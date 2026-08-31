@@ -7,7 +7,7 @@ import type {
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   createProviderFetch,
   createProviderProxyUrl,
@@ -358,10 +358,6 @@ function requiredInputString(value: unknown, fieldName: string) {
 
 function optionalInteger(value: unknown) {
   return typeof value === "number" && Number.isInteger(value) ? value : undefined;
-}
-
-function optionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function optionalStringArray(value: unknown) {

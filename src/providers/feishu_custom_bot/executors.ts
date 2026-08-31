@@ -144,7 +144,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<FeishuCustom
     const credential = await requireApiKeyCredential(context, service);
     return {
       apiKey: credential.apiKey,
-      signingSecret: readOptionalFeishuCustomBotField(credential.values.signingSecret),
+      signingSecret: optionalString(credential.values.signingSecret),
       fetcher,
       signal: context.signal,
     };
@@ -174,7 +174,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
     }
 
     const requestBody = JSON.stringify(
-      buildFeishuCustomBotRequestPayload(payload, readOptionalFeishuCustomBotField(credential.values.signingSecret)),
+      buildFeishuCustomBotRequestPayload(payload, optionalString(credential.values.signingSecret)),
     );
     if (Buffer.byteLength(requestBody, "utf8") > feishuCustomBotMaxPayloadBytes) {
       throw new ProviderRequestError(400, "Feishu custom bot request body must not exceed 20 KB");
@@ -231,7 +231,7 @@ export const credentialValidators: CredentialValidators = {
     const credential = resolveFeishuCustomBotApiKey(input.apiKey);
     await validateFeishuCustomBotCredential({
       webhookUrl: credential.webhookUrl,
-      signingSecret: readOptionalFeishuCustomBotField(input.values.signingSecret),
+      signingSecret: optionalString(input.values.signingSecret),
       fetcher,
       signal,
     });
@@ -245,7 +245,7 @@ export const credentialValidators: CredentialValidators = {
       metadata: compactObject({
         webhookHost: new URL(credential.webhookUrl).host,
         webhookPathSuffix: maskFeishuCustomBotToken(credential.webhookToken),
-        securityMode: readOptionalFeishuCustomBotField(input.values.signingSecret) ? "signed" : "unsigned",
+        securityMode: optionalString(input.values.signingSecret) ? "signed" : "unsigned",
         validationMode: "invalid_msg_type_probe",
         credentialKind: "webhook_token",
       }),
@@ -522,10 +522,6 @@ function requiredFeishuCustomBotString(value: unknown, fieldName: string): strin
 
 function requiredFeishuCustomBotObject(value: unknown, fieldName: string): Record<string, unknown> {
   return requiredRecord(value, fieldName, (message) => new ProviderRequestError(400, message));
-}
-
-function readOptionalFeishuCustomBotField(value: unknown): string | undefined {
-  return optionalString(value);
 }
 
 function createFeishuCustomBotRequestSignal(parent?: AbortSignal): FeishuCustomBotRequestSignal {

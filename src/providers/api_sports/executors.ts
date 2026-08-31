@@ -1,7 +1,14 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBoolean,
+  optionalBooleanOrNull,
+  optionalInteger,
+  optionalRecord,
+  optionalString,
+} from "../../core/cast.ts";
 import {
   defineProviderExecutors,
   isAbortLikeError,
@@ -532,15 +539,11 @@ function readNumber(value: unknown): number | null {
   return typeof value === "number" ? value : null;
 }
 
-function readBoolean(value: unknown): boolean | null {
-  return typeof value === "boolean" ? value : null;
-}
-
 function mapLeagueSummary(item: Record<string, unknown>): Record<string, unknown> {
   const league = readObject(item.league);
   const country = readObject(item.country);
   const seasons = readObjectArray(item.seasons);
-  const selectedSeason = seasons.find((season) => readBoolean(season.current) === true) ?? seasons[0] ?? null;
+  const selectedSeason = seasons.find((season) => optionalBooleanOrNull(season.current) === true) ?? seasons[0] ?? null;
   const coverage = readObject(selectedSeason?.coverage);
   const fixtures = readObject(coverage?.fixtures);
 
@@ -553,16 +556,16 @@ function mapLeagueSummary(item: Record<string, unknown>): Record<string, unknown
     logoUrl: readString(league?.logo),
     currentSeason: readNumber(selectedSeason?.year),
     coverage: {
-      standings: readBoolean(coverage?.standings) ?? undefined,
-      players: readBoolean(coverage?.players) ?? undefined,
-      topScorers: readBoolean(coverage?.top_scorers) ?? undefined,
-      predictions: readBoolean(coverage?.predictions) ?? undefined,
-      odds: readBoolean(coverage?.odds) ?? undefined,
-      events: readBoolean(fixtures?.events) ?? undefined,
-      lineups: readBoolean(fixtures?.lineups) ?? undefined,
-      statisticsFixtures: readBoolean(fixtures?.statistics_fixtures) ?? undefined,
-      statisticsPlayers: readBoolean(fixtures?.statistics_players) ?? undefined,
-      injuries: readBoolean(coverage?.injuries) ?? undefined,
+      standings: optionalBooleanOrNull(coverage?.standings) ?? undefined,
+      players: optionalBooleanOrNull(coverage?.players) ?? undefined,
+      topScorers: optionalBooleanOrNull(coverage?.top_scorers) ?? undefined,
+      predictions: optionalBooleanOrNull(coverage?.predictions) ?? undefined,
+      odds: optionalBooleanOrNull(coverage?.odds) ?? undefined,
+      events: optionalBooleanOrNull(fixtures?.events) ?? undefined,
+      lineups: optionalBooleanOrNull(fixtures?.lineups) ?? undefined,
+      statisticsFixtures: optionalBooleanOrNull(fixtures?.statistics_fixtures) ?? undefined,
+      statisticsPlayers: optionalBooleanOrNull(fixtures?.statistics_players) ?? undefined,
+      injuries: optionalBooleanOrNull(coverage?.injuries) ?? undefined,
     },
   };
 }
@@ -577,7 +580,7 @@ function mapTeamSummary(item: Record<string, unknown>): Record<string, unknown> 
     name: readString(team?.name) ?? "",
     code: readString(team?.code),
     country: readString(team?.country),
-    national: readBoolean(team?.national),
+    national: optionalBooleanOrNull(team?.national),
     logoUrl: readString(team?.logo),
     venue: venueId ? { venueId, name: readString(venue?.name), city: readString(venue?.city) } : null,
   };
@@ -662,7 +665,7 @@ function mapFixtureTeam(team: Record<string, unknown> | null): Record<string, un
     teamId: readNumber(team?.id) ?? 0,
     name: readString(team?.name) ?? "",
     logoUrl: readString(team?.logo),
-    winner: readBoolean(team?.winner),
+    winner: optionalBooleanOrNull(team?.winner),
   };
 }
 

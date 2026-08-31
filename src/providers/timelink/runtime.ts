@@ -3,6 +3,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
   compactObject,
+  optionalBoolean,
   optionalNumber as asOptionalNumber,
   optionalRecord as asOptionalObject,
   optionalString as asOptionalString,
@@ -36,8 +37,8 @@ export const timelinkActionHandlers: ProviderActionHandlers<"timelink", Timelink
         search: readOptionalString(input.search),
         ids: readOptionalStringArray(input.ids),
         orders: readOptionalOrderArray(input.orders),
-        active: readOptionalBoolean(input.active),
-        withLimitedPartOfProjects: readOptionalBoolean(input.withLimitedPartOfProjects),
+        active: optionalBoolean(input.active),
+        withLimitedPartOfProjects: optionalBoolean(input.withLimitedPartOfProjects),
         projectsLimit: readOptionalInteger(input.projectsLimit),
       }),
       fetcher: context.fetcher,
@@ -71,7 +72,7 @@ export const timelinkActionHandlers: ProviderActionHandlers<"timelink", Timelink
         search: readOptionalString(input.search),
         ids: readOptionalStringArray(input.ids),
         orders: readOptionalOrderArray(input.orders),
-        active: readOptionalBoolean(input.active),
+        active: optionalBoolean(input.active),
         client_id: readOptionalString(input.clientId),
       }),
       fetcher: context.fetcher,
@@ -105,7 +106,7 @@ export const timelinkActionHandlers: ProviderActionHandlers<"timelink", Timelink
         search: readOptionalString(input.search),
         ids: readOptionalStringArray(input.ids),
         orders: readOptionalOrderArray(input.orders),
-        active: readOptionalBoolean(input.active),
+        active: optionalBoolean(input.active),
       }),
       fetcher: context.fetcher,
       phase: "execute",
@@ -138,13 +139,13 @@ export const timelinkActionHandlers: ProviderActionHandlers<"timelink", Timelink
         search: readOptionalString(input.search),
         ids: readOptionalStringArray(input.ids),
         orders: readOptionalOrderArray(input.orders),
-        withRelations: readOptionalBoolean(input.withRelations),
+        withRelations: optionalBoolean(input.withRelations),
         start: readOptionalString(input.start),
         end: readOptionalString(input.end),
-        onlyDeleted: readOptionalBoolean(input.onlyDeleted),
-        isInterrupt: readOptionalBoolean(input.isInterrupt),
-        isBilled: readOptionalBoolean(input.isBilled),
-        isBillable: readOptionalBoolean(input.isBillable),
+        onlyDeleted: optionalBoolean(input.onlyDeleted),
+        isInterrupt: optionalBoolean(input.isInterrupt),
+        isBilled: optionalBoolean(input.isBilled),
+        isBillable: optionalBoolean(input.isBillable),
         searchInDescription: readOptionalString(input.searchInDescription),
         clientId: readOptionalString(input.clientId),
         projectId: readOptionalString(input.projectId),
@@ -152,7 +153,7 @@ export const timelinkActionHandlers: ProviderActionHandlers<"timelink", Timelink
         userId: readOptionalString(input.userId),
         userIds: readOptionalStringArray(input.userIds),
         extToolId: readOptionalString(input.extToolId),
-        exact: readOptionalBoolean(input.exact),
+        exact: optionalBoolean(input.exact),
       }),
       fetcher: context.fetcher,
       phase: "execute",
@@ -182,7 +183,7 @@ export const timelinkActionHandlers: ProviderActionHandlers<"timelink", Timelink
       token: context.apiKey,
       query: buildListQuery({
         limit: readOptionalInteger(input.limit),
-        withRelations: readOptionalBoolean(input.withRelations),
+        withRelations: optionalBoolean(input.withRelations),
       }),
       fetcher: context.fetcher,
       phase: "execute",
@@ -217,7 +218,7 @@ export const timelinkActionHandlers: ProviderActionHandlers<"timelink", Timelink
         search: readOptionalString(input.search),
         ids: readOptionalStringArray(input.ids),
         orders: readOptionalOrderArray(input.orders),
-        active: readOptionalBoolean(input.active),
+        active: optionalBoolean(input.active),
       }),
       fetcher: context.fetcher,
       phase: "execute",
@@ -651,10 +652,6 @@ function readOptionalInteger(value: unknown) {
     return undefined;
   }
   return value;
-}
-
-function readOptionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function readNullableBoolean(value: unknown) {

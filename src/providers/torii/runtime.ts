@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { optionalRecord, optionalString } from "../../core/cast.ts";
+import { optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
 export const toriiApiBaseUrl = "https://api.toriihq.com/v1.0";
@@ -370,8 +370,4 @@ function requireObjectArrayPayload(payload: unknown, label: string): Record<stri
   }
 
   return payload as Record<string, unknown>[];
-}
-
-function optionalNumber(value: unknown): number | undefined {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }

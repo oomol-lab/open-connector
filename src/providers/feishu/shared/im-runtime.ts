@@ -1,7 +1,7 @@
 import type { FeishuActionRuntimeContext, FeishuJsonRequest } from "./client.ts";
 import type { FeishuIdentity } from "./client.ts";
 
-import { optionalRecord, optionalString } from "../../../core/cast.ts";
+import { optionalBoolean, optionalRecord, optionalString } from "../../../core/cast.ts";
 import { ProviderRequestError } from "../../provider-runtime.ts";
 import { uploadFeishuMedia } from "./media.ts";
 
@@ -291,10 +291,6 @@ function requireString(value: unknown, fieldName: string) {
 
 function stringArray(value: unknown) {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : undefined;
-}
-
-function optionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function optionalNumber(value: unknown) {

@@ -1,7 +1,7 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
   providerUserAgent,
@@ -399,14 +399,14 @@ function normalizeCompanySettings(payload: unknown) {
   return compactObject({
     id: readRequiredString(record.id, "id"),
     name: readRequiredString(record.name, "name"),
-    hasInsurance: readOptionalBoolean(record.hasInsurance),
+    hasInsurance: optionalBoolean(record.hasInsurance),
     timeZoneInfo: timeZoneInfo
       ? compactObject({
           name: optionalString(timeZoneInfo.name),
           daylightName: optionalString(timeZoneInfo.daylightName),
           baseUtcOffset: optionalString(timeZoneInfo.baseUtcOffset),
           adjustedUtcOffset: optionalString(timeZoneInfo.adjustedUtcOffset),
-          supportsDaylightSavingTime: readOptionalBoolean(timeZoneInfo.supportsDaylightSavingTime),
+          supportsDaylightSavingTime: optionalBoolean(timeZoneInfo.supportsDaylightSavingTime),
         })
       : undefined,
   });
@@ -537,10 +537,6 @@ function normalizePagedCollection<T>(payload: unknown, mapItem: (item: unknown) 
     pageStartIndex: readRequiredInteger(record.pageStartIndex, "pageStartIndex"),
     items,
   };
-}
-
-function readOptionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function readRequiredBoolean(value: unknown, fieldName: string) {

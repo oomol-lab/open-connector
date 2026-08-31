@@ -87,12 +87,7 @@ export const stannpActionHandlers: ProviderActionHandlers<"stannp", ProviderRunt
     };
   },
   async create_group(input, context) {
-    const data = await stannpPostForm(
-      "/v1/groups/new",
-      { name: readOptionalTrimmedString(input.name) },
-      context,
-      "execute",
-    );
+    const data = await stannpPostForm("/v1/groups/new", { name: optionalString(input.name) }, context, "execute");
     return {
       groupId: stringFrom(data),
       raw: data,
@@ -143,16 +138,16 @@ export const stannpActionHandlers: ProviderActionHandlers<"stannp", ProviderRunt
     const data = await stannpPostForm(
       "/v1/addresses/validate",
       compactObject({
-        company: readOptionalTrimmedString(input.company),
-        address1: readOptionalTrimmedString(input.address1),
-        address2: readOptionalTrimmedString(input.address2),
-        address3: readOptionalTrimmedString(input.address3),
-        city: readOptionalTrimmedString(input.city),
-        postcode: readOptionalTrimmedString(input.postcode),
-        country: readOptionalTrimmedString(input.country),
-        state: readOptionalTrimmedString(input.state),
-        province: readOptionalTrimmedString(input.province),
-        zipcode: readOptionalTrimmedString(input.zipcode),
+        company: optionalString(input.company),
+        address1: optionalString(input.address1),
+        address2: optionalString(input.address2),
+        address3: optionalString(input.address3),
+        city: optionalString(input.city),
+        postcode: optionalString(input.postcode),
+        country: optionalString(input.country),
+        state: optionalString(input.state),
+        province: optionalString(input.province),
+        zipcode: optionalString(input.zipcode),
       }),
       context,
       "execute",
@@ -354,21 +349,21 @@ function appendFormField(body: URLSearchParams, key: string, value: unknown): vo
 function recipientFormFields(input: Record<string, unknown>): Record<string, unknown> {
   const fields: Record<string, unknown> = compactObject({
     group_id: input.groupId,
-    title: readOptionalTrimmedString(input.title),
-    firstname: readOptionalTrimmedString(input.firstname),
-    lastname: readOptionalTrimmedString(input.lastname),
-    company: readOptionalTrimmedString(input.company),
-    job_title: readOptionalTrimmedString(input.jobTitle),
-    address1: readOptionalTrimmedString(input.address1),
-    address2: readOptionalTrimmedString(input.address2),
-    address3: readOptionalTrimmedString(input.address3),
-    city: readOptionalTrimmedString(input.city),
-    county: readOptionalTrimmedString(input.county),
-    postcode: readOptionalTrimmedString(input.postcode),
-    country: readOptionalTrimmedString(input.country),
-    email: readOptionalTrimmedString(input.email),
-    phone_number: readOptionalTrimmedString(input.phoneNumber),
-    ref_id: readOptionalTrimmedString(input.refId),
+    title: optionalString(input.title),
+    firstname: optionalString(input.firstname),
+    lastname: optionalString(input.lastname),
+    company: optionalString(input.company),
+    job_title: optionalString(input.jobTitle),
+    address1: optionalString(input.address1),
+    address2: optionalString(input.address2),
+    address3: optionalString(input.address3),
+    city: optionalString(input.city),
+    county: optionalString(input.county),
+    postcode: optionalString(input.postcode),
+    country: optionalString(input.country),
+    email: optionalString(input.email),
+    phone_number: optionalString(input.phoneNumber),
+    ref_id: optionalString(input.refId),
     on_duplicate: input.onDuplicate,
     test_level: input.testLevel,
   });
@@ -457,8 +452,4 @@ function booleanFromStannp(value: unknown): boolean {
     return normalized === "1" || normalized === "true" || normalized === "yes";
   }
   return false;
-}
-
-function readOptionalTrimmedString(value: unknown): string | undefined {
-  return optionalString(value);
 }

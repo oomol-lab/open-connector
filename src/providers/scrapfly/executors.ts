@@ -6,6 +6,7 @@ import {
   compactObject,
   optionalBoolean,
   optionalInteger,
+  optionalRawString,
   optionalRecord,
   optionalString,
   requiredString,
@@ -210,7 +211,7 @@ function buildMonitoringQuery(input: Record<string, unknown>): Record<string, Sc
 
 function buildScrapeRequest(input: Record<string, unknown>): RequestInit {
   const method = optionalString(input.method) ?? "GET";
-  const body = optionalRawInputString(input.body);
+  const body = optionalRawString(input.body);
   const contentType = optionalString(input.content_type);
   if ((method === "GET" || method === "HEAD") && body) {
     throw new ProviderRequestError(400, `${method} scrape requests cannot include body`);
@@ -331,10 +332,6 @@ function readOptionalHeaderInteger(headers: Headers, name: string): number | nul
 
 function requiredInputString(value: unknown, fieldName: string): string {
   return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
-}
-
-function optionalRawInputString(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
 }
 
 function looksLikeHtml(value: string): boolean {

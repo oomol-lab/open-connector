@@ -2,7 +2,7 @@ import type { CredentialValidators, ProviderExecutors } from "../../core/types.t
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalBooleanOrNull, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
   isAbortLikeError,
@@ -146,7 +146,7 @@ export const apiverveActionHandlers: ProviderActionHandlers<"apiverve", Apiverve
       timezoneDiffHours: readNullableNumber(record.timezoneDiffHours),
       bearing: readNullableNumber(record.bearing),
       direction: readNullableString(record.direction),
-      isInternational: readNullableBoolean(record.isInternational),
+      isInternational: optionalBooleanOrNull(record.isInternational),
       carbonEstimateKg: readNullableNumber(record.carbonEstimateKg),
       airport1: normalizeDistanceAirport(record.airport1, "airport1"),
       airport2: normalizeDistanceAirport(record.airport2, "airport2"),
@@ -355,7 +355,7 @@ function normalizeAge(value: unknown): Record<string, unknown> {
       chineseZodiac: readNullableString(insights.chineseZodiac),
       birthstone: readNullableString(insights.birthstone),
       dayOfWeekBorn: readNullableString(insights.dayOfWeekBorn),
-      isLeapYearBirth: readNullableBoolean(insights.isLeapYearBirth),
+      isLeapYearBirth: optionalBooleanOrNull(insights.isLeapYearBirth),
       milestones: normalizeMilestones(insights.milestones),
     },
   };
@@ -403,10 +403,10 @@ function normalizeMilestones(value: unknown): Record<string, unknown> {
   const record = readRequiredRecord(value, "milestones");
 
   return {
-    canVoteUS: readNullableBoolean(record.canVoteUS),
-    canDrinkUS: readNullableBoolean(record.canDrinkUS),
-    canRentCarUS: readNullableBoolean(record.canRentCarUS),
-    seniorDiscount: readNullableBoolean(record.seniorDiscount),
+    canVoteUS: optionalBooleanOrNull(record.canVoteUS),
+    canDrinkUS: optionalBooleanOrNull(record.canDrinkUS),
+    canRentCarUS: optionalBooleanOrNull(record.canRentCarUS),
+    seniorDiscount: optionalBooleanOrNull(record.seniorDiscount),
   };
 }
 
@@ -468,7 +468,7 @@ function normalizeAirline(record: Record<string, unknown>): Record<string, unkno
     callsign: readNullableString(record.callsign),
     country: readNullableString(record.country),
     id: readNullableString(record.id),
-    isLowCost: readNullableBoolean(record.islowcost),
+    isLowCost: optionalBooleanOrNull(record.islowcost),
     logoUrl: readNullableString(record.logourl),
     raw: record,
   };
@@ -538,8 +538,4 @@ function readRequiredNumber(value: unknown, fieldName: string): number {
 
 function readNullableNumber(value: unknown): number | null {
   return typeof value === "number" ? value : null;
-}
-
-function readNullableBoolean(value: unknown): boolean | null {
-  return typeof value === "boolean" ? value : null;
 }

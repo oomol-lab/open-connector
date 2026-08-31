@@ -264,7 +264,7 @@ function readResultObject(payload: Record<string, unknown>) {
 
 function buildAssetQuery(input: Record<string, unknown>) {
   return compactObject({
-    at_time: readOptionalString(input.at_time),
+    at_time: optionalString(input.at_time),
   });
 }
 
@@ -274,8 +274,4 @@ function readRequiredString(value: unknown, fieldName: string) {
     throw new ProviderRequestError(400, `${fieldName} is required`);
   }
   return parsed;
-}
-
-function readOptionalString(value: unknown) {
-  return optionalString(value);
 }

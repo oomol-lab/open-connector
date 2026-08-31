@@ -3,6 +3,7 @@ import type { OomolConsoleMemberDirectory } from "./member-directory.ts";
 import type { ConnectionActionPermission, ConnectionPermissionGroupsState } from "./permission-groups.ts";
 import type { OomolConsoleEndpoints } from "./request.ts";
 
+import { optionalNumber, optionalRawString } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import {
   parseConnectionPermissionGroups,
@@ -613,8 +614,8 @@ function parseTeam(value: unknown): TeamView {
   return compact({
     id: readString(team.id, "team.id"),
     name: readString(team.name, "team.name"),
-    avatar: readOptionalString(team.avatar),
-    creatorUserId: readOptionalString(team.creator_user_id),
+    avatar: optionalRawString(team.avatar),
+    creatorUserId: optionalRawString(team.creator_user_id),
     status: readOptionalEnum(team.status, ["normal", "paused"] as const, "team.status"),
     role: readOptionalEnum(team.role, ["creator", "admin", "member", "guest"] as const, "team.role"),
     writable: readOptionalBoolean(team.writable, "team.writable"),
@@ -650,7 +651,7 @@ function parseTeamMember(value: unknown): TeamMemberView {
       ["user", "service_account"] as const,
       "member.user_type",
     ),
-    name: readOptionalString(member.name),
+    name: optionalRawString(member.name),
     role: readEnum(member.role, ["creator", "admin", "member", "guest"] as const, "member.role"),
     disabled: readOptionalBoolean(member.disable, "member.disable") ?? false,
   });
@@ -821,9 +822,9 @@ async function getMeteringStats(
       const item = asRecord(value, "metering item");
       return compact({
         time: readNumber(item.time, "metering item.time"),
-        source: readOptionalString(item.source),
-        subject: readOptionalString(item.subject),
-        totalUsage: readOptionalString(item.totalUsage),
+        source: optionalRawString(item.source),
+        subject: optionalRawString(item.subject),
+        totalUsage: optionalRawString(item.totalUsage),
         eventCount: readNumber(item.eventCount, "metering item.eventCount"),
       });
     }),
@@ -912,10 +913,6 @@ function optionalString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
-function optionalNumber(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
-}
-
 function optionalExecutionStatus(value: unknown) {
   return value === "success" || value === "error" ? value : undefined;
 }
@@ -939,10 +936,6 @@ function readString(value: unknown, label: string) {
     throw invalidResponse(`${label} is not a string`);
   }
   return value;
-}
-
-function readOptionalString(value: unknown) {
-  return typeof value === "string" ? value : undefined;
 }
 
 function readNullableString(value: unknown, label: string) {

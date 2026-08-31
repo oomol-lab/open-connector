@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
-import { compactObject } from "../../core/cast.ts";
+import { compactObject, optionalBoolean } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 type AlchemyPhase = "validate" | "execute";
@@ -143,11 +143,11 @@ async function executeGetAssetTransfers(
           toBlock: readOptionalTrimmedString(input.toBlock),
           fromAddress: readOptionalTrimmedString(input.fromAddress),
           toAddress: readOptionalTrimmedString(input.toAddress),
-          excludeZeroValue: readOptionalBoolean(input.excludeZeroValue),
+          excludeZeroValue: optionalBoolean(input.excludeZeroValue),
           category: readOptionalStringArray(input.category),
           contractAddresses: readOptionalStringArray(input.contractAddresses),
           order: readOptionalTrimmedString(input.order),
-          withMetadata: readOptionalBoolean(input.withMetadata),
+          withMetadata: optionalBoolean(input.withMetadata),
           maxCount: readOptionalTrimmedString(input.maxCount),
           pageKey: readOptionalTrimmedString(input.pageKey),
         }),
@@ -185,7 +185,7 @@ async function executeGetNftsForOwner(
     "/getNFTsForOwner",
     {
       owner: readRequiredTrimmedString(input.owner, "owner"),
-      withMetadata: readOptionalBoolean(input.withMetadata),
+      withMetadata: optionalBoolean(input.withMetadata),
       orderBy: readOptionalTrimmedString(input.orderBy),
       tokenUriTimeoutInMs: readOptionalInteger(input.tokenUriTimeoutInMs),
       pageKey: readOptionalTrimmedString(input.pageKey),
@@ -464,10 +464,6 @@ function readNullableNumber(value: unknown): number | null {
     return null;
   }
   return typeof value === "number" ? value : null;
-}
-
-function readOptionalBoolean(value: unknown): boolean | undefined {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function readOptionalInteger(value: unknown): number | undefined {

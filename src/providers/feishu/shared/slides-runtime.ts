@@ -1,6 +1,12 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
-import { optionalRecord, optionalString, optionalStringArray } from "../../../core/cast.ts";
+import {
+  optionalBoolean,
+  optionalNumber,
+  optionalRecord,
+  optionalString,
+  optionalStringArray,
+} from "../../../core/cast.ts";
 import { providerInputError, ProviderRequestError } from "../../provider-runtime.ts";
 
 interface FeishuSlidesActionHandler {
@@ -411,12 +417,4 @@ function requireResponseString(value: unknown, fieldName: string) {
     throw new ProviderRequestError(502, `Feishu Slides response is missing ${fieldName}`);
   }
   return string;
-}
-
-function optionalNumber(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
-}
-
-function optionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }

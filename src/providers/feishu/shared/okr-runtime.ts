@@ -1,5 +1,6 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
+import { optionalNumber } from "../../../core/cast.ts";
 import { providerInputError } from "../../provider-runtime.ts";
 
 interface OkrActionHandler {
@@ -493,10 +494,6 @@ function requiredNumber(value: unknown, field: string) {
     return value;
   }
   throw providerInputError(`${field} must be a number`);
-}
-
-function optionalNumber(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 function encode(value: string) {

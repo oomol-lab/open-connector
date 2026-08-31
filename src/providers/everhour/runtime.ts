@@ -51,9 +51,9 @@ export const everhourActionHandlers: ProviderActionHandlers<"everhour", Everhour
         path: "/projects",
         phase: "execute",
         query: compactObject({
-          query: readOptionalString(input.query),
+          query: optionalString(input.query),
           limit: readOptionalPositiveInteger(input.limit, "limit"),
-          platform: readOptionalString(input.platform),
+          platform: optionalString(input.platform),
         }),
       },
       context,
@@ -81,7 +81,7 @@ export const everhourActionHandlers: ProviderActionHandlers<"everhour", Everhour
         query: compactObject({
           page: readOptionalPositiveInteger(input.page, "page"),
           limit: readOptionalPositiveInteger(input.limit, "limit"),
-          query: readOptionalString(input.query),
+          query: optionalString(input.query),
           "exclude-closed": optionalBoolean(input.excludeClosed),
         }),
       },
@@ -117,8 +117,8 @@ export const everhourActionHandlers: ProviderActionHandlers<"everhour", Everhour
     return { tasks: requireEverhourArray(payload, "tasks") };
   },
   async list_time_records(input, context) {
-    const from = readOptionalString(input.from);
-    const to = readOptionalString(input.to);
+    const from = optionalString(input.from);
+    const to = optionalString(input.to);
     if (from && to && from > to) {
       throw new ProviderRequestError(400, "from must be on or before to");
     }
@@ -147,9 +147,9 @@ export const everhourActionHandlers: ProviderActionHandlers<"everhour", Everhour
         body: compactObject({
           time: readRequiredPositiveInteger(input.time, "time"),
           date: readRequiredString(input.date, "date"),
-          task: readOptionalString(input.taskId),
+          task: optionalString(input.taskId),
           user: readOptionalPositiveInteger(input.userId, "userId"),
-          comment: readOptionalString(input.comment),
+          comment: optionalString(input.comment),
         }),
       },
       context,
@@ -164,8 +164,8 @@ export const everhourActionHandlers: ProviderActionHandlers<"everhour", Everhour
         phase: "execute",
         body: compactObject({
           task: readRequiredString(input.taskId, "taskId"),
-          userDate: readOptionalString(input.userDate),
-          comment: readOptionalString(input.comment),
+          userDate: optionalString(input.userDate),
+          comment: optionalString(input.comment),
         }),
       },
       context,
@@ -317,15 +317,11 @@ function requireEverhourArray(value: unknown, label: string): unknown[] {
 }
 
 function readRequiredString(value: unknown, fieldName: string): string {
-  const parsed = readOptionalString(value);
+  const parsed = optionalString(value);
   if (!parsed) {
     throw new ProviderRequestError(400, `${fieldName} is required`);
   }
   return parsed;
-}
-
-function readOptionalString(value: unknown): string | undefined {
-  return optionalString(value);
 }
 
 function readRequiredPositiveInteger(value: unknown, fieldName: string): number {

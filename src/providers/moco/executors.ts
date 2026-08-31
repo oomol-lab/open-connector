@@ -1,7 +1,14 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBoolean,
+  optionalBooleanOrNull,
+  optionalInteger,
+  optionalRecord,
+  optionalString,
+} from "../../core/cast.ts";
 import {
   defineProviderExecutors,
   ProviderRequestError,
@@ -295,8 +302,8 @@ function normalizeProfile(value: unknown): Record<string, unknown> {
     fullName: readNullableString(profile.full_name),
     firstName: readNullableString(profile.first_name),
     lastName: readNullableString(profile.last_name),
-    active: readNullableBoolean(profile.active),
-    external: readNullableBoolean(profile.external),
+    active: optionalBooleanOrNull(profile.active),
+    external: optionalBooleanOrNull(profile.external),
     avatarUrl: readNullableString(profile.avatar_url),
     unit: normalizeShortReference(profile.unit),
     createdAt: readNullableString(profile.created_at),
@@ -316,7 +323,7 @@ function normalizeCompany(value: unknown): Record<string, unknown> {
     phone: readNullableString(company.phone),
     tags: readStringArray(company.tags),
     identifier: readNullableString(company.identifier),
-    active: readNullableBoolean(company.active),
+    active: optionalBooleanOrNull(company.active),
     archivedOn: readNullableString(company.archived_on),
     createdAt: readNullableString(company.created_at),
     updatedAt: readNullableString(company.updated_at),
@@ -578,10 +585,6 @@ function readRequiredPositiveInteger(value: unknown, fieldName: string): number 
 
 function readNullableString(value: unknown): string | null {
   return typeof value === "string" ? value : null;
-}
-
-function readNullableBoolean(value: unknown): boolean | null {
-  return typeof value === "boolean" ? value : null;
 }
 
 function readStringArray(value: unknown): string[] {

@@ -1,7 +1,7 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { optionalNumber, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
+import { optionalNumber, optionalRawString, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   defineProviderExecutors,
@@ -256,10 +256,6 @@ function readRequiredNumber(value: unknown, fieldName: string): number {
     throw new ProviderRequestError(502, `Serply response missing ${fieldName}`);
   }
   return value;
-}
-
-function optionalRawString(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
 }
 
 function asArrayOfObjects(value: unknown): Array<Record<string, unknown>> {

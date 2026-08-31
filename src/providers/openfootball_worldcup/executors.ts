@@ -1,6 +1,7 @@
 import type { ExecutionContext, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
+import { optionalRawString } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   defineProviderExecutors,
@@ -36,7 +37,7 @@ export const openfootballWorldcupActionHandlers: ProviderActionHandlers<
     const { payload, sourceUrl } = await requestDataset(season, "matches", context);
     const record = readObjectPayload(payload, "OpenFootball matches response");
     return {
-      tournament: { name: readString(record.name) ?? `World Cup ${season}` },
+      tournament: { name: optionalRawString(record.name) ?? `World Cup ${season}` },
       matches: Array.isArray(record.matches) ? record.matches : [],
       sourceUrl,
     };
@@ -46,7 +47,7 @@ export const openfootballWorldcupActionHandlers: ProviderActionHandlers<
     const { payload, sourceUrl } = await requestDataset(season, "groups", context);
     const record = readObjectPayload(payload, "OpenFootball groups response");
     return {
-      tournament: { name: readString(record.name) ?? `World Cup ${season}` },
+      tournament: { name: optionalRawString(record.name) ?? `World Cup ${season}` },
       groups: Array.isArray(record.groups) ? record.groups : [],
       sourceUrl,
     };
@@ -64,7 +65,7 @@ export const openfootballWorldcupActionHandlers: ProviderActionHandlers<
     const { payload, sourceUrl } = await requestDataset(season, "stadiums", context);
     const record = readObjectPayload(payload, "OpenFootball stadiums response");
     return {
-      tournament: { name: readString(record.name) ?? `World Cup ${season}` },
+      tournament: { name: optionalRawString(record.name) ?? `World Cup ${season}` },
       stadiums: Array.isArray(record.stadiums) ? record.stadiums : [],
       sourceUrl,
     };
@@ -82,7 +83,7 @@ export const openfootballWorldcupActionHandlers: ProviderActionHandlers<
     const { payload, sourceUrl } = await requestDataset(season, "qualiPlayoffs", context);
     const record = readObjectPayload(payload, "OpenFootball qualification playoffs response");
     return {
-      tournament: { name: readString(record.name) ?? `World Cup ${season} Qualifying` },
+      tournament: { name: optionalRawString(record.name) ?? `World Cup ${season} Qualifying` },
       matches: Array.isArray(record.matches) ? record.matches : [],
       sourceUrl,
     };
@@ -197,10 +198,6 @@ function readObjectPayload(value: unknown, label: string): Record<string, unknow
     throw new ProviderRequestError(502, `${label} was not an object`);
   }
   return value as Record<string, unknown>;
-}
-
-function readString(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
 }
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

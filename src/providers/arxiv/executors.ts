@@ -1,6 +1,7 @@
 import type { ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
+import { optionalNumber } from "../../core/cast.ts";
 import { defineProviderExecutors, providerFetch, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "arxiv";
@@ -94,8 +95,8 @@ function searchPapers(input: Record<string, unknown>, context: ArxivActionContex
   return requestArxiv(
     {
       searchQuery: readString(input.query, "query"),
-      start: readOptionalNumber(input.start) ?? 0,
-      maxResults: readOptionalNumber(input.maxResults) ?? defaultMaxResults,
+      start: optionalNumber(input.start) ?? 0,
+      maxResults: optionalNumber(input.maxResults) ?? defaultMaxResults,
       sortBy: readOptionalSortBy(input.sortBy),
       sortOrder: readOptionalSortOrder(input.sortOrder),
     },
@@ -131,8 +132,8 @@ function searchByAllFields(input: Record<string, unknown>, context: ArxivActionC
   return requestArxiv(
     {
       searchQuery: parts.join(" AND "),
-      start: readOptionalNumber(input.start) ?? 0,
-      maxResults: readOptionalNumber(input.maxResults) ?? defaultMaxResults,
+      start: optionalNumber(input.start) ?? 0,
+      maxResults: optionalNumber(input.maxResults) ?? defaultMaxResults,
       sortBy: readOptionalSortBy(input.sortBy),
       sortOrder: readOptionalSortOrder(input.sortOrder),
     },
@@ -160,7 +161,7 @@ function getPapers(input: Record<string, unknown>, context: ArxivActionContext):
   return requestArxiv(
     {
       idList: ids,
-      maxResults: readOptionalNumber(input.maxResults) ?? ids.length,
+      maxResults: optionalNumber(input.maxResults) ?? ids.length,
     },
     context.fetcher,
   );
@@ -170,8 +171,8 @@ function listRecentPapers(input: Record<string, unknown>, context: ArxivActionCo
   return requestArxiv(
     {
       searchQuery: `cat:${readString(input.category, "category")}`,
-      start: readOptionalNumber(input.start) ?? 0,
-      maxResults: readOptionalNumber(input.maxResults) ?? defaultMaxResults,
+      start: optionalNumber(input.start) ?? 0,
+      maxResults: optionalNumber(input.maxResults) ?? defaultMaxResults,
       sortBy: "submittedDate",
       sortOrder: readOptionalSortOrder(input.sortOrder) ?? "descending",
     },
@@ -188,8 +189,8 @@ function searchByField(
   return requestArxiv(
     {
       searchQuery: `${prefix}:${formatStructuredFieldValue(value)}`,
-      start: readOptionalNumber(input.start) ?? 0,
-      maxResults: readOptionalNumber(input.maxResults) ?? defaultMaxResults,
+      start: optionalNumber(input.start) ?? 0,
+      maxResults: optionalNumber(input.maxResults) ?? defaultMaxResults,
       sortBy: readOptionalSortBy(input.sortBy),
       sortOrder: readOptionalSortOrder(input.sortOrder),
     },
@@ -563,10 +564,6 @@ function readStringArray(value: unknown, fieldName: string): string[] {
 
 function readOptionalString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
-}
-
-function readOptionalNumber(value: unknown): number | undefined {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 function readOptionalSortBy(value: unknown): ArxivSortBy | undefined {

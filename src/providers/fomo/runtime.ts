@@ -1,7 +1,7 @@
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { compactObject } from "../../core/cast.ts";
+import { compactObject, optionalRawString } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -28,8 +28,8 @@ export const fomoActionHandlers: ProviderActionHandlers<"fomo", ProviderRuntimeH
           show_meta: "true",
           per_page: perPage === undefined ? undefined : String(perPage),
           page: page === undefined ? undefined : String(page),
-          order_by: readOptionalString(input.order_by),
-          order_direction: readOptionalString(input.order_direction),
+          order_by: optionalRawString(input.order_by),
+          order_direction: optionalRawString(input.order_direction),
         }),
         mode: "execute",
         signal: context.signal,
@@ -402,10 +402,6 @@ function readNullableString(value: unknown): string | null {
 
 function readNullableNumber(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-
-function readOptionalString(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
 }
 
 function readOptionalInteger(value: unknown): number | undefined {

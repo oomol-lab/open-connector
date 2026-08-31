@@ -1,7 +1,7 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject } from "../../core/cast.ts";
+import { compactObject, optionalRawString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 type RawgActionContext = {
@@ -49,7 +49,7 @@ export async function validateRawgCredential(
       validationEndpoint: "/platforms",
       apiBaseUrl: rawgApiBaseUrl,
       firstPlatformId: asOptionalNumber(firstPlatform?.id),
-      firstPlatformName: asOptionalString(firstPlatform?.name),
+      firstPlatformName: optionalRawString(firstPlatform?.name),
       pageSize: 1,
     }),
   };
@@ -279,7 +279,7 @@ async function readRawgPayload(
 
 function buildRawgError(status: number, payload: unknown, phase: "validate" | "execute") {
   const payloadObject = asOptionalObject(payload);
-  const message = asOptionalString(payloadObject?.error) ?? defaultErrorMessage(status);
+  const message = optionalRawString(payloadObject?.error) ?? defaultErrorMessage(status);
 
   if (status === 401 || status === 403) {
     if (phase === "validate") {
@@ -376,7 +376,7 @@ function stringifyOptionalBoolean(value: unknown) {
 }
 
 function readOptionalString(value: unknown) {
-  return asOptionalString(value);
+  return optionalRawString(value);
 }
 
 function asOptionalObject(value: unknown) {
@@ -384,10 +384,6 @@ function asOptionalObject(value: unknown) {
     return undefined;
   }
   return Object.fromEntries(Object.entries(value));
-}
-
-function asOptionalString(value: unknown) {
-  return typeof value === "string" ? value : undefined;
 }
 
 function asOptionalNumber(value: unknown) {

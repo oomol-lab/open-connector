@@ -1,6 +1,6 @@
 import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 
-import { nullableString, optionalRecord, optionalString, compactObject } from "../../core/cast.ts";
+import { nullableString, optionalBoolean, optionalRecord, optionalString, compactObject } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { dopplerRequest, dopplerRequestWithResponse, readObject } from "./runtime.shared.ts";
 
@@ -52,8 +52,8 @@ async function dopplerListSecrets(input: Record<string, unknown>, accessToken: s
       query: {
         project: asRequiredString(input.project, "project"),
         config: asRequiredString(input.config, "config"),
-        include_managed_secrets: asOptionalBoolean(input.includeManagedSecrets),
-        include_dynamic_secrets: asOptionalBoolean(input.includeDynamicSecrets),
+        include_managed_secrets: optionalBoolean(input.includeManagedSecrets),
+        include_dynamic_secrets: optionalBoolean(input.includeDynamicSecrets),
         dynamic_secrets_ttl_sec: asOptionalNumber(input.dynamicSecretsTtlSec),
       },
     },
@@ -97,8 +97,8 @@ async function dopplerListSecretNames(input: Record<string, unknown>, accessToke
       query: {
         project: asRequiredString(input.project, "project"),
         config: asRequiredString(input.config, "config"),
-        include_managed_secrets: asOptionalBoolean(input.includeManagedSecrets),
-        include_dynamic_secrets: asOptionalBoolean(input.includeDynamicSecrets),
+        include_managed_secrets: optionalBoolean(input.includeManagedSecrets),
+        include_dynamic_secrets: optionalBoolean(input.includeDynamicSecrets),
       },
     },
     fetcher,
@@ -123,7 +123,7 @@ async function dopplerDownloadSecrets(input: Record<string, unknown>, accessToke
         format,
         secrets: optionalString(input.secrets),
         name_transformer: optionalString(input.nameTransformer),
-        include_dynamic_secrets: asOptionalBoolean(input.includeDynamicSecrets),
+        include_dynamic_secrets: optionalBoolean(input.includeDynamicSecrets),
         dynamic_secrets_ttl_sec: asOptionalNumber(input.dynamicSecretsTtlSec),
       },
       headers: {
@@ -238,7 +238,7 @@ async function dopplerIssueDynamicSecretLease(
   const record = readObject(payload, "dynamic secret lease");
 
   return compactObject({
-    success: asOptionalBoolean(record.success),
+    success: optionalBoolean(record.success),
     id: optionalString(record.id),
     expiresAt: optionalString(record.expires_at),
     value: optionalRecord(record.value),
@@ -268,7 +268,7 @@ async function dopplerRevokeDynamicSecretLease(
   const record = optionalRecord(payload);
 
   return {
-    success: record ? (asOptionalBoolean(record.success) ?? true) : true,
+    success: record ? (optionalBoolean(record.success) ?? true) : true,
   };
 }
 
@@ -333,10 +333,6 @@ function asRequiredString(value: unknown, fieldName: string) {
 
 function asOptionalNumber(value: unknown) {
   return typeof value === "number" ? value : undefined;
-}
-
-function asOptionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function asRequiredNumber(value: unknown, fieldName: string) {

@@ -2,7 +2,7 @@ import type { CredentialValidators, ProviderExecutors } from "../../core/types.t
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { optionalInteger, optionalString, requiredString } from "../../core/cast.ts";
+import { optionalBoolean, optionalInteger, optionalString, requiredString } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
@@ -220,10 +220,6 @@ function extractMomentumIoErrorMessage(payload: unknown): string | undefined {
     optionalString(record.detail) ??
     optionalString(record.title)
   );
-}
-
-function optionalBoolean(value: unknown): boolean | undefined {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function optionalStringArray(value: unknown): string[] | undefined {

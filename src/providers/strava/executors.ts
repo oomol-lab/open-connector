@@ -6,6 +6,7 @@ import {
   compactObject,
   optionalBoolean,
   optionalInteger,
+  optionalNumber,
   optionalRecord,
   optionalString,
   requiredRecord,
@@ -634,10 +635,6 @@ function requireNumber(value: unknown, fieldName: string): number {
     return value;
   }
   throw new ProviderRequestError(400, `${fieldName} must be a number`);
-}
-
-function optionalNumber(value: unknown): number | undefined {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 function requireInteger(value: unknown, fieldName: string): number {

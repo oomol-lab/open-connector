@@ -182,10 +182,10 @@ export const featheryActionHandlers: ProviderActionHandlers<"feathery", Feathery
             method: "GET",
             mode: "execute",
             query: compactObject({
-              created_after: readOptionalTrimmedString(input.created_after),
-              created_before: readOptionalTrimmedString(input.created_before),
-              filter_field_id: readOptionalTrimmedString(input.filter_field_id),
-              filter_field_value: readOptionalTrimmedString(input.filter_field_value),
+              created_after: optionalString(input.created_after),
+              created_before: optionalString(input.created_before),
+              filter_field_id: optionalString(input.filter_field_id),
+              filter_field_value: optionalString(input.filter_field_value),
             }),
             signal: context.signal,
           },
@@ -204,7 +204,7 @@ export const featheryActionHandlers: ProviderActionHandlers<"feathery", Feathery
             method: "GET",
             mode: "execute",
             query: compactObject({
-              id: readOptionalTrimmedString(input.id),
+              id: optionalString(input.id),
             }),
             signal: context.signal,
           },
@@ -285,7 +285,7 @@ export const credentialValidators: CredentialValidators = {
       ),
     );
 
-    const team = readOptionalTrimmedString(account.team);
+    const team = optionalString(account.team);
     return {
       profile: {
         accountId: team ? `team:${team}` : "api_key",
@@ -444,17 +444,13 @@ function buildTagsQuery(value: unknown): Record<string, string[]> | undefined {
 }
 
 function validateListUsersInput(input: Record<string, unknown>): void {
-  if (readOptionalTrimmedString(input.filter_field_id) && !readOptionalTrimmedString(input.filter_field_value)) {
+  if (optionalString(input.filter_field_id) && !optionalString(input.filter_field_value)) {
     throw new ProviderRequestError(400, "filter_field_value is required when filter_field_id is provided");
   }
 }
 
-function readOptionalTrimmedString(value: unknown): string | undefined {
-  return optionalString(value);
-}
-
 function readRequiredTrimmedString(value: unknown, field: string): string {
-  const trimmed = readOptionalTrimmedString(value);
+  const trimmed = optionalString(value);
   if (!trimmed) {
     throw new ProviderRequestError(400, `${field} is required`);
   }

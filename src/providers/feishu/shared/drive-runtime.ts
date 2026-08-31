@@ -1,6 +1,6 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
-import { optionalRecord, optionalString } from "../../../core/cast.ts";
+import { optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../../core/cast.ts";
 import { providerInputError, ProviderRequestError } from "../../provider-runtime.ts";
 
 interface FeishuDriveActionHandler {
@@ -448,12 +448,4 @@ function requireBoolean(value: unknown, fieldName: string) {
     throw providerInputError(`${fieldName} is required`);
   }
   return value;
-}
-
-function optionalNumber(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
-}
-
-function optionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }

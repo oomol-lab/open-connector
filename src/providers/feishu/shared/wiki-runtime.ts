@@ -1,5 +1,6 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
+import { optionalBoolean, optionalNumber } from "../../../core/cast.ts";
 import { providerInputError } from "../../provider-runtime.ts";
 
 interface WikiActionHandler {
@@ -309,14 +310,6 @@ function requiredString(value: unknown, field: string) {
 
 function optionalString(value: unknown) {
   return typeof value === "string" && value.length > 0 ? value : undefined;
-}
-
-function optionalNumber(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
-}
-
-function optionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function compact(value: Record<string, unknown>) {

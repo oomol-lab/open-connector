@@ -439,7 +439,7 @@ function normalizeNearEarthObject(payload: Record<string, unknown>) {
     ),
     orbitalData: readOptionalObject(payload.orbital_data),
     links: payload.links ? normalizeLinks(payload.links) : undefined,
-    isSentryObject: readOptionalBoolean(payload.is_sentry_object),
+    isSentryObject: optionalBoolean(payload.is_sentry_object),
     sentryDataUrl: readOptionalString(payload.sentry_data),
   };
 }
@@ -697,10 +697,6 @@ function readRequiredBoolean(value: unknown, fieldName: string): boolean {
   }
 
   return value;
-}
-
-function readOptionalBoolean(value: unknown): boolean | undefined {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function readOptionalObject(value: unknown): Record<string, unknown> | undefined {

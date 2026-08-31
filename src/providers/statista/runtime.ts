@@ -157,11 +157,11 @@ function statistaHeaders(apiKey: string): Record<string, string> {
 
 function statisticsSearchQuery(input: Record<string, unknown>): StatistaQuery {
   return {
-    q: readOptionalNonEmptyString(input.q),
+    q: optionalString(input.q),
     offset: readOptionalIntegerString(input.offset),
     size: readOptionalIntegerString(input.size),
-    date_from: readOptionalNonEmptyString(input.date_from),
-    date_to: readOptionalNonEmptyString(input.date_to),
+    date_from: optionalString(input.date_from),
+    date_to: optionalString(input.date_to),
     premium: typeof input.premium === "boolean" ? String(input.premium) : undefined,
   };
 }
@@ -324,7 +324,7 @@ function readStatistaErrorMessage(payload: unknown): string | undefined {
     return undefined;
   }
 
-  const direct = readOptionalNonEmptyString(record.message) ?? readOptionalNonEmptyString(record.error);
+  const direct = optionalString(record.message) ?? optionalString(record.error);
   if (direct) {
     return direct;
   }
@@ -333,9 +333,7 @@ function readStatistaErrorMessage(payload: unknown): string | undefined {
   for (const error of errors) {
     const errorRecord = optionalRecord(error);
     const message =
-      readOptionalNonEmptyString(errorRecord?.message) ??
-      readOptionalNonEmptyString(errorRecord?.detail) ??
-      readOptionalNonEmptyString(errorRecord?.title);
+      optionalString(errorRecord?.message) ?? optionalString(errorRecord?.detail) ?? optionalString(errorRecord?.title);
     if (message) {
       return message;
     }
@@ -368,15 +366,11 @@ function readObjectArray(value: unknown): Array<Record<string, unknown>> {
 }
 
 function readRequiredString(value: unknown, fieldName: string): string {
-  const text = readOptionalNonEmptyString(value);
+  const text = optionalString(value);
   if (!text) {
     throw new ProviderRequestError(502, `Statista returned invalid ${fieldName}`, value);
   }
   return text;
-}
-
-function readOptionalNonEmptyString(value: unknown): string | undefined {
-  return optionalString(value);
 }
 
 function readNullableString(value: unknown): string | null {

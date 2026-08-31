@@ -57,7 +57,7 @@ export const adobeCommerceActionHandlers: ProviderActionHandlers<"adobe_commerce
       mode: "execute",
       pathSegments: ["products"],
       query: compactObject({
-        fields: readOptionalTrimmedString(input.fields),
+        fields: optionalString(input.fields),
       }),
       appendSearchCriteria(url) {
         appendSearchCriteria(url, input);
@@ -78,7 +78,7 @@ export const adobeCommerceActionHandlers: ProviderActionHandlers<"adobe_commerce
         editMode: optionalBoolean(input.editMode),
         storeId: optionalInteger(input.storeId),
         forceReload: optionalBoolean(input.forceReload),
-        fields: readOptionalTrimmedString(input.fields),
+        fields: optionalString(input.fields),
       }),
     });
 
@@ -97,7 +97,7 @@ export const adobeCommerceActionHandlers: ProviderActionHandlers<"adobe_commerce
       query: compactObject({
         rootCategoryId: optionalInteger(input.rootCategoryId),
         depth: optionalInteger(input.depth),
-        fields: readOptionalTrimmedString(input.fields),
+        fields: optionalString(input.fields),
       }),
     });
 
@@ -115,7 +115,7 @@ export const adobeCommerceActionHandlers: ProviderActionHandlers<"adobe_commerce
       pathSegments: ["categories", String(readRequiredInteger(input.categoryId, "categoryId"))],
       query: compactObject({
         storeId: optionalInteger(input.storeId),
-        fields: readOptionalTrimmedString(input.fields),
+        fields: optionalString(input.fields),
       }),
     });
 
@@ -333,7 +333,7 @@ function appendSearchCriteria(url: URL, input: Record<string, unknown>): void {
       const prefix = `searchCriteria[filter_groups][${groupIndex}][filters][${filterIndex}]`;
       url.searchParams.set(`${prefix}[field]`, requireRequiredString(filterRecord.field, "field"));
       url.searchParams.set(`${prefix}[value]`, requireRequiredString(filterRecord.value, "value"));
-      const conditionType = readOptionalTrimmedString(filterRecord.conditionType);
+      const conditionType = optionalString(filterRecord.conditionType);
       if (conditionType) {
         url.searchParams.set(`${prefix}[condition_type]`, conditionType);
       }
@@ -348,7 +348,7 @@ function appendSearchCriteria(url: URL, input: Record<string, unknown>): void {
     }
     const prefix = `searchCriteria[sortOrders][${index}]`;
     url.searchParams.set(`${prefix}[field]`, requireRequiredString(sortRecord.field, "field"));
-    const direction = readOptionalTrimmedString(sortRecord.direction);
+    const direction = optionalString(sortRecord.direction);
     if (direction) {
       url.searchParams.set(`${prefix}[direction]`, direction);
     }
@@ -429,7 +429,7 @@ function requireObject(value: unknown, fieldName: string): Record<string, unknow
 }
 
 function requireRequiredString(value: unknown, fieldName: string): string {
-  const trimmed = readOptionalTrimmedString(value);
+  const trimmed = optionalString(value);
   if (!trimmed) {
     throw new ProviderRequestError(400, `${fieldName} is required`);
   }
@@ -444,12 +444,8 @@ function readRequiredInteger(value: unknown, fieldName: string): number {
   return parsed;
 }
 
-function readOptionalTrimmedString(value: unknown): string | undefined {
-  return optionalString(value);
-}
-
 function normalizeOptionalStoreCode(value: unknown): string | undefined {
-  return readOptionalTrimmedString(value);
+  return optionalString(value);
 }
 
 function resolveStoreCode(inputStoreCode: unknown, metadataStoreCode: string | undefined): string | undefined {

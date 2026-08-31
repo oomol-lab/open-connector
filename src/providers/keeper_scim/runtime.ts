@@ -139,14 +139,13 @@ export function resolveKeeperScimConfig(input: {
   providerMetadata?: Record<string, unknown>;
   values?: Record<string, unknown>;
 }): KeeperScimConfig {
-  const nodeId =
-    readOptionalTrimmedString(input.values?.nodeId) ?? readOptionalTrimmedString(input.providerMetadata?.nodeId);
+  const nodeId = optionalString(input.values?.nodeId) ?? optionalString(input.providerMetadata?.nodeId);
   if (!nodeId) {
     throw new ProviderRequestError(400, "Keeper SCIM nodeId is required");
   }
 
   const region = readKeeperScimRegion(
-    readOptionalTrimmedString(input.values?.region) ?? readOptionalTrimmedString(input.providerMetadata?.region),
+    optionalString(input.values?.region) ?? optionalString(input.providerMetadata?.region),
   );
   const apiBaseUrl = keeperScimRegionBaseUrls[region];
   return {
@@ -323,15 +322,11 @@ function requireObjectPayload(payload: unknown, label: string): Record<string, u
 }
 
 function readRequiredString(input: Record<string, unknown>, key: string, label: string): string {
-  const value = readOptionalTrimmedString(input[key]);
+  const value = optionalString(input[key]);
   if (!value) {
     throw new ProviderRequestError(400, `${label} is required`);
   }
   return value;
-}
-
-function readOptionalTrimmedString(value: unknown): string | undefined {
-  return optionalString(value);
 }
 
 function readStringArray(value: unknown): string[] {

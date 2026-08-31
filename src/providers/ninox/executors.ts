@@ -204,7 +204,7 @@ async function listRecords(input: Record<string, unknown>, context: ApiKeyProvid
     context,
     phase: "execute",
     query: compactObject({
-      choiceStyle: readOptionalTrimmedString(input.choiceStyle),
+      choiceStyle: optionalString(input.choiceStyle),
     }),
   });
 
@@ -222,8 +222,8 @@ async function getRecord(input: Record<string, unknown>, context: ApiKeyProvider
       context,
       phase: "execute",
       query: compactObject({
-        choiceStyle: readOptionalTrimmedString(input.choiceStyle),
-        style: readOptionalTrimmedString(input.style),
+        choiceStyle: optionalString(input.choiceStyle),
+        style: optionalString(input.style),
       }),
     }),
     "record",
@@ -243,9 +243,9 @@ async function searchRecord(input: Record<string, unknown>, context: ApiKeyProvi
     phase: "execute",
     method: "POST",
     query: compactObject({
-      style: readOptionalTrimmedString(input.style),
-      dateStyle: readOptionalTrimmedString(input.dateStyle),
-      choiceStyle: readOptionalTrimmedString(input.choiceStyle),
+      style: optionalString(input.style),
+      dateStyle: optionalString(input.dateStyle),
+      choiceStyle: optionalString(input.choiceStyle),
     }),
     body: {
       filters,
@@ -568,15 +568,11 @@ function readRecordIdArray(value: unknown, fieldName: string): number[] {
 }
 
 function requireTrimmedString(input: Record<string, unknown>, fieldName: string): string {
-  const value = readOptionalTrimmedString(input[fieldName]);
+  const value = optionalString(input[fieldName]);
   if (!value) {
     throw new ProviderRequestError(400, `${fieldName} is required`);
   }
   return value;
-}
-
-function readOptionalTrimmedString(value: unknown): string | undefined {
-  return optionalString(value);
 }
 
 function requirePositiveInteger(value: unknown, fieldName: string): number {

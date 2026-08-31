@@ -2,7 +2,14 @@ import type { CredentialValidationResult, CredentialValidators, ProviderExecutor
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBoolean,
+  optionalInteger,
+  optionalRecord,
+  optionalString,
+  requiredString,
+} from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const service = "rocketlane";
@@ -56,7 +63,7 @@ export const credentialValidators: CredentialValidators = {
     const firstUser = data[0];
     const accountId = readRocketlaneProviderAccountId(firstUser);
     const firstUserId = readOptionalPositiveInteger(firstUser?.userId, "userId");
-    const firstUserEmail = readOptionalString(firstUser?.email);
+    const firstUserEmail = optionalString(firstUser?.email);
 
     return {
       profile: {
@@ -86,19 +93,19 @@ async function listProjects(
     signal: context.signal,
     query: compactObject({
       pageSize: readOptionalPositiveInteger(input.pageSize, "pageSize"),
-      pageToken: readOptionalString(input.pageToken),
+      pageToken: optionalString(input.pageToken),
       includeFields: readOptionalStringArray(input.includeFields, "includeFields"),
-      includeAllFields: readOptionalBoolean(input.includeAllFields),
-      sortBy: readOptionalString(input.sortBy),
-      sortOrder: readOptionalString(input.sortOrder),
-      match: readOptionalString(input.match),
-      "projectName.eq": readOptionalString(input.projectNameEq),
-      "projectName.cn": readOptionalString(input.projectNameContains),
-      "status.eq": readOptionalString(input.statusEq),
+      includeAllFields: optionalBoolean(input.includeAllFields),
+      sortBy: optionalString(input.sortBy),
+      sortOrder: optionalString(input.sortOrder),
+      match: optionalString(input.match),
+      "projectName.eq": optionalString(input.projectNameEq),
+      "projectName.cn": optionalString(input.projectNameContains),
+      "status.eq": optionalString(input.statusEq),
       "status.oneOf": readOptionalStringArray(input.statusOneOf, "statusOneOf"),
-      "startDate.gt": readOptionalString(input.startDateGt),
-      "startDate.ge": readOptionalString(input.startDateGe),
-      "dueDate.lt": readOptionalString(input.dueDateLt),
+      "startDate.gt": optionalString(input.startDateGt),
+      "startDate.ge": optionalString(input.startDateGe),
+      "dueDate.lt": optionalString(input.dueDateLt),
       "customerId.eq": readOptionalPositiveInteger(input.customerIdEq, "customerIdEq"),
     }),
     phase: "execute",
@@ -122,7 +129,7 @@ async function getProject(
     signal: context.signal,
     query: compactObject({
       includeFields: readOptionalStringArray(input.includeFields, "includeFields"),
-      includeAllFields: readOptionalBoolean(input.includeAllFields),
+      includeAllFields: optionalBoolean(input.includeAllFields),
     }),
     phase: "execute",
   });
@@ -140,20 +147,20 @@ async function listTasks(
     signal: context.signal,
     query: compactObject({
       pageSize: readOptionalPositiveInteger(input.pageSize, "pageSize"),
-      pageToken: readOptionalString(input.pageToken),
+      pageToken: optionalString(input.pageToken),
       includeFields: readOptionalStringArray(input.includeFields, "includeFields"),
-      includeAllFields: readOptionalBoolean(input.includeAllFields),
-      sortBy: readOptionalString(input.sortBy),
-      sortOrder: readOptionalString(input.sortOrder),
-      match: readOptionalString(input.match),
-      "taskName.eq": readOptionalString(input.taskNameEq),
-      "taskName.cn": readOptionalString(input.taskNameContains),
-      "task.status.eq": readOptionalString(input.taskStatusEq),
+      includeAllFields: optionalBoolean(input.includeAllFields),
+      sortBy: optionalString(input.sortBy),
+      sortOrder: optionalString(input.sortOrder),
+      match: optionalString(input.match),
+      "taskName.eq": optionalString(input.taskNameEq),
+      "taskName.cn": optionalString(input.taskNameContains),
+      "task.status.eq": optionalString(input.taskStatusEq),
       "task.status.oneOf": readOptionalStringArray(input.taskStatusOneOf, "taskStatusOneOf"),
       "projectId.eq": readOptionalPositiveInteger(input.projectIdEq, "projectIdEq"),
-      "startDate.gt": readOptionalString(input.startDateGt),
-      "dueDate.lt": readOptionalString(input.dueDateLt),
-      "atRisk.eq": readOptionalBoolean(input.atRiskEq),
+      "startDate.gt": optionalString(input.startDateGt),
+      "dueDate.lt": optionalString(input.dueDateLt),
+      "atRisk.eq": optionalBoolean(input.atRiskEq),
     }),
     phase: "execute",
   });
@@ -176,7 +183,7 @@ async function getTask(
     signal: context.signal,
     query: compactObject({
       includeFields: readOptionalStringArray(input.includeFields, "includeFields"),
-      includeAllFields: readOptionalBoolean(input.includeAllFields),
+      includeAllFields: optionalBoolean(input.includeAllFields),
     }),
     phase: "execute",
   });
@@ -194,16 +201,16 @@ async function listUsers(
     signal: context.signal,
     query: compactObject({
       pageSize: readOptionalPositiveInteger(input.pageSize, "pageSize"),
-      pageToken: readOptionalString(input.pageToken),
+      pageToken: optionalString(input.pageToken),
       includeFields: readOptionalStringArray(input.includeFields, "includeFields"),
-      includeAllFields: readOptionalBoolean(input.includeAllFields),
-      sortBy: readOptionalString(input.sortBy),
-      sortOrder: readOptionalString(input.sortOrder),
-      match: readOptionalString(input.match),
-      "firstName.eq": readOptionalString(input.firstNameEq),
-      "firstName.cn": readOptionalString(input.firstNameContains),
-      "email.eq": readOptionalString(input.emailEq),
-      "email.cn": readOptionalString(input.emailContains),
+      includeAllFields: optionalBoolean(input.includeAllFields),
+      sortBy: optionalString(input.sortBy),
+      sortOrder: optionalString(input.sortOrder),
+      match: optionalString(input.match),
+      "firstName.eq": optionalString(input.firstNameEq),
+      "firstName.cn": optionalString(input.firstNameContains),
+      "email.eq": optionalString(input.emailEq),
+      "email.cn": optionalString(input.emailContains),
       "status.eq": readOptionalStringArray(input.statusEq, "statusEq"),
       "status.oneOf": readOptionalStringArray(input.statusOneOf, "statusOneOf"),
       "type.eq": readOptionalStringArray(input.typeEq, "typeEq"),
@@ -230,7 +237,7 @@ async function getUser(
     signal: context.signal,
     query: compactObject({
       includeFields: readOptionalStringArray(input.includeFields, "includeFields"),
-      includeAllFields: readOptionalBoolean(input.includeAllFields),
+      includeAllFields: optionalBoolean(input.includeAllFields),
     }),
     phase: "execute",
   });
@@ -308,9 +315,9 @@ function readRecordArray(value: unknown, label: string): Record<string, unknown>
 
 function buildAccountLabel(user: Record<string, unknown> | undefined): string {
   if (user) {
-    const fullName = [readOptionalString(user.firstName), readOptionalString(user.lastName)].filter(Boolean).join(" ");
+    const fullName = [optionalString(user.firstName), optionalString(user.lastName)].filter(Boolean).join(" ");
     if (fullName) return fullName;
-    const email = readOptionalString(user.email);
+    const email = optionalString(user.email);
     if (email) return email;
   }
   return "Rocketlane API Key";
@@ -318,7 +325,7 @@ function buildAccountLabel(user: Record<string, unknown> | undefined): string {
 
 function readRocketlaneProviderAccountId(user: Record<string, unknown> | undefined): string | undefined {
   if (!user) return undefined;
-  const email = readOptionalString(user.email);
+  const email = optionalString(user.email);
   if (email) return email;
   const userId = readOptionalPositiveInteger(user.userId, "userId");
   return userId ? String(userId) : undefined;
@@ -338,16 +345,15 @@ function extractRocketlaneErrorMessage(payload: unknown): string | undefined {
   if (typeof payload === "string" && payload.trim() !== "") return payload;
   const record = optionalRecord(payload);
   if (!record) return undefined;
-  const direct =
-    readOptionalString(record.errorMessage) ?? readOptionalString(record.message) ?? readOptionalString(record.error);
+  const direct = optionalString(record.errorMessage) ?? optionalString(record.message) ?? optionalString(record.error);
   if (direct) return direct;
   if (Array.isArray(record.errors)) {
     for (const item of record.errors) {
       const errorRecord = optionalRecord(item);
       const message =
-        readOptionalString(errorRecord?.errorMessage) ??
-        readOptionalString(errorRecord?.message) ??
-        readOptionalString(errorRecord?.error);
+        optionalString(errorRecord?.errorMessage) ??
+        optionalString(errorRecord?.message) ??
+        optionalString(errorRecord?.error);
       if (message) return message;
     }
   }
@@ -374,18 +380,10 @@ function readOptionalNonNegativeInteger(value: unknown, fieldName: string): numb
   return parsed;
 }
 
-function readOptionalString(value: unknown): string | undefined {
-  return optionalString(value);
-}
-
 function readOptionalStringArray(value: unknown, fieldName: string): string[] | undefined {
   if (value === undefined) return undefined;
   if (!Array.isArray(value)) throw new ProviderRequestError(400, `${fieldName} must be an array`);
   const normalized = value.map((item) => optionalString(item)).filter((item): item is string => Boolean(item));
   if (normalized.length === 0) throw new ProviderRequestError(400, `${fieldName} must contain at least one value`);
   return normalized;
-}
-
-function readOptionalBoolean(value: unknown): boolean | undefined {
-  return typeof value === "boolean" ? value : undefined;
 }

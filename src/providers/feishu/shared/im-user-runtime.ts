@@ -1,5 +1,6 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
+import { optionalBoolean } from "../../../core/cast.ts";
 import { ProviderRequestError } from "../../provider-runtime.ts";
 
 interface FeishuImUserActionHandler {
@@ -139,10 +140,6 @@ function optionalString(value: unknown) {
 
 function optionalNumber(value: unknown) {
   return typeof value === "number" ? value : undefined;
-}
-
-function optionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function requireObject(value: unknown, fieldName: string) {

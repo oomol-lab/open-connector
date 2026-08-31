@@ -2,6 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
+import { optionalBoolean, optionalNumber } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const ticketmasterDiscoveryBaseUrl = "https://app.ticketmaster.com/discovery/v2";
@@ -578,10 +579,10 @@ function mapPage(value: unknown) {
   }
 
   return {
-    size: asNumber(page.size) ?? 0,
-    totalElements: asNumber(page.totalElements) ?? 0,
-    totalPages: asNumber(page.totalPages) ?? 0,
-    number: asNumber(page.number) ?? 0,
+    size: optionalNumber(page.size) ?? 0,
+    totalElements: optionalNumber(page.totalElements) ?? 0,
+    totalPages: optionalNumber(page.totalPages) ?? 0,
+    number: optionalNumber(page.number) ?? 0,
   };
 }
 
@@ -664,7 +665,7 @@ function mapClassification(value: Record<string, unknown>) {
     id: asString(value.id) ?? "",
     name: asString(value.name) ?? null,
     locale: asString(value.locale) ?? null,
-    primary: asBoolean(value.primary) ?? null,
+    primary: optionalBoolean(value.primary) ?? null,
     segment: mapEntityReference(value.segment),
     genre: mapEntityReference(value.genre),
     subGenre: mapEntityReference(value.subGenre),
@@ -680,7 +681,7 @@ function mapClassificationList(value: unknown) {
     .map((item) => mapObject(item))
     .filter((item): item is Record<string, unknown> => Boolean(item))
     .map((item) => ({
-      primary: asBoolean(item.primary) ?? null,
+      primary: optionalBoolean(item.primary) ?? null,
       segment: mapEntityReference(item.segment),
       genre: mapEntityReference(item.genre),
       subGenre: mapEntityReference(item.subGenre),
@@ -698,9 +699,9 @@ function mapImages(value: unknown) {
     .map((item) => ({
       url: asString(item.url) ?? "",
       ratio: asString(item.ratio) ?? null,
-      width: asNumber(item.width) ?? null,
-      height: asNumber(item.height) ?? null,
-      fallback: asBoolean(item.fallback) ?? null,
+      width: optionalNumber(item.width) ?? null,
+      height: optionalNumber(item.height) ?? null,
+      fallback: optionalBoolean(item.fallback) ?? null,
       attribution: asString(item.attribution) ?? null,
     }));
 }
@@ -831,14 +832,6 @@ function mapStringRecord(value: unknown) {
 
 function asString(value: unknown) {
   return typeof value === "string" && value.length > 0 ? value : undefined;
-}
-
-function asNumber(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
-}
-
-function asBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function asPositiveInteger(value: unknown) {

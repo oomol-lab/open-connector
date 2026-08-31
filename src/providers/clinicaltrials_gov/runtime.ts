@@ -1,5 +1,6 @@
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
+import { optionalBoolean, optionalNumber } from "../../core/cast.ts";
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const clinicalTrialsGovApiBaseUrl = "https://clinicaltrials.gov/api/v2";
@@ -224,9 +225,9 @@ async function getStudyEligibility(input: Record<string, unknown>, fetcher: type
     eligibility: rawEligibility
       ? {
           criteria: readOptionalString(rawEligibility.eligibilityCriteria) ?? null,
-          healthyVolunteers: readOptionalBoolean(rawEligibility.healthyVolunteers) ?? null,
+          healthyVolunteers: optionalBoolean(rawEligibility.healthyVolunteers) ?? null,
           sex: readOptionalString(rawEligibility.sex) ?? null,
-          genderBased: readOptionalBoolean(rawEligibility.genderBased) ?? null,
+          genderBased: optionalBoolean(rawEligibility.genderBased) ?? null,
           genderDescription: readOptionalString(rawEligibility.genderDescription) ?? null,
           minimumAge: readOptionalString(rawEligibility.minimumAge) ?? null,
           maximumAge: readOptionalString(rawEligibility.maximumAge) ?? null,
@@ -281,8 +282,8 @@ async function getStudyLocations(input: Record<string, unknown>, fetcher: typeof
     locations: (readOptionalRecordArray(contactsLocations?.locations, "ClinicalTrials.gov locations") ?? []).map(
       (location) => {
         const rawGeoPoint = optionalRecord(location.geoPoint);
-        const latitude = readOptionalNumber(rawGeoPoint?.lat);
-        const longitude = readOptionalNumber(rawGeoPoint?.lon);
+        const latitude = optionalNumber(rawGeoPoint?.lat);
+        const longitude = optionalNumber(rawGeoPoint?.lon);
         return {
           facility: readOptionalString(location.facility) ?? null,
           status: readOptionalString(location.status) ?? null,
@@ -318,7 +319,7 @@ async function getStudyResults(input: Record<string, unknown>, fetcher: typeof f
     found: true,
     nctId: identity.nctId,
     briefTitle: identity.briefTitle,
-    hasResults: readOptionalBoolean(payload.hasResults) ?? null,
+    hasResults: optionalBoolean(payload.hasResults) ?? null,
     results: optionalRecord(payload.resultsSection) ?? null,
   };
 }
@@ -348,9 +349,9 @@ async function getStudyDocuments(input: Record<string, unknown>, fetcher: typeof
         uploadDate: readOptionalString(document.uploadDate) ?? null,
         filename: readOptionalString(document.filename) ?? null,
         sizeBytes: readOptionalInteger(document.size) ?? null,
-        hasProtocol: readOptionalBoolean(document.hasProtocol) ?? null,
-        hasStatisticalAnalysisPlan: readOptionalBoolean(document.hasSap) ?? null,
-        hasInformedConsentForm: readOptionalBoolean(document.hasIcf) ?? null,
+        hasProtocol: optionalBoolean(document.hasProtocol) ?? null,
+        hasStatisticalAnalysisPlan: optionalBoolean(document.hasSap) ?? null,
+        hasInformedConsentForm: optionalBoolean(document.hasIcf) ?? null,
         raw: document,
       };
     },
@@ -359,7 +360,7 @@ async function getStudyDocuments(input: Record<string, unknown>, fetcher: typeof
     found: true,
     nctId: identity.nctId,
     briefTitle: identity.briefTitle,
-    noStatisticalAnalysisPlan: readOptionalBoolean(documentModule?.noSap) ?? null,
+    noStatisticalAnalysisPlan: optionalBoolean(documentModule?.noSap) ?? null,
     documents,
   };
 }
@@ -897,10 +898,6 @@ function readRequiredBoolean(value: unknown, label: string) {
   return value;
 }
 
-function readOptionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
-}
-
 function readNumber(value: unknown, label: string) {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     throw new ProviderRequestError(502, `${label} must be a finite number`);
@@ -931,10 +928,6 @@ function formatDecimalNumber(value: number) {
     decimal = `${digits.slice(0, decimalIndex)}.${digits.slice(decimalIndex)}`;
   }
   return negative ? `-${decimal}` : decimal;
-}
-
-function readOptionalNumber(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 function readOptionalInteger(value: unknown) {

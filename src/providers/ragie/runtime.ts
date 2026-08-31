@@ -1,7 +1,7 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject } from "../../core/cast.ts";
+import { compactObject, optionalBoolean, optionalRawString } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 
 const ragieApiBaseUrl = "https://api.ragie.ai";
@@ -77,9 +77,9 @@ function ragieRetrieve(input: Record<string, unknown>, context: RagieActionConte
         query: readRequiredString(input.query, "query"),
         top_k: readOptionalNumber(input.topK),
         filter: readOptionalObject(input.filter),
-        rerank: readOptionalBoolean(input.rerank),
-        partition: readOptionalString(input.partition),
-        recency_bias: readOptionalBoolean(input.recencyBias),
+        rerank: optionalBoolean(input.rerank),
+        partition: optionalRawString(input.partition),
+        recency_bias: optionalBoolean(input.recencyBias),
         max_chunks_per_document: readOptionalNumber(input.maxChunksPerDocument),
       }),
     },
@@ -95,11 +95,11 @@ function ragieListDocuments(input: Record<string, unknown>, context: RagieAction
     {
       path: "/documents",
       query: compactObject({
-        cursor: readOptionalString(input.cursor),
-        filter: readOptionalString(input.filter),
+        cursor: optionalRawString(input.cursor),
+        filter: optionalRawString(input.filter),
         page_size: readOptionalNumber(input.pageSize),
       }),
-      partition: readOptionalString(input.partition),
+      partition: optionalRawString(input.partition),
     },
     context.fetcher,
   ).then((payload) => ({
@@ -113,7 +113,7 @@ function ragieGetDocument(input: Record<string, unknown>, context: RagieActionCo
     context.apiKey,
     {
       path: `/documents/${readRequiredString(input.documentId, "documentId")}`,
-      partition: readOptionalString(input.partition),
+      partition: optionalRawString(input.partition),
     },
     context.fetcher,
   ).then((payload) => mapDetailedDocument(asObject(payload)));
@@ -127,10 +127,10 @@ function ragieCreateDocumentRaw(input: Record<string, unknown>, context: RagieAc
       path: "/documents/raw",
       body: compactObject({
         data: input.data,
-        name: readOptionalString(input.name),
+        name: optionalRawString(input.name),
         metadata: readOptionalObject(input.metadata),
-        partition: readOptionalString(input.partition),
-        external_id: readOptionalString(input.externalId),
+        partition: optionalRawString(input.partition),
+        external_id: optionalRawString(input.externalId),
       }),
     },
     context.fetcher,
@@ -146,10 +146,10 @@ function ragieCreateDocumentFromUrl(input: Record<string, unknown>, context: Rag
       body: compactObject({
         url: readRequiredString(input.url, "url"),
         mode: input.mode,
-        name: readOptionalString(input.name),
+        name: optionalRawString(input.name),
         metadata: readOptionalObject(input.metadata),
-        partition: readOptionalString(input.partition),
-        external_id: readOptionalString(input.externalId),
+        partition: optionalRawString(input.partition),
+        external_id: optionalRawString(input.externalId),
       }),
     },
     context.fetcher,
@@ -162,10 +162,10 @@ function ragiePatchDocumentMetadata(input: Record<string, unknown>, context: Rag
     {
       method: "PATCH",
       path: `/documents/${readRequiredString(input.documentId, "documentId")}/metadata`,
-      partition: readOptionalString(input.partition),
+      partition: optionalRawString(input.partition),
       body: compactObject({
         metadata: readRequiredObject(input.metadata, "metadata"),
-        async: readOptionalBoolean(input.async),
+        async: optionalBoolean(input.async),
       }),
     },
     context.fetcher,
@@ -178,11 +178,11 @@ function ragieGetDocumentContent(input: Record<string, unknown>, context: RagieA
     {
       path: `/documents/${readRequiredString(input.documentId, "documentId")}/content`,
       query: compactObject({
-        media_type: readOptionalString(input.mediaType),
-        download: readOptionalBoolean(input.download),
+        media_type: optionalRawString(input.mediaType),
+        download: optionalBoolean(input.download),
       }),
-      partition: readOptionalString(input.partition),
-      range: readOptionalString(input.range),
+      partition: optionalRawString(input.partition),
+      range: optionalRawString(input.range),
     },
     context.fetcher,
   ).then((payload) => mapDocumentContent(asObject(payload)));
@@ -193,7 +193,7 @@ function ragieGetDocumentSummary(input: Record<string, unknown>, context: RagieA
     context.apiKey,
     {
       path: `/documents/${readRequiredString(input.documentId, "documentId")}/summary`,
-      partition: readOptionalString(input.partition),
+      partition: optionalRawString(input.partition),
     },
     context.fetcher,
   ).then((payload) => mapDocumentSummary(asObject(payload)));
@@ -204,9 +204,9 @@ function ragieGetDocumentChunks(input: Record<string, unknown>, context: RagieAc
     context.apiKey,
     {
       path: `/documents/${readRequiredString(input.documentId, "documentId")}/chunks`,
-      partition: readOptionalString(input.partition),
+      partition: optionalRawString(input.partition),
       query: compactObject({
-        cursor: readOptionalString(input.cursor),
+        cursor: optionalRawString(input.cursor),
         page_size: readOptionalNumber(input.pageSize),
         start_index: readOptionalNumber(input.startIndex),
         end_index: readOptionalNumber(input.endIndex),
@@ -225,9 +225,9 @@ function ragieDeleteDocument(input: Record<string, unknown>, context: RagieActio
     {
       method: "DELETE",
       path: `/documents/${readRequiredString(input.documentId, "documentId")}`,
-      partition: readOptionalString(input.partition),
+      partition: optionalRawString(input.partition),
       query: compactObject({
-        async: readOptionalBoolean(input.async),
+        async: optionalBoolean(input.async),
       }),
     },
     context.fetcher,
@@ -240,7 +240,7 @@ function ragieListPartitions(context: RagieActionContext, input: Record<string, 
     {
       path: "/partitions",
       query: compactObject({
-        cursor: readOptionalString(input.cursor),
+        cursor: optionalRawString(input.cursor),
         page_size: readOptionalNumber(input.pageSize),
       }),
     },
@@ -280,8 +280,8 @@ function ragieUpdatePartition(input: Record<string, unknown>, context: RagieActi
       method: "PATCH",
       path: `/partitions/${readRequiredString(input.partitionId, "partitionId")}`,
       body: compactObject({
-        description: readOptionalString(input.description),
-        context_aware: readOptionalBoolean(input.contextAware),
+        description: optionalRawString(input.description),
+        context_aware: optionalBoolean(input.contextAware),
         metadata_schema: readOptionalObject(input.metadataSchema),
       }),
     },
@@ -308,7 +308,7 @@ function ragieDeletePartition(input: Record<string, unknown>, context: RagieActi
       method: "DELETE",
       path: `/partitions/${readRequiredString(input.partitionId, "partitionId")}`,
       query: compactObject({
-        async_deletion: readOptionalBoolean(input.asyncDeletion),
+        async_deletion: optionalBoolean(input.asyncDeletion),
       }),
     },
     context.fetcher,
@@ -335,11 +335,11 @@ function ragieListConnections(input: Record<string, unknown>, context: RagieActi
     {
       path: "/connections",
       query: compactObject({
-        cursor: readOptionalString(input.cursor),
-        filter: readOptionalString(input.filter),
+        cursor: optionalRawString(input.cursor),
+        filter: optionalRawString(input.filter),
         page_size: readOptionalNumber(input.pageSize),
       }),
-      partition: readOptionalString(input.partition),
+      partition: optionalRawString(input.partition),
     },
     context.fetcher,
   ).then((payload) => ({
@@ -356,14 +356,14 @@ function ragieCreateOauthRedirectUrl(input: Record<string, unknown>, context: Ra
       path: "/connections/oauth",
       body: compactObject({
         redirect_uri: readRequiredString(input.redirectUri, "redirectUri"),
-        source_type: readOptionalString(input.sourceType),
-        theme: readOptionalString(input.theme),
+        source_type: optionalRawString(input.sourceType),
+        theme: optionalRawString(input.theme),
         config: readOptionalObject(input.config),
         metadata: readOptionalObject(input.metadata),
-        partition: readOptionalString(input.partition),
+        partition: optionalRawString(input.partition),
         page_limit: readOptionalNumber(input.pageLimit),
         mode: input.mode,
-        authenticator_id: readOptionalString(input.authenticatorId),
+        authenticator_id: optionalRawString(input.authenticatorId),
       }),
     },
     context.fetcher,
@@ -451,15 +451,15 @@ async function assertRagieResponse(response: Response, mode: "validate" | "execu
 async function readRagieError(response: Response) {
   try {
     const payload = (await response.json()) as Record<string, unknown>;
-    const detail = readOptionalString(payload.detail);
+    const detail = optionalRawString(payload.detail);
     if (detail) {
       return detail;
     }
-    const error = readOptionalString(payload.error);
+    const error = optionalRawString(payload.error);
     if (error) {
       return error;
     }
-    const message = readOptionalString(payload.message);
+    const message = optionalRawString(payload.message);
     if (message) {
       return message;
     }
@@ -471,8 +471,8 @@ async function readRagieError(response: Response) {
 function buildPartitionBody(input: Record<string, unknown>, includeName: boolean) {
   return compactObject({
     name: includeName ? readRequiredString(input.name, "name") : undefined,
-    description: readOptionalString(input.description),
-    context_aware: readOptionalBoolean(input.contextAware),
+    description: optionalRawString(input.description),
+    context_aware: optionalBoolean(input.contextAware),
     metadata_schema: readOptionalObject(input.metadataSchema),
     ...buildLimitBody(input),
   });
@@ -520,7 +520,7 @@ function mapDocument(payload: Record<string, unknown>) {
     updatedAt: readRequiredString(payload.updated_at, "updated_at"),
     pageCount: readOptionalNumber(payload.page_count),
     chunkCount: readOptionalNumber(payload.chunk_count),
-    externalId: readOptionalString(payload.external_id),
+    externalId: optionalRawString(payload.external_id),
   });
 }
 
@@ -557,7 +557,7 @@ function mapDocumentChunk(payload: Record<string, unknown>) {
 
 function mapPagination(payload: Record<string, unknown>) {
   return {
-    nextCursor: readOptionalString(payload.next_cursor) ?? null,
+    nextCursor: optionalRawString(payload.next_cursor) ?? null,
     totalCount: readOptionalNumber(payload.total_count) ?? 0,
   };
 }
@@ -565,13 +565,13 @@ function mapPagination(payload: Record<string, unknown>) {
 function mapPartition(payload: Record<string, unknown>) {
   return compactObject({
     name: readRequiredString(payload.name, "name"),
-    isDefault: readOptionalBoolean(payload.is_default) ?? false,
-    description: readOptionalString(payload.description),
-    contextAware: readOptionalBoolean(payload.context_aware) ?? false,
+    isDefault: optionalBoolean(payload.is_default) ?? false,
+    description: optionalRawString(payload.description),
+    contextAware: optionalBoolean(payload.context_aware) ?? false,
     metadataSchema: readOptionalObject(payload.metadata_schema),
     limits: camelizeFlatObject(readOptionalObject(payload.limits) ?? {}),
     stats: camelizeFlatObject(readOptionalObject(payload.stats) ?? {}),
-    limitExceededAt: readOptionalString(payload.limit_exceeded_at),
+    limitExceededAt: optionalRawString(payload.limit_exceeded_at),
   });
 }
 
@@ -590,19 +590,19 @@ function mapConnection(payload: Record<string, unknown>) {
     name: readRequiredString(payload.name, "name"),
     type: readRequiredString(payload.type, "type"),
     source: readOptionalObject(payload.source),
-    enabled: readOptionalBoolean(payload.enabled) ?? false,
+    enabled: optionalBoolean(payload.enabled) ?? false,
     metadata: readOptionalObject(payload.metadata) ?? {},
     createdAt: readRequiredString(payload.created_at, "created_at"),
     updatedAt: readRequiredString(payload.updated_at, "updated_at"),
     pageLimit: readOptionalNumber(payload.page_limit),
-    disabledBySystem: readOptionalBoolean(payload.disabled_by_system) ?? false,
+    disabledBySystem: optionalBoolean(payload.disabled_by_system) ?? false,
     disabledBySystemReason: readNullableString(payload.disabled_by_system_reason),
   });
 }
 
 function mapMetadataPatchResult(payload: Record<string, unknown>) {
   return compactObject({
-    status: readOptionalString(payload.status),
+    status: optionalRawString(payload.status),
     metadata: readOptionalObject(payload.metadata),
   });
 }
@@ -651,23 +651,15 @@ function readRequiredString(value: unknown, fieldName: string) {
   return value;
 }
 
-function readOptionalString(value: unknown) {
-  return typeof value === "string" ? value : undefined;
-}
-
 function readNullableString(value: unknown) {
   if (value === null) {
     return null;
   }
-  return readOptionalString(value);
+  return optionalRawString(value);
 }
 
 function readOptionalNumber(value: unknown) {
   return typeof value === "number" ? value : undefined;
-}
-
-function readOptionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function readOptionalObject(value: unknown) {

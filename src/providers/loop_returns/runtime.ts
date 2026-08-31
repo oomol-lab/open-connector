@@ -2,7 +2,14 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString, positiveInteger } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBooleanOrNull,
+  optionalRawString,
+  optionalRecord,
+  optionalString,
+  positiveInteger,
+} from "../../core/cast.ts";
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const loopReturnsApiBaseUrl = "https://api.loopreturns.com/api/v1";
@@ -28,13 +35,13 @@ export const loopReturnsActionHandlers: ProviderActionHandlers<"loop_returns", L
       apiKey: context.apiKey,
       path: "/warehouse/return/list",
       query: compactObject({
-        from: optionalQueryString(input.from),
-        to: optionalQueryString(input.to),
-        filter: optionalQueryString(input.filter),
-        state: optionalQueryString(input.state),
+        from: optionalRawString(input.from),
+        to: optionalRawString(input.to),
+        filter: optionalRawString(input.filter),
+        state: optionalRawString(input.state),
         paginate: true,
         pageSize: optionalQueryNumber(input.pageSize),
-        cursor: optionalQueryString(input.cursor),
+        cursor: optionalRawString(input.cursor),
       }),
       fetcher: context.fetcher,
       signal: context.signal,
@@ -48,8 +55,8 @@ export const loopReturnsActionHandlers: ProviderActionHandlers<"loop_returns", L
     const query = compactObject({
       return_id: optionalQueryNumber(input.returnId),
       order_id: optionalQueryNumber(input.orderId),
-      order_name: optionalQueryString(input.orderName),
-      currency_type: optionalQueryString(input.currencyType),
+      order_name: optionalRawString(input.orderName),
+      currency_type: optionalRawString(input.currencyType),
     });
     const identifierCount = [query.return_id, query.order_id, query.order_name].filter(
       (value) => value !== undefined,
@@ -379,7 +386,7 @@ function normalizeDestination(record: Record<string, unknown>): Record<string, u
     id: readProviderInteger(record.id, "destination id"),
     type: nullableString(record.type),
     name: nullableString(record.name),
-    enabled: nullableBoolean(record.enabled),
+    enabled: optionalBooleanOrNull(record.enabled),
     providerLocationId: nullableInteger(record.provider_location_id),
     address: normalizeAddress(record.address),
     raw: record,
@@ -453,16 +460,8 @@ function nullableStringFromValue(value: unknown): string | null {
   return null;
 }
 
-function nullableBoolean(value: unknown): boolean | null {
-  return typeof value === "boolean" ? value : null;
-}
-
 function isValidationAuthError(error: unknown): error is ProviderRequestError {
   return error instanceof ProviderRequestError && error.status === 400;
-}
-
-function optionalQueryString(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
 }
 
 function optionalQueryNumber(value: unknown): number | undefined {

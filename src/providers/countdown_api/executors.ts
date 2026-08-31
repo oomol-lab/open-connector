@@ -105,17 +105,17 @@ async function searchProducts(input: Record<string, unknown>, context: Countdown
     ...context,
     params: compactObject({
       type: "search",
-      "ebay domain": optionalStringValue(input.ebay_domain),
-      "search term": optionalStringValue(input.search_term),
-      url: optionalStringValue(input.ebay_url),
+      "ebay domain": optionalString(input.ebay_domain),
+      "search term": optionalString(input.search_term),
+      url: optionalString(input.ebay_url),
       page: optionalIntegerString(input.page),
       "max page": optionalIntegerString(input.max_page),
-      "category id": optionalStringValue(input.category_id),
-      "listing type": optionalStringValue(input.listing_type),
-      condition: optionalStringValue(input.condition),
-      "sort by": optionalStringValue(input.sort_by),
+      "category id": optionalString(input.category_id),
+      "listing type": optionalString(input.listing_type),
+      condition: optionalString(input.condition),
+      "sort by": optionalString(input.sort_by),
       num: optionalIntegerString(input.num),
-      facets: optionalStringValue(input.facets),
+      facets: optionalString(input.facets),
       "sold items": optionalBooleanString(input.sold_items),
       "completed items": optionalBooleanString(input.completed_items),
       "authorized sellers": optionalBooleanString(input.authorized_sellers),
@@ -125,10 +125,10 @@ async function searchProducts(input: Record<string, unknown>, context: Countdown
       "deals and savings": optionalBooleanString(input.deals_and_savings),
       "sale items": optionalBooleanString(input.sale_items),
       "allow rewritten results": optionalBooleanString(input.allow_rewritten_results),
-      "customer location": optionalStringValue(input.customer_location),
-      "customer zipcode": optionalStringValue(input.customer_zipcode),
-      "include fields": optionalStringValue(input.include_fields),
-      "exclude fields": optionalStringValue(input.exclude_fields),
+      "customer location": optionalString(input.customer_location),
+      "customer zipcode": optionalString(input.customer_zipcode),
+      "include fields": optionalString(input.include_fields),
+      "exclude fields": optionalString(input.exclude_fields),
     }),
     phase: "execute",
   });
@@ -145,16 +145,16 @@ async function getProduct(input: Record<string, unknown>, context: CountdownApiC
     ...context,
     params: compactObject({
       type: "product",
-      "ebay domain": optionalStringValue(input.ebay_domain),
-      epid: optionalStringValue(input.epid),
-      gtin: optionalStringValue(input.gtin),
-      url: optionalStringValue(input.ebay_url),
+      "ebay domain": optionalString(input.ebay_domain),
+      epid: optionalString(input.epid),
+      gtin: optionalString(input.gtin),
+      url: optionalString(input.ebay_url),
       "skip gtin cache": optionalBooleanString(input.skip_gtin_cache),
       "include parts compatibility": optionalBooleanString(input.include_parts_compatibility),
-      "customer location": optionalStringValue(input.customer_location),
-      "customer zipcode": optionalStringValue(input.customer_zipcode),
-      "include fields": optionalStringValue(input.include_fields),
-      "exclude fields": optionalStringValue(input.exclude_fields),
+      "customer location": optionalString(input.customer_location),
+      "customer zipcode": optionalString(input.customer_zipcode),
+      "include fields": optionalString(input.include_fields),
+      "exclude fields": optionalString(input.exclude_fields),
     }),
     phase: "execute",
   });
@@ -288,10 +288,6 @@ function readRequiredString(value: unknown, fieldName: string): string {
     throw new ProviderRequestError(400, `${fieldName} is required`);
   }
   return text;
-}
-
-function optionalStringValue(value: unknown): string | undefined {
-  return optionalString(value);
 }
 
 function optionalIntegerString(value: unknown): string | undefined {

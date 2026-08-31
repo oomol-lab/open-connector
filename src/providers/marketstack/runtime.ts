@@ -4,6 +4,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
   compactObject,
+  optionalBooleanOrNull,
   optionalInteger,
   optionalRecord,
   optionalString,
@@ -255,8 +256,8 @@ function normalizeTickerSummary(input: Record<string, unknown>): Record<string, 
   return {
     name: nullableString(input.name),
     ticker: nullableString(input.ticker),
-    hasEod: nullableBoolean(input.has_eod),
-    hasIntraday: nullableBoolean(input.has_intraday),
+    hasEod: optionalBooleanOrNull(input.has_eod),
+    hasIntraday: optionalBooleanOrNull(input.has_intraday),
     stockExchange: normalizeOptionalStockExchange(optionalRecord(input.stock_exchange)),
   };
 }
@@ -376,8 +377,4 @@ function nullableString(value: unknown): string | null {
 
 function nullableNumber(value: unknown): number | null {
   return typeof value === "number" ? value : null;
-}
-
-function nullableBoolean(value: unknown): boolean | null {
-  return typeof value === "boolean" ? value : null;
 }

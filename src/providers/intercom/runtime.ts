@@ -1,7 +1,7 @@
 import type { CredentialValidationResult, ResolvedCredential } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -78,7 +78,7 @@ export const intercomActionHandlers: ProviderActionHandlers<"intercom", Intercom
       providerMetadata: context.providerMetadata,
       phase: "execute",
       query: compactObject({
-        display_avatar: readOptionalBoolean(input.displayAvatar),
+        display_avatar: optionalBoolean(input.displayAvatar),
       }),
     });
 
@@ -112,7 +112,7 @@ export const intercomActionHandlers: ProviderActionHandlers<"intercom", Intercom
       phase: "execute",
       query: compactObject({
         per_page: readOptionalInteger(input.perPage),
-        starting_after: readOptionalString(input.startingAfter),
+        starting_after: optionalString(input.startingAfter),
       }),
     });
 
@@ -220,8 +220,8 @@ export const intercomActionHandlers: ProviderActionHandlers<"intercom", Intercom
       query: compactObject({
         page: readOptionalInteger(input.page),
         per_page: readOptionalInteger(input.perPage),
-        order: readOptionalString(input.order),
-        starting_after: readOptionalString(input.startingAfter),
+        order: optionalString(input.order),
+        starting_after: optionalString(input.startingAfter),
       }),
     });
 
@@ -242,8 +242,8 @@ export const intercomActionHandlers: ProviderActionHandlers<"intercom", Intercom
       phase: "execute",
       notFoundAsInvalidInput: true,
       query: compactObject({
-        company_id: readOptionalString(input.companyId),
-        name: readOptionalString(input.name),
+        company_id: optionalString(input.companyId),
+        name: optionalString(input.name),
       }),
     });
 
@@ -260,7 +260,7 @@ export const intercomActionHandlers: ProviderActionHandlers<"intercom", Intercom
       phase: "execute",
       query: compactObject({
         per_page: readOptionalInteger(input.perPage),
-        starting_after: readOptionalString(input.startingAfter),
+        starting_after: optionalString(input.startingAfter),
       }),
     });
 
@@ -281,7 +281,7 @@ export const intercomActionHandlers: ProviderActionHandlers<"intercom", Intercom
       phase: "execute",
       notFoundAsInvalidInput: true,
       query: compactObject({
-        display_as: readOptionalString(input.displayAs),
+        display_as: optionalString(input.displayAs),
       }),
     });
 
@@ -300,7 +300,7 @@ export const intercomActionHandlers: ProviderActionHandlers<"intercom", Intercom
       phase: "execute",
       notFoundAsInvalidInput: true,
       body: compactObject({
-        message_type: readOptionalString(input.messageType) ?? "comment",
+        message_type: optionalString(input.messageType) ?? "comment",
         type: "admin",
         admin_id: readRequiredString(input.adminId, "adminId", "action input"),
         body: readRequiredString(input.body, "body", "action input"),
@@ -326,7 +326,7 @@ export const intercomActionHandlers: ProviderActionHandlers<"intercom", Intercom
         message_type: "close",
         type: "admin",
         admin_id: readRequiredString(input.adminId, "adminId", "action input"),
-        body: readOptionalString(input.body),
+        body: optionalString(input.body),
       }),
     });
 
@@ -364,11 +364,11 @@ export const intercomActionHandlers: ProviderActionHandlers<"intercom", Intercom
       phase: "execute",
       query: compactObject({
         type: "user",
-        user_id: readOptionalString(input.userId),
-        email: readOptionalString(input.email),
-        intercom_user_id: readOptionalString(input.intercomUserId),
+        user_id: optionalString(input.userId),
+        email: optionalString(input.email),
+        intercom_user_id: optionalString(input.intercomUserId),
         per_page: readOptionalInteger(input.perPage),
-        summary: readOptionalBoolean(input.summary),
+        summary: optionalBoolean(input.summary),
       }),
     });
 
@@ -400,8 +400,8 @@ export const intercomActionHandlers: ProviderActionHandlers<"intercom", Intercom
       providerMetadata: context.providerMetadata,
       phase: "execute",
       query: compactObject({
-        type: readOptionalString(input.type),
-        count: readOptionalString(input.count),
+        type: optionalString(input.type),
+        count: optionalString(input.count),
       }),
     });
 
@@ -471,7 +471,7 @@ export const intercomActionHandlers: ProviderActionHandlers<"intercom", Intercom
       phase: "execute",
       query: compactObject({
         per_page: readOptionalInteger(input.perPage),
-        starting_after: readOptionalString(input.startingAfter),
+        starting_after: optionalString(input.startingAfter),
       }),
     });
 
@@ -513,11 +513,11 @@ export async function validateIntercomOAuthCredential(
 
   const adminId = readRequiredString(payload.id, "id", "current admin");
   const app = optionalRecord(payload.app);
-  const workspaceIdCode = readOptionalString(app?.id_code);
-  const workspaceName = readOptionalString(app?.name);
-  const workspaceRegion = readOptionalString(app?.region);
-  const email = readOptionalString(payload.email);
-  const name = readOptionalString(payload.name);
+  const workspaceIdCode = optionalString(app?.id_code);
+  const workspaceName = optionalString(app?.name);
+  const workspaceRegion = optionalString(app?.region);
+  const email = optionalString(payload.email);
+  const name = optionalString(payload.name);
   const providerAccountId = workspaceIdCode ? `${workspaceIdCode}:${adminId}` : adminId;
   const accountLabel = buildIntercomAccountLabel({
     workspaceName,
@@ -654,12 +654,12 @@ function resolveIntercomApiBaseUrl(
   providerMetadata?: { workspaceRegion?: string; apiBaseUrl?: string } | Record<string, unknown>,
 ): string {
   const metadata = providerMetadata as Record<string, unknown> | undefined;
-  const apiBaseUrl = readOptionalString(metadata?.apiBaseUrl) ?? readOptionalString(metadata?.baseUrl);
+  const apiBaseUrl = optionalString(metadata?.apiBaseUrl) ?? optionalString(metadata?.baseUrl);
   if (apiBaseUrl) {
     return normalizeIntercomApiBaseUrl(apiBaseUrl);
   }
 
-  const region = readOptionalString(metadata?.workspaceRegion) ?? readOptionalString(metadata?.region);
+  const region = optionalString(metadata?.workspaceRegion) ?? optionalString(metadata?.region);
   if (region) {
     const resolved = intercomRegionBaseUrlByCode[region.toUpperCase()];
     if (resolved) {
@@ -694,7 +694,7 @@ function normalizeIntercomApiBaseUrl(value: string): string {
 
 function buildIntercomPaginationRequest(input: Record<string, unknown>): Record<string, unknown> | undefined {
   const perPage = readOptionalInteger(input.perPage);
-  const startingAfter = readOptionalString(input.startingAfter);
+  const startingAfter = optionalString(input.startingAfter);
   if (perPage === undefined && startingAfter === undefined) {
     return undefined;
   }
@@ -707,9 +707,9 @@ function buildIntercomPaginationRequest(input: Record<string, unknown>): Record<
 
 function buildIntercomContactBody(input: Record<string, unknown>): Record<string, unknown> {
   return compactObject({
-    role: readOptionalString(input.role),
-    external_id: readOptionalString(input.externalId),
-    email: readOptionalString(input.email),
+    role: optionalString(input.role),
+    external_id: optionalString(input.externalId),
+    email: optionalString(input.email),
     phone: readNullableString(input.phone),
     name: readNullableString(input.name),
     avatar: readNullableString(input.avatar),
@@ -722,7 +722,7 @@ function buildIntercomContactBody(input: Record<string, unknown>): Record<string
 }
 
 function validateCreateContactInput(input: Record<string, unknown>): void {
-  if (!readOptionalString(input.email) && !readOptionalString(input.externalId) && !readOptionalString(input.role)) {
+  if (!optionalString(input.email) && !optionalString(input.externalId) && !optionalString(input.role)) {
     throw new ProviderRequestError(400, "create_contact requires at least one of email, externalId, or role");
   }
 }
@@ -735,7 +735,7 @@ function validateUpdateContactInput(input: Record<string, unknown>): void {
 }
 
 function validateGetCompanyInput(input: Record<string, unknown>): void {
-  const provided = [readOptionalString(input.companyId), readOptionalString(input.name)].filter((value) => value);
+  const provided = [optionalString(input.companyId), optionalString(input.name)].filter((value) => value);
   if (provided.length !== 1) {
     throw new ProviderRequestError(400, "get_company requires exactly one of companyId or name");
   }
@@ -743,9 +743,9 @@ function validateGetCompanyInput(input: Record<string, unknown>): void {
 
 function validateListEventsInput(input: Record<string, unknown>): void {
   const provided = [
-    readOptionalString(input.userId),
-    readOptionalString(input.email),
-    readOptionalString(input.intercomUserId),
+    optionalString(input.userId),
+    optionalString(input.email),
+    optionalString(input.intercomUserId),
   ].filter((value) => value);
   if (provided.length !== 1) {
     throw new ProviderRequestError(400, "list_events requires exactly one of userId, email, or intercomUserId");
@@ -768,8 +768,8 @@ function normalizeIntercomPagination(payload: Record<string, unknown>): Intercom
   const pages = optionalRecord(payload.pages);
   const next = optionalRecord(pages?.next);
   return {
-    hasMore: next != null && readOptionalString(next.starting_after) != null,
-    nextStartingAfter: readOptionalString(next?.starting_after) ?? null,
+    hasMore: next != null && optionalString(next.starting_after) != null,
+    nextStartingAfter: optionalString(next?.starting_after) ?? null,
     page: readOptionalInteger(pages?.page) ?? null,
     perPage: readOptionalInteger(pages?.per_page) ?? null,
     totalPages: readOptionalInteger(pages?.total_pages) ?? null,
@@ -782,11 +782,7 @@ function extractIntercomErrorMessage(payload: unknown): string | undefined {
   const errors = Array.isArray(body?.errors) ? body.errors : undefined;
   const firstError = errors?.find((value) => optionalRecord(value) != null);
   const firstErrorRecord = optionalRecord(firstError);
-  return (
-    readOptionalString(firstErrorRecord?.message) ??
-    readOptionalString(body?.message) ??
-    readOptionalString(body?.error)
-  );
+  return optionalString(firstErrorRecord?.message) ?? optionalString(body?.message) ?? optionalString(body?.error);
 }
 
 function looksLikeAuthError(message: string): boolean {
@@ -809,12 +805,8 @@ function readObjectArray(value: unknown): Array<Record<string, unknown>> {
   return value.filter((item): item is Record<string, unknown> => optionalRecord(item) != null);
 }
 
-function readOptionalString(value: unknown): string | undefined {
-  return optionalString(value);
-}
-
 function readRequiredString(value: unknown, fieldName: string, context: string): string {
-  const stringValue = readOptionalString(value);
+  const stringValue = optionalString(value);
   if (!stringValue) {
     throw new ProviderRequestError(400, `${fieldName} is required for ${context}`);
   }
@@ -849,22 +841,18 @@ function readNullableInteger(value: unknown): number | null | undefined {
   return readOptionalInteger(value);
 }
 
-function readOptionalBoolean(value: unknown): boolean | undefined {
-  return typeof value === "boolean" ? value : undefined;
-}
-
 function readNullableBoolean(value: unknown): boolean | null | undefined {
   if (value === null) {
     return null;
   }
-  return readOptionalBoolean(value);
+  return optionalBoolean(value);
 }
 
 function readNullableString(value: unknown): string | null | undefined {
   if (value === null) {
     return null;
   }
-  return readOptionalString(value);
+  return optionalString(value);
 }
 
 function readNullableObject(value: unknown): Record<string, unknown> | null | undefined {

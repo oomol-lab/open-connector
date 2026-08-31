@@ -1,5 +1,6 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
+import { optionalNumber } from "../../../core/cast.ts";
 import { providerInputError, ProviderRequestError } from "../../provider-runtime.ts";
 
 interface ImOrganizeActionHandler {
@@ -428,10 +429,6 @@ function requiredProviderString(value: unknown, field: string) {
 
 function optionalString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
-}
-
-function optionalNumber(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 function errorMessage(error: unknown) {

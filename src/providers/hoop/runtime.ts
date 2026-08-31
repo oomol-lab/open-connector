@@ -47,16 +47,16 @@ export const hoopActionHandlers: ProviderActionHandlers<"hoop", HoopActionHandle
       signal: context.signal,
       phase: "execute",
       query: compactObject({
-        agent_id: readOptionalTrimmedString(input.agentId),
-        tags: readOptionalTrimmedString(input.tags),
-        tag_selector: readOptionalTrimmedString(input.tagSelector),
-        search: readOptionalTrimmedString(input.search),
-        type: readOptionalTrimmedString(input.type),
-        subtype: readOptionalTrimmedString(input.subtype),
-        managed_by: readOptionalTrimmedString(input.managedBy),
-        resource_name: readOptionalTrimmedString(input.resourceName),
-        attribute: readOptionalTrimmedString(input.attribute),
-        connection_ids: readOptionalTrimmedString(input.connectionIds),
+        agent_id: optionalString(input.agentId),
+        tags: optionalString(input.tags),
+        tag_selector: optionalString(input.tagSelector),
+        search: optionalString(input.search),
+        type: optionalString(input.type),
+        subtype: optionalString(input.subtype),
+        managed_by: optionalString(input.managedBy),
+        resource_name: optionalString(input.resourceName),
+        attribute: optionalString(input.attribute),
+        connection_ids: optionalString(input.connectionIds),
         page_size: optionalInteger(input.pageSize),
         page: optionalInteger(input.page),
       }),
@@ -75,15 +75,15 @@ export const hoopActionHandlers: ProviderActionHandlers<"hoop", HoopActionHandle
       signal: context.signal,
       phase: "execute",
       query: compactObject({
-        user: readOptionalTrimmedString(input.user),
-        connection: readOptionalTrimmedString(input.connectionName),
-        type: readOptionalTrimmedString(input.type),
-        "review.approver": readOptionalTrimmedString(input.reviewApprover),
-        "review.status": readOptionalTrimmedString(input.reviewStatus),
-        correlation_id: readOptionalTrimmedString(input.correlationId),
-        jira_issue_key: readOptionalTrimmedString(input.jiraIssueKey),
-        start_date: readOptionalTrimmedString(input.startDate),
-        end_date: readOptionalTrimmedString(input.endDate),
+        user: optionalString(input.user),
+        connection: optionalString(input.connectionName),
+        type: optionalString(input.type),
+        "review.approver": optionalString(input.reviewApprover),
+        "review.status": optionalString(input.reviewStatus),
+        correlation_id: optionalString(input.correlationId),
+        jira_issue_key: optionalString(input.jiraIssueKey),
+        start_date: optionalString(input.startDate),
+        end_date: optionalString(input.endDate),
         limit: optionalInteger(input.limit),
         offset: optionalInteger(input.offset),
       }),
@@ -203,11 +203,7 @@ function readErrorMessage(payload: unknown): string | undefined {
   if (!object) {
     return undefined;
   }
-  return (
-    readOptionalTrimmedString(object.message) ??
-    readOptionalTrimmedString(object.error) ??
-    readOptionalTrimmedString(object.detail)
-  );
+  return optionalString(object.message) ?? optionalString(object.error) ?? optionalString(object.detail);
 }
 
 interface HoopUserInfo {
@@ -220,7 +216,7 @@ interface HoopUserInfo {
 
 function normalizeUserInfo(payload: unknown): HoopUserInfo {
   const data = requireObject(payload, "userinfo");
-  const subject = readOptionalTrimmedString(data.subject) ?? readOptionalTrimmedString(data.sub);
+  const subject = optionalString(data.subject) ?? optionalString(data.sub);
   if (!subject) {
     throw new ProviderRequestError(502, "Invalid Hoop userinfo response", data);
   }
@@ -229,11 +225,11 @@ function normalizeUserInfo(payload: unknown): HoopUserInfo {
     subject,
     raw: data,
   };
-  const email = readOptionalTrimmedString(data.email);
+  const email = optionalString(data.email);
   if (email) {
     user.email = email;
   }
-  const name = readOptionalTrimmedString(data.name);
+  const name = optionalString(data.name);
   if (name) {
     user.name = name;
   }
@@ -247,12 +243,12 @@ function normalizeUserInfo(payload: unknown): HoopUserInfo {
 function normalizeConnection(payload: unknown): Record<string, unknown> {
   const data = requireObject(payload, "connection");
   return compactObject({
-    name: readOptionalTrimmedString(data.name),
-    type: readOptionalTrimmedString(data.type),
-    subtype: readOptionalTrimmedString(data.subtype),
-    status: readOptionalTrimmedString(data.status),
-    agentId: readOptionalTrimmedString(data.agent_id) ?? readOptionalTrimmedString(data.agentId),
-    resourceName: readOptionalTrimmedString(data.resource_name) ?? readOptionalTrimmedString(data.resourceName),
+    name: optionalString(data.name),
+    type: optionalString(data.type),
+    subtype: optionalString(data.subtype),
+    status: optionalString(data.status),
+    agentId: optionalString(data.agent_id) ?? optionalString(data.agentId),
+    resourceName: optionalString(data.resource_name) ?? optionalString(data.resourceName),
     raw: data,
   });
 }
@@ -260,13 +256,11 @@ function normalizeConnection(payload: unknown): Record<string, unknown> {
 function normalizeSession(payload: unknown): Record<string, unknown> {
   const data = requireObject(payload, "session");
   return compactObject({
-    id: readOptionalTrimmedString(data.id),
+    id: optionalString(data.id),
     connectionName:
-      readOptionalTrimmedString(data.connection) ??
-      readOptionalTrimmedString(data.connection_name) ??
-      readOptionalTrimmedString(data.connectionName),
-    status: readOptionalTrimmedString(data.status),
-    user: readOptionalTrimmedString(data.user),
+      optionalString(data.connection) ?? optionalString(data.connection_name) ?? optionalString(data.connectionName),
+    status: optionalString(data.status),
+    user: optionalString(data.user),
     raw: data,
   });
 }
@@ -297,8 +291,4 @@ function readStringArray(value: unknown): string[] | undefined {
   return Array.isArray(value)
     ? value.map((item) => optionalString(item)).filter((item): item is string => item !== undefined)
     : undefined;
-}
-
-function readOptionalTrimmedString(value: unknown): string | undefined {
-  return optionalString(value);
 }

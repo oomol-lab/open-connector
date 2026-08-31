@@ -1,7 +1,7 @@
 import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
 import type { DopplerMarketingAutomationActionName } from "./actions.ts";
 
-import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { optionalBooleanOrNull, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -356,10 +356,10 @@ function normalizeList(record: Record<string, unknown>) {
     currentStatus: readNullableString(record.currentStatus),
     subscribersCount: readNullableInteger(record.subscribersCount, "subscribersCount"),
     creationDate: readNullableString(record.creationDate),
-    hasScheduledCampaigns: readNullableBoolean(record.hasScheduledCampaigns),
-    hasFormsAssociated: readNullableBoolean(record.hasFormsAssociated),
-    hasSegmentsAssociated: readNullableBoolean(record.hasSegmentsAssociated),
-    hasEventsAssociated: readNullableBoolean(record.hasEventsAssociated),
+    hasScheduledCampaigns: optionalBooleanOrNull(record.hasScheduledCampaigns),
+    hasFormsAssociated: optionalBooleanOrNull(record.hasFormsAssociated),
+    hasSegmentsAssociated: optionalBooleanOrNull(record.hasSegmentsAssociated),
+    hasEventsAssociated: optionalBooleanOrNull(record.hasEventsAssociated),
     data: record,
   };
 }
@@ -371,8 +371,8 @@ function normalizeSubscriber(record: Record<string, unknown>) {
     belongsToLists: readOptionalStringArray(record.belongsToLists),
     status: readNullableString(record.status),
     unsubscriptionDate: readNullableString(record.unsubscriptionDate),
-    canBeReactivated: readNullableBoolean(record.canBeReactivated),
-    isBeingReactivated: readNullableBoolean(record.isBeingReactivated),
+    canBeReactivated: optionalBooleanOrNull(record.canBeReactivated),
+    isBeingReactivated: optionalBooleanOrNull(record.isBeingReactivated),
     unsubscriptionType: readNullableString(record.unsubscriptionType),
     manualUnsubscriptionReason: readNullableString(record.manualUnsubscriptionReason),
     unsubscriptionComment: readNullableString(record.unsubscriptionComment),
@@ -491,8 +491,4 @@ function readNullableInteger(value: unknown, fieldName: string) {
 
 function readNullableString(value: unknown) {
   return typeof value === "string" ? value : null;
-}
-
-function readNullableBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : null;
 }

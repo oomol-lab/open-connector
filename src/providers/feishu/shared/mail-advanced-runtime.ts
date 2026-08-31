@@ -2,6 +2,7 @@ import type { FeishuJsonRequest } from "./client.ts";
 
 import { Buffer } from "node:buffer";
 import MailComposer from "nodemailer/lib/mail-composer/index.js";
+import { optionalBoolean, optionalNumber } from "../../../core/cast.ts";
 import { providerInputError, ProviderRequestError } from "../../provider-runtime.ts";
 
 interface MailAdvancedActionHandler {
@@ -685,12 +686,4 @@ function requiredProviderString(value: unknown, field: string) {
 
 function optionalString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
-}
-
-function optionalNumber(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
-}
-
-function optionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }

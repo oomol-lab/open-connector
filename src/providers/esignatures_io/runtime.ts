@@ -341,12 +341,12 @@ function buildCreateTemplatePayload(input: Record<string, unknown>): Record<stri
 function buildCreateContractPayload(input: Record<string, unknown>): Record<string, unknown> {
   return compactObject({
     template_id: readRequiredTrimmedString(input.templateId, "templateId"),
-    title: readOptionalNonEmptyString(input.title),
-    locale: readOptionalNonEmptyString(input.locale),
-    metadata: readOptionalNonEmptyString(input.metadata),
+    title: optionalString(input.title),
+    locale: optionalString(input.locale),
+    metadata: optionalString(input.metadata),
     expires_in_hours: stringifyOptionalInteger(optionalInteger(input.expiresInHours)),
-    custom_webhook_url: readOptionalNonEmptyString(input.customWebhookUrl),
-    assigned_user_email: readOptionalNonEmptyString(input.assignedUserEmail),
+    custom_webhook_url: optionalString(input.customWebhookUrl),
+    assigned_user_email: optionalString(input.assignedUserEmail),
     labels: readOptionalStringArray(input.labels),
     test: stringifyOptionalYesNo(optionalBoolean(input.test)),
     save_as_draft: stringifyOptionalYesNo(optionalBoolean(input.saveAsDraft)),
@@ -361,15 +361,15 @@ function buildCreateContractPayload(input: Record<string, unknown>): Record<stri
 function buildSignerPayload(input: Record<string, unknown>): Record<string, unknown> {
   return compactObject({
     name: readRequiredNonEmptyString(input.name, "signer.name"),
-    email: readOptionalNonEmptyString(input.email),
-    mobile: readOptionalNonEmptyString(input.mobile),
-    company_name: readOptionalNonEmptyString(input.companyName),
+    email: optionalString(input.email),
+    mobile: optionalString(input.mobile),
+    company_name: optionalString(input.companyName),
     signing_order: stringifyOptionalInteger(optionalInteger(input.signingOrder)),
     auto_sign: stringifyOptionalYesNo(optionalBoolean(input.autoSign)),
     signature_request_delivery_methods: readOptionalStringArray(input.signatureRequestDeliveryMethods),
     signed_document_delivery_method: optionalRawString(input.signedDocumentDeliveryMethod),
     multi_factor_authentications: readOptionalStringArray(input.multiFactorAuthentications),
-    redirect_url: readOptionalNonEmptyString(input.redirectUrl),
+    redirect_url: optionalString(input.redirectUrl),
   });
 }
 
@@ -378,7 +378,7 @@ function buildPlaceholderFieldPayload(input: Record<string, unknown>): Record<st
     placeholder_key: readRequiredTrimmedString(input.placeholderKey, "placeholderKey"),
     replace_with_text: optionalRawString(input.replaceWithText),
     replace_with_markdown: optionalRawString(input.replaceWithMarkdown),
-    replace_with_template: readOptionalNonEmptyString(input.replaceWithTemplate),
+    replace_with_template: optionalString(input.replaceWithTemplate),
   });
 }
 
@@ -395,12 +395,12 @@ function buildEmailsPayload(value: unknown): Record<string, unknown> | undefined
     return undefined;
   }
   return compactObject({
-    signature_request_subject: readOptionalNonEmptyString(input.signatureRequestSubject),
+    signature_request_subject: optionalString(input.signatureRequestSubject),
     signature_request_text: optionalRawString(input.signatureRequestText),
-    final_contract_subject: readOptionalNonEmptyString(input.finalContractSubject),
+    final_contract_subject: optionalString(input.finalContractSubject),
     final_contract_text: optionalRawString(input.finalContractText),
     cc_email_addresses: readOptionalStringArray(input.ccEmailAddresses),
-    reply_to: readOptionalNonEmptyString(input.replyTo),
+    reply_to: optionalString(input.replyTo),
   });
 }
 
@@ -410,8 +410,8 @@ function buildCustomBrandingPayload(value: unknown): Record<string, unknown> | u
     return undefined;
   }
   return compactObject({
-    company_name: readOptionalNonEmptyString(input.companyName),
-    logo_url: readOptionalNonEmptyString(input.logoUrl),
+    company_name: optionalString(input.companyName),
+    logo_url: optionalString(input.logoUrl),
   });
 }
 
@@ -535,10 +535,6 @@ function readRequiredNonEmptyString(value: unknown, fieldName: string): string {
 
 function readRequiredTrimmedString(value: unknown, fieldName: string): string {
   return readRequiredNonEmptyString(value, fieldName).trim();
-}
-
-function readOptionalNonEmptyString(value: unknown): string | undefined {
-  return optionalString(value);
 }
 
 function stringifyOptionalInteger(value: number | undefined): string | undefined {

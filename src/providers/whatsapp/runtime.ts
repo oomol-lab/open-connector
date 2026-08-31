@@ -2,7 +2,7 @@ import type { CredentialValidationResult, TransitFileWriter } from "../../core/t
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent, readTransitFileInput } from "../provider-runtime.ts";
 
@@ -532,7 +532,7 @@ function normalizeWhatsAppError(input: {
   phase: WhatsAppPhase;
   payload: unknown;
 }): ProviderRequestError {
-  const graphErrorCode = readNumber(input.graphError?.code);
+  const graphErrorCode = optionalNumber(input.graphError?.code);
   const baseMessage =
     readString(input.graphError?.message) ??
     readString(input.graphError?.error_user_msg) ??
@@ -644,7 +644,7 @@ function normalizeTemplateQualityScore(value: unknown): Record<string, unknown> 
   if (!record) return undefined;
   return compactObject({
     score: readString(record.score),
-    date: readNumber(record.date) ?? readString(record.date),
+    date: optionalNumber(record.date) ?? readString(record.date),
   });
 }
 
@@ -655,7 +655,7 @@ function normalizeMediaInfo(value: unknown): Record<string, unknown> {
     url: readString(record.url),
     mime_type: readString(record.mime_type),
     sha256: readString(record.sha256),
-    file_size: readNumber(record.file_size),
+    file_size: optionalNumber(record.file_size),
     messaging_product: readString(record.messaging_product),
   });
 }
@@ -721,10 +721,6 @@ function asRecord(value: unknown, fieldName: string): Record<string, unknown> {
 
 function readString(value: unknown): string | undefined {
   return typeof value === "string" && value.length > 0 ? value : undefined;
-}
-
-function readNumber(value: unknown): number | undefined {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 function readStringArray(value: unknown): string[] | undefined {

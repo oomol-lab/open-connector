@@ -1,5 +1,6 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
+import { optionalBoolean, optionalNumber } from "../../../core/cast.ts";
 import { providerInputError } from "../../provider-runtime.ts";
 
 interface TaskActionHandler {
@@ -491,14 +492,6 @@ function optionalNumberArray(value: unknown) {
     ? value.filter((item): item is number => typeof item === "number" && Number.isFinite(item))
     : [];
   return values.length > 0 ? values : undefined;
-}
-
-function optionalNumber(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
-}
-
-function optionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function compact(value: Record<string, unknown>) {

@@ -39,9 +39,9 @@ export const footballDataActionHandlers: ProviderActionHandlers<"football_data",
     const payload = await footballDataRequestJson(context, {
       path: "/matches",
       query: compactObject({
-        dateFrom: stringParam(input.dateFrom),
-        dateTo: stringParam(input.dateTo),
-        status: stringParam(input.status),
+        dateFrom: optionalString(input.dateFrom),
+        dateTo: optionalString(input.dateTo),
+        status: optionalString(input.status),
         competitions: codeListParam(input.competitions),
       }),
       phase: "execute",
@@ -74,11 +74,11 @@ export const footballDataActionHandlers: ProviderActionHandlers<"football_data",
       path: `/competitions/${encodeURIComponent(competition)}/matches`,
       query: compactObject({
         season: numberParam(input.season),
-        dateFrom: stringParam(input.dateFrom),
-        dateTo: stringParam(input.dateTo),
-        status: stringParam(input.status),
-        stage: stringParam(input.stage),
-        group: stringParam(input.group),
+        dateFrom: optionalString(input.dateFrom),
+        dateTo: optionalString(input.dateTo),
+        status: optionalString(input.status),
+        stage: optionalString(input.stage),
+        group: optionalString(input.group),
       }),
       phase: "execute",
     });
@@ -269,10 +269,6 @@ function extractMessage(payload: unknown): string | undefined {
 
 function numberParam(value: unknown): string | undefined {
   return optionalInteger(value)?.toString();
-}
-
-function stringParam(value: unknown): string | undefined {
-  return optionalString(value);
 }
 
 function codeParam(value: unknown): string | undefined {

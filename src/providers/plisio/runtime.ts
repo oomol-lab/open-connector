@@ -4,6 +4,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import {
   compactObject,
+  optionalBoolean,
   optionalInteger,
   optionalNumber,
   optionalRecord,
@@ -362,8 +363,4 @@ function requiredInputString(value: unknown, fieldName: string): string {
 
 function requiredProviderString(value: unknown, fieldName: string): string {
   return requiredString(value, fieldName, () => new ProviderRequestError(502, `Plisio response missing ${fieldName}`));
-}
-
-function optionalBoolean(value: unknown): boolean | undefined {
-  return typeof value === "boolean" ? value : undefined;
 }

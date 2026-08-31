@@ -1,7 +1,7 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { requiredString } from "../../core/cast.ts";
+import { optionalBoolean, requiredString } from "../../core/cast.ts";
 import { providerInputError, ProviderRequestError } from "../provider-runtime.ts";
 
 export const amapApiBaseUrl = "https://restapi.amap.com";
@@ -201,7 +201,7 @@ async function executeSearchPlaces(input: Record<string, unknown>, runtime: Amap
     {
       keywords: readRequiredString(input.keywords, "keywords"),
       region: readOptionalString(input.region),
-      city_limit: readOptionalBoolean(input.cityLimit),
+      city_limit: optionalBoolean(input.cityLimit),
       types: readOptionalString(input.types),
       page_num: readOptionalNumber(input.pageNum),
       page_size: readOptionalNumber(input.pageSize),
@@ -284,7 +284,7 @@ async function executeInputTips(input: Record<string, unknown>, runtime: AmapAct
       type: readOptionalString(input.type),
       location: readOptionalString(input.location),
       city: readOptionalString(input.city),
-      citylimit: readOptionalBoolean(input.cityLimit),
+      citylimit: optionalBoolean(input.cityLimit),
       datatype: readOptionalString(input.dataType),
       key: runtime.apiKey,
     },
@@ -524,10 +524,6 @@ function readOptionalString(value: unknown) {
 
 function readOptionalNumber(value: unknown) {
   return typeof value === "number" ? value : undefined;
-}
-
-function readOptionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function readStringOrStringArray(value: unknown) {

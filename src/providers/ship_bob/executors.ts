@@ -1,7 +1,14 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { optionalBoolean, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
+import {
+  optionalBoolean,
+  optionalBooleanOrNull,
+  optionalRawString,
+  optionalRecord,
+  optionalString,
+  requiredRecord,
+} from "../../core/cast.ts";
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
@@ -51,12 +58,12 @@ export const shipBobActionHandlers: ProviderActionHandlers<"ship_bob", ShipBobAc
       context,
       path: "/inventory-level",
       query: compactDefined({
-        SearchBy: optionalQueryString(input.searchBy),
+        SearchBy: optionalRawString(input.searchBy),
         InventoryIds: joinValues(input.inventoryIds),
         IsActive: optionalBoolean(input.isActive),
         IsDigital: optionalBoolean(input.isDigital),
         PageSize: optionalQueryNumber(input.pageSize),
-        SortBy: optionalQueryString(input.sortBy),
+        SortBy: optionalRawString(input.sortBy),
       }),
       phase: "execute",
     });
@@ -83,8 +90,8 @@ export const shipBobActionHandlers: ProviderActionHandlers<"ship_bob", ShipBobAc
       context,
       path: "/product",
       query: compactDefined({
-        Search: optionalQueryString(input.search),
-        Barcode: optionalQueryString(input.barcode),
+        Search: optionalRawString(input.search),
+        Barcode: optionalRawString(input.barcode),
         Barcodes: joinValues(input.barcodes),
         CategoryIds: joinValues(input.categoryIds),
         ChannelIds: joinValues(input.channelIds),
@@ -92,18 +99,18 @@ export const shipBobActionHandlers: ProviderActionHandlers<"ship_bob", ShipBobAc
         HasVariants: booleanAsString(input.hasVariants),
         InventoryId: optionalQueryNumber(input.inventoryId),
         IsInventorySyncEnabled: booleanAsString(input.isInventorySyncEnabled),
-        LastUpdatedTimestamp: optionalQueryString(input.lastUpdatedTimestamp),
-        Name: optionalQueryString(input.name),
+        LastUpdatedTimestamp: optionalRawString(input.lastUpdatedTimestamp),
+        Name: optionalRawString(input.name),
         OnHand: booleanAsString(input.onHand),
         ProductId: optionalQueryNumber(input.productId),
-        ProductType: optionalQueryString(input.productType),
-        SellerSKU: optionalQueryString(input.sellerSku),
-        SKU: optionalQueryString(input.sku),
+        ProductType: optionalRawString(input.productType),
+        SellerSKU: optionalRawString(input.sellerSku),
+        SKU: optionalRawString(input.sku),
         VariantId: optionalQueryNumber(input.variantId),
-        VariantStatus: optionalQueryString(input.variantStatus),
+        VariantStatus: optionalRawString(input.variantStatus),
         PageSize: optionalQueryNumber(input.pageSize),
-        SortBy: optionalQueryString(input.sortBy),
-        SortOrder: optionalQueryString(input.sortOrder),
+        SortBy: optionalRawString(input.sortBy),
+        SortOrder: optionalRawString(input.sortOrder),
       }),
       phase: "execute",
     });
@@ -346,10 +353,10 @@ function normalizeLocation(record: Record<string, unknown>) {
     id: readInteger(record.id, "location id"),
     name: nullableString(record.name),
     abbreviation: nullableString(record.abbreviation),
-    isActive: nullableBoolean(record.is_active),
-    accessGranted: nullableBoolean(record.access_granted),
-    isReceivingEnabled: nullableBoolean(record.is_receiving_enabled),
-    isShippingEnabled: nullableBoolean(record.is_shipping_enabled),
+    isActive: optionalBooleanOrNull(record.is_active),
+    accessGranted: optionalBooleanOrNull(record.access_granted),
+    isReceivingEnabled: optionalBooleanOrNull(record.is_receiving_enabled),
+    isShippingEnabled: optionalBooleanOrNull(record.is_shipping_enabled),
     raw: record,
   };
 }
@@ -386,16 +393,8 @@ function nullableString(value: unknown): string | null {
   return typeof value === "string" ? value : null;
 }
 
-function nullableBoolean(value: unknown): boolean | null {
-  return typeof value === "boolean" ? value : null;
-}
-
 function joinValues(value: unknown): string | undefined {
   return Array.isArray(value) ? value.join(",") : undefined;
-}
-
-function optionalQueryString(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
 }
 
 function optionalQueryNumber(value: unknown): number | undefined {

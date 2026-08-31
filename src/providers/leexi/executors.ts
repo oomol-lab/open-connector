@@ -237,7 +237,7 @@ async function executeListCallNotes(input: Record<string, unknown>, context: Lee
     query: compactObject({
       ...buildPaginationQuery(input),
       call_uuid: requireUuidString(input.callUuid, "callUuid"),
-      prompt_uuid: optionalUuidString(input.promptUuid),
+      prompt_uuid: optionalString(input.promptUuid),
     }),
   });
   const record = requireRecord(payload, "Leexi call notes response");
@@ -515,10 +515,6 @@ function requireUuidString(value: unknown, fieldName: string): string {
     throw new ProviderRequestError(400, `${fieldName} is required`);
   }
   return trimmed;
-}
-
-function optionalUuidString(value: unknown): string | undefined {
-  return optionalString(value);
 }
 
 function readStringArray(value: unknown): string[] | undefined {

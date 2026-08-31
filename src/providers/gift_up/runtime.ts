@@ -132,14 +132,14 @@ async function listGiftCards(input: Record<string, unknown>, context: GiftUpRunt
     method: "GET",
     path: "/gift-cards",
     query: giftUpQuery({
-      status: readOptionalString(input.status),
-      createdOnOrAfter: readOptionalString(input.createdOnOrAfter),
-      updatedOnOrAfter: readOptionalString(input.updatedOnOrAfter),
-      orderId: readOptionalString(input.orderId),
-      sku: readOptionalString(input.sku),
-      recipientEmail: readOptionalString(input.recipientEmail),
-      purchaserEmail: readOptionalString(input.purchaserEmail),
-      paymentTransactionId: readOptionalString(input.paymentTransactionId),
+      status: optionalString(input.status),
+      createdOnOrAfter: optionalString(input.createdOnOrAfter),
+      updatedOnOrAfter: optionalString(input.updatedOnOrAfter),
+      orderId: optionalString(input.orderId),
+      sku: optionalString(input.sku),
+      recipientEmail: optionalString(input.recipientEmail),
+      purchaserEmail: optionalString(input.purchaserEmail),
+      paymentTransactionId: optionalString(input.paymentTransactionId),
       limit: readOptionalInteger(input.limit),
       offset: readOptionalInteger(input.offset),
     }),
@@ -237,7 +237,7 @@ async function listItems(input: Record<string, unknown>, context: GiftUpRuntimeC
     context,
     method: "GET",
     path: "/items",
-    query: giftUpQuery({ groupId: readOptionalString(input.groupId) }),
+    query: giftUpQuery({ groupId: optionalString(input.groupId) }),
     phase: "execute",
   });
   return {
@@ -266,9 +266,9 @@ async function listOrders(input: Record<string, unknown>, context: GiftUpRuntime
     method: "GET",
     path: "/orders",
     query: giftUpQuery({
-      createdOnOrAfter: readOptionalString(input.createdOnOrAfter),
-      purchaserEmail: readOptionalString(input.purchaserEmail),
-      source: readOptionalString(input.source),
+      createdOnOrAfter: optionalString(input.createdOnOrAfter),
+      purchaserEmail: optionalString(input.purchaserEmail),
+      source: optionalString(input.source),
       limit: readOptionalInteger(input.limit),
       offset: readOptionalInteger(input.offset),
     }),
@@ -328,12 +328,12 @@ async function listReportTransactions(input: Record<string, unknown>, context: G
     method: "GET",
     path: "/reports/transactions",
     query: giftUpQuery({
-      eventOccurredOnOrAfter: readOptionalString(input.eventOccurredOnOrAfter),
-      eventOccurredOnOrBefore: readOptionalString(input.eventOccurredOnOrBefore),
+      eventOccurredOnOrAfter: optionalString(input.eventOccurredOnOrAfter),
+      eventOccurredOnOrBefore: optionalString(input.eventOccurredOnOrBefore),
       events: readOptionalStringArray(input.events),
       users: readOptionalStringArray(input.users),
       locations: readOptionalStringArray(input.locations),
-      code: readOptionalString(input.code),
+      code: optionalString(input.code),
       limit: readOptionalInteger(input.limit),
       offset: readOptionalInteger(input.offset),
     }),
@@ -503,8 +503,8 @@ function extractGiftUpErrorMessage(payload: unknown): string | undefined {
 
 function eventBody(input: Record<string, unknown>): Record<string, unknown> {
   return jsonObject({
-    reason: readOptionalString(input.reason),
-    locationId: readOptionalString(input.locationId),
+    reason: optionalString(input.reason),
+    locationId: optionalString(input.locationId),
     metadata: optionalRecord(input.metadata),
   });
 }
@@ -512,7 +512,7 @@ function eventBody(input: Record<string, unknown>): Record<string, unknown> {
 function redemptionEventBody(input: Record<string, unknown>): Record<string, unknown> {
   return jsonObject({
     ...eventBody(input),
-    redeemedOn: readOptionalString(input.redeemedOn),
+    redeemedOn: optionalString(input.redeemedOn),
   });
 }
 
@@ -524,7 +524,7 @@ function balanceOperationBody(
     amount: readOptionalNumber(input.amount),
     units: readOptionalInteger(input.units),
     ...eventBody(input),
-    redeemedOn: options.includeRedeemedOn ? readOptionalString(input.redeemedOn) : undefined,
+    redeemedOn: options.includeRedeemedOn ? optionalString(input.redeemedOn) : undefined,
   });
 }
 
@@ -741,10 +741,6 @@ function normalizeStringArray(value: unknown): string[] {
 
 function readRequiredString(value: unknown, fieldName: string): string {
   return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
-}
-
-function readOptionalString(value: unknown): string | undefined {
-  return optionalString(value);
 }
 
 function readOptionalNumber(value: unknown): number | undefined {

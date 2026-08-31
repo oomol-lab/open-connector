@@ -9,7 +9,13 @@ import type {
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
-import { compactObject, optionalBoolean, optionalInteger, optionalString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBoolean,
+  optionalBooleanOrNull,
+  optionalInteger,
+  optionalString,
+} from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
   createProviderFetch,
@@ -497,7 +503,7 @@ function normalizeTopicListPayload(payload: unknown) {
   const record = requirePayloadObject(payload, "Discourse topic list response");
   const topicList = requirePayloadObject(record.topic_list, "Discourse topic_list response");
   return {
-    canCreateTopic: toNullableBoolean(topicList.can_create_topic),
+    canCreateTopic: optionalBooleanOrNull(topicList.can_create_topic),
     perPage: toNullableInteger(topicList.per_page),
     moreTopicsUrl: toNullableString(topicList.more_topics_url),
     topics: readPayloadObjectArray(topicList.topics, "Discourse topics").map(normalizeTopicSummary),
@@ -522,10 +528,10 @@ function normalizeTopicSummary(value: unknown) {
     categoryId: toNullableInteger(record.category_id),
     views: toNullableInteger(record.views),
     likeCount: toNullableInteger(record.like_count),
-    pinned: toNullableBoolean(record.pinned),
-    closed: toNullableBoolean(record.closed),
-    archived: toNullableBoolean(record.archived),
-    visible: toNullableBoolean(record.visible),
+    pinned: optionalBooleanOrNull(record.pinned),
+    closed: optionalBooleanOrNull(record.closed),
+    archived: optionalBooleanOrNull(record.archived),
+    visible: optionalBooleanOrNull(record.visible),
     lastPosterUsername: toNullableString(record.last_poster_username),
     raw: record,
   };
@@ -544,7 +550,7 @@ function normalizeCategorySummary(value: unknown) {
     postCount: toNullableInteger(record.post_count),
     position: toNullableInteger(record.position),
     parentCategoryId: toNullableInteger(record.parent_category_id),
-    readRestricted: toNullableBoolean(record.read_restricted),
+    readRestricted: optionalBooleanOrNull(record.read_restricted),
     raw: record,
   };
 }
@@ -699,10 +705,6 @@ function toNullableInteger(value: unknown) {
   }
 
   return null;
-}
-
-function toNullableBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : null;
 }
 
 function hashValue(value: string) {

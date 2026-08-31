@@ -1,7 +1,7 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 
-import { nullableString, optionalRecord, optionalString, compactObject } from "../../core/cast.ts";
+import { nullableString, optionalBoolean, optionalRecord, optionalString, compactObject } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { dopplerApiBaseUrl, dopplerRequest, readArray, readObject } from "./runtime.shared.ts";
 
@@ -260,7 +260,7 @@ async function dopplerCreateEnvironment(input: Record<string, unknown>, accessTo
       body: compactObject({
         name: asRequiredInputString(input.name, "name"),
         slug: asRequiredInputString(input.slug, "slug"),
-        personal_configs: asOptionalBoolean(input.personalConfigs),
+        personal_configs: optionalBoolean(input.personalConfigs),
       }),
     },
     fetcher,
@@ -286,7 +286,7 @@ async function dopplerUpdateEnvironment(input: Record<string, unknown>, accessTo
       body: compactObject({
         name: optionalString(input.name),
         slug: optionalString(input.slug),
-        personal_configs: asOptionalBoolean(input.personalConfigs),
+        personal_configs: optionalBoolean(input.personalConfigs),
       }),
     },
     fetcher,
@@ -464,7 +464,7 @@ async function dopplerSetConfigInheritable(input: Record<string, unknown>, acces
   const record = readObject(payload, "config inheritable");
 
   return {
-    success: asOptionalBoolean(record.success) ?? true,
+    success: optionalBoolean(record.success) ?? true,
     config: normalizeConfig(readObject(record.config, "config")),
   };
 }
@@ -521,12 +521,12 @@ function normalizeConfig(record: Record<string, unknown>) {
     slug: optionalString(record.slug),
     project: optionalString(record.project),
     environment: optionalString(record.environment),
-    root: asOptionalBoolean(record.root),
-    locked: asOptionalBoolean(record.locked),
+    root: optionalBoolean(record.root),
+    locked: optionalBoolean(record.locked),
     inherits: optionalStringArray(record.inherits),
     inheritedBy: optionalStringArray(record.inherited_by),
-    inheriting: asOptionalBoolean(record.inheriting),
-    inheritable: asOptionalBoolean(record.inheritable),
+    inheriting: optionalBoolean(record.inheriting),
+    inheritable: optionalBoolean(record.inheritable),
     createdAt: optionalString(record.created_at),
     initialFetchAt: nullableString(record.initial_fetch_at),
     lastFetchAt: nullableString(record.last_fetch_at),
@@ -536,7 +536,7 @@ function normalizeConfig(record: Record<string, unknown>) {
 function normalizeSuccessResult(payload: unknown) {
   const record = optionalRecord(payload);
   return {
-    success: record ? (asOptionalBoolean(record.success) ?? true) : true,
+    success: record ? (optionalBoolean(record.success) ?? true) : true,
   };
 }
 
@@ -580,10 +580,6 @@ function asRequiredBoolean(value: unknown, fieldName: string) {
 
 function asOptionalNumber(value: unknown) {
   return typeof value === "number" ? value : undefined;
-}
-
-function asOptionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function optionalStringArray(value: unknown) {

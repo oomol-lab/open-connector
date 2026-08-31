@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject } from "../../core/cast.ts";
+import { compactObject, optionalBoolean } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const twelveDataApiBaseUrl: string = "https://api.twelvedata.com";
@@ -472,7 +472,7 @@ function normalizeQuote(record: Record<string, unknown>): Record<string, unknown
     rolling1dChange: readOptionalScalarString(record.rolling_1d_change),
     rolling7dChange: readOptionalScalarString(record.rolling_7d_change),
     rollingChange: readOptionalScalarString(record.rolling_change),
-    isMarketOpen: readOptionalBoolean(record.is_market_open),
+    isMarketOpen: optionalBoolean(record.is_market_open),
     fiftyTwoWeek: normalizeFiftyTwoWeek(record.fifty_two_week),
     extendedChange: readOptionalScalarString(record.extended_change),
     extendedPercentChange: readOptionalScalarString(record.extended_percent_change),
@@ -691,10 +691,6 @@ function readRequiredBoolean(value: unknown, fieldName: string): boolean {
   if (typeof value !== "boolean")
     throw new ProviderRequestError(502, `Twelve Data response missing boolean field: ${fieldName}`);
   return value;
-}
-
-function readOptionalBoolean(value: unknown): boolean | undefined {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function readRequiredInputString(input: Record<string, unknown>, fieldName: string): string {

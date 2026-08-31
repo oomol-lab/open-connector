@@ -6,7 +6,7 @@ import type {
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalRawString, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
   defineProviderProxy,
@@ -416,12 +416,12 @@ function buildArticleRequestBody(input: Record<string, unknown>): Record<string,
   return {
     article: compactObject({
       title: readOptionalTrimmedString(input.title),
-      body_markdown: readOptionalString(input.bodyMarkdown),
+      body_markdown: optionalRawString(input.bodyMarkdown),
       published: typeof input.published === "boolean" ? input.published : undefined,
       series: readOptionalNullableString(input.series),
       main_image: readOptionalNullableString(input.mainImage),
       canonical_url: readOptionalNullableString(input.canonicalUrl),
-      description: readOptionalString(input.description),
+      description: optionalRawString(input.description),
       tags: readOptionalStringList(input.tags)?.join(", "),
       organization_id:
         input.organizationId === null ? null : readOptionalPositiveInteger(input.organizationId, "organizationId"),
@@ -454,12 +454,8 @@ function buildForemApiBaseUrl(baseUrl: string): string {
   return `${baseUrl}${foremApiPathPrefix}`;
 }
 
-function readOptionalString(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
-}
-
 function readOptionalTrimmedString(value: unknown): string | undefined {
-  const raw = readOptionalString(value);
+  const raw = optionalRawString(value);
   if (raw === undefined) {
     return undefined;
   }
@@ -471,7 +467,7 @@ function readOptionalNullableString(value: unknown): string | null | undefined {
   if (value === null) {
     return null;
   }
-  return readOptionalString(value);
+  return optionalRawString(value);
 }
 
 function readRequiredString(value: unknown, fieldName: string): string {

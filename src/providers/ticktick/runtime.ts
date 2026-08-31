@@ -3,7 +3,14 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
-import { compactObject, objectArray, optionalBoolean, optionalInteger, optionalString } from "../../core/cast.ts";
+import {
+  compactObject,
+  objectArray,
+  optionalBoolean,
+  optionalInteger,
+  optionalNumber,
+  optionalString,
+} from "../../core/cast.ts";
 import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const ticktickApiBaseUrl = "https://api.ticktick.com";
@@ -668,10 +675,6 @@ function requireInteger(value: unknown, fieldName: string): number {
   const parsed = optionalInteger(value);
   if (parsed == null) throw new ProviderRequestError(400, `${fieldName} must be an integer`);
   return parsed;
-}
-
-function optionalNumber(value: unknown): number | undefined {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 function requireObjectPayload(value: unknown, fieldName: string): TicktickPayload {

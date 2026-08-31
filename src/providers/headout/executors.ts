@@ -4,6 +4,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import {
   compactObject,
   optionalBoolean,
+  optionalBooleanOrNull,
   optionalInteger,
   optionalNumber,
   optionalRecord,
@@ -395,7 +396,7 @@ function normalizeProductListing(record: Record<string, unknown>): Record<string
     startGeolocation: normalizeGeolocationOrNull(record.startGeolocation),
     ratingCumulative: normalizeRatingOrNull(record.ratingCumulative),
     pricing: normalizeProductPricingOrNull(record.pricing),
-    hasInstantConfirmation: readBoolean(record.hasInstantConfirmation),
+    hasInstantConfirmation: optionalBooleanOrNull(record.hasInstantConfirmation),
     raw: record,
   };
 }
@@ -416,8 +417,8 @@ function normalizeProduct(record: Record<string, unknown>): Record<string, unkno
     endLocation: normalizeLocationOrNull(record.endLocation),
     productType: readStringish(record.productType),
     ratingCumulative: normalizeRatingOrNull(record.ratingCumulative),
-    hasInstantConfirmation: readBoolean(record.hasInstantConfirmation),
-    hasMobileTicket: readBoolean(record.hasMobileTicket),
+    hasInstantConfirmation: optionalBooleanOrNull(record.hasInstantConfirmation),
+    hasMobileTicket: optionalBooleanOrNull(record.hasMobileTicket),
     variants: readObjectArray(record.variants).map(normalizeVariant),
     pricing: normalizeProductPricingOrNull(record.pricing),
     raw: record,
@@ -472,7 +473,7 @@ function normalizeValidationOrNull(value: unknown): Record<string, unknown> | nu
     maxLength: optionalInteger(record.maxLength) ?? null,
     minValue: optionalNumber(record.minValue) ?? null,
     maxValue: optionalNumber(record.maxValue) ?? null,
-    required: readBoolean(record.required),
+    required: optionalBooleanOrNull(record.required),
     values: readStringArrayOrNull(record.values),
     raw: record,
   };
@@ -719,7 +720,7 @@ function normalizeCustomerDetailsOrNull(value: unknown): Record<string, unknown>
 function normalizeBookingCustomer(record: Record<string, unknown>): Record<string, unknown> {
   return {
     personType: readStringish(record.personType),
-    isPrimary: readBoolean(record.isPrimary),
+    isPrimary: optionalBooleanOrNull(record.isPrimary),
     inputFields: readObjectArray(record.inputFields).map(normalizeBookingInputField),
   };
 }
@@ -774,10 +775,6 @@ function readStringish(value: unknown): string | null {
     return String(value);
   }
   return null;
-}
-
-function readBoolean(value: unknown): boolean | null {
-  return typeof value === "boolean" ? value : null;
 }
 
 function readObjectArray(value: unknown): Array<Record<string, unknown>> {

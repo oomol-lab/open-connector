@@ -1,7 +1,7 @@
 import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
 import type { DialMyCallsActionName } from "./actions.ts";
 
-import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { compactObject, optionalRawString, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 export interface DialmycallsCredentialCheck {
@@ -285,12 +285,12 @@ function requireEnvelope(payload: unknown) {
 
 function buildContactBody(input: Record<string, unknown>) {
   return compactObject({
-    firstname: readOptionalString(input.firstname),
-    lastname: readOptionalString(input.lastname),
+    firstname: optionalRawString(input.firstname),
+    lastname: optionalRawString(input.lastname),
     phone: readRequiredString(input.phone, "phone"),
-    extension: readOptionalString(input.extension),
-    email: readOptionalString(input.email),
-    extra1: readOptionalString(input.extra1),
+    extension: optionalRawString(input.extension),
+    email: optionalRawString(input.email),
+    extra1: optionalRawString(input.extra1),
     groups: readOptionalStringArray(input.groups, "groups"),
   });
 }
@@ -316,10 +316,6 @@ function readRequiredString(value: unknown, fieldName: string) {
     throw new ProviderRequestError(400, `${fieldName} must be a non-empty string`);
   }
   return value;
-}
-
-function readOptionalString(value: unknown) {
-  return typeof value === "string" ? value : undefined;
 }
 
 function readOptionalStringArray(value: unknown, fieldName: string) {

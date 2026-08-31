@@ -2,7 +2,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
-import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
 import { providerFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
@@ -28,8 +28,8 @@ export const cursorActionHandlers: ProviderActionHandlers<"cursor", CursorAction
           endTime: optionalString(input.endTime),
           eventTypes: joinOptionalStrings(input.eventTypes),
           search: optionalString(input.search),
-          page: readOptionalNumber(input.page),
-          pageSize: readOptionalNumber(input.pageSize),
+          page: optionalNumber(input.page),
+          pageSize: optionalNumber(input.pageSize),
           users: joinOptionalStrings(input.users),
         }),
       },
@@ -217,10 +217,6 @@ function readNumber(value: unknown, fieldName: string): number {
     throw new ProviderRequestError(502, `Cursor response field ${fieldName} is not a number`);
   }
   return value;
-}
-
-function readOptionalNumber(value: unknown): number | undefined {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 function readObject(value: unknown, fieldName: string): Record<string, unknown> {

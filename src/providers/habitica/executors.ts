@@ -5,6 +5,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import {
   compactObject,
   optionalBoolean,
+  optionalBooleanOrNull,
   optionalInteger,
   optionalNumber,
   optionalRecord,
@@ -541,7 +542,7 @@ function normalizeTask(value: unknown): Record<string, unknown> {
     alias: nullableString(record.alias),
     type: nullableString(record.type),
     notes: nullableString(record.notes),
-    completed: nullableBoolean(record.completed),
+    completed: optionalBooleanOrNull(record.completed),
     priority: nullableNumber(record.priority),
     value: nullableNumber(record.value),
     attribute: nullableString(record.attribute),
@@ -558,7 +559,7 @@ function normalizeChecklistList(value: unknown): Array<Record<string, unknown>> 
     return {
       id: nullableString(record.id) ?? nullableString(record._id),
       text: nullableString(record.text),
-      completed: nullableBoolean(record.completed),
+      completed: optionalBooleanOrNull(record.completed),
       raw: record,
     };
   });
@@ -659,8 +660,4 @@ function nullableNumber(value: unknown): number | null {
 
 function nullableInteger(value: unknown): number | null {
   return typeof value === "number" && Number.isInteger(value) ? value : null;
-}
-
-function nullableBoolean(value: unknown): boolean | null {
-  return typeof value === "boolean" ? value : null;
 }

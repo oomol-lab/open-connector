@@ -2,7 +2,14 @@ import type { ProviderExecutors, ProviderProxyExecutor } from "../../core/types.
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBoolean,
+  optionalBooleanOrNull,
+  optionalRecord,
+  optionalString,
+  requiredString,
+} from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
@@ -253,7 +260,7 @@ function normalizeWorkflowRun(raw: Record<string, unknown>): Record<string, unkn
     workflowId: nullableString(raw.workflowId),
     name: nullableString(raw.name),
     status: nullableString(raw.status),
-    shared: nullableBoolean(raw.shared),
+    shared: optionalBooleanOrNull(raw.shared),
     migrationStatus: nullableString(raw.migrationStatus),
     dueDate: nullableString(raw.dueDate),
     audit: raw.audit ?? null,
@@ -268,8 +275,8 @@ function normalizeTask(raw: Record<string, unknown>): Record<string, unknown> {
     workflowRunId: nullableString(raw.workflowRunId),
     status: nullableString(raw.status),
     name: nullableString(raw.name),
-    hidden: nullableBoolean(raw.hidden),
-    stopped: nullableBoolean(raw.stopped),
+    hidden: optionalBooleanOrNull(raw.hidden),
+    stopped: optionalBooleanOrNull(raw.stopped),
     taskType: nullableString(raw.taskType),
     dueDate: nullableString(raw.dueDate),
     completedDate: nullableString(raw.completedDate),
@@ -288,7 +295,7 @@ function normalizeFormField(raw: Record<string, unknown>): Record<string, unknow
     key: nullableString(raw.key),
     label: nullableString(raw.label),
     fieldType: nullableString(raw.fieldType),
-    dataSetLinked: nullableBoolean(raw.dataSetLinked),
+    dataSetLinked: optionalBooleanOrNull(raw.dataSetLinked),
     audit: raw.audit ?? null,
     raw,
   };
@@ -303,7 +310,7 @@ function normalizeFormFieldValue(raw: Record<string, unknown>): Record<string, u
     label: nullableString(raw.label),
     fieldType: nullableString(raw.fieldType),
     data: raw.data ?? null,
-    dataSetLinked: nullableBoolean(raw.dataSetLinked),
+    dataSetLinked: optionalBooleanOrNull(raw.dataSetLinked),
     updatedDate: nullableString(raw.updatedDate),
     updatedBy: normalizeUser(raw.updatedBy),
     links: normalizeLinks(raw.links),
@@ -371,8 +378,4 @@ function requiredResponseString(value: unknown, fieldName: string, context: stri
 
 function nullableString(value: unknown): string | null {
   return value === null ? null : (optionalString(value) ?? null);
-}
-
-function nullableBoolean(value: unknown): boolean | null {
-  return typeof value === "boolean" ? value : null;
 }

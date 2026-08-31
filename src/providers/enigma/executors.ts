@@ -5,6 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import {
   compactObject,
   optionalBoolean,
+  optionalBooleanOrNull,
   optionalInteger,
   optionalNumber,
   optionalRecord,
@@ -902,12 +903,12 @@ function normalizeAccount(value: unknown): Record<string, string | number | bool
     customerId: optionalString(record.customerId) ?? null,
     pricingPlan: optionalString(record.pricingPlan) ?? null,
     customerEmail: optionalString(record.customerEmail) ?? null,
-    autoRenewEnabled: nullableBoolean(record.autoRenewEnabled),
+    autoRenewEnabled: optionalBooleanOrNull(record.autoRenewEnabled),
     billingAccountId: optionalString(record.billingAccountId) ?? null,
-    creditsAvailable: nullableBoolean(record.creditsAvailable),
+    creditsAvailable: optionalBooleanOrNull(record.creditsAvailable),
     autoRechargeLimitUsd: optionalNumber(record.autoRechargeLimitUsd) ?? null,
-    autoRechargeCurrentState: nullableBoolean(record.autoRechargeCurrentState),
-    autoRechargeDesiredState: nullableBoolean(record.autoRechargeDesiredState),
+    autoRechargeCurrentState: optionalBooleanOrNull(record.autoRechargeCurrentState),
+    autoRechargeDesiredState: optionalBooleanOrNull(record.autoRechargeDesiredState),
     autoRechargeThresholdAmount: optionalNumber(record.autoRechargeThresholdAmount) ?? null,
     autoRechargeRechargeToAmount: optionalNumber(record.autoRechargeRechargeToAmount) ?? null,
     autoRechargeReenableAfterTimestamp: optionalString(record.autoRechargeReenableAfterTimestamp) ?? null,
@@ -1293,10 +1294,6 @@ function pickOptionalListType(input: Record<string, unknown>, ...keys: string[])
     return value;
   }
   throw new ProviderRequestError(400, `unsupported list type: ${value}`);
-}
-
-function nullableBoolean(value: unknown): boolean | null {
-  return typeof value === "boolean" ? value : null;
 }
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

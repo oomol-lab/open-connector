@@ -2,7 +2,7 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderTransitFile } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
 import {
   defineApiKeyProviderExecutors,
@@ -363,10 +363,6 @@ function requiredProviderString(value: unknown, fieldName: string) {
 
 function optionalInteger(value: unknown) {
   return typeof value === "number" && Number.isInteger(value) ? value : undefined;
-}
-
-function optionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function optionalSurroundingDiv(value: unknown) {

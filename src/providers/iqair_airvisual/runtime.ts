@@ -225,7 +225,7 @@ function normalizeNamedObjects(data: unknown, fieldName: string, context: string
 function normalizeCityData(data: unknown, context: string): Record<string, unknown> {
   const record = readRecord(data, context);
   return compactObject({
-    name: readOptionalNonEmptyString(record.name),
+    name: optionalString(record.name),
     city: readRequiredResponseString(record.city, "city"),
     state: readRequiredResponseString(record.state, "state"),
     country: readRequiredResponseString(record.country, "country"),
@@ -286,12 +286,8 @@ function readOptionalArray(value: unknown): unknown[] | undefined {
   return Array.isArray(value) ? value : undefined;
 }
 
-function readOptionalNonEmptyString(value: unknown): string | undefined {
-  return optionalString(value);
-}
-
 function readRequiredResponseString(value: unknown, fieldName: string): string {
-  const text = readOptionalNonEmptyString(value);
+  const text = optionalString(value);
   if (!text) {
     throw new ProviderRequestError(502, `IQAir AirVisual response missing ${fieldName}`);
   }

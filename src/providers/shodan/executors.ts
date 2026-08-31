@@ -34,7 +34,7 @@ export const shodanActionHandlers: ProviderActionHandlers<"shodan", ShodanAction
         path: "/shodan/host/search",
         query: compactObject({
           query: readRequiredString(input.query, "query"),
-          facets: readOptionalString(input.facets),
+          facets: optionalString(input.facets),
           page: optionalInteger(input.page),
           minify: optionalBoolean(input.minify),
         }),
@@ -50,7 +50,7 @@ export const shodanActionHandlers: ProviderActionHandlers<"shodan", ShodanAction
         path: "/shodan/host/count",
         query: compactObject({
           query: readRequiredString(input.query, "query"),
-          facets: readOptionalString(input.facets),
+          facets: optionalString(input.facets),
         }),
       },
       context,
@@ -220,12 +220,12 @@ function readShodanMessage(payload: unknown): string | undefined {
 function normalizeApiInfoPayload(payload: Record<string, unknown>): Record<string, unknown> {
   return compactObject({
     plan: readRequiredString(payload.plan, "plan"),
-    https: readOptionalBoolean(payload.https),
+    https: optionalBoolean(payload.https),
     monitored_ips: readRequiredNonNegativeInteger(payload.monitored_ips, "monitored_ips"),
     query_credits: readRequiredNonNegativeInteger(payload.query_credits, "query_credits"),
     scan_credits: readRequiredNonNegativeInteger(payload.scan_credits, "scan_credits"),
-    telnet: readOptionalBoolean(payload.telnet),
-    unlocked: readOptionalBoolean(payload.unlocked),
+    telnet: optionalBoolean(payload.telnet),
+    unlocked: optionalBoolean(payload.unlocked),
     unlocked_left: readOptionalNonNegativeInteger(payload.unlocked_left, "unlocked_left"),
     usage_limits: optionalRecord(payload.usage_limits),
   });
@@ -252,7 +252,7 @@ function normalizeDomainPayload(payload: Record<string, unknown>): Record<string
     tags: readOptionalStringArray(payload.tags, "tags"),
     data: readOptionalObjectArray(payload.data, "data"),
     subdomains: readOptionalStringArray(payload.subdomains, "subdomains"),
-    more: readOptionalBoolean(payload.more) ?? false,
+    more: optionalBoolean(payload.more) ?? false,
   };
 }
 
@@ -262,10 +262,6 @@ function readRequiredString(value: unknown, fieldName: string): string {
     throw new ProviderRequestError(400, `${fieldName} is required`);
   }
   return parsed;
-}
-
-function readOptionalString(value: unknown): string | undefined {
-  return optionalString(value);
 }
 
 function joinRequiredStringArray(value: unknown, fieldName: string): string {
@@ -296,10 +292,6 @@ function readRequiredNonNegativeInteger(value: unknown, fieldName: string): numb
 
 function readOptionalNonNegativeInteger(value: unknown, fieldName: string): number | undefined {
   return value === undefined ? undefined : readRequiredNonNegativeInteger(value, fieldName);
-}
-
-function readOptionalBoolean(value: unknown): boolean | undefined {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function readObjectArray(value: unknown, fieldName: string): Array<Record<string, unknown>> {

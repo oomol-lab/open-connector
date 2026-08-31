@@ -10,6 +10,8 @@ import type { OAuthProviderContext } from "../provider-runtime.ts";
 import { Buffer } from "node:buffer";
 import {
   compactObject,
+  optionalBoolean,
+  optionalNumber,
   optionalRecord as asOptionalObject,
   optionalString as asOptionalString,
   requiredRecord,
@@ -204,8 +206,8 @@ async function getCurrentAccount(accessToken: string, fetcher: typeof fetch) {
     givenName: optionalString(name.given_name) ?? null,
     surname: optionalString(name.surname) ?? null,
     email: optionalString(payload.email) ?? null,
-    emailVerified: readBoolean(payload.email_verified),
-    disabled: readBoolean(payload.disabled) ?? false,
+    emailVerified: optionalBoolean(payload.email_verified),
+    disabled: optionalBoolean(payload.disabled) ?? false,
     locale: optionalString(payload.locale) ?? null,
     country: optionalString(payload.country) ?? null,
     accountType: optionalString(accountType[".tag"]) ?? null,
@@ -220,11 +222,11 @@ async function listFolder(input: Record<string, unknown>, accessToken: string, f
     fetcher,
     body: compactObject({
       path: optionalString(input.path) ?? "",
-      recursive: readBoolean(input.recursive),
-      include_deleted: readBoolean(input.includeDeleted),
-      include_mounted_folders: readBoolean(input.includeMountedFolders),
-      include_has_explicit_shared_members: readBoolean(input.includeHasExplicitSharedMembers),
-      limit: readNumber(input.limit),
+      recursive: optionalBoolean(input.recursive),
+      include_deleted: optionalBoolean(input.includeDeleted),
+      include_mounted_folders: optionalBoolean(input.includeMountedFolders),
+      include_has_explicit_shared_members: optionalBoolean(input.includeHasExplicitSharedMembers),
+      limit: optionalNumber(input.limit),
     }),
   });
 
@@ -247,7 +249,7 @@ function normalizeListFolderResult(payload: Record<string, unknown>) {
   return {
     entries: readObjectArray(payload.entries).map(mapDropboxMetadata),
     cursor: requireString(payload.cursor, "dropbox cursor"),
-    hasMore: readBoolean(payload.has_more) ?? false,
+    hasMore: optionalBoolean(payload.has_more) ?? false,
   };
 }
 
@@ -257,8 +259,8 @@ async function getMetadata(input: Record<string, unknown>, accessToken: string, 
     fetcher,
     body: compactObject({
       path: requireString(input.path, "dropbox metadata path"),
-      include_deleted: readBoolean(input.includeDeleted),
-      include_has_explicit_shared_members: readBoolean(input.includeHasExplicitSharedMembers),
+      include_deleted: optionalBoolean(input.includeDeleted),
+      include_has_explicit_shared_members: optionalBoolean(input.includeHasExplicitSharedMembers),
     }),
   });
 
@@ -302,10 +304,10 @@ async function uploadFile(input: Record<string, unknown>, accessToken: string, f
   const arg = compactObject({
     path,
     mode: normalizeWriteMode(mode, updateRev),
-    autorename: readBoolean(input.autorename),
+    autorename: optionalBoolean(input.autorename),
     client_modified: optionalString(input.clientModified),
-    mute: readBoolean(input.mute),
-    strict_conflict: readBoolean(input.strictConflict),
+    mute: optionalBoolean(input.mute),
+    strict_conflict: optionalBoolean(input.strictConflict),
     content_hash: optionalString(input.contentHash),
   });
 
@@ -335,7 +337,7 @@ async function createFolder(input: Record<string, unknown>, accessToken: string,
     fetcher,
     body: compactObject({
       path: requireString(input.path, "dropbox folder path"),
-      autorename: readBoolean(input.autorename),
+      autorename: optionalBoolean(input.autorename),
     }),
   });
 
@@ -356,8 +358,8 @@ async function relocate(
     body: compactObject({
       from_path: requireString(input.fromPath, "dropbox fromPath"),
       to_path: requireString(input.toPath, "dropbox toPath"),
-      autorename: readBoolean(input.autorename),
-      allow_ownership_transfer: readBoolean(input.allowOwnershipTransfer),
+      autorename: optionalBoolean(input.autorename),
+      allow_ownership_transfer: optionalBoolean(input.allowOwnershipTransfer),
     }),
   });
 
@@ -386,7 +388,7 @@ async function createSharedLink(input: Record<string, unknown>, accessToken: str
     requested_visibility: optionalString(input.requestedVisibility),
     audience: optionalString(input.audience),
     access: optionalString(input.access),
-    allow_download: readBoolean(input.allowDownload),
+    allow_download: optionalBoolean(input.allowDownload),
     password: optionalString(input.password),
     expires: optionalString(input.expiresAt),
   });
@@ -412,23 +414,23 @@ async function listSharedLinks(input: Record<string, unknown>, accessToken: stri
     body: compactObject({
       path: optionalString(input.path),
       cursor: optionalString(input.cursor),
-      direct_only: readBoolean(input.directOnly),
+      direct_only: optionalBoolean(input.directOnly),
     }),
   });
 
   return {
     links: readObjectArray(payload.links).map(mapDropboxMetadata),
     cursor: optionalString(payload.cursor) ?? null,
-    hasMore: readBoolean(payload.has_more) ?? false,
+    hasMore: optionalBoolean(payload.has_more) ?? false,
   };
 }
 
 async function searchFiles(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
   const options = compactObject({
     path: optionalString(input.path),
-    max_results: readNumber(input.maxResults),
+    max_results: optionalNumber(input.maxResults),
     file_status: optionalString(input.fileStatus),
-    filename_only: readBoolean(input.filenameOnly),
+    filename_only: optionalBoolean(input.filenameOnly),
     file_categories: readStringArray(input.fileCategories),
     file_extensions: readStringArray(input.fileExtensions),
     order_by: optionalString(input.orderBy),
@@ -441,7 +443,7 @@ async function searchFiles(input: Record<string, unknown>, accessToken: string, 
       query: requireString(input.query, "dropbox search query"),
       options: Object.keys(options).length > 0 ? options : undefined,
       match_field_options:
-        readBoolean(input.includeHighlights) === true
+        optionalBoolean(input.includeHighlights) === true
           ? {
               include_highlights: true,
             }
@@ -475,7 +477,7 @@ function normalizeSearchResult(payload: Record<string, unknown>) {
       };
     }),
     cursor: optionalString(payload.cursor) ?? null,
-    hasMore: readBoolean(payload.has_more) ?? false,
+    hasMore: optionalBoolean(payload.has_more) ?? false,
   };
 }
 
@@ -539,15 +541,15 @@ async function listRevisions(input: Record<string, unknown>, accessToken: string
       path: requireString(input.path, "dropbox list_revisions path"),
       mode: optionalString(input.mode),
       before_rev: optionalString(input.beforeRev),
-      limit: readNumber(input.limit),
+      limit: optionalNumber(input.limit),
     }),
   });
 
   return {
     entries: readObjectArray(payload.entries).map(mapDropboxMetadata),
-    isDeleted: readBoolean(payload.is_deleted) ?? false,
+    isDeleted: optionalBoolean(payload.is_deleted) ?? false,
     serverDeleted: optionalString(payload.server_deleted) ?? null,
-    hasMore: readBoolean(payload.has_more) ?? false,
+    hasMore: optionalBoolean(payload.has_more) ?? false,
   };
 }
 
@@ -653,7 +655,7 @@ async function modifySharedLink(input: Record<string, unknown>, accessToken: str
     requested_visibility: optionalString(input.requestedVisibility),
     audience: optionalString(input.audience),
     access: optionalString(input.access),
-    allow_download: readBoolean(input.allowDownload),
+    allow_download: optionalBoolean(input.allowDownload),
     link_password: optionalString(input.password),
     expires: optionalString(input.expiresAt),
   });
@@ -664,7 +666,7 @@ async function modifySharedLink(input: Record<string, unknown>, accessToken: str
     body: compactObject({
       url: requireString(input.url, "dropbox shared link url"),
       settings,
-      remove_expiration: readBoolean(input.removeExpiration),
+      remove_expiration: optionalBoolean(input.removeExpiration),
     }),
   });
 
@@ -819,8 +821,8 @@ function mapDropboxMetadata(value: unknown) {
     clientModified: optionalString(record.client_modified) ?? null,
     serverModified: optionalString(record.server_modified) ?? null,
     rev: optionalString(record.rev) ?? null,
-    sizeBytes: readNumber(record.size) ?? null,
-    isDownloadable: readBoolean(record.is_downloadable) ?? null,
+    sizeBytes: optionalNumber(record.size) ?? null,
+    isDownloadable: optionalBoolean(record.is_downloadable) ?? null,
     contentHash: optionalString(record.content_hash) ?? null,
     url: optionalString(record.url) ?? null,
     expiresAt: optionalString(record.expires) ?? null,
@@ -835,10 +837,10 @@ function resolveDropboxMetadataTag(record: Record<string, unknown>) {
     return explicitTag;
   }
   if (
-    readBoolean(record.is_downloadable) !== undefined ||
+    optionalBoolean(record.is_downloadable) !== undefined ||
     optionalString(record.rev) ||
     optionalString(record.content_hash) ||
-    readNumber(record.size) !== undefined
+    optionalNumber(record.size) !== undefined
   ) {
     return "file";
   }
@@ -889,14 +891,6 @@ function asObject(value: unknown): Record<string, unknown> {
 
 function optionalString(value: unknown) {
   return asOptionalString(value);
-}
-
-function readBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
-}
-
-function readNumber(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 function readObjectArray(value: unknown) {

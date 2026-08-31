@@ -1,7 +1,14 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalNumber,
+  optionalRecord,
+  optionalString,
+  requiredRecord,
+  requiredString,
+} from "../../core/cast.ts";
 import { defineOAuthProviderExecutors, providerInputError, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "canva";
@@ -517,10 +524,6 @@ function optionalStringList(value: unknown) {
 
 function optionalIntegerString(value: unknown) {
   return typeof value === "number" && Number.isInteger(value) ? String(value) : undefined;
-}
-
-function optionalNumber(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 function requireCanvaString(value: unknown, fieldName: string) {

@@ -27,7 +27,7 @@ export const radarActionHandlers: ProviderActionHandlers<"radar", RadarActionHan
         query: readRequiredString(input.query, "query"),
         layers: joinStringList(input.layers),
         country: joinCountryCodeList(input.country),
-        lang: readOptionalString(input.lang),
+        lang: optionalString(input.lang),
       }),
       context,
       phase: "execute",
@@ -414,10 +414,6 @@ function readRequiredString(value: unknown, fieldName: string): string {
   }
 
   return stringValue;
-}
-
-function readOptionalString(value: unknown): string | undefined {
-  return optionalString(value);
 }
 
 function readRequiredNumber(value: unknown, fieldName: string): number {

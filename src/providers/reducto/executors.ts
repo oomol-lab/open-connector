@@ -83,7 +83,7 @@ async function executeExtractData(input: Record<string, unknown>, context: ApiKe
       input: readRequiredDocumentUrl(input),
       instructions: compactObject({
         schema: optionalRecord(input.schema) ?? {},
-        system_prompt: readOptionalTrimmedString(input.systemPrompt),
+        system_prompt: optionalString(input.systemPrompt),
       }),
       parsing: optionalRecord(input.parsing),
       settings: optionalRecord(input.settings),
@@ -99,7 +99,7 @@ async function executeSplitDocument(input: Record<string, unknown>, context: Api
     compactObject({
       input: readRequiredDocumentUrl(input),
       split_description: input.splitDescription,
-      split_rules: readOptionalTrimmedString(input.splitRules),
+      split_rules: optionalString(input.splitRules),
       parsing: optionalRecord(input.parsing),
       settings: optionalRecord(input.settings),
     }),
@@ -281,8 +281,4 @@ function requirePayloadRecord(payload: unknown): Record<string, unknown> {
 
 function readRequiredDocumentUrl(input: Record<string, unknown>): string {
   return requiredString(input.documentUrl, "documentUrl", (message) => new ProviderRequestError(400, message));
-}
-
-function readOptionalTrimmedString(value: unknown): string | undefined {
-  return optionalString(value);
 }

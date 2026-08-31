@@ -2,7 +2,14 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalInteger, optionalRecord, optionalString, stringArray } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBoolean,
+  optionalInteger,
+  optionalRecord,
+  optionalString,
+  stringArray,
+} from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const giphyApiBaseUrl = "https://api.giphy.com/v1";
@@ -331,10 +338,6 @@ function toGiphyContextQuery(input: Record<string, unknown>): Record<string, Que
     country_code: optionalString(input.countryCode),
     region: optionalString(input.region),
   });
-}
-
-function optionalBoolean(value: unknown): boolean | undefined {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function toPagination(value: unknown, count: number): Record<string, number> {

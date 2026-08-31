@@ -1,4 +1,4 @@
-import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { optionalRawString, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const openfdaApiBaseUrl = "https://api.fda.gov";
@@ -50,8 +50,8 @@ export async function executeOpenfdaAction(
       usesApiKey: apiKey != null,
       dataset,
       params: {
-        search: readOptionalString(input.search),
-        sort: readOptionalString(input.sort),
+        search: optionalRawString(input.search),
+        sort: optionalRawString(input.sort),
         limit: readOptionalNumber(input.limit),
         skip: readOptionalNumber(input.skip),
       },
@@ -71,7 +71,7 @@ export async function executeOpenfdaAction(
       dataset,
       params: {
         count: String(input.field),
-        search: readOptionalString(input.search),
+        search: optionalRawString(input.search),
         limit: readOptionalNumber(input.limit),
       },
       fetcher,
@@ -183,10 +183,6 @@ function readErrorMessage(value: unknown): string | undefined {
   const payload = optionalRecord(value);
   const error = optionalRecord(payload?.error);
   return optionalString(error?.message) ?? optionalString(payload?.message);
-}
-
-function readOptionalString(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
 }
 
 function readOptionalNumber(value: unknown): number | undefined {

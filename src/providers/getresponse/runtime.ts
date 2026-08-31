@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 
-import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -114,7 +114,7 @@ function listCampaigns(input: GetresponseInput, fetcher: typeof fetch) {
     path: "/campaigns",
     query: compactObject({
       "query[name]": optionalInputString(input.input.name),
-      "query[isDefault]": optionalInputBoolean(input.input.isDefault),
+      "query[isDefault]": optionalBoolean(input.input.isDefault),
       ...buildSortQuery(input.input),
       ...buildPageQuery(input.input),
     }),
@@ -776,10 +776,6 @@ function optionalTrimmed(value: string | undefined) {
 
 function optionalInputString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
-}
-
-function optionalInputBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function optionalInputInteger(value: unknown) {

@@ -24,23 +24,23 @@ export const polygonIoActionHandlers: ProviderActionHandlers<"polygon_io", Polyg
   async list_tickers(input, context) {
     const response = optionalRecord(
       await requestPolygonIoJson(context, "/v3/reference/tickers", {
-        ticker: optionalText(input.ticker),
-        type: optionalText(input.type),
-        market: optionalText(input.market),
-        exchange: optionalText(input.exchange),
-        cusip: optionalText(input.cusip),
-        cik: optionalText(input.cik),
-        date: optionalText(input.date),
-        search: optionalText(input.search),
+        ticker: optionalString(input.ticker),
+        type: optionalString(input.type),
+        market: optionalString(input.market),
+        exchange: optionalString(input.exchange),
+        cusip: optionalString(input.cusip),
+        cik: optionalString(input.cik),
+        date: optionalString(input.date),
+        search: optionalString(input.search),
         active: optionalBoolean(input.active),
-        "ticker.gte": optionalText(input.tickerGte),
-        "ticker.gt": optionalText(input.tickerGt),
-        "ticker.lte": optionalText(input.tickerLte),
-        "ticker.lt": optionalText(input.tickerLt),
-        order: optionalText(input.order),
+        "ticker.gte": optionalString(input.tickerGte),
+        "ticker.gt": optionalString(input.tickerGt),
+        "ticker.lte": optionalString(input.tickerLte),
+        "ticker.lt": optionalString(input.tickerLt),
+        order: optionalString(input.order),
         limit: optionalIntegerString(input.limit),
-        sort: optionalText(input.sort),
-        cursor: optionalText(input.cursor),
+        sort: optionalString(input.sort),
+        cursor: optionalString(input.cursor),
       }),
     );
     return {
@@ -53,7 +53,7 @@ export const polygonIoActionHandlers: ProviderActionHandlers<"polygon_io", Polyg
     const ticker = requiredInputText(input.ticker, "ticker");
     const response = optionalRecord(
       await requestPolygonIoJson(context, `/v3/reference/tickers/${encodeURIComponent(ticker)}`, {
-        date: optionalText(input.date),
+        date: optionalString(input.date),
       }),
     );
     return {
@@ -80,7 +80,7 @@ export const polygonIoActionHandlers: ProviderActionHandlers<"polygon_io", Polyg
     const response = optionalRecord(
       await requestPolygonIoJson(context, path, {
         adjusted: optionalBoolean(input.adjusted),
-        sort: optionalText(input.sort),
+        sort: optionalString(input.sort),
         limit: optionalIntegerString(input.limit),
       }),
     );
@@ -89,8 +89,8 @@ export const polygonIoActionHandlers: ProviderActionHandlers<"polygon_io", Polyg
   async list_exchanges(input, context) {
     const response = optionalRecord(
       await requestPolygonIoJson(context, "/v3/reference/exchanges", {
-        asset_class: optionalText(input.assetClass),
-        locale: optionalText(input.locale),
+        asset_class: optionalString(input.assetClass),
+        locale: optionalString(input.locale),
       }),
     );
     return {
@@ -101,8 +101,8 @@ export const polygonIoActionHandlers: ProviderActionHandlers<"polygon_io", Polyg
   async list_ticker_types(input, context) {
     const response = optionalRecord(
       await requestPolygonIoJson(context, "/v3/reference/tickers/types", {
-        asset_class: optionalText(input.assetClass),
-        locale: optionalText(input.locale),
+        asset_class: optionalString(input.assetClass),
+        locale: optionalString(input.locale),
       }),
     );
     return {
@@ -413,10 +413,6 @@ function requiredInteger(value: unknown, fieldName: string): number {
     return value;
   }
   throw new ProviderRequestError(400, `${fieldName} must be an integer`);
-}
-
-function optionalText(value: unknown): string | undefined {
-  return optionalString(value);
 }
 
 function optionalIntegerString(value: unknown): string | undefined {

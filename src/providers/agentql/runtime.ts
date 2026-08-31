@@ -74,10 +74,10 @@ export async function validateAgentqlCredential(
 }
 
 async function executeQueryData(input: Record<string, unknown>, context: AgentqlActionContext): Promise<unknown> {
-  const url = readOptionalTrimmedString(input.url);
-  const html = readOptionalTrimmedString(input.html);
-  const query = readOptionalTrimmedString(input.query);
-  const prompt = readOptionalTrimmedString(input.prompt);
+  const url = optionalString(input.url);
+  const html = optionalString(input.html);
+  const query = optionalString(input.query);
+  const prompt = optionalString(input.prompt);
 
   if (!url && !html) {
     throw new ProviderRequestError(400, "url or html is required");
@@ -106,12 +106,12 @@ async function executeCreateBrowserSession(
   return agentqlPostJson(
     tetraSessionsPath,
     compactObject({
-      browser_ua_preset: readOptionalTrimmedString(input.browser_ua_preset),
-      browser_profile: readOptionalTrimmedString(input.browser_profile),
-      shutdown_mode: readOptionalTrimmedString(input.shutdown_mode),
+      browser_ua_preset: optionalString(input.browser_ua_preset),
+      browser_profile: optionalString(input.browser_profile),
+      shutdown_mode: optionalString(input.shutdown_mode),
       inactivity_timeout_seconds: optionalInteger(input.inactivity_timeout_seconds),
       proxy: normalizeProxy(input.proxy),
-      sub_user_id: readOptionalTrimmedString(input.sub_user_id),
+      sub_user_id: optionalString(input.sub_user_id),
       branding: optionalBoolean(input.branding),
     }),
     context,
@@ -124,13 +124,13 @@ async function executeListSessionUsage(
   context: AgentqlActionContext,
 ): Promise<unknown> {
   const url = new URL(tetraUsagePath, agentqlApiBaseUrl);
-  setOptionalQueryParameter(url, "sub_user_id", readOptionalTrimmedString(input.sub_user_id));
-  setOptionalQueryParameter(url, "session_id", readOptionalTrimmedString(input.session_id));
-  setOptionalQueryParameter(url, "start_after", readOptionalTrimmedString(input.start_after));
-  setOptionalQueryParameter(url, "end_before", readOptionalTrimmedString(input.end_before));
-  setOptionalQueryParameter(url, "updated_after", readOptionalTrimmedString(input.updated_after));
-  setOptionalQueryParameter(url, "updated_before", readOptionalTrimmedString(input.updated_before));
-  setOptionalQueryParameter(url, "status", readOptionalTrimmedString(input.status));
+  setOptionalQueryParameter(url, "sub_user_id", optionalString(input.sub_user_id));
+  setOptionalQueryParameter(url, "session_id", optionalString(input.session_id));
+  setOptionalQueryParameter(url, "start_after", optionalString(input.start_after));
+  setOptionalQueryParameter(url, "end_before", optionalString(input.end_before));
+  setOptionalQueryParameter(url, "updated_after", optionalString(input.updated_after));
+  setOptionalQueryParameter(url, "updated_before", optionalString(input.updated_before));
+  setOptionalQueryParameter(url, "status", optionalString(input.status));
   setOptionalQueryParameter(url, "limit", optionalInteger(input.limit)?.toString());
   setOptionalQueryParameter(url, "page", optionalInteger(input.page)?.toString());
 
@@ -257,11 +257,11 @@ function normalizeQueryParams(value: unknown): Record<string, unknown> | undefin
   }
 
   return compactObject({
-    mode: readOptionalTrimmedString(params.mode),
+    mode: optionalString(params.mode),
     wait_for: optionalInteger(params.wait_for),
     is_scroll_to_bottom_enabled: optionalBoolean(params.is_scroll_to_bottom_enabled),
     is_screenshot_enabled: optionalBoolean(params.is_screenshot_enabled),
-    browser_profile: readOptionalTrimmedString(params.browser_profile),
+    browser_profile: optionalString(params.browser_profile),
     proxy: normalizeProxy(params.proxy),
   });
 }
@@ -272,18 +272,18 @@ function normalizeProxy(value: unknown): Record<string, unknown> | undefined {
     return undefined;
   }
 
-  const type = readOptionalTrimmedString(proxy.type);
-  const url = readOptionalTrimmedString(proxy.url);
+  const type = optionalString(proxy.type);
+  const url = optionalString(proxy.url);
   if (type === "custom" && !url) {
     throw new ProviderRequestError(400, "url is required when proxy type is custom");
   }
 
   return compactObject({
     type,
-    country_code: readOptionalTrimmedString(proxy.country_code)?.toUpperCase(),
+    country_code: optionalString(proxy.country_code)?.toUpperCase(),
     url,
-    username: readOptionalTrimmedString(proxy.username),
-    password: readOptionalTrimmedString(proxy.password),
+    username: optionalString(proxy.username),
+    password: optionalString(proxy.password),
   });
 }
 
@@ -293,8 +293,7 @@ function readErrorMessage(payload: unknown): string | undefined {
   }
 
   const record = payload as Record<string, unknown>;
-  const direct =
-    readNonEmptyString(record.error_info) ?? readNonEmptyString(record.detail) ?? readNonEmptyString(record.message);
+  const direct = optionalString(record.error_info) ?? optionalString(record.detail) ?? optionalString(record.message);
   if (direct) {
     return direct;
   }
@@ -302,7 +301,7 @@ function readErrorMessage(payload: unknown): string | undefined {
   const detail = record.detail;
   if (Array.isArray(detail)) {
     for (const item of detail) {
-      const message = readNonEmptyString(optionalRecord(item)?.msg);
+      const message = optionalString(optionalRecord(item)?.msg);
       if (message) {
         return message;
       }
@@ -328,19 +327,11 @@ function readNullableRecord(
 
 function readOptionalString(payload: unknown, parentKey: string, childKey: string): string | undefined {
   const parent = optionalRecord(payload)?.[parentKey];
-  return readOptionalTrimmedString(optionalRecord(parent)?.[childKey]);
-}
-
-function readOptionalTrimmedString(value: unknown): string | undefined {
-  return optionalString(value);
+  return optionalString(optionalRecord(parent)?.[childKey]);
 }
 
 function setOptionalQueryParameter(url: URL, key: string, value: string | undefined): void {
   if (value !== undefined) {
     url.searchParams.set(key, value);
   }
-}
-
-function readNonEmptyString(value: unknown): string | undefined {
-  return optionalString(value);
 }

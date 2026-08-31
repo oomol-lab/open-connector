@@ -293,17 +293,16 @@ function extractWorkdayErrorMessage(payload: unknown): string | undefined {
 function normalizeWorker(value: unknown): Record<string, unknown> {
   const record = normalizeRawObject(value);
   return {
-    id: readNonEmptyString(record.id) ?? null,
-    workerId: readNonEmptyString(record.workerId) ?? readNonEmptyString(record.worker_id) ?? null,
-    descriptor: readNonEmptyString(record.descriptor) ?? null,
-    isManager: readBoolean(record.isManager) ?? readBoolean(record.is_manager) ?? null,
-    businessTitle: readNonEmptyString(record.businessTitle) ?? readNonEmptyString(record.business_title) ?? null,
-    primaryWorkEmail: readNonEmptyString(record.primaryWorkEmail) ?? readNonEmptyString(record.email) ?? null,
-    primaryWorkPhone: readNonEmptyString(record.primaryWorkPhone) ?? readNonEmptyString(record.phone) ?? null,
-    primaryWorkAddressText:
-      readNonEmptyString(record.primaryWorkAddressText) ?? readNonEmptyString(record.address) ?? null,
-    dateOfBirth: readNonEmptyString(record.dateOfBirth) ?? readNonEmptyString(record.date_of_birth) ?? null,
-    yearsOfService: readNonEmptyString(record.yearsOfService) ?? readNonEmptyString(record.years_of_service) ?? null,
+    id: optionalString(record.id) ?? null,
+    workerId: optionalString(record.workerId) ?? optionalString(record.worker_id) ?? null,
+    descriptor: optionalString(record.descriptor) ?? null,
+    isManager: optionalBoolean(record.isManager) ?? optionalBoolean(record.is_manager) ?? null,
+    businessTitle: optionalString(record.businessTitle) ?? optionalString(record.business_title) ?? null,
+    primaryWorkEmail: optionalString(record.primaryWorkEmail) ?? optionalString(record.email) ?? null,
+    primaryWorkPhone: optionalString(record.primaryWorkPhone) ?? optionalString(record.phone) ?? null,
+    primaryWorkAddressText: optionalString(record.primaryWorkAddressText) ?? optionalString(record.address) ?? null,
+    dateOfBirth: optionalString(record.dateOfBirth) ?? optionalString(record.date_of_birth) ?? null,
+    yearsOfService: optionalString(record.yearsOfService) ?? optionalString(record.years_of_service) ?? null,
     person: normalizePerson(record.person),
     primaryJob: normalizeReference(record.primaryJob),
     workerType: normalizeWorkerType(record.workerType),
@@ -319,13 +318,11 @@ function normalizeWorker(value: unknown): Record<string, unknown> {
 function normalizeJob(value: unknown): Record<string, unknown> {
   const record = normalizeRawObject(value);
   return {
-    id: readNonEmptyString(record.id) ?? null,
-    descriptor: readNonEmptyString(record.descriptor) ?? null,
-    businessTitle: readNonEmptyString(record.businessTitle) ?? readNonEmptyString(record.business_title) ?? null,
+    id: optionalString(record.id) ?? null,
+    descriptor: optionalString(record.descriptor) ?? null,
+    businessTitle: optionalString(record.businessTitle) ?? optionalString(record.business_title) ?? null,
     nextPayPeriodStartDate:
-      readNonEmptyString(record.nextPayPeriodStartDate) ??
-      readNonEmptyString(record.next_pay_period_start_date) ??
-      null,
+      optionalString(record.nextPayPeriodStartDate) ?? optionalString(record.next_pay_period_start_date) ?? null,
     worker: normalizeReference(record.worker),
     jobType: normalizeReference(record.jobType),
     location: normalizeReference(record.location),
@@ -338,13 +335,13 @@ function normalizeJob(value: unknown): Record<string, unknown> {
 function normalizeJobPosting(value: unknown): Record<string, unknown> {
   const record = normalizeRawObject(value);
   return {
-    id: readNonEmptyString(record.id) ?? null,
-    descriptor: readNonEmptyString(record.descriptor) ?? null,
-    jobTitle: readNonEmptyString(record.jobTitle) ?? null,
-    postingTitle: readNonEmptyString(record.postingTitle) ?? null,
-    jobDescription: readNonEmptyString(record.jobDescription) ?? null,
-    postingStartDate: readNonEmptyString(record.postingStartDate) ?? null,
-    postingEndDate: readNonEmptyString(record.postingEndDate) ?? null,
+    id: optionalString(record.id) ?? null,
+    descriptor: optionalString(record.descriptor) ?? null,
+    jobTitle: optionalString(record.jobTitle) ?? null,
+    postingTitle: optionalString(record.postingTitle) ?? null,
+    jobDescription: optionalString(record.jobDescription) ?? null,
+    postingStartDate: optionalString(record.postingStartDate) ?? null,
+    postingEndDate: optionalString(record.postingEndDate) ?? null,
     location: normalizeReference(record.location),
     department: normalizeReference(record.department),
     position: normalizeReference(record.position),
@@ -361,25 +358,25 @@ function normalizeJobPosting(value: unknown): Record<string, unknown> {
 function normalizePerson(value: unknown): Record<string, string | null> {
   const record = normalizeRawObject(value);
   return {
-    id: readNonEmptyString(record.id) ?? null,
-    descriptor: readNonEmptyString(record.descriptor) ?? null,
+    id: optionalString(record.id) ?? null,
+    descriptor: optionalString(record.descriptor) ?? null,
   };
 }
 
 function normalizeWorkerType(value: unknown): Record<string, string | null> {
   const record = normalizeRawObject(value);
   return {
-    id: readNonEmptyString(record.id) ?? null,
-    descriptor: readNonEmptyString(record.descriptor) ?? null,
+    id: optionalString(record.id) ?? null,
+    descriptor: optionalString(record.descriptor) ?? null,
   };
 }
 
 function normalizeReference(value: unknown): Record<string, string | null> {
   const record = normalizeRawObject(value);
   return {
-    id: readNonEmptyString(record.id) ?? null,
-    href: readNonEmptyString(record.href) ?? null,
-    descriptor: readNonEmptyString(record.descriptor) ?? null,
+    id: optionalString(record.id) ?? null,
+    href: optionalString(record.href) ?? null,
+    descriptor: optionalString(record.descriptor) ?? null,
   };
 }
 
@@ -431,14 +428,6 @@ function requiredProviderString(value: unknown, fieldName: string): string {
 function readGrantedScopes(metadata: Record<string, unknown>): string[] {
   const rawScope = optionalString(metadata.scope);
   return rawScope ? rawScope.split(/\s+/).filter(Boolean) : [...workdayOAuthScopes];
-}
-
-function readNonEmptyString(value: unknown): string | undefined {
-  return optionalString(value);
-}
-
-function readBoolean(value: unknown): boolean | undefined {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function nonEmptyString(value: unknown): string | undefined {

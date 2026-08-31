@@ -2,7 +2,13 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBooleanOrNull,
+  optionalNumber,
+  optionalRecord,
+  optionalString,
+} from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 export const smartsheetApiBaseUrl = "https://api.smartsheet.com/2.0";
@@ -265,7 +271,7 @@ function normalizeColumn(value: unknown): Record<string, unknown> {
     id: nullableInteger(record.id),
     title: nullableString(record.title),
     type: nullableString(record.type),
-    primary: nullableBoolean(record.primary),
+    primary: optionalBooleanOrNull(record.primary),
     index: nullableInteger(record.index),
     symbol: nullableString(record.symbol),
     options: normalizeArray(record.options).flatMap((option) => (typeof option === "string" ? [option] : [])),
@@ -280,7 +286,7 @@ function normalizeRow(value: unknown): Record<string, unknown> {
     sheetId: nullableInteger(record.sheetId),
     rowNumber: nullableInteger(record.rowNumber),
     permalink: nullableString(record.permalink),
-    expanded: nullableBoolean(record.expanded),
+    expanded: optionalBooleanOrNull(record.expanded),
     createdAt: nullableString(record.createdAt),
     modifiedAt: nullableString(record.modifiedAt),
     cells: normalizeArray(record.cells).map(normalizeCell),
@@ -353,8 +359,4 @@ function nullableInteger(value: unknown): number | null {
   if (value == null) return null;
   const number = typeof value === "number" ? value : Number(value);
   return Number.isInteger(number) ? number : null;
-}
-
-function nullableBoolean(value: unknown): boolean | null {
-  return typeof value === "boolean" ? value : null;
 }

@@ -3,7 +3,14 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
-import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBoolean,
+  optionalBooleanOrNull,
+  optionalNumber,
+  optionalRecord,
+  optionalString,
+} from "../../core/cast.ts";
 import { compactJson } from "../../core/request.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
@@ -163,7 +170,7 @@ async function listTemplates(input: Record<string, unknown>, context: DocmosisAc
 
   const items = Array.isArray(payload.templateList) ? payload.templateList : [];
   return {
-    templateListStale: readNullableBoolean(payload.templateListStale),
+    templateListStale: optionalBooleanOrNull(payload.templateListStale),
     nextPageToken: readNullableString(payload.nextPageToken),
     pageSize: readNullableInteger(payload.pageSize),
     templates: items.map((item) => normalizeTemplateDetails(item)),
@@ -205,7 +212,7 @@ async function getTemplateStructure(input: Record<string, unknown>, context: Doc
   });
 
   return {
-    templateHasErrors: readNullableBoolean(payload.templateHasErrors),
+    templateHasErrors: optionalBooleanOrNull(payload.templateHasErrors),
     templateErrorMessage: readNullableString(payload.templateErrorMessage),
     templateStructure: Array.isArray(payload.templateStructure) ? payload.templateStructure : [],
   };
@@ -263,7 +270,7 @@ async function renderDocument(input: Record<string, unknown>, context: DocmosisA
     requestId: readNullableString(payload.requestId) ?? responseHeaders.requestId,
     resultFileBase64: readNullableString(payload.resultFile),
     queue: {
-      rejected: readNullableBoolean(queueRecord?.rejected),
+      rejected: optionalBooleanOrNull(queueRecord?.rejected),
       availablePct: readNullableInteger(queueRecord?.availablePct),
       delaySeconds: readNullableInteger(queueRecord?.delaySeconds),
     },
@@ -311,11 +318,11 @@ function normalizeEnvironmentSummary(payload: Record<string, unknown>): Docmosis
 
   return {
     environmentName: readNullableString(accountEnvDetails?.name),
-    ready: readNullableBoolean(summaryRoot?.ready),
+    ready: optionalBooleanOrNull(summaryRoot?.ready),
     planName: readNullableString(plan?.name),
-    isActivated: readNullableBoolean(accountEnvDetails?.isActivated),
-    isDeleted: readNullableBoolean(accountEnvDetails?.isDeleted),
-    isDisabled: readNullableBoolean(accountEnvDetails?.isDisabled),
+    isActivated: optionalBooleanOrNull(accountEnvDetails?.isActivated),
+    isDeleted: optionalBooleanOrNull(accountEnvDetails?.isDeleted),
+    isDisabled: optionalBooleanOrNull(accountEnvDetails?.isDisabled),
     lastUpdatedByUser: readNullableString(auditInfo?.lastUpdatedByUser),
     lastUpdatedTime: readNullableInteger(auditInfo?.lastUpdatedTime),
     pageQuota: {
@@ -323,7 +330,7 @@ function normalizeEnvironmentSummary(payload: Record<string, unknown>): Docmosis
       used: readNullableInteger(pageQuota?.used),
       pctUsed: readNullableNumber(pageQuota?.pctUsed),
       pctUsedStr: readNullableString(pageQuota?.pctUsedStr),
-      isHardLimited: readNullableBoolean(pageQuota?.isHardLimited),
+      isHardLimited: optionalBooleanOrNull(pageQuota?.isHardLimited),
     },
     raw: summaryRoot ?? {},
   };
@@ -339,8 +346,8 @@ function normalizeTemplateDetails(value: unknown): Record<string, unknown> {
     md5: readNullableString(record.md5),
     templatePlainTextFieldPrefix: readNullableString(record.templatePlainTextFieldPrefix),
     templatePlainTextFieldSuffix: readNullableString(record.templatePlainTextFieldSuffix),
-    templateHasErrors: readNullableBoolean(record.templateHasErrors),
-    templateDevMode: readNullableBoolean(record.templateDevMode),
+    templateHasErrors: optionalBooleanOrNull(record.templateHasErrors),
+    templateDevMode: optionalBooleanOrNull(record.templateDevMode),
     templateDescription: readNullableString(record.templateDescription),
     raw: record,
   };
@@ -557,10 +564,6 @@ function readNullableNumber(value: unknown): number | null {
   }
   const parsed = optionalNumber(value);
   return typeof parsed === "number" ? parsed : null;
-}
-
-function readNullableBoolean(value: unknown): boolean | null {
-  return typeof value === "boolean" ? value : null;
 }
 
 function readOptionalMessage(payload: Record<string, unknown>, key: string): string | null {

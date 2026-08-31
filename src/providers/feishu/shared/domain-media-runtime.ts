@@ -2,7 +2,7 @@ import type { TransitFileWriter } from "../../../core/types.ts";
 import type { FeishuJsonRequest } from "./client.ts";
 import type { DownloadedFeishuSource } from "./media.ts";
 
-import { compactObject, optionalRecord } from "../../../core/cast.ts";
+import { compactObject, optionalNumber, optionalRecord } from "../../../core/cast.ts";
 import {
   createProviderFetch,
   providerInputError,
@@ -978,10 +978,6 @@ function requireResponseString(value: unknown, fieldName: string) {
     throw providerResponseError(`Feishu response is missing ${fieldName}`);
   }
   return value;
-}
-
-function optionalNumber(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 function optionalStringArray(value: unknown) {

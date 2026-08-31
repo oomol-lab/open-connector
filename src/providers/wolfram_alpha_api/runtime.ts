@@ -59,7 +59,7 @@ export const wolframAlphaApiActionHandlers: ProviderActionHandlers<
       context.apiKey,
       {
         i: query,
-        units: readOptionalString(input.units),
+        units: optionalString(input.units),
         timeout: readOptionalTimeout(input.timeout),
       },
       context.fetcher,
@@ -75,7 +75,7 @@ export const wolframAlphaApiActionHandlers: ProviderActionHandlers<
       context.apiKey,
       {
         i: query,
-        units: readOptionalString(input.units),
+        units: optionalString(input.units),
         timeout: readOptionalTimeout(input.timeout),
       },
       context.fetcher,
@@ -240,10 +240,6 @@ function createWolframAlphaCredentialError(message: string, phase: WolframAlphaP
 
 function requiredProviderString(value: unknown, fieldName: string): string {
   return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
-}
-
-function readOptionalString(value: unknown): string | undefined {
-  return optionalString(value);
 }
 
 function readOptionalTimeout(value: unknown): string | undefined {

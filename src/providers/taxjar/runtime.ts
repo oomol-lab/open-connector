@@ -22,10 +22,10 @@ export const taxjarActionHandlers: ProviderActionHandlers<"taxjar", TaxjarAction
         path: `/rates/${encodeURIComponent(zip)}`,
         method: "GET",
         query: compactObject({
-          country: readOptionalTrimmedString(input.country),
-          state: readOptionalTrimmedString(input.state),
-          city: readOptionalTrimmedString(input.city),
-          street: readOptionalTrimmedString(input.street),
+          country: optionalString(input.country),
+          state: optionalString(input.state),
+          city: optionalString(input.city),
+          street: optionalString(input.street),
         }),
       },
       context,
@@ -165,7 +165,7 @@ function listTransactions(
       query: compactObject({
         from_transaction_date: readRequiredTrimmedString(input.from_transaction_date, "from_transaction_date"),
         to_transaction_date: readRequiredTrimmedString(input.to_transaction_date, "to_transaction_date"),
-        provider: readOptionalTrimmedString(input.provider),
+        provider: optionalString(input.provider),
       }),
     },
     context,
@@ -252,10 +252,6 @@ function extractErrorMessage(payload: unknown): string | undefined {
 
 function readRequiredTrimmedString(value: unknown, fieldName: string): string {
   return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
-}
-
-function readOptionalTrimmedString(value: unknown): string | undefined {
-  return optionalString(value);
 }
 
 function isTimeoutLikeError(error: unknown): boolean {

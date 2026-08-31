@@ -2,7 +2,13 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBooleanOrNull,
+  optionalRecord,
+  optionalString,
+  requiredString,
+} from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -462,7 +468,7 @@ function normalizeCommission(item: Record<string, unknown>): Record<string, unkn
   return {
     id: numberOrNull(item.id),
     amount: numberOrNull(item.amount),
-    approved: booleanOrNull(item.approved),
+    approved: optionalBooleanOrNull(item.approved),
     created_at: stringOrNull(item.created_at),
     commission_type: stringOrNull(item.commission_type),
     commission_name: stringOrNull(item.commission_name),
@@ -487,7 +493,7 @@ function normalizeProgram(
     currency: stringOrNull(item.currency),
     cookie_time: numberOrNull(item.cookie_time),
     default_landing_page_url: stringOrNull(item.default_landing_page_url),
-    recurring: booleanOrNull(item.recurring),
+    recurring: optionalBooleanOrNull(item.recurring),
     recurring_cap: numberOrNull(item.recurring_cap),
     recurring_period_days: numberOrNull(item.recurring_period_days),
     program_category: objectOrNull(item.program_category),
@@ -619,10 +625,6 @@ function stringOrNull(value: unknown): string | null {
 
 function numberOrNull(value: unknown): number | null {
   return typeof value === "number" ? value : null;
-}
-
-function booleanOrNull(value: unknown): boolean | null {
-  return typeof value === "boolean" ? value : null;
 }
 
 function objectOrNull(value: unknown): Record<string, unknown> | null {

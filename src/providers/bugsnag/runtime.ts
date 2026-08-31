@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
+import { optionalBoolean, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -86,7 +86,7 @@ async function listOrganizations(input: Record<string, unknown>, context: ApiKey
     apiKey: context.apiKey,
     path: "/user/organizations",
     query: {
-      admin: readBoolean(input.admin),
+      admin: optionalBoolean(input.admin),
       per_page: readNumber(input.perPage),
     },
     fetcher: context.fetcher,
@@ -385,8 +385,4 @@ function readString(value: unknown): string | undefined {
 
 function readNumber(value: unknown): number | undefined {
   return typeof value === "number" ? value : undefined;
-}
-
-function readBoolean(value: unknown): boolean | undefined {
-  return typeof value === "boolean" ? value : undefined;
 }

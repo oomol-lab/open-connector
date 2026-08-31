@@ -61,7 +61,7 @@ export const proxiedmailActionHandlers: ProviderActionHandlers<"proxiedmail", Pr
           type: "proxy_bindings",
           attributes: compactObject({
             real_addresses: readStringArray(input.realAddresses, "realAddresses"),
-            proxy_address: readOptionalNonEmptyString(input.proxyAddress),
+            proxy_address: optionalString(input.proxyAddress),
             callback_url: readOptionalString(input.callbackUrl),
             is_browsable: typeof input.isBrowsable === "boolean" ? input.isBrowsable : undefined,
           }),
@@ -78,7 +78,7 @@ export const proxiedmailActionHandlers: ProviderActionHandlers<"proxiedmail", Pr
     const proxyBindingId = readRequiredNonEmptyString(input.proxyBindingId, "proxyBindingId");
     const attributes = compactObject({
       real_addresses: readOptionalRealAddressUpdates(input.realAddresses),
-      proxy_address: readOptionalNonEmptyString(input.proxyAddress),
+      proxy_address: optionalString(input.proxyAddress),
       description: typeof input.description === "string" ? input.description : undefined,
       callback_url: readOptionalString(input.callbackUrl),
       is_browsable: typeof input.isBrowsable === "boolean" ? input.isBrowsable : undefined,
@@ -342,10 +342,6 @@ function readOptionalRealAddressUpdates(value: unknown): Record<string, boolean>
 
 function readRequiredNonEmptyString(value: unknown, fieldName: string): string {
   return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
-}
-
-function readOptionalNonEmptyString(value: unknown): string | undefined {
-  return optionalString(value);
 }
 
 function readOptionalString(value: unknown): string | undefined {

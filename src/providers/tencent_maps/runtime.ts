@@ -1,7 +1,7 @@
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject } from "../../core/cast.ts";
+import { compactObject, optionalBoolean } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const tencentMapsApiBaseUrl = "https://apis.map.qq.com";
@@ -185,7 +185,7 @@ async function executeSearchPlacesAround(input: Record<string, unknown>, runtime
       boundary: buildNearbyBoundary(
         readRequiredString(input.location, "location"),
         readOptionalInteger(input.radius) ?? 1000,
-        readOptionalBoolean(input.autoExtend),
+        optionalBoolean(input.autoExtend),
       ),
       get_subpois: readOptionalFlag(input.getSubPois),
       filter: readOptionalString(input.filter),
@@ -760,12 +760,8 @@ function readOptionalNumber(value: unknown) {
   return undefined;
 }
 
-function readOptionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
-}
-
 function readOptionalFlag(value: unknown) {
-  const booleanValue = readOptionalBoolean(value);
+  const booleanValue = optionalBoolean(value);
   if (booleanValue === undefined) {
     return undefined;
   }

@@ -1,6 +1,6 @@
 import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 
-import { optionalRecord, optionalString, compactObject } from "../../core/cast.ts";
+import { optionalBoolean, optionalRecord, optionalString, compactObject } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { dopplerRequest, readObject } from "./runtime.shared.ts";
 
@@ -82,7 +82,7 @@ function normalizeLog(payload: unknown) {
     config: optionalString(record.config),
     project: optionalString(record.project),
     environment: optionalString(record.environment),
-    rollback: asOptionalBoolean(record.rollback),
+    rollback: optionalBoolean(record.rollback),
     createdAt: optionalString(record.created_at),
     user: optionalRecord(record.user),
     diff: Array.isArray(record.diff) ? record.diff : undefined,
@@ -99,8 +99,4 @@ function asRequiredString(value: unknown, fieldName: string) {
 
 function asOptionalNumber(value: unknown) {
   return typeof value === "number" ? value : undefined;
-}
-
-function asOptionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }

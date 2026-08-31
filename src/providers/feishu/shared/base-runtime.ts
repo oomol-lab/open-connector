@@ -1,6 +1,6 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
-import { compactObject } from "../../../core/cast.ts";
+import { compactObject, optionalBoolean } from "../../../core/cast.ts";
 import { ProviderRequestError } from "../../provider-runtime.ts";
 
 interface FeishuBaseActionHandler {
@@ -677,10 +677,6 @@ function optionalObject(value: unknown): Record<string, unknown> | undefined {
 
 function optionalNumber(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : undefined;
-}
-
-function optionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function invalidResponse(message: string) {

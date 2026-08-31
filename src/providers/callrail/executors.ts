@@ -2,7 +2,14 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBooleanOrNull,
+  optionalNumber,
+  optionalRecord,
+  optionalString,
+  requiredString,
+} from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
@@ -312,8 +319,8 @@ function normalizeAccount(input: Record<string, unknown>): Record<string, unknow
   return {
     id: asNullableString(input.id),
     name: asNullableString(input.name),
-    outboundRecordingEnabled: asNullableBoolean(input.outbound_recording_enabled),
-    hipaaAccount: asNullableBoolean(input.hipaa_account),
+    outboundRecordingEnabled: optionalBooleanOrNull(input.outbound_recording_enabled),
+    hipaaAccount: optionalBooleanOrNull(input.hipaa_account),
     raw: input,
   };
 }
@@ -339,7 +346,7 @@ function normalizeCall(input: Record<string, unknown>): Record<string, unknown> 
     trackingPhoneNumber: asNullableString(input.tracking_phone_number),
     businessPhoneNumber: asNullableString(input.business_phone_number),
     direction: asNullableString(input.direction),
-    answered: asNullableBoolean(input.answered),
+    answered: optionalBooleanOrNull(input.answered),
     duration: asNullableInteger(input.duration),
     startTime: asNullableString(input.start_time),
     source: asNullableString(input.source),
@@ -386,8 +393,4 @@ function asNullableString(value: unknown): string | null {
 function asNullableInteger(value: unknown): number | null {
   const number = optionalNumber(value);
   return number !== undefined && Number.isInteger(number) ? number : null;
-}
-
-function asNullableBoolean(value: unknown): boolean | null {
-  return typeof value === "boolean" ? value : null;
 }

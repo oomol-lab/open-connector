@@ -4,6 +4,7 @@ import type { Document360ActionName } from "./actions.ts";
 import {
   compactObject,
   optionalBoolean,
+  optionalBooleanOrNull,
   optionalInteger,
   optionalNumber,
   optionalRecord,
@@ -239,10 +240,10 @@ function normalizeWorkspace(value: unknown): Record<string, unknown> {
     versionNumber: nullableNumber(record.version_number),
     baseVersionNumber: nullableNumber(record.base_version_number),
     versionCodeName: optionalString(record.version_code_name) ?? null,
-    isMainVersion: nullableBoolean(record.is_main_version),
-    isBeta: nullableBoolean(record.is_beta),
-    isPublic: nullableBoolean(record.is_public),
-    isDeprecated: nullableBoolean(record.is_deprecated),
+    isMainVersion: optionalBooleanOrNull(record.is_main_version),
+    isBeta: optionalBooleanOrNull(record.is_beta),
+    isPublic: optionalBooleanOrNull(record.is_public),
+    isDeprecated: optionalBooleanOrNull(record.is_deprecated),
     slug: optionalString(record.slug) ?? null,
     order: nullableInteger(record.order),
     versionType: record.version_type ?? null,
@@ -260,8 +261,8 @@ function normalizeLanguage(value: unknown): Record<string, unknown> {
     code: optionalString(record.code) ?? null,
     name: optionalString(record.name) ?? null,
     displayName: optionalString(record.display_name) ?? null,
-    setAsDefault: nullableBoolean(record.set_as_default),
-    hidden: nullableBoolean(record.hidden),
+    setAsDefault: optionalBooleanOrNull(record.set_as_default),
+    hidden: optionalBooleanOrNull(record.hidden),
     raw: record,
   };
 }
@@ -276,13 +277,13 @@ function normalizeArticle(value: unknown): Record<string, unknown> {
     languageCode: optionalString(record.language_code) ?? null,
     publicVersion: nullableNumber(record.public_version),
     latestVersion: nullableNumber(record.latest_version),
-    hidden: nullableBoolean(record.hidden),
+    hidden: optionalBooleanOrNull(record.hidden),
     status: record.status ?? null,
     order: nullableInteger(record.order),
     contentType: record.content_type ?? null,
     translationOption: record.translation_option ?? null,
-    isSharedArticle: nullableBoolean(record.is_shared_article),
-    excludeFromExternalSearch: nullableBoolean(record.exclude_from_external_search),
+    isSharedArticle: optionalBooleanOrNull(record.is_shared_article),
+    excludeFromExternalSearch: optionalBooleanOrNull(record.exclude_from_external_search),
     securityVisibility: record.security_visibility ?? null,
     currentWorkflowStatusId: optionalString(record.current_workflow_status_id) ?? null,
     createdAt: optionalString(record.created_at) ?? null,
@@ -300,11 +301,11 @@ function normalizeCategory(value: unknown): Record<string, unknown> {
     slug: optionalString(record.slug) ?? null,
     languageCode: optionalString(record.language_code) ?? null,
     categoryType: record.category_type ?? null,
-    hidden: nullableBoolean(record.hidden),
+    hidden: optionalBooleanOrNull(record.hidden),
     order: nullableInteger(record.order),
     icon: optionalString(record.icon) ?? null,
     status: record.status ?? null,
-    excludeFromExternalSearch: nullableBoolean(record.exclude_from_external_search),
+    excludeFromExternalSearch: optionalBooleanOrNull(record.exclude_from_external_search),
     securityVisibility: record.security_visibility ?? null,
     createdAt: optionalString(record.created_at) ?? null,
     modifiedAt: optionalString(record.modified_at) ?? null,
@@ -331,9 +332,9 @@ function normalizeSearchHit(value: unknown): Record<string, unknown> {
     slug: optionalString(record.slug) ?? null,
     version: nullableNumber(record.version),
     order: nullableInteger(record.order),
-    isHidden: nullableBoolean(record.is_hidden),
-    isDraft: nullableBoolean(record.is_draft),
-    isPrivate: nullableBoolean(record.is_private),
+    isHidden: optionalBooleanOrNull(record.is_hidden),
+    isDraft: optionalBooleanOrNull(record.is_draft),
+    isPrivate: optionalBooleanOrNull(record.is_private),
     langCode: optionalString(record.lang_code) ?? null,
     objectId: optionalString(record.object_id) ?? null,
     raw: record,
@@ -354,8 +355,4 @@ function nullableNumber(value: unknown): number | null {
 
 function nullableInteger(value: unknown): number | null {
   return optionalInteger(value) ?? null;
-}
-
-function nullableBoolean(value: unknown): boolean | null {
-  return typeof value === "boolean" ? value : null;
 }

@@ -1,5 +1,6 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
+import { optionalNumber } from "../../../core/cast.ts";
 import { providerInputError } from "../../provider-runtime.ts";
 
 interface MinutesActionHandler {
@@ -292,10 +293,6 @@ function optionalStringArray(value: unknown) {
   }
   const values = value.filter((item): item is string => typeof item === "string" && item.length > 0);
   return values.length > 0 ? values : undefined;
-}
-
-function optionalNumber(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 function requireReplacements(value: unknown) {

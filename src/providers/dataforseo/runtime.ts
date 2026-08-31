@@ -1,7 +1,7 @@
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
-import { compactObject, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalBoolean, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 type DataForSeoPhase = "validate" | "execute";
@@ -154,7 +154,7 @@ export const dataForSeoActionHandlers: ProviderActionHandlers<"dataforseo", Data
           language_name: readOptionalString(input.languageName),
           language_code: readOptionalString(input.languageCode),
           limit: readOptionalInteger(input.limit, "limit"),
-          include_seed_keyword: readOptionalBoolean(input.includeSeedKeyword),
+          include_seed_keyword: optionalBoolean(input.includeSeedKeyword),
           tag: readOptionalString(input.tag),
         }),
       ],
@@ -593,7 +593,7 @@ function buildDataForSeoBody(
     body[outputKey] = readOptionalInteger(input[inputKey], inputKey);
   }
   for (const [inputKey, outputKey] of options.booleanFields ?? []) {
-    body[outputKey] = readOptionalBoolean(input[inputKey]);
+    body[outputKey] = optionalBoolean(input[inputKey]);
   }
   for (const [inputKey, outputKey] of options.objectFields ?? []) {
     body[outputKey] = readOptionalObject(input[inputKey]);
@@ -773,8 +773,4 @@ function readOptionalNumber(value: unknown) {
     return Number.isFinite(parsed) ? parsed : undefined;
   }
   return undefined;
-}
-
-function readOptionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }

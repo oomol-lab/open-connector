@@ -6,6 +6,7 @@ import {
   compactObject,
   objectArray,
   optionalInteger,
+  optionalRawString,
   optionalRecord,
   optionalString,
   requiredRecord,
@@ -231,7 +232,7 @@ function normalizeProjectSummary(value: Record<string, unknown>): Record<string,
     id: requiredString(value.id, "project.id", providerResponseError),
     name: requiredString(value.name, "project.name", providerResponseError),
     ...compactObject({
-      description: readOptionalRawString(value.description),
+      description: optionalRawString(value.description),
     }),
   };
 }
@@ -247,7 +248,7 @@ function normalizeServiceSummary(value: Record<string, unknown>): Record<string,
     disabledCD: readRequiredBoolean(value.disabledCD, "service.disabledCD"),
     ...compactObject({
       tags: Array.isArray(value.tags) ? value.tags.map((item) => String(item).trim()) : undefined,
-      description: readOptionalRawString(value.description),
+      description: optionalRawString(value.description),
       status: normalizeStatus(value.status),
     }),
   };
@@ -380,10 +381,6 @@ function readOptionalInteger(value: unknown, fieldName: string): number | undefi
   return parsed;
 }
 
-function readOptionalRawString(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
-}
-
 function readRequiredNumber(value: unknown, fieldName: string): number {
   if (typeof value !== "number") {
     throw providerResponseError(`Northflank response missing ${fieldName}`);
@@ -424,7 +421,7 @@ function extractErrorMessage(payload: unknown): string | undefined {
     return undefined;
   }
 
-  const message = readOptionalRawString(record.message) ?? readOptionalRawString(record.error);
+  const message = optionalRawString(record.message) ?? optionalRawString(record.error);
   if (message?.trim()) {
     return message;
   }
@@ -433,7 +430,7 @@ function extractErrorMessage(payload: unknown): string | undefined {
   if (Array.isArray(errors)) {
     const messages = errors
       .map((item) => {
-        const itemMessage = typeof item === "string" ? item : readOptionalRawString(optionalRecord(item)?.message);
+        const itemMessage = typeof item === "string" ? item : optionalRawString(optionalRecord(item)?.message);
         return itemMessage?.trim() ? itemMessage : undefined;
       })
       .filter((item) => item !== undefined);

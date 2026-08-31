@@ -5,6 +5,7 @@ import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.
 import {
   compactObject,
   optionalBoolean,
+  optionalBooleanOrNull,
   optionalInteger,
   optionalRecord,
   optionalString,
@@ -496,9 +497,9 @@ function normalizeSupportbeeTicket(value: Record<string, unknown>): Record<strin
     comments_count: readNullableInteger(value.comments_count),
     created_at: readNullableString(value.created_at),
     last_activity_at: readNullableString(value.last_activity_at),
-    unanswered: readNullableBoolean(value.unanswered),
-    archived: readNullableBoolean(value.archived),
-    spam: readNullableBoolean(value.spam),
+    unanswered: optionalBooleanOrNull(value.unanswered),
+    archived: optionalBooleanOrNull(value.archived),
+    spam: optionalBooleanOrNull(value.spam),
     labels: readLabelNames(value.labels),
     requester: readObjectProperty(value, "requester"),
     content: readObjectProperty(value, "content"),
@@ -536,7 +537,7 @@ function normalizeSupportbeeUser(value: Record<string, unknown>): Record<string,
     email: readNullableString(value.email),
     name: readNullableString(value.name),
     role: readNullableString(value.role),
-    agent: readNullableBoolean(value.agent),
+    agent: optionalBooleanOrNull(value.agent),
     teams: readObjectArray(value, "teams"),
     raw: value,
   };
@@ -649,10 +650,6 @@ function readLabelNames(value: unknown): string[] {
 
 function readNullableString(value: unknown): string | null {
   return typeof value === "string" ? value : null;
-}
-
-function readNullableBoolean(value: unknown): boolean | null {
-  return typeof value === "boolean" ? value : null;
 }
 
 function readNullableInteger(value: unknown): number | null {

@@ -7,6 +7,7 @@ import {
   objectArray,
   optionalBoolean,
   optionalInteger,
+  optionalRawString,
   optionalRecord,
   optionalString,
   stringArray,
@@ -730,10 +731,6 @@ function assertMutableFieldPresent(
   }
 
   throw new ProviderRequestError(400, message);
-}
-
-function optionalRawString(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
 }
 
 function isAbortError(error: unknown): boolean {

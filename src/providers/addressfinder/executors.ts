@@ -1,7 +1,14 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBoolean,
+  optionalBooleanOrNull,
+  optionalInteger,
+  optionalRecord,
+  optionalString,
+} from "../../core/cast.ts";
 import {
   defineProviderExecutors,
   isAbortLikeError,
@@ -192,7 +199,7 @@ function executeVerification(
       const record = requireRecord(payload, "Addressfinder verification response");
       return {
         success: readBoolean(record.success, true),
-        matched: readNullableBoolean(record.matched),
+        matched: optionalBooleanOrNull(record.matched),
         address: readNullableRecord(record.address),
         meta: { country, endpoint: path },
         raw: record,
@@ -376,10 +383,6 @@ function requireAddressfinderApiSecret(values: Record<string, unknown>): string 
 
 function readBoolean(value: unknown, fallback: boolean): boolean {
   return typeof value === "boolean" ? value : fallback;
-}
-
-function readNullableBoolean(value: unknown): boolean | null {
-  return typeof value === "boolean" ? value : null;
 }
 
 function readNullableRecord(value: unknown): Record<string, unknown> | null {

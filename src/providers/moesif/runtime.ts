@@ -69,7 +69,7 @@ export const moesifActionHandlers: ProviderActionHandlers<"moesif", MoesifAction
       apiKey: context.apiKey,
       params: queryParams({
         take: readTake(input.take),
-        before_id: readOptionalTrimmedString(input.beforeId),
+        before_id: optionalString(input.beforeId),
       }),
       fetcher: context.fetcher,
       signal: context.signal,
@@ -85,9 +85,9 @@ export const moesifActionHandlers: ProviderActionHandlers<"moesif", MoesifAction
       path: buildOrganizationPath(input.organizationId, "workspaces"),
       apiKey: context.apiKey,
       params: queryParams({
-        app_id: readOptionalTrimmedString(input.appId) ?? defaultAppId,
+        app_id: optionalString(input.appId) ?? defaultAppId,
         take: readTake(input.take),
-        before_id: readOptionalTrimmedString(input.beforeId),
+        before_id: optionalString(input.beforeId),
       }),
       repeatedParams: {
         access: readRequiredStringList(input.access, "access"),
@@ -110,7 +110,7 @@ export const moesifActionHandlers: ProviderActionHandlers<"moesif", MoesifAction
       ),
       apiKey: context.apiKey,
       params: {
-        app_id: readOptionalTrimmedString(input.appId) ?? defaultAppId,
+        app_id: optionalString(input.appId) ?? defaultAppId,
       },
       fetcher: context.fetcher,
       signal: context.signal,
@@ -126,7 +126,7 @@ export const moesifActionHandlers: ProviderActionHandlers<"moesif", MoesifAction
       path: buildOrganizationPath(input.organizationId, "workspaces", "templates"),
       apiKey: context.apiKey,
       params: {
-        app_id: readOptionalTrimmedString(input.appId) ?? defaultAppId,
+        app_id: optionalString(input.appId) ?? defaultAppId,
       },
       fetcher: context.fetcher,
       signal: context.signal,
@@ -227,7 +227,7 @@ function buildMoesifUrl(
 
 function buildOrganizationPath(organizationId: unknown, ...segments: string[]): string {
   return [
-    encodeURIComponent(readOptionalTrimmedString(organizationId) ?? defaultOrganizationId),
+    encodeURIComponent(optionalString(organizationId) ?? defaultOrganizationId),
     ...segments.map((segment) => encodeURIComponent(segment)),
   ].join("/");
 }
@@ -368,18 +368,12 @@ function readRequiredString(value: unknown, fieldName: string): string {
   return requiredString(value, fieldName, (message) => new ProviderRequestError(400, message));
 }
 
-function readOptionalTrimmedString(value: unknown): string | undefined {
-  return optionalString(value);
-}
-
 function readRequiredStringList(value: unknown, fieldName: string): string[] {
   if (!Array.isArray(value)) {
     throw new ProviderRequestError(400, `${fieldName} must be a string array`);
   }
 
-  const values = value
-    .map((item) => readOptionalTrimmedString(item))
-    .filter((item): item is string => item !== undefined);
+  const values = value.map((item) => optionalString(item)).filter((item): item is string => item !== undefined);
   if (values.length === 0) {
     throw new ProviderRequestError(400, `${fieldName} must include at least one value`);
   }

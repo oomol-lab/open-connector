@@ -2,7 +2,13 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
-import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBooleanOrNull,
+  optionalInteger,
+  optionalRecord,
+  optionalString,
+} from "../../core/cast.ts";
 import { providerFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const razorpayApiBaseUrl = "https://api.razorpay.com/v1";
@@ -380,11 +386,11 @@ function normalizePayment(record: Record<string, unknown>) {
     status: trimOptionalString(record.status) ?? null,
     orderId: trimOptionalString(record.order_id) ?? null,
     invoiceId: trimOptionalString(record.invoice_id) ?? null,
-    international: readOptionalBoolean(record.international),
+    international: optionalBooleanOrNull(record.international),
     method: trimOptionalString(record.method) ?? null,
     amountRefunded: asOptionalInteger(record.amount_refunded) ?? null,
     refundStatus: trimOptionalString(record.refund_status) ?? null,
-    captured: readOptionalBoolean(record.captured),
+    captured: optionalBooleanOrNull(record.captured),
     description: trimOptionalString(record.description) ?? null,
     cardId: trimOptionalString(record.card_id) ?? null,
     bank: trimOptionalString(record.bank) ?? null,
@@ -510,10 +516,6 @@ function readOptionalStringRecord(value: unknown) {
       .filter(([, child]) => child !== undefined),
   );
   return Object.keys(normalized).length > 0 ? normalized : undefined;
-}
-
-function readOptionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : null;
 }
 
 function stringifyOptionalInteger(value: number | undefined) {

@@ -1,7 +1,14 @@
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord, optionalString, requiredRecord, stringArray } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalBoolean,
+  optionalRecord,
+  optionalString,
+  requiredRecord,
+  stringArray,
+} from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortSignalError,
@@ -97,15 +104,15 @@ function buildWebScrapeBody(input: Record<string, unknown>): Record<string, unkn
     proxyCountry: optionalString(input.proxyCountry),
     extractRules: readOptionalStringRecord(input.extractRules, "extractRules"),
     aiExtractRules: readOptionalJsonRecord(input.aiExtractRules, "aiExtractRules"),
-    screenshot: readOptionalBoolean(input.screenshot),
-    extractEmails: readOptionalBoolean(input.extractEmails),
-    extractLinks: readOptionalBoolean(input.extractLinks),
+    screenshot: optionalBoolean(input.screenshot),
+    extractEmails: optionalBoolean(input.extractEmails),
+    extractLinks: optionalBoolean(input.extractLinks),
     wait: readOptionalNumber(input.wait),
     waitFor: optionalString(input.waitFor),
-    blockResources: readOptionalBoolean(input.blockResources),
-    blockAds: readOptionalBoolean(input.blockAds),
+    blockResources: optionalBoolean(input.blockResources),
+    blockAds: optionalBoolean(input.blockAds),
     blockUrls: readOptionalStringArray(input.blockUrls, "blockUrls"),
-    jsRendering: readOptionalBoolean(input.jsRendering),
+    jsRendering: optionalBoolean(input.jsRendering),
     jsScenario: readOptionalJsonArray(input.jsScenario, "jsScenario"),
     headers: readOptionalStringRecord(input.headers, "headers"),
   });
@@ -204,10 +211,6 @@ function readRequiredString(value: unknown, fieldName: string): string {
     throw new ProviderRequestError(400, `${fieldName} is required`);
   }
   return value;
-}
-
-function readOptionalBoolean(value: unknown): boolean | undefined {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function readOptionalNumber(value: unknown): number | undefined {

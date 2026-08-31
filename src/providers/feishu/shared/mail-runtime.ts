@@ -2,6 +2,7 @@ import type { FeishuJsonRequest } from "./client.ts";
 
 import { Buffer } from "node:buffer";
 import MailComposer from "nodemailer/lib/mail-composer/index.js";
+import { optionalBoolean, optionalNumber } from "../../../core/cast.ts";
 import { providerFetch, providerInputError, ProviderRequestError } from "../../provider-runtime.ts";
 import { downloadFeishuSource } from "./media.ts";
 
@@ -612,14 +613,6 @@ function optionalStringArray(value: unknown) {
   }
   const values = value.filter((item): item is string => typeof item === "string" && item.length > 0);
   return values.length > 0 ? values : undefined;
-}
-
-function optionalNumber(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
-}
-
-function optionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function errorMessage(error: unknown) {

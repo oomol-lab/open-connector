@@ -229,14 +229,14 @@ function buildOccurrenceQuery(input: Record<string, unknown>): Record<string, st
 function buildListItemsQuery(input: Record<string, unknown>): Record<string, string | string[] | undefined> {
   const isSnoozed = optionalBoolean(input.isSnoozed);
   return compactObject({
-    assigned_user: readOptionalString(input.assignedUser),
+    assigned_user: optionalString(input.assignedUser),
     assigned_team: readOptionalStringArray(input.assignedTeam),
     environment: readOptionalStringArray(input.environment),
     framework: readOptionalStringArray(input.framework),
     ids: readOptionalIntegerArray(input.itemIds),
     level: readOptionalStringArray(input.level),
     page: readOptionalPositiveIntegerString(input.page),
-    query: readOptionalString(input.query),
+    query: optionalString(input.query),
     status: readOptionalStringArray(input.status),
     is_snoozed: isSnoozed === undefined ? undefined : String(isSnoozed),
   });
@@ -388,10 +388,6 @@ function readArray(value: unknown): unknown[] {
 function readOptionalPositiveIntegerString(value: unknown): string | undefined {
   const parsed = optionalInteger(value);
   return parsed == null || parsed <= 0 ? undefined : String(parsed);
-}
-
-function readOptionalString(value: unknown): string | undefined {
-  return optionalString(value);
 }
 
 function readOptionalStringArray(value: unknown): string[] | undefined {

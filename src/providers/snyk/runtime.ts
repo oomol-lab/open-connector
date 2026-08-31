@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   providerUserAgent,
   ProviderRequestError,
@@ -42,7 +42,7 @@ export const snykActionHandlers: ProviderActionHandlers<"snyk", ProviderRuntimeH
         query: {
           ...cursorQuery(input),
           group_id: trimmed(input.groupId),
-          is_personal: boolean(input.isPersonal),
+          is_personal: optionalBoolean(input.isPersonal),
           slug: trimmed(input.slug),
           name: trimmed(input.name),
           expand: input.includeMemberRole === true ? ["member_role"] : undefined,
@@ -81,8 +81,8 @@ export const snykActionHandlers: ProviderActionHandlers<"snyk", ProviderRuntimeH
             environment: stringArray(input.environment),
             lifecycle: stringArray(input.lifecycle),
             expand: input.includeTarget === true ? ["target"] : undefined,
-            "meta.latest_issue_counts": boolean(input.includeLatestIssueCounts),
-            "meta.latest_dependency_total": boolean(input.includeLatestDependencyTotal),
+            "meta.latest_issue_counts": optionalBoolean(input.includeLatestIssueCounts),
+            "meta.latest_dependency_total": optionalBoolean(input.includeLatestDependencyTotal),
             cli_monitored_before: trimmed(input.cliMonitoredBefore),
             cli_monitored_after: trimmed(input.cliMonitoredAfter),
           },
@@ -112,8 +112,8 @@ export const snykActionHandlers: ProviderActionHandlers<"snyk", ProviderRuntimeH
       path: `/orgs/${encodeURIComponent(orgId)}/projects/${encodeURIComponent(projectId)}`,
       query: {
         expand: input.includeTarget === true ? ["target"] : undefined,
-        "meta.latest_issue_counts": boolean(input.includeLatestIssueCounts),
-        "meta.latest_dependency_total": boolean(input.includeLatestDependencyTotal),
+        "meta.latest_issue_counts": optionalBoolean(input.includeLatestIssueCounts),
+        "meta.latest_dependency_total": optionalBoolean(input.includeLatestDependencyTotal),
       },
       commaArrays: ["expand"],
       phase: "execute",
@@ -139,7 +139,7 @@ export const snykActionHandlers: ProviderActionHandlers<"snyk", ProviderRuntimeH
             created_after: trimmed(input.createdAfter),
             effective_severity_level: stringArray(input.effectiveSeverityLevel),
             status: stringArray(input.status),
-            ignored: boolean(input.ignored),
+            ignored: optionalBoolean(input.ignored),
           },
           commaArrays: ["effective_severity_level", "status"],
           phase: "execute",
@@ -247,9 +247,6 @@ function requiredTrimmed(value: unknown, field: string): string {
 }
 function trimmed(value: unknown): string | undefined {
   return optionalString(value)?.trim() || undefined;
-}
-function boolean(value: unknown): boolean | undefined {
-  return typeof value === "boolean" ? value : undefined;
 }
 function stringArray(value: unknown): string[] | undefined {
   if (value === undefined) return undefined;

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 
-import { compactObject, optionalRecord as asOptionalObject, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalBoolean, optionalRecord as asOptionalObject, optionalString } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -366,8 +366,8 @@ export function normalizeMondayUser(value: unknown): MondayNormalizedUser {
     id: toRequiredId(record?.id, "monday user id"),
     name: toOptionalString(record?.name),
     email: toOptionalString(record?.email),
-    enabled: toOptionalBoolean(record?.enabled),
-    is_guest: toOptionalBoolean(record?.is_guest),
+    enabled: optionalBoolean(record?.enabled),
+    is_guest: optionalBoolean(record?.is_guest),
     created_at: toOptionalString(record?.created_at),
     account: normalizeOptionalMondayAccount(record?.account),
   }) as MondayNormalizedUser;
@@ -463,8 +463,8 @@ export function normalizeMondayGroup(value: unknown): Record<string, unknown> {
     title: toOptionalString(record?.title),
     color: toOptionalString(record?.color),
     position: toOptionalString(record?.position),
-    archived: toOptionalBoolean(record?.archived),
-    deleted: toOptionalBoolean(record?.deleted),
+    archived: optionalBoolean(record?.archived),
+    deleted: optionalBoolean(record?.deleted),
   });
 }
 
@@ -475,7 +475,7 @@ export function normalizeMondayColumn(value: unknown): Record<string, unknown> {
     title: toOptionalString(record?.title),
     type: toOptionalString(record?.type),
     description: toOptionalString(record?.description),
-    archived: toOptionalBoolean(record?.archived),
+    archived: optionalBoolean(record?.archived),
     revision: toOptionalString(record?.revision),
     width: toOptionalInteger(record?.width),
     settings: asOptionalObject(record?.settings),
@@ -576,7 +576,7 @@ export function normalizeMondayDeleteDocResult(value: unknown): Record<string, u
 
   return compactObject({
     deletedDocId,
-    success: toOptionalBoolean(record?.success),
+    success: optionalBoolean(record?.success),
   });
 }
 
@@ -684,10 +684,6 @@ export function asArray(value: unknown): unknown[] {
 
 function toOptionalString(value: unknown) {
   return typeof value === "string" && value.length > 0 ? value : undefined;
-}
-
-function toOptionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function toOptionalInteger(value: unknown) {

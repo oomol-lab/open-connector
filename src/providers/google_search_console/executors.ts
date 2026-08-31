@@ -4,6 +4,7 @@ import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import {
   compactObject,
+  optionalNumber,
   optionalRecord as asOptionalObject,
   optionalString as asOptionalString,
   pickOptionalInteger,
@@ -280,10 +281,10 @@ function normalizeSearchAnalyticsRow(value: unknown) {
 
   return {
     keys: Array.isArray(payload.keys) ? payload.keys.map(String) : [],
-    clicks: asOptionalNumber(payload.clicks) ?? 0,
-    impressions: asOptionalNumber(payload.impressions) ?? 0,
-    ctr: asOptionalNumber(payload.ctr) ?? 0,
-    position: asOptionalNumber(payload.position) ?? 0,
+    clicks: optionalNumber(payload.clicks) ?? 0,
+    impressions: optionalNumber(payload.impressions) ?? 0,
+    ctr: optionalNumber(payload.ctr) ?? 0,
+    position: optionalNumber(payload.position) ?? 0,
   };
 }
 
@@ -330,10 +331,6 @@ function stringifyOptional(value: unknown) {
     return String(value);
   }
   return null;
-}
-
-function asOptionalNumber(value: unknown): number | undefined {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 function resolveSiteUrl(input: Record<string, unknown>) {

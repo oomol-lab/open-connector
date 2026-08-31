@@ -140,8 +140,8 @@ async function sendImage(input: Record<string, unknown>, context: WaboxappAction
       to: requireInputString(input.to, "to"),
       custom_uid: requireInputString(input.customUid, "customUid"),
       url: requireInputString(input.imageUrl, "imageUrl"),
-      caption: readOptionalNonEmptyString(input.caption),
-      description: readOptionalNonEmptyString(input.description),
+      caption: optionalString(input.caption),
+      description: optionalString(input.description),
     }) as Record<string, string>,
   });
   return normalizeWaboxappSendResult(payload);
@@ -155,9 +155,9 @@ async function sendLink(input: Record<string, unknown>, context: WaboxappActionC
       to: requireInputString(input.to, "to"),
       custom_uid: requireInputString(input.customUid, "customUid"),
       url: requireInputString(input.linkUrl, "linkUrl"),
-      caption: readOptionalNonEmptyString(input.caption),
-      description: readOptionalNonEmptyString(input.description),
-      url_thumb: readOptionalNonEmptyString(input.urlThumb),
+      caption: optionalString(input.caption),
+      description: optionalString(input.description),
+      url_thumb: optionalString(input.urlThumb),
     }) as Record<string, string>,
   });
   return normalizeWaboxappSendResult(payload);
@@ -171,9 +171,9 @@ async function sendMedia(input: Record<string, unknown>, context: WaboxappAction
       to: requireInputString(input.to, "to"),
       custom_uid: requireInputString(input.customUid, "customUid"),
       url: requireInputString(input.mediaUrl, "mediaUrl"),
-      caption: readOptionalNonEmptyString(input.caption),
-      description: readOptionalNonEmptyString(input.description),
-      url_thumb: readOptionalNonEmptyString(input.urlThumb),
+      caption: optionalString(input.caption),
+      description: optionalString(input.description),
+      url_thumb: optionalString(input.urlThumb),
     }) as Record<string, string>,
   });
   return normalizeWaboxappSendResult(payload);
@@ -363,10 +363,6 @@ function requireResponseString(value: unknown, fieldName: string): string {
     fieldName,
     () => new ProviderRequestError(502, `${fieldName} is required in Waboxapp response`),
   );
-}
-
-function readOptionalNonEmptyString(value: unknown): string | undefined {
-  return optionalString(value);
 }
 
 function readNullableString(value: unknown): string | null {

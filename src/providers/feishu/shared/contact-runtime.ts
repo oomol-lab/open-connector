@@ -1,7 +1,7 @@
 import type { FeishuJsonRequest } from "./client.ts";
 import type { FeishuIdentity } from "./client.ts";
 
-import { optionalRecord, optionalString } from "../../../core/cast.ts";
+import { optionalBoolean, optionalRecord, optionalString } from "../../../core/cast.ts";
 import { ProviderRequestError } from "../../provider-runtime.ts";
 
 interface FeishuContactActionHandler {
@@ -115,10 +115,6 @@ function stringArray(value: unknown) {
 
 function optionalTrue(value: unknown) {
   return value === true ? true : undefined;
-}
-
-function optionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function optionalNumber(value: unknown) {

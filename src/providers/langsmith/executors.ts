@@ -96,7 +96,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<LangSmithAct
     return {
       apiKey: credential.apiKey,
       apiBaseUrl: readLangSmithApiBaseUrl(credential.values.region ?? credential.metadata.region),
-      workspaceId: readOptionalTrimmedString(credential.values.workspaceId ?? credential.metadata.workspaceId),
+      workspaceId: optionalString(credential.values.workspaceId ?? credential.metadata.workspaceId),
       fetcher,
       signal: context.signal,
     };
@@ -122,7 +122,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
 
     const workspaceId =
       input.credential?.authType === "api_key"
-        ? readOptionalTrimmedString(input.credential.values.workspaceId ?? input.credential.metadata.workspaceId)
+        ? optionalString(input.credential.values.workspaceId ?? input.credential.metadata.workspaceId)
         : undefined;
     if (workspaceId) {
       input.headers.set("X-Tenant-Id", workspaceId);
@@ -134,7 +134,7 @@ export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }): Promise<CredentialValidationResult> {
     const region = readLangSmithRegion(input.values.region);
     const apiBaseUrl = langSmithRegionBaseUrls[region];
-    const workspaceId = readOptionalTrimmedString(input.values.workspaceId);
+    const workspaceId = optionalString(input.values.workspaceId);
     const context: LangSmithActionContext = {
       apiKey: input.apiKey,
       apiBaseUrl,
@@ -590,16 +590,12 @@ function readFirstWorkspaceName(workspaces: Array<Record<string, unknown>>): str
   return undefined;
 }
 
-function readOptionalTrimmedString(value: unknown): string | undefined {
-  return optionalString(value);
-}
-
 function readLangSmithApiBaseUrl(value: unknown): string {
   return langSmithRegionBaseUrls[readLangSmithRegion(value)];
 }
 
 function readLangSmithRegion(value: unknown): LangSmithRegion {
-  let region = readOptionalTrimmedString(value) ?? defaultLangSmithRegion;
+  let region = optionalString(value) ?? defaultLangSmithRegion;
   if (region === "aws") {
     region = "aws_us";
   }

@@ -11,6 +11,7 @@ import {
   compactObject,
   optionalBoolean,
   optionalInteger,
+  optionalRawString,
   optionalRecord,
   optionalString,
   requiredString,
@@ -172,7 +173,7 @@ function buildScrapingantQuery(
     timeout: stringifyOptionalInteger(optionalInteger(input.timeout)),
     return_page_source: stringifyOptionalBoolean(optionalBoolean(input.returnPageSource)),
     cookies: optionalString(input.cookies),
-    js_snippet: encodeOptionalBase64(optionalRawInputString(input.jsSnippet)),
+    js_snippet: encodeOptionalBase64(optionalRawString(input.jsSnippet)),
     proxy_type: optionalString(input.proxyType),
     proxy_country: normalizeProxyCountry(input.proxyCountry),
     wait_for_selector: optionalString(input.waitForSelector),
@@ -197,7 +198,7 @@ function buildScrapingantBody(input: Record<string, unknown>): string | undefine
   if (input.bodyJson !== undefined) {
     return JSON.stringify(input.bodyJson);
   }
-  return optionalRawInputString(input.bodyText);
+  return optionalRawString(input.bodyText);
 }
 
 function buildConnectorTimeoutMs(input: Record<string, unknown>): number {
@@ -439,10 +440,6 @@ function stringifyOptionalBoolean(value: boolean | undefined): string | undefine
 
 function stringifyOptionalInteger(value: number | undefined): string | undefined {
   return value === undefined ? undefined : String(value);
-}
-
-function optionalRawInputString(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
 }
 
 function requiredInputString(value: unknown, fieldName: string): string {

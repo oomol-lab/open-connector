@@ -215,7 +215,7 @@ async function executeGeocode(input: RuntimeInput, context: BaiduMapsActionConte
       "/geocoding/v3/",
       compactObject({
         address: readRequiredString(input.address, "address"),
-        city: readOptionalString(input.city),
+        city: optionalString(input.city),
         output: "json",
         ak: context.apiKey,
       }),
@@ -242,11 +242,11 @@ async function executeReverseGeocode(input: RuntimeInput, context: BaiduMapsActi
       "/reverse_geocoding/v3/",
       compactObject({
         location: readRequiredString(input.location, "location"),
-        coordtype: readOptionalString(input.coordtype),
+        coordtype: optionalString(input.coordtype),
         radius: readOptionalIntegerLike(input.radius),
         extensions_poi: readOptionalIntegerLike(input.extensionsPoi ?? input.extensions_poi),
-        poi_types: readOptionalString(input.poiTypes ?? input.poi_types),
-        language: readOptionalString(input.language),
+        poi_types: optionalString(input.poiTypes ?? input.poi_types),
+        language: optionalString(input.language),
         latest_admin: readOptionalIntegerLike(input.latestAdmin ?? input.latest_admin),
         output: "json",
         ak: context.apiKey,
@@ -260,12 +260,12 @@ async function executeReverseGeocode(input: RuntimeInput, context: BaiduMapsActi
   const result = optionalRecord(payload.result);
   return compactObject({
     status: readOptionalInteger(payload.status),
-    formatted_address: readOptionalString(extractField(result, "formatted_address")),
+    formatted_address: optionalString(extractField(result, "formatted_address")),
     addressComponent: optionalRecord(extractField(result, "addressComponent")),
     pois: readArrayLike(extractField(result, "pois")),
     roads: readArrayLike(extractField(result, "roads")),
     poiRegions: readArrayLike(extractField(result, "poiRegions")),
-    sematic_description: readOptionalString(extractField(result, "sematic_description")),
+    sematic_description: optionalString(extractField(result, "sematic_description")),
     cityCode: readOptionalIntegerLike(extractField(result, "cityCode")),
   });
 }
@@ -289,20 +289,20 @@ function payloadFromSearch(
 ) {
   const query: Record<string, QueryValue> = compactObject({
     query: readRequiredString(input.query, "query"),
-    region: variant === "region" ? readOptionalString(input.region) : undefined,
+    region: variant === "region" ? optionalString(input.region) : undefined,
     location: variant === "around" ? readRequiredString(input.location, "location") : undefined,
     radius: variant === "around" ? readOptionalIntegerLike(input.radius) : undefined,
     radius_limit: readOptionalIntegerLike(input.radiusLimit ?? input.radius_limit),
     bounds: variant === "polygon" ? readRequiredString(input.bounds, "bounds") : undefined,
     city_limit: readOptionalIntegerLike(input.cityLimit ?? input.city_limit),
     output: "json",
-    filter: readOptionalString(input.filter),
+    filter: optionalString(input.filter),
     // `scope` is declared as a string|int union in actions.ts because Baidu
-    // accepts both forms. readOptionalString drops numbers, so use the
+    // accepts both forms. optionalString drops numbers, so use the
     // string-coercing variant to preserve either shape.
     scope: readOptionalStringLike(input.scope),
-    coord_type: readOptionalString(input.coordType ?? input.coord_type),
-    ret_coordtype: readOptionalString(input.retCoordtype ?? input.ret_coordtype),
+    coord_type: optionalString(input.coordType ?? input.coord_type),
+    ret_coordtype: optionalString(input.retCoordtype ?? input.ret_coordtype),
     page_size: readOptionalIntegerLike(input.pageSize ?? input.page_size),
     page_num: readOptionalIntegerLike(input.pageNum ?? input.page_num),
     ak: context.apiKey,
@@ -323,7 +323,7 @@ async function placeSearch({
   const payload = await baiduMapsGet("/place/v2/search", query, fetcher, "execute", signal);
   return compactObject({
     status: readOptionalInteger(payload.status),
-    message: readOptionalString(payload.message),
+    message: optionalString(payload.message),
     total: readOptionalIntegerLike(extractField(payload, "total")),
     results: readArrayLike(payload.results),
   });
@@ -339,7 +339,7 @@ async function executeGetPlaceDetail(input: RuntimeInput, context: BaiduMapsActi
         // Same string|int union as search_places.scope — see comment there.
         scope: readOptionalStringLike(input.scope),
         output: "json",
-        coord_type: readOptionalString(input.coordType ?? input.coord_type),
+        coord_type: optionalString(input.coordType ?? input.coord_type),
         ak: context.apiKey,
       }),
       context.sk,
@@ -350,7 +350,7 @@ async function executeGetPlaceDetail(input: RuntimeInput, context: BaiduMapsActi
   );
   return compactObject({
     status: readOptionalInteger(payload.status),
-    message: readOptionalString(payload.message),
+    message: optionalString(payload.message),
     result: optionalRecord(payload.result),
   });
 }
@@ -362,10 +362,10 @@ async function executeInputTips(input: RuntimeInput, context: BaiduMapsActionCon
       "/place/v2/suggestion",
       compactObject({
         query: readRequiredString(input.query, "query"),
-        region: readOptionalString(input.region),
+        region: optionalString(input.region),
         city_limit: readOptionalIntegerLike(input.cityLimit ?? input.city_limit),
-        location: readOptionalString(input.location),
-        coord_type: readOptionalString(input.coordType ?? input.coord_type),
+        location: optionalString(input.location),
+        coord_type: optionalString(input.coordType ?? input.coord_type),
         output: "json",
         ak: context.apiKey,
       }),
@@ -377,7 +377,7 @@ async function executeInputTips(input: RuntimeInput, context: BaiduMapsActionCon
   );
   return compactObject({
     status: readOptionalInteger(payload.status),
-    message: readOptionalString(payload.message),
+    message: optionalString(payload.message),
     // /place/v2/suggestion returns `result` as an array of suggestion objects.
     result: readArrayLike(payload.result),
   });
@@ -389,8 +389,8 @@ async function executeIpLocate(input: RuntimeInput, context: BaiduMapsActionCont
     applyBaiduMapsSn(
       "/location/ip",
       compactObject({
-        ip: readOptionalString(input.ip),
-        coor: readOptionalString(input.coor),
+        ip: optionalString(input.ip),
+        coor: optionalString(input.coor),
         output: "json",
         ak: context.apiKey,
       }),
@@ -405,18 +405,18 @@ async function executeIpLocate(input: RuntimeInput, context: BaiduMapsActionCont
   const point = optionalRecord(extractField(content, "point"));
   return compactObject({
     status: readOptionalInteger(payload.status),
-    message: readOptionalString(payload.message),
-    address: readOptionalString(payload.address),
+    message: optionalString(payload.message),
+    address: optionalString(payload.address),
     content: compactObject({
-      address: readOptionalString(extractField(content, "address")),
+      address: optionalString(extractField(content, "address")),
       point: compactObject({
         x: readOptionalNumber(point?.x),
         y: readOptionalNumber(point?.y),
       }),
       address_detail: compactObject({
-        city: readOptionalString(extractField(addressDetail, "city")),
+        city: optionalString(extractField(addressDetail, "city")),
         city_code: readOptionalIntegerLike(extractField(addressDetail, "city_code")),
-        province: readOptionalString(extractField(addressDetail, "province")),
+        province: optionalString(extractField(addressDetail, "province")),
       }),
     }),
   });
@@ -443,7 +443,7 @@ async function executeDistrictSearch(input: RuntimeInput, context: BaiduMapsActi
   );
   return compactObject({
     status: readOptionalInteger(payload.status),
-    message: readOptionalString(payload.message),
+    message: optionalString(payload.message),
     result_size: readOptionalInteger(payload.result_size),
     // /api_region_search/v1/ returns the administrative divisions under a
     // top-level `districts` array (not `result`).
@@ -452,8 +452,8 @@ async function executeDistrictSearch(input: RuntimeInput, context: BaiduMapsActi
 }
 
 async function executeWeather(input: RuntimeInput, context: BaiduMapsActionContext) {
-  const districtId = readOptionalString(input.districtId ?? input.district_id);
-  const locationInput = readOptionalString(input.location);
+  const districtId = optionalString(input.districtId ?? input.district_id);
+  const locationInput = optionalString(input.location);
   if (!districtId && !locationInput) {
     throw new ProviderRequestError(400, "either location or district_id is required");
   }
@@ -467,8 +467,8 @@ async function executeWeather(input: RuntimeInput, context: BaiduMapsActionConte
         // param is `coordtype` (one word), not `coord_type`.
         district_id: districtId,
         location: locationInput,
-        data_type: readOptionalString(input.dataType ?? input.data_type),
-        coordtype: readOptionalString(input.coordtype ?? input.coordType ?? input.coord_type),
+        data_type: optionalString(input.dataType ?? input.data_type),
+        coordtype: optionalString(input.coordtype ?? input.coordType ?? input.coord_type),
         output: "json",
         ak: context.apiKey,
       }),
@@ -484,13 +484,13 @@ async function executeWeather(input: RuntimeInput, context: BaiduMapsActionConte
   const location = optionalRecord(extractField(result, "location") ?? extractField(result, "address"));
   return compactObject({
     status: readOptionalInteger(payload.status),
-    message: readOptionalString(payload.message),
+    message: optionalString(payload.message),
     result: compactObject({
       location: compactObject({
-        country: readOptionalString(extractField(location, "country")),
-        province: readOptionalString(extractField(location, "province")),
-        city: readOptionalString(extractField(location, "city")),
-        name: readOptionalString(extractField(location, "name")),
+        country: optionalString(extractField(location, "country")),
+        province: optionalString(extractField(location, "province")),
+        city: optionalString(extractField(location, "city")),
+        name: optionalString(extractField(location, "name")),
         id: readOptionalStringLike(extractField(location, "id")),
       }),
       // Baidu weather v1 returns these as arrays. Note the response key is
@@ -521,17 +521,17 @@ async function executeRoute(
       compactObject({
         origin: readRequiredString(input.origin, "origin"),
         destination: readRequiredString(input.destination, "destination"),
-        origin_uid: readOptionalString(input.originUid ?? input.origin_uid),
-        destination_uid: readOptionalString(input.destinationUid ?? input.destination_uid),
-        waypoints: readOptionalString(input.waypoints),
+        origin_uid: optionalString(input.originUid ?? input.origin_uid),
+        destination_uid: optionalString(input.destinationUid ?? input.destination_uid),
+        waypoints: optionalString(input.waypoints),
         tactics: readOptionalIntegerLike(input.tactics),
         tactics_in_city: readOptionalIntegerLike(input.tacticsInCity ?? input.tactics_in_city),
         tactics_inter_city: readOptionalIntegerLike(input.tacticsInterCity ?? input.tactics_inter_city),
         alternatives: readOptionalIntegerLike(input.alternatives),
-        departure_time: readOptionalString(input.departureTime ?? input.departure_time),
-        plate_number: readOptionalString(input.plateNumber ?? input.plate_number),
+        departure_time: optionalString(input.departureTime ?? input.departure_time),
+        plate_number: optionalString(input.plateNumber ?? input.plate_number),
         traffic_policy: readOptionalIntegerLike(input.trafficPolicy ?? input.traffic_policy),
-        coord_type: readOptionalString(input.coordType ?? input.coord_type),
+        coord_type: optionalString(input.coordType ?? input.coord_type),
         output: "json",
         ak: context.apiKey,
       }),
@@ -544,7 +544,7 @@ async function executeRoute(
   const result = optionalRecord(payload.result);
   return compactObject({
     status: readOptionalInteger(payload.status),
-    message: readOptionalString(payload.message),
+    message: optionalString(payload.message),
     result: compactObject({
       // directionlite returns origin/destination as { lng, lat } objects and a
       // routes array; there are no origin_poi/destination_poi fields here.
@@ -627,7 +627,7 @@ function normalizeBaiduMapsError(
   phase: BaiduMapsRequestPhase,
 ): ProviderRequestError {
   const status = readStatusCode(payload.status);
-  const message = readOptionalString(payload.message) ?? `Baidu Maps request failed with ${status ?? response.status}`;
+  const message = optionalString(payload.message) ?? `Baidu Maps request failed with ${status ?? response.status}`;
   if (status !== undefined) {
     if (baiduMapsRateLimitStatuses.has(status) || response.status === 429) {
       return new ProviderRequestError(429, message);
@@ -658,10 +658,6 @@ function readRequiredString(value: unknown, fieldName: string): string {
     throw new ProviderRequestError(400, `${fieldName} is required`);
   }
   return resolved;
-}
-
-function readOptionalString(value: unknown): string | undefined {
-  return optionalString(value);
 }
 
 function readOptionalStringLike(value: unknown): string | undefined {

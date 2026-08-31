@@ -2,7 +2,7 @@ import type { CredentialValidators, ProviderExecutors } from "../../core/types.t
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { compactObject, optionalRecord } from "../../core/cast.ts";
+import { compactObject, optionalBooleanOrNull, optionalRecord } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
@@ -392,7 +392,7 @@ function normalizeContact(value: unknown): Record<string, unknown> {
   return {
     id: readRequiredInteger(record.id, "id"),
     state: readNullableString(record.state),
-    is_optined: readNullableBoolean(record.is_optined),
+    is_optined: optionalBooleanOrNull(record.is_optined),
     email: readNullableString(record.email),
     sms: readNullableString(record.sms),
     first_name: readNullableString(record.first_name),
@@ -462,8 +462,4 @@ function readOptionalNumberString(value: unknown): string | undefined {
     return undefined;
   }
   return String(value);
-}
-
-function readNullableBoolean(value: unknown): boolean | null {
-  return typeof value === "boolean" ? value : null;
 }

@@ -1,5 +1,6 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
+import { optionalBoolean } from "../../../core/cast.ts";
 import { providerInputError } from "../../provider-runtime.ts";
 
 interface FeishuAttendanceActionHandler {
@@ -60,10 +61,6 @@ function isValidDate(value: number) {
   }
   const date = new Date(Date.UTC(year, month - 1, day));
   return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
-}
-
-function optionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : undefined;
 }
 
 function stringArray(value: unknown) {
