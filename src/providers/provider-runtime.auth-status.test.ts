@@ -6,8 +6,10 @@ import { executors as clinicalkeyExecutors } from "./clinicalkey/executors.ts";
 import { executors as deepgramExecutors } from "./deepgram/executors.ts";
 import { executors as helpdeskExecutors } from "./helpdesk/executors.ts";
 import { executors as mondayExecutors } from "./monday/executors.ts";
+import { toProviderExecutionError } from "./provider-runtime.ts";
 import { executors as sellerspriteExecutors } from "./sellersprite/executors.ts";
 import { executors as teableExecutors } from "./teable/executors.ts";
+import { assertTikHubEndpointEligible } from "./tikhub/endpoint-policy.ts";
 import { executors as zoomExecutors } from "./zoom/executors.ts";
 
 afterEach(() => {
@@ -126,5 +128,20 @@ describe("clinicalkey execute-phase credential failures", () => {
 
     expect(result).toMatchObject({ ok: false, error: { code: "authorization_failed" } });
     expect(httpStatusOf(result)).toBe(403);
+  });
+});
+
+describe("provider-local endpoint denials", () => {
+  it("reports an endpoint the provider will not serve as invalid_input with HTTP 400", () => {
+    let raised: unknown;
+    try {
+      assertTikHubEndpointEligible("GET", "/api/v1/tikhub/user/get_user_info");
+    } catch (error) {
+      raised = error;
+    }
+
+    const result = toProviderExecutionError(raised, "TikHub request failed");
+    expect(result).toMatchObject({ ok: false, error: { code: "invalid_input" } });
+    expect(httpStatusOf(result)).toBe(400);
   });
 });

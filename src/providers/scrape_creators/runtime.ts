@@ -97,9 +97,9 @@ async function invokeEndpoint(
   const catalog = await loadScrapeCreatorsCatalog(fetcher);
   if (!catalog.snapshot.endpoints.some((endpoint) => endpoint.method === method && endpoint.path === path)) {
     throw new ScrapeCreatorsRequestError(
-      "authorization_failed",
+      "invalid_input",
       "endpoint is not present in the current Scrape Creators OpenAPI document",
-      403,
+      400,
     );
   }
   const request = optionalRecord(input.request) ?? {};
@@ -122,9 +122,9 @@ async function requestJson(
   const url = new URL(path, apiBaseUrl);
   if (url.origin !== apiBaseUrl)
     throw new ScrapeCreatorsRequestError(
-      "authorization_failed",
+      "invalid_input",
       "endpoint must resolve to the official Scrape Creators API origin",
-      403,
+      400,
     );
   if (Object.keys(query).length > queryMaxKeys)
     throw new ScrapeCreatorsRequestError(
