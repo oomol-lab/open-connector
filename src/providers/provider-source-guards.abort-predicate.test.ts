@@ -19,8 +19,11 @@ import { describe, expect, it } from "vitest";
 const providersDir = fileURLToPath(new URL(".", import.meta.url));
 const repoDir = fileURLToPath(new URL("../..", import.meta.url));
 const abortNameComparison = /name\s*===\s*"AbortError"/;
+// The `const` arm reads a return-type annotation that itself contains `=>`, and
+// its initializer arm accepts a single-parameter arrow written without
+// parentheses, so `const isAbortError = error => ...` is still resolved by name.
 const predicateDeclaration =
-  /(?:function\s+([A-Za-z_$][\w$]*)\s*\(|const\s+([A-Za-z_$][\w$]*)\s*(?::[^=;]*)?=\s*(?:async\s+)?[(<])/g;
+  /(?:function\s+([A-Za-z_$][\w$]*)\s*\(|const\s+([A-Za-z_$][\w$]*)\s*(?::(?:[^=;]|=>)*)?=\s*(?:async\s+)?(?:[(<]|[A-Za-z_$][\w$]*\s*=>))/g;
 const requestHelperBody = /\b(?:await|fetch|throw)\b/;
 const timeoutBranch = /\b504\b|timed out/i;
 const declarationWindowChars = 2000;
@@ -167,11 +170,16 @@ function guardedBranch(lines: string[], line: number): string {
   return branch.join("\n");
 }
 
+/** Escape a captured predicate name, so a `$` in it stays a literal instead of anchoring the call pattern. */
+function escapeRegExp(text: string): string {
+  return text.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+}
+
 function findDeadTimeoutGuards(file: ProviderSource, names: string[]): string[] {
   if (names.length === 0 && !file.source.includes('"AbortError"')) {
     return [];
   }
-  const calls = names.map((name) => new RegExp(`\\b${name}\\s*\\(`));
+  const calls = names.map((name) => new RegExp(String.raw`(?<![\w$])${escapeRegExp(name)}\s*\(`));
   const lines = file.source.split("\n");
   const dead: string[] = [];
   lines.forEach((line, index) => {
