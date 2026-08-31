@@ -15,7 +15,7 @@ Keep the repository focused on open-source local execution:
 
 - Do not describe non-public products, non-public migration sources, unreleased SDK behavior, deployment operations, or organization-specific workflows in provider code, docs, examples, or skill text.
 - Do not expose compatibility fields, storage placeholders, or implementation details that have no clear public source and consumer.
-- Do not add provider-local generated schema modules such as `generated.ts` from OpenAPI/tool output. If the upstream surface is large, choose a small runnable subset and maintain schemas as source.
+- Do not paste OpenAPI or vendor tool output into the repository as provider action schemas. A provider-local action-schema module such as `generated.ts` is allowed only when it is hand-maintained as source and reviewed like the rest of the provider; `src/providers/gorgias/generated.ts` and `src/providers/postman/generated.ts` are the two files this repository already ships under that rule, and a new one needs the same justification. A new module must not carry vendor tool-description text verbatim: rewrite every action description in this project's voice. If the upstream surface is large, choose a small runnable subset and maintain schemas as source.
 - Do not copy third-party logos, screenshots, API specs, documentation excerpts, generated schemas, or brand assets unless the project has the right to distribute them.
 - Prefer official public URLs for `homepageUrl`, API documentation references in comments when truly needed, and credential help text.
 - If you use a reference implementation, treat it only as behavioral evidence. Re-express the provider in this repository's architecture and remove non-public assumptions before finishing.
@@ -137,7 +137,7 @@ Provider-local runtime files are appropriate when a provider has multiple API ar
 Previous provider batches needed cleanup for these issues. Check them explicitly:
 
 - Do not add catalog-only placeholders or empty `executors`. Add a provider when it has a runnable local executor.
-- Do not commit generated action schema modules. Hand-maintained provider source should own action schemas.
+- Do not commit machine-emitted action schema modules. Hand-maintained provider source should own action schemas, including a provider-local `generated.ts` when one is justified; see the Public Boundary rule above for the two grandfathered files and the vendor-description constraint.
 - If a credential field contains a user-configured base URL, host, workspace URL, or region-derived URL, normalize and validate it with the current public URL helper from `src/core/request.ts` before any fetch or proxy call. Reject credentials in URLs and unsafe network targets according to that helper.
 - If runtime downloads or uploads files, use existing transit-file and bounded-response helpers. Avoid unbounded `arrayBuffer()` or `text()` reads for file-sized responses.
 - If the upstream API supports streaming, multipart uploads, or very large local files but this runtime only supports JSON-friendly calls, expose the JSON-friendly shape and reject unsupported flags deliberately.
