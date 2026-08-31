@@ -4,6 +4,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -874,8 +875,4 @@ function validateInjuriesInput(input: Record<string, unknown>): void {
 
 function readUnexpectedMessage(error: unknown): string {
   return error instanceof Error && error.message ? error.message : "api_sports request failed";
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError");
 }

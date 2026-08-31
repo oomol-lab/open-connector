@@ -2,7 +2,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { InstabotActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  isAbortLikeError,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 export interface InstabotCredentialCheck {
   providerAccountId?: string;
@@ -334,8 +339,4 @@ function requireObject(value: unknown, message: string) {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return optionalRecord(value) !== undefined;
-}
-
-function isAbortLikeError(error: unknown) {
-  return error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError");
 }

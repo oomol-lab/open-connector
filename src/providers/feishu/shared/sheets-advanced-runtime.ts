@@ -1,5 +1,6 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
+import { compactObject } from "../../../core/cast.ts";
 import { ProviderRequestError } from "../../provider-runtime.ts";
 
 interface FeishuSheetsAdvancedActionHandler {
@@ -466,16 +467,6 @@ function parseCell(value: string) {
     column = column * 26 + character.charCodeAt(0) - 64;
   }
   return { row, column };
-}
-
-function compactObject(value: Record<string, unknown>) {
-  const result: Record<string, unknown> = {};
-  for (const [key, item] of Object.entries(value)) {
-    if (item !== undefined) {
-      result[key] = item;
-    }
-  }
-  return result;
 }
 
 function requireObject(value: unknown, fieldName: string) {

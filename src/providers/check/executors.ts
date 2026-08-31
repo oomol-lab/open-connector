@@ -17,6 +17,7 @@ import {
 import {
   defineProviderExecutors,
   defineProviderProxy,
+  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -277,8 +278,4 @@ function resolveApiBaseUrl(environment: CheckEnvironment): string {
 
 function providerError(message: string): ProviderRequestError {
   return new ProviderRequestError(502, message);
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return error instanceof Error && error.name === "AbortError";
 }

@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import { assertPublicHttpUrl, encodePathSegment, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -683,8 +683,4 @@ function requireObject(value: unknown, fieldName: string): Record<string, unknow
     throw new ProviderRequestError(400, `${fieldName} object is required`);
   }
   return object;
-}
-
-function encodePathSegment(value: string): string {
-  return encodeURIComponent(value);
 }

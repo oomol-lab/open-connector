@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { isAbortLikeError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const bunnyApiBaseUrl = "https://api.bunny.net";
 const validationPath = "/pullzone";
@@ -279,8 +279,4 @@ function requiredPullZoneId(value: unknown): number {
     throw new ProviderRequestError(400, "pullZoneId must be a positive integer");
   }
   return pullZoneId;
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return error instanceof Error && error.name === "AbortError";
 }

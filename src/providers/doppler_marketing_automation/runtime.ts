@@ -2,7 +2,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { DopplerMarketingAutomationActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  isAbortLikeError,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 export interface DopplerMarketingAutomationCredentialCheck {
   providerAccountId?: string;
@@ -500,8 +505,4 @@ function readNullableString(value: unknown) {
 
 function readNullableBoolean(value: unknown) {
   return typeof value === "boolean" ? value : null;
-}
-
-function isAbortLikeError(error: unknown) {
-  return error instanceof DOMException && error.name === "AbortError";
 }

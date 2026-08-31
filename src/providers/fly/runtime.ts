@@ -3,7 +3,7 @@ import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment, jsonObject } from "../../core/request.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { isAbortLikeError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const flyApiBaseUrl = "https://api.machines.dev/v1/";
 const flyValidationPath = "tokens/current";
@@ -334,8 +334,4 @@ function requiredActionString(value: unknown, fieldName: string): string {
     throw new ProviderRequestError(400, `${fieldName} is required`);
   }
   return result;
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError");
 }

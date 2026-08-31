@@ -2,7 +2,7 @@ import type { CredentialValidationResult, ResolvedCredential } from "../../core/
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { isAbortLikeError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 import { readAlpacaGrantedScopes } from "./scopes.ts";
 
 const paperTradingBaseUrl = "https://paper-api.alpaca.markets";
@@ -735,8 +735,4 @@ function readEnvironment(value: unknown, fallback?: Environment): Environment {
   }
 
   throw new ProviderRequestError(400, "environment must be paper or live");
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError");
 }

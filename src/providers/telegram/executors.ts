@@ -12,6 +12,7 @@ import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  isAbortLikeError,
   ProviderRequestError,
   requireApiKeyCredential,
 } from "../provider-runtime.ts";
@@ -1368,8 +1369,4 @@ function assertValidTelegramBotToken(botToken: string): void {
   if (botToken.length === 0 || /[/?#\s]/u.test(botToken)) {
     throw new ProviderRequestError(400, "telegram bot token is malformed");
   }
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return error instanceof Error && error.name === "AbortError";
 }

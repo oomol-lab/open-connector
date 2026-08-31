@@ -12,6 +12,7 @@ import {
   createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
+  isAbortLikeError,
   normalizeProviderProxyHeaders,
   ProviderRequestError,
   providerUserAgent,
@@ -910,13 +911,4 @@ function assertDateRange(input: Record<string, unknown>): void {
   if (from && to && from > to) {
     throw new ProviderRequestError(400, "to must be on or after from.");
   }
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return (
-    !!error &&
-    typeof error === "object" &&
-    "name" in error &&
-    String((error as { name?: unknown }).name) === "AbortError"
-  );
 }

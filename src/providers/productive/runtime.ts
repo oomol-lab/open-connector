@@ -6,6 +6,7 @@ import { compactObject, optionalNumber, optionalRecord, optionalString } from ".
 import {
   defineProviderExecutors,
   getProviderActionHandler,
+  isAbortLikeError,
   providerFetch,
   ProviderRequestError,
   providerUserAgent,
@@ -564,10 +565,6 @@ function nullableOutputString(value: unknown) {
 
 function readOptionalNumber(value: unknown) {
   return optionalNumber(value);
-}
-
-function isAbortLikeError(error: unknown) {
-  return error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError");
 }
 
 function readRequiredApiKey(apiKey: unknown) {

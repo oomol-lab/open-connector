@@ -8,7 +8,7 @@ import {
   optionalString as asOptionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { createProviderTimeout, providerUserAgent } from "../provider-runtime.ts";
+import { createProviderTimeout, isAbortLikeError, providerUserAgent } from "../provider-runtime.ts";
 import { BoundedResponseTooLargeError, readBoundedResponseText } from "./bounded-response.ts";
 import { discoverTikHubEndpoints } from "./endpoint-catalog.ts";
 import {
@@ -781,11 +781,4 @@ function asRecordOrEmpty(value: unknown, fieldName: string) {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function isAbortLikeError(error: unknown) {
-  return (
-    error instanceof DOMException ||
-    (error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError"))
-  );
 }

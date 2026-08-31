@@ -640,10 +640,12 @@ export function createProviderTimeout(parentSignal: AbortSignal | undefined, tim
 }
 
 /**
- * Return whether a caught error represents a fetch abort.
+ * Return whether a caught error represents a fetch abort: the `AbortError`
+ * raised by an aborted controller or the `TimeoutError` raised by
+ * `AbortSignal.timeout()`.
  */
 export function isAbortLikeError(error: unknown): boolean {
-  return error instanceof Error && error.name === "AbortError";
+  return error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError");
 }
 
 /**

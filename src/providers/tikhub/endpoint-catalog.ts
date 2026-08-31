@@ -6,7 +6,7 @@ import type {
 } from "./endpoint-types.ts";
 
 import { createHash } from "node:crypto";
-import { createProviderTimeout } from "../provider-runtime.ts";
+import { createProviderTimeout, isAbortLikeError } from "../provider-runtime.ts";
 import { cancelResponseBody, readBoundedResponseText } from "./bounded-response.ts";
 import { parseTikHubEndpointDocument } from "./endpoint-document.ts";
 import { parseTikHubLlmsIndex, tikhubDocsIndexUrl } from "./endpoint-index.ts";
@@ -543,11 +543,4 @@ function sha256Hex(value: string) {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function isAbortLikeError(error: unknown) {
-  return (
-    error instanceof DOMException ||
-    (error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError"))
-  );
 }

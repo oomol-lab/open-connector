@@ -9,7 +9,13 @@ import {
   compactObject,
   optionalBoolean,
 } from "../../core/cast.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { encodePathSegment } from "../../core/request.ts";
+import {
+  createProviderTimeout,
+  isAbortLikeError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const deepgramApiBaseUrl = "https://api.deepgram.com/v1";
 const deepgramDefaultRequestTimeoutMs = 30_000;
@@ -467,17 +473,4 @@ function readNullableBoolean(value: unknown) {
   }
   const parsed = optionalBoolean(value);
   return parsed ?? null;
-}
-
-function encodePathSegment(value: string) {
-  return encodeURIComponent(value);
-}
-
-function isAbortLikeError(error: unknown) {
-  if (!error || typeof error !== "object") {
-    return false;
-  }
-
-  const name = "name" in error ? String(error.name) : "";
-  return name === "AbortError" || name === "TimeoutError";
 }

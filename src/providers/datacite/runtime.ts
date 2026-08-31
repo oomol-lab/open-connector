@@ -224,13 +224,14 @@ function readOptionalBooleanString(value: unknown) {
   return typeof value === "boolean" ? String(value) : undefined;
 }
 
-function isAbortLikeError(error: unknown) {
-  return error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError");
-}
-
 function providerInputError(message: string): ProviderRequestError {
   return new ProviderRequestError(400, message);
 }
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  isAbortLikeError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";

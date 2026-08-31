@@ -12,6 +12,7 @@ import {
 } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -798,14 +799,4 @@ function readStringArrayOrNull(value: unknown): string[] | null {
 
 function providerInputError(message: string): ProviderRequestError {
   return new ProviderRequestError(400, message);
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return (
-    !!error &&
-    typeof error === "object" &&
-    "name" in error &&
-    (String((error as { name?: unknown }).name) === "AbortError" ||
-      String((error as { name?: unknown }).name) === "TimeoutError")
-  );
 }

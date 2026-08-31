@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, stringRecord } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  isAbortLikeError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "harmonic_ai";
 const harmonicAiApiBaseUrl = "https://api.harmonic.ai";
@@ -275,13 +280,4 @@ function numberQueryValue(value: unknown): number | undefined {
 
 function stringArrayQueryValue(value: unknown): string[] | undefined {
   return Array.isArray(value) ? value.map((item) => String(item)) : undefined;
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return (
-    !!error &&
-    typeof error === "object" &&
-    "name" in error &&
-    String((error as { name?: unknown }).name) === "AbortError"
-  );
 }

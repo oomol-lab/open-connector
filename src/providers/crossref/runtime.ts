@@ -880,10 +880,6 @@ function numberToString(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) ? String(value) : undefined;
 }
 
-function isAbortLikeError(error: unknown) {
-  return error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError");
-}
-
 function providerInputError(message: string): ProviderRequestError {
   return new ProviderRequestError(400, message);
 }
@@ -897,4 +893,9 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  isAbortLikeError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";

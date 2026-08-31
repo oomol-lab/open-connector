@@ -3,6 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import { encodePathSegment } from "../../core/request.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -319,8 +320,4 @@ function stringifyOptional(value: unknown): string | undefined {
 function stringifyPathValue(value: unknown): string {
   if (typeof value === "boolean") return value ? "true" : "false";
   return String(value);
-}
-
-function encodePathSegment(value: string): string {
-  return encodeURIComponent(value);
 }

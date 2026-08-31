@@ -115,7 +115,7 @@ async function requestBigpictureJson(input: {
     });
     payload = await readBigpicturePayload(response);
   } catch (error) {
-    if (timeout.didTimeout() || isAbortLikeError(error) || isTimeoutLikeError(error)) {
+    if (timeout.didTimeout() || isAbortLikeError(error)) {
       throw new ProviderRequestError(504, "BigPicture.io request timed out");
     }
 
@@ -224,8 +224,4 @@ function readRequiredString(value: unknown, fieldName: string): string {
     throw new ProviderRequestError(400, `${fieldName} is required`);
   }
   return value.trim();
-}
-
-function isTimeoutLikeError(error: unknown): boolean {
-  return error instanceof Error && error.name === "TimeoutError";
 }

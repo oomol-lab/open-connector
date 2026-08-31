@@ -12,6 +12,7 @@ import {
   createProviderTimeout,
   defineProviderExecutors,
   defineProviderProxy,
+  isAbortLikeError,
   mapProviderActionSources,
   providerProxyEndpointPrefixes,
   ProviderRequestError,
@@ -574,10 +575,6 @@ function readStringList(value: unknown) {
   }
 
   return value.map((item) => readRequiredString(item, "id"));
-}
-
-function isAbortLikeError(error: unknown) {
-  return error instanceof DOMException && error.name === "AbortError";
 }
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

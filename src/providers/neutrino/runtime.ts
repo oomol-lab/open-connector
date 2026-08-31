@@ -4,7 +4,7 @@ import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.
 import type { NeutrinoActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { isAbortLikeError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const neutrinoApiBaseUrl = "https://neutrinoapi.net";
 
@@ -237,11 +237,4 @@ function isNeutrinoRateLimitError(apiErrorCode: number | undefined): boolean {
 
 function invalidInput(message: string): ProviderRequestError {
   return new ProviderRequestError(400, message);
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return (
-    error instanceof DOMException ||
-    (error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError"))
-  );
 }

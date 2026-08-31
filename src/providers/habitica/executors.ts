@@ -17,6 +17,7 @@ import {
   createProviderFetch,
   createProviderProxyUrl,
   defineProviderExecutors,
+  isAbortLikeError,
   normalizeProviderProxyHeaders,
   ProviderRequestError,
   providerUserAgent,
@@ -668,8 +669,4 @@ function providerInputError(message: string): ProviderRequestError {
 
 function providerOutputError(message: string): ProviderRequestError {
   return new ProviderRequestError(502, message);
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return error instanceof Error && (error.name === "AbortError" || error.message.toLowerCase().includes("abort"));
 }

@@ -2,7 +2,7 @@ import type { TransitFileWriter } from "../../../core/types.ts";
 import type { FeishuJsonRequest } from "./client.ts";
 import type { DownloadedFeishuSource } from "./media.ts";
 
-import { optionalRecord } from "../../../core/cast.ts";
+import { compactObject, optionalRecord } from "../../../core/cast.ts";
 import { createProviderFetch, ProviderRequestError } from "../../provider-runtime.ts";
 import { requestFeishuMultipart, withFeishuRawResponse } from "./client.ts";
 import {
@@ -947,16 +947,6 @@ function isPositiveIntegerString(value: string) {
     }
   }
   return true;
-}
-
-function compactObject(input: Record<string, unknown>) {
-  const output: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(input)) {
-    if (value !== undefined) {
-      output[key] = value;
-    }
-  }
-  return output;
 }
 
 function requireObject(value: unknown, fieldName: string) {

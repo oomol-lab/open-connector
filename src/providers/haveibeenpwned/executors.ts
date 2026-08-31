@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  isAbortLikeError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "haveibeenpwned";
 const haveibeenpwnedApiBaseUrl = "https://haveibeenpwned.com/api/v3";
@@ -457,13 +462,4 @@ function stringifyOptionalBoolean(value: unknown): string | undefined {
 
 function providerInputError(message: string): ProviderRequestError {
   return new ProviderRequestError(400, message);
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return (
-    !!error &&
-    typeof error === "object" &&
-    "name" in error &&
-    String((error as { name?: unknown }).name) === "AbortError"
-  );
 }

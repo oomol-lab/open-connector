@@ -185,7 +185,7 @@ async function requestBettercontactJson(
       throw error;
     }
 
-    if (timeout.didTimeout() || isAbortLikeError(error) || isTimeoutLikeError(error)) {
+    if (timeout.didTimeout() || isAbortLikeError(error)) {
       throw new ProviderRequestError(504, "BetterContact request timed out");
     }
 
@@ -412,8 +412,4 @@ function requireInputString(value: unknown, fieldName: string): string {
     throw new ProviderRequestError(400, `${fieldName} is required`);
   }
   return resolved;
-}
-
-function isTimeoutLikeError(error: unknown): boolean {
-  return error instanceof Error && error.name === "TimeoutError";
 }

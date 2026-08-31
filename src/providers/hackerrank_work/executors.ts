@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalIntegerLike, optionalRecord, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  isAbortLikeError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "hackerrank_work";
 const hackerrankWorkApiBaseUrl = "https://www.hackerrank.com/x/api/v3";
@@ -298,13 +303,4 @@ function readString(value: unknown): string | undefined {
 
 function providerInputError(message: string): ProviderRequestError {
   return new ProviderRequestError(400, message);
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return (
-    !!error &&
-    typeof error === "object" &&
-    "name" in error &&
-    String((error as { name?: unknown }).name) === "AbortError"
-  );
 }

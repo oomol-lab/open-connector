@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  isAbortLikeError,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "apollo";
 const apolloApiBaseUrl = "https://api.apollo.io";
@@ -384,8 +389,4 @@ function asStringList(value: unknown): string[] | undefined {
 
   const normalized = value.map((item) => optionalString(item)).filter((item): item is string => !!item);
   return normalized.length > 0 ? normalized : undefined;
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return error instanceof DOMException && error.name === "AbortError";
 }

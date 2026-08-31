@@ -2,7 +2,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { MoreTreesActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  isAbortLikeError,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 export interface MoreTreesCredentialCheck {
   providerAccountId?: string;
@@ -328,11 +333,4 @@ function resolveStoredAccountCode(providerMetadata: Record<string, unknown> | un
 function readOptionalTrimmedString(value: unknown) {
   const text = optionalString(value)?.trim();
   return text || undefined;
-}
-
-function isAbortLikeError(error: unknown) {
-  return (
-    (error instanceof DOMException && error.name === "AbortError") ||
-    (error instanceof Error && error.name === "AbortError")
-  );
 }

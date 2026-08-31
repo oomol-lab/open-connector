@@ -4,6 +4,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -270,8 +271,4 @@ function extractErrorMessage(payload: unknown): string | undefined {
   return record
     ? (optionalString(record.message) ?? optionalString(record.error) ?? optionalString(record.detail))
     : undefined;
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError");
 }

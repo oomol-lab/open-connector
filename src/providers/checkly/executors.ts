@@ -4,6 +4,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import { optionalBoolean, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -256,8 +257,4 @@ function resolveAccountId(value: unknown): string {
 
 function providerError(message: string): ProviderRequestError {
   return new ProviderRequestError(502, message);
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return error instanceof Error && error.name === "AbortError";
 }

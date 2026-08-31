@@ -1,6 +1,6 @@
 import type { InfolobbyActionName } from "./actions.ts";
 
-import { requiredString } from "../../core/cast.ts";
+import { compactObject, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export interface InfolobbyCredentialCheck {
@@ -244,8 +244,4 @@ function optionalRecord(value: unknown) {
 
 function readOptionalString(value: unknown) {
   return typeof value === "string" && value ? value : undefined;
-}
-
-function compactObject(value: Record<string, unknown>) {
-  return Object.fromEntries(Object.entries(value).filter((entry) => entry[1] !== undefined));
 }

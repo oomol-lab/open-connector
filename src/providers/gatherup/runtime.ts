@@ -2,7 +2,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  isAbortLikeError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 export interface GatherupContext {
   apiKey: string;
@@ -198,11 +203,4 @@ function invalidCredential(message: string): ProviderRequestError {
 
 function readOptionalFlag(value: unknown) {
   return typeof value === "boolean" ? (value ? 1 : 0) : undefined;
-}
-
-function isAbortLikeError(error: unknown) {
-  return (
-    error instanceof DOMException ||
-    (error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError"))
-  );
 }

@@ -4,6 +4,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -391,11 +392,4 @@ function requireRecord(value: unknown, label: string): Record<string, unknown> {
     throw new ProviderRequestError(502, `${label} is not a JSON object`);
   }
   return record;
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return (
-    error instanceof DOMException ||
-    (error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError"))
-  );
 }

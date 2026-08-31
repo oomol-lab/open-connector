@@ -3,6 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalString, requiredString } from "../../core/cast.ts";
+import { encodePathSegment } from "../../core/request.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const service = "lightfield";
@@ -344,10 +345,6 @@ function readNumberProperty(payload: Record<string, unknown>, key: string, label
     throw new ProviderRequestError(502, `Invalid ${label}.`, payload);
   }
   return value;
-}
-
-function encodePathSegment(value: string): string {
-  return encodeURIComponent(value);
 }
 
 function invalidInputError(message: string): ProviderRequestError {

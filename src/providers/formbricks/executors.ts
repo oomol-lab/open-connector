@@ -6,6 +6,7 @@ import { compactObject, optionalInteger, optionalRecord, optionalString } from "
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -448,10 +449,6 @@ function nullableProviderString(value: unknown): string | null {
     return null;
   }
   return typeof value === "string" ? value : null;
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError");
 }
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

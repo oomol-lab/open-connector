@@ -2,6 +2,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProductlaneActionName } from "./actions.ts";
 
 import { requiredString } from "../../core/cast.ts";
+import { encodePathSegment } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export interface ProductlaneCredentialCheck {
@@ -322,10 +323,6 @@ function readErrorMessage(payload: unknown) {
 function omitId(input: Record<string, unknown>) {
   const { id: _id, ...body } = input;
   return body;
-}
-
-function encodePathSegment(value: unknown) {
-  return encodeURIComponent(String(value));
 }
 
 function readObject(value: unknown) {

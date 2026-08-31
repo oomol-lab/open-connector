@@ -1,5 +1,6 @@
 import type { FeishuJsonRequest, FeishuQueryValue } from "./client.ts";
 
+import { compactObject } from "../../../core/cast.ts";
 import { ProviderRequestError } from "../../provider-runtime.ts";
 
 interface FeishuApprovalActionHandler {
@@ -234,16 +235,6 @@ function mapEnum<T>(value: unknown, values: Readonly<Record<string, T>>, fieldNa
     throw new ProviderRequestError(400, `${fieldName} has an unsupported value`);
   }
   return mapped;
-}
-
-function compactObject(value: Record<string, unknown>) {
-  const result: Record<string, unknown> = {};
-  for (const [key, item] of Object.entries(value)) {
-    if (item !== undefined) {
-      result[key] = item;
-    }
-  }
-  return result;
 }
 
 function compactQuery(value: Record<string, unknown>) {

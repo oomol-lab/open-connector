@@ -1,7 +1,12 @@
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  isAbortLikeError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const clinicalKeyApiBaseUrl = "https://api.elsevier.com/sushi/r51";
 const clinicalKeyPlatformCode = "ck";
@@ -299,10 +304,6 @@ function readRequiredString(value: unknown, fieldName: string) {
 
 function readOptionalString(value: unknown) {
   return typeof value === "string" && value.trim() !== "" ? value.trim() : undefined;
-}
-
-function isAbortLikeError(error: unknown) {
-  return error instanceof DOMException && error.name === "AbortError";
 }
 
 function providerInputError(message: string): ProviderRequestError {

@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, nullableString, optionalRecord, optionalString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { isAbortLikeError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const affinityApiBaseUrl = "https://api.affinity.co";
 export const affinityValidationPath = "/v2/auth/whoami";
@@ -763,13 +763,4 @@ function readOptionalPositiveIntegerArray(value: unknown, fieldName: string) {
   }
 
   return value.map((item, index) => readPositiveInteger(item, `${fieldName}[${index}]`));
-}
-
-function isAbortLikeError(error: unknown) {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "name" in error &&
-    (error as { name?: unknown }).name === "AbortError"
-  );
 }

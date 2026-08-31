@@ -1,5 +1,6 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
+import { compactObject } from "../../../core/cast.ts";
 import { ProviderRequestError } from "../../provider-runtime.ts";
 
 interface FeishuBaseActionHandler {
@@ -607,16 +608,6 @@ function tablePath(appToken: unknown, tableId: unknown) {
 
 function segment(value: unknown) {
   return encodeURIComponent(requireString(value, "path identifier"));
-}
-
-function compactObject(value: Record<string, unknown>) {
-  const result: Record<string, unknown> = {};
-  for (const [key, item] of Object.entries(value)) {
-    if (item !== undefined) {
-      result[key] = item;
-    }
-  }
-  return result;
 }
 
 function serializeJson(value: unknown) {

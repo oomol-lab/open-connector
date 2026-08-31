@@ -7,6 +7,7 @@ import { compactObject, optionalRecord, optionalString, requiredString } from ".
 import {
   defineApiKeyProviderExecutors,
   getProviderActionHandler,
+  isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -532,11 +533,4 @@ function readFirstObject(input: Record<string, unknown>, keys: string[]) {
 function readNonEmptyString(value: unknown) {
   const text = optionalString(value);
   return text || undefined;
-}
-
-function isAbortLikeError(error: unknown) {
-  return (
-    error instanceof DOMException ||
-    (error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError"))
-  );
 }

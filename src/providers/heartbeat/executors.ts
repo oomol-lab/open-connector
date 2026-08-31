@@ -7,6 +7,7 @@ import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
@@ -235,11 +236,4 @@ function requireResourceObject(payload: unknown, label: string): Record<string, 
 
 function providerInputError(message: string): ProviderRequestError {
   return new ProviderRequestError(400, message);
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return (
-    error instanceof DOMException ||
-    (error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError"))
-  );
 }

@@ -9,7 +9,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import { assertPublicHttpUrl, encodePathSegment, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
   createProviderFetch,
   createProviderProxyUrl,
@@ -564,10 +564,6 @@ function buildBasicAuthHeader(username: string, password: string) {
 
 function buildApiKeyAuthHeader(apiKey: string) {
   return `ApiKey ${apiKey}`;
-}
-
-function encodePathSegment(value: string) {
-  return encodeURIComponent(value);
 }
 
 async function readElasticsearchPayload(response: Response) {

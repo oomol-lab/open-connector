@@ -9,7 +9,12 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  isAbortLikeError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "cincopa";
 const apiBaseUrl = "https://api.cincopa.com/v2";
@@ -268,8 +273,4 @@ function joinStringArray(value: unknown): string | undefined {
 
 function providerError(message: string): ProviderRequestError {
   return new ProviderRequestError(502, `Cincopa returned invalid ${message}`);
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return error instanceof Error && error.name === "AbortError";
 }

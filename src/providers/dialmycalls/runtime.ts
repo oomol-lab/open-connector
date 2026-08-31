@@ -2,7 +2,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { DialMyCallsActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  isAbortLikeError,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 export interface DialmycallsCredentialCheck {
   providerAccountId?: string;
@@ -372,8 +377,4 @@ function requireObject(value: unknown, context: string): Record<string, unknown>
     throw new ProviderRequestError(502, `${context} must be an object`);
   }
   return object;
-}
-
-function isAbortLikeError(error: unknown) {
-  return error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError");
 }

@@ -4,7 +4,12 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { compactJson, jsonObject } from "../../core/request.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  isAbortLikeError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "geckoboard";
 const geckoboardApiBaseUrl = "https://api.geckoboard.com";
@@ -254,8 +259,4 @@ function readResponseObject(value: unknown, fieldName: string): Record<string, u
     throw new ProviderRequestError(502, `Geckoboard response is missing ${fieldName}`, value);
   }
   return record;
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError");
 }

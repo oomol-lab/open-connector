@@ -11,6 +11,7 @@ import { compactObject, optionalInteger, optionalRecord, optionalString } from "
 import {
   defineProviderProxy,
   defineProviderExecutors,
+  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -565,10 +566,6 @@ function readOptionalStringArray(value: unknown): string[] | undefined {
     .map((item) => optionalString(item))
     .filter((item): item is string => item !== undefined && item.length > 0);
   return result.length > 0 ? result : undefined;
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
 }
 
 function trimTrailingSlash(value: string): string {

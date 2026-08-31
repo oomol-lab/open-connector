@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  isAbortLikeError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "fidel_api";
 const fidelApiBaseUrl = "https://api.fidel.uk/v1";
@@ -585,8 +590,4 @@ function createFidelRequestSignal(parent?: AbortSignal): FidelApiRequestSignal {
       parent?.removeEventListener("abort", abortFromParent);
     },
   };
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return error instanceof Error && error.name === "AbortError";
 }

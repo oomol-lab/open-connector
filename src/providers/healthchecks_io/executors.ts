@@ -13,6 +13,7 @@ import {
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -403,16 +404,6 @@ function assertUpdateCheckInput(input: Record<string, unknown>): void {
 
 function providerInputError(message: string): ProviderRequestError {
   return new ProviderRequestError(400, message);
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return (
-    !!error &&
-    typeof error === "object" &&
-    "name" in error &&
-    (String((error as { name?: unknown }).name) === "AbortError" ||
-      String((error as { name?: unknown }).name) === "TimeoutError")
-  );
 }
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

@@ -3,7 +3,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalNumber, optionalRecord, requiredRecord, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { isAbortLikeError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const fireberryApiBaseUrl = "https://api.fireberry.com";
 export const fireberryDefaultRequestTimeoutMs = 30_000;
@@ -410,8 +410,4 @@ function hashToken(apiKey: string) {
 
 function isRecordObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function isAbortLikeError(error: unknown) {
-  return error instanceof Error && error.name === "AbortError";
 }

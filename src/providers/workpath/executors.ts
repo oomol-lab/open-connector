@@ -210,7 +210,7 @@ async function workpathRequest(
       throw error;
     }
 
-    if (timeout.didTimeout() || isAbortLikeError(error) || isTimeoutLikeError(error)) {
+    if (timeout.didTimeout() || isAbortLikeError(error)) {
       throw new ProviderRequestError(
         504,
         `Workpath ${input.path} request timed out after ${Math.ceil(workpathDefaultRequestTimeoutMs / 1000)} seconds`,
@@ -324,8 +324,4 @@ function extractWorkpathErrorMessage(payload: unknown): string | undefined {
 
 function providerInputError(message: string): ProviderRequestError {
   return new ProviderRequestError(400, message);
-}
-
-function isTimeoutLikeError(error: unknown): boolean {
-  return error instanceof Error && error.name === "TimeoutError";
 }

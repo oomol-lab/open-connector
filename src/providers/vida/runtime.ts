@@ -2,7 +2,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { VidaActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  isAbortLikeError,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 export interface VidaCredentialCheck {
   providerAccountId?: string;
@@ -260,8 +265,4 @@ function readOptionalString(value: unknown) {
 
 function readOptionalNumberString(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) ? String(value) : undefined;
-}
-
-function isAbortLikeError(error: unknown) {
-  return error instanceof Error && error.name === "AbortError";
 }

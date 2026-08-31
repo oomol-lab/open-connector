@@ -10,7 +10,12 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  isAbortLikeError,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 export const partnerStackPartnerApiBaseUrl = "https://api.partnerstack.com/api/v2/";
 const partnerStackPartnerValidationPath = "/api/v2/marketplace/programs";
@@ -278,13 +283,6 @@ function createPartnerStackTransportError(error: unknown) {
       ? `PartnerStack Partner request failed: ${error.message}`
       : "PartnerStack Partner request failed";
   return new ProviderRequestError(502, message);
-}
-
-function isAbortLikeError(error: unknown) {
-  if (!(error instanceof Error)) {
-    return false;
-  }
-  return error.name === "AbortError" || error.name === "TimeoutError";
 }
 
 function extractErrorMessage(payload: unknown): string | undefined {

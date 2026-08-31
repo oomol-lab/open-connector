@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  isAbortLikeError,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "apiverve";
 const apiverveApiBaseUrl = "https://api.apiverve.com";
@@ -537,8 +542,4 @@ function readNullableNumber(value: unknown): number | null {
 
 function readNullableBoolean(value: unknown): boolean | null {
   return typeof value === "boolean" ? value : null;
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return error instanceof DOMException && error.name === "AbortError";
 }

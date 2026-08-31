@@ -9,7 +9,12 @@ import {
   optionalString,
   requiredRecord,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  isAbortLikeError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "circle";
 const apiBaseUrl = "https://app.circle.so/api/admin/v2";
@@ -349,8 +354,4 @@ function optionalIntegerListString(value: unknown): string | undefined {
 
 function providerError(message: string): ProviderRequestError {
   return new ProviderRequestError(502, message);
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return error instanceof Error && error.name === "AbortError";
 }

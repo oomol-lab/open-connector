@@ -2,6 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
+import { encodePathSegment } from "../../core/request.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -286,8 +287,4 @@ function requireTrimmedString(value: unknown, fieldName: string): string {
     throw new ProviderRequestError(400, `${fieldName} is required`);
   }
   return trimmed;
-}
-
-function encodePathSegment(value: string): string {
-  return encodeURIComponent(value);
 }

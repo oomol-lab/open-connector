@@ -1,7 +1,12 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  isAbortLikeError,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const getresponseRetailApiBaseUrl = "https://api.getresponse.com/v3";
 export const getresponseMaxApiBaseUrls = [
@@ -810,8 +815,4 @@ function optionalBooleanLike(value: unknown) {
   if (value === "true") return true;
   if (value === "false") return false;
   return null;
-}
-
-function isAbortLikeError(error: unknown) {
-  return error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError");
 }

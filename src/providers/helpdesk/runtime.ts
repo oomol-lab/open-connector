@@ -2,7 +2,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { HelpdeskActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  isAbortLikeError,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 export interface HelpdeskCredentialCheck {
   providerAccountId?: string;
@@ -495,11 +500,4 @@ function requireOkAcknowledgement(value: unknown) {
   if (typeof value !== "string" || value.trim() !== "OK") {
     throw new ProviderRequestError(502, "HelpDesk acknowledgement response must be OK");
   }
-}
-
-function isAbortLikeError(error: unknown) {
-  return (
-    error instanceof DOMException ||
-    (error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError"))
-  );
 }

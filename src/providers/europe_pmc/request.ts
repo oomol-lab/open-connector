@@ -1,5 +1,10 @@
 import { optionalRecord, optionalString } from "../../core/cast.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  isAbortLikeError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 export const europePmcApiBaseUrl = "https://www.ebi.ac.uk/europepmc/webservices/rest";
 export const europePmcAnnotationsApiBaseUrl = "https://www.ebi.ac.uk/europepmc/annotations_api";
@@ -157,8 +162,4 @@ function extractErrorMessage(body: string) {
 
 function readOptionalString(value: unknown) {
   return optionalString(value)?.trim() || undefined;
-}
-
-function isAbortLikeError(error: unknown) {
-  return error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError");
 }

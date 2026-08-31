@@ -5,6 +5,7 @@ import { compactObject, optionalIntegerLike, optionalRawString } from "../../cor
 import {
   createProviderTimeout,
   defineProviderExecutors,
+  isAbortLikeError,
   mapProviderActionSources,
   providerUserAgent,
   ProviderRequestError,
@@ -274,8 +275,4 @@ function readOptionalString(value: unknown) {
 function stringifyOptionalInteger(value: unknown) {
   const integer = optionalIntegerLike(value, "integer");
   return integer === undefined ? undefined : String(integer);
-}
-
-function isAbortLikeError(error: unknown) {
-  return error instanceof Error && error.name === "AbortError";
 }

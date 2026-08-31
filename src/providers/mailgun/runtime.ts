@@ -10,6 +10,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
+import { encodePathSegment } from "../../core/request.ts";
 import {
   defineProviderExecutors,
   providerUserAgent,
@@ -657,8 +658,4 @@ function appendPrefixedRecord(form: FormData, prefix: string, value: unknown): v
     }
     form.append(`${prefix}${key}`, typeof child === "string" ? child : JSON.stringify(child));
   }
-}
-
-function encodePathSegment(value: string): string {
-  return encodeURIComponent(value);
 }

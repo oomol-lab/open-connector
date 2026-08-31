@@ -121,7 +121,7 @@ async function requestBigDataCloudJson(input: {
     });
     payload = await readBigDataCloudPayload(response);
   } catch (error) {
-    if (isAbortLikeError(error) || isTimeoutLikeError(error)) {
+    if (isAbortLikeError(error)) {
       throw new ProviderRequestError(504, error instanceof Error ? error.message : "BigDataCloud request timed out");
     }
 
@@ -204,8 +204,4 @@ function mapBigDataCloudError(
   }
 
   return new ProviderRequestError(status || 500, normalizedMessage, payload);
-}
-
-function isTimeoutLikeError(error: unknown): boolean {
-  return error instanceof Error && error.name === "TimeoutError";
 }

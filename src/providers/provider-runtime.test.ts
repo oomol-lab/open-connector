@@ -9,6 +9,7 @@ import {
   defineOAuthProviderExecutors,
   defineProviderExecutors,
   defineProviderProxy,
+  isAbortLikeError,
   isAbortSignalError,
   mapProviderActionSources,
   providerFetch,
@@ -160,6 +161,28 @@ describe("createProviderTimeout", () => {
     } finally {
       timeout.cleanup();
     }
+  });
+});
+
+describe("isAbortLikeError", () => {
+  it("accepts AbortError and the TimeoutError raised by AbortSignal.timeout()", () => {
+    expect(isAbortLikeError(new DOMException("aborted", "AbortError"))).toBe(true);
+    expect(isAbortLikeError(new DOMException("timed out", "TimeoutError"))).toBe(true);
+    expect(isAbortLikeError(AbortSignal.abort().reason)).toBe(true);
+  });
+
+  it("recognizes the reason an AbortSignal.timeout() signal aborts with", async () => {
+    const signal = AbortSignal.timeout(1);
+    await new Promise((resolve) => signal.addEventListener("abort", resolve, { once: true }));
+    expect((signal.reason as Error).name).toBe("TimeoutError");
+    expect(isAbortLikeError(signal.reason)).toBe(true);
+  });
+
+  it("rejects other errors and non-error values", () => {
+    expect(isAbortLikeError(new Error("connection reset"))).toBe(false);
+    expect(isAbortLikeError(new TypeError("fetch failed"))).toBe(false);
+    expect(isAbortLikeError({ name: "AbortError" })).toBe(false);
+    expect(isAbortLikeError(undefined)).toBe(false);
   });
 });
 

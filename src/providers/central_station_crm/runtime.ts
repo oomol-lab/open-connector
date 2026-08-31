@@ -5,6 +5,7 @@ import { compactObject, optionalInteger, optionalRecord, optionalString } from "
 import {
   createProviderTimeout,
   getProviderActionHandler,
+  isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -719,13 +720,6 @@ function asNullableInteger(value: unknown) {
     return null;
   }
   return optionalInteger(value);
-}
-
-function isAbortLikeError(error: unknown) {
-  return (
-    error instanceof DOMException ||
-    (error instanceof Error && (error.name === "AbortError" || error.message.includes("aborted")))
-  );
 }
 
 function readApiKey(value: unknown): string {

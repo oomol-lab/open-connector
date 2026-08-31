@@ -151,7 +151,7 @@ async function requestBidsketchJson(input: {
       throw error;
     }
 
-    if (timeout.didTimeout() || isAbortLikeError(error) || isTimeoutLikeError(error)) {
+    if (timeout.didTimeout() || isAbortLikeError(error)) {
       throw new ProviderRequestError(504, "BidSketch request timed out");
     }
 
@@ -303,8 +303,4 @@ function readRequiredPositiveInteger(value: unknown, fieldName: string): number 
     throw new ProviderRequestError(400, `${fieldName} is required`);
   }
   return parsed;
-}
-
-function isTimeoutLikeError(error: unknown): boolean {
-  return error instanceof Error && error.name === "TimeoutError";
 }

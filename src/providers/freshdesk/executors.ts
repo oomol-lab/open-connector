@@ -11,6 +11,7 @@ import { compactObject, optionalInteger, optionalRecord, optionalString } from "
 import {
   defineProviderProxy,
   defineProviderExecutors,
+  isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -370,10 +371,6 @@ function isFreshdeskSubdomain(value: string): boolean {
 
 function buildFreshdeskAuthorizationHeader(apiKey: string): string {
   return `Basic ${Buffer.from(`${apiKey}:X`).toString("base64")}`;
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
 }
 
 function trimTrailingSlash(value: string): string {

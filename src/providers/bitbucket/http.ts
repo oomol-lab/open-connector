@@ -1,4 +1,9 @@
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  isAbortLikeError,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const bitbucketRequestTimeoutMs = 30_000;
 const bitbucketMaxResponseBytes = 10 * 1024 * 1024;
@@ -75,11 +80,4 @@ async function readLimitedText(response: Response) {
 
 function responseTooLargeError() {
   return new ProviderRequestError(502, "bitbucket response is too large");
-}
-
-function isAbortLikeError(error: unknown) {
-  return (
-    (error instanceof Error && error.name === "AbortError") ||
-    (typeof DOMException !== "undefined" && error instanceof DOMException && error.name === "AbortError")
-  );
 }

@@ -1,7 +1,12 @@
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  isAbortLikeError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const embaseApiBaseUrl = "https://api.elsevier.com/content/embase";
 const embaseDefaultRequestTimeoutMs = 30_000;
@@ -334,10 +339,6 @@ function readRequiredString(value: unknown, fieldName: string) {
     throw new ProviderRequestError(400, `${fieldName} is required`);
   }
   return value.trim();
-}
-
-function isAbortLikeError(error: unknown) {
-  return error instanceof DOMException && error.name === "AbortError";
 }
 
 function providerInputError(message: string): ProviderRequestError {

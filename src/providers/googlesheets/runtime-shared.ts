@@ -13,7 +13,7 @@ import {
   requiredRecord,
   stringArray,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { isAbortLikeError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export {
   compactObject,
@@ -316,8 +316,4 @@ function columnIndexToLetters(columnIndex: number): string {
     current = Math.floor((current - 1) / 26);
   }
   return letters;
-}
-
-function isAbortLikeError(error: unknown): boolean {
-  return error instanceof DOMException && error.name === "AbortError";
 }
