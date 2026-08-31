@@ -1,4 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
 import type { AppcircleActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -9,14 +9,6 @@ export interface AppcircleCredentialCheck {
   accountLabel: string;
   providerScopes: string[];
   providerMetadata: Record<string, unknown>;
-}
-
-interface ApiKeyProviderActionInput {
-  apiKey: string;
-  actionName: string;
-  input: Record<string, unknown>;
-  providerMetadata?: Record<string, unknown>;
-  values?: Record<string, string>;
 }
 
 export const appcircleApiBaseUrl = "https://api.appcircle.io";
@@ -95,7 +87,7 @@ export async function validateAppcircleCredential(
 }
 
 export async function executeAppcircleAction(
-  input: ApiKeyProviderActionInput & {
+  input: ApiKeyActionRequest & {
     actionName: AppcircleActionName;
     input: Record<string, unknown>;
   },

@@ -1,3 +1,4 @@
+import type { ApiKeyActionRequest } from "../provider-runtime.ts";
 import type { InfolobbyActionName } from "./actions.ts";
 
 import { compactObject, requiredString } from "../../core/cast.ts";
@@ -8,14 +9,6 @@ export interface InfolobbyCredentialCheck {
   accountLabel: string;
   providerScopes: string[];
   providerMetadata: Record<string, unknown>;
-}
-
-interface ApiKeyProviderActionInput {
-  apiKey: string;
-  actionName: string;
-  input: Record<string, unknown>;
-  providerMetadata?: Record<string, unknown>;
-  values?: Record<string, string>;
 }
 
 export const infolobbyApiBaseUrl = "https://infolobby.com/api";
@@ -55,7 +48,7 @@ export async function validateInfolobbyCredential(
 }
 
 export async function executeInfolobbyAction(
-  input: ApiKeyProviderActionInput & {
+  input: ApiKeyActionRequest & {
     actionName: InfolobbyActionName;
     input: Record<string, unknown>;
   },

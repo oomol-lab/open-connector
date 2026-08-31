@@ -1,4 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
 import type { DopplerMarketingAutomationActionName } from "./actions.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -16,14 +16,6 @@ export interface DopplerMarketingAutomationCredentialCheck {
   providerMetadata: Record<string, unknown>;
 }
 
-interface ApiKeyProviderActionInput {
-  apiKey: string;
-  actionName: string;
-  input: Record<string, unknown>;
-  providerMetadata?: Record<string, unknown>;
-  values?: Record<string, string>;
-}
-
 export const dopplerMarketingAutomationApiBaseUrl = "https://restapi.fromdoppler.com";
 
 type RequestPhase = "validate" | "execute";
@@ -39,7 +31,7 @@ interface DopplerMarketingRequest {
   phase: RequestPhase;
 }
 
-type DopplerMarketingActionHandler = (input: ApiKeyProviderActionInput, fetcher: typeof fetch) => Promise<unknown>;
+type DopplerMarketingActionHandler = (input: ApiKeyActionRequest, fetcher: typeof fetch) => Promise<unknown>;
 
 export const dopplerMarketingAutomationActionHandlers: ProviderActionHandlers<
   "doppler_marketing_automation",
@@ -221,7 +213,7 @@ export async function validateDopplerMarketingAutomationCredential(
 }
 
 export async function executeDopplerMarketingAutomationAction(
-  input: ApiKeyProviderActionInput & {
+  input: ApiKeyActionRequest & {
     actionName: DopplerMarketingAutomationActionName;
   },
   fetcher: typeof fetch,
@@ -408,7 +400,7 @@ function normalizeMessageResult(payload: unknown) {
   };
 }
 
-function credentialContext(input: ApiKeyProviderActionInput) {
+function credentialContext(input: ApiKeyActionRequest) {
   return {
     apiKey: requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message)),
     accountEmail: requireAccountEmail(

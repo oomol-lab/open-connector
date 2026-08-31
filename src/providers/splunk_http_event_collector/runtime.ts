@@ -1,19 +1,10 @@
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
 import type { SplunkHttpEventCollectorActionName } from "./actions.ts";
 
+import { createHash, randomUUID } from "node:crypto";
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
-
-interface ApiKeyProviderActionInput {
-  apiKey: string;
-  actionName: string;
-  input: Record<string, unknown>;
-  providerMetadata?: Record<string, unknown>;
-  values?: Record<string, string>;
-}
-
-import { createHash, randomUUID } from "node:crypto";
 
 export interface SplunkHttpEventCollectorCredentialCheck {
   providerAccountId?: string;
@@ -32,7 +23,7 @@ interface SplunkHecExpectedResponse {
   readonly code: number;
 }
 
-interface SplunkHecActionInput extends ApiKeyProviderActionInput {
+interface SplunkHecActionInput extends ApiKeyActionRequest {
   readonly actionName: SplunkHttpEventCollectorActionName;
   readonly input: Record<string, unknown>;
 }

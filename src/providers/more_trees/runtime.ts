@@ -1,4 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
 import type { MoreTreesActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -16,14 +16,6 @@ export interface MoreTreesCredentialCheck {
   providerMetadata: Record<string, unknown>;
 }
 
-interface ApiKeyProviderActionInput {
-  apiKey: string;
-  actionName: string;
-  input: Record<string, unknown>;
-  providerMetadata?: Record<string, unknown>;
-  values?: Record<string, string>;
-}
-
 export const moreTreesAccountOrigin = "https://user-management-service.platform.moretrees.eco";
 export const moreTreesProjectOrigin = "https://project-management-service.platform.moretrees.eco";
 export const moreTreesTransactionOrigin = "https://transaction-management-service.platform.moretrees.eco";
@@ -35,7 +27,7 @@ const moreTreesProjectsPath = "/project-management-api/external/projects";
 const moreTreesPlantPath = "/transaction-management-api/external/plant";
 
 type MoreTreesRequestPhase = "validate" | "execute";
-type MoreTreesActionInput = ApiKeyProviderActionInput & {
+type MoreTreesActionInput = ApiKeyActionRequest & {
   actionName: MoreTreesActionName;
   input: Record<string, unknown>;
 };

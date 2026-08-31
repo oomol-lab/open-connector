@@ -1,4 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -10,19 +10,11 @@ export interface LeadiqCredentialCheck {
   providerMetadata: Record<string, unknown>;
 }
 
-interface ApiKeyProviderActionInput {
-  apiKey: string;
-  actionName: string;
-  input: Record<string, unknown>;
-  providerMetadata?: Record<string, unknown>;
-  values?: Record<string, string>;
-}
-
 export const leadiqApiBaseUrl = "https://api.leadiq.com";
 export const leadiqGraphqlPath = "/graphql";
 
 type LeadiqRequestPhase = "validate" | "execute";
-type LeadiqActionHandler = (input: ApiKeyProviderActionInput, fetcher: typeof fetch) => Promise<unknown>;
+type LeadiqActionHandler = (input: ApiKeyActionRequest, fetcher: typeof fetch) => Promise<unknown>;
 
 interface GraphqlRequest {
   query: string;

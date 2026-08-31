@@ -1,4 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
 import type { SupermemoryActionName } from "./actions.ts";
 
 import { compactObject, requiredString } from "../../core/cast.ts";
@@ -9,14 +9,6 @@ export interface SupermemoryCredentialCheck {
   accountLabel: string;
   providerScopes: string[];
   providerMetadata: Record<string, unknown>;
-}
-
-interface ApiKeyProviderActionInput {
-  apiKey: string;
-  actionName: string;
-  input: Record<string, unknown>;
-  providerMetadata?: Record<string, unknown>;
-  values?: Record<string, string>;
 }
 
 type SupermemoryActionHandler = (
@@ -112,7 +104,7 @@ export async function validateSupermemoryApiKey(
 }
 
 export function executeSupermemoryAction(
-  input: ApiKeyProviderActionInput & {
+  input: ApiKeyActionRequest & {
     actionName: SupermemoryActionName;
     input: Record<string, unknown>;
   },

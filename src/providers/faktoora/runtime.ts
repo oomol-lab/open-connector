@@ -1,4 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
 import type { FaktooraActionName } from "./actions.ts";
 
 import { requiredString } from "../../core/cast.ts";
@@ -9,14 +9,6 @@ export interface FaktooraCredentialCheck {
   accountLabel: string;
   providerScopes: string[];
   providerMetadata: Record<string, unknown>;
-}
-
-interface ApiKeyProviderActionInput {
-  apiKey: string;
-  actionName: string;
-  input: Record<string, unknown>;
-  providerMetadata?: Record<string, unknown>;
-  values?: Record<string, string>;
 }
 
 export const faktooraApiBaseUrl = "https://api.faktoora.com/api/v1";
@@ -138,7 +130,7 @@ export async function validateFaktooraCredential(
 export async function executeFaktooraAction(
   actionName: FaktooraActionName,
   input: Record<string, unknown>,
-  providerInput: ApiKeyProviderActionInput,
+  providerInput: ApiKeyActionRequest,
   fetcher: typeof fetch,
 ): Promise<unknown> {
   return faktooraActionHandlers[actionName](input, {

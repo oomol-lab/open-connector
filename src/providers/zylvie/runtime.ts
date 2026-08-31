@@ -1,4 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -15,16 +15,8 @@ export interface ZylvieCredentialCheck {
   providerMetadata: Record<string, unknown>;
 }
 
-interface ApiKeyProviderActionInput {
-  apiKey: string;
-  actionName: string;
-  input: Record<string, unknown>;
-  providerMetadata?: Record<string, unknown>;
-  values?: Record<string, string>;
-}
-
 type RequestPhase = "validate" | "execute";
-type ActionHandler = (input: ApiKeyProviderActionInput, fetcher: typeof fetch) => Promise<unknown>;
+type ActionHandler = (input: ApiKeyActionRequest, fetcher: typeof fetch) => Promise<unknown>;
 
 export const zylvieApiBaseUrl = "https://api.zylvie.com";
 
@@ -197,7 +189,7 @@ export async function validateZylvieCredential(
   };
 }
 
-export async function executeZylvieAction(input: ApiKeyProviderActionInput, fetcher: typeof fetch): Promise<unknown> {
+export async function executeZylvieAction(input: ApiKeyActionRequest, fetcher: typeof fetch): Promise<unknown> {
   const handler = getProviderActionHandler(actionHandlers, input.actionName);
   if (!handler) {
     throw new ProviderRequestError(500, `Zylvie action is not implemented yet: ${input.actionName}`);
@@ -254,7 +246,7 @@ export async function requestZylvieJson(input: {
 }
 
 async function mutation(
-  input: ApiKeyProviderActionInput,
+  input: ApiKeyActionRequest,
   fetcher: typeof fetch,
   path: string,
   method: "POST" | "PUT" | "DELETE",

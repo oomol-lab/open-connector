@@ -200,6 +200,22 @@ export interface ApiKeyProviderContext {
   signal?: AbortSignal;
 }
 
+/**
+ * Request an API-key provider action handler receives: the resolved key, the
+ * provider-local action name, the schema-validated action input, the full
+ * credential field map (`values` also carries `apiKey`) and the runtime
+ * metadata the credential validator stored on the connection. Executors pass
+ * every field; the optional markers only let provider-local helpers accept a
+ * narrower request.
+ */
+export interface ApiKeyActionRequest {
+  apiKey: string;
+  actionName: string;
+  input: Record<string, unknown>;
+  providerMetadata?: Record<string, unknown>;
+  values?: Record<string, string>;
+}
+
 export interface OAuthProviderContext {
   accessToken: string;
   tokenType?: string;

@@ -1,4 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
 import type { HelpdeskActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -16,19 +16,11 @@ export interface HelpdeskCredentialCheck {
   providerMetadata: Record<string, unknown>;
 }
 
-interface ApiKeyProviderActionInput {
-  apiKey: string;
-  actionName: string;
-  input: Record<string, unknown>;
-  providerMetadata?: Record<string, unknown>;
-  values?: Record<string, string>;
-}
-
 export const helpdeskApiBaseUrl = "https://api.helpdesk.com";
 const helpdeskValidationEndpoint = "/v1/licenses";
 
 type HelpdeskRequestPhase = "validate" | "execute";
-type HelpdeskActionInput = ApiKeyProviderActionInput & {
+type HelpdeskActionInput = ApiKeyActionRequest & {
   actionName: HelpdeskActionName;
   input: Record<string, unknown>;
 };
@@ -350,7 +342,7 @@ function readIntegerHeader(headers: Headers, name: string) {
   return Number.isInteger(parsed) ? parsed : null;
 }
 
-function readActionCredential(input: ApiKeyProviderActionInput) {
+function readActionCredential(input: ApiKeyActionRequest) {
   return {
     apiKey: input.apiKey,
     accountId: requireStoredHelpdeskAccountId(input.values),

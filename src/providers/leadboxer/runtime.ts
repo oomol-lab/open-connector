@@ -1,4 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { isIP } from "node:net";
 import { domainToASCII } from "node:url";
@@ -17,16 +17,8 @@ export interface LeadboxerCredentialCheck {
   providerMetadata: Record<string, unknown>;
 }
 
-interface ApiKeyProviderActionInput {
-  apiKey: string;
-  actionName: string;
-  input: Record<string, unknown>;
-  providerMetadata?: Record<string, unknown>;
-  values?: Record<string, string>;
-}
-
 type LeadboxerRequestPhase = "validate" | "execute";
-type LeadboxerActionHandler = (input: ApiKeyProviderActionInput, fetcher: typeof fetch) => Promise<unknown>;
+type LeadboxerActionHandler = (input: ApiKeyActionRequest, fetcher: typeof fetch) => Promise<unknown>;
 
 export const leadboxerApiBaseUrl = "https://api.leadboxer.com";
 
@@ -67,10 +59,7 @@ export async function validateLeadboxerCredential(
   };
 }
 
-export async function executeLeadboxerAction(
-  input: ApiKeyProviderActionInput,
-  fetcher: typeof fetch,
-): Promise<unknown> {
+export async function executeLeadboxerAction(input: ApiKeyActionRequest, fetcher: typeof fetch): Promise<unknown> {
   const handler = getProviderActionHandler(leadboxerActionHandlers, input.actionName);
   if (!handler) {
     throw new ProviderRequestError(500, `LeadBoxer action is not implemented yet: ${input.actionName}`);
@@ -133,7 +122,7 @@ export async function requestLeadboxerJson(input: {
 }
 
 async function executeLookup(
-  input: ApiKeyProviderActionInput,
+  input: ApiKeyActionRequest,
   fetcher: typeof fetch,
   path: string,
   lookupField: "ip" | "domain",
