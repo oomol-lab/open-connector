@@ -4,7 +4,6 @@ import type {
   ExecutionContext,
   ProviderExecutors,
   ProviderProxyExecutor,
-  ProxyExecutionResult,
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
@@ -12,21 +11,16 @@ import { compactObject, optionalRecord, optionalString } from "../../core/cast.t
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
   createProviderFetch,
-  createProviderProxyUrl,
   defineProviderExecutors,
-  normalizeProviderProxyHeaders,
+  defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
-  readProviderProxyErrorMessage,
-  readProviderProxyResponse,
-  toProviderProxyError,
+  requireCustomCredential,
 } from "../provider-runtime.ts";
 
 const service = "rocket_chat";
 const requestTimeoutMs = 30_000;
 const validationPath = "/me";
-
-const privateAwareFetch = createProviderFetch({ allowPrivateNetwork: isPrivateNetworkAccessAllowed });
 
 interface RocketChatCredential {
   baseUrl: string;
@@ -212,41 +206,22 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-export const proxy: ProviderProxyExecutor = async (input, context): Promise<ProxyExecutionResult> => {
-  try {
-    const credential = await context.getCredential(service);
-    if (credential?.authType !== "custom_credential") {
-      throw new ProviderRequestError(401, "Configure rocket_chat custom credentials first.");
-    }
-    const rocketChatCredential = readRocketChatCredential(credential.values);
-    const url = createProviderProxyUrl(rocketChatCredential.apiBaseUrl, input.endpoint, input.query);
-    const headers = normalizeProviderProxyHeaders(input.headers);
-    headers.set("user-agent", providerUserAgent);
-    headers.set("X-Auth-Token", rocketChatCredential.authToken);
-    headers.set("X-User-Id", rocketChatCredential.userId);
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: async (context) => (await readRocketChatProxyCredential(context)).apiBaseUrl,
+  auth: { type: "none" },
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
+  async customizeRequest({ context, headers }) {
+    const credential = await readRocketChatProxyCredential(context);
+    headers.set("X-Auth-Token", credential.authToken);
+    headers.set("X-User-Id", credential.userId);
+  },
+});
 
-    const init: RequestInit = {
-      method: input.method,
-      headers,
-      signal: context.signal,
-    };
-    if (input.body !== undefined) {
-      init.body = typeof input.body === "string" ? input.body : JSON.stringify(input.body);
-      if (!headers.has("content-type") && typeof input.body !== "string") {
-        headers.set("content-type", "application/json");
-      }
-    }
-
-    const response = await privateAwareFetch(url, init);
-    if (!response.ok) {
-      const text = await readProviderProxyErrorMessage(response, "");
-      throw new ProviderRequestError(response.status, text || `provider request failed with HTTP ${response.status}`);
-    }
-    return { ok: true, response: await readProviderProxyResponse(response) };
-  } catch (error) {
-    return toProviderProxyError(error, "provider request failed");
-  }
-};
+async function readRocketChatProxyCredential(context: ExecutionContext): Promise<RocketChatCredential> {
+  const credential = await requireCustomCredential(context, service);
+  return readRocketChatCredential(credential.values);
+}
 
 async function requestRocketChatObject(options: {
   credential: RocketChatCredential;
