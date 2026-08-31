@@ -1,9 +1,5 @@
-import type {
-  IStagedTransitFileService,
-  StagedTransitFile,
-  TransitFileRead,
-  TransitFileUpload,
-} from "./transit-file-store.ts";
+import type { TransitFileRead, TransitFileUpload } from "../../core/types.ts";
+import type { IStagedTransitFileService, StagedTransitFile, TransitFileInfo } from "./transit-file-store.ts";
 import type { GetObjectCommandOutput } from "@aws-sdk/client-s3";
 
 import {
@@ -14,15 +10,19 @@ import {
   S3Client,
   S3ServiceException,
 } from "@aws-sdk/client-s3";
-import { randomBytes } from "node:crypto";
 import { createReadStream } from "node:fs";
 import {
+  assertFileSize,
   assertSafeFileId,
-  contentDispositionForFileName,
   contentTypeFromFileId,
+  normalizeDescriptor,
   objectKey,
+  randomHex,
   safeExtension,
   TransitFileError,
+  transitFileRead,
+  transitFileResponse,
+  uploadResult,
 } from "./transit-file-store.ts";
 
 export interface S3TransitFileOptions {
@@ -31,12 +31,6 @@ export interface S3TransitFileOptions {
   publicOrigin: string;
   ttlSeconds: number;
   maxBytes: number;
-}
-
-interface S3ObjectMetadata {
-  name: string;
-  mimeType: string;
-  sizeBytes: number;
 }
 
 export class S3TransitFileService implements IStagedTransitFileService {
@@ -49,19 +43,18 @@ export class S3TransitFileService implements IStagedTransitFileService {
   constructor(options: S3TransitFileOptions) {
     this.client = options.client;
     this.bucket = options.bucket;
-    this.publicOrigin = options.publicOrigin.replace(/\/+$/, "");
+    this.publicOrigin = options.publicOrigin;
     this.ttlMs = options.ttlSeconds * 1000;
     this.maxBytes = options.maxBytes;
   }
 
   async create(file: File): Promise<TransitFileUpload> {
-    this.assertFileSize(file.size);
-    const fileId = `${randomBytes(16).toString("hex")}${safeExtension(file.name)}`;
-    const metadata = normalizeMetadata({
-      name: file.name || fileId,
-      mimeType: file.type || contentTypeFromFileId(fileId),
+    assertFileSize(file.size, this.maxBytes);
+    const fileId = `${randomHex(16)}${safeExtension(file.name)}`;
+    const metadata = {
+      ...normalizeDescriptor({ name: file.name || fileId, mimeType: file.type || contentTypeFromFileId(fileId) }),
       sizeBytes: file.size,
-    });
+    };
 
     await this.client.send(
       new PutObjectCommand({
@@ -74,23 +67,16 @@ export class S3TransitFileService implements IStagedTransitFileService {
       }),
     );
 
-    return {
-      fileId,
-      downloadUrl: `${this.publicOrigin}/api/files/${encodeURIComponent(fileId)}`,
-      sizeBytes: metadata.sizeBytes,
-      name: metadata.name,
-      mimeType: metadata.mimeType,
-    };
+    return uploadResult(this.publicOrigin, fileId, metadata);
   }
 
   async createFromPath(file: StagedTransitFile): Promise<TransitFileUpload> {
-    this.assertFileSize(file.sizeBytes);
-    const fileId = `${randomBytes(16).toString("hex")}${safeExtension(file.name)}`;
-    const metadata = normalizeMetadata({
-      name: file.name || fileId,
-      mimeType: file.mimeType || contentTypeFromFileId(fileId),
+    assertFileSize(file.sizeBytes, this.maxBytes);
+    const fileId = `${randomHex(16)}${safeExtension(file.name)}`;
+    const metadata = {
+      ...normalizeDescriptor({ name: file.name || fileId, mimeType: file.mimeType || contentTypeFromFileId(fileId) }),
       sizeBytes: file.sizeBytes,
-    });
+    };
 
     await this.client.send(
       new PutObjectCommand({
@@ -103,36 +89,17 @@ export class S3TransitFileService implements IStagedTransitFileService {
       }),
     );
 
-    return {
-      fileId,
-      downloadUrl: `${this.publicOrigin}/api/files/${encodeURIComponent(fileId)}`,
-      sizeBytes: metadata.sizeBytes,
-      name: metadata.name,
-      mimeType: metadata.mimeType,
-    };
+    return uploadResult(this.publicOrigin, fileId, metadata);
   }
 
   async read(fileId: string): Promise<TransitFileRead> {
     const { object, metadata } = await this.readObject(fileId);
-    return {
-      file: new File([Uint8Array.from(await object.Body!.transformToByteArray())], metadata.name, {
-        type: metadata.mimeType,
-      }),
-      sizeBytes: metadata.sizeBytes,
-      name: metadata.name,
-      mimeType: metadata.mimeType,
-    };
+    return transitFileRead(Uint8Array.from(await object.Body!.transformToByteArray()), metadata);
   }
 
   async response(fileId: string): Promise<Response> {
     const { object, metadata } = await this.readObject(fileId);
-    return new Response(object.Body!.transformToWebStream(), {
-      headers: {
-        "content-length": String(metadata.sizeBytes),
-        "content-type": metadata.mimeType,
-        "content-disposition": contentDispositionForFileName(metadata.name),
-      },
-    });
+    return transitFileResponse(object.Body!.transformToWebStream(), metadata);
   }
 
   async delete(fileId: string): Promise<boolean> {
@@ -146,7 +113,7 @@ export class S3TransitFileService implements IStagedTransitFileService {
 
   private async readObject(fileId: string): Promise<{
     object: GetObjectCommandOutput;
-    metadata: S3ObjectMetadata;
+    metadata: TransitFileInfo;
   }> {
     assertSafeFileId(fileId);
     const object = await this.getObject(objectKey(fileId));
@@ -157,11 +124,13 @@ export class S3TransitFileService implements IStagedTransitFileService {
 
     return {
       object,
-      metadata: normalizeMetadata({
-        name: decodeFileName(object.Metadata?.filename) ?? fileId,
-        mimeType: object.ContentType || contentTypeFromFileId(fileId),
+      metadata: {
+        ...normalizeDescriptor({
+          name: decodeFileName(object.Metadata?.filename) ?? fileId,
+          mimeType: object.ContentType || contentTypeFromFileId(fileId),
+        }),
         sizeBytes: object.ContentLength ?? 0,
-      }),
+      },
     };
   }
 
@@ -188,24 +157,9 @@ export class S3TransitFileService implements IStagedTransitFileService {
     }
   }
 
-  private assertFileSize(size: number): void {
-    if (size > this.maxBytes) {
-      throw new TransitFileError(413, "file_too_large", `Transit file must be ${this.maxBytes} bytes or smaller.`);
-    }
-  }
-
   private isExpired(lastModified: Date): boolean {
     return Date.now() - lastModified.getTime() > this.ttlMs;
   }
-}
-
-function normalizeMetadata(input: Partial<S3ObjectMetadata>): S3ObjectMetadata {
-  return {
-    name: typeof input.name === "string" && input.name.trim() ? input.name.trim() : "file",
-    mimeType:
-      typeof input.mimeType === "string" && input.mimeType.trim() ? input.mimeType.trim() : "application/octet-stream",
-    sizeBytes: typeof input.sizeBytes === "number" && Number.isFinite(input.sizeBytes) ? input.sizeBytes : 0,
-  };
 }
 
 function encodeFileName(name: string): string {

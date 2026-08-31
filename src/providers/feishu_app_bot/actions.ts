@@ -1,6 +1,6 @@
 import type { ActionDefinition } from "../../core/types.ts";
 
-import { s } from "../../core/json-schema.ts";
+import { readSchemaProperties, readSchemaRequired, s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 import { createFeishuApplicationActions } from "../feishu/shared/application-actions.ts";
 import { createFeishuBaseActions } from "../feishu/shared/base-actions.ts";
@@ -725,14 +725,9 @@ function tenantMailActions(actions: readonly ActionDefinition[]): readonly Actio
 }
 
 function requireExplicitMailbox(action: ActionDefinition): ActionDefinition {
-  const properties = action.inputSchema.properties;
-  const mailboxSchema =
-    properties && typeof properties === "object" && !Array.isArray(properties)
-      ? (properties as Record<string, unknown>).mailboxId
-      : undefined;
-  const required = Array.isArray(action.inputSchema.required)
-    ? action.inputSchema.required.filter((field): field is string => typeof field === "string")
-    : [];
+  const properties = readSchemaProperties(action.inputSchema);
+  const mailboxSchema = properties.mailboxId;
+  const required = readSchemaRequired(action.inputSchema);
   if (!mailboxSchema || typeof mailboxSchema !== "object" || Array.isArray(mailboxSchema)) {
     return action;
   }
@@ -741,7 +736,7 @@ function requireExplicitMailbox(action: ActionDefinition): ActionDefinition {
     inputSchema: {
       ...action.inputSchema,
       properties: {
-        ...(properties as Record<string, unknown>),
+        ...properties,
         mailboxId: {
           ...mailboxSchema,
           description: "The explicit user mailbox email address. App identity does not support `me`.",

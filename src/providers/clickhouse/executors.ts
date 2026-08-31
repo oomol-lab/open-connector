@@ -6,7 +6,6 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
-import type { ClickhouseActionName } from "./actions.ts";
 import type { ClickhouseActionContext } from "./runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -78,5 +77,3 @@ export const credentialValidators: CredentialValidators = {
     return validateClickhouseCredential(input.values, guardedFetcher, signal);
   },
 };
-
-export type { ClickhouseActionName };

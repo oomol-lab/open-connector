@@ -1,3 +1,6 @@
+// Trimmed from the shadcn base-nova template: unused exports were removed, so do not regenerate
+// this file with the shadcn CLI.
+
 import type { VariantProps } from "class-variance-authority";
 
 import { cva } from "class-variance-authority";

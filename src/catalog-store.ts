@@ -37,7 +37,8 @@ export type RuntimeProviderDefinition = Omit<ProviderDefinition, "actions"> & {
  */
 type ActionSummaryDefinition = Omit<RuntimeActionDefinition, "inputSchema" | "outputSchema">;
 
-type ProviderSummaryDefinition = Omit<RuntimeProviderDefinition, "actions"> & {
+/** One provider as `/api/providers` serves it to list views: metadata plus schema-free actions. */
+export type ProviderSummaryDefinition = Omit<RuntimeProviderDefinition, "actions"> & {
   actions: ActionSummaryDefinition[];
 };
 

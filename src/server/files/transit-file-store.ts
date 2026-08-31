@@ -1,15 +1,21 @@
-import type { TransitFileRead, TransitFileUpload } from "../../core/types.ts";
+import type { TransitFileRead, TransitFileStore, TransitFileUpload } from "../../core/types.ts";
 
 import { extname } from "node:path";
 
-export type { TransitFileRead, TransitFileUpload };
-
-/** Stored side-car metadata for one transit file. */
-export interface TransitFileMetadata {
+/** The user-facing name and MIME type every backend keeps beside a transit file's bytes. */
+export interface TransitFileDescriptor {
   name: string;
   mimeType: string;
-  createdAt: string;
+}
+
+/** A descriptor plus the byte size every upload answer and download response reports. */
+export interface TransitFileInfo extends TransitFileDescriptor {
   sizeBytes: number;
+}
+
+/** Stored side-car metadata for one transit file. */
+export interface TransitFileMetadata extends TransitFileInfo {
+  createdAt: string;
 }
 
 export interface StagedTransitFile {
@@ -19,12 +25,8 @@ export interface StagedTransitFile {
   mimeType: string;
 }
 
-export interface ITransitFileService {
-  readonly maxBytes: number;
-  create(file: File): Promise<TransitFileUpload>;
-  read(fileId: string): Promise<TransitFileRead>;
+export interface ITransitFileService extends TransitFileStore {
   response(fileId: string): Promise<Response>;
-  delete(fileId: string): Promise<boolean>;
   cleanupExpired(): Promise<void>;
 }
 
@@ -41,6 +43,45 @@ export class TransitFileError extends Error {
     this.status = status;
     this.code = code;
   }
+}
+
+/** Reject a payload larger than the backend's configured upload limit. */
+export function assertFileSize(size: number, maxBytes: number): void {
+  if (size > maxBytes) {
+    throw new TransitFileError(413, "file_too_large", `Transit file must be ${maxBytes} bytes or smaller.`);
+  }
+}
+
+/** Wrap a transit file's bytes in the download response every backend serves. */
+export function transitFileResponse(body: BodyInit, info: TransitFileInfo): Response {
+  return new Response(body, {
+    headers: {
+      "content-length": String(info.sizeBytes),
+      "content-type": info.mimeType,
+      "content-disposition": contentDispositionForFileName(info.name),
+    },
+  });
+}
+
+/** Materialize a transit file's bytes as the `File` the executor-facing read contract returns. */
+export function transitFileRead(bytes: ArrayBuffer | Uint8Array<ArrayBuffer>, info: TransitFileInfo): TransitFileRead {
+  return {
+    file: new File([bytes], info.name, { type: info.mimeType }),
+    sizeBytes: info.sizeBytes,
+    name: info.name,
+    mimeType: info.mimeType,
+  };
+}
+
+/** Describe a stored transit file to its uploader, with a download URL rooted at `publicOrigin`. */
+export function uploadResult(publicOrigin: string, fileId: string, info: TransitFileInfo): TransitFileUpload {
+  return {
+    fileId,
+    downloadUrl: `${publicOrigin.replace(/\/+$/, "")}/api/files/${encodeURIComponent(fileId)}`,
+    sizeBytes: info.sizeBytes,
+    name: info.name,
+    mimeType: info.mimeType,
+  };
 }
 
 /**
@@ -149,17 +190,26 @@ export function objectKey(fileId: string): string {
   return `transit/${fileId}`;
 }
 
-/** Key holding a transit file's side-car metadata, shared by the KV, R2 and S3 backends. */
+/** Key holding a transit file's side-car metadata, shared by the KV and R2 backends. */
 export function metadataKey(fileId: string): string {
   return `transit/${fileId}.meta.json`;
 }
 
-/** Fill in every metadata field a backend may have stored partially or not at all. */
+/** Trim a stored name and MIME type, substituting the matching fallback for a missing or blank value. */
+export function normalizeDescriptor(
+  input: Partial<TransitFileDescriptor>,
+  fallback: TransitFileDescriptor = { name: "file", mimeType: "application/octet-stream" },
+): TransitFileDescriptor {
+  return {
+    name: typeof input.name === "string" && input.name.trim() ? input.name.trim() : fallback.name,
+    mimeType: typeof input.mimeType === "string" && input.mimeType.trim() ? input.mimeType.trim() : fallback.mimeType,
+  };
+}
+
+/** Decode a stored metadata document, filling in every field a backend may have written partially or not at all. */
 export function normalizeMetadata(input: Partial<TransitFileMetadata>): TransitFileMetadata {
   return {
-    name: typeof input.name === "string" && input.name.trim() ? input.name.trim() : "file",
-    mimeType:
-      typeof input.mimeType === "string" && input.mimeType.trim() ? input.mimeType.trim() : "application/octet-stream",
+    ...normalizeDescriptor(input),
     createdAt: typeof input.createdAt === "string" && input.createdAt ? input.createdAt : new Date().toISOString(),
     sizeBytes: typeof input.sizeBytes === "number" && Number.isFinite(input.sizeBytes) ? input.sizeBytes : 0,
   };

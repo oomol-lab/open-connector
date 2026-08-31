@@ -15,7 +15,7 @@
     "deploy:cloudflare": "npm run generate:catalog && npm run build:web && node scripts/copy-catalog-assets.ts && wrangler deploy --config wrangler.local.jsonc --minify",
     "start": "node scripts/ensure-generated.ts && node src/server/index.ts",
     "test": "vitest run",
-    "typecheck": "npm run generate:registry && node scripts/typecheck.ts src scripts-all examples",
+    "typecheck": "npm run generate:registry && node scripts/typecheck.ts",
     "generate:registry": "node scripts/generate-provider-registry.ts",
     "generate:catalog": "node scripts/generate-catalog.ts",
     "runtime:migrate": "node scripts/runtime-data.ts migrate",

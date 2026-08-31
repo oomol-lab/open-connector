@@ -18,27 +18,22 @@ import type {
 } from "./idempotency-store.ts";
 import type { RuntimeDatabase } from "./runtime-database.ts";
 import type { IRuntimePolicyStore, RuntimePolicyRecord } from "./runtime-policy-store.ts";
-import type {
-  IRunLogStore,
-  RunLog,
-  RunLogListInput,
-  RunLogPage,
-  RunLogWriteResult,
-  RuntimeRow,
-} from "./runtime-store.ts";
+import type { RuntimeRow } from "./runtime-sql.ts";
+import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage, RunLogWriteResult } from "./runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
 
 import { parseRuntimeActionHttpResult } from "../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
 import {
-  buildRunLogQuery,
-  DEFAULT_RUN_LIMIT,
+  listRunLogs,
   parseJson,
   readRunLogRow,
+  readRuntimePolicyRow,
   readRuntimeTokenRow,
   readString,
-  toRunLogPage,
-} from "./runtime-store.ts";
+  runtimeTokenColumns,
+} from "./runtime-sql.ts";
+import { DEFAULT_RUN_LIMIT } from "./runtime-store.ts";
 
 type SecretJsonTable = "oauth_client_configs";
 
@@ -310,7 +305,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
       .prepare(
         `
         insert into runtime_tokens (
-          id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, allowed_connections, created_at, last_used_at
+          ${runtimeTokenColumns}
         )
         values (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
@@ -333,7 +328,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
     const { results } = await this.database
       .prepare(
         `
-        select id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, allowed_connections, created_at, last_used_at
+        select ${runtimeTokenColumns}
         from runtime_tokens
         order by created_at desc, id desc
       `,
@@ -346,7 +341,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
     const row = await this.database
       .prepare(
         `
-        select id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, allowed_connections, created_at, last_used_at
+        select ${runtimeTokenColumns}
         from runtime_tokens
         where token_hash = ?
       `,
@@ -363,7 +358,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
         update runtime_tokens
         set allowed_actions = ?, blocked_actions = ?, allowed_proxies = ?, allowed_connections = ?
         where id = ?
-        returning id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, allowed_connections, created_at, last_used_at
+        returning ${runtimeTokenColumns}
       `,
       )
       .bind(
@@ -398,12 +393,7 @@ export class D1RuntimePolicyStore implements IRuntimePolicyStore {
     const row = await this.database
       .prepare("select value, updated_at from runtime_policy where id = 1")
       .first<RuntimeRow>();
-    return row
-      ? {
-          rules: parseJson(readString(row, "value")),
-          updatedAt: readString(row, "updated_at"),
-        }
-      : undefined;
+    return row ? readRuntimePolicyRow(row) : undefined;
   }
 
   async set(record: RuntimePolicyRecord): Promise<void> {
@@ -558,12 +548,18 @@ export class D1RunLogStore implements IRunLogStore {
   }
 
   async list(input: RunLogListInput = {}): Promise<RunLogPage> {
-    const query = buildRunLogQuery(input, this.limit, () => "?");
-    const { results } = await this.database
-      .prepare(query.sql)
-      .bind(...query.values)
-      .all<RuntimeRow>();
-    return toRunLogPage(results, query.limit);
+    return listRunLogs(
+      input,
+      this.limit,
+      () => "?",
+      async (sql, values) => {
+        const { results } = await this.database
+          .prepare(sql)
+          .bind(...values)
+          .all<RuntimeRow>();
+        return results;
+      },
+    );
   }
 }
 

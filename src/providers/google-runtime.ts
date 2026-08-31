@@ -71,27 +71,22 @@ export async function googleRequest(url: string, input: GoogleRequestOptions): P
             "content-type": "application/json",
           }
         : headers,
-    signal: input.signal,
     ...(input.rawBody != null ? { body: input.rawBody } : hasJsonBody ? { body: JSON.stringify(input.body) } : {}),
   };
   const timeoutMs = input.timeoutMs ?? googleDefaultRequestTimeoutMs;
+  const timeout = createProviderTimeout(input.signal, timeoutMs);
   let response: Response;
-  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
-    response = await input.fetcher(target.toString(), requestInit);
-  } else {
-    const timeout = createProviderTimeout(input.signal, timeoutMs);
-    try {
-      response = await input.fetcher(target.toString(), { ...requestInit, signal: timeout.signal });
-    } catch (error) {
-      if (timeout.didTimeout() && isAbortLikeError(error)) {
-        const timeoutSeconds = Math.max(1, Math.ceil(timeoutMs / 1000));
-        const unit = timeoutSeconds === 1 ? "second" : "seconds";
-        throw new ProviderRequestError(502, `${service} request timed out after ${timeoutSeconds} ${unit}`);
-      }
-      throw error;
-    } finally {
-      timeout.cleanup();
+  try {
+    response = await input.fetcher(target.toString(), { ...requestInit, signal: timeout.signal });
+  } catch (error) {
+    if (timeout.didTimeout() && isAbortLikeError(error)) {
+      const timeoutSeconds = Math.max(1, Math.ceil(timeoutMs / 1000));
+      const unit = timeoutSeconds === 1 ? "second" : "seconds";
+      throw new ProviderRequestError(502, `${service} request timed out after ${timeoutSeconds} ${unit}`);
     }
+    throw error;
+  } finally {
+    timeout.cleanup();
   }
 
   await assertGoogleResponse(response, service);

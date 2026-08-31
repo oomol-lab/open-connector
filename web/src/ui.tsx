@@ -144,7 +144,7 @@ export async function loadRuntimeData(
   unlockToken: string,
   cachedProviders?: ProviderDefinition[],
 ): Promise<RuntimeLoadResult> {
-  const authSession = await apiGet<AuthSession>("/api/auth/session", { bearerToken: unlockToken });
+  const authSession = await apiGet<AuthSession>("/api/auth/session", unlockToken);
   if (!authSession.authenticated) {
     return { authSession, data: emptyData };
   }

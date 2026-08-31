@@ -26,7 +26,7 @@ export interface RunActionInput {
   input: unknown;
   caller: RunLogCaller;
   connectionName?: string;
-  policy?: ActionPolicySnapshot;
+  policy: ActionPolicySnapshot;
   runtimeTokenId?: string;
   signal?: AbortSignal;
 }
@@ -72,8 +72,7 @@ export class ActionRunner {
     this.options.logger?.info(logContext, "action run started");
     const startedAtMs = Date.now();
     const startedAt = new Date(startedAtMs).toISOString();
-    const snapshot = input.policy;
-    let policy: ActionPolicyDecision = snapshot?.evaluate(action) ?? { allowed: true, checks: [] };
+    let policy: ActionPolicyDecision = input.policy.evaluate(action);
     let connection: ExecutionConnection | undefined;
     let result: ExecutionResult;
     if (!policy.allowed) {
@@ -85,7 +84,7 @@ export class ActionRunner {
         const summary = await this.options.connections.getConnectionSummary(action.service, input.connectionName);
         input.signal?.throwIfAborted();
         const connectionPolicy =
-          summary?.authType === "no_auth" ? undefined : snapshot?.evaluateConnection(summary?.id);
+          summary?.authType === "no_auth" ? undefined : input.policy.evaluateConnection(summary?.id);
         if (connectionPolicy && !connectionPolicy.allowed) {
           policy = connectionPolicy;
           result = { ok: false, error: { code: policy.code, message: policy.message } };
@@ -124,7 +123,7 @@ export class ActionRunner {
       } catch (error) {
         const missingConnectionPolicy =
           error instanceof ConnectionError && error.code === "connection_not_found"
-            ? snapshot?.evaluateConnection()
+            ? input.policy.evaluateConnection()
             : undefined;
         if (input.signal?.aborted) {
           result = cancelledExecutionResult();

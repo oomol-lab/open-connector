@@ -1,13 +1,13 @@
-import type { IStagedTransitFileService, StagedTransitFile, TransitFileUpload } from "./transit-file-store.ts";
+import type { TransitFileUpload } from "../../core/types.ts";
+import type { IStagedTransitFileService, StagedTransitFile } from "./transit-file-store.ts";
 
 import Busboy from "busboy";
-import { randomBytes } from "node:crypto";
 import { createWriteStream } from "node:fs";
 import { mkdir, readdir, stat, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import { TransitFileError } from "./transit-file-store.ts";
+import { randomHex, TransitFileError } from "./transit-file-store.ts";
 
 export interface NodeTransitFileUploadOptions {
   transitFiles: IStagedTransitFileService;
@@ -19,7 +19,7 @@ export function createNodeTransitFileUpload(
 ): (request: Request) => Promise<TransitFileUpload> {
   return async (request) => {
     await mkdir(options.tempDir, { recursive: true });
-    const path = join(options.tempDir, `${randomBytes(16).toString("hex")}.tmp`);
+    const path = join(options.tempDir, `${randomHex(16)}.tmp`);
     try {
       return await options.transitFiles.createFromPath(
         await stageMultipartFile(request, path, options.transitFiles.maxBytes),

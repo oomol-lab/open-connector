@@ -1,21 +1,21 @@
+import type { TransitFileRead, TransitFileUpload } from "../../core/types.ts";
 import type { R2BucketBinding, R2ObjectBinding } from "../cloudflare/cloudflare-bindings.ts";
-import type {
-  ITransitFileService,
-  TransitFileMetadata,
-  TransitFileRead,
-  TransitFileUpload,
-} from "./transit-file-store.ts";
+import type { ITransitFileService, TransitFileMetadata } from "./transit-file-store.ts";
 
 import {
+  assertFileSize,
   assertSafeFileId,
-  contentDispositionForFileName,
   contentTypeFromFileId,
   metadataKey,
+  normalizeDescriptor,
   normalizeMetadata,
   objectKey,
   randomHex,
   safeExtension,
   TransitFileError,
+  transitFileRead,
+  transitFileResponse,
+  uploadResult,
 } from "./transit-file-store.ts";
 
 export interface R2TransitFileOptions {
@@ -33,54 +33,36 @@ export class R2TransitFileService implements ITransitFileService {
 
   constructor(options: R2TransitFileOptions) {
     this.bucket = options.bucket;
-    this.publicOrigin = options.publicOrigin.replace(/\/+$/, "");
+    this.publicOrigin = options.publicOrigin;
     this.ttlMs = options.ttlSeconds * 1000;
     this.maxBytes = options.maxBytes;
   }
 
   async create(file: File): Promise<TransitFileUpload> {
-    this.assertFileSize(file.size);
+    assertFileSize(file.size, this.maxBytes);
     const fileId = `${randomHex(16)}${safeExtension(file.name)}`;
-    const metadata = normalizeMetadata({
-      name: file.name || fileId,
-      mimeType: file.type || contentTypeFromFileId(fileId),
+    const metadata: TransitFileMetadata = {
+      ...normalizeDescriptor({ name: file.name || fileId, mimeType: file.type || contentTypeFromFileId(fileId) }),
       createdAt: new Date().toISOString(),
       sizeBytes: file.size,
-    });
+    };
 
     await this.bucket.put(objectKey(fileId), file.stream(), {
       httpMetadata: { contentType: metadata.mimeType },
     });
     await this.bucket.put(metadataKey(fileId), JSON.stringify(metadata));
 
-    return {
-      fileId,
-      downloadUrl: `${this.publicOrigin}/api/files/${encodeURIComponent(fileId)}`,
-      sizeBytes: metadata.sizeBytes,
-      name: metadata.name,
-      mimeType: metadata.mimeType,
-    };
+    return uploadResult(this.publicOrigin, fileId, metadata);
   }
 
   async read(fileId: string): Promise<TransitFileRead> {
     const { object, metadata } = await this.readObject(fileId);
-    return {
-      file: new File([await object.arrayBuffer()], metadata.name, { type: metadata.mimeType }),
-      sizeBytes: metadata.sizeBytes,
-      name: metadata.name,
-      mimeType: metadata.mimeType,
-    };
+    return transitFileRead(await object.arrayBuffer(), metadata);
   }
 
   async response(fileId: string): Promise<Response> {
     const { object, metadata } = await this.readObject(fileId);
-    return new Response(object.body, {
-      headers: {
-        "content-length": String(metadata.sizeBytes),
-        "content-type": metadata.mimeType,
-        "content-disposition": contentDispositionForFileName(metadata.name),
-      },
-    });
+    return transitFileResponse(object.body, metadata);
   }
 
   async delete(fileId: string): Promise<boolean> {
@@ -116,12 +98,6 @@ export class R2TransitFileService implements ITransitFileService {
       return normalizeMetadata(JSON.parse(await metadataText(metadata)) as Partial<TransitFileMetadata>);
     } catch {
       return undefined;
-    }
-  }
-
-  private assertFileSize(size: number): void {
-    if (size > this.maxBytes) {
-      throw new TransitFileError(413, "file_too_large", `Transit file must be ${this.maxBytes} bytes or smaller.`);
     }
   }
 

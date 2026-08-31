@@ -1,3 +1,4 @@
+import type { ProviderSummaryDefinition } from "./catalog-store.ts";
 import type { ProviderDefinition } from "./core/types.ts";
 
 import { describe, expect, it } from "vitest";
@@ -57,12 +58,7 @@ describe("catalog store", () => {
     ];
 
     const catalog = createCatalogStore(providers, { executableActionIds: ["example.ping"] });
-    const summaries = JSON.parse(catalog.providerSummariesJson) as Array<{
-      scenario: string;
-      execution: { actionCount: number };
-      actions: Array<{ id: string; requiredScopes: string[]; execution: { locallyExecutable: boolean } }>;
-    }>;
-    const summary = summaries[0];
+    const [summary] = JSON.parse(catalog.providerSummariesJson) as ProviderSummaryDefinition[];
     const summarizedAction = summary?.actions[0];
 
     expect(summarizedAction).not.toHaveProperty("inputSchema");

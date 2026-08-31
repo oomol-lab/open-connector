@@ -17,14 +17,8 @@ import type {
 } from "./idempotency-store.ts";
 import type { RuntimeDatabase } from "./runtime-database.ts";
 import type { IRuntimePolicyStore, RuntimePolicyRecord } from "./runtime-policy-store.ts";
-import type {
-  IRunLogStore,
-  RunLog,
-  RunLogListInput,
-  RunLogPage,
-  RunLogWriteResult,
-  RuntimeRow,
-} from "./runtime-store.ts";
+import type { RuntimeRow } from "./runtime-sql.ts";
+import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage, RunLogWriteResult } from "./runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
 import type { PoolClient } from "pg";
 
@@ -33,14 +27,15 @@ import { parseRuntimeActionHttpResult } from "../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
 import { assertPostgresSchemaReady } from "./postgres-migrations.ts";
 import {
-  buildRunLogQuery,
-  DEFAULT_RUN_LIMIT,
+  listRunLogs,
   parseJson,
   readRunLogRow,
+  readRuntimePolicyRow,
   readRuntimeTokenRow,
   readString,
-  toRunLogPage,
-} from "./runtime-store.ts";
+  runtimeTokenColumns,
+} from "./runtime-sql.ts";
+import { DEFAULT_RUN_LIMIT } from "./runtime-store.ts";
 
 export interface PostgresRuntimeDatabaseOptions {
   logger?: RuntimeLogger;
@@ -425,7 +420,7 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
     await this.pool.query(
       `
         insert into runtime_tokens (
-          id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, allowed_connections, created_at, last_used_at
+          ${runtimeTokenColumns}
         )
         values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       `,
@@ -445,7 +440,7 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
 
   async list(): Promise<RuntimeTokenRecord[]> {
     const result = await this.pool.query<RuntimeRow>(`
-      select id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, allowed_connections, created_at, last_used_at
+      select ${runtimeTokenColumns}
       from runtime_tokens
       order by created_at desc, id desc
     `);
@@ -455,7 +450,7 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
   async findByHash(tokenHash: string): Promise<RuntimeTokenRecord | undefined> {
     const result = await this.pool.query<RuntimeRow>(
       `
-        select id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, allowed_connections, created_at, last_used_at
+        select ${runtimeTokenColumns}
         from runtime_tokens
         where token_hash = $1
       `,
@@ -471,7 +466,7 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
         update runtime_tokens
         set allowed_actions = $1, blocked_actions = $2, allowed_proxies = $3, allowed_connections = $4
         where id = $5
-        returning id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, allowed_connections, created_at, last_used_at
+        returning ${runtimeTokenColumns}
       `,
       [
         JSON.stringify(policy.allowedActions),
@@ -505,12 +500,7 @@ class PostgresRuntimePolicyStore implements IRuntimePolicyStore {
   async get(): Promise<RuntimePolicyRecord | undefined> {
     const result = await this.pool.query<RuntimeRow>("select value, updated_at from runtime_policy where id = 1");
     const row = result.rows[0];
-    return row
-      ? {
-          rules: parseJson(readString(row, "value")),
-          updatedAt: readString(row, "updated_at"),
-        }
-      : undefined;
+    return row ? readRuntimePolicyRow(row) : undefined;
   }
 
   async set(record: RuntimePolicyRecord): Promise<void> {
@@ -659,9 +649,12 @@ class PostgresRunLogStore implements IRunLogStore {
   }
 
   async list(input: RunLogListInput = {}): Promise<RunLogPage> {
-    const query = buildRunLogQuery(input, this.limit, (position) => `$${position}`);
-    const result = await this.pool.query<RuntimeRow>(query.sql, query.values);
-    return toRunLogPage(result.rows, query.limit);
+    return listRunLogs(
+      input,
+      this.limit,
+      (position) => `$${position}`,
+      async (sql, values) => (await this.pool.query<RuntimeRow>(sql, values)).rows,
+    );
   }
 }
 

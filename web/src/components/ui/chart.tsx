@@ -1,3 +1,6 @@
+// Trimmed from the shadcn base-nova template: unused exports were removed, so do not regenerate
+// this file with the shadcn CLI.
+
 import * as React from "react";
 import * as RechartsPrimitive from "recharts";
 import { cn } from "@/lib/utils";

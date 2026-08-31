@@ -104,5 +104,3 @@ export const onlyofficeDocspaceActions: ActionDefinition[] = [
   getRoom,
   getFolderContents,
 ];
-
-export type OnlyofficeDocspaceActionName = (typeof onlyofficeDocspaceActions)[number]["name"];

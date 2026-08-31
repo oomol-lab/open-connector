@@ -203,13 +203,6 @@ const getDatabaseSchemaAction = defineProviderAction(service, {
   }),
 });
 
-export type ClickhouseActionName =
-  | "execute_query"
-  | "list_databases"
-  | "list_tables"
-  | "get_table_schema"
-  | "get_database_schema";
-
 export const clickhouseActions: ActionDefinition[] = [
   executeQueryAction,
   listDatabasesAction,

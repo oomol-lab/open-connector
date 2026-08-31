@@ -1,3 +1,6 @@
+// Trimmed from the shadcn base-nova template: unused exports were removed, so do not regenerate
+// this file with the shadcn CLI.
+
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react";
 import * as React from "react";

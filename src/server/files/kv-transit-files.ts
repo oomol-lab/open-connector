@@ -1,21 +1,21 @@
+import type { TransitFileRead, TransitFileUpload } from "../../core/types.ts";
 import type { KVNamespaceBinding } from "../cloudflare/cloudflare-bindings.ts";
-import type {
-  ITransitFileService,
-  TransitFileMetadata,
-  TransitFileRead,
-  TransitFileUpload,
-} from "./transit-file-store.ts";
+import type { ITransitFileService, TransitFileMetadata } from "./transit-file-store.ts";
 
 import {
+  assertFileSize,
   assertSafeFileId,
-  contentDispositionForFileName,
   contentTypeFromFileId,
   metadataKey,
+  normalizeDescriptor,
   normalizeMetadata,
   objectKey,
   randomHex,
   safeExtension,
   TransitFileError,
+  transitFileRead,
+  transitFileResponse,
+  uploadResult,
 } from "./transit-file-store.ts";
 
 // Workers KV rejects an `expirationTtl` below 60 seconds.
@@ -40,7 +40,7 @@ export class KVTransitFileService implements ITransitFileService {
 
   constructor(options: KVTransitFileOptions) {
     this.namespace = options.namespace;
-    this.publicOrigin = options.publicOrigin.replace(/\/+$/, "");
+    this.publicOrigin = options.publicOrigin;
     // This constructor is exported; a non-finite/fractional/non-positive value would slip
     // through the clamps below (NaN maxBytes silently disables the size check, NaN ttl yields
     // an invalid expirationTtl), so reject anything that is not a positive integer up front.
@@ -49,11 +49,10 @@ export class KVTransitFileService implements ITransitFileService {
   }
 
   async create(file: File): Promise<TransitFileUpload> {
-    this.assertFileSize(file.size);
+    assertFileSize(file.size, this.maxBytes);
     const fileId = `${randomHex(16)}${safeExtension(file.name)}`;
     const metadata: TransitFileMetadata = {
-      name: file.name || fileId,
-      mimeType: file.type || contentTypeFromFileId(fileId),
+      ...normalizeDescriptor({ name: file.name || fileId, mimeType: file.type || contentTypeFromFileId(fileId) }),
       createdAt: new Date().toISOString(),
       sizeBytes: file.size,
     };
@@ -65,34 +64,17 @@ export class KVTransitFileService implements ITransitFileService {
     await this.namespace.put(metadataKey(fileId), JSON.stringify(metadata), {
       expirationTtl: this.ttlSeconds,
     });
-    return {
-      fileId,
-      downloadUrl: `${this.publicOrigin}/api/files/${encodeURIComponent(fileId)}`,
-      sizeBytes: metadata.sizeBytes,
-      name: metadata.name,
-      mimeType: metadata.mimeType,
-    };
+    return uploadResult(this.publicOrigin, fileId, metadata);
   }
 
   async read(fileId: string): Promise<TransitFileRead> {
     const { buffer, metadata } = await this.readObject(fileId);
-    return {
-      file: new File([buffer], metadata.name, { type: metadata.mimeType }),
-      sizeBytes: metadata.sizeBytes,
-      name: metadata.name,
-      mimeType: metadata.mimeType,
-    };
+    return transitFileRead(buffer, metadata);
   }
 
   async response(fileId: string): Promise<Response> {
     const { buffer, metadata } = await this.readObject(fileId);
-    return new Response(buffer, {
-      headers: {
-        "content-length": String(metadata.sizeBytes),
-        "content-type": metadata.mimeType,
-        "content-disposition": contentDispositionForFileName(metadata.name),
-      },
-    });
+    return transitFileResponse(buffer, metadata);
   }
 
   async delete(fileId: string): Promise<boolean> {
@@ -130,12 +112,6 @@ export class KVTransitFileService implements ITransitFileService {
       return normalizeMetadata(JSON.parse(raw) as Partial<TransitFileMetadata>);
     } catch {
       return undefined;
-    }
-  }
-
-  private assertFileSize(size: number): void {
-    if (size > this.maxBytes) {
-      throw new TransitFileError(413, "file_too_large", `Transit file must be ${this.maxBytes} bytes or smaller.`);
     }
   }
 }

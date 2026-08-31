@@ -41,6 +41,7 @@ const credential: Extract<ResolvedCredential, { authType: "api_key" }> = {
   profile: { accountId: "example", displayName: "Example", grantedScopes: [] },
   metadata: {},
 };
+const openPolicy = new ActionPolicyService().createSnapshot();
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -56,6 +57,7 @@ describe("ActionRunner", () => {
       actionId: "example.echo",
       input: { message: "hello", token: "secret" },
       caller: "http",
+      policy: openPolicy,
     });
 
     expect(run).toMatchObject({ auditPersisted: true, result: { ok: true } });
@@ -83,7 +85,7 @@ describe("ActionRunner", () => {
     const { entries, logger } = createTestLogger();
     const runner = createRunner({ runs, logger });
 
-    const run = await runner.run({ actionId: "example.echo", input: {}, caller: "mcp" });
+    const run = await runner.run({ actionId: "example.echo", input: {}, caller: "mcp", policy: openPolicy });
 
     expect(run).toMatchObject({
       auditPersisted: false,
@@ -101,7 +103,12 @@ describe("ActionRunner", () => {
     const { entries, logger } = createTestLogger();
     const runner = createRunner({ runs, logger });
 
-    const run = await runner.run({ actionId: "example.echo", input: unsummarizableInput, caller: "web" });
+    const run = await runner.run({
+      actionId: "example.echo",
+      input: unsummarizableInput,
+      caller: "web",
+      policy: openPolicy,
+    });
 
     expect(run?.result).toEqual({ ok: true, output: { message: "ok" } });
     expect(runs.items[0]).toMatchObject({ inputSummary: "[unavailable]" });
@@ -119,7 +126,7 @@ describe("ActionRunner", () => {
       }),
     });
 
-    const run = await runner.run({ actionId: "example.echo", input: {}, caller: "http" });
+    const run = await runner.run({ actionId: "example.echo", input: {}, caller: "http", policy: openPolicy });
 
     expect(run?.result).toEqual({
       ok: false,
@@ -157,6 +164,7 @@ describe("ActionRunner", () => {
       actionId: "example.echo",
       input: {},
       caller: "http",
+      policy: openPolicy,
       signal: controller.signal,
     });
     await started;
@@ -187,6 +195,7 @@ describe("ActionRunner", () => {
       actionId: "example.echo",
       input: {},
       caller: "http",
+      policy: openPolicy,
       signal: controller.signal,
     });
 
@@ -218,6 +227,7 @@ describe("ActionRunner", () => {
       actionId: "example.echo",
       input: {},
       caller: "http",
+      policy: openPolicy,
       signal: controller.signal,
     });
     await vi.waitFor(() => expect(getConnectionSummary).toHaveBeenCalledOnce());
@@ -242,7 +252,7 @@ describe("ActionRunner", () => {
       }),
     });
 
-    const run = await runner.run({ actionId: "example.echo", input: {}, caller: "web" });
+    const run = await runner.run({ actionId: "example.echo", input: {}, caller: "web", policy: openPolicy });
 
     expect(run?.result.ok).toBe(true);
   });
