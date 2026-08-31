@@ -14,6 +14,7 @@ import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   readProviderJsonBody,
 } from "../provider-runtime.ts";
@@ -249,25 +250,17 @@ async function falAiSubmitQueueRequest(input: Record<string, unknown>, context: 
       context,
     ),
     "fal_ai queue submission response",
-    invalidQueueResponseError,
+    providerResponseError,
   );
 
   return {
-    requestId: requiredString(payload.request_id, "fal_ai queue submission request_id", invalidQueueResponseError),
+    requestId: requiredString(payload.request_id, "fal_ai queue submission request_id", providerResponseError),
     status: optionalString(payload.status) ?? "IN_QUEUE",
     queuePosition: typeof payload.queue_position === "number" ? payload.queue_position : null,
-    statusUrl: requiredString(payload.status_url, "fal_ai queue submission status_url", invalidQueueResponseError),
-    responseUrl: requiredString(
-      payload.response_url,
-      "fal_ai queue submission response_url",
-      invalidQueueResponseError,
-    ),
-    cancelUrl: requiredString(payload.cancel_url, "fal_ai queue submission cancel_url", invalidQueueResponseError),
+    statusUrl: requiredString(payload.status_url, "fal_ai queue submission status_url", providerResponseError),
+    responseUrl: requiredString(payload.response_url, "fal_ai queue submission response_url", providerResponseError),
+    cancelUrl: requiredString(payload.cancel_url, "fal_ai queue submission cancel_url", providerResponseError),
   };
-}
-
-function invalidQueueResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }
 
 async function falAiQueueGetStatus(input: Record<string, unknown>, context: FalAiActionContext): Promise<unknown> {
@@ -285,7 +278,7 @@ async function falAiQueueGetStatus(input: Record<string, unknown>, context: FalA
       context,
     ),
     "fal_ai queue status response",
-    invalidQueueResponseError,
+    providerResponseError,
   );
 
   return {
@@ -362,7 +355,7 @@ async function falAiGetQueueRequestResult(
       context,
     ),
     "fal_ai queue result response",
-    invalidQueueResponseError,
+    providerResponseError,
   );
 
   // The fal queue result endpoint returns the raw, model-specific output
@@ -388,7 +381,7 @@ async function falAiCancelQueueRequest(input: Record<string, unknown>, context: 
       context,
     ),
     "fal_ai queue cancellation response",
-    invalidQueueResponseError,
+    providerResponseError,
   );
 
   return {

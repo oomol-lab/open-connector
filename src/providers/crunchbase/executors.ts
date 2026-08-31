@@ -7,6 +7,7 @@ import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -277,8 +278,4 @@ function requireArray(value: unknown, message: string): unknown[] {
 function requireInteger(value: unknown, message: string): number {
   if (!Number.isInteger(value)) throw new ProviderRequestError(502, message);
   return value as number;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

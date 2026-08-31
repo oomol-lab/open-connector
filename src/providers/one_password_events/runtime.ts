@@ -18,6 +18,8 @@ import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
+  providerResponseError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -87,7 +89,7 @@ export async function validateOnePasswordEventsCredential(
       phase: "validate",
     }),
     "1Password Events introspection response",
-    providerOutputError,
+    providerResponseError,
   );
   const integrationUuid = optionalString(introspection.uuid);
   const accountUuid = optionalString(introspection.account_uuid);
@@ -126,12 +128,12 @@ async function listOnePasswordEvents(
     phase: "execute",
     body: buildEventCursorBody(input),
   });
-  const record = requiredRecord(payload, "1Password Events stream response", providerOutputError);
+  const record = requiredRecord(payload, "1Password Events stream response", providerResponseError);
 
   return {
     cursor: optionalString(record.cursor) ?? "",
     hasMore: optionalBoolean(record.has_more) ?? false,
-    events: objectArray(record.items, "1Password Events stream items", providerOutputError),
+    events: objectArray(record.items, "1Password Events stream items", providerResponseError),
     raw: record,
   };
 }
@@ -294,12 +296,4 @@ function trimTrailingSlash(value: string): string {
 
 function buildTokenFingerprint(apiKey: string): string {
   return createHash("sha256").update(apiKey).digest("hex").slice(0, 12);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerOutputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

@@ -15,6 +15,7 @@ import {
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   readProviderJsonBody,
@@ -48,7 +49,6 @@ const invalidInputErrorSymbols = new Set([
   "invalid_request",
   "private_capability_not_enabled",
 ]);
-const inputError = (message: string): ProviderRequestError => new ProviderRequestError(400, message);
 
 export const anySearchActionHandlers: ProviderActionHandlers<
   "anysearch",
@@ -97,7 +97,7 @@ export async function validateAnySearchApiKey(
 
 function buildSearchInput(input: Record<string, unknown>): Record<string, unknown> {
   return compactObject({
-    query: requiredString(input.query, "query", inputError),
+    query: requiredString(input.query, "query", providerInputError),
     max_results: optionalInteger(input.max_results),
     domain: optionalString(input.domain),
     tag: optionalString(input.tag),
@@ -111,18 +111,18 @@ function buildSearchInput(input: Record<string, unknown>): Record<string, unknow
 function buildGetSubDomainsInput(input: Record<string, unknown>): Record<string, unknown> {
   if (input.domains !== undefined) {
     return {
-      domains: requiredStringArray(input.domains, "domains", inputError),
+      domains: requiredStringArray(input.domains, "domains", providerInputError),
     };
   }
   return {
-    domain: requiredString(input.domain, "domain", inputError),
+    domain: requiredString(input.domain, "domain", providerInputError),
   };
 }
 
 function buildBatchSearchInput(input: Record<string, unknown>): Record<string, unknown> {
-  const queries = objectArray(input.queries, "queries", inputError).map((query, index) =>
+  const queries = objectArray(input.queries, "queries", providerInputError).map((query, index) =>
     compactObject({
-      query: requiredString(query.query, "queries[" + index + "].query", inputError),
+      query: requiredString(query.query, "queries[" + index + "].query", providerInputError),
       domain: optionalString(query.domain),
       sub_domain: optionalString(query.sub_domain),
       sub_domain_params: optionalRecord(query.sub_domain_params),
@@ -133,7 +133,7 @@ function buildBatchSearchInput(input: Record<string, unknown>): Record<string, u
 }
 
 function readExtractUrl(value: unknown): string {
-  const url = requiredString(value, "url", inputError);
+  const url = requiredString(value, "url", providerInputError);
   let parsed: URL;
   try {
     parsed = new URL(url);
@@ -150,8 +150,8 @@ function readOptionalStringArray(value: unknown, fieldName: string): string[] | 
   if (value === undefined) {
     return undefined;
   }
-  return requiredStringArray(value, fieldName, inputError).map((item, index) =>
-    requiredString(item, fieldName + "[" + index + "]", inputError),
+  return requiredStringArray(value, fieldName, providerInputError).map((item, index) =>
+    requiredString(item, fieldName + "[" + index + "]", providerInputError),
   );
 }
 

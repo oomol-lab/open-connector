@@ -4,6 +4,7 @@ import { compactObject, optionalRecord, optionalString, requiredString } from ".
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -339,8 +340,4 @@ function readRequiredString(value: unknown, fieldName: string) {
     throw new ProviderRequestError(400, `${fieldName} is required`);
   }
   return value.trim();
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

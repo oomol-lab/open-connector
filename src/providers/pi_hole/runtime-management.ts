@@ -9,15 +9,11 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError } from "../provider-runtime.ts";
 import { requestPiHoleJson } from "./runtime.ts";
 
-function piHoleInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
 function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, piHoleInputError);
+  return requiredString(value, fieldName, providerInputError);
 }
 
 function readRecordPayload(payload: unknown): Record<string, unknown> {
@@ -39,9 +35,9 @@ function readGroupsPayload(input: Record<string, unknown>): number[] | undefined
   // Coerce numeric strings so an ID like "1" never silently becomes the
   // default group 0; anything else is a clear input error.
   return groups.map((value) => {
-    const parsed = optionalIntegerLike(value, "groups", piHoleInputError);
+    const parsed = optionalIntegerLike(value, "groups", providerInputError);
     if (parsed === undefined) {
-      throw piHoleInputError("groups must be an array of group IDs");
+      throw providerInputError("groups must be an array of group IDs");
     }
     return parsed;
   });
@@ -401,8 +397,8 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
       context,
       "lists:batchDelete",
       readBatchEntries(input.items, "items", (entry) => {
-        const address = requiredString(entry.address, "address", piHoleInputError);
-        const type = normalizeListType(requiredString(entry.type, "type", piHoleInputError));
+        const address = requiredString(entry.address, "address", providerInputError);
+        const type = normalizeListType(requiredString(entry.type, "type", providerInputError));
         if (type !== "allow" && type !== "block") {
           throw new ProviderRequestError(400, "type must be either allow or block");
         }
@@ -415,12 +411,12 @@ export const piHoleManagementActionHandlers: ProviderActionHandlerSubset<"pi_hol
       context,
       "domains:batchDelete",
       readBatchEntries(input.items, "items", (entry) => {
-        const domain = requiredString(entry.domain, "domain", piHoleInputError);
-        const type = normalizeListType(requiredString(entry.type, "type", piHoleInputError));
+        const domain = requiredString(entry.domain, "domain", providerInputError);
+        const type = normalizeListType(requiredString(entry.type, "type", providerInputError));
         if (type !== "allow" && type !== "deny") {
           throw new ProviderRequestError(400, "type must be either allow or deny");
         }
-        const kind = normalizeListType(requiredString(entry.kind, "kind", piHoleInputError));
+        const kind = normalizeListType(requiredString(entry.kind, "kind", providerInputError));
         if (kind !== "exact" && kind !== "regex") {
           throw new ProviderRequestError(400, "kind must be either exact or regex");
         }

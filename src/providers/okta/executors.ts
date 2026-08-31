@@ -11,6 +11,7 @@ import { optionalRecord, optionalString, requiredString } from "../../core/cast.
 import {
   defineProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -108,8 +109,4 @@ function resolveOktaOAuthOrgUrl(metadata: Record<string, unknown>): string {
 function readOktaGrantedScopes(value: unknown, fallback: string[]): string[] {
   const scope = optionalString(value);
   return scope ? [...new Set(scope.split(/\s+/u).filter(Boolean))] : fallback;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

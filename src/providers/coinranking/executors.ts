@@ -12,7 +12,13 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerInputError,
+  ProviderRequestError,
+  providerResponseError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "coinranking";
 const coinrankingApiBaseUrl = "https://api.coinranking.com/v2";
@@ -233,12 +239,4 @@ function buildCoinrankingError(
     return new ProviderRequestError(400, message, payload);
   }
   return new ProviderRequestError(httpStatus >= 400 ? httpStatus : 502, message, payload);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

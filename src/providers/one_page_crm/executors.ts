@@ -12,6 +12,7 @@ import {
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderProxyErrorMessage,
@@ -365,8 +366,8 @@ function buildDealBody(input: Record<string, unknown>): Record<string, unknown> 
 
 function readOnePageCrmCredential(input: Record<string, string>): OnePageCrmCredential {
   return {
-    userId: requiredString(input.userId, "userId", inputError),
-    apiKey: requiredString(input.apiKey, "apiKey", inputError),
+    userId: requiredString(input.userId, "userId", providerInputError),
+    apiKey: requiredString(input.apiKey, "apiKey", providerInputError),
   };
 }
 
@@ -490,11 +491,7 @@ function requireObject(value: unknown, message: string): Record<string, unknown>
 }
 
 function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, inputError);
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
+  return requiredString(value, fieldName, providerInputError);
 }
 
 function readOptionalInteger(value: unknown, fieldName: string): number | undefined {

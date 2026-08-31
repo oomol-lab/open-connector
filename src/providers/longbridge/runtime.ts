@@ -17,6 +17,7 @@ import {
   createProviderTimeout,
   isAbortLikeError,
   mapProviderActionHandlers,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -825,10 +826,6 @@ function uniqueStrings(values: readonly string[]): string[] {
     }
   }
   return result;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function dateToUnixSeconds(value: string, edge: "end" | "start"): number {

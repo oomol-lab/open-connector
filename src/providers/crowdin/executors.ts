@@ -16,7 +16,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { defineProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import { defineProviderExecutors, providerInputError, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "crowdin";
 const crowdinUserUrl = "https://api.crowdin.com/api/v2/user";
@@ -465,8 +465,4 @@ function extractOrganizationDomainFromToken(accessToken: string | undefined): st
   } catch {
     return undefined;
   }
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

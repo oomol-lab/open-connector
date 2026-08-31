@@ -4,7 +4,7 @@ import type { BearerProviderContext, ProviderRuntimeHandler } from "../provider-
 
 import { compactObject, optionalIntegerLike, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment, queryParams } from "../../core/request.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const giteeApiBaseUrl = "https://gitee.com/api/v5";
 
@@ -25,8 +25,8 @@ export const giteeActionHandlers: ProviderActionHandlers<"gitee", ProviderRuntim
         q: optionalString(input.q),
         sort: optionalString(input.sort),
         direction: optionalString(input.direction),
-        page: optionalIntegerLike(input.page, "page", createInputError),
-        per_page: optionalIntegerLike(input.perPage, "perPage", createInputError),
+        page: optionalIntegerLike(input.page, "page", providerInputError),
+        per_page: optionalIntegerLike(input.perPage, "perPage", providerInputError),
       },
     });
     if (!Array.isArray(payload)) {
@@ -35,8 +35,8 @@ export const giteeActionHandlers: ProviderActionHandlers<"gitee", ProviderRuntim
     return { repositories: payload };
   },
   async get_repository(input, context) {
-    const owner = requiredString(input.owner, "owner", createInputError);
-    const repo = requiredString(input.repo, "repo", createInputError);
+    const owner = requiredString(input.owner, "owner", providerInputError);
+    const repo = requiredString(input.repo, "repo", providerInputError);
     return requireGiteeObject(
       await giteeRequestJson(`/repos/${encodePathSegment(owner)}/${encodePathSegment(repo)}`, context),
       "repository",
@@ -174,8 +174,4 @@ function requireGiteeObject(value: unknown, resource: string): Record<string, un
     return record;
   }
   throw new ProviderRequestError(502, `Gitee ${resource} response is not an object`, value);
-}
-
-function createInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

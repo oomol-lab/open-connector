@@ -10,7 +10,12 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  providerResponseError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const tinyurlApiBaseUrl = "https://api.tinyurl.com";
 const tinyurlValidationPath = "/urls/available?page=1&limit=1";
@@ -80,8 +85,8 @@ async function createShortUrl(
   const record = requireTinyurlObject(payload, "create response");
   const data = optionalRecord(record.data) ?? record;
   return compactObject({
-    tiny_url: requiredString(data.tiny_url, "tinyurl create response tiny_url", providerError),
-    alias: requiredString(data.alias, "tinyurl create response alias", providerError),
+    tiny_url: requiredString(data.tiny_url, "tinyurl create response tiny_url", providerResponseError),
+    alias: requiredString(data.alias, "tinyurl create response alias", providerResponseError),
     domain: optionalString(data.domain),
     url: optionalString(data.url),
     tags: Array.isArray(data.tags) ? data.tags.filter((item): item is string => typeof item === "string") : undefined,
@@ -94,7 +99,7 @@ async function listUrls(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const type = requiredString(input.type, "type", invalidInput);
+  const type = requiredString(input.type, "type", providerInputError);
   const url = new URL(`/urls/${type}`, tinyurlApiBaseUrl);
   const page = optionalInteger(input.page);
   const limit = optionalInteger(input.limit);
@@ -206,12 +211,12 @@ function extractTinyurlMessage(payload: unknown, fallback: string): string {
 function parseTinyurlListItem(value: unknown, index: number): Record<string, unknown> {
   const record = requireTinyurlObject(value, `list item ${index + 1}`);
   return compactObject({
-    tiny_url: requiredString(record.tiny_url, `tinyurl list item ${index + 1} tiny_url`, providerError),
-    alias: requiredString(record.alias, `tinyurl list item ${index + 1} alias`, providerError),
-    domain: requiredString(record.domain, `tinyurl list item ${index + 1} domain`, providerError),
+    tiny_url: requiredString(record.tiny_url, `tinyurl list item ${index + 1} tiny_url`, providerResponseError),
+    alias: requiredString(record.alias, `tinyurl list item ${index + 1} alias`, providerResponseError),
+    domain: requiredString(record.domain, `tinyurl list item ${index + 1} domain`, providerResponseError),
     url: optionalString(record.url),
     archived: optionalBoolean(record.archived) ?? false,
-    created_at: requiredString(record.created_at, `tinyurl list item ${index + 1} created_at`, providerError),
+    created_at: requiredString(record.created_at, `tinyurl list item ${index + 1} created_at`, providerResponseError),
   });
 }
 
@@ -221,12 +226,4 @@ function requireTinyurlObject(value: unknown, label: string): Record<string, unk
     throw new ProviderRequestError(502, `tinyurl ${label} is invalid`);
   }
   return record;
-}
-
-function invalidInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

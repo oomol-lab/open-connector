@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerInputError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "zipcodebase";
 const zipcodebaseApiBaseUrl = "https://app.zipcodebase.com/api/v1";
@@ -32,9 +37,9 @@ export const zipcodebaseActionHandlers: ProviderActionHandlers<"zipcodebase", Zi
     return requestZipcodebaseJson(
       "/distance",
       {
-        code: requiredString(input.code, "code", badInput),
+        code: requiredString(input.code, "code", providerInputError),
         compare: readStringList(input.compare, "compare").join(","),
-        country: requiredString(input.country, "country", badInput),
+        country: requiredString(input.country, "country", providerInputError),
         unit: optionalString(input.unit),
       },
       context,
@@ -45,9 +50,9 @@ export const zipcodebaseActionHandlers: ProviderActionHandlers<"zipcodebase", Zi
     return requestZipcodebaseJson(
       "/radius",
       {
-        code: requiredString(input.code, "code", badInput),
+        code: requiredString(input.code, "code", providerInputError),
         radius: requiredNumber(input.radius, "radius"),
-        country: requiredString(input.country, "country", badInput),
+        country: requiredString(input.country, "country", providerInputError),
         unit: optionalString(input.unit),
       },
       context,
@@ -60,7 +65,7 @@ export const zipcodebaseActionHandlers: ProviderActionHandlers<"zipcodebase", Zi
       {
         codes: readStringList(input.codes, "codes").join(","),
         distance: requiredNumber(input.distance, "distance"),
-        country: requiredString(input.country, "country", badInput),
+        country: requiredString(input.country, "country", providerInputError),
         unit: optionalString(input.unit),
       },
       context,
@@ -71,8 +76,8 @@ export const zipcodebaseActionHandlers: ProviderActionHandlers<"zipcodebase", Zi
     return requestZipcodebaseJson(
       "/code/city",
       {
-        city: requiredString(input.city, "city", badInput),
-        country: requiredString(input.country, "country", badInput),
+        city: requiredString(input.city, "city", providerInputError),
+        country: requiredString(input.country, "country", providerInputError),
         state_name: optionalString(input.state_name),
       },
       context,
@@ -83,8 +88,8 @@ export const zipcodebaseActionHandlers: ProviderActionHandlers<"zipcodebase", Zi
     return requestZipcodebaseJson(
       "/code/state",
       {
-        state_name: requiredString(input.state_name, "state_name", badInput),
-        country: requiredString(input.country, "country", badInput),
+        state_name: requiredString(input.state_name, "state_name", providerInputError),
+        country: requiredString(input.country, "country", providerInputError),
       },
       context,
       "execute",
@@ -185,11 +190,7 @@ function requiredNumber(value: unknown, fieldName: string): number {
   if (parsed !== undefined) {
     return parsed;
   }
-  throw badInput(`${fieldName} must be a number`);
-}
-
-function badInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
+  throw providerInputError(`${fieldName} must be a number`);
 }
 
 async function readZipcodebasePayload(response: Response): Promise<unknown> {

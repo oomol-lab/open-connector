@@ -13,6 +13,7 @@ import {
   defineProviderExecutors,
   defineProviderProxy,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
@@ -128,7 +129,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
 export const credentialValidators: CredentialValidators = {
   async apiKey(input) {
     if (!input.apiKey.trim()) {
-      throw invalidInput("gainsight_nxt access key is required");
+      throw providerInputError("gainsight_nxt access key is required");
     }
     const baseUrl = normalizeBaseUrl(input.values.baseUrl);
     const hostname = new URL(baseUrl).hostname;
@@ -313,18 +314,18 @@ function readRecordArray(value: unknown) {
 function normalizeBaseUrl(value: unknown) {
   const raw = optionalString(value)?.trim() ?? "";
   if (!raw) {
-    throw invalidInput("baseUrl is required");
+    throw providerInputError("baseUrl is required");
   }
 
   const url = assertPublicHttpUrl(raw, {
     fieldName: "baseUrl",
-    createError: invalidInput,
+    createError: providerInputError,
   });
   if (url.protocol !== "https:") {
-    throw invalidInput("baseUrl must be a valid https URL");
+    throw providerInputError("baseUrl must be a valid https URL");
   }
   if (url.username || url.password || url.search || url.hash || url.pathname.replaceAll("/", "")) {
-    throw invalidInput("baseUrl must be a clean Gainsight API domain URL");
+    throw providerInputError("baseUrl must be a clean Gainsight API domain URL");
   }
 
   return url.origin;
@@ -333,7 +334,7 @@ function normalizeBaseUrl(value: unknown) {
 function requireNonEmptyString(value: unknown, fieldName: string) {
   const parsed = readOptionalTrimmedString(value);
   if (!parsed) {
-    throw invalidInput(`${fieldName} is required`);
+    throw providerInputError(`${fieldName} is required`);
   }
   return parsed;
 }
@@ -352,7 +353,7 @@ function readNullableInteger(value: unknown) {
 
 function trimStringArray(value: unknown, fieldName: string): string[] {
   if (!Array.isArray(value)) {
-    throw invalidInput(`${fieldName} must be an array`);
+    throw providerInputError(`${fieldName} must be an array`);
   }
   return value.map((item) => requireNonEmptyString(item, fieldName));
 }
@@ -382,8 +383,4 @@ function normalizeWhere(value: unknown): unknown {
     expression:
       where.expression === undefined ? undefined : requireNonEmptyString(where.expression, "where.expression"),
   });
-}
-
-function invalidInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

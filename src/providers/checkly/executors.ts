@@ -5,6 +5,7 @@ import { optionalBoolean, optionalRecord, optionalString, requiredRecord, requir
 import {
   defineProviderExecutors,
   isAbortLikeError,
+  providerResponseError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -72,7 +73,7 @@ export const checklyActionHandlers: ProviderActionHandlers<"checkly", ChecklyHan
           phase: "execute",
         }),
         "checkly check status response",
-        providerError,
+        providerResponseError,
       ),
     };
   },
@@ -97,7 +98,7 @@ export const checklyActionHandlers: ProviderActionHandlers<"checkly", ChecklyHan
           phase: "execute",
         }),
         "checkly check result response",
-        providerError,
+        providerResponseError,
       ),
     };
   },
@@ -128,7 +129,7 @@ export const credentialValidators: CredentialValidators = {
     const account = requiredRecord(
       await requestChecklyJson({ context, path: "/v1/accounts/me", phase: "validate" }),
       "checkly account response",
-      providerError,
+      providerResponseError,
     );
     const accountId = optionalString(account.id) ?? context.accountId;
 
@@ -253,8 +254,4 @@ function resolveAccountId(value: unknown): string {
   const accountId = optionalString(value);
   if (!accountId) throw new ProviderRequestError(400, "checkly accountId is required");
   return accountId;
-}
-
-function providerError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

@@ -10,7 +10,13 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerInputError,
+  ProviderRequestError,
+  providerResponseError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 export const payhipApiBaseUrl = "https://payhip.com/api/v2";
 const payhipValidationPath = "/coupons";
@@ -353,8 +359,12 @@ function readSingleObject(payload: unknown, message: string) {
 function normalizeCoupon(coupon: Record<string, unknown>) {
   return {
     id: requirePositiveInteger(readAny(coupon, "id", "coupon_id"), "id"),
-    code: requiredString(coupon.code, "code", providerOutputError),
-    couponType: requiredString(readAny(coupon, "coupon_type", "couponType", "type"), "couponType", providerOutputError),
+    code: requiredString(coupon.code, "code", providerResponseError),
+    couponType: requiredString(
+      readAny(coupon, "coupon_type", "couponType", "type"),
+      "couponType",
+      providerResponseError,
+    ),
     notes: nullableString(coupon.notes),
     amountOff: nullableInteger(readAny(coupon, "amount_off", "amountOff")),
     percentOff: nullableNumber(readAny(coupon, "percent_off", "percentOff")),
@@ -446,7 +456,7 @@ function nullableInteger(value: unknown) {
   if (value == null || value === "") {
     return null;
   }
-  return optionalIntegerLike(value, "integer", providerOutputError) ?? null;
+  return optionalIntegerLike(value, "integer", providerResponseError) ?? null;
 }
 
 function nullableBoolean(value: unknown) {
@@ -470,12 +480,4 @@ function readBoolean(value: unknown, fieldName: string) {
     throw new ProviderRequestError(502, `Payhip returned an invalid ${fieldName} payload`);
   }
   return value;
-}
-
-function providerInputError(message: string) {
-  return new ProviderRequestError(400, message);
-}
-
-function providerOutputError(message: string) {
-  return new ProviderRequestError(502, message);
 }

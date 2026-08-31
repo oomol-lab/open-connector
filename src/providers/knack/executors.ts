@@ -12,6 +12,7 @@ import { compactObject, optionalInteger, optionalRecord, optionalString, require
 import {
   defineProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -186,7 +187,7 @@ async function createKnackRecord(input: Record<string, unknown>, context: KnackA
     url,
     {
       method: "POST",
-      body: JSON.stringify(requiredRecord(input.record, "record", inputError)),
+      body: JSON.stringify(requiredRecord(input.record, "record", providerInputError)),
     },
     context,
     "execute",
@@ -207,7 +208,7 @@ async function updateKnackRecord(input: Record<string, unknown>, context: KnackA
     url,
     {
       method: "PUT",
-      body: JSON.stringify(requiredRecord(input.record, "record", inputError)),
+      body: JSON.stringify(requiredRecord(input.record, "record", providerInputError)),
     },
     context,
     "execute",
@@ -356,10 +357,6 @@ function requireKnackRecordId(input: Record<string, unknown>): string {
     throw new ProviderRequestError(400, "recordId is required");
   }
   return recordId;
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function responseError(message: string): ProviderRequestError {

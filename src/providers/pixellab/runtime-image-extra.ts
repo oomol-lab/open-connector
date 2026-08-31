@@ -12,7 +12,7 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, providerResponseError } from "../provider-runtime.ts";
 import {
   encodeTransitImage,
   normalizeStartedJob,
@@ -41,9 +41,9 @@ export const pixellabImageExtraActionHandlers: ProviderActionHandlerSubset<"pixe
       "POST",
       "/edit-animation-v2",
       compactObject({
-        description: requiredString(input.description, "description", invalidInputError),
+        description: requiredString(input.description, "description", providerInputError),
         frames,
-        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
         seed: optionalInteger(input.seed),
         no_background: optionalBoolean(input.noBackground),
       }),
@@ -59,8 +59,8 @@ export const pixellabImageExtraActionHandlers: ProviderActionHandlerSubset<"pixe
       compactObject({
         start_image: await encodeFrame(input.startImage, "startImage", context),
         end_image: await encodeFrame(input.endImage, "endImage", context),
-        action: requiredString(input.action, "action", invalidInputError),
-        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+        action: requiredString(input.action, "action", providerInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
         seed: optionalInteger(input.seed),
         no_background: optionalBoolean(input.noBackground),
       }),
@@ -76,7 +76,7 @@ export const pixellabImageExtraActionHandlers: ProviderActionHandlerSubset<"pixe
       compactObject({
         reference_image: await encodeFrame(input.referenceImage, "referenceImage", context),
         frames: await encodeFrameList(input.frames, "frames", context),
-        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
         seed: optionalInteger(input.seed),
         no_background: optionalBoolean(input.noBackground),
         additional_instructions: optionalString(input.additionalInstructions),
@@ -107,9 +107,9 @@ export const pixellabImageExtraActionHandlers: ProviderActionHandlerSubset<"pixe
       "POST",
       "/animate-with-text",
       compactObject({
-        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
-        description: requiredString(input.description, "description", invalidInputError),
-        action: requiredString(input.action, "action", invalidInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
+        description: requiredString(input.description, "description", providerInputError),
+        action: requiredString(input.action, "action", providerInputError),
         text_guidance_scale: optionalNumber(input.textGuidanceScale),
         image_guidance_scale: optionalNumber(input.imageGuidanceScale),
         n_frames: optionalInteger(input.frameCount),
@@ -133,9 +133,9 @@ export const pixellabImageExtraActionHandlers: ProviderActionHandlerSubset<"pixe
       "/animate-with-text-v2",
       compactObject({
         reference_image: await encodeTransitImage(input.referenceImage, "referenceImage", context),
-        reference_image_size: requiredRecord(input.referenceImageSize, "referenceImageSize", invalidInputError),
-        action: requiredString(input.action, "action", invalidInputError),
-        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+        reference_image_size: requiredRecord(input.referenceImageSize, "referenceImageSize", providerInputError),
+        action: requiredString(input.action, "action", providerInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
         seed: optionalInteger(input.seed),
         no_background: optionalBoolean(input.noBackground),
         view: optionalString(input.view),
@@ -165,7 +165,7 @@ export const pixellabImageExtraActionHandlers: ProviderActionHandlerSubset<"pixe
       "/generate-8-rotations-v2",
       compactObject({
         method,
-        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
         reference_image: referenceImage,
         concept_image: conceptImage,
         description,
@@ -189,7 +189,7 @@ export const pixellabImageExtraActionHandlers: ProviderActionHandlerSubset<"pixe
       "POST",
       "/rotate",
       compactObject({
-        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
         image_guidance_scale: optionalNumber(input.imageGuidanceScale),
         view_change: optionalInteger(input.viewChange),
         direction_change: optionalInteger(input.directionChange),
@@ -216,8 +216,8 @@ export const pixellabImageExtraActionHandlers: ProviderActionHandlerSubset<"pixe
       "POST",
       "/inpaint",
       compactObject({
-        description: requiredString(input.description, "description", invalidInputError),
-        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+        description: requiredString(input.description, "description", providerInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
         text_guidance_scale: optionalNumber(input.textGuidanceScale),
         outline: optionalString(input.outline),
         shading: optionalString(input.shading),
@@ -245,8 +245,8 @@ export const pixellabImageExtraActionHandlers: ProviderActionHandlerSubset<"pixe
       "/edit-image",
       compactObject({
         image: await encodeTransitImage(input.image, "image", context),
-        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
-        description: requiredString(input.description, "description", invalidInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
+        description: requiredString(input.description, "description", providerInputError),
         width: optionalInteger(input.width),
         height: optionalInteger(input.height),
         seed: optionalInteger(input.seed),
@@ -265,8 +265,8 @@ async function buildPixfluxBody(
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   return compactObject({
-    description: requiredString(input.description, "description", invalidInputError),
-    image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+    description: requiredString(input.description, "description", providerInputError),
+    image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
     text_guidance_scale: optionalNumber(input.textGuidanceScale),
     outline: optionalString(input.outline),
     shading: optionalString(input.shading),
@@ -289,7 +289,7 @@ async function encodeFrameList(
   context: ApiKeyProviderContext,
 ): Promise<Array<Record<string, unknown>>> {
   return Promise.all(
-    objectArray(value, fieldName, invalidInputError).map((frame, index) =>
+    objectArray(value, fieldName, providerInputError).map((frame, index) =>
       encodeFrame(frame, `${fieldName}[${index}]`, context),
     ),
   );
@@ -300,12 +300,12 @@ async function encodeFrame(
   fieldName: string,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const record = requiredRecord(value, fieldName, invalidInputError);
+  const record = requiredRecord(value, fieldName, providerInputError);
   return {
     image: await encodeTransitImage(record.file, `${fieldName}.file`, context),
     size: {
-      width: integer(record.width, `${fieldName}.width`, invalidInputError),
-      height: integer(record.height, `${fieldName}.height`, invalidInputError),
+      width: integer(record.width, `${fieldName}.width`, providerInputError),
+      height: integer(record.height, `${fieldName}.height`, providerInputError),
     },
   };
 }
@@ -318,11 +318,11 @@ async function encodeOptionalFlatImage(
   if (value === undefined) {
     return undefined;
   }
-  const record = requiredRecord(value, fieldName, invalidInputError);
+  const record = requiredRecord(value, fieldName, providerInputError);
   return {
     image: await encodeTransitImage(record.file, `${fieldName}.file`, context),
-    width: integer(record.width, `${fieldName}.width`, invalidInputError),
-    height: integer(record.height, `${fieldName}.height`, invalidInputError),
+    width: integer(record.width, `${fieldName}.width`, providerInputError),
+    height: integer(record.height, `${fieldName}.height`, providerInputError),
   };
 }
 
@@ -343,15 +343,7 @@ async function normalizeSingleImage(
   const images = await storePixellabImages([record.image], namePrefix, context);
   const image = images[0];
   if (!image) {
-    throw invalidResponseError("PixelLab response did not include an image.");
+    throw providerResponseError("PixelLab response did not include an image.");
   }
   return compactObject({ image, usage: normalizeUsage(record.usage) });
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function invalidResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

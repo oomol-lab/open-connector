@@ -6,6 +6,7 @@ import { optionalRecord, optionalString, requiredString } from "../../core/cast.
 import {
   createProviderTimeout,
   isAbortSignalError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderJsonBody,
@@ -57,8 +58,8 @@ export const context7ActionHandlers: ProviderActionHandlers<
     return requestContext7Json({
       path: "/v2/libs/search",
       query: {
-        libraryName: requiredString(input.libraryName, "libraryName", invalidInputError),
-        query: requiredString(input.query, "query", invalidInputError),
+        libraryName: requiredString(input.libraryName, "libraryName", providerInputError),
+        query: requiredString(input.query, "query", providerInputError),
         fast: optionalBooleanString(input.fast),
       },
       apiKey: context.apiKey,
@@ -71,8 +72,8 @@ export const context7ActionHandlers: ProviderActionHandlers<
     return requestContext7Json({
       path: "/v2/context",
       query: {
-        libraryId: requiredString(input.libraryId, "libraryId", invalidInputError),
-        query: requiredString(input.query, "query", invalidInputError),
+        libraryId: requiredString(input.libraryId, "libraryId", providerInputError),
+        query: requiredString(input.query, "query", providerInputError),
         type: "json",
         fast: optionalBooleanString(input.fast),
       },
@@ -176,8 +177,4 @@ function readContext7ErrorMessage(payload: unknown): string | undefined {
 
 function optionalBooleanString(value: unknown): string | undefined {
   return typeof value == "boolean" ? String(value) : undefined;
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

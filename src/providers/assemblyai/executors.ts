@@ -13,6 +13,7 @@ import {
 } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
@@ -42,7 +43,7 @@ export const assemblyaiActionHandlers: ProviderActionHandlers<"assemblyai", Asse
 
   async get_transcript(input, context) {
     const payload = await requestAssemblyaiJson({
-      path: `/transcript/${encodeURIComponent(requiredString(input.transcriptId, "transcriptId", invalidInputError))}`,
+      path: `/transcript/${encodeURIComponent(requiredString(input.transcriptId, "transcriptId", providerInputError))}`,
       method: "GET",
       context,
       phase: "execute",
@@ -73,7 +74,7 @@ export const assemblyaiActionHandlers: ProviderActionHandlers<"assemblyai", Asse
 
   async delete_transcript(input, context) {
     const payload = await requestAssemblyaiJson({
-      path: `/transcript/${encodeURIComponent(requiredString(input.transcriptId, "transcriptId", invalidInputError))}`,
+      path: `/transcript/${encodeURIComponent(requiredString(input.transcriptId, "transcriptId", providerInputError))}`,
       method: "DELETE",
       context,
       phase: "execute",
@@ -86,7 +87,7 @@ export const assemblyaiActionHandlers: ProviderActionHandlers<"assemblyai", Asse
 
   async get_transcript_sentences(input, context) {
     const payload = await requestAssemblyaiJson({
-      path: `/transcript/${encodeURIComponent(requiredString(input.transcriptId, "transcriptId", invalidInputError))}/sentences`,
+      path: `/transcript/${encodeURIComponent(requiredString(input.transcriptId, "transcriptId", providerInputError))}/sentences`,
       method: "GET",
       context,
       phase: "execute",
@@ -97,7 +98,7 @@ export const assemblyaiActionHandlers: ProviderActionHandlers<"assemblyai", Asse
 
   async get_transcript_paragraphs(input, context) {
     const payload = await requestAssemblyaiJson({
-      path: `/transcript/${encodeURIComponent(requiredString(input.transcriptId, "transcriptId", invalidInputError))}/paragraphs`,
+      path: `/transcript/${encodeURIComponent(requiredString(input.transcriptId, "transcriptId", providerInputError))}/paragraphs`,
       method: "GET",
       context,
       phase: "execute",
@@ -238,7 +239,7 @@ function extractAssemblyaiErrorMessage(payload: unknown): string | undefined {
 
 function buildCreateTranscriptBody(input: Record<string, unknown>): Record<string, unknown> {
   return compactObject({
-    audio_url: requiredString(input.audioUrl, "audioUrl", invalidInputError),
+    audio_url: requiredString(input.audioUrl, "audioUrl", providerInputError),
     speech_model: optionalString(input.speechModel),
     language_code: optionalString(input.languageCode),
     language_detection: optionalBoolean(input.languageDetection),
@@ -367,10 +368,6 @@ function readOptionalIntegerString(value: unknown, fieldName: string): string | 
 
 function compactStringObject(input: Record<string, string | undefined>): Record<string, string> {
   return compactObject(input) as Record<string, string>;
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function isAbortError(error: unknown): boolean {

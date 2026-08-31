@@ -13,6 +13,7 @@ import {
   defineProviderExecutors,
   defineProviderProxy,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
@@ -375,10 +376,6 @@ function getContentfulGraphqlApiBaseUrl(region: ContentfulGraphqlRegion): string
 function formatContentfulGraphqlAccountLabel(input: ContentfulGraphqlTarget): string {
   const regionLabel = input.region === "eu" ? " EU" : "";
   return `Contentful GraphQL${regionLabel} ${input.spaceId}/${input.environmentId}`;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

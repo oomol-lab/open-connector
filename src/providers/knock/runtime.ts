@@ -7,6 +7,7 @@ import { encodePathSegment } from "../../core/request.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -44,7 +45,7 @@ export const knockActionHandlers: ProviderActionHandlers<"knock", KnockActionHan
     return normalizeUserListResponse(payload);
   },
   async get_user(input, context) {
-    const userId = requiredString(input.userId, "userId", invalidInputError);
+    const userId = requiredString(input.userId, "userId", providerInputError);
     const payload = await requestKnockJson(
       {
         method: "GET",
@@ -57,7 +58,7 @@ export const knockActionHandlers: ProviderActionHandlers<"knock", KnockActionHan
     return { user: normalizeUser(payload) };
   },
   async identify_user(input, context) {
-    const userId = requiredString(input.userId, "userId", invalidInputError);
+    const userId = requiredString(input.userId, "userId", providerInputError);
     const payload = await requestKnockJson(
       {
         method: "PUT",
@@ -71,7 +72,7 @@ export const knockActionHandlers: ProviderActionHandlers<"knock", KnockActionHan
     return { user: normalizeUser(payload) };
   },
   async delete_user(input, context) {
-    const userId = requiredString(input.userId, "userId", invalidInputError);
+    const userId = requiredString(input.userId, "userId", providerInputError);
     await requestKnockJson(
       {
         method: "DELETE",
@@ -87,7 +88,7 @@ export const knockActionHandlers: ProviderActionHandlers<"knock", KnockActionHan
     };
   },
   async trigger_workflow(input, context) {
-    const key = requiredString(input.key, "key", invalidInputError);
+    const key = requiredString(input.key, "key", providerInputError);
     const payload = await requestKnockJson(
       {
         method: "POST",
@@ -344,8 +345,4 @@ function optionalStringArray(value: unknown): string[] | undefined {
 
 function requireProviderRecord(value: unknown, message: string): Record<string, unknown> {
   return requiredRecord(value, message, (errorMessage) => new ProviderRequestError(502, errorMessage));
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalIntegerLike, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent, setSearchParams } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, providerUserAgent, setSearchParams } from "../provider-runtime.ts";
 
 export const catsApiBaseUrl = "https://api.catsone.com/v3";
 
@@ -302,8 +302,4 @@ function readString(value: unknown): string | undefined {
     : typeof value === "number" && Number.isFinite(value)
       ? String(value)
       : undefined;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

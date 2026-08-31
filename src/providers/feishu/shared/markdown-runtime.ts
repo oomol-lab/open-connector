@@ -1,4 +1,4 @@
-import { ProviderRequestError } from "../../provider-runtime.ts";
+import { providerInputError, ProviderRequestError } from "../../provider-runtime.ts";
 
 export interface FeishuMarkdownDownloadInput {
   readonly fileToken: string;
@@ -72,7 +72,7 @@ async function createMarkdownFile(input: Record<string, unknown>, context: Feish
   const folderToken = optionalString(input.folderToken);
   const wikiToken = optionalString(input.wikiToken);
   if (folderToken && wikiToken) {
-    throw invalidInput("folderToken and wikiToken are mutually exclusive");
+    throw providerInputError("folderToken and wikiToken are mutually exclusive");
   }
 
   const result = await context.upload({
@@ -107,10 +107,10 @@ async function diffMarkdownFile(input: Record<string, unknown>, context: FeishuM
   const proposedMarkdown = typeof input.markdown === "string" ? input.markdown : undefined;
   const contextLines = optionalNonNegativeInteger(input.contextLines, "contextLines") ?? 3;
   if (proposedMarkdown === undefined && fromVersion === undefined) {
-    throw invalidInput("provide markdown for remote-to-input diff or fromVersion for remote-to-remote diff");
+    throw providerInputError("provide markdown for remote-to-input diff or fromVersion for remote-to-remote diff");
   }
   if (proposedMarkdown !== undefined && toVersion !== undefined) {
-    throw invalidInput("toVersion cannot be combined with markdown");
+    throw providerInputError("toVersion cannot be combined with markdown");
   }
 
   const from = await context.download({ fileToken, version: fromVersion });
@@ -258,7 +258,7 @@ function applyPatch(markdown: string, pattern: string, replacement: string, rege
   try {
     expression = new RegExp(pattern, "g");
   } catch (error) {
-    throw invalidInput(
+    throw providerInputError(
       `pattern is not a valid regular expression: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
@@ -487,20 +487,20 @@ function unifiedDiff(
 function ensureDiffSize(markdown: string, field: string) {
   ensureMarkdownString(markdown);
   if (utf8Size(markdown) > maximumDiffBytes) {
-    throw invalidInput(`${field} exceeds the 10 MB diff limit`);
+    throw providerInputError(`${field} exceeds the 10 MB diff limit`);
   }
 }
 
 function ensureRegexPatchSize(value: string, field: string) {
   if (utf8Size(value) > maximumDiffBytes) {
-    throw invalidInput(`${field} exceeds the 10 MB regex patch limit`);
+    throw providerInputError(`${field} exceeds the 10 MB regex patch limit`);
   }
 }
 
 function nonEmptyMarkdown(value: unknown) {
   const markdown = requiredRawString(value, "markdown", false);
   if (utf8Size(markdown) === 0) {
-    throw invalidInput("empty Markdown content is not supported");
+    throw providerInputError("empty Markdown content is not supported");
   }
   return markdown;
 }
@@ -514,7 +514,7 @@ function ensureMarkdownString(value: unknown): asserts value is string {
 function markdownFileName(value: unknown, field: string) {
   const result = requiredString(value, field);
   if (!result.toLowerCase().endsWith(".md")) {
-    throw invalidInput(`${field} must end with .md`);
+    throw providerInputError(`${field} must end with .md`);
   }
   return result;
 }
@@ -524,14 +524,14 @@ function optionalNonNegativeInteger(value: unknown, field: string) {
     return undefined;
   }
   if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
-    throw invalidInput(`${field} must be a non-negative integer`);
+    throw providerInputError(`${field} must be a non-negative integer`);
   }
   return value;
 }
 
 function requiredRawString(value: unknown, field: string, allowEmpty: boolean) {
   if (typeof value !== "string" || (!allowEmpty && value.length === 0)) {
-    throw invalidInput(`${field} is required`);
+    throw providerInputError(`${field} is required`);
   }
   return value;
 }
@@ -539,7 +539,7 @@ function requiredRawString(value: unknown, field: string, allowEmpty: boolean) {
 function requiredString(value: unknown, field: string) {
   const result = optionalString(value);
   if (!result) {
-    throw invalidInput(`${field} is required`);
+    throw providerInputError(`${field} is required`);
   }
   return result;
 }
@@ -550,8 +550,4 @@ function optionalString(value: unknown) {
 
 function utf8Size(value: string) {
   return new TextEncoder().encode(value).byteLength;
-}
-
-function invalidInput(message: string) {
-  return new ProviderRequestError(400, message);
 }

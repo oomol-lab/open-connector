@@ -13,6 +13,8 @@ import {
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  providerInputError,
+  providerResponseError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -93,7 +95,7 @@ async function listCustomers(input: Record<string, unknown>, context: ApiKeyProv
 }
 
 async function getCustomer(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const customerId = positiveInteger(input.customerId, "customerId", inputError);
+  const customerId = positiveInteger(input.customerId, "customerId", providerInputError);
   const response = await requestAltoviz(`/v1/Customers/${encodeURIComponent(String(customerId))}`, {
     ...context,
     phase: "execute",
@@ -181,7 +183,7 @@ function mapAltovizError(status: number, payload: unknown, phase: AltovizPhase):
 }
 
 function readObject(payload: unknown, label: string): Record<string, unknown> {
-  return requiredRecord(payload, `${label} response`, outputError);
+  return requiredRecord(payload, `${label} response`, providerResponseError);
 }
 
 function readArray(payload: unknown, label: string): unknown[] {
@@ -193,12 +195,4 @@ function readIntegerHeader(headers: Headers, name: string): number | undefined {
   const value = headers.get(name);
   const parsed = value === null ? Number.NaN : Number(value);
   return Number.isInteger(parsed) ? parsed : undefined;
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function outputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

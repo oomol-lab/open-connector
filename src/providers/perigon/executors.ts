@@ -6,6 +6,7 @@ import { optionalInteger, optionalRecord, optionalString, requiredString } from 
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -234,7 +235,7 @@ export const perigonActionHandlers: ProviderActionHandlers<"perigon", PerigonAct
     );
   },
   async get_journalist(input, context) {
-    const id = requiredString(input.id, "id", requestInputError);
+    const id = requiredString(input.id, "id", providerInputError);
     const payload = await requestPerigonJson(
       "GET",
       `/v1/journalists/${encodeURIComponent(id)}`,
@@ -576,10 +577,6 @@ function readArray(value: unknown): unknown[] {
 
 function readNullableInteger(value: unknown): number | null {
   return optionalInteger(value) ?? null;
-}
-
-function requestInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

@@ -7,7 +7,12 @@ import {
   optionalBoolean,
   requiredString,
 } from "../../core/cast.ts";
-import { ProviderRequestError, createProviderTimeout, providerUserAgent } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  ProviderRequestError,
+  createProviderTimeout,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 export type BoldSignRegion = "us" | "eu" | "ca" | "au";
 
@@ -158,7 +163,7 @@ export async function validateBoldSignCredential(
   const apiBaseUrl = buildBoldSignApiBaseUrl(region);
   const payload = await requestBoldSignJson({
     apiBaseUrl,
-    apiKey: requiredString(input.apiKey, "apiKey", badInput),
+    apiKey: requiredString(input.apiKey, "apiKey", providerInputError),
     fetcher,
     signal,
     path: boldSignCreditsPath,
@@ -508,8 +513,4 @@ function isAbortError(error: unknown) {
 
 function boldSignError(code: string, message: string, status: number): ProviderRequestError {
   return new ProviderRequestError(status, message, { code });
-}
-
-function badInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

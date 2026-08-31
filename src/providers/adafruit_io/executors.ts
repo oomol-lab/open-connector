@@ -20,6 +20,7 @@ import {
   defineProviderExecutors,
   defineProviderProxy,
   isAbortLikeError,
+  providerResponseError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -489,8 +490,4 @@ function requireRecord(value: unknown, message: string): Record<string, unknown>
     throw new ProviderRequestError(502, message, value);
   }
   return record;
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

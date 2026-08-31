@@ -10,7 +10,12 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  providerResponseError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const codemagicV3BaseUrl = "https://codemagic.io";
 const codemagicLegacyBaseUrl = "https://api.codemagic.io";
@@ -394,7 +399,7 @@ async function readJsonResponse<T>(response: Response, providerName: string): Pr
 }
 
 function requireInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, invalidInputError);
+  return requiredString(value, fieldName, providerInputError);
 }
 
 function requireResponsePositiveInteger(value: unknown, fieldName: string): number {
@@ -427,7 +432,7 @@ function readOptionalPositiveInteger(value: unknown, fieldName: string): number 
   if (value == null || value === "") {
     return undefined;
   }
-  return positiveInteger(value, fieldName, invalidInputError);
+  return positiveInteger(value, fieldName, providerInputError);
 }
 
 function readOptionalStringArray(value: unknown): string[] | undefined {
@@ -445,7 +450,7 @@ function readOptionalEnvironment(value: unknown): Record<string, unknown> | unde
     return undefined;
   }
 
-  const input = requiredRecord(value, "environment", invalidInputError);
+  const input = requiredRecord(value, "environment", providerInputError);
   return compactObject({
     variables: readOptionalPrimitiveRecord(input.variables),
     groups: readOptionalStringArray(input.groups),
@@ -457,7 +462,7 @@ function readOptionalPrimitiveRecord(value: unknown): Record<string, string | nu
   if (value === undefined) {
     return undefined;
   }
-  const input = requiredRecord(value, "environment.variables", invalidInputError);
+  const input = requiredRecord(value, "environment.variables", providerInputError);
   return Object.fromEntries(
     Object.entries(input).map(([key, child]) => {
       if (typeof child !== "string" && typeof child !== "number" && typeof child !== "boolean") {
@@ -472,7 +477,7 @@ function readOptionalStringRecord(value: unknown): Record<string, string> | unde
   if (value === undefined) {
     return undefined;
   }
-  const input = requiredRecord(value, "environment.softwareVersions", invalidInputError);
+  const input = requiredRecord(value, "environment.softwareVersions", providerInputError);
   return Object.fromEntries(
     Object.entries(input).map(([key, child]) => {
       if (typeof child !== "string") {
@@ -490,12 +495,4 @@ function pickFirstNonEmptyString(...values: Array<string | undefined>): string |
     }
   }
   return undefined;
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

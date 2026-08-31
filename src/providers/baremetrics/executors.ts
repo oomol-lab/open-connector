@@ -5,6 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
@@ -115,7 +116,7 @@ async function listCustomers(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const sourceId = requiredString(input.sourceId, "sourceId", invalidInputError);
+  const sourceId = requiredString(input.sourceId, "sourceId", providerInputError);
   const payload = await baremetricsGetJson(
     `/v1/${encodeURIComponent(sourceId)}/customers`,
     compactObject({
@@ -137,11 +138,11 @@ async function customerMutation(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const sourceId = requiredString(input.sourceId, "sourceId", invalidInputError);
+  const sourceId = requiredString(input.sourceId, "sourceId", providerInputError);
   const path =
     method === "POST"
       ? `/v1/${encodeURIComponent(sourceId)}/customers`
-      : `/v1/${encodeURIComponent(sourceId)}/customers/${encodeURIComponent(requiredString(input.customerOid, "customerOid", invalidInputError))}`;
+      : `/v1/${encodeURIComponent(sourceId)}/customers/${encodeURIComponent(requiredString(input.customerOid, "customerOid", providerInputError))}`;
   const payload = await baremetricsSendJson(
     method,
     path,
@@ -164,7 +165,7 @@ async function listPlans(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const sourceId = requiredString(input.sourceId, "sourceId", invalidInputError);
+  const sourceId = requiredString(input.sourceId, "sourceId", providerInputError);
   const payload = await baremetricsGetJson(
     `/v1/${encodeURIComponent(sourceId)}/plans`,
     compactObject({
@@ -184,11 +185,11 @@ async function planMutation(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const sourceId = requiredString(input.sourceId, "sourceId", invalidInputError);
+  const sourceId = requiredString(input.sourceId, "sourceId", providerInputError);
   const path =
     method === "POST"
       ? `/v1/${encodeURIComponent(sourceId)}/plans`
-      : `/v1/${encodeURIComponent(sourceId)}/plans/${encodeURIComponent(requiredString(input.planOid, "planOid", invalidInputError))}`;
+      : `/v1/${encodeURIComponent(sourceId)}/plans/${encodeURIComponent(requiredString(input.planOid, "planOid", providerInputError))}`;
   const payload = await baremetricsSendJson(
     method,
     path,
@@ -214,7 +215,7 @@ async function listSubscriptions(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const sourceId = requiredString(input.sourceId, "sourceId", invalidInputError);
+  const sourceId = requiredString(input.sourceId, "sourceId", providerInputError);
   const payload = await baremetricsGetJson(
     `/v1/${encodeURIComponent(sourceId)}/subscriptions`,
     compactObject({
@@ -235,11 +236,11 @@ async function subscriptionMutation(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const sourceId = requiredString(input.sourceId, "sourceId", invalidInputError);
+  const sourceId = requiredString(input.sourceId, "sourceId", providerInputError);
   const path =
     method === "POST"
       ? `/v1/${encodeURIComponent(sourceId)}/subscriptions`
-      : `/v1/${encodeURIComponent(sourceId)}/subscriptions/${encodeURIComponent(requiredString(input.subscriptionOid, "subscriptionOid", invalidInputError))}`;
+      : `/v1/${encodeURIComponent(sourceId)}/subscriptions/${encodeURIComponent(requiredString(input.subscriptionOid, "subscriptionOid", providerInputError))}`;
   const payload = await baremetricsSendJson(method, path, subscriptionBody(input), context);
   return normalizeSubscriptionPayload(payload);
 }
@@ -248,12 +249,12 @@ async function cancelSubscription(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const sourceId = requiredString(input.sourceId, "sourceId", invalidInputError);
+  const sourceId = requiredString(input.sourceId, "sourceId", providerInputError);
   const payload = await baremetricsSendJson(
     "PUT",
-    `/v1/${encodeURIComponent(sourceId)}/subscriptions/${encodeURIComponent(requiredString(input.subscriptionOid, "subscriptionOid", invalidInputError))}/cancel`,
+    `/v1/${encodeURIComponent(sourceId)}/subscriptions/${encodeURIComponent(requiredString(input.subscriptionOid, "subscriptionOid", providerInputError))}/cancel`,
     {
-      canceled_at: requiredString(input.canceledAt, "canceledAt", invalidInputError),
+      canceled_at: requiredString(input.canceledAt, "canceledAt", providerInputError),
     },
     context,
   );
@@ -264,7 +265,7 @@ async function listCharges(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const sourceId = requiredString(input.sourceId, "sourceId", invalidInputError);
+  const sourceId = requiredString(input.sourceId, "sourceId", providerInputError);
   const payload = await baremetricsGetJson(
     `/v1/${encodeURIComponent(sourceId)}/charges`,
     compactObject({
@@ -422,10 +423,6 @@ function readArray(payload: unknown, key: string): unknown[] {
 
 function asRecord(value: unknown): Record<string, unknown> {
   return optionalRecord(value) ?? {};
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function isAbortError(error: unknown): boolean {

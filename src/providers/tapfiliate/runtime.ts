@@ -6,6 +6,7 @@ import { compactObject, optionalRecord, optionalString, requiredString } from ".
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -46,7 +47,7 @@ export const tapfiliateActionHandlers: ProviderActionHandlers<"tapfiliate", Tapf
   },
 
   async get_affiliate(input, context) {
-    const affiliateId = requiredString(input.affiliate_id, "affiliate_id", requestInputError);
+    const affiliateId = requiredString(input.affiliate_id, "affiliate_id", providerInputError);
     const response = await requestTapfiliateJson({
       path: `/affiliates/${encodeURIComponent(affiliateId)}/`,
       method: "GET",
@@ -288,7 +289,7 @@ async function requestTapfiliateJson(input: {
     const headers: Record<string, string> = {
       accept: "application/json",
       "user-agent": providerUserAgent,
-      "X-Api-Key": requiredString(input.context.apiKey, "apiKey", requestInputError),
+      "X-Api-Key": requiredString(input.context.apiKey, "apiKey", providerInputError),
     };
     const body = input.body === undefined ? undefined : JSON.stringify(input.body);
     if (body !== undefined) {
@@ -667,8 +668,4 @@ function extractTapfiliateErrorMessage(payload: unknown): string | undefined {
     return record.errors[0];
   }
   return undefined;
-}
-
-function requestInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

@@ -10,6 +10,7 @@ import { compactObject, optionalInteger, optionalRecord, optionalString, require
 import {
   defineProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
@@ -226,10 +227,6 @@ function extractMxToolboxErrorMessage(payload: unknown): string | undefined {
     optionalString(record.error) ??
     optionalString(record.Error)
   );
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

@@ -19,6 +19,7 @@ import {
 import {
   defineProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   requireOAuthCredential,
@@ -263,7 +264,7 @@ async function searchMediaItems(input: Record<string, unknown>, context: GoogleP
 
 async function batchGetMediaItems(input: Record<string, unknown>, context: GooglePhotosRuntimeContext) {
   const url = new URL(`${googlePhotosApiBaseUrl}/mediaItems:batchGet`);
-  for (const mediaItemId of stringArray(input.mediaItemIds, "mediaItemIds", providerRequestError)) {
+  for (const mediaItemId of stringArray(input.mediaItemIds, "mediaItemIds", providerInputError)) {
     url.searchParams.append("mediaItemIds", mediaItemId);
   }
 
@@ -276,7 +277,7 @@ async function batchGetMediaItems(input: Record<string, unknown>, context: Googl
 
 async function batchAddMediaItems(input: Record<string, unknown>, context: GooglePhotosRuntimeContext) {
   const albumId = requireInputString(input.albumId, "albumId is required");
-  const mediaItemIds = stringArray(input.mediaItemIds, "mediaItemIds", providerRequestError);
+  const mediaItemIds = stringArray(input.mediaItemIds, "mediaItemIds", providerInputError);
 
   await requestGooglePhotosJson(`${googlePhotosApiBaseUrl}/albums/${encodeURIComponent(albumId)}:batchAddMediaItems`, {
     ...context,
@@ -1107,10 +1108,6 @@ function hasExplicitPort(url: string): boolean {
   const authority = url.slice(authorityStart, authorityEnd);
   const host = authority.includes("@") ? authority.slice(authority.lastIndexOf("@") + 1) : authority;
   return host.includes(":");
-}
-
-function providerRequestError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

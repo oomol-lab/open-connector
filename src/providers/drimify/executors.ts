@@ -14,6 +14,8 @@ import {
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  providerInputError,
+  providerResponseError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -192,12 +194,4 @@ function readItemsPerPage(value: unknown): number {
 
 function readPositiveInteger(value: unknown, fieldName: string): number | undefined {
   return value === undefined ? undefined : positiveInteger(value, fieldName, providerInputError);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

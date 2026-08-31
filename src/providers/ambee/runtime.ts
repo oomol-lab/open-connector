@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const ambeeApiBaseUrl = "https://api.ambeedata.com";
 
@@ -304,10 +304,6 @@ function coordinateQuery(input: Record<string, unknown>) {
 
 function readRequiredString(value: unknown, fieldName: string) {
   return requiredString(value, fieldName, providerInputError);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function readRequiredNumber(value: unknown, fieldName: string) {

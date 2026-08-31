@@ -23,6 +23,7 @@ import {
   createProviderTimeout,
   isAbortLikeError,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   readProviderJsonBody,
 } from "../provider-runtime.ts";
@@ -314,7 +315,7 @@ function normalizePromptTemplateList(payload: Record<string, unknown>): {
   raw: Record<string, unknown>;
 } {
   return {
-    items: objectArray(payload.items, "PromptLayer prompt template list items", createPromptLayerResponseError).map(
+    items: objectArray(payload.items, "PromptLayer prompt template list items", providerResponseError).map(
       normalizePromptTemplateSummary,
     ),
     page: requireResponseInteger(payload.page, "PromptLayer prompt template list page"),
@@ -337,16 +338,12 @@ function normalizePromptTemplateSummary(record: Record<string, unknown>): Record
     promptTemplate: requiredRecord(
       record.prompt_template,
       "PromptLayer prompt template prompt_template",
-      createPromptLayerResponseError,
+      providerResponseError,
     ),
     metadata: optionalRecord(record.metadata) ?? null,
     commitMessage: optionalStringOrNull(record.commit_message),
     llmKwargs: optionalRecord(record.llm_kwargs) ?? null,
-    externalIds: objectArray(
-      record.external_ids,
-      "PromptLayer prompt template external_ids",
-      createPromptLayerResponseError,
-    ),
+    externalIds: objectArray(record.external_ids, "PromptLayer prompt template external_ids", providerResponseError),
     raw: record,
   };
 }
@@ -359,7 +356,7 @@ function normalizePromptTemplate(record: Record<string, unknown>): Record<string
     promptTemplate: requiredRecord(
       record.prompt_template,
       "PromptLayer prompt template prompt_template",
-      createPromptLayerResponseError,
+      providerResponseError,
     ),
     metadata: optionalRecord(record.metadata) ?? null,
     commitMessage: optionalStringOrNull(record.commit_message),
@@ -385,7 +382,7 @@ function normalizeRequestLog(record: Record<string, unknown>): Record<string, un
     promptBlueprint: requiredRecord(
       record.prompt_blueprint,
       "PromptLayer request prompt_blueprint",
-      createPromptLayerResponseError,
+      providerResponseError,
     ),
     raw: record,
   };
@@ -393,9 +390,7 @@ function normalizeRequestLog(record: Record<string, unknown>): Record<string, un
 
 function normalizeTableList(payload: Record<string, unknown>): Record<string, unknown> {
   return {
-    tables: objectArray(payload.data, "PromptLayer table list data", createPromptLayerResponseError).map(
-      normalizeTable,
-    ),
+    tables: objectArray(payload.data, "PromptLayer table list data", providerResponseError).map(normalizeTable),
     nextCursor: optionalStringOrNull(payload.next_cursor),
     hasMore: requireResponseBoolean(payload.has_more, "PromptLayer table list has_more"),
     raw: payload,
@@ -417,9 +412,7 @@ function normalizeTable(record: Record<string, unknown>): Record<string, unknown
 
 function normalizeSheetList(payload: Record<string, unknown>): Record<string, unknown> {
   return {
-    sheets: objectArray(payload.data, "PromptLayer sheet list data", createPromptLayerResponseError).map(
-      normalizeSheet,
-    ),
+    sheets: objectArray(payload.data, "PromptLayer sheet list data", providerResponseError).map(normalizeSheet),
     nextCursor: optionalStringOrNull(payload.next_cursor),
     hasMore: requireResponseBoolean(payload.has_more, "PromptLayer sheet list has_more"),
     raw: payload,
@@ -443,7 +436,7 @@ function normalizeSheet(record: Record<string, unknown>): Record<string, unknown
 
 function normalizeRowList(payload: Record<string, unknown>): Record<string, unknown> {
   return {
-    rows: objectArray(payload.data, "PromptLayer row list data", createPromptLayerResponseError).map(normalizeRow),
+    rows: objectArray(payload.data, "PromptLayer row list data", providerResponseError).map(normalizeRow),
     columns: optionalObjectArray(
       payload.columns,
       "PromptLayer row list column",
@@ -461,7 +454,7 @@ function normalizeRowList(payload: Record<string, unknown>): Record<string, unkn
 function normalizeRow(record: Record<string, unknown>): Record<string, unknown> {
   return {
     rowIndex: requireResponseInteger(record.row_index, "PromptLayer row row_index"),
-    cells: normalizeCells(requiredRecord(record.cells, "PromptLayer row cells", createPromptLayerResponseError)),
+    cells: normalizeCells(requiredRecord(record.cells, "PromptLayer row cells", providerResponseError)),
     raw: record,
   };
 }
@@ -484,7 +477,7 @@ function normalizeCells(cells: Record<string, unknown>): Record<string, unknown>
   return Object.fromEntries(
     Object.entries(cells).map(([columnId, value]) => [
       columnId,
-      normalizeCell(requiredRecord(value, `PromptLayer cell ${columnId}`, createPromptLayerResponseError)),
+      normalizeCell(requiredRecord(value, `PromptLayer cell ${columnId}`, providerResponseError)),
     ]),
   );
 }
@@ -531,10 +524,6 @@ function normalizeRequestMetrics(record: Record<string, unknown>): Record<string
             () => new ProviderRequestError(502, "PromptLayer cell request_metrics.trace_ids are invalid"),
           ),
   });
-}
-
-function createPromptLayerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }
 
 function requireResponseString(value: unknown, fieldName: string): string {

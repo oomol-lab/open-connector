@@ -7,6 +7,7 @@ import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -404,11 +405,11 @@ function normalizeSuccess(payload: unknown): Record<string, unknown> {
 }
 
 function readRequiredString(input: Record<string, unknown>, key: string): string {
-  return requiredString(input[key], key, invalidInputError);
+  return requiredString(input[key], key, providerInputError);
 }
 
 function readRequiredObject(input: Record<string, unknown>, key: string): Record<string, unknown> {
-  return requiredRecord(input[key], `${key} object`, invalidInputError);
+  return requiredRecord(input[key], `${key} object`, providerInputError);
 }
 
 function readOptionalObject(value: unknown): Record<string, unknown> {
@@ -418,8 +419,4 @@ function readOptionalObject(value: unknown): Record<string, unknown> {
 function readOptionalString(value: unknown): string | undefined {
   const string = optionalString(value);
   return string && string.trim() ? string : undefined;
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

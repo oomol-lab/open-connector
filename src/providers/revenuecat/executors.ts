@@ -15,7 +15,9 @@ import {
 import { encodePathSegment } from "../../core/request.ts";
 import {
   defineApiKeyProviderExecutors,
+  providerInputError,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   readProviderTextBody,
 } from "../provider-runtime.ts";
@@ -76,7 +78,7 @@ export const revenueCatActionHandlers: ProviderActionHandlers<"revenuecat", Reve
         store_subscription_identifier: requiredString(
           input.storeSubscriptionIdentifier,
           "storeSubscriptionIdentifier",
-          inputError,
+          providerInputError,
         ),
         include_scheduled: optionalBoolean(input.includeScheduled),
       },
@@ -109,8 +111,8 @@ export const revenueCatActionHandlers: ProviderActionHandlers<"revenuecat", Reve
   },
   get_revenue_metric(input, context) {
     return getRevenueCatResource(`/v2/projects/${projectId(input)}/metrics/revenue`, context, "metric", {
-      start_date: requiredString(input.startDate, "startDate", inputError),
-      end_date: requiredString(input.endDate, "endDate", inputError),
+      start_date: requiredString(input.startDate, "startDate", providerInputError),
+      end_date: requiredString(input.endDate, "endDate", providerInputError),
       currency: optionalString(input.currency),
       revenue_type: optionalString(input.revenueType),
     });
@@ -266,26 +268,18 @@ function extractRevenueCatError(payload: unknown, status: number): string {
 }
 
 function projectId(input: Record<string, unknown>): string {
-  return encodePathSegment(requiredString(input.projectId, "projectId", inputError));
+  return encodePathSegment(requiredString(input.projectId, "projectId", providerInputError));
 }
 
 function customerId(input: Record<string, unknown>): string {
-  return encodePathSegment(requiredString(input.customerId, "customerId", inputError));
+  return encodePathSegment(requiredString(input.customerId, "customerId", providerInputError));
 }
 
 function subscriptionId(input: Record<string, unknown>): string {
-  return encodePathSegment(requiredString(input.subscriptionId, "subscriptionId", inputError));
+  return encodePathSegment(requiredString(input.subscriptionId, "subscriptionId", providerInputError));
 }
 
 function optionalStringArray(value: unknown): string[] | undefined {
   if (value === undefined) return undefined;
-  return requiredStringArray(value, "expand", inputError);
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
+  return requiredStringArray(value, "expand", providerInputError);
 }

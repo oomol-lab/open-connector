@@ -2,7 +2,13 @@ import type { ExecutionContext } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError, requireApiKeyCredential } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  providerResponseError,
+  providerUserAgent,
+  ProviderRequestError,
+  requireApiKeyCredential,
+} from "../provider-runtime.ts";
 type Environment = "sandbox" | "production";
 interface CheckoutContext {
   apiKey: string;
@@ -35,25 +41,25 @@ export const checkoutComActionHandlers: ProviderActionHandlers<
       await request("/customers", "POST", customerBody(input), context, "execute"),
       "Checkout.com create customer response",
     );
-    return { customer_id: requiredString(payload.id, "id", badProvider) };
+    return { customer_id: requiredString(payload.id, "id", providerResponseError) };
   },
   async get_customer(input, context) {
-    const identifier = requiredString(input.identifier, "identifier", badInput);
+    const identifier = requiredString(input.identifier, "identifier", providerInputError);
     const customer = requiredObject(
       await request(`/customers/${encodeURIComponent(identifier)}`, "GET", undefined, context, "execute"),
       "Checkout.com customer response",
     );
-    requiredString(customer.id, "id", badProvider);
-    requiredString(customer.email, "email", badProvider);
+    requiredString(customer.id, "id", providerResponseError);
+    requiredString(customer.email, "email", providerResponseError);
     return { customer };
   },
   async update_customer(input, context) {
-    const id = requiredString(input.customer_id, "customer_id", badInput);
+    const id = requiredString(input.customer_id, "customer_id", providerInputError);
     await request(`/customers/${encodeURIComponent(id)}`, "PATCH", customerBody(input), context, "execute");
     return { updated: true };
   },
   async delete_customer(input, context) {
-    const id = requiredString(input.customer_id, "customer_id", badInput);
+    const id = requiredString(input.customer_id, "customer_id", providerInputError);
     await request(`/customers/${encodeURIComponent(id)}`, "DELETE", undefined, context, "execute");
     return { deleted: true };
   },
@@ -146,7 +152,7 @@ function environment(value: unknown): Environment {
   throw new ProviderRequestError(400, "environment must be sandbox or production");
 }
 function prefix(value: unknown): string {
-  const result = requiredString(value, "prefix", badInput).toLowerCase();
+  const result = requiredString(value, "prefix", providerInputError).toLowerCase();
   if (result.length !== 8 || ![...result].every(isLowercaseLetterOrDigit))
     throw new ProviderRequestError(400, "prefix must contain exactly 8 lowercase letters or digits");
   return result;
@@ -161,10 +167,4 @@ function requiredObject(value: unknown, label: string): Record<string, unknown> 
   const record = optionalRecord(value);
   if (!record) throw new ProviderRequestError(502, `${label} was invalid`);
   return record;
-}
-function badInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-function badProvider(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

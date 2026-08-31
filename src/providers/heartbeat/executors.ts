@@ -8,6 +8,7 @@ import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
@@ -232,8 +233,4 @@ function requireResourceArray(payload: unknown, label: string): Array<Record<str
 
 function requireResourceObject(payload: unknown, label: string): Record<string, unknown> {
   return requiredRecord(payload, label, (message) => new ProviderRequestError(502, message));
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

@@ -15,7 +15,14 @@ import {
   requiredStringArray,
 } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
-import { createProviderTimeout, providerFetch, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  providerFetch,
+  providerInputError,
+  providerResponseError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 import { parsePubmedArticleSet } from "./runtime-xml.ts";
 
 type PubmedSort = "first_author" | "journal" | "publication_date" | "relevance";
@@ -247,11 +254,11 @@ function createAbortError(): Error {
 
 export const pubmedActionHandlers: ProviderActionHandlers<"pubmed", ProviderRuntimeHandler<PubmedActionContext>> = {
   async search_articles(input, context) {
-    const query = requiredString(input.query, "query", invalidInput);
+    const query = requiredString(input.query, "query", providerInputError);
     const offset = optionalInteger(input.offset) ?? 0;
     const limit = optionalInteger(input.limit) ?? 10;
     if (offset + limit > 10_000) {
-      throw invalidInput("offset plus limit must not exceed 10000 for PubMed searches");
+      throw providerInputError("offset plus limit must not exceed 10000 for PubMed searches");
     }
     const sort = readSort(input.sort);
     const publicationDateRange = readPublicationDateRange(input.publicationDateRange);
@@ -270,10 +277,10 @@ export const pubmedActionHandlers: ProviderActionHandlers<"pubmed", ProviderRunt
         context,
       ),
       "PubMed search response",
-      invalidResponse,
+      providerResponseError,
     );
-    const result = requiredRecord(searchPayload.esearchresult, "PubMed esearchresult", invalidResponse);
-    const pmids = requiredStringArray(result.idlist, "PubMed search idlist", invalidResponse);
+    const result = requiredRecord(searchPayload.esearchresult, "PubMed esearchresult", providerResponseError);
+    const pmids = requiredStringArray(result.idlist, "PubMed search idlist", providerResponseError);
 
     return {
       total: readIntegerString(result.count, "PubMed search count"),
@@ -316,7 +323,7 @@ export const pubmedActionHandlers: ProviderActionHandlers<"pubmed", ProviderRunt
         context,
       ),
       "PubMed related articles response",
-      invalidResponse,
+      providerResponseError,
     );
     const relatedPmids = readLinkedPmids(payload, "pubmed_pubmed", "PubMed related article links")
       .filter((pmid) => pmid !== sourcePmid)
@@ -327,19 +334,19 @@ export const pubmedActionHandlers: ProviderActionHandlers<"pubmed", ProviderRunt
     };
   },
   async match_citation(input, context) {
-    const citation = requiredString(input.citation, "citation", invalidInput);
+    const citation = requiredString(input.citation, "citation", providerInputError);
     const url = new URL(citationMatcherUrl);
     url.searchParams.set("method", "heuristic");
     url.searchParams.set("raw-text", citation);
     const payload = requiredRecord(
       await requestNcbiJson(url, "PubMed Citation Matcher", context),
       "PubMed Citation Matcher response",
-      invalidResponse,
+      providerResponseError,
     );
     if (payload.success !== true) {
       throw new ProviderRequestError(502, "PubMed Citation Matcher reported an unsuccessful response");
     }
-    const result = requiredRecord(payload.result, "PubMed Citation Matcher result", invalidResponse);
+    const result = requiredRecord(payload.result, "PubMed Citation Matcher result", providerResponseError);
     const pmids = readCitationPmids(result.uids);
     return {
       matched: pmids.length > 0,
@@ -363,9 +370,9 @@ export const pubmedActionHandlers: ProviderActionHandlers<"pubmed", ProviderRunt
     const payload = requiredRecord(
       await requestNcbiJson(url, "PMC ID Converter", context),
       "PMC ID Converter response",
-      invalidResponse,
+      providerResponseError,
     );
-    const records = objectArray(payload.records, "PMC ID Converter records", invalidResponse);
+    const records = objectArray(payload.records, "PMC ID Converter records", providerResponseError);
     return {
       records: records.map((record, index) => ({
         requestedId: readIdentifier(record["requested-id"], `PMC ID Converter records[${index}].requested-id`),
@@ -392,10 +399,10 @@ export async function validatePubmedCredential(
   const payload = requiredRecord(
     await requestPubmedJson("einfo.fcgi", {}, context),
     "PubMed credential validation response",
-    invalidResponse,
+    providerResponseError,
   );
-  const result = requiredRecord(payload.einforesult, "PubMed einforesult", invalidResponse);
-  const database = optionalObjectArray(result.dbinfo, "PubMed EInfo database", invalidResponse).find(
+  const result = requiredRecord(payload.einforesult, "PubMed einforesult", providerResponseError);
+  const database = optionalObjectArray(result.dbinfo, "PubMed EInfo database", providerResponseError).find(
     (entry) => optionalString(entry.dbname) === "pubmed",
   );
   if (!database) {
@@ -429,14 +436,6 @@ function requestGateFor(apiKey: string | undefined): Pick<PubmedRequestGate, "wa
   return apiKeyRequestGates.forKey(apiKey);
 }
 
-function invalidInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function invalidResponse(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
-}
-
 function readSort(value: unknown): PubmedSort | undefined {
   const sort = optionalString(value);
   if (!sort) {
@@ -445,20 +444,20 @@ function readSort(value: unknown): PubmedSort | undefined {
   if (sort in pubmedSortValues) {
     return sort as PubmedSort;
   }
-  throw invalidInput("sort is not supported by PubMed");
+  throw providerInputError("sort is not supported by PubMed");
 }
 
 function readPmid(value: unknown, fieldName: string): string {
-  const pmid = requiredString(value, fieldName, invalidInput);
+  const pmid = requiredString(value, fieldName, providerInputError);
   if (!/^\d+$/u.test(pmid)) {
-    throw invalidInput(`${fieldName} must contain only digits`);
+    throw providerInputError(`${fieldName} must contain only digits`);
   }
   return pmid;
 }
 
 function readPmidArray(value: unknown): string[] {
   if (!Array.isArray(value) || value.length === 0 || value.length > 50) {
-    throw invalidInput("pmids must contain between 1 and 50 PubMed IDs");
+    throw providerInputError("pmids must contain between 1 and 50 PubMed IDs");
   }
   return value.map((pmid, index) => readPmid(pmid, `pmids[${index}]`));
 }
@@ -466,24 +465,24 @@ function readPmidArray(value: unknown): string[] {
 function readLimit(value: unknown): number {
   const limit = optionalInteger(value) ?? 10;
   if (limit < 1 || limit > 50) {
-    throw invalidInput("limit must be between 1 and 50");
+    throw providerInputError("limit must be between 1 and 50");
   }
   return limit;
 }
 
 function readArticleIds(value: unknown): string[] {
   if (!Array.isArray(value) || value.length === 0 || value.length > 200) {
-    throw invalidInput("ids must contain between 1 and 200 article identifiers");
+    throw providerInputError("ids must contain between 1 and 200 article identifiers");
   }
-  return value.map((id, index) => requiredString(id, `ids[${index}]`, invalidInput));
+  return value.map((id, index) => requiredString(id, `ids[${index}]`, providerInputError));
 }
 
 function readIdType(value: unknown): PubmedIdType {
-  const idType = requiredString(value, "idType", invalidInput);
+  const idType = requiredString(value, "idType", providerInputError);
   if (idType === "doi" || idType === "mid" || idType === "pmcid" || idType === "pmid") {
     return idType;
   }
-  throw invalidInput("idType must be doi, mid, pmcid, or pmid");
+  throw providerInputError("idType must be doi, mid, pmcid, or pmid");
 }
 
 interface PublicationDateRange {
@@ -496,10 +495,10 @@ function readPublicationDateRange(value: unknown): PublicationDateRange | undefi
   if (!range) {
     return undefined;
   }
-  const from = requiredString(range.from, "publicationDateRange.from", invalidInput);
-  const to = requiredString(range.to, "publicationDateRange.to", invalidInput);
+  const from = requiredString(range.from, "publicationDateRange.from", providerInputError);
+  const to = requiredString(range.to, "publicationDateRange.to", providerInputError);
   if (from > to) {
-    throw invalidInput("publicationDateRange.from must not be after publicationDateRange.to");
+    throw providerInputError("publicationDateRange.from must not be after publicationDateRange.to");
   }
   return { from, to };
 }
@@ -540,7 +539,7 @@ async function fetchLinkedArticles(
       context,
     ),
     `PubMed ${linkName} response`,
-    invalidResponse,
+    providerResponseError,
   );
   const pmids = readLinkedPmids(payload, linkName, `PubMed ${linkName} links`).slice(0, limit);
   return {
@@ -742,20 +741,20 @@ function extractPubmedError(text: string): string | undefined {
 }
 
 function readLinkedPmids(payload: Record<string, unknown>, linkName: string, fieldName: string): string[] {
-  const linksets = optionalObjectArray(payload.linksets, `${fieldName} linkset`, invalidResponse);
+  const linksets = optionalObjectArray(payload.linksets, `${fieldName} linkset`, providerResponseError);
   for (const linkset of linksets) {
-    const related = optionalObjectArray(linkset.linksetdbs, `${fieldName} database`, invalidResponse).find(
+    const related = optionalObjectArray(linkset.linksetdbs, `${fieldName} database`, providerResponseError).find(
       (linksetDatabase) => optionalString(linksetDatabase.linkname) === linkName,
     );
     if (related) {
-      return requiredStringArray(related.links, fieldName, invalidResponse);
+      return requiredStringArray(related.links, fieldName, providerResponseError);
     }
   }
   return [];
 }
 
 function readCitationPmids(value: unknown): string[] {
-  return objectArray(value, "PubMed Citation Matcher UIDs", invalidResponse).map((record, index) =>
+  return objectArray(value, "PubMed Citation Matcher UIDs", providerResponseError).map((record, index) =>
     readPmid(record.pubmed, `PubMed Citation Matcher UIDs[${index}].pubmed`),
   );
 }

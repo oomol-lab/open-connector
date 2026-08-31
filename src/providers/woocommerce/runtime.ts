@@ -15,7 +15,13 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, readBoundedResponseBytes } from "../../core/request.ts";
-import { providerFetch, providerUserAgent, ProviderRequestError, readTransitFileInput } from "../provider-runtime.ts";
+import {
+  providerFetch,
+  providerInputError,
+  providerUserAgent,
+  ProviderRequestError,
+  readTransitFileInput,
+} from "../provider-runtime.ts";
 
 const maxMediaUploadSourceBytes = 20 * 1024 * 1024;
 
@@ -1056,10 +1062,6 @@ function inferMimeType(fileName: string): string {
 
 function escapeHeaderFileName(fileName: string): string {
   return fileName.replace(/["\\\r\n]/g, "_");
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {

@@ -6,7 +6,7 @@ import { ProtocolError, SdkError, SdkErrorCode, SdkHttpError, UnauthorizedError 
 import { createHash } from "node:crypto";
 import { optionalRecord, requiredString } from "../../core/cast.ts";
 import { withMcpClient } from "../mcp-client.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const mcdonaldsCnMcpEndpoint = "https://mcp.mcd.cn";
 const requestTimeoutMs = 60_000;
@@ -184,10 +184,6 @@ function mapMcdonaldsCnMcpError(error: unknown): ProviderRequestError {
 
 function hashMcdonaldsCnMcpToken(token: string): string {
   return createHash("sha256").update(token).digest("hex").slice(0, 16);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function isAbortError(error: unknown): boolean {

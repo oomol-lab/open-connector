@@ -11,7 +11,9 @@ import { compactObject, optionalRecord, optionalString, requiredRecord, required
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
 } from "../provider-runtime.ts";
 
@@ -105,7 +107,7 @@ async function requestZenserpSearch(
     throw createZenserpError(response.status, payload, phase);
   }
 
-  return requiredRecord(payload, "Zenserp response", providerOutputError);
+  return requiredRecord(payload, "Zenserp response", providerResponseError);
 }
 
 function buildZenserpSearchQuery(
@@ -218,14 +220,6 @@ function readOptionalInteger(
   }
 
   return value;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerOutputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

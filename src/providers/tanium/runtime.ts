@@ -8,6 +8,7 @@ import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/r
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -42,7 +43,7 @@ export const taniumActionHandlers: ProviderActionHandlers<"tanium", TaniumAction
       gatewayUrl: context.gatewayUrl,
       apiKey: context.apiKey,
       operationName: optionalString(input.operationName),
-      query: requiredString(input.query, "query", requestInputError),
+      query: requiredString(input.query, "query", providerInputError),
       variables: optionalRecord(input.variables),
       phase: "execute",
       fetcher: context.fetcher,
@@ -58,7 +59,7 @@ export async function validateTaniumCredential(
   fetcher: ProviderFetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const apiKey = requiredString(input.apiKey, "apiKey", requestInputError);
+  const apiKey = requiredString(input.apiKey, "apiKey", providerInputError);
   const gatewayUrl = normalizeTaniumGatewayUrl(input.gatewayUrl);
   const payload = await requestTaniumGraphql({
     gatewayUrl,
@@ -124,7 +125,7 @@ export function normalizeTaniumGatewayUrl(
 
   return assertPublicHttpUrl(url.toString(), {
     fieldName: "gatewayUrl",
-    createError: requestInputError,
+    createError: providerInputError,
     allowPrivateNetwork,
   }).toString();
 }
@@ -313,8 +314,4 @@ function expectObject(value: unknown, label: string): Record<string, unknown> {
 
 function buildTokenFingerprint(apiKey: string): string {
   return createHash("sha256").update(apiKey).digest("hex").slice(0, 12);
-}
-
-function requestInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

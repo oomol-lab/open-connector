@@ -14,6 +14,7 @@ import { queryFlag } from "../../core/request.ts";
 import {
   defineApiKeyProviderExecutors,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   setSearchParams,
 } from "../provider-runtime.ts";
@@ -54,7 +55,7 @@ export const credentialValidators: CredentialValidators = {
         "validate",
       ),
       "OpenCage payload",
-      providerError,
+      providerResponseError,
     );
     const rate = optionalRecord(payload.rate);
 
@@ -202,10 +203,6 @@ function readRequiredString(value: unknown, fieldName: string): string {
 function integerParam(value: unknown): string | undefined {
   const parsed = optionalInteger(value);
   return parsed === undefined ? undefined : String(parsed);
-}
-
-function providerError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }
 
 function isAbortError(error: unknown): boolean {

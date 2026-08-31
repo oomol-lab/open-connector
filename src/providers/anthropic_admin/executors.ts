@@ -6,6 +6,7 @@ import { optionalRecord, optionalString, requiredString } from "../../core/cast.
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -175,8 +176,4 @@ async function readAnthropicAdminError(response: Response) {
       message: raw || `anthropic_admin request failed with ${response.status}`,
     };
   }
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

@@ -7,6 +7,7 @@ import { compactObject, optionalRecord, optionalString, requiredRecord, required
 import { encodePathSegment } from "../../core/request.ts";
 import {
   defineProviderExecutors,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -205,7 +206,7 @@ export async function validateElorusCredential(
   fetcher: ProviderFetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const apiKey = requiredString(input.apiKey, "apiKey", badInput);
+  const apiKey = requiredString(input.apiKey, "apiKey", providerInputError);
   const organizationId = requireOrganizationId(input.values.organizationId);
 
   await requestElorusJson({
@@ -412,22 +413,18 @@ function normalizeQueryValue(value: unknown, key: string): string {
 }
 
 function requireInputId(input: Record<string, unknown>, fieldName: string): string {
-  return requiredString(input[fieldName], fieldName, badInput);
+  return requiredString(input[fieldName], fieldName, providerInputError);
 }
 
 function requireBodyObject(value: unknown, fieldName: string): Record<string, unknown> {
-  return requiredRecord(value, fieldName, badInput);
+  return requiredRecord(value, fieldName, providerInputError);
 }
 
 function requireOrganizationId(value: unknown): string {
-  return requiredString(value, "organizationId", badInput);
+  return requiredString(value, "organizationId", providerInputError);
 }
 
 function buildElorusProviderAccountId(apiKey: string, organizationId: string): string {
   const digest = createHash("sha256").update(`${apiKey}\n${organizationId}`).digest("hex").slice(0, 16);
   return `elorus:api_key:${digest}`;
-}
-
-function badInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

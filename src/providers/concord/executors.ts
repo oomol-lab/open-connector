@@ -16,6 +16,8 @@ import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
   isAbortLikeError,
+  providerInputError,
+  providerResponseError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -39,13 +41,13 @@ export const concordActionHandlers: ProviderActionHandlers<"concord", ConcordAct
     return { organizations: payload.organizations };
   },
   async get_organization(input, context) {
-    const organizationId = positiveInteger(input.organizationId, "organizationId", inputError);
+    const organizationId = positiveInteger(input.organizationId, "organizationId", providerInputError);
     return {
       organization: await requestConcordObject(`/organizations/${organizationId}`, context, "execute", "organization"),
     };
   },
   async list_folders(input, context) {
-    const organizationId = positiveInteger(input.organizationId, "organizationId", inputError);
+    const organizationId = positiveInteger(input.organizationId, "organizationId", providerInputError);
     return {
       folder: await requestConcordObject(
         `/user/me/organizations/${organizationId}/folders`,
@@ -56,9 +58,10 @@ export const concordActionHandlers: ProviderActionHandlers<"concord", ConcordAct
     };
   },
   async list_agreements(input, context) {
-    const organizationId = positiveInteger(input.organizationId, "organizationId", inputError);
+    const organizationId = positiveInteger(input.organizationId, "organizationId", providerInputError);
     const query = new URLSearchParams();
-    for (const status of requiredStringArray(input.statuses, "statuses", inputError)) query.append("statuses", status);
+    for (const status of requiredStringArray(input.statuses, "statuses", providerInputError))
+      query.append("statuses", status);
     appendOptional(query, "page", optionalInteger(input.page));
     appendOptional(query, "numberOfItemsByPage", optionalInteger(input.numberOfItemsByPage));
     appendOptional(query, "search", optionalString(input.search));
@@ -67,7 +70,8 @@ export const concordActionHandlers: ProviderActionHandlers<"concord", ConcordAct
     appendOptional(query, "sortByColumn", optionalString(input.sortByColumn));
     appendOptional(query, "sortByAsc", optionalBoolean(input.sortByAsc));
     if (Array.isArray(input.tagIds)) {
-      for (const tagId of input.tagIds) query.append("tagIds", String(positiveInteger(tagId, "tagIds", inputError)));
+      for (const tagId of input.tagIds)
+        query.append("tagIds", String(positiveInteger(tagId, "tagIds", providerInputError)));
     }
     return requestConcordObject(
       `/user/me/organizations/${organizationId}/agreements?${query}`,
@@ -120,7 +124,7 @@ async function requestConcordObject(
   phase: ConcordPhase,
   label: string,
 ): Promise<Record<string, unknown>> {
-  return requiredRecord(await requestConcordJson(path, context, phase), `Concord ${label}`, outputError);
+  return requiredRecord(await requestConcordJson(path, context, phase), `Concord ${label}`, providerResponseError);
 }
 
 async function requestConcordJson(
@@ -182,12 +186,4 @@ function createConcordError(status: number, payload: unknown, phase: ConcordPhas
 
 function appendOptional(query: URLSearchParams, name: string, value: string | number | boolean | undefined): void {
   if (value !== undefined) query.set(name, String(value));
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function outputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

@@ -10,7 +10,12 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerInputError,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "apify";
 const apifyApiBaseUrl = "https://api.apify.com";
@@ -88,7 +93,7 @@ async function getCurrentUser(context: ApiKeyProviderContext): Promise<unknown> 
 }
 
 async function getActor(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const actorId = requiredString(input.actorId, "actorId", invalidInputError);
+  const actorId = requiredString(input.actorId, "actorId", providerInputError);
   const payload = await requestApifyJson({
     apiKey: context.apiKey,
     path: `/v2/acts/${encodeURIComponent(actorId)}`,
@@ -104,7 +109,7 @@ async function getActor(input: Record<string, unknown>, context: ApiKeyProviderC
 }
 
 async function runActor(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const actorId = requiredString(input.actorId, "actorId", invalidInputError);
+  const actorId = requiredString(input.actorId, "actorId", providerInputError);
   const body = readOptionalInputObject(input.input);
   const payload = await requestApifyJson({
     apiKey: context.apiKey,
@@ -128,7 +133,7 @@ async function runActor(input: Record<string, unknown>, context: ApiKeyProviderC
 }
 
 async function getRun(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const runId = requiredString(input.runId, "runId", invalidInputError);
+  const runId = requiredString(input.runId, "runId", providerInputError);
   const payload = await requestApifyJson({
     apiKey: context.apiKey,
     path: `/v2/actor-runs/${encodeURIComponent(runId)}`,
@@ -147,7 +152,7 @@ async function getRun(input: Record<string, unknown>, context: ApiKeyProviderCon
 }
 
 async function getDatasetItems(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const datasetId = requiredString(input.datasetId, "datasetId", invalidInputError);
+  const datasetId = requiredString(input.datasetId, "datasetId", providerInputError);
   const payload = await requestApifyJson({
     apiKey: context.apiKey,
     path: `/v2/datasets/${encodeURIComponent(datasetId)}/items`,
@@ -344,8 +349,4 @@ function isJsonCompatibleObject(value: object, stack: WeakSet<object>): boolean 
     return false;
   }
   return Object.values(value).every((item) => isJsonCompatibleValueInner(item, stack));
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

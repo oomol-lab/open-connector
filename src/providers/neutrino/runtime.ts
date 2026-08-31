@@ -4,7 +4,7 @@ import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.
 import type { NeutrinoActionName } from "./actions.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { isAbortLikeError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { isAbortLikeError, providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const neutrinoApiBaseUrl = "https://neutrinoapi.net";
 
@@ -35,32 +35,32 @@ export const neutrinoActionHandlers: ProviderActionHandlers<
 > = {
   validate_email(input: Record<string, unknown>, context: NeutrinoActionContext): Promise<unknown> {
     return requestNeutrinoJsonForAction(context, "validate_email", [
-      ["email", requiredString(input.email, "email", invalidInput)],
+      ["email", requiredString(input.email, "email", providerInputError)],
       ["fix-typos", optionalBoolean(input["fix-typos"])],
     ]);
   },
   validate_phone(input: Record<string, unknown>, context: NeutrinoActionContext): Promise<unknown> {
     return requestNeutrinoJsonForAction(context, "validate_phone", [
-      ["number", requiredString(input.number, "number", invalidInput)],
+      ["number", requiredString(input.number, "number", providerInputError)],
       ["country-code", optionalString(input["country-code"])?.toUpperCase()],
       ["ip", optionalString(input.ip)],
     ]);
   },
   get_ip_info(input: Record<string, unknown>, context: NeutrinoActionContext): Promise<unknown> {
     return requestNeutrinoJsonForAction(context, "get_ip_info", [
-      ["ip", requiredString(input.ip, "ip", invalidInput)],
+      ["ip", requiredString(input.ip, "ip", providerInputError)],
       ["reverse-lookup", optionalBoolean(input["reverse-lookup"])],
     ]);
   },
   lookup_domain(input: Record<string, unknown>, context: NeutrinoActionContext): Promise<unknown> {
     return requestNeutrinoJsonForAction(context, "lookup_domain", [
-      ["host", requiredString(input.host, "host", invalidInput)],
+      ["host", requiredString(input.host, "host", providerInputError)],
       ["live", optionalBoolean(input.live)],
     ]);
   },
   check_ip_blocklist(input: Record<string, unknown>, context: NeutrinoActionContext): Promise<unknown> {
     return requestNeutrinoJsonForAction(context, "check_ip_blocklist", [
-      ["ip", requiredString(input.ip, "ip", invalidInput)],
+      ["ip", requiredString(input.ip, "ip", providerInputError)],
       ["vpn-lookup", optionalBoolean(input["vpn-lookup"])],
     ]);
   },
@@ -74,8 +74,8 @@ export async function validateNeutrinoCredential(
   fetcher: ProviderFetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const apiKey = requiredString(input.apiKey, "apiKey", invalidInput);
-  const userId = requiredString(input.userId, "userId", invalidInput);
+  const apiKey = requiredString(input.apiKey, "apiKey", providerInputError);
+  const userId = requiredString(input.userId, "userId", providerInputError);
   const payload = await requestNeutrinoJson({
     path: neutrinoActionPathByName.get_ip_info,
     query: [["ip", validationIp]],
@@ -233,8 +233,4 @@ function extractNeutrinoApiErrorCode(payload: unknown): number | undefined {
 
 function isNeutrinoRateLimitError(apiErrorCode: number | undefined): boolean {
   return apiErrorCode === 2 || apiErrorCode === 6 || apiErrorCode === 16 || apiErrorCode === 31;
-}
-
-function invalidInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

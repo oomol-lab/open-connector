@@ -4,7 +4,7 @@ import type { BearerProviderContext } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, objectArray, optionalBoolean, optionalInteger, optionalString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const ticktickApiBaseUrl = "https://api.ticktick.com";
 const ticktickProviderScopes = ["ticktick.read", "ticktick.write"] as const;
@@ -688,10 +688,6 @@ function requireObjectArrayPayload(value: unknown, fieldName: string): TicktickP
 
 function optionalObjectArrayPayload(value: unknown): TicktickPayload[] {
   return value == null ? [] : requireObjectArrayPayload(value, "ticktick nested array response");
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function hashAccessToken(accessToken: string): string {

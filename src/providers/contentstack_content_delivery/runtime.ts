@@ -5,6 +5,7 @@ import { compactObject, optionalInteger, optionalRecord, optionalString, require
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -437,8 +438,4 @@ function readStringArray(value: unknown): string[] | undefined {
   }
   const values = value.map((item) => optionalString(item)).filter((item): item is string => Boolean(item));
   return values.length > 0 ? values : undefined;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

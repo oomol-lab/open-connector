@@ -9,7 +9,7 @@ import { ProtocolError } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
 import { optionalRecord, requiredString } from "../../core/cast.ts";
 import { withMcpClient } from "../mcp-client.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const sifMcpOrigin: string = "https://mcp.sif.com";
 export const sifMcpEndpoint: string = `${sifMcpOrigin}/mcp`;
@@ -22,7 +22,7 @@ export const sifActionHandlers: ProviderActionHandlers<"sif", ProviderRuntimeHan
     return { tools: await listBusinessTools(context) };
   },
   async call_tool(input, context) {
-    const toolName = requiredString(input.toolName, "toolName", badRequest);
+    const toolName = requiredString(input.toolName, "toolName", providerInputError);
     const args = input.arguments === undefined ? {} : optionalRecord(input.arguments);
     if (!args) throw new ProviderRequestError(400, "arguments must be a JSON object");
     return { result: normalizeResult(await callTool(context, toolName, args)) };
@@ -125,8 +125,4 @@ function normalizeResult(result: ToolResult): unknown {
   } catch {
     return text.text;
   }
-}
-
-function badRequest(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

@@ -13,6 +13,7 @@ import {
 import { compactJson, encodePathSegment } from "../../core/request.ts";
 import {
   defineProviderExecutors,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
@@ -656,8 +657,4 @@ function readNullableBoolean(value: unknown): boolean | null {
 
 function readNullableInteger(value: unknown): number | null {
   return typeof value === "number" && Number.isInteger(value) ? value : null;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

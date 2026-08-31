@@ -13,6 +13,8 @@ import {
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
+  providerResponseError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -43,7 +45,7 @@ export const customerioActionHandlers: ProviderActionHandlers<"customerio", Cust
       context,
       method: "PUT",
       path: `/api/v1/customers/${encodeURIComponent(requireNonEmptyString(input.identifier, "identifier"))}`,
-      body: requiredRecord(input.attributes, "attributes", invalidInputError),
+      body: requiredRecord(input.attributes, "attributes", providerInputError),
       phase: "execute",
     });
   },
@@ -165,8 +167,8 @@ export function resolveCustomerioCredentialContext(
   metadata: Record<string, unknown> = {},
 ): CustomerioCredentialContext {
   return {
-    siteId: requiredString(values.siteId, "siteId", invalidInputError),
-    apiKey: requiredString(values.apiKey, "apiKey", invalidInputError),
+    siteId: requiredString(values.siteId, "siteId", providerInputError),
+    apiKey: requiredString(values.apiKey, "apiKey", providerInputError),
     apiBaseUrl: normalizeApiBaseUrl(optionalString(metadata.apiBaseUrl), optionalString(metadata.region)),
     fetcher,
     signal,
@@ -292,22 +294,14 @@ function buildCustomerioAuthorization(siteId: string, apiKey: string): string {
 }
 
 function requireNonEmptyString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, invalidInputError);
+  return requiredString(value, fieldName, providerInputError);
 }
 
 function readPersonReference(value: unknown, fieldName: string): Record<string, unknown> {
-  const record = requiredRecord(value, fieldName, invalidInputError);
+  const record = requiredRecord(value, fieldName, providerInputError);
   const presentCount = ["id", "email", "cio_id"].filter((key) => optionalString(record[key]) !== undefined).length;
   if (presentCount !== 1) {
     throw new ProviderRequestError(400, "Exactly one of id, email, or cio_id is required.");
   }
   return record;
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

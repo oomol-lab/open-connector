@@ -13,7 +13,7 @@ import {
   requiredString,
   stringArray,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const mapleBillingApiBaseUrl = "https://api.getmeasure.com/api/v1";
 const mapleBillingCredentialHelpUrl = "https://docs.getmeasure.com/pages/guides/quickstart-with-api";
@@ -441,7 +441,7 @@ function buildCheckoutSessionBody(input: Record<string, unknown>): Record<string
     change_proration_type: optionalString(input.changeProrationType),
     change_reset_billing_anchor: optionalBoolean(input.changeResetBillingAnchor),
     change_timing: optionalString(input.changeTiming),
-    config_items: objectArray(input.configItems, "configItems", providerError),
+    config_items: objectArray(input.configItems, "configItems", providerInputError),
     customer_id: requiredInputString(input.customerId, "customerId"),
     discounts: optionalProviderObjectArray(input.discounts, "discounts"),
     metadata: optionalRecord(input.metadata),
@@ -552,18 +552,16 @@ function optionalStringArray(value: unknown): string[] | undefined {
   if (value === undefined) {
     return undefined;
   }
-  return stringArray(value, "array", providerError).map((item, index) => requiredInputString(item, `array[${index}]`));
+  return stringArray(value, "array", providerInputError).map((item, index) =>
+    requiredInputString(item, `array[${index}]`),
+  );
 }
 
 function optionalProviderObjectArray(value: unknown, fieldName: string): Array<Record<string, unknown>> | undefined {
   if (value === undefined) {
     return undefined;
   }
-  return optionalObjectArray(value, fieldName, providerError);
-}
-
-function providerError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
+  return optionalObjectArray(value, fieldName, providerInputError);
 }
 
 function pathWithoutLeadingSlash(path: string): string {

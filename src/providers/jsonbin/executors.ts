@@ -5,6 +5,7 @@ import { optionalRecord, optionalString, requiredRecord, requiredString } from "
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -80,7 +81,7 @@ export const credentialValidators: CredentialValidators = {
 };
 
 async function createBin(input: Record<string, unknown>, context: JsonbinActionContext): Promise<unknown> {
-  const record = requiredRecord(input.record, "record", jsonbinInputError);
+  const record = requiredRecord(input.record, "record", providerInputError);
   const response = await jsonbinFetch(buildJsonbinUrl("/b"), {
     method: "POST",
     headers: jsonbinJsonHeaders(context.apiKey, {
@@ -122,7 +123,7 @@ async function readBin(input: Record<string, unknown>, context: JsonbinActionCon
 }
 
 async function updateBin(input: Record<string, unknown>, context: JsonbinActionContext): Promise<unknown> {
-  const record = requiredRecord(input.record, "record", jsonbinInputError);
+  const record = requiredRecord(input.record, "record", providerInputError);
   const response = await jsonbinFetch(buildJsonbinUrl(`/b/${readBinIdPathSegment(input.binId)}`), {
     method: "PUT",
     headers: jsonbinJsonHeaders(context.apiKey, {
@@ -287,9 +288,5 @@ function readPayloadObject(payload: unknown): Record<string, unknown> {
 }
 
 function readBinIdPathSegment(value: unknown): string {
-  return encodeURIComponent(requiredString(value, "binId", jsonbinInputError));
-}
-
-function jsonbinInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
+  return encodeURIComponent(requiredString(value, "binId", providerInputError));
 }

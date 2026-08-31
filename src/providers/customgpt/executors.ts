@@ -11,7 +11,12 @@ import {
   positiveInteger,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerInputError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "customgpt";
 const customgptApiBaseUrl = "https://app.customgpt.ai";
@@ -431,8 +436,4 @@ function readNullableInteger(value: unknown): number | null {
 
 function readNullableString(value: unknown): string | null {
   return optionalString(value) ?? null;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

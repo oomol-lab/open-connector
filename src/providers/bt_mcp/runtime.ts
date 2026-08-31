@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
 import { optionalRecord, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { withMcpClient } from "../mcp-client.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const requestTimeoutMs = 5 * 60_000;
 
@@ -24,7 +24,7 @@ export function createBtMcpContext(
 ): BtMcpContext {
   return {
     endpoint: normalizeBtMcpEndpoint(values.serverUrl),
-    authorizationToken: requiredString(values.authorizationToken, "authorizationToken", credentialError),
+    authorizationToken: requiredString(values.authorizationToken, "authorizationToken", providerInputError),
     fetcher,
     signal,
   };
@@ -38,7 +38,7 @@ export async function validateBtMcpCredential(
   const context = createBtMcpContext(values, fetcher, signal);
   const tools = await listBtMcpTools(context);
   if (tools.length === 0) {
-    throw credentialError("BT Panel MCP did not expose any tools for this connection");
+    throw providerInputError("BT Panel MCP did not expose any tools for this connection");
   }
   const endpointHash = createHash("sha256").update(context.endpoint.origin).digest("hex").slice(0, 16);
   return {
@@ -70,7 +70,7 @@ export async function callBtMcpTool(
   context: BtMcpContext,
   input: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
-  const toolName = requiredString(input.toolName, "toolName", credentialError);
+  const toolName = requiredString(input.toolName, "toolName", providerInputError);
   const args = optionalRecord(input.arguments) ?? {};
   return withBtMcpClient(context, async (client) => {
     const result = await client.callTool(
@@ -86,16 +86,16 @@ export async function callBtMcpTool(
 
 export function normalizeBtMcpEndpoint(value: unknown): URL {
   const allowPrivateNetwork = isPrivateNetworkAccessAllowed();
-  const url = assertPublicHttpUrl(requiredString(value, "serverUrl", credentialError), {
+  const url = assertPublicHttpUrl(requiredString(value, "serverUrl", providerInputError), {
     fieldName: "serverUrl",
-    createError: credentialError,
+    createError: providerInputError,
     allowPrivateNetwork,
   });
-  if (url.username || url.password) throw credentialError("serverUrl must not include credentials");
+  if (url.username || url.password) throw providerInputError("serverUrl must not include credentials");
   if (url.protocol === "http:" && !allowPrivateNetwork) {
-    throw credentialError("http serverUrl values require private-network access to be enabled");
+    throw providerInputError("http serverUrl values require private-network access to be enabled");
   }
-  if (!url.pathname.endsWith("/mcp")) throw credentialError("serverUrl path must end with /mcp");
+  if (!url.pathname.endsWith("/mcp")) throw providerInputError("serverUrl path must end with /mcp");
   url.hash = "";
   return url;
 }
@@ -138,8 +138,4 @@ function mapBtMcpError(error: unknown): ProviderRequestError {
     error instanceof Error ? `BT Panel MCP request failed: ${error.message}` : "BT Panel MCP request failed",
     error,
   );
-}
-
-function credentialError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

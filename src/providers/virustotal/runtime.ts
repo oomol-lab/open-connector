@@ -12,7 +12,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const virustotalApiBaseUrl = "https://www.virustotal.com/api/v3";
 export const virustotalLargeFileThresholdBytes: number = 32 * 1024 * 1024;
@@ -32,7 +32,7 @@ export const virustotalActionHandlers: ProviderActionHandlers<"virustotal", Viru
       "/search",
       {
         query: {
-          query: requiredString(input.query, "query", badInput),
+          query: requiredString(input.query, "query", providerInputError),
           limit: optionalPositiveInteger(input.limit, "limit"),
           cursor: optionalString(input.cursor),
         },
@@ -46,7 +46,7 @@ export const virustotalActionHandlers: ProviderActionHandlers<"virustotal", Viru
   },
   get_analysis(input, context) {
     return virustotalJsonRequest(
-      `/analyses/${encodeURIComponent(requiredString(input.analysisId, "analysisId", badInput))}`,
+      `/analyses/${encodeURIComponent(requiredString(input.analysisId, "analysisId", providerInputError))}`,
       {},
       context,
       "execute",
@@ -54,14 +54,14 @@ export const virustotalActionHandlers: ProviderActionHandlers<"virustotal", Viru
   },
   get_file_report(input, context) {
     return virustotalJsonRequest(
-      `/files/${encodeURIComponent(requiredString(input.fileId, "fileId", badInput))}`,
+      `/files/${encodeURIComponent(requiredString(input.fileId, "fileId", providerInputError))}`,
       {},
       context,
       "execute",
     );
   },
   async upload_file(input, context) {
-    const bytes = base64Bytes(input.contentBase64, "contentBase64", badInput);
+    const bytes = base64Bytes(input.contentBase64, "contentBase64", providerInputError);
     const fileName = optionalString(input.fileName) ?? "sample.bin";
     const password = optionalString(input.password);
     const formData = new FormData();
@@ -77,7 +77,7 @@ export const virustotalActionHandlers: ProviderActionHandlers<"virustotal", Viru
   },
   rescan_file(input, context) {
     return virustotalJsonRequest(
-      `/files/${encodeURIComponent(requiredString(input.fileId, "fileId", badInput))}/analyse`,
+      `/files/${encodeURIComponent(requiredString(input.fileId, "fileId", providerInputError))}/analyse`,
       { method: "POST" },
       context,
       "execute",
@@ -85,7 +85,7 @@ export const virustotalActionHandlers: ProviderActionHandlers<"virustotal", Viru
   },
   scan_url(input, context) {
     const body = new URLSearchParams();
-    body.set("url", requiredString(input.url, "url", badInput));
+    body.set("url", requiredString(input.url, "url", providerInputError));
     return virustotalJsonRequest("/urls", { method: "POST", body }, context, "execute");
   },
   get_url_report(input, context) {
@@ -93,7 +93,7 @@ export const virustotalActionHandlers: ProviderActionHandlers<"virustotal", Viru
   },
   get_domain_report(input, context) {
     return virustotalJsonRequest(
-      `/domains/${encodeURIComponent(requiredString(input.domain, "domain", badInput))}`,
+      `/domains/${encodeURIComponent(requiredString(input.domain, "domain", providerInputError))}`,
       {},
       context,
       "execute",
@@ -103,8 +103,8 @@ export const virustotalActionHandlers: ProviderActionHandlers<"virustotal", Viru
     return virustotalJsonRequest(
       buildRelationshipPath({
         collection: "domains",
-        id: requiredString(input.domain, "domain", badInput),
-        relationship: requiredString(input.relationship, "relationship", badInput),
+        id: requiredString(input.domain, "domain", providerInputError),
+        relationship: requiredString(input.relationship, "relationship", providerInputError),
         descriptorsOnly: optionalBoolean(input.descriptorsOnly) ?? false,
       }),
       {
@@ -119,7 +119,7 @@ export const virustotalActionHandlers: ProviderActionHandlers<"virustotal", Viru
   },
   get_ip_address_report(input, context) {
     return virustotalJsonRequest(
-      `/ip_addresses/${encodeURIComponent(requiredString(input.ipAddress, "ipAddress", badInput))}`,
+      `/ip_addresses/${encodeURIComponent(requiredString(input.ipAddress, "ipAddress", providerInputError))}`,
       {},
       context,
       "execute",
@@ -129,8 +129,8 @@ export const virustotalActionHandlers: ProviderActionHandlers<"virustotal", Viru
     return virustotalJsonRequest(
       buildRelationshipPath({
         collection: "ip_addresses",
-        id: requiredString(input.ipAddress, "ipAddress", badInput),
-        relationship: requiredString(input.relationship, "relationship", badInput),
+        id: requiredString(input.ipAddress, "ipAddress", providerInputError),
+        relationship: requiredString(input.relationship, "relationship", providerInputError),
         descriptorsOnly: optionalBoolean(input.descriptorsOnly) ?? false,
       }),
       {
@@ -165,7 +165,7 @@ export const virustotalActionHandlers: ProviderActionHandlers<"virustotal", Viru
           data: {
             type: "comment",
             attributes: {
-              text: requiredString(input.text, "text", badInput),
+              text: requiredString(input.text, "text", providerInputError),
             },
           },
         },
@@ -196,7 +196,7 @@ export const virustotalActionHandlers: ProviderActionHandlers<"virustotal", Viru
           data: {
             type: "vote",
             attributes: {
-              verdict: requiredString(input.verdict, "verdict", badInput),
+              verdict: requiredString(input.verdict, "verdict", providerInputError),
             },
           },
         },
@@ -449,8 +449,4 @@ function optionalPositiveInteger(value: unknown, fieldName: string): number | un
     throw new ProviderRequestError(400, `${fieldName} must be a positive integer`);
   }
   return value;
-}
-
-function badInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

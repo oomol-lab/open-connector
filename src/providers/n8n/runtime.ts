@@ -10,7 +10,7 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const n8nValidationPath = "/discover";
 const n8nCredentialHelpUrl = "https://docs.n8n.io/api/authentication/";
@@ -835,8 +835,4 @@ function assertN8nInstanceProtocol(url: URL, allowPrivateNetwork: boolean): void
     return;
   }
   throw providerInputError("instanceUrl must use https");
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

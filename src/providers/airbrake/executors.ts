@@ -13,6 +13,7 @@ import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -487,8 +488,4 @@ function readOptionalGroupOrder(value: unknown): string | undefined {
     return order;
   }
   throw new ProviderRequestError(400, "order must be last_notice, notice_count, weight, or created");
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

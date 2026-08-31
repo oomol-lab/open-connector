@@ -11,6 +11,7 @@ import { compactObject, nullableString, optionalRecord, optionalString, required
 import {
   defineProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -555,8 +556,4 @@ function readOptionalStringLike(value: unknown): string | null {
     return value;
   }
   return String(value);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

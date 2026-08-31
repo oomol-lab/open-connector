@@ -10,7 +10,12 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerInputError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "scrapingdog";
 const scrapingdogBaseUrl = "https://api.scrapingdog.com";
@@ -24,7 +29,7 @@ export const scrapingdogActionHandlers: ProviderActionHandlers<"scrapingdog", Sc
     const response = await requestScrapingdogRaw(
       "scrape",
       compactObject({
-        url: requiredString(input.url, "url", invalidInputError),
+        url: requiredString(input.url, "url", providerInputError),
         dynamic: optionalBoolean(input.dynamic),
       }),
       context,
@@ -44,7 +49,7 @@ export const scrapingdogActionHandlers: ProviderActionHandlers<"scrapingdog", Sc
     const payload = await requestScrapingdogJson(
       "google",
       compactObject({
-        query: requiredString(input.query, "query", invalidInputError),
+        query: requiredString(input.query, "query", providerInputError),
         domain: optionalString(input.domain),
         country: optionalString(input.country),
         cr: optionalString(input.cr),
@@ -78,7 +83,7 @@ export const scrapingdogActionHandlers: ProviderActionHandlers<"scrapingdog", Sc
     const payload = await requestScrapingdogJson(
       "google_maps",
       compactObject({
-        query: requiredString(input.query, "query", invalidInputError),
+        query: requiredString(input.query, "query", providerInputError),
         ll: optionalString(input.ll),
         domain: optionalString(input.domain),
         language: optionalString(input.language),
@@ -116,7 +121,7 @@ export const scrapingdogActionHandlers: ProviderActionHandlers<"scrapingdog", Sc
     const payload = await requestScrapingdogJson(
       "google_scholar",
       compactObject({
-        query: requiredString(input.query, "query", invalidInputError),
+        query: requiredString(input.query, "query", providerInputError),
         html: optionalBoolean(input.html),
         country: optionalString(input.country),
         language: optionalString(input.language),
@@ -274,10 +279,6 @@ function optionalBooleanAsInteger(value: unknown): number | undefined {
     return undefined;
   }
   return booleanValue ? 1 : 0;
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function ensureTrailingSlash(url: string): string {

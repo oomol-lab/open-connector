@@ -13,7 +13,7 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, providerResponseError } from "../provider-runtime.ts";
 import {
   encodeTransitImage,
   normalizeStartedJob,
@@ -30,11 +30,11 @@ type SizedImageLayout = "flat" | "nested";
 export const pixellabImageActionHandlers: ProviderActionHandlerSubset<"pixellab", PixellabImageActionHandler> = {
   async get_balance(_input, context) {
     const record = requireResponseRecord(await pixellabRequestJson("GET", "/balance", undefined, context), "balance");
-    const credits = requiredRecord(record.credits, "PixelLab balance credits", invalidResponseError);
-    const subscription = requiredRecord(record.subscription, "PixelLab balance subscription", invalidResponseError);
+    const credits = requiredRecord(record.credits, "PixelLab balance credits", providerResponseError);
+    const subscription = requiredRecord(record.subscription, "PixelLab balance subscription", providerResponseError);
     return compactObject({
       creditsUsd: requireResponseNumber(credits.usd, "PixelLab credits.usd"),
-      subscriptionStatus: requiredString(subscription.status, "PixelLab subscription.status", invalidResponseError),
+      subscriptionStatus: requiredString(subscription.status, "PixelLab subscription.status", providerResponseError),
       subscriptionPlan: optionalString(subscription.plan),
       generationsRemaining: requireResponseNumber(subscription.generations, "PixelLab subscription.generations"),
       generationsTotal: requireResponseNumber(subscription.total, "PixelLab subscription.total"),
@@ -54,8 +54,8 @@ export const pixellabImageActionHandlers: ProviderActionHandlerSubset<"pixellab"
       "POST",
       "/generate-image-v2",
       compactObject({
-        description: requiredString(input.description, "description", invalidInputError),
-        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+        description: requiredString(input.description, "description", providerInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
         seed: optionalInteger(input.seed),
         no_background: optionalBoolean(input.noBackground),
         reference_images: referenceImages,
@@ -74,8 +74,8 @@ export const pixellabImageActionHandlers: ProviderActionHandlerSubset<"pixellab"
       "/generate-with-style-v2",
       compactObject({
         style_images: styleImages,
-        description: requiredString(input.description, "description", invalidInputError),
-        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+        description: requiredString(input.description, "description", providerInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
         style_description: optionalString(input.styleDescription),
         seed: optionalInteger(input.seed),
         no_background: optionalBoolean(input.noBackground),
@@ -91,7 +91,7 @@ export const pixellabImageActionHandlers: ProviderActionHandlerSubset<"pixellab"
       "POST",
       "/generate-ui-v2",
       compactObject({
-        description: requiredString(input.description, "description", invalidInputError),
+        description: requiredString(input.description, "description", providerInputError),
         image_size: optionalRecord(input.imageSize),
         seed: optionalInteger(input.seed),
         no_background: optionalBoolean(input.noBackground),
@@ -110,8 +110,8 @@ export const pixellabImageActionHandlers: ProviderActionHandlerSubset<"pixellab"
       "POST",
       "/create-image-pixflux",
       compactObject({
-        description: requiredString(input.description, "description", invalidInputError),
-        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+        description: requiredString(input.description, "description", providerInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
         text_guidance_scale: optionalNumber(input.textGuidanceScale),
         outline: optionalString(input.outline),
         shading: optionalString(input.shading),
@@ -137,8 +137,8 @@ export const pixellabImageActionHandlers: ProviderActionHandlerSubset<"pixellab"
       "POST",
       "/create-image-pixen",
       compactObject({
-        description: requiredString(input.description, "description", invalidInputError),
-        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+        description: requiredString(input.description, "description", providerInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
         outline: optionalString(input.outline),
         detail: optionalString(input.detail),
         view: optionalString(input.view),
@@ -167,8 +167,8 @@ export const pixellabImageActionHandlers: ProviderActionHandlerSubset<"pixellab"
       "/image-to-pixelart",
       compactObject({
         image,
-        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
-        output_size: requiredRecord(input.outputSize, "outputSize", invalidInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
+        output_size: requiredRecord(input.outputSize, "outputSize", providerInputError),
         text_guidance_scale: optionalNumber(input.textGuidanceScale),
         seed: optionalInteger(input.seed),
       }),
@@ -200,10 +200,10 @@ export const pixellabImageActionHandlers: ProviderActionHandlerSubset<"pixellab"
       "POST",
       "/resize",
       compactObject({
-        description: requiredString(input.description, "description", invalidInputError),
+        description: requiredString(input.description, "description", providerInputError),
         reference_image: referenceImage,
-        reference_image_size: requiredRecord(input.referenceImageSize, "referenceImageSize", invalidInputError),
-        target_size: requiredRecord(input.targetSize, "targetSize", invalidInputError),
+        reference_image_size: requiredRecord(input.referenceImageSize, "referenceImageSize", providerInputError),
+        target_size: requiredRecord(input.targetSize, "targetSize", providerInputError),
         view: optionalString(input.view),
         direction: optionalString(input.direction),
         isometric: optionalBoolean(input.isometric),
@@ -226,7 +226,7 @@ export const pixellabImageActionHandlers: ProviderActionHandlerSubset<"pixellab"
       "/remove-background",
       compactObject({
         image,
-        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
         background_removal_task: optionalString(input.backgroundRemovalTask),
         text: optionalString(input.text),
         seed: optionalInteger(input.seed),
@@ -259,7 +259,7 @@ export const pixellabImageActionHandlers: ProviderActionHandlerSubset<"pixellab"
       compactObject({
         method,
         edit_images: editImages,
-        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
         description: method === "edit_with_text" ? description : undefined,
         reference_image: method === "edit_with_reference" ? referenceImage : undefined,
         seed: optionalInteger(input.seed),
@@ -271,14 +271,14 @@ export const pixellabImageActionHandlers: ProviderActionHandlerSubset<"pixellab"
   },
 
   async start_inpaint(input, context) {
-    const imageSize = requiredRecord(input.imageSize, "imageSize", invalidInputError);
+    const imageSize = requiredRecord(input.imageSize, "imageSize", providerInputError);
     const image = await encodeTransitImage(input.image, "image", context);
     const maskImage = await encodeTransitImage(input.maskImage, "maskImage", context);
     const payload = await pixellabRequestJson(
       "POST",
       "/inpaint-v3",
       compactObject({
-        description: requiredString(input.description, "description", invalidInputError),
+        description: requiredString(input.description, "description", providerInputError),
         inpainting_image: { image, size: imageSize },
         mask_image: { image: maskImage, size: imageSize },
         seed: optionalInteger(input.seed),
@@ -311,8 +311,8 @@ export const pixellabImageActionHandlers: ProviderActionHandlerSubset<"pixellab"
       "POST",
       "/enhance-pixen-prompt",
       compactObject({
-        description: requiredString(input.description, "description", invalidInputError),
-        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+        description: requiredString(input.description, "description", providerInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
         outline: optionalString(input.outline),
         detail: optionalString(input.detail),
         view: optionalString(input.view),
@@ -329,8 +329,8 @@ export const pixellabImageActionHandlers: ProviderActionHandlerSubset<"pixellab"
       "POST",
       "/enhance-character-v3-prompt",
       compactObject({
-        description: requiredString(input.description, "description", invalidInputError),
-        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+        description: requiredString(input.description, "description", providerInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
         view: optionalString(input.view),
         outline: optionalString(input.outline),
         detail: optionalString(input.detail),
@@ -349,7 +349,7 @@ export const pixellabImageActionHandlers: ProviderActionHandlerSubset<"pixellab"
       compactObject({
         first_frame: firstFrame,
         last_frame: lastFrame,
-        action: requiredString(input.action, "action", invalidInputError),
+        action: requiredString(input.action, "action", providerInputError),
       }),
       context,
     );
@@ -373,7 +373,7 @@ async function storeSingleImage(value: unknown, namePrefix: string, context: Api
   const images = await storePixellabImages([value], namePrefix, context);
   const image = images[0];
   if (!image) {
-    throw invalidResponseError("PixelLab response did not include an image.");
+    throw providerResponseError("PixelLab response did not include an image.");
   }
   return image;
 }
@@ -381,7 +381,7 @@ async function storeSingleImage(value: unknown, namePrefix: string, context: Api
 function normalizePromptResponse(payload: unknown, operation: string): Record<string, unknown> {
   const record = requireResponseRecord(payload, operation);
   return compactObject({
-    enhancedPrompt: requiredString(record.enhanced_prompt, "PixelLab enhanced_prompt", invalidResponseError),
+    enhancedPrompt: requiredString(record.enhanced_prompt, "PixelLab enhanced_prompt", providerResponseError),
     usage: normalizeUsage(record.usage),
   });
 }
@@ -401,7 +401,7 @@ async function encodeSizedImageList(
   context: ApiKeyProviderContext,
   includeUsageDescription = false,
 ): Promise<Array<Record<string, unknown>>> {
-  const images = objectArray(value, fieldName, invalidInputError);
+  const images = objectArray(value, fieldName, providerInputError);
   return Promise.all(
     images.map((image, index) =>
       encodeSizedImage(image, `${fieldName}[${index}]`, layout, context, includeUsageDescription),
@@ -432,7 +432,7 @@ async function encodeOptionalSizedImage(
     return undefined;
   }
   return encodeSizedImage(
-    requiredRecord(value, fieldName, invalidInputError),
+    requiredRecord(value, fieldName, providerInputError),
     fieldName,
     layout,
     context,
@@ -448,8 +448,8 @@ async function encodeSizedImage(
   includeUsageDescription: boolean,
 ): Promise<Record<string, unknown>> {
   const image = await encodeTransitImage(record.file, `${fieldName}.file`, context);
-  const width = integer(record.width, `${fieldName}.width`, invalidInputError);
-  const height = integer(record.height, `${fieldName}.height`, invalidInputError);
+  const width = integer(record.width, `${fieldName}.width`, providerInputError);
+  const height = integer(record.height, `${fieldName}.height`, providerInputError);
   if (layout === "flat") {
     return { image, width, height };
   }
@@ -474,9 +474,9 @@ function normalizeStyleOptions(value: unknown): Record<string, boolean | undefin
 }
 
 function validatePixenImageSize(value: unknown): void {
-  const size = requiredRecord(value, "imageSize", invalidInputError);
-  const width = integer(size.width, "imageSize.width", invalidInputError);
-  const height = integer(size.height, "imageSize.height", invalidInputError);
+  const size = requiredRecord(value, "imageSize", providerInputError);
+  const width = integer(size.width, "imageSize.width", providerInputError);
+  const height = integer(size.height, "imageSize.height", providerInputError);
   if (width % 4 !== 0 || height % 4 !== 0) {
     throw new ProviderRequestError(400, "imageSize width and height must be divisible by 4.");
   }
@@ -488,15 +488,7 @@ function validatePixenImageSize(value: unknown): void {
 function requireResponseNumber(value: unknown, fieldName: string): number {
   const number = optionalNumber(value);
   if (number === undefined) {
-    throw invalidResponseError(`${fieldName} must be a finite number.`);
+    throw providerResponseError(`${fieldName} must be a finite number.`);
   }
   return number;
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function invalidResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

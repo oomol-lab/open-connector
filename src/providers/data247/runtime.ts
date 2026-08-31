@@ -6,6 +6,7 @@ import { compactObject, optionalRecord, optionalString, requiredString } from ".
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -57,7 +58,7 @@ export const data247ActionHandlers: ProviderActionHandlers<"data247", Data247Han
       phase: "execute",
       signal: context.signal,
       query: {
-        phone: requiredString(input.phone, "phone", badInput),
+        phone: requiredString(input.phone, "phone", providerInputError),
       },
     });
   },
@@ -69,7 +70,7 @@ export const data247ActionHandlers: ProviderActionHandlers<"data247", Data247Han
       phase: "execute",
       signal: context.signal,
       query: {
-        phone: requiredString(input.phone, "phone", badInput),
+        phone: requiredString(input.phone, "phone", providerInputError),
       },
     });
   },
@@ -81,7 +82,7 @@ export const data247ActionHandlers: ProviderActionHandlers<"data247", Data247Han
       phase: "execute",
       signal: context.signal,
       query: {
-        phone: requiredString(input.phone, "phone", badInput),
+        phone: requiredString(input.phone, "phone", providerInputError),
       },
     });
   },
@@ -93,7 +94,7 @@ export const data247ActionHandlers: ProviderActionHandlers<"data247", Data247Han
       phase: "execute",
       signal: context.signal,
       query: {
-        fname: requiredString(input.fname, "fname", badInput),
+        fname: requiredString(input.fname, "fname", providerInputError),
       },
     });
   },
@@ -264,8 +265,4 @@ function readRequiredResponseString(value: unknown, fieldName: string, api: Data
     return value;
   }
   throw new ProviderRequestError(502, `Data247 api ${api} response missing ${fieldName}`);
-}
-
-function badInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

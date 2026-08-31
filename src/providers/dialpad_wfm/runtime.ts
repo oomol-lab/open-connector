@@ -6,6 +6,7 @@ import { optionalRecord, optionalString, requiredString } from "../../core/cast.
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -128,8 +129,8 @@ function buildDialpadWfmUrl(input: { path: string; query: URLSearchParams }): UR
 
 function buildScheduleQuery(input: Record<string, unknown>): URLSearchParams {
   const query = new URLSearchParams();
-  query.set("start", requiredString(input.start, "start", badInput));
-  query.set("end", requiredString(input.end, "end", badInput));
+  query.set("start", requiredString(input.start, "start", providerInputError));
+  query.set("end", requiredString(input.end, "end", providerInputError));
   setOptionalQueryParam(query, "include_deleted_agents", input.includeDeletedAgents);
   setOptionalQueryParam(query, "page[size]", input.pageSize);
   setOptionalQueryParam(query, "page[after]", input.pageAfter);
@@ -138,8 +139,8 @@ function buildScheduleQuery(input: Record<string, unknown>): URLSearchParams {
 
 function buildMetricsQuery(input: Record<string, unknown>): URLSearchParams {
   const query = new URLSearchParams();
-  query.set("start", requiredString(input.start, "start", badInput));
-  query.set("end", requiredString(input.end, "end", badInput));
+  query.set("start", requiredString(input.start, "start", providerInputError));
+  query.set("end", requiredString(input.end, "end", providerInputError));
   setOptionalQueryParam(query, "emails", input.emails);
   setOptionalQueryParam(query, "include_deleted_agents", input.includeDeletedAgents);
   setOptionalQueryParam(query, "limit", input.limit);
@@ -254,8 +255,4 @@ function readNullablePayloadString(value: unknown, label: string): string | null
     throw new ProviderRequestError(502, `${label} is invalid`);
   }
   return stringValue;
-}
-
-function badInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

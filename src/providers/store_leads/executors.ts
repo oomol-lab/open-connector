@@ -7,7 +7,9 @@ import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
 } from "../provider-runtime.ts";
 
@@ -23,7 +25,7 @@ export const storeLeadsActionHandlers: ProviderActionHandlers<"store_leads", Sto
   async get_domain(input, context) {
     const body = await requestStoreLeadsObject({
       context,
-      path: `/domain/${encodeURIComponent(requiredString(input.domain, "domain", invalidInputError))}`,
+      path: `/domain/${encodeURIComponent(requiredString(input.domain, "domain", providerInputError))}`,
       query: buildQueryParams(input, ["follow_redirects", "fields"]),
       phase: "execute",
     });
@@ -37,14 +39,14 @@ export const storeLeadsActionHandlers: ProviderActionHandlers<"store_leads", Sto
       phase: "execute",
     });
     return {
-      domains: objectArray(body.domains, "Store Leads domains list response", providerError),
+      domains: objectArray(body.domains, "Store Leads domains list response", providerResponseError),
       next_cursor: optionalString(body.next_cursor) ?? null,
     };
   },
   async get_app(input, context) {
     const body = await requestStoreLeadsObject({
       context,
-      path: `/app/${encodeURIComponent(requiredString(input.app_id, "app_id", invalidInputError))}`,
+      path: `/app/${encodeURIComponent(requiredString(input.app_id, "app_id", providerInputError))}`,
       query: buildQueryParams(input, ["fields"]),
       phase: "execute",
     });
@@ -65,12 +67,12 @@ export const storeLeadsActionHandlers: ProviderActionHandlers<"store_leads", Sto
       ]),
       phase: "execute",
     });
-    return { apps: objectArray(body.apps, "Store Leads apps list response", providerError) };
+    return { apps: objectArray(body.apps, "Store Leads apps list response", providerResponseError) };
   },
   async get_technology(input, context) {
     const body = await requestStoreLeadsObject({
       context,
-      path: `/technology/${encodeURIComponent(requiredString(input.technology, "technology", invalidInputError))}`,
+      path: `/technology/${encodeURIComponent(requiredString(input.technology, "technology", providerInputError))}`,
       query: buildQueryParams(input, ["fields"]),
       phase: "execute",
     });
@@ -86,7 +88,7 @@ export const storeLeadsActionHandlers: ProviderActionHandlers<"store_leads", Sto
       phase: "execute",
     });
     return {
-      technologies: objectArray(body.technologies, "Store Leads technologies list response", providerError),
+      technologies: objectArray(body.technologies, "Store Leads technologies list response", providerResponseError),
     };
   },
 };
@@ -101,7 +103,7 @@ export const credentialValidators: CredentialValidators = {
       query: buildQueryParams({ page_size: 1 }, ["page_size"]),
       phase: "validate",
     });
-    const apps = objectArray(body.apps, "Store Leads apps list response", providerError);
+    const apps = objectArray(body.apps, "Store Leads apps list response", providerResponseError);
     const firstApp = apps[0];
     return {
       profile: {
@@ -231,12 +233,4 @@ function requireProviderObject(value: unknown, label: string): Record<string, un
     throw new ProviderRequestError(502, `${label} is missing an object`, value);
   }
   return object;
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

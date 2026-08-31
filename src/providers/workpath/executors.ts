@@ -7,6 +7,7 @@ import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -320,8 +321,4 @@ function extractWorkpathErrorMessage(payload: unknown): string | undefined {
     firstErrorMessage ??
     optionalString(optionalRecord(object.error)?.message)
   );
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

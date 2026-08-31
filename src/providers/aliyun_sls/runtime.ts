@@ -15,7 +15,12 @@ import {
   requiredString,
   requiredStringArray,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError, readProviderTextBody } from "../provider-runtime.ts";
+import {
+  providerResponseError,
+  providerUserAgent,
+  ProviderRequestError,
+  readProviderTextBody,
+} from "../provider-runtime.ts";
 import {
   assertAliyunSlsEndpointAllowed,
   filterAliyunSlsLogstores,
@@ -280,8 +285,8 @@ async function listProjectsAcrossRegions(
   const uniqueProjects = new Map<string, Record<string, unknown>>();
   for (const success of successes) {
     for (const project of success.projects) {
-      const region = requiredString(project.region, "Project region", badGateway);
-      const projectNameValue = requiredString(project.projectName, "Project name", badGateway);
+      const region = requiredString(project.region, "Project region", providerResponseError);
+      const projectNameValue = requiredString(project.projectName, "Project name", providerResponseError);
       const key = `${region}\u0000${projectNameValue}`;
       if (!uniqueProjects.has(key)) uniqueProjects.set(key, project);
     }
@@ -352,8 +357,8 @@ async function requestProjectPage(
     path: "/",
     query,
   });
-  const payload = requiredRecord(response.data, "ListProject response", badGateway);
-  const rawProjects = objectArray(payload.projects, "ListProject projects", badGateway);
+  const payload = requiredRecord(response.data, "ListProject response", providerResponseError);
+  const rawProjects = objectArray(payload.projects, "ListProject projects", providerResponseError);
   const page = validateAliyunSlsPage(
     rawProjects,
     payload.count,
@@ -440,8 +445,8 @@ async function requestLogstorePage(
     path: "/logstores",
     query,
   });
-  const payload = requiredRecord(response.data, "ListLogStores response", badGateway);
-  const logstores = requiredStringArray(payload.logstores, "ListLogStores logstores", badGateway);
+  const payload = requiredRecord(response.data, "ListLogStores response", providerResponseError);
+  const logstores = requiredStringArray(payload.logstores, "ListLogStores logstores", providerResponseError);
   return validateAliyunSlsPage(logstores, payload.count, payload.total, "ListLogStores", options.offset, options.size);
 }
 
@@ -514,8 +519,8 @@ async function getHistograms(
 function normalizeProject(project: Record<string, unknown>, endpoint: string): Record<string, unknown> {
   return {
     endpoint,
-    projectName: requiredString(project.projectName, "Project projectName", badGateway),
-    region: requiredString(project.region, "Project region", badGateway),
+    projectName: requiredString(project.projectName, "Project projectName", providerResponseError),
+    region: requiredString(project.region, "Project region", providerResponseError),
     description: responseString(project.description),
     status: responseString(project.status),
     createTime: responseString(project.createTime),
@@ -536,7 +541,7 @@ function normalizeLogsResponse(response: AliyunSlsJsonResponse): Record<string, 
     logsValue = record.data;
     meta = optionalRecord(record.meta);
   }
-  const logs = objectArray(logsValue, "GetLogs data", badGateway);
+  const logs = objectArray(logsValue, "GetLogs data", providerResponseError);
   const progress =
     optionalString(meta?.progress) ?? requiredResponseHeader(response.headers, "x-log-progress", "GetLogs progress");
   return {
@@ -552,12 +557,12 @@ function normalizeLogsResponse(response: AliyunSlsJsonResponse): Record<string, 
 }
 
 function normalizeHistograms(value: unknown): AliyunSlsHistogram[] {
-  return objectArray(value, "GetHistograms histogram data", badGateway).map((record, index) => {
+  return objectArray(value, "GetHistograms histogram data", providerResponseError).map((record, index) => {
     return {
       from: readRequiredResponseInteger(record.from, `histogram[${index}].from`),
       to: readRequiredResponseInteger(record.to, `histogram[${index}].to`),
       count: readRequiredResponseInteger(record.count, `histogram[${index}].count`),
-      progress: requiredString(record.progress, `histogram[${index}].progress`, badGateway),
+      progress: requiredString(record.progress, `histogram[${index}].progress`, providerResponseError),
     };
   });
 }
@@ -639,7 +644,7 @@ function responseNullableString(value: unknown): string | null {
 }
 
 function requiredResponseHeader(headers: Headers, name: string, fieldName: string): string {
-  return requiredString(headers.get(name), `${fieldName} response header`, badGateway);
+  return requiredString(headers.get(name), `${fieldName} response header`, providerResponseError);
 }
 
 function validateAliyunSlsPage<T>(
@@ -653,16 +658,16 @@ function validateAliyunSlsPage<T>(
   const count = readRequiredResponseInteger(countValue, `${operation} count`);
   const total = readRequiredResponseInteger(totalValue, `${operation} total`);
   if (count > requestedSize) {
-    throw badGateway(`${operation} count ${count} exceeds requested size ${requestedSize}`);
+    throw providerResponseError(`${operation} count ${count} exceeds requested size ${requestedSize}`);
   }
   if (count !== items.length) {
-    throw badGateway(`${operation} count ${count} does not match the ${items.length} returned items`);
+    throw providerResponseError(`${operation} count ${count} does not match the ${items.length} returned items`);
   }
   if (count > 0 && offset + count > total) {
-    throw badGateway(`${operation} page exceeds its reported total ${total}`);
+    throw providerResponseError(`${operation} page exceeds its reported total ${total}`);
   }
   if (count === 0 && offset < total) {
-    throw badGateway(`${operation} returned an empty page before its reported total ${total} was reached`);
+    throw providerResponseError(`${operation} returned an empty page before its reported total ${total} was reached`);
   }
   return { items, total };
 }
@@ -678,21 +683,21 @@ async function collectAllAliyunSlsPages<T>(
     if (expectedTotal === undefined) {
       expectedTotal = page.total;
       if (expectedTotal > maximumPaginatedItems) {
-        throw badGateway(`${operation} total ${expectedTotal} exceeds the ${maximumPaginatedItems} item limit`);
+        throw providerResponseError(
+          `${operation} total ${expectedTotal} exceeds the ${maximumPaginatedItems} item limit`,
+        );
       }
     } else if (page.total !== expectedTotal) {
-      throw badGateway(`${operation} total changed from ${expectedTotal} to ${page.total} during pagination`);
+      throw providerResponseError(
+        `${operation} total changed from ${expectedTotal} to ${page.total} during pagination`,
+      );
     }
     items.push(...page.items);
     if (items.length === expectedTotal) {
       return items;
     }
   }
-  throw badGateway(`${operation} exceeded the ${maximumPaginationPages} page pagination limit`);
-}
-
-function badGateway(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
+  throw providerResponseError(`${operation} exceeded the ${maximumPaginationPages} page pagination limit`);
 }
 
 function createAliyunSlsResponseError(operation: string, response: Response, text: string): ProviderRequestError {

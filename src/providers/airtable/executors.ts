@@ -12,7 +12,12 @@ import {
   optionalStringArray,
   requiredRecord,
 } from "../../core/cast.ts";
-import { defineBearerProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineBearerProviderExecutors,
+  ProviderRequestError,
+  providerResponseError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 type AirtableRequestMode = "validate" | "execute";
 type AirtableActionInput = Record<string, unknown>;
@@ -671,15 +676,15 @@ function buildRecordCollectionPath(input: Record<string, unknown>): string {
 }
 
 function readBaseArray(value: unknown): Array<Record<string, unknown>> {
-  return Array.isArray(value) ? objectArray(value, "bases", invalidProviderPayload) : [];
+  return Array.isArray(value) ? objectArray(value, "bases", providerResponseError) : [];
 }
 
 function readRecordArray(value: unknown): Array<Record<string, unknown>> {
-  return Array.isArray(value) ? objectArray(value, "records", invalidProviderPayload) : [];
+  return Array.isArray(value) ? objectArray(value, "records", providerResponseError) : [];
 }
 
 function readDeletedRecordArray(value: unknown): Array<Record<string, unknown>> {
-  return Array.isArray(value) ? objectArray(value, "records", invalidProviderPayload) : [];
+  return Array.isArray(value) ? objectArray(value, "records", providerResponseError) : [];
 }
 
 function readTableConfigs(value: unknown): Array<Record<string, unknown>> {
@@ -761,7 +766,7 @@ function readRecordFields(value: unknown, fieldName: string): Record<string, unk
 }
 
 function readObject(value: unknown, context: string): Record<string, unknown> {
-  return requiredRecord(value, context, invalidProviderPayload);
+  return requiredRecord(value, context, providerResponseError);
 }
 
 function requireString(value: unknown, fieldName: string): string {
@@ -770,8 +775,4 @@ function requireString(value: unknown, fieldName: string): string {
     throw new ProviderRequestError(400, `${fieldName} is required`);
   }
   return text;
-}
-
-function invalidProviderPayload(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

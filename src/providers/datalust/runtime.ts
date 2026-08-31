@@ -14,6 +14,7 @@ import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/r
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
@@ -81,7 +82,7 @@ export function createDatalustContext(
   signal?: AbortSignal,
 ): DatalustContext {
   return {
-    apiKey: requiredString(apiKey, "apiKey", credentialError),
+    apiKey: requiredString(apiKey, "apiKey", providerInputError),
     baseUrl: normalizeDatalustBaseUrl(values.baseUrl),
     fetcher,
     signal,
@@ -133,20 +134,20 @@ export function normalizeDatalustBaseUrl(
   value: unknown,
   allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
 ): string {
-  const raw = requiredString(value, "baseUrl", credentialError);
+  const raw = requiredString(value, "baseUrl", providerInputError);
   const url = assertPublicHttpUrl(raw, {
     fieldName: "baseUrl",
-    createError: credentialError,
+    createError: providerInputError,
     allowPrivateNetwork,
   });
   if (url.protocol !== "https:" && !allowPrivateNetwork) {
-    throw credentialError("baseUrl must use HTTPS");
+    throw providerInputError("baseUrl must use HTTPS");
   }
   if (url.username || url.password || url.search || url.hash) {
-    throw credentialError("baseUrl must not include credentials, query parameters, or a fragment");
+    throw providerInputError("baseUrl must not include credentials, query parameters, or a fragment");
   }
   if (url.pathname !== "/") {
-    throw credentialError("baseUrl must be the Seq instance root URL");
+    throw providerInputError("baseUrl must be the Seq instance root URL");
   }
   return url.toString().replace(/\/$/u, "");
 }
@@ -182,7 +183,7 @@ async function searchEvents(input: Record<string, unknown>, context: DatalustCon
 }
 
 async function getEvent(input: Record<string, unknown>, context: DatalustContext): Promise<unknown> {
-  const eventId = requiredString(input.eventId, "eventId", inputError);
+  const eventId = requiredString(input.eventId, "eventId", providerInputError);
   const payload = requireResponseObject(
     await requestSeqJson({
       context,
@@ -203,7 +204,7 @@ async function executeQuery(input: Record<string, unknown>, context: DatalustCon
       path: "/api/data",
       method: "POST",
       query: {
-        q: requiredString(input.query, "query", inputError),
+        q: requiredString(input.query, "query", providerInputError),
         rangeStartUtc: optionalString(input.rangeStartUtc),
         rangeEndUtc: optionalString(input.rangeEndUtc),
         signal: optionalString(input.signal),
@@ -241,10 +242,10 @@ async function ingestEvent(input: Record<string, unknown>, context: DatalustCont
 async function ingestEvents(input: Record<string, unknown>, context: DatalustContext): Promise<unknown> {
   const events = requireInputArray(input.events, "events");
   if (events.length === 0) {
-    throw inputError("events must contain at least one event");
+    throw providerInputError("events must contain at least one event");
   }
   const clefEvents = events.map((event, index) =>
-    buildClefEvent(requiredRecord(event, `events[${index}]`, inputError), `events[${index}]`),
+    buildClefEvent(requiredRecord(event, `events[${index}]`, providerInputError), `events[${index}]`),
   );
   const status = await requestSeqStatus({
     context,
@@ -274,7 +275,7 @@ async function listSignals(input: Record<string, unknown>, context: DatalustCont
 }
 
 async function getSignal(input: Record<string, unknown>, context: DatalustContext): Promise<unknown> {
-  const signalId = requiredString(input.signalId, "signalId", inputError);
+  const signalId = requiredString(input.signalId, "signalId", providerInputError);
   const payload = requireResponseObject(
     await requestSeqJson({
       context,
@@ -298,7 +299,7 @@ async function createSignal(input: Record<string, unknown>, context: DatalustCon
 }
 
 async function updateSignal(input: Record<string, unknown>, context: DatalustContext): Promise<unknown> {
-  const signalId = requiredString(input.signalId, "signalId", inputError);
+  const signalId = requiredString(input.signalId, "signalId", providerInputError);
   const path = `/api/signals/${encodeURIComponent(signalId)}`;
   const entity = applySignalChanges(await readEntity(context, path), input);
   const status = await writeEntity({ context, path, method: "PUT", entity });
@@ -306,7 +307,7 @@ async function updateSignal(input: Record<string, unknown>, context: DatalustCon
 }
 
 async function deleteSignal(input: Record<string, unknown>, context: DatalustContext): Promise<unknown> {
-  const signalId = requiredString(input.signalId, "signalId", inputError);
+  const signalId = requiredString(input.signalId, "signalId", providerInputError);
   const path = `/api/signals/${encodeURIComponent(signalId)}`;
   const status = await writeEntity({ context, path, method: "DELETE", entity: await readEntity(context, path) });
   return { deleted: true, status };
@@ -326,7 +327,7 @@ async function listSavedQueries(input: Record<string, unknown>, context: Datalus
 }
 
 async function getSavedQuery(input: Record<string, unknown>, context: DatalustContext): Promise<unknown> {
-  const queryId = requiredString(input.queryId, "queryId", inputError);
+  const queryId = requiredString(input.queryId, "queryId", providerInputError);
   const payload = await readEntity(context, `/api/sqlqueries/${encodeURIComponent(queryId)}`);
   return { savedQuery: normalizeSavedQuery(payload) };
 }
@@ -342,7 +343,7 @@ async function createSavedQuery(input: Record<string, unknown>, context: Datalus
 }
 
 async function updateSavedQuery(input: Record<string, unknown>, context: DatalustContext): Promise<unknown> {
-  const queryId = requiredString(input.queryId, "queryId", inputError);
+  const queryId = requiredString(input.queryId, "queryId", providerInputError);
   const path = `/api/sqlqueries/${encodeURIComponent(queryId)}`;
   const entity = applySavedQueryChanges(await readEntity(context, path), input);
   const status = await writeEntity({ context, path, method: "PUT", entity });
@@ -350,7 +351,7 @@ async function updateSavedQuery(input: Record<string, unknown>, context: Datalus
 }
 
 async function deleteSavedQuery(input: Record<string, unknown>, context: DatalustContext): Promise<unknown> {
-  const queryId = requiredString(input.queryId, "queryId", inputError);
+  const queryId = requiredString(input.queryId, "queryId", providerInputError);
   const path = `/api/sqlqueries/${encodeURIComponent(queryId)}`;
   const status = await writeEntity({ context, path, method: "DELETE", entity: await readEntity(context, path) });
   return { deleted: true, status };
@@ -410,12 +411,12 @@ function buildClefEvent(input: Record<string, unknown>, fieldPrefix = ""): Recor
   const properties = optionalRecord(input.properties) ?? {};
   const reservedProperty = Object.keys(properties).find((key) => key.startsWith("@") && !key.startsWith("@@"));
   if (reservedProperty) {
-    throw inputError(`${fieldName("properties")} must not contain reserved CLEF property ${reservedProperty}`);
+    throw providerInputError(`${fieldName("properties")} must not contain reserved CLEF property ${reservedProperty}`);
   }
   const eventType = readClefEventType(input.eventType, fieldName("eventType"));
   return {
     ...properties,
-    "@t": requiredString(input.timestamp, fieldName("timestamp"), inputError),
+    "@t": requiredString(input.timestamp, fieldName("timestamp"), providerInputError),
     "@m": typeof input.message === "string" ? input.message : undefined,
     "@mt": typeof input.messageTemplate === "string" ? input.messageTemplate : undefined,
     "@l": typeof input.level === "string" ? input.level : undefined,
@@ -426,13 +427,13 @@ function buildClefEvent(input: Record<string, unknown>, fieldPrefix = ""): Recor
 
 function applySignalChanges(entity: Record<string, unknown>, input: Record<string, unknown>): Record<string, unknown> {
   const updated = { ...entity };
-  if (Object.hasOwn(input, "title")) updated.Title = requiredString(input.title, "title", inputError);
+  if (Object.hasOwn(input, "title")) updated.Title = requiredString(input.title, "title", providerInputError);
   assignNullableString(updated, "Description", input, "description");
   if (Object.hasOwn(input, "filters")) {
     updated.Filters = requireInputArray(input.filters, "filters").map((value, index) => {
-      const filter = requiredRecord(value, `filters[${index}]`, inputError);
+      const filter = requiredRecord(value, `filters[${index}]`, providerInputError);
       const mapped: Record<string, unknown> = {
-        Filter: requiredString(filter.filter, `filters[${index}].filter`, inputError),
+        Filter: requiredString(filter.filter, `filters[${index}].filter`, providerInputError),
       };
       assignNullableString(mapped, "Description", filter, "description");
       assignBoolean(mapped, "DescriptionIsExcluded", filter, "descriptionIsExcluded");
@@ -442,16 +443,16 @@ function applySignalChanges(entity: Record<string, unknown>, input: Record<strin
   }
   if (Object.hasOwn(input, "columns")) {
     updated.Columns = requireInputArray(input.columns, "columns").map((value, index) => {
-      const column = requiredRecord(value, `columns[${index}]`, inputError);
-      return { Expression: requiredString(column.expression, `columns[${index}].expression`, inputError) };
+      const column = requiredRecord(value, `columns[${index}]`, providerInputError);
+      return { Expression: requiredString(column.expression, `columns[${index}].expression`, providerInputError) };
     });
   }
   assignBoolean(updated, "IsProtected", input, "isProtected");
   assignBoolean(updated, "IsIndexSuppressed", input, "isIndexSuppressed");
   if (Object.hasOwn(input, "grouping")) {
-    const grouping = requiredString(input.grouping, "grouping", inputError);
+    const grouping = requiredString(input.grouping, "grouping", providerInputError);
     if (!signalGroupingValues.has(grouping)) {
-      throw inputError("grouping must be one of Inferred, Explicit, None");
+      throw providerInputError("grouping must be one of Inferred, Explicit, None");
     }
     updated.Grouping = grouping;
   }
@@ -465,10 +466,10 @@ function applySavedQueryChanges(
   input: Record<string, unknown>,
 ): Record<string, unknown> {
   const updated = { ...entity };
-  if (Object.hasOwn(input, "title")) updated.Title = requiredString(input.title, "title", inputError);
+  if (Object.hasOwn(input, "title")) updated.Title = requiredString(input.title, "title", providerInputError);
   assignNullableString(updated, "Description", input, "description");
   if (Object.hasOwn(input, "sql")) {
-    if (typeof input.sql !== "string") throw inputError("sql must be a string");
+    if (typeof input.sql !== "string") throw providerInputError("sql must be a string");
     updated.Sql = input.sql;
   }
   assignBoolean(updated, "IsProtected", input, "isProtected");
@@ -574,7 +575,7 @@ function extractErrorMessage(payload: unknown): string | undefined {
 function readClefEventType(value: unknown, fieldName: string): string | number | undefined {
   if (value === undefined || typeof value === "string") return value;
   if (typeof value === "number" && Number.isFinite(value)) return value;
-  throw inputError(`${fieldName} must be a string or number`);
+  throw providerInputError(`${fieldName} must be a string or number`);
 }
 
 function readValue(object: Record<string, unknown>, ...keys: string[]): unknown {
@@ -639,7 +640,7 @@ function requireResponseArray(value: unknown, label: string): unknown[] {
 }
 
 function requireInputArray(value: unknown, fieldName: string): unknown[] {
-  if (!Array.isArray(value)) throw inputError(`${fieldName} must be an array`);
+  if (!Array.isArray(value)) throw providerInputError(`${fieldName} must be an array`);
   return value;
 }
 
@@ -650,7 +651,7 @@ function assignBoolean(
   inputKey: string,
 ): void {
   if (!Object.hasOwn(input, inputKey)) return;
-  if (typeof input[inputKey] !== "boolean") throw inputError(`${inputKey} must be a boolean`);
+  if (typeof input[inputKey] !== "boolean") throw providerInputError(`${inputKey} must be a boolean`);
   target[targetKey] = input[inputKey];
 }
 
@@ -662,7 +663,7 @@ function assignNullableString(
 ): void {
   if (!Object.hasOwn(input, inputKey)) return;
   const value = input[inputKey];
-  if (value !== null && typeof value !== "string") throw inputError(`${inputKey} must be a string or null`);
+  if (value !== null && typeof value !== "string") throw providerInputError(`${inputKey} must be a string or null`);
   target[targetKey] = value;
 }
 
@@ -673,13 +674,5 @@ function assignNullableNonEmptyString(
   inputKey: string,
 ): void {
   if (!Object.hasOwn(input, inputKey)) return;
-  target[targetKey] = input[inputKey] === null ? null : requiredString(input[inputKey], inputKey, inputError);
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function credentialError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
+  target[targetKey] = input[inputKey] === null ? null : requiredString(input[inputKey], inputKey, providerInputError);
 }

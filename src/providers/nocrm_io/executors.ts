@@ -13,6 +13,7 @@ import {
   defineProviderExecutors,
   defineProviderProxy,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -335,10 +336,6 @@ function normalizeNocrmSubdomain(value: unknown): string {
 
 function requiredInputString(value: unknown, fieldName: string): string {
   return requiredString(value, fieldName, providerInputError);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function identifierValue(value: unknown): string | undefined {

@@ -12,7 +12,13 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerInputError,
+  providerResponseError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "sender";
 const senderApiBaseUrl = "https://api.sender.net/v2";
@@ -279,7 +285,7 @@ function groupMembershipBody(input: Record<string, unknown>, includeAutomation: 
 }
 
 function normalizePaginatedResponse(payload: unknown, key: string): Record<string, unknown> {
-  const record = requiredRecord(payload, "Sender paginated response", providerOutputError);
+  const record = requiredRecord(payload, "Sender paginated response", providerResponseError);
   return compactObject({
     [key]: readObjectArray(record.data),
     links: optionalRecord(record.links),
@@ -290,14 +296,14 @@ function normalizePaginatedResponse(payload: unknown, key: string): Record<strin
 }
 
 function normalizeDataObjectResponse(payload: unknown, key: string): Record<string, unknown> {
-  const record = requiredRecord(payload, "Sender detail response", providerOutputError);
+  const record = requiredRecord(payload, "Sender detail response", providerResponseError);
   return {
-    [key]: requiredRecord(record.data, `Sender ${key} response data`, providerOutputError),
+    [key]: requiredRecord(record.data, `Sender ${key} response data`, providerResponseError),
   };
 }
 
 function normalizeMutationResponse(payload: unknown, key: string): Record<string, unknown> {
-  const record = requiredRecord(payload, "Sender mutation response", providerOutputError);
+  const record = requiredRecord(payload, "Sender mutation response", providerResponseError);
   return compactObject({
     success: typeof record.success === "boolean" ? record.success : true,
     message: record.message,
@@ -306,7 +312,7 @@ function normalizeMutationResponse(payload: unknown, key: string): Record<string
 }
 
 function normalizeGenericMutationResponse(payload: unknown): Record<string, unknown> {
-  const record = requiredRecord(payload, "Sender mutation response", providerOutputError);
+  const record = requiredRecord(payload, "Sender mutation response", providerResponseError);
   return {
     success: typeof record.success === "boolean" ? record.success : true,
     message: record.message,
@@ -315,12 +321,12 @@ function normalizeGenericMutationResponse(payload: unknown): Record<string, unkn
 
 function readObjectArray(value: unknown): Array<Record<string, unknown>> {
   if (Array.isArray(value)) {
-    return objectArray(value, "Sender response data item", providerOutputError);
+    return objectArray(value, "Sender response data item", providerResponseError);
   }
   if (value === undefined || value === null) {
     return [];
   }
-  return [requiredRecord(value, "Sender response data item", providerOutputError)];
+  return [requiredRecord(value, "Sender response data item", providerResponseError)];
 }
 
 function pickDefined(input: Record<string, unknown>, keys: string[]): Record<string, unknown> {
@@ -387,12 +393,4 @@ function senderErrorMessage(payload: unknown, fallback: string): string {
     return record.errors.map(String).join("; ");
   }
   return fallback;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerOutputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

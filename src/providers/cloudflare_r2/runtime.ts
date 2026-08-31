@@ -15,7 +15,7 @@ import {
 } from "../../core/cast.ts";
 import { queryParams, readBoundedResponseBytes } from "../../core/request.ts";
 import { readCloudflareCurrentUser } from "../cloudflare-current-user.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 import { createCloudflareR2PresignedUrl, deriveCloudflareR2S3SecretAccessKey } from "./s3-presign.ts";
 
 export interface CloudflareR2Context {
@@ -580,10 +580,6 @@ function encodeR2ObjectKeySegment(segment: string): string {
 
 function defaultObjectFileName(objectKey: string): string {
   return objectKey.split("/").findLast((segment) => segment.length > 0) ?? "r2-object";
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 async function requestEnvelope(

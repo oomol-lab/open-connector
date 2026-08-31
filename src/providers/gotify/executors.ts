@@ -233,7 +233,7 @@ async function requestGotifyJson(input: GotifyJsonRequestOptions): Promise<unkno
 }
 
 function normalizeGotifyMessage(payload: unknown): Record<string, unknown> {
-  const record = requiredRecord(payload, "Gotify message response", providerResponseError);
+  const record = requiredRecord(payload, "Gotify message response", gotifyResponseError);
   return compactObject({
     id: requireGotifyInteger(record.id, "id"),
     appid: requireGotifyInteger(record.appid, "appid"),
@@ -241,12 +241,12 @@ function normalizeGotifyMessage(payload: unknown): Record<string, unknown> {
     date: requireGotifyString(record.date, "date"),
     title: record.title === undefined ? undefined : requireGotifyString(record.title, "title"),
     priority: record.priority === undefined ? undefined : requireGotifyInteger(record.priority, "priority"),
-    extras: record.extras === undefined ? undefined : requiredRecord(record.extras, "extras", providerResponseError),
+    extras: record.extras === undefined ? undefined : requiredRecord(record.extras, "extras", gotifyResponseError),
   });
 }
 
 function normalizeGotifyHealth(payload: unknown): Record<string, string> {
-  const record = requiredRecord(payload, "Gotify health response", providerResponseError);
+  const record = requiredRecord(payload, "Gotify health response", gotifyResponseError);
   return {
     health: requireGotifyString(record.health, "health"),
     database: requireGotifyString(record.database, "database"),
@@ -254,7 +254,7 @@ function normalizeGotifyHealth(payload: unknown): Record<string, string> {
 }
 
 function normalizeGotifyVersion(payload: unknown): Record<string, string> {
-  const record = requiredRecord(payload, "Gotify version response", providerResponseError);
+  const record = requiredRecord(payload, "Gotify version response", gotifyResponseError);
   return {
     version: requireGotifyString(record.version, "version"),
     commit: requireGotifyString(record.commit, "commit"),
@@ -264,7 +264,7 @@ function normalizeGotifyVersion(payload: unknown): Record<string, string> {
 
 function requireGotifyString(value: unknown, fieldName: string): string {
   if (typeof value !== "string") {
-    throw providerResponseError(`${fieldName} must be a string`);
+    throw gotifyResponseError(`${fieldName} must be a string`);
   }
   return value;
 }
@@ -272,12 +272,12 @@ function requireGotifyString(value: unknown, fieldName: string): string {
 function requireGotifyInteger(value: unknown, fieldName: string): number {
   const parsed = optionalInteger(value);
   if (parsed === undefined) {
-    throw providerResponseError(`${fieldName} must be an integer`);
+    throw gotifyResponseError(`${fieldName} must be an integer`);
   }
   return parsed;
 }
 
-function providerResponseError(message: string): ProviderRequestError {
+function gotifyResponseError(message: string): ProviderRequestError {
   return new ProviderRequestError(502, `Gotify returned an invalid response: ${message}`);
 }
 

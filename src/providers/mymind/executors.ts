@@ -18,6 +18,7 @@ import {
   createProviderTimeout,
   defineProviderExecutors,
   isAbortSignalError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderJsonBody,
@@ -63,8 +64,6 @@ interface MyMindRequest {
 
 type ActionHandler = (input: Record<string, unknown>, context: MyMindContext) => Promise<unknown>;
 
-const badRequest = (message: string): ProviderRequestError => new ProviderRequestError(400, message);
-
 export const myMindActionHandlers: ProviderActionHandlers<"mymind", ActionHandler> = {
   async search_objects(input, context) {
     const limit = optionalInteger(input.limit) ?? defaultSearchLimit;
@@ -73,7 +72,7 @@ export const myMindActionHandlers: ProviderActionHandlers<"mymind", ActionHandle
       {
         method: "GET",
         query: {
-          q: requiredString(input.query, "query", badRequest),
+          q: requiredString(input.query, "query", providerInputError),
           limit: String(limit),
           semantic: flag(input.semantic),
           semanticBoost: numberParam(input.semanticBoost),
@@ -134,7 +133,7 @@ export const myMindActionHandlers: ProviderActionHandlers<"mymind", ActionHandle
   },
 
   async get_object_content(input, context) {
-    const objectId = requiredString(input.objectId, "objectId", badRequest);
+    const objectId = requiredString(input.objectId, "objectId", providerInputError);
     try {
       const markdown = await requestText(
         `/objects/${encodePathSegment(objectId)}/content`,
@@ -157,9 +156,9 @@ export const myMindActionHandlers: ProviderActionHandlers<"mymind", ActionHandle
   },
 
   save_url(input, context) {
-    const url = assertPublicHttpUrl(requiredString(input.url, "url", badRequest), {
+    const url = assertPublicHttpUrl(requiredString(input.url, "url", providerInputError), {
       fieldName: "url",
-      createError: badRequest,
+      createError: providerInputError,
     });
     return createObject(
       jsonObject({
@@ -175,7 +174,7 @@ export const myMindActionHandlers: ProviderActionHandlers<"mymind", ActionHandle
   create_note(input, context) {
     return createObject(
       jsonObject({
-        content: { type: markdownMediaType, body: requiredString(input.content, "content", badRequest) },
+        content: { type: markdownMediaType, body: requiredString(input.content, "content", providerInputError) },
         title: optionalString(input.title),
         tags: tagBody(input.tags),
         spaces: spaceBody(input.spaceIds),
@@ -185,7 +184,7 @@ export const myMindActionHandlers: ProviderActionHandlers<"mymind", ActionHandle
   },
 
   async update_object(input, context) {
-    const objectId = requiredString(input.objectId, "objectId", badRequest);
+    const objectId = requiredString(input.objectId, "objectId", providerInputError);
     await requestJson(
       `/objects/${encodePathSegment(objectId)}`,
       {
@@ -203,12 +202,12 @@ export const myMindActionHandlers: ProviderActionHandlers<"mymind", ActionHandle
   },
 
   async update_object_content(input, context) {
-    const objectId = requiredString(input.objectId, "objectId", badRequest);
+    const objectId = requiredString(input.objectId, "objectId", providerInputError);
     await requestJson(
       `/objects/${encodePathSegment(objectId)}/content`,
       {
         method: "PUT",
-        text: { contentType: markdownMediaType, body: requiredString(input.content, "content", badRequest) },
+        text: { contentType: markdownMediaType, body: requiredString(input.content, "content", providerInputError) },
       },
       context,
       "execute",
@@ -217,19 +216,19 @@ export const myMindActionHandlers: ProviderActionHandlers<"mymind", ActionHandle
   },
 
   async delete_object(input, context) {
-    const objectId = requiredString(input.objectId, "objectId", badRequest);
+    const objectId = requiredString(input.objectId, "objectId", providerInputError);
     await requestJson(`/objects/${encodePathSegment(objectId)}`, { method: "DELETE" }, context, "execute");
     return { objectId, acknowledged: true };
   },
 
   async restore_object(input, context) {
-    const objectId = requiredString(input.objectId, "objectId", badRequest);
+    const objectId = requiredString(input.objectId, "objectId", providerInputError);
     await requestJson(`/objects/${encodePathSegment(objectId)}/restore`, { method: "POST" }, context, "execute");
     return { objectId, acknowledged: true };
   },
 
   async pin_object(input, context) {
-    const objectId = requiredString(input.objectId, "objectId", badRequest);
+    const objectId = requiredString(input.objectId, "objectId", providerInputError);
     await requestJson(
       `/objects/${encodePathSegment(objectId)}/pin`,
       { method: "POST", json: jsonObject({ position: optionalInteger(input.position) }) },
@@ -240,18 +239,18 @@ export const myMindActionHandlers: ProviderActionHandlers<"mymind", ActionHandle
   },
 
   async unpin_object(input, context) {
-    const objectId = requiredString(input.objectId, "objectId", badRequest);
+    const objectId = requiredString(input.objectId, "objectId", providerInputError);
     await requestJson(`/objects/${encodePathSegment(objectId)}/pin`, { method: "DELETE" }, context, "execute");
     return { objectId, acknowledged: true };
   },
 
   async create_object_note(input, context) {
-    const objectId = requiredString(input.objectId, "objectId", badRequest);
+    const objectId = requiredString(input.objectId, "objectId", providerInputError);
     const payload = await requestJson(
       `/objects/${encodePathSegment(objectId)}/notes`,
       {
         method: "POST",
-        text: { contentType: markdownMediaType, body: requiredString(input.content, "content", badRequest) },
+        text: { contentType: markdownMediaType, body: requiredString(input.content, "content", providerInputError) },
       },
       context,
       "execute",
@@ -264,12 +263,12 @@ export const myMindActionHandlers: ProviderActionHandlers<"mymind", ActionHandle
   },
 
   async update_object_note(input, context) {
-    const noteId = requiredString(input.noteId, "noteId", badRequest);
+    const noteId = requiredString(input.noteId, "noteId", providerInputError);
     await requestJson(
       `/objects/${objectPath(input)}/notes/${encodePathSegment(noteId)}`,
       {
         method: "PUT",
-        text: { contentType: markdownMediaType, body: requiredString(input.content, "content", badRequest) },
+        text: { contentType: markdownMediaType, body: requiredString(input.content, "content", providerInputError) },
       },
       context,
       "execute",
@@ -278,7 +277,7 @@ export const myMindActionHandlers: ProviderActionHandlers<"mymind", ActionHandle
   },
 
   async delete_object_note(input, context) {
-    const noteId = requiredString(input.noteId, "noteId", badRequest);
+    const noteId = requiredString(input.noteId, "noteId", providerInputError);
     await requestJson(
       `/objects/${objectPath(input)}/notes/${encodePathSegment(noteId)}`,
       { method: "DELETE" },
@@ -299,7 +298,7 @@ export const myMindActionHandlers: ProviderActionHandlers<"mymind", ActionHandle
   },
 
   async add_object_tags(input, context) {
-    const objectId = requiredString(input.objectId, "objectId", badRequest);
+    const objectId = requiredString(input.objectId, "objectId", providerInputError);
     await requestJson(
       `/objects/${encodePathSegment(objectId)}/tags`,
       { method: "POST", json: requiredTagBody(input.tags) },
@@ -310,7 +309,7 @@ export const myMindActionHandlers: ProviderActionHandlers<"mymind", ActionHandle
   },
 
   async remove_object_tags(input, context) {
-    const objectId = requiredString(input.objectId, "objectId", badRequest);
+    const objectId = requiredString(input.objectId, "objectId", providerInputError);
     await requestJson(
       `/objects/${encodePathSegment(objectId)}/tags`,
       { method: "DELETE", json: requiredTagBody(input.tags) },
@@ -335,7 +334,7 @@ export const myMindActionHandlers: ProviderActionHandlers<"mymind", ActionHandle
       {
         method: "POST",
         json: jsonObject({
-          name: requiredString(input.name, "name", badRequest),
+          name: requiredString(input.name, "name", providerInputError),
           color: optionalString(input.color),
           objects: spaceBody(input.objectIds),
         }),
@@ -358,13 +357,13 @@ export const myMindActionHandlers: ProviderActionHandlers<"mymind", ActionHandle
   },
 
   async delete_space(input, context) {
-    const spaceId = requiredString(input.spaceId, "spaceId", badRequest);
+    const spaceId = requiredString(input.spaceId, "spaceId", providerInputError);
     await requestJson(`/spaces/${encodePathSegment(spaceId)}`, { method: "DELETE" }, context, "execute");
     return { spaceId, acknowledged: true };
   },
 
   async add_object_to_space(input, context) {
-    const spaceId = requiredString(input.spaceId, "spaceId", badRequest);
+    const spaceId = requiredString(input.spaceId, "spaceId", providerInputError);
     await requestJson(
       `/spaces/${encodePathSegment(spaceId)}/objects/${objectPath(input)}`,
       { method: "PUT" },
@@ -375,7 +374,7 @@ export const myMindActionHandlers: ProviderActionHandlers<"mymind", ActionHandle
   },
 
   async remove_object_from_space(input, context) {
-    const spaceId = requiredString(input.spaceId, "spaceId", badRequest);
+    const spaceId = requiredString(input.spaceId, "spaceId", providerInputError);
     await requestJson(
       `/spaces/${encodePathSegment(spaceId)}/objects/${objectPath(input)}`,
       { method: "DELETE" },
@@ -396,8 +395,8 @@ export const myMindActionHandlers: ProviderActionHandlers<"mymind", ActionHandle
       {
         method: "POST",
         json: {
-          sourceId: requiredString(input.sourceId, "sourceId", badRequest),
-          targetId: requiredString(input.targetId, "targetId", badRequest),
+          sourceId: requiredString(input.sourceId, "sourceId", providerInputError),
+          targetId: requiredString(input.targetId, "targetId", providerInputError),
         },
       },
       context,
@@ -407,7 +406,7 @@ export const myMindActionHandlers: ProviderActionHandlers<"mymind", ActionHandle
   },
 
   async delete_link(input, context) {
-    const linkId = requiredString(input.linkId, "linkId", badRequest);
+    const linkId = requiredString(input.linkId, "linkId", providerInputError);
     await requestJson(`/links/${encodePathSegment(linkId)}`, { method: "DELETE" }, context, "execute");
     return { linkId, acknowledged: true };
   },
@@ -446,17 +445,17 @@ export const credentialValidators: CredentialValidators = {
 
 function readAccessKey(values: Record<string, string>): MyMindAccessKey {
   return {
-    keyId: requiredString(values.keyId, "keyId", badRequest),
-    keySecret: base64Bytes(values.keySecret, "keySecret", badRequest),
+    keyId: requiredString(values.keyId, "keyId", providerInputError),
+    keySecret: base64Bytes(values.keySecret, "keySecret", providerInputError),
   };
 }
 
 function objectPath(input: Record<string, unknown>): string {
-  return encodePathSegment(requiredString(input.objectId, "objectId", badRequest));
+  return encodePathSegment(requiredString(input.objectId, "objectId", providerInputError));
 }
 
 function spacePath(input: Record<string, unknown>): string {
-  return encodePathSegment(requiredString(input.spaceId, "spaceId", badRequest));
+  return encodePathSegment(requiredString(input.spaceId, "spaceId", providerInputError));
 }
 
 function flag(value: unknown): string | undefined {
@@ -476,7 +475,7 @@ function tagBody(value: unknown): Array<{ name: string }> | undefined {
 function requiredTagBody(value: unknown): Array<{ name: string }> {
   const tags = tagBody(value);
   if (!tags) {
-    throw badRequest("tags must contain at least one tag name");
+    throw providerInputError("tags must contain at least one tag name");
   }
   return tags;
 }
@@ -642,7 +641,7 @@ async function createRequestError(response: Response, phase: RequestPhase): Prom
 
   if (response.status === 401 || response.status === 403) {
     return phase === "validate"
-      ? badRequest(`mymind rejected the access key: ${message}`)
+      ? providerInputError(`mymind rejected the access key: ${message}`)
       : new ProviderRequestError(response.status, message, problem);
   }
   if (response.status === 429) {

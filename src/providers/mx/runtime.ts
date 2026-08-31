@@ -15,7 +15,13 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  providerInputError,
+  ProviderRequestError,
+  providerResponseError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 export const mxApiBaseUrl = "https://api.mx.com";
 
@@ -88,7 +94,7 @@ export const mxActionHandlers: ProviderActionHandlers<"mx", ProviderRuntimeHandl
   update_user(input, context) {
     return writeUser({
       method: "PUT",
-      path: `/users/${encodeURIComponent(requiredString(input.userIdentifier, "userIdentifier", inputError))}`,
+      path: `/users/${encodeURIComponent(requiredString(input.userIdentifier, "userIdentifier", providerInputError))}`,
       user: readUserPatch(input.user),
       context,
     });
@@ -115,7 +121,7 @@ async function listUsers(input: Record<string, unknown>, context: MxContext) {
 }
 
 async function readUser(input: Record<string, unknown>, context: MxContext) {
-  const userIdentifier = requiredString(input.userIdentifier, "userIdentifier", inputError);
+  const userIdentifier = requiredString(input.userIdentifier, "userIdentifier", providerInputError);
   const payload = await requestMxJson({
     method: "GET",
     path: `/users/${encodeURIComponent(userIdentifier)}`,
@@ -146,7 +152,7 @@ async function writeUser(input: {
 }
 
 async function deleteUser(input: Record<string, unknown>, context: MxContext) {
-  const userIdentifier = requiredString(input.userIdentifier, "userIdentifier", inputError);
+  const userIdentifier = requiredString(input.userIdentifier, "userIdentifier", providerInputError);
   const payload = await requestMxJson({
     method: "DELETE",
     path: `/users/${encodeURIComponent(userIdentifier)}`,
@@ -245,7 +251,7 @@ function extractMxErrorMessage(payload: unknown) {
 }
 
 function normalizeUsersResponse(payload: unknown) {
-  const record = requiredRecord(payload, "MX list users response", responseError);
+  const record = requiredRecord(payload, "MX list users response", providerResponseError);
   const usersValue = record.users;
   if (!Array.isArray(usersValue)) {
     throw new ProviderRequestError(502, "MX list users response missing users array");
@@ -258,14 +264,14 @@ function normalizeUsersResponse(payload: unknown) {
 }
 
 function normalizeUserResponse(payload: unknown) {
-  const record = requiredRecord(payload, "MX user response", responseError);
+  const record = requiredRecord(payload, "MX user response", providerResponseError);
   return {
     user: normalizeUser(record.user),
   };
 }
 
 function normalizeUser(value: unknown) {
-  const record = requiredRecord(value, "MX user", responseError);
+  const record = requiredRecord(value, "MX user", providerResponseError);
   return {
     guid: optionalStringOrNull(record.guid),
     id: optionalStringOrNull(record.id),
@@ -288,7 +294,7 @@ function normalizePagination(value: unknown) {
 }
 
 function readUserPatch(value: unknown) {
-  const record = requiredRecord(value, "user", inputError);
+  const record = requiredRecord(value, "user", providerInputError);
   const patch = compactObject({
     id: optionalString(record.id),
     email: optionalString(record.email),
@@ -307,12 +313,4 @@ function stringifyOptionalInteger(value: number | undefined) {
 
 function stringifyOptionalBoolean(value: boolean | undefined) {
   return value === undefined ? undefined : String(value);
-}
-
-function inputError(message: string) {
-  return new ProviderRequestError(400, message);
-}
-
-function responseError(message: string) {
-  return new ProviderRequestError(502, message);
 }

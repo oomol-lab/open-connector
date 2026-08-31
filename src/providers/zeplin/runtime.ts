@@ -13,7 +13,7 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { encodePathSegment, queryParams } from "../../core/request.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerResponseError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 import { zeplinReadScope } from "./scopes.ts";
 
 const zeplinApiBaseUrl = "https://api.zeplin.dev/v1";
@@ -108,7 +108,7 @@ async function zeplinListPersonalProjects(
   });
 
   return {
-    projects: objectArray(payload, "zeplin personal projects", createProviderResponseError).map(toZeplinProjectSummary),
+    projects: objectArray(payload, "zeplin personal projects", providerResponseError).map(toZeplinProjectSummary),
   };
 }
 
@@ -146,7 +146,7 @@ async function zeplinListProjectColors(
   });
 
   return {
-    colors: objectArray(payload, "zeplin project colors", createProviderResponseError).map(toZeplinColor),
+    colors: objectArray(payload, "zeplin project colors", providerResponseError).map(toZeplinColor),
   };
 }
 
@@ -167,7 +167,7 @@ async function zeplinListProjectTextStyles(
   });
 
   return {
-    textStyles: objectArray(payload, "zeplin project text styles", createProviderResponseError).map(toZeplinTextStyle),
+    textStyles: objectArray(payload, "zeplin project text styles", providerResponseError).map(toZeplinTextStyle),
   };
 }
 
@@ -188,7 +188,7 @@ async function zeplinListScreenVersions(
   });
 
   return {
-    versions: objectArray(payload, "zeplin screen versions", createProviderResponseError).map(toZeplinScreenVersion),
+    versions: objectArray(payload, "zeplin screen versions", providerResponseError).map(toZeplinScreenVersion),
   };
 }
 
@@ -298,7 +298,7 @@ function toZeplinColor(color: Record<string, unknown>): Record<string, unknown> 
   return compactObject({
     id: requiredProviderString(color.id, "zeplin color id"),
     name: requiredProviderString(color.name, "zeplin color name"),
-    source: requiredRecord(color.source, "zeplin color source", createProviderResponseError),
+    source: requiredRecord(color.source, "zeplin color source", providerResponseError),
     created: requiredProviderInteger(color.created, "zeplin color created"),
     color: toZeplinRgba(
       {
@@ -318,7 +318,7 @@ function toZeplinTextStyle(textStyle: Record<string, unknown>): Record<string, u
   return compactObject({
     id: requiredProviderString(textStyle.id, "zeplin text style id"),
     name: requiredProviderString(textStyle.name, "zeplin text style name"),
-    source: requiredRecord(textStyle.source, "zeplin text style source", createProviderResponseError),
+    source: requiredRecord(textStyle.source, "zeplin text style source", providerResponseError),
     created: requiredProviderInteger(textStyle.created, "zeplin text style created"),
     fontFamily: requiredProviderString(textStyle.font_family, "zeplin text style font_family"),
     fontSize: requiredProviderNumber(textStyle.font_size, "zeplin text style font_size"),
@@ -329,7 +329,7 @@ function toZeplinTextStyle(textStyle: Record<string, unknown>): Record<string, u
     letterSpacing: optionalNumber(textStyle.letter_spacing),
     textAlign: optionalString(textStyle.text_align),
     color: toZeplinRgba(
-      requiredRecord(textStyle.color, "zeplin text style color", createProviderResponseError),
+      requiredRecord(textStyle.color, "zeplin text style color", providerResponseError),
       "zeplin text style color",
     ),
     description: optionalString(textStyle.description),
@@ -356,7 +356,7 @@ function toZeplinRgba(color: Record<string, unknown>, fieldName: string): Record
 }
 
 function requiredProviderString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, createProviderResponseError);
+  return requiredString(value, fieldName, providerResponseError);
 }
 
 function requiredProviderInteger(value: unknown, fieldName: string): number {
@@ -364,7 +364,7 @@ function requiredProviderInteger(value: unknown, fieldName: string): number {
   if (parsed !== undefined) {
     return parsed;
   }
-  throw createProviderResponseError(`malformed zeplin response: ${fieldName}`);
+  throw providerResponseError(`malformed zeplin response: ${fieldName}`);
 }
 
 function requiredProviderNumber(value: unknown, fieldName: string): number {
@@ -372,9 +372,5 @@ function requiredProviderNumber(value: unknown, fieldName: string): number {
   if (parsed !== undefined) {
     return parsed;
   }
-  throw createProviderResponseError(`malformed zeplin response: ${fieldName}`);
-}
-
-function createProviderResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
+  throw providerResponseError(`malformed zeplin response: ${fieldName}`);
 }

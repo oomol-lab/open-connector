@@ -10,7 +10,12 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  providerResponseError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const codacyApiBaseUrl = "https://app.codacy.com";
 const codacyApiPathPrefix = "/api/v3";
@@ -311,14 +316,14 @@ function readResponseArray(value: unknown, fieldName: string): Array<Record<stri
 }
 
 function requireInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, invalidInputError);
+  return requiredString(value, fieldName, providerInputError);
 }
 
 function readOptionalPositiveInteger(value: unknown, fieldName: string): number | undefined {
   if (value == null || value === "") {
     return undefined;
   }
-  return positiveInteger(value, fieldName, invalidInputError);
+  return positiveInteger(value, fieldName, providerInputError);
 }
 
 function readOptionalNumberAsString(value: unknown): string | undefined {
@@ -332,12 +337,4 @@ function pickFirstNonEmptyString(...values: Array<string | undefined>): string |
     }
   }
   return undefined;
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

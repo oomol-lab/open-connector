@@ -11,6 +11,7 @@ import {
   defineProviderProxy,
   providerProxyEndpointPrefixes,
   ProviderRequestError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 import {
   createComment,
@@ -511,12 +512,12 @@ async function downloadFile(input: Record<string, unknown>, context: ActionConte
     includeSharedDrives,
     context.signal,
   );
-  const fileId = requiredString(metadata.id, "Google Drive file metadata id", providerMetadataError);
-  const name = requiredRawString(metadata.name, "Google Drive file metadata name", providerMetadataError);
+  const fileId = requiredString(metadata.id, "Google Drive file metadata id", providerResponseError);
+  const name = requiredRawString(metadata.name, "Google Drive file metadata name", providerResponseError);
   if (name.length === 0) {
-    throw providerMetadataError("Google Drive file metadata name must not be empty");
+    throw providerResponseError("Google Drive file metadata name must not be empty");
   }
-  const mimeType = requiredString(metadata.mimeType, "Google Drive file metadata MIME type", providerMetadataError);
+  const mimeType = requiredString(metadata.mimeType, "Google Drive file metadata MIME type", providerResponseError);
   if (mimeType.toLowerCase().startsWith("application/vnd.google-apps.")) {
     throw new ProviderRequestError(
       400,
@@ -766,10 +767,6 @@ async function fetchDriveFile(
       supportsAllDrives: String(includeSharedDrives),
     },
   });
-}
-
-function providerMetadataError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }
 
 function extensionForExportMimeType(mimeType: string): string {

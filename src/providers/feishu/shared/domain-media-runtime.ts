@@ -3,7 +3,12 @@ import type { FeishuJsonRequest } from "./client.ts";
 import type { DownloadedFeishuSource } from "./media.ts";
 
 import { compactObject, optionalRecord } from "../../../core/cast.ts";
-import { createProviderFetch, ProviderRequestError } from "../../provider-runtime.ts";
+import {
+  createProviderFetch,
+  providerInputError,
+  ProviderRequestError,
+  providerResponseError,
+} from "../../provider-runtime.ts";
 import { requestFeishuMultipart, withFeishuRawResponse } from "./client.ts";
 import {
   downloadFeishuSource,
@@ -101,7 +106,7 @@ async function insertDocsMedia(input: Record<string, unknown>, deps: FeishuDomai
     });
     const root = optionalRecord(rootData.block);
     if (!root) {
-      throw providerError("Feishu document root response is missing block");
+      throw providerResponseError("Feishu document root response is missing block");
     }
     const parentBlockId = optionalString(root.block_id) ?? documentId;
     const index = Array.isArray(root.children) ? root.children.length : 0;
@@ -187,7 +192,7 @@ async function downloadDocumentCover(input: Record<string, unknown>, deps: Feish
   const cover = await getDocumentCover(documentId, deps.request);
   const coverToken = optionalString(cover.token);
   if (!coverToken) {
-    throw invalidInput(`document ${documentId} has no cover`);
+    throw providerInputError(`document ${documentId} has no cover`);
   }
   const file = await downloadFeishuRaw(
     {
@@ -204,7 +209,7 @@ async function updateDocumentCover(input: Record<string, unknown>, deps: FeishuD
   const documentId = requireString(input.documentId, "documentId");
   const source = await downloadSource(input, deps.fetcher, singlePartMaxBytes, deps.signal);
   if (!["image/gif", "image/jpeg", "image/png", "image/webp"].includes(source.mimeType)) {
-    throw invalidInput("document covers support GIF, JPEG, PNG, or WebP images");
+    throw providerInputError("document covers support GIF, JPEG, PNG, or WebP images");
   }
   const uploaded = await uploadDriveMedia(
     source,
@@ -265,7 +270,7 @@ async function uploadSlidesMedia(input: Record<string, unknown>, deps: FeishuDom
   const presentationId = await resolveSlidesPresentation(input, deps.request);
   const source = await downloadSource(input, deps.fetcher, singlePartMaxBytes, deps.signal);
   if (!source.mimeType.startsWith("image/")) {
-    throw invalidInput("fileUrl must point to an image");
+    throw providerInputError("fileUrl must point to an image");
   }
   const uploaded = await uploadDriveMedia(
     source,
@@ -291,7 +296,7 @@ async function getSlidesScreenshots(input: Record<string, unknown>, deps: Feishu
   const slideNumbers = optionalNumberArray(input.slideNumbers);
   const count = (slideIds?.length ?? 0) + (slideNumbers?.length ?? 0);
   if (count < 1 || count > 10) {
-    throw invalidInput("select between one and ten slides");
+    throw providerInputError("select between one and ten slides");
   }
   const data = await deps.request({
     method: "POST",
@@ -303,7 +308,7 @@ async function getSlidesScreenshots(input: Record<string, unknown>, deps: Feishu
   });
   const items = Array.isArray(data.slide_images) ? data.slide_images : [];
   if (items.length === 0) {
-    throw providerError("Feishu Slides screenshot response is missing slide_images");
+    throw providerResponseError("Feishu Slides screenshot response is missing slide_images");
   }
   const screenshots = [];
   for (const [index, item] of items.entries()) {
@@ -367,7 +372,7 @@ async function setSheetCellImage(input: Record<string, unknown>, deps: FeishuDom
   );
   const dimensions = readImageDimensions(requireInMemoryFeishuSource(source));
   if (!dimensions.width || !dimensions.height) {
-    throw invalidInput("imageUrl must return an image with valid dimensions");
+    throw providerInputError("imageUrl must return an image with valid dimensions");
   }
   const uploaded = await uploadDriveMedia(
     source,
@@ -423,17 +428,17 @@ async function setSheetCellImage(input: Record<string, unknown>, deps: FeishuDom
 async function uploadOkrImage(input: Record<string, unknown>, deps: FeishuDomainMediaRuntimeDeps) {
   const targetId = requireString(input.targetId, "targetId");
   if (!isPositiveIntegerString(targetId)) {
-    throw invalidInput("targetId must be a positive int64 string");
+    throw providerInputError("targetId must be a positive int64 string");
   }
   const targetType = requireString(input.targetType, "targetType");
   const targetTypeValue = targetType === "objective" ? 2 : targetType === "key_result" ? 3 : 0;
   if (targetTypeValue === 0) {
-    throw invalidInput("targetType must be objective or key_result");
+    throw providerInputError("targetType must be objective or key_result");
   }
   const source = await downloadSource(input, deps.fetcher, okrImageMaxBytes, deps.signal);
   try {
     if (!["image/bmp", "image/gif", "image/jpeg", "image/png"].includes(source.mimeType)) {
-      throw invalidInput("OKR images support BMP, GIF, JPEG, or PNG");
+      throw providerInputError("OKR images support BMP, GIF, JPEG, or PNG");
     }
     const body = new FormData();
     body.set("target_id", targetId);
@@ -467,7 +472,7 @@ async function downloadMinutesMedia(input: Record<string, unknown>, deps: Feishu
   const guardedFetcher = createProviderFetch({ fetch: deps.fetcher });
   const response = await guardedFetcher(downloadUrl);
   if (!response.ok) {
-    throw providerError(`Minutes download failed with status ${response.status}`);
+    throw providerResponseError(`Minutes download failed with status ${response.status}`);
   }
   const mimeType = response.headers.get("content-type")?.split(";", 1)[0]?.trim() ?? "application/octet-stream";
   const name = safeFileName(
@@ -560,7 +565,7 @@ async function uploadDriveMedia(
     };
   }
   if (!allowMultipart) {
-    throw invalidInput("Slides media upload is limited to 20 MB");
+    throw providerInputError("Slides media upload is limited to 20 MB");
   }
   const prepareData = await deps.request({
     method: "POST",
@@ -618,7 +623,7 @@ function readUploadSession(data: Record<string, unknown>, sizeBytes: number): Up
     !Number.isInteger(blockNum) ||
     Math.ceil(sizeBytes / blockSize) !== blockNum
   ) {
-    throw providerError("Feishu upload_prepare returned an invalid block plan");
+    throw providerResponseError("Feishu upload_prepare returned an invalid block plan");
   }
   return { uploadId, blockSize, blockNum };
 }
@@ -670,7 +675,7 @@ async function uploadResponseToTransit(
     if (error instanceof ProviderRequestError) {
       throw error;
     }
-    throw providerError(error instanceof Error ? error.message : "Feishu file transit upload failed");
+    throw providerResponseError(error instanceof Error ? error.message : "Feishu file transit upload failed");
   }
 }
 
@@ -683,14 +688,14 @@ async function storeScreenshot(
   const formatCode = optionalNumber(item.format);
   const format = formatCode === 1 ? "png" : formatCode === 2 ? "jpeg" : undefined;
   if (!format) {
-    throw providerError(`unsupported Slides screenshot format ${formatCode ?? "missing"}`);
+    throw providerResponseError(`unsupported Slides screenshot format ${formatCode ?? "missing"}`);
   }
   const encoded = requireResponseString(item.data, "slide image data");
   let bytes: Uint8Array;
   try {
     bytes = Uint8Array.from(Buffer.from(encoded, "base64"));
   } catch {
-    throw providerError("invalid Slides screenshot Base64 data");
+    throw providerResponseError("invalid Slides screenshot Base64 data");
   }
   const mimeType = format === "png" ? "image/png" : "image/jpeg";
   const slideId = optionalString(item.slide_id);
@@ -716,7 +721,7 @@ async function resolveSlidesPresentation(input: Record<string, unknown>, request
   });
   const node = optionalRecord(data.node);
   if (!node || optionalString(node.obj_type) !== "slides") {
-    throw invalidInput("Wiki node does not resolve to a Slides presentation");
+    throw providerInputError("Wiki node does not resolve to a Slides presentation");
   }
   return requireResponseString(node.obj_token, "node.obj_token");
 }
@@ -754,7 +759,7 @@ function readCreatedDocsMediaTargets(data: Record<string, unknown>, mediaType: "
   const child = optionalRecord(children[0]);
   const blockId = child ? optionalString(child.block_id) : undefined;
   if (!child || !blockId) {
-    throw providerError("Feishu create block response is missing block_id");
+    throw providerResponseError("Feishu create block response is missing block_id");
   }
   let nestedId: string | undefined;
   if (mediaType === "file" && Array.isArray(child.children)) {
@@ -832,7 +837,7 @@ function readImageDimensions(bytes: Uint8Array): ImageDimensions {
       offset += length + 2;
     }
   }
-  throw invalidInput("imageUrl must return a supported PNG, GIF, or JPEG image");
+  throw providerInputError("imageUrl must return a supported PNG, GIF, or JPEG image");
 }
 
 function requireTransit(deps: FeishuDomainMediaRuntimeDeps): TransitFileWriter {
@@ -846,14 +851,14 @@ function requireMediaType(value: unknown): "image" | "file" {
   if (value === "image" || value === "file") {
     return value;
   }
-  throw invalidInput("type must be image or file");
+  throw providerInputError("type must be image or file");
 }
 
 function requireSheetSelector(input: Record<string, unknown>) {
   const sheetId = optionalString(input.sheetId);
   const sheetName = optionalString(input.sheetName);
   if (Boolean(sheetId) === Boolean(sheetName)) {
-    throw invalidInput("provide exactly one of sheetId or sheetName");
+    throw providerInputError("provide exactly one of sheetId or sheetName");
   }
   return {
     sheetId,
@@ -865,7 +870,7 @@ function requireSheetSelector(input: Record<string, unknown>) {
 function normalizeSingleCellRange(value: string) {
   const parts = value.trim().toUpperCase().split(":");
   if (parts.length > 2 || !parts[0] || (parts.length === 2 && parts[0] !== parts[1])) {
-    throw invalidInput("range must identify exactly one cell");
+    throw providerInputError("range must identify exactly one cell");
   }
   const cell = parts[0];
   let index = 0;
@@ -873,12 +878,12 @@ function normalizeSingleCellRange(value: string) {
     index += 1;
   }
   if (index === 0 || index === cell.length || cell[index] === "0") {
-    throw invalidInput("range must use A1 notation");
+    throw providerInputError("range must use A1 notation");
   }
   for (; index < cell.length; index += 1) {
     const code = cell.charCodeAt(index);
     if (code < 48 || code > 57) {
-      throw invalidInput("range must use A1 notation");
+      throw providerInputError("range must use A1 notation");
     }
   }
   return cell;
@@ -900,7 +905,7 @@ function parseSheetToolOutput(value: unknown) {
   try {
     return optionalRecord(JSON.parse(value)) ?? {};
   } catch {
-    throw providerError("Feishu set_cell_range returned invalid JSON output");
+    throw providerResponseError("Feishu set_cell_range returned invalid JSON output");
   }
 }
 
@@ -923,7 +928,7 @@ function validateMinutesFileName(value: string) {
     "flv",
   ]);
   if (!extension || !allowed.has(extension)) {
-    throw invalidInput("Minutes source file has an unsupported audio or video extension");
+    throw providerInputError("Minutes source file has an unsupported audio or video extension");
   }
 }
 
@@ -952,14 +957,14 @@ function isPositiveIntegerString(value: string) {
 function requireObject(value: unknown, fieldName: string) {
   const object = optionalRecord(value);
   if (!object) {
-    throw providerError(`Feishu response is missing ${fieldName}`);
+    throw providerResponseError(`Feishu response is missing ${fieldName}`);
   }
   return object;
 }
 
 function requireString(value: unknown, fieldName: string) {
   if (typeof value !== "string" || !value.trim()) {
-    throw invalidInput(`${fieldName} is required`);
+    throw providerInputError(`${fieldName} is required`);
   }
   return value.trim();
 }
@@ -970,7 +975,7 @@ function optionalString(value: unknown) {
 
 function requireResponseString(value: unknown, fieldName: string) {
   if (typeof value !== "string" || !value) {
-    throw providerError(`Feishu response is missing ${fieldName}`);
+    throw providerResponseError(`Feishu response is missing ${fieldName}`);
   }
   return value;
 }
@@ -984,7 +989,7 @@ function optionalStringArray(value: unknown) {
     return undefined;
   }
   if (!Array.isArray(value)) {
-    throw invalidInput("slideIds must be a string array");
+    throw providerInputError("slideIds must be a string array");
   }
   return Array.from(new Set(value.map((item) => requireString(item, "slideIds item"))));
 }
@@ -994,12 +999,12 @@ function optionalNumberArray(value: unknown) {
     return undefined;
   }
   if (!Array.isArray(value)) {
-    throw invalidInput("slideNumbers must be an integer array");
+    throw providerInputError("slideNumbers must be an integer array");
   }
   const numbers = value.map((item) => {
     const number = optionalNumber(item);
     if (!number || !Number.isInteger(number) || number < 1) {
-      throw invalidInput("slideNumbers items must be positive integers");
+      throw providerInputError("slideNumbers items must be positive integers");
     }
     return number;
   });
@@ -1058,12 +1063,4 @@ function ensureImageExtension(name: string, format: "png" | "jpeg") {
 
 function segment(value: string) {
   return encodeURIComponent(value);
-}
-
-function invalidInput(message: string) {
-  return new ProviderRequestError(400, message);
-}
-
-function providerError(message: string) {
-  return new ProviderRequestError(502, message);
 }

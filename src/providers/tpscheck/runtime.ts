@@ -13,6 +13,7 @@ import {
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -180,8 +181,4 @@ function requireTpscheckObject(payload: unknown, endpoint: string): Record<strin
     throw new ProviderRequestError(502, `TPSCheck ${endpoint} returned a non-object response`);
   }
   return record;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

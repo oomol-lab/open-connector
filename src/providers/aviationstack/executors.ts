@@ -6,6 +6,7 @@ import { compactObject, optionalNumber, optionalRecord, optionalString, required
 import {
   defineProviderExecutors,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   requireApiKeyCredential,
   setSearchParams,
@@ -91,7 +92,7 @@ export const credentialValidators: CredentialValidators = {
       },
       phase: "validate",
     });
-    const pagination = normalizePagination(requiredRecord(payload.pagination, "pagination", providerError));
+    const pagination = normalizePagination(requiredRecord(payload.pagination, "pagination", providerResponseError));
     const firstAirport = readFirstDataObject(payload);
 
     return {
@@ -144,7 +145,7 @@ async function searchFlights(
 
   return {
     flights: normalizeDataArray(payload).map((item) => normalizeFlight(item)),
-    pagination: normalizePagination(requiredRecord(payload.pagination, "pagination", providerError)),
+    pagination: normalizePagination(requiredRecord(payload.pagination, "pagination", providerResponseError)),
   };
 }
 
@@ -171,7 +172,7 @@ async function searchRoutes(
 
   return {
     routes: normalizeDataArray(payload).map((item) => normalizeRoute(item)),
-    pagination: normalizePagination(requiredRecord(payload.pagination, "pagination", providerError)),
+    pagination: normalizePagination(requiredRecord(payload.pagination, "pagination", providerResponseError)),
   };
 }
 
@@ -197,7 +198,7 @@ async function listCollection(
 
   return {
     [config.outputKey]: normalizeDataArray(payload).map((item) => config.normalize(item)),
-    pagination: normalizePagination(requiredRecord(payload.pagination, "pagination", providerError)),
+    pagination: normalizePagination(requiredRecord(payload.pagination, "pagination", providerResponseError)),
   };
 }
 
@@ -256,7 +257,7 @@ async function readAviationstackPayload(response: Response): Promise<Record<stri
     throw new ProviderRequestError(502, "Aviationstack returned invalid JSON");
   }
 
-  return requiredRecord(payload, "Aviationstack payload", providerError);
+  return requiredRecord(payload, "Aviationstack payload", providerResponseError);
 }
 
 function createAviationstackError(
@@ -300,7 +301,7 @@ function normalizeDataArray(payload: Record<string, unknown>): Array<Record<stri
   if (!Array.isArray(payload.data)) {
     throw new ProviderRequestError(502, "Aviationstack response is missing data");
   }
-  return payload.data.map((item, index) => requiredRecord(item, `data[${index}]`, providerError));
+  return payload.data.map((item, index) => requiredRecord(item, `data[${index}]`, providerResponseError));
 }
 
 function normalizePagination(input: Record<string, unknown>): Record<string, number> {
@@ -547,10 +548,6 @@ function stringifyQuery(input: Record<string, AviationstackQueryValue>): Record<
   return Object.fromEntries(
     Object.entries(input).map(([key, value]) => [key, value === undefined ? undefined : String(value)]),
   );
-}
-
-function providerError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }
 
 function isAbortError(error: unknown): boolean {

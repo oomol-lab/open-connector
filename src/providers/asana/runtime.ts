@@ -8,7 +8,13 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { isAbortLikeError, ProviderRequestError, providerUserAgent, setSearchParams } from "../provider-runtime.ts";
+import {
+  isAbortLikeError,
+  providerInputError,
+  ProviderRequestError,
+  providerUserAgent,
+  setSearchParams,
+} from "../provider-runtime.ts";
 
 export const asanaApiBaseUrl = "https://app.asana.com/api/1.0";
 
@@ -40,14 +46,9 @@ export interface AsanaWriteResourceOptions {
   notFoundAsInvalidInput?: boolean;
 }
 
-/** Build an invalid-input error for Asana action fields. */
-export function asanaInvalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
 /** Encode a required Asana gid for use in a request path. */
 export function asanaPathGid(value: unknown, fieldName: string): string {
-  return encodeURIComponent(requiredString(value, fieldName, asanaInvalidInputError));
+  return encodeURIComponent(requiredString(value, fieldName, providerInputError));
 }
 
 /** Remove undefined values from an Asana query parameter map. */
@@ -97,7 +98,7 @@ export function buildAsanaPaginationQuery(
 /** Reject an update body that contains no mutable Asana fields. */
 export function requireNonEmptyAsanaBody(body: Record<string, unknown>, message: string): void {
   if (Object.keys(body).length === 0) {
-    throw asanaInvalidInputError(message);
+    throw providerInputError(message);
   }
 }
 

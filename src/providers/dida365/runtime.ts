@@ -12,7 +12,7 @@ import {
   optionalRecord,
   optionalString,
 } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const dida365ApiBaseUrl = "https://api.dida365.com";
 
@@ -491,7 +491,7 @@ function buildFilterTasksBody(input: Record<string, unknown>): Record<string, un
 }
 
 function normalizeMoveOperations(value: unknown): Array<Record<string, unknown>> {
-  return objectArray(value, "moves", inputError).map((operation) =>
+  return objectArray(value, "moves", providerInputError).map((operation) =>
     compactObject({
       fromProjectId: requireNonEmptyString(operation.fromProjectId, "moves.fromProjectId"),
       toProjectId: requireNonEmptyString(operation.toProjectId, "moves.toProjectId"),
@@ -513,7 +513,7 @@ function buildHabitCheckinBody(input: Record<string, unknown>): Record<string, u
 
 function normalizeChecklistItems(value: unknown): Array<Record<string, unknown>> | undefined {
   if (value == null) return undefined;
-  return objectArray(value, "items", inputError).map((item) =>
+  return objectArray(value, "items", providerInputError).map((item) =>
     compactObject({
       id: optionalString(item.id),
       title: requireNonEmptyString(item.title, "items.title"),
@@ -616,8 +616,4 @@ function requireObjectArrayPayload(value: unknown, fieldName: string): Dida365Pa
 
 function optionalObjectArrayPayload(value: unknown): Dida365Payload[] {
   return value == null ? [] : requireObjectArrayPayload(value, "dida365 nested array response");
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

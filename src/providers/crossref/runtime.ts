@@ -880,9 +880,6 @@ function numberToString(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) ? String(value) : undefined;
 }
 
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
 import { Buffer } from "node:buffer";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import {
@@ -896,6 +893,7 @@ import {
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";

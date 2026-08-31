@@ -15,6 +15,7 @@ import {
   createProviderTimeout,
   defineProviderExecutors,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -43,7 +44,7 @@ const handlers: Record<Document360ActionName, Handler> = {
     };
   },
   async list_workspace_articles(input, context) {
-    const projectVersionId = requiredString(input.projectVersionId, "projectVersionId", invalidInput);
+    const projectVersionId = requiredString(input.projectVersionId, "projectVersionId", providerInputError);
     const payload = await requestJson({
       ...context,
       path: `/v2/ProjectVersions/${encodePathSegment(projectVersionId)}/articles`,
@@ -63,7 +64,7 @@ const handlers: Record<Document360ActionName, Handler> = {
     };
   },
   async get_workspace_categories(input, context) {
-    const projectVersionId = requiredString(input.projectVersionId, "projectVersionId", invalidInput);
+    const projectVersionId = requiredString(input.projectVersionId, "projectVersionId", providerInputError);
     const payload = await requestJson({
       ...context,
       path: `/v2/ProjectVersions/${encodePathSegment(projectVersionId)}/categories`,
@@ -82,13 +83,13 @@ const handlers: Record<Document360ActionName, Handler> = {
     };
   },
   async search_workspace(input, context) {
-    const projectVersionId = requiredString(input.projectVersionId, "projectVersionId", invalidInput);
-    const langCode = requiredString(input.langCode, "langCode", invalidInput);
+    const projectVersionId = requiredString(input.projectVersionId, "projectVersionId", providerInputError);
+    const langCode = requiredString(input.langCode, "langCode", providerInputError);
     const payload = await requestJson({
       ...context,
       path: `/v2/ProjectVersions/${encodePathSegment(projectVersionId)}/${encodePathSegment(langCode)}`,
       query: compactObject({
-        searchQuery: requiredString(input.searchQuery, "searchQuery", invalidInput),
+        searchQuery: requiredString(input.searchQuery, "searchQuery", providerInputError),
         page: optionalNumber(input.page),
         hitsPerPage: optionalNumber(input.hitsPerPage),
       }),
@@ -370,8 +371,4 @@ function nullableInteger(value: unknown): number | null {
 
 function nullableBoolean(value: unknown): boolean | null {
   return typeof value === "boolean" ? value : null;
-}
-
-function invalidInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

@@ -22,6 +22,7 @@ import {
   defineProviderExecutors,
   defineProviderProxy,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
@@ -645,10 +646,6 @@ function buildQuery(input: Record<string, string | number | boolean | undefined>
 
 function requiredInputString(value: unknown, fieldName: string): string {
   return requiredString(value, fieldName, providerInputError);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function requiredOutputObject(value: unknown, label: string): Record<string, unknown> {

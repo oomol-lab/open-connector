@@ -14,7 +14,9 @@ import {
   createProviderTimeout,
   isAbortSignalError,
   parseProviderJsonBodyText,
+  providerInputError,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   readProviderTextBody,
 } from "../provider-runtime.ts";
@@ -328,12 +330,4 @@ function requiredRecord(value: unknown, fieldName: string): Record<string, unkno
     return record;
   }
   throw providerResponseError(`${fieldName} must be an object`);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

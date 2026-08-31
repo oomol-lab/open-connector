@@ -20,6 +20,7 @@ import {
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
   providerFetch,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderProxyResponse,
@@ -244,7 +245,7 @@ async function createFlomoMemo(input: {
         "user-agent": providerUserAgent,
       },
       body: JSON.stringify({
-        content: requiredString(input.input.content, "content", flomoInputError),
+        content: requiredString(input.input.content, "content", providerInputError),
         ...(input.input.contentType === "markdown" || input.input.format === "markdown"
           ? { content_type: "markdown" }
           : {}),
@@ -528,10 +529,6 @@ function buildFlomoHttpErrorMessage(status: number, text: string): string {
   }
 
   return `flomo webhook request failed with HTTP ${status}: ${trimmed.slice(0, 200)}`;
-}
-
-function flomoInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function isAbortError(error: unknown): boolean {

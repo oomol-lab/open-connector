@@ -8,6 +8,7 @@ import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   uploadProviderUrlToTransitFile,
@@ -220,8 +221,4 @@ function inferConvertedFileName(record: Record<string, unknown>): string {
   const fileId = optionalString(record.FileId) ?? "convertapi-output";
   const fileExt = optionalString(record.FileExt);
   return fileExt ? `${fileId}.${fileExt}` : fileId;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

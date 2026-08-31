@@ -13,6 +13,7 @@ import { optionalInteger, optionalRecord, optionalString, requiredString } from 
 import {
   defineProviderProxy,
   defineProviderExecutors,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -78,7 +79,7 @@ export const bamboohrActionHandlers: ProviderActionHandlers<"bamboohr", Provider
   },
 
   async get_employee(input, context) {
-    const employeeId = requiredString(input.employeeId, "employeeId", invalidInputError);
+    const employeeId = requiredString(input.employeeId, "employeeId", providerInputError);
     const raw = await requestBamboohrJson({
       context,
       path: `/api/v1/employees/${encodeURIComponent(employeeId)}`,
@@ -339,10 +340,6 @@ function readFirstString(record: Record<string, unknown>, keys: string[]): strin
     }
   }
   return undefined;
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function isAbortError(error: unknown): boolean {

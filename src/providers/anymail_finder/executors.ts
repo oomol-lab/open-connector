@@ -2,7 +2,12 @@ import type { CredentialValidators, ProviderExecutors } from "../../core/types.t
 import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerInputError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "anymail_finder";
 const apiBaseUrl = "https://api.anymailfinder.com";
@@ -47,7 +52,7 @@ export const anymailFinderActionHandlers: ProviderActionHandlers<
   async verify_email(input, context) {
     return wrapResult(
       await post("/v5.1/verify-email", context, {
-        email: requiredString(input.email, "email", badRequest),
+        email: requiredString(input.email, "email", providerInputError),
       }),
     );
   },
@@ -80,13 +85,13 @@ function validatePersonSearch(input: Record<string, unknown>): void {
     (Boolean(optionalString(input.firstName)) && Boolean(optionalString(input.lastName)));
   const hasCompany = Boolean(optionalString(input.domain)) || Boolean(optionalString(input.companyName));
   if (hasName && hasCompany) return;
-  throw badRequest("linkedinUrl or a person name together with domain or companyName is required");
+  throw providerInputError("linkedinUrl or a person name together with domain or companyName is required");
 }
 
 function companyFields(input: Record<string, unknown>): Record<string, unknown> {
   const domain = optionalString(input.domain);
   const companyName = optionalString(input.companyName);
-  if (!domain && !companyName) throw badRequest("domain or companyName is required");
+  if (!domain && !companyName) throw providerInputError("domain or companyName is required");
   return { domain, company_name: companyName };
 }
 
@@ -161,8 +166,4 @@ function readNumber(input: Record<string, unknown>, key: string): number {
   const value = input[key];
   if (typeof value === "number" && Number.isFinite(value)) return value;
   throw new ProviderRequestError(502, `Anymail Finder response is missing ${key}`);
-}
-
-function badRequest(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

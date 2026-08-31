@@ -2,7 +2,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  providerResponseError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 import { todoistOAuthScopes } from "./scopes.ts";
 
 const todoistApiBaseUrl = "https://api.todoist.com/api/v1";
@@ -116,7 +121,7 @@ export async function fetchTodoistCurrentAccount(
     phase,
   });
 
-  const userId = requiredString(payload.id, "todoist user id", providerError);
+  const userId = requiredString(payload.id, "todoist user id", providerResponseError);
   const email = optionalString(payload.email);
   const fullName = optionalString(payload.full_name);
   return {
@@ -167,7 +172,7 @@ async function getProject(input: Record<string, unknown>, context: BearerProvide
   return {
     project: await requestTodoistJson({
       ...requestContext(context),
-      path: `/projects/${encodeURIComponent(requiredString(input.projectId, "projectId", invalidInput))}`,
+      path: `/projects/${encodeURIComponent(requiredString(input.projectId, "projectId", providerInputError))}`,
       notFoundAsInvalidInput: true,
     }),
   };
@@ -180,7 +185,7 @@ async function createProject(input: Record<string, unknown>, context: BearerProv
       path: "/projects",
       method: "POST",
       body: compactObject({
-        name: requiredString(input.name, "name", invalidInput),
+        name: requiredString(input.name, "name", providerInputError),
         description: optionalString(input.description),
         parent_id: input.parentId === null ? null : optionalString(input.parentId),
         color: input.color,
@@ -196,7 +201,7 @@ async function updateProject(input: Record<string, unknown>, context: BearerProv
   return {
     project: await requestTodoistJson({
       ...requestContext(context),
-      path: `/projects/${encodeURIComponent(requiredString(input.projectId, "projectId", invalidInput))}`,
+      path: `/projects/${encodeURIComponent(requiredString(input.projectId, "projectId", providerInputError))}`,
       method: "POST",
       notFoundAsInvalidInput: true,
       body: compactObject({
@@ -230,7 +235,7 @@ async function getSection(input: Record<string, unknown>, context: BearerProvide
   return {
     section: await requestTodoistJson({
       ...requestContext(context),
-      path: `/sections/${encodeURIComponent(requiredString(input.sectionId, "sectionId", invalidInput))}`,
+      path: `/sections/${encodeURIComponent(requiredString(input.sectionId, "sectionId", providerInputError))}`,
       notFoundAsInvalidInput: true,
     }),
   };
@@ -243,8 +248,8 @@ async function createSection(input: Record<string, unknown>, context: BearerProv
       path: "/sections",
       method: "POST",
       body: compactObject({
-        name: requiredString(input.name, "name", invalidInput),
-        project_id: requiredString(input.projectId, "projectId", invalidInput),
+        name: requiredString(input.name, "name", providerInputError),
+        project_id: requiredString(input.projectId, "projectId", providerInputError),
         order: optionalInteger(input.order),
       }),
     }),
@@ -255,7 +260,7 @@ async function updateSection(input: Record<string, unknown>, context: BearerProv
   return {
     section: await requestTodoistJson({
       ...requestContext(context),
-      path: `/sections/${encodeURIComponent(requiredString(input.sectionId, "sectionId", invalidInput))}`,
+      path: `/sections/${encodeURIComponent(requiredString(input.sectionId, "sectionId", providerInputError))}`,
       method: "POST",
       notFoundAsInvalidInput: true,
       body: compactObject({
@@ -292,7 +297,7 @@ async function getTask(input: Record<string, unknown>, context: BearerProviderCo
   return {
     task: await requestTodoistJson({
       ...requestContext(context),
-      path: `/tasks/${encodeURIComponent(requiredString(input.taskId, "taskId", invalidInput))}`,
+      path: `/tasks/${encodeURIComponent(requiredString(input.taskId, "taskId", providerInputError))}`,
       notFoundAsInvalidInput: true,
     }),
   };
@@ -313,7 +318,7 @@ async function updateTask(input: Record<string, unknown>, context: BearerProvide
   return {
     task: await requestTodoistJson({
       ...requestContext(context),
-      path: `/tasks/${encodeURIComponent(requiredString(input.taskId, "taskId", invalidInput))}`,
+      path: `/tasks/${encodeURIComponent(requiredString(input.taskId, "taskId", providerInputError))}`,
       method: "POST",
       notFoundAsInvalidInput: true,
       body: buildTaskBody(input, false),
@@ -324,7 +329,7 @@ async function updateTask(input: Record<string, unknown>, context: BearerProvide
 async function closeTask(input: Record<string, unknown>, context: BearerProviderContext): Promise<unknown> {
   await requestTodoistJson({
     ...requestContext(context),
-    path: `/tasks/${encodeURIComponent(requiredString(input.taskId, "taskId", invalidInput))}/close`,
+    path: `/tasks/${encodeURIComponent(requiredString(input.taskId, "taskId", providerInputError))}/close`,
     method: "POST",
     notFoundAsInvalidInput: true,
   });
@@ -351,7 +356,7 @@ async function listComments(input: Record<string, unknown>, context: BearerProvi
 async function getComment(input: Record<string, unknown>, context: BearerProviderContext): Promise<unknown> {
   const payload = await requestTodoistJson<Record<string, unknown>>({
     ...requestContext(context),
-    path: `/comments/${encodeURIComponent(requiredString(input.commentId, "commentId", invalidInput))}`,
+    path: `/comments/${encodeURIComponent(requiredString(input.commentId, "commentId", providerInputError))}`,
     notFoundAsInvalidInput: true,
   });
   return { comment: normalizeComment(payload) };
@@ -363,7 +368,7 @@ async function createComment(input: Record<string, unknown>, context: BearerProv
     path: "/comments",
     method: "POST",
     body: compactObject({
-      content: requiredString(input.content, "content", invalidInput),
+      content: requiredString(input.content, "content", providerInputError),
       task_id: optionalString(input.taskId),
       project_id: optionalString(input.projectId),
       attachment: buildCommentAttachment(input.attachment),
@@ -376,11 +381,11 @@ async function createComment(input: Record<string, unknown>, context: BearerProv
 async function updateComment(input: Record<string, unknown>, context: BearerProviderContext): Promise<unknown> {
   const payload = await requestTodoistJson<Record<string, unknown>>({
     ...requestContext(context),
-    path: `/comments/${encodeURIComponent(requiredString(input.commentId, "commentId", invalidInput))}`,
+    path: `/comments/${encodeURIComponent(requiredString(input.commentId, "commentId", providerInputError))}`,
     method: "POST",
     notFoundAsInvalidInput: true,
     body: {
-      content: requiredString(input.content, "content", invalidInput),
+      content: requiredString(input.content, "content", providerInputError),
     },
   });
   return { comment: normalizeComment(payload) };
@@ -502,7 +507,7 @@ function readNextCursor(payload: Record<string, unknown>): string | null {
 
 function buildTaskBody(input: Record<string, unknown>, isCreate: boolean): Record<string, unknown> {
   return compactObject({
-    content: isCreate ? requiredString(input.content, "content", invalidInput) : optionalString(input.content),
+    content: isCreate ? requiredString(input.content, "content", providerInputError) : optionalString(input.content),
     description: input.description,
     project_id: optionalString(input.projectId),
     section_id: optionalString(input.sectionId),
@@ -554,12 +559,4 @@ function normalizeComment(comment: Record<string, unknown>): Record<string, unkn
     ...comment,
     attachment,
   });
-}
-
-function invalidInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

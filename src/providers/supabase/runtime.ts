@@ -16,7 +16,7 @@ import {
   stringArray,
 } from "../../core/cast.ts";
 import { jsonObject, readBoundedResponseBytes } from "../../core/request.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 import { supabaseProviderScopes } from "./scopes.ts";
 
 const supabaseApiBaseUrl = "https://api.supabase.com/v1";
@@ -1133,10 +1133,6 @@ function buildSupabaseAccountLabel(organizations: SupabaseOrganizationSummary[])
   return organizations.length === 1
     ? `Supabase (${firstName})`
     : `Supabase (${firstName} +${organizations.length - 1})`;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function providerMalformedError(message: string): ProviderRequestError {

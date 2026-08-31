@@ -1,6 +1,6 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
-import { ProviderRequestError } from "../../provider-runtime.ts";
+import { providerInputError, ProviderRequestError } from "../../provider-runtime.ts";
 
 interface CalendarActionHandler {
   (input: Record<string, unknown>): Promise<unknown>;
@@ -55,7 +55,7 @@ async function listAgenda(input: Record<string, unknown>, request: FeishuJsonReq
   const start = unixSeconds(input.startTime, "startTime");
   const end = unixSeconds(input.endTime, "endTime");
   if (end < start) {
-    throw invalidInput("endTime must be later than startTime");
+    throw providerInputError("endTime must be later than startTime");
   }
 
   const windows = splitUnixRange(start, end, 40 * 24 * 60 * 60);
@@ -79,7 +79,7 @@ async function searchEvents(input: Record<string, unknown>, request: FeishuJsonR
   const filter: Record<string, unknown> = {};
   if (input.startTime != null || input.endTime != null) {
     if (input.startTime == null || input.endTime == null) {
-      throw invalidInput("startTime and endTime must be provided together");
+      throw providerInputError("startTime and endTime must be provided together");
     }
     filter.time_range = {
       start_time: rfc3339(input.startTime, "startTime"),
@@ -334,19 +334,19 @@ function buildEventBody(input: Record<string, unknown>, required: boolean) {
   if (input.startTime != null) {
     body.start_time = calendarTime(input.startTime, input.timezone, input.isAllDay);
   } else if (required) {
-    throw invalidInput("startTime is required");
+    throw providerInputError("startTime is required");
   }
   if (input.endTime != null) {
     body.end_time = calendarTime(input.endTime, input.timezone, input.isAllDay);
   } else if (required) {
-    throw invalidInput("endTime is required");
+    throw providerInputError("endTime is required");
   }
   if (
     input.startTime != null &&
     input.endTime != null &&
     unixSeconds(input.endTime, "endTime") <= unixSeconds(input.startTime, "startTime")
   ) {
-    throw invalidInput("endTime must be later than startTime");
+    throw providerInputError("endTime must be later than startTime");
   }
   return body;
 }
@@ -463,7 +463,7 @@ function requiredString(value: unknown, field: string) {
   if (typeof value === "string" && value.length > 0) {
     return value;
   }
-  throw invalidInput(`${field} must be a non-empty string`);
+  throw providerInputError(`${field} must be a non-empty string`);
 }
 
 function optionalString(value: unknown) {
@@ -478,7 +478,7 @@ function requiredNumber(value: unknown, field: string) {
   if (typeof value === "number" && Number.isFinite(value)) {
     return value;
   }
-  throw invalidInput(`${field} must be a number`);
+  throw providerInputError(`${field} must be a number`);
 }
 
 function unixSeconds(value: unknown, field: string) {
@@ -491,7 +491,7 @@ function unixSeconds(value: unknown, field: string) {
   if (Number.isFinite(milliseconds)) {
     return Math.trunc(milliseconds / 1000);
   }
-  throw invalidInput(`${field} must be an RFC 3339 date-time or Unix timestamp`);
+  throw providerInputError(`${field} must be an RFC 3339 date-time or Unix timestamp`);
 }
 
 function rfc3339(value: unknown, field: string) {
@@ -499,7 +499,7 @@ function rfc3339(value: unknown, field: string) {
   const numeric = Number(raw);
   const milliseconds = Number.isFinite(numeric) ? numeric * 1000 : Date.parse(raw);
   if (!Number.isFinite(milliseconds)) {
-    throw invalidInput(`${field} must be an RFC 3339 date-time or Unix timestamp`);
+    throw providerInputError(`${field} must be an RFC 3339 date-time or Unix timestamp`);
   }
   return new Date(milliseconds).toISOString();
 }
@@ -509,7 +509,7 @@ function assignString(target: Record<string, unknown>, key: string, value: unkno
   if (stringValue) {
     target[key] = stringValue;
   } else if (required) {
-    throw invalidInput(`${key} is required`);
+    throw providerInputError(`${key} is required`);
   }
 }
 
@@ -529,8 +529,4 @@ function encode(value: string) {
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
-}
-
-function invalidInput(message: string) {
-  return new ProviderRequestError(400, message);
 }

@@ -2,7 +2,7 @@ import type { TransitFileWriter } from "../../core/types.ts";
 
 import { optionalRecord, requiredString } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { ProviderRequestError, providerResponseError } from "../provider-runtime.ts";
 
 interface MarketDumpContext {
   apiKey: string;
@@ -55,7 +55,7 @@ async function exportMarketDump(get: MarketDumpGet, path: string, name: string, 
   if (!context.transitFiles) throw new ProviderRequestError(500, "market dump export requires local transit storage");
   const signed = optionalRecord(await get(path, {}, context));
   if (!signed) throw new ProviderRequestError(502, "market dump signing response must be an object");
-  const sourceUrl = requiredString(signed.presigned_url, "presigned_url", providerOutput);
+  const sourceUrl = requiredString(signed.presigned_url, "presigned_url", providerResponseError);
   const sourceExpiresAt = requiredDateTime(signed.presigned_url_expires_at, "presigned_url_expires_at");
   const url = parseHttpsUrl(sourceUrl, "presigned_url");
   const timeout = AbortSignal.timeout(timeoutMs);
@@ -102,7 +102,7 @@ function validateParquetEnvelope(bytes: Uint8Array): void {
 }
 
 function requiredDateTime(value: unknown, field: string): string {
-  const text = requiredString(value, field, providerOutput);
+  const text = requiredString(value, field, providerResponseError);
   if (!Number.isFinite(Date.parse(text))) throw new ProviderRequestError(502, `${field} must be an ISO 8601 date-time`);
   return text;
 }
@@ -116,8 +116,4 @@ function parseHttpsUrl(value: string, field: string): URL {
   }
   if (url.protocol !== "https:") throw new ProviderRequestError(502, `${field} must use HTTPS`);
   return url;
-}
-
-function providerOutput(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

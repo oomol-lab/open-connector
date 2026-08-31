@@ -19,6 +19,7 @@ import {
   defineProviderExecutors,
   isAbortLikeError,
   normalizeProviderProxyHeaders,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderProxyErrorMessage,
@@ -286,11 +287,7 @@ async function requestAtlasJson(input: {
 }
 
 function readPrivateKey(values: Record<string, unknown> | undefined): string {
-  return requiredString(values?.privateKey, "privateKey", providerRequestInputError);
-}
-
-function providerRequestInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
+  return requiredString(values?.privateKey, "privateKey", providerInputError);
 }
 
 function buildAtlasUrl(path: string, query: Record<string, string | undefined> = {}): URL {
@@ -495,7 +492,7 @@ function optionalIntegerString(value: unknown, fieldName: string): string | unde
 }
 
 function requiredAtlasInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerRequestInputError as CastErrorFactory);
+  return requiredString(value, fieldName, providerInputError as CastErrorFactory);
 }
 
 function normalizeProjects(value: unknown): Array<Record<string, unknown>> {

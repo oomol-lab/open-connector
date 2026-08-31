@@ -5,6 +5,7 @@ import { optionalRecord, optionalString, requiredString } from "../../core/cast.
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -97,8 +98,8 @@ export async function validateGatherupCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
 ): Promise<{ profile: { displayName: string }; grantedScopes: string[] }> {
-  const apiKey = requiredString(input.apiKey, "apiKey", invalidCredential);
-  const clientId = requiredString(input.clientId, "clientId", invalidCredential);
+  const apiKey = requiredString(input.apiKey, "apiKey", providerInputError);
+  const clientId = requiredString(input.clientId, "clientId", providerInputError);
   await requestGatherupJson({
     apiKey,
     clientId,
@@ -195,10 +196,6 @@ function extractGatherupErrorMessage(payload: unknown) {
   }
   const record = optionalRecord(payload);
   return optionalString(record?.errorMessage) ?? optionalString(record?.message) ?? optionalString(record?.error);
-}
-
-function invalidCredential(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function readOptionalFlag(value: unknown) {

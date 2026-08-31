@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   uploadProviderUrlToTransitFile,
@@ -266,10 +267,6 @@ function readPdfApiIoObject(value: unknown): Record<string, unknown> {
 
 function buildPdfApiIoProviderAccountId(apiKey: string): string {
   return `pdf_api_io:${createHash("sha256").update(apiKey).digest("hex").slice(0, 16)}`;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function providerOutputError(message: string): ProviderRequestError {

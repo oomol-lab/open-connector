@@ -18,7 +18,13 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
-import { providerFetch, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  providerFetch,
+  providerInputError,
+  providerResponseError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 export const apiBaseUrl = "https://api.toriitranslate.com";
 const translatePath = "/api/upload";
@@ -86,13 +92,13 @@ async function translateImage(
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const source = await downloadSource(
-    requiredString(input.imageUrl, "imageUrl", badRequest),
+    requiredString(input.imageUrl, "imageUrl", providerInputError),
     "imageUrl",
     context.signal,
   );
   const form = new FormData();
   appendImage(form, "file", source);
-  form.set("target_lang", requiredString(input.targetLanguage, "targetLanguage", badRequest));
+  form.set("target_lang", requiredString(input.targetLanguage, "targetLanguage", providerInputError));
   form.set("translator", optionalString(input.translator) ?? "gemini-3.1-flash-lite");
   form.set("font", optionalString(input.font) ?? "noto");
   appendOptional(form, "text_align", optionalString(input.textAlign));
@@ -110,7 +116,7 @@ async function translateImage(
   }
   return compactObject({
     translatedImage: image,
-    textRegions: objectArray(payload.text, "translation text region", upstreamError),
+    textRegions: objectArray(payload.text, "translation text region", providerResponseError),
     context: optionalString(payload.context),
     creditsRemaining: response.creditsRemaining,
   });
@@ -121,7 +127,7 @@ async function extractText(
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const source = await downloadSource(
-    requiredString(input.imageUrl, "imageUrl", badRequest),
+    requiredString(input.imageUrl, "imageUrl", providerInputError),
     "imageUrl",
     context.signal,
   );
@@ -132,7 +138,7 @@ async function extractText(
     throw new ProviderRequestError(502, "Torii OCR response was not an array");
   }
   return compactObject({
-    paragraphs: objectArray(response.payload, "OCR paragraph", upstreamError),
+    paragraphs: objectArray(response.payload, "OCR paragraph", providerResponseError),
     creditsRemaining: response.creditsRemaining,
   });
 }
@@ -142,8 +148,8 @@ async function inpaintImage(
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const [source, mask] = await Promise.all([
-    downloadSource(requiredString(input.imageUrl, "imageUrl", badRequest), "imageUrl", context.signal),
-    downloadSource(requiredString(input.maskUrl, "maskUrl", badRequest), "maskUrl", context.signal),
+    downloadSource(requiredString(input.imageUrl, "imageUrl", providerInputError), "imageUrl", context.signal),
+    downloadSource(requiredString(input.maskUrl, "maskUrl", providerInputError), "maskUrl", context.signal),
   ]);
   const form = new FormData();
   appendImage(form, "image", source);
@@ -161,12 +167,12 @@ async function typesetImage(
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const source = await downloadSource(
-    requiredString(input.imageUrl, "imageUrl", badRequest),
+    requiredString(input.imageUrl, "imageUrl", providerInputError),
     "imageUrl",
     context.signal,
   );
-  const textBoxes = objectArray(input.textBoxes, "textBoxes", badRequest);
-  if (textBoxes.length === 0) throw badRequest("textBoxes must contain at least one item");
+  const textBoxes = objectArray(input.textBoxes, "textBoxes", providerInputError);
+  if (textBoxes.length === 0) throw providerInputError("textBoxes must contain at least one item");
   const form = new FormData();
   appendImage(form, "file", source);
   form.set("text_boxes", JSON.stringify(textBoxes.map(normalizeTextBox)));
@@ -205,14 +211,14 @@ async function downloadSource(url: string, fieldName: string, signal?: AbortSign
       error,
     );
   }
-  if (!response.ok) throw badRequest(`${fieldName} returned ${response.status}`);
+  if (!response.ok) throw providerInputError(`${fieldName} returned ${response.status}`);
   const bytes = await readBoundedResponseBytes(response, {
     maxBytes: maximumSourceImageBytes,
     fieldName,
     createError: (message) => new ProviderRequestError(413, message),
   });
   const mimeType = detectMimeType(bytes);
-  if (!mimeType) throw badRequest(`${fieldName} must return a JPG, PNG, or WebP image`);
+  if (!mimeType) throw providerInputError(`${fieldName} must return a JPG, PNG, or WebP image`);
   return { bytes, mimeType, name: `${fieldName}.${mimeType.split("/")[1]}` };
 }
 
@@ -288,7 +294,7 @@ async function requestJsonWith(input: {
 
 async function storePng(value: unknown, name: string, context: ApiKeyProviderContext): Promise<ProviderTransitFile> {
   if (!context.transitFiles) throw new ProviderRequestError(500, "local transit storage is not configured");
-  const dataUrl = requiredString(value, "image", upstreamError);
+  const dataUrl = requiredString(value, "image", providerResponseError);
   const prefix = "data:image/png;base64,";
   if (!dataUrl.startsWith(prefix)) throw new ProviderRequestError(502, "Torii returned an invalid PNG data URL");
   let bytes: Buffer;
@@ -352,12 +358,4 @@ function detectMimeType(bytes: Uint8Array): DownloadedImage["mimeType"] | undefi
     return "image/webp";
   }
   return undefined;
-}
-
-function badRequest(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function upstreamError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

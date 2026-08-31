@@ -10,8 +10,8 @@ import {
   requiredString,
   requiredStringArray,
 } from "../../core/cast.ts";
+import { providerInputError } from "../provider-runtime.ts";
 import {
-  asanaInvalidInputError,
   asanaPathGid,
   buildAsanaFieldsQuery,
   buildAsanaPaginationQuery,
@@ -190,22 +190,22 @@ function buildStoryBody(input: Record<string, unknown>, requireText: boolean): R
   const hasText = Object.hasOwn(input, "text");
   const hasHtmlText = Object.hasOwn(input, "htmlText");
   if (hasText && hasHtmlText) {
-    throw asanaInvalidInputError("text and htmlText cannot both be provided.");
+    throw providerInputError("text and htmlText cannot both be provided.");
   }
   if (requireText && !hasText && !hasHtmlText) {
-    throw asanaInvalidInputError("Exactly one of text or htmlText must be provided.");
+    throw providerInputError("Exactly one of text or htmlText must be provided.");
   }
   if (hasText && typeof input.text !== "string") {
-    throw asanaInvalidInputError("text must be a string.");
+    throw providerInputError("text must be a string.");
   }
   if (hasHtmlText && typeof input.htmlText !== "string") {
-    throw asanaInvalidInputError("htmlText must be a string.");
+    throw providerInputError("htmlText must be a string.");
   }
   if (Object.hasOwn(input, "isPinned") && typeof input.isPinned !== "boolean") {
-    throw asanaInvalidInputError("isPinned must be a boolean.");
+    throw providerInputError("isPinned must be a boolean.");
   }
   if (!requireText && Object.hasOwn(input, "stickerName")) {
-    throw asanaInvalidInputError("stickerName can only be provided when creating a comment story.");
+    throw providerInputError("stickerName can only be provided when creating a comment story.");
   }
 
   const body = compactObject({
@@ -224,17 +224,17 @@ function readOptionalStorySticker(value: unknown): string | undefined {
   if (value === undefined) {
     return undefined;
   }
-  const stickerName = requiredString(value, "stickerName", asanaInvalidInputError);
+  const stickerName = requiredString(value, "stickerName", providerInputError);
   if (!storyStickerNames.includes(stickerName)) {
-    throw asanaInvalidInputError("stickerName must be an official Asana story sticker name.");
+    throw providerInputError("stickerName must be an official Asana story sticker name.");
   }
   return stickerName;
 }
 
 function buildTagCreateBody(input: Record<string, unknown>, includeWorkspace: boolean): Record<string, unknown> {
   return compactObject({
-    workspace: includeWorkspace ? requiredString(input.workspaceId, "workspaceId", asanaInvalidInputError) : undefined,
-    name: requiredString(input.name, "name", asanaInvalidInputError),
+    workspace: includeWorkspace ? requiredString(input.workspaceId, "workspaceId", providerInputError) : undefined,
+    name: requiredString(input.name, "name", providerInputError),
     color: nullableString(input.color),
     notes: optionalRawString(input.notes),
     followers: readOptionalTagFollowers(input.followerIds),
@@ -243,7 +243,7 @@ function buildTagCreateBody(input: Record<string, unknown>, includeWorkspace: bo
 
 function buildTagUpdateBody(input: Record<string, unknown>): Record<string, unknown> {
   const body = compactObject({
-    name: input.name === undefined ? undefined : requiredString(input.name, "name", asanaInvalidInputError),
+    name: input.name === undefined ? undefined : requiredString(input.name, "name", providerInputError),
     color: nullableString(input.color),
     notes: optionalRawString(input.notes),
   });
@@ -255,9 +255,9 @@ function readOptionalTagFollowers(value: unknown): string[] | undefined {
   if (value === undefined) {
     return undefined;
   }
-  const values = requiredStringArray(value, "followerIds", asanaInvalidInputError);
+  const values = requiredStringArray(value, "followerIds", providerInputError);
   if (values.length === 0 || values.some((item) => item.trim().length === 0)) {
-    throw asanaInvalidInputError("followerIds must contain at least one non-empty string.");
+    throw providerInputError("followerIds must contain at least one non-empty string.");
   }
   return values;
 }

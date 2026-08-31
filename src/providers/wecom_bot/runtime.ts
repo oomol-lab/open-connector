@@ -4,7 +4,12 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { objectArray, optionalRecord, optionalString } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  providerInputError,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const wecomBotApiBaseUrl = "https://qyapi.weixin.qq.com";
 const wecomBotWebhookPath = "/cgi-bin/webhook/send";
@@ -262,8 +267,4 @@ function requireUtf8Content(value: unknown, fieldName: string, maxBytes: number)
     throw new ProviderRequestError(400, `${fieldName} must be at most ${maxBytes} UTF-8 bytes`);
   }
   return content;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

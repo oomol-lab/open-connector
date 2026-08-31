@@ -13,6 +13,7 @@ import {
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -260,8 +261,4 @@ function readRequiredInteger(value: unknown, field: string): number {
     return result;
   }
   throw new ProviderRequestError(502, `Northbeam returned an invalid ${field}`);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

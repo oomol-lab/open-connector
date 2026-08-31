@@ -4,6 +4,7 @@ import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
@@ -29,7 +30,7 @@ export async function validatePushsaferCredential(
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const apiKey = requiredString(input.apiKey, "apiKey", invalidInput);
+  const apiKey = requiredString(input.apiKey, "apiKey", providerInputError);
   const username = requireNonEmptyString(input.username, "username");
   const payload = await requestPushsaferJson({
     apiKey,
@@ -79,7 +80,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<PushsaferCon
     const credential = await requireApiKeyCredential(context, "pushsafer");
     return {
       apiKey: credential.apiKey,
-      username: requiredString(credential.values.username, "username", invalidInput),
+      username: requiredString(credential.values.username, "username", providerInputError),
       fetcher,
       signal: context.signal,
     };
@@ -307,8 +308,4 @@ function requirePayloadInteger(value: unknown, fieldName: string) {
 
 function invalidResponse(fieldName: string) {
   return new ProviderRequestError(502, `Pushsafer returned an invalid ${fieldName} field`);
-}
-
-function invalidInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

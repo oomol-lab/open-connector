@@ -12,6 +12,7 @@ import {
 } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
@@ -49,9 +50,9 @@ const updateDestinationFieldNames = [
 
 export const asinDataApiActionHandlers: ProviderActionHandlers<"asin_data_api", AsinDataApiActionHandler> = {
   async clear_collection_requests(input, context) {
-    const collectionId = requiredString(input.collection_id, "collection_id", invalidInputError);
-    const requestIds = stringArray(input.request_ids, "request_ids", invalidInputError).map((requestId, index) =>
-      requiredString(requestId, `request_ids[${index}]`, invalidInputError),
+    const collectionId = requiredString(input.collection_id, "collection_id", providerInputError);
+    const requestIds = stringArray(input.request_ids, "request_ids", providerInputError).map((requestId, index) =>
+      requiredString(requestId, `request_ids[${index}]`, providerInputError),
     );
     const deletedRequests = [];
     const failedRequestIds = [];
@@ -85,7 +86,7 @@ export const asinDataApiActionHandlers: ProviderActionHandlers<"asin_data_api", 
 
   async delete_destination(input, context) {
     const payload = await requestAsinDataApiJson({
-      path: `/destinations/${encodeURIComponent(requiredString(input.destination_id, "destination_id", invalidInputError))}`,
+      path: `/destinations/${encodeURIComponent(requiredString(input.destination_id, "destination_id", providerInputError))}`,
       method: "DELETE",
       context,
       phase: "execute",
@@ -96,7 +97,7 @@ export const asinDataApiActionHandlers: ProviderActionHandlers<"asin_data_api", 
 
   async get_collection(input, context) {
     const payload = await requestAsinDataApiJson({
-      path: `/collections/${encodeURIComponent(requiredString(input.collection_id, "collection_id", invalidInputError))}`,
+      path: `/collections/${encodeURIComponent(requiredString(input.collection_id, "collection_id", providerInputError))}`,
       method: "GET",
       context,
       phase: "execute",
@@ -106,7 +107,7 @@ export const asinDataApiActionHandlers: ProviderActionHandlers<"asin_data_api", 
   },
 
   async list_collection_requests(input, context) {
-    const collectionId = requiredString(input.collection_id, "collection_id", invalidInputError);
+    const collectionId = requiredString(input.collection_id, "collection_id", providerInputError);
     const page = optionalInteger(input.page) ?? 1;
     const payload = await requestAsinDataApiJson({
       path: `/collections/${encodeURIComponent(collectionId)}/requests/${encodeURIComponent(String(page))}`,
@@ -137,7 +138,7 @@ export const asinDataApiActionHandlers: ProviderActionHandlers<"asin_data_api", 
 
   async update_destination(input, context) {
     const payload = await requestAsinDataApiJson({
-      path: `/destinations/${encodeURIComponent(requiredString(input.destination_id, "destination_id", invalidInputError))}`,
+      path: `/destinations/${encodeURIComponent(requiredString(input.destination_id, "destination_id", providerInputError))}`,
       method: "PUT",
       context,
       body: pickUpdateDestinationBody(input),
@@ -367,10 +368,6 @@ function compactStringObject(input: Record<string, string | undefined>): Record<
 
 function compactHeaders(input: Record<string, string | undefined>): Headers {
   return new Headers(compactObject(input) as Record<string, string>);
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function isAbortError(error: unknown): boolean {

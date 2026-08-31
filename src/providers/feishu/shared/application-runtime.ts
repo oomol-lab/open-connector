@@ -1,7 +1,7 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
 import { optionalRecord } from "../../../core/cast.ts";
-import { ProviderRequestError } from "../../provider-runtime.ts";
+import { providerInputError, ProviderRequestError } from "../../provider-runtime.ts";
 
 interface FeishuApplicationActionHandler {
   (input: Record<string, unknown>): Promise<Record<string, unknown>>;
@@ -74,7 +74,9 @@ async function updateSlashCommand(input: Record<string, unknown>, request: Feish
   const description = optionalString(input.description);
   const descriptionI18n = optionalStringRecord(input.descriptionI18n, "descriptionI18n");
   if (descriptionI18n !== undefined && description === undefined) {
-    throw invalidInput("descriptionI18n requires description because Feishu replaces the complete description object");
+    throw providerInputError(
+      "descriptionI18n requires description because Feishu replaces the complete description object",
+    );
   }
   const body = buildCommandBody({
     description,
@@ -82,7 +84,7 @@ async function updateSlashCommand(input: Record<string, unknown>, request: Feish
     iconKey: optionalString(input.iconKey),
   });
   if (Object.keys(body).length === 0) {
-    throw invalidInput("provide at least one field to update");
+    throw providerInputError("provide at least one field to update");
   }
 
   const data = await request({
@@ -111,7 +113,7 @@ async function resolveTargetCommandId(input: Record<string, unknown>, request: F
   const commandId = optionalString(input.commandId);
   const command = optionalString(input.command);
   if (Boolean(commandId) === Boolean(command)) {
-    throw invalidInput("provide exactly one of commandId or command");
+    throw providerInputError("provide exactly one of commandId or command");
   } else if (commandId) {
     return commandId;
   } else {
@@ -163,7 +165,7 @@ function isCommandExists(error: unknown) {
 function commandName(value: unknown, field: string) {
   const command = requiredString(value, field);
   if (command.startsWith("/")) {
-    throw invalidInput(`${field} must not start with "/"`);
+    throw providerInputError(`${field} must not start with "/"`);
   }
   return command;
 }
@@ -173,7 +175,7 @@ function optionalStringRecord(value: unknown, field: string) {
     return undefined;
   }
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw invalidInput(`${field} must be an object`);
+    throw providerInputError(`${field} must be an object`);
   }
   const result: Record<string, string> = {};
   for (const [key, item] of Object.entries(value)) {
@@ -185,7 +187,7 @@ function optionalStringRecord(value: unknown, field: string) {
 function requiredString(value: unknown, field: string) {
   const result = optionalString(value);
   if (!result) {
-    throw invalidInput(`${field} is required`);
+    throw providerInputError(`${field} is required`);
   }
   return result;
 }
@@ -200,8 +202,4 @@ function recordArray(value: unknown) {
         (item): item is Record<string, unknown> => typeof item === "object" && item !== null && !Array.isArray(item),
       )
     : [];
-}
-
-function invalidInput(message: string) {
-  return new ProviderRequestError(400, message);
 }

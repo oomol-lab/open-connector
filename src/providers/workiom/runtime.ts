@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerResponseError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const workiomApiBaseUrl = "https://api.workiom.com";
 const workiomApiPathPrefix = "/api/services/app";
@@ -88,7 +88,7 @@ export const workiomActionHandlers: ProviderActionHandlers<"workiom", ProviderRu
         method: "POST",
         apiKey: context.apiKey,
         query: { listId: readRequiredString(input, "listId") },
-        body: requiredRecord(input.record, "record", providerError),
+        body: requiredRecord(input.record, "record", providerResponseError),
       },
       context,
     );
@@ -197,7 +197,7 @@ function readArrayFromPayload(payload: unknown, paths: string[]): Array<Record<s
   for (const path of paths) {
     const value = readPath(payload, path);
     if (Array.isArray(value)) {
-      return value.map((item) => requiredRecord(item, path, providerError));
+      return value.map((item) => requiredRecord(item, path, providerResponseError));
     }
   }
   return [];
@@ -209,7 +209,7 @@ function readObjectFromPayload(payload: unknown, paths: string[], fallback: unkn
     const record = optionalRecord(value);
     if (record) return record;
   }
-  return requiredRecord(fallback, "payload", providerError);
+  return requiredRecord(fallback, "payload", providerResponseError);
 }
 
 function readPath(payload: unknown, path: string): unknown {
@@ -247,8 +247,4 @@ function readRequiredString(input: Record<string, unknown>, key: string): string
 
 function readOptionalArray(value: unknown): unknown[] | undefined {
   return Array.isArray(value) ? value : undefined;
-}
-
-function providerError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

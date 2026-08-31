@@ -5,6 +5,7 @@ import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/r
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -228,8 +229,4 @@ function requireEntity(payload: unknown, displayName: string, kind: string): Rec
   const entity = optionalRecord(payload);
   if (!entity) throw new ProviderRequestError(502, `${displayName} response is missing the ${kind} object`, payload);
   return entity;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

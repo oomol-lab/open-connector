@@ -13,6 +13,7 @@ import {
 import {
   defineProviderExecutors,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -795,8 +796,4 @@ function readStringArray(value: unknown): string[] {
 
 function readStringArrayOrNull(value: unknown): string[] | null {
   return value == null ? null : readStringArray(value);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

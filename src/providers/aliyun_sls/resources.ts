@@ -1,6 +1,6 @@
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError } from "../provider-runtime.ts";
 
 export interface AliyunSlsResourceScopeEntry {
   endpoint: string;
@@ -33,9 +33,9 @@ const aliyunSlsEndpointPattern = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.log\.al
 
 /** Parse and validate all user-configured SLS credential values. */
 export function parseAliyunSlsCredential(values: Record<string, string>): AliyunSlsCredential {
-  const accessKeyId = requiredString(values.accessKeyId, "accessKeyId", badRequest);
-  const accessKeySecret = requiredString(values.accessKeySecret, "accessKeySecret", badRequest);
-  const endpoint = normalizeAliyunSlsEndpoint(requiredString(values.endpoint, "endpoint", badRequest));
+  const accessKeyId = requiredString(values.accessKeyId, "accessKeyId", providerInputError);
+  const accessKeySecret = requiredString(values.accessKeySecret, "accessKeySecret", providerInputError);
+  const endpoint = normalizeAliyunSlsEndpoint(requiredString(values.endpoint, "endpoint", providerInputError));
   const securityToken = optionalString(values.securityToken);
   const resourceScope = parseAliyunSlsResourceScope(values.resourceScope, endpoint);
   const credential: AliyunSlsCredential = {
@@ -50,24 +50,24 @@ export function parseAliyunSlsCredential(values: Record<string, string>): Aliyun
 
 /** Normalize an official regional SLS endpoint to a public HTTPS host without path state. */
 export function normalizeAliyunSlsEndpoint(value: string, fieldName = "endpoint"): string {
-  const raw = requiredString(value, fieldName, badRequest);
+  const raw = requiredString(value, fieldName, providerInputError);
   const candidate = raw.includes("://") ? raw : `https://${raw}`;
   const url = assertPublicHttpUrl(candidate, {
     fieldName,
-    createError: badRequest,
+    createError: providerInputError,
   });
   if (url.protocol !== "https:") {
-    throw badRequest(`${fieldName} must use https`);
+    throw providerInputError(`${fieldName} must use https`);
   }
   if (url.username || url.password) {
-    throw badRequest(`${fieldName} must not include credentials`);
+    throw providerInputError(`${fieldName} must not include credentials`);
   }
   if (url.pathname !== "/" || url.search || url.hash) {
-    throw badRequest(`${fieldName} must not include a path, query, or hash`);
+    throw providerInputError(`${fieldName} must not include a path, query, or hash`);
   }
   const hostname = url.hostname.toLowerCase();
   if (url.port || !aliyunSlsEndpointPattern.test(hostname)) {
-    throw badRequest(`${fieldName} must be an official Alibaba Cloud SLS endpoint under log.aliyuncs.com`);
+    throw providerInputError(`${fieldName} must be an official Alibaba Cloud SLS endpoint under log.aliyuncs.com`);
   }
   return hostname;
 }
@@ -86,14 +86,14 @@ export function parseAliyunSlsResourceScope(
     try {
       parsed = JSON.parse(value) as unknown;
     } catch {
-      throw badRequest("resourceScope must be valid JSON");
+      throw providerInputError("resourceScope must be valid JSON");
     }
   }
   if (!Array.isArray(parsed)) {
-    throw badRequest("resourceScope must be a JSON array");
+    throw providerInputError("resourceScope must be a JSON array");
   }
   if (parsed.length === 0) {
-    throw badRequest("resourceScope must not be an empty array");
+    throw providerInputError("resourceScope must not be an empty array");
   }
 
   const entries: AliyunSlsResourceScope = [];
@@ -101,24 +101,24 @@ export function parseAliyunSlsResourceScope(
   for (const [index, item] of parsed.entries()) {
     const record = optionalRecord(item);
     if (!record) {
-      throw badRequest(`resourceScope[${index}] must be an object`);
+      throw providerInputError(`resourceScope[${index}] must be an object`);
     }
     const unknownKey = Object.keys(record).find((key) => !resourceScopeKeys.has(key));
     if (unknownKey) {
-      throw badRequest(`resourceScope[${index}] contains unsupported field ${unknownKey}`);
+      throw providerInputError(`resourceScope[${index}] contains unsupported field ${unknownKey}`);
     }
 
     const project = normalizeAliyunSlsProjectName(record.project, `resourceScope[${index}].project`);
     const endpoint =
       "endpoint" in record
         ? normalizeAliyunSlsEndpoint(
-            requiredString(record.endpoint, `resourceScope[${index}].endpoint`, badRequest),
+            requiredString(record.endpoint, `resourceScope[${index}].endpoint`, providerInputError),
             `resourceScope[${index}].endpoint`,
           )
         : defaultEndpoint;
     const projectKey = `${endpoint}\u0000${project}`;
     if (projects.has(projectKey)) {
-      throw badRequest(`resourceScope contains duplicate Project ${project} for endpoint ${endpoint}`);
+      throw providerInputError(`resourceScope contains duplicate Project ${project} for endpoint ${endpoint}`);
     }
     projects.add(projectKey);
 
@@ -132,17 +132,17 @@ export function parseAliyunSlsResourceScope(
 
 export function normalizeAliyunSlsEndpointList(value: unknown): string[] {
   if (!Array.isArray(value) || value.length < 1 || value.length > 50) {
-    throw badRequest("endpoints must contain between 1 and 50 regional endpoints");
+    throw providerInputError("endpoints must contain between 1 and 50 regional endpoints");
   }
   const endpoints: string[] = [];
   const seen = new Set<string>();
   for (const [index, item] of value.entries()) {
     if (typeof item !== "string") {
-      throw badRequest(`endpoints[${index}] must be a string`);
+      throw providerInputError(`endpoints[${index}] must be a string`);
     }
     const endpoint = normalizeAliyunSlsEndpoint(item, `endpoints[${index}]`);
     if (seen.has(endpoint)) {
-      throw badRequest(`endpoints contains duplicate endpoint ${endpoint}`);
+      throw providerInputError(`endpoints contains duplicate endpoint ${endpoint}`);
     }
     seen.add(endpoint);
     endpoints.push(endpoint);
@@ -184,10 +184,10 @@ export function resolveAliyunSlsProjectTarget(
   }
 
   if (!entries) {
-    throw badRequest("project is required when resourceScope does not identify exactly one candidate Project");
+    throw providerInputError("project is required when resourceScope does not identify exactly one candidate Project");
   }
   if (entries.length !== 1) {
-    throw badRequest(`project is required because endpoint ${endpoint} has multiple candidate Projects`);
+    throw providerInputError(`project is required because endpoint ${endpoint} has multiple candidate Projects`);
   }
   return {
     endpoint,
@@ -216,7 +216,7 @@ export function resolveAliyunSlsLogstoreTarget(
   }
 
   if (!allowedLogstores || allowedLogstores.length !== 1) {
-    throw badRequest(
+    throw providerInputError(
       `logstore is required when Project ${target.project} does not have exactly one candidate Logstore`,
     );
   }
@@ -253,15 +253,15 @@ function parseScopedLogstores(record: Record<string, unknown>, index: number): s
     return undefined;
   }
   if (!Array.isArray(record.logstores) || record.logstores.length === 0) {
-    throw badRequest(`resourceScope[${index}].logstores must be a non-empty array`);
+    throw providerInputError(`resourceScope[${index}].logstores must be a non-empty array`);
   }
 
   const logstores: string[] = [];
   const seen = new Set<string>();
   for (const [logstoreIndex, item] of record.logstores.entries()) {
-    const logstore = requiredString(item, `resourceScope[${index}].logstores[${logstoreIndex}]`, badRequest);
+    const logstore = requiredString(item, `resourceScope[${index}].logstores[${logstoreIndex}]`, providerInputError);
     if (seen.has(logstore)) {
-      throw badRequest(`resourceScope[${index}].logstores contains duplicate Logstore ${logstore}`);
+      throw providerInputError(`resourceScope[${index}].logstores contains duplicate Logstore ${logstore}`);
     }
     seen.add(logstore);
     logstores.push(logstore);
@@ -270,15 +270,11 @@ function parseScopedLogstores(record: Record<string, unknown>, index: number): s
 }
 
 export function normalizeAliyunSlsProjectName(value: unknown, fieldName: string): string {
-  const project = requiredString(value, fieldName, badRequest);
+  const project = requiredString(value, fieldName, providerInputError);
   if (!/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(project)) {
-    throw badRequest(`${fieldName} must be a valid 3 to 63 character Simple Log Service Project name`);
+    throw providerInputError(`${fieldName} must be a valid 3 to 63 character Simple Log Service Project name`);
   }
   return project;
-}
-
-function badRequest(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function forbidden(message: string): ProviderRequestError {

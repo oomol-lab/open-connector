@@ -15,7 +15,9 @@ import {
   createProviderTimeout,
   isAbortSignalError,
   parseProviderJsonBodyText,
+  providerInputError,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   readProviderTextBody,
 } from "../provider-runtime.ts";
@@ -434,11 +436,3 @@ function isDistance(value: string): value is "Cosine" | "Euclid" | "Dot" | "Manh
 }
 
 const uuidPattern = new RegExp(qdrantUuidPattern);
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
-}

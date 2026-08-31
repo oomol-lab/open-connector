@@ -15,6 +15,7 @@ import {
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
@@ -393,7 +394,7 @@ function assertBranchAndPullRequestAreExclusive(input: Record<string, unknown>):
 }
 
 function readInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, badRequest);
+  return requiredString(value, fieldName, providerInputError);
 }
 
 function readOptionalInputString(value: unknown, fieldName: string): string | undefined {
@@ -411,7 +412,9 @@ function joinRequiredStringList(value: unknown, fieldName: string): string {
 
 function joinOptionalStringList(value: unknown, fieldName: string): string | undefined {
   if (value == null) return undefined;
-  const values = requiredStringArray(value, fieldName, badRequest).map((item) => readInputString(item, fieldName));
+  const values = requiredStringArray(value, fieldName, providerInputError).map((item) =>
+    readInputString(item, fieldName),
+  );
   if (values.length === 0) {
     throw new ProviderRequestError(400, `${fieldName} must be a non-empty string array`);
   }
@@ -440,10 +443,6 @@ function readProviderString(value: unknown, message: string): string {
   const stringValue = optionalString(value);
   if (stringValue === undefined) throw new ProviderRequestError(502, message);
   return stringValue;
-}
-
-function badRequest(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function providerError(message: string): ProviderRequestError {

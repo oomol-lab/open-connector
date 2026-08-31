@@ -6,6 +6,7 @@ import { compactObject, optionalRecord, optionalString, requiredString } from ".
 import {
   defineProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -348,8 +349,4 @@ function readFirstObject(value: unknown): Record<string, unknown> | undefined {
     }
   }
   return undefined;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

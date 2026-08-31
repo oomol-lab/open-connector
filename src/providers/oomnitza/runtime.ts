@@ -7,6 +7,7 @@ import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -55,7 +56,7 @@ export const oomnitzaActionHandlers: ProviderActionHandlers<"oomnitza", Oomnitza
     return normalizeOomnitzaListPayload(payload, "assets");
   },
   async get_asset(input, context) {
-    const id = requiredString(input.id, "id", requestInputError);
+    const id = requiredString(input.id, "id", providerInputError);
     const payload = await requestOomnitzaJson({
       ...context,
       path: `/api/v3/assets/${encodeURIComponent(id)}`,
@@ -78,7 +79,7 @@ export const oomnitzaActionHandlers: ProviderActionHandlers<"oomnitza", Oomnitza
     return normalizeOomnitzaListPayload(payload, "users");
   },
   async get_user(input, context) {
-    const username = requiredString(input.username, "username", requestInputError);
+    const username = requiredString(input.username, "username", providerInputError);
     const payload = await requestOomnitzaJson({
       ...context,
       path: `/api/v3/users/${encodeURIComponent(username)}`,
@@ -368,8 +369,4 @@ function trimTrailingSlash(value: string): string {
     normalized = normalized.slice(0, -1);
   }
   return normalized;
-}
-
-function requestInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

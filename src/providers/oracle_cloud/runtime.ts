@@ -15,6 +15,8 @@ import {
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
+  providerResponseError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -126,8 +128,8 @@ export const oracleCloudActionHandlers: ProviderActionHandlers<"oracle_cloud", O
   create_vcn: (input, context) =>
     createEntity(context, "vcn", "/vcns", {
       compartmentId: compartment(input, context),
-      cidrBlock: requiredString(input.cidrBlock, "cidrBlock", inputError),
-      displayName: requiredString(input.displayName, "displayName", inputError),
+      cidrBlock: requiredString(input.cidrBlock, "cidrBlock", providerInputError),
+      displayName: requiredString(input.displayName, "displayName", providerInputError),
     }),
   list_subnets: (input, context) =>
     listResources(input, context, "subnets", "/subnets", {
@@ -139,8 +141,8 @@ export const oracleCloudActionHandlers: ProviderActionHandlers<"oracle_cloud", O
     createEntity(context, "subnet", "/subnets", {
       compartmentId: compartment(input, context),
       vcnId: requireOcid(input.vcnId, "vcnId", ["vcn"]),
-      cidrBlock: requiredString(input.cidrBlock, "cidrBlock", inputError),
-      displayName: requiredString(input.displayName, "displayName", inputError),
+      cidrBlock: requiredString(input.cidrBlock, "cidrBlock", providerInputError),
+      displayName: requiredString(input.displayName, "displayName", providerInputError),
     }),
   list_security_lists: (input, context) =>
     listResources(input, context, "securityLists", "/securityLists", {
@@ -215,11 +217,11 @@ export function createOracleCloudContext(
   signal?: AbortSignal,
 ): OracleCloudContext {
   return {
-    tenancyId: requireOcid(values.tenancyId, "tenancyId", ["tenancy"], credentialError),
-    userId: requireOcid(values.userId, "userId", ["user"], credentialError),
+    tenancyId: requireOcid(values.tenancyId, "tenancyId", ["tenancy"], providerInputError),
+    userId: requireOcid(values.userId, "userId", ["user"], providerInputError),
     fingerprint: requireFingerprint(values.fingerprint),
     privateKey: parseOracleApiPrivateKey(
-      requiredString(values.privateKey, "privateKey", credentialError),
+      requiredString(values.privateKey, "privateKey", providerInputError),
       optionalString(values.privateKeyPassphrase),
     ),
     region: requireRegion(values.region),
@@ -228,7 +230,7 @@ export function createOracleCloudContext(
       values.defaultCompartmentId,
       "defaultCompartmentId",
       ["compartment", "tenancy"],
-      credentialError,
+      providerInputError,
     ),
     fetcher,
     signal,
@@ -279,8 +281,8 @@ async function launchInstance(
 ): Promise<Record<string, unknown>> {
   const body = compactObject({
     compartmentId: compartment(input, context),
-    displayName: requiredString(input.displayName, "displayName", inputError),
-    availabilityDomain: requiredString(input.availabilityDomain, "availabilityDomain", inputError),
+    displayName: requiredString(input.displayName, "displayName", providerInputError),
+    availabilityDomain: requiredString(input.availabilityDomain, "availabilityDomain", providerInputError),
     shape: optionalString(input.shape) ?? "VM.Standard.E5.Flex",
     sourceDetails: {
       sourceType: "image",
@@ -288,7 +290,7 @@ async function launchInstance(
     },
     createVnicDetails: { subnetId: requireOcid(input.subnetId, "subnetId", ["subnet"]) },
     shapeConfig: compactObject({
-      ocpus: optionalIntegerLike(input.ocpus, "ocpus", inputError),
+      ocpus: optionalIntegerLike(input.ocpus, "ocpus", providerInputError),
       memoryInGBs: optionalNumber(input.memoryInGBs),
     }),
   });
@@ -300,10 +302,10 @@ async function updateInstance(
   context: OracleCloudContext,
 ): Promise<Record<string, unknown>> {
   const shapeConfig = compactObject({
-    ocpus: optionalIntegerLike(input.ocpus, "ocpus", inputError),
+    ocpus: optionalIntegerLike(input.ocpus, "ocpus", providerInputError),
     memoryInGBs: optionalNumber(input.memoryInGBs),
   });
-  if (Object.keys(shapeConfig).length === 0) throw inputError("ocpus or memoryInGBs is required");
+  if (Object.keys(shapeConfig).length === 0) throw providerInputError("ocpus or memoryInGBs is required");
   const id = requireOcid(input.instanceId, "instanceId", ["instance"]);
   const response = await requestOracle({
     context,
@@ -320,9 +322,9 @@ async function instanceAction(
   context: OracleCloudContext,
 ): Promise<Record<string, unknown>> {
   const id = requireOcid(input.instanceId, "instanceId", ["instance"]);
-  const action = requiredString(input.action, "action", inputError);
+  const action = requiredString(input.action, "action", providerInputError);
   if (!oracleInstanceActions.includes(action)) {
-    throw inputError(`action must be one of ${oracleInstanceActions.join(", ")}`);
+    throw providerInputError(`action must be one of ${oracleInstanceActions.join(", ")}`);
   }
   const response = await requestOracle({
     context,
@@ -340,7 +342,7 @@ async function listMetricDefinitions(
   context: OracleCloudContext,
 ): Promise<Record<string, unknown>> {
   const groupBy = Array.isArray(input.groupBy)
-    ? input.groupBy.map((value) => requiredString(value, "groupBy", inputError))
+    ? input.groupBy.map((value) => requiredString(value, "groupBy", providerInputError))
     : undefined;
   const response = await requestOracle({
     context,
@@ -381,8 +383,8 @@ async function getMetricsData(
       compartmentIdInSubtree: optionalBoolean(input.compartmentIdInSubtree),
     }),
     body: compactObject({
-      query: requiredString(input.query, "query", inputError),
-      namespace: requiredString(input.namespace, "namespace", inputError),
+      query: requiredString(input.query, "query", providerInputError),
+      namespace: requiredString(input.namespace, "namespace", providerInputError),
       startTime,
       endTime,
       resourceGroup: optionalString(input.resourceGroup),
@@ -438,7 +440,7 @@ async function readRootCompartment(context: OracleCloudContext): Promise<Record<
       path: `/compartments/${encodeURIComponent(context.tenancyId)}`,
       phase: "execute",
     });
-    return requiredRecord(root.payload, "OCI root compartment", responseError);
+    return requiredRecord(root.payload, "OCI root compartment", providerResponseError);
   } catch (error) {
     if (error instanceof ProviderRequestError && error.status < 500) return null;
     throw error;
@@ -449,7 +451,7 @@ async function getCompartmentByName(
   input: Record<string, unknown>,
   context: OracleCloudContext,
 ): Promise<Record<string, unknown>> {
-  const name = requiredString(input.name, "name", inputError);
+  const name = requiredString(input.name, "name", providerInputError);
   const response = await requestOracle({
     context,
     service: "identity",
@@ -481,17 +483,17 @@ async function runInstanceAgentCommand(
     method: "POST",
     body: {
       compartmentId: compartment(input, context),
-      displayName: requiredString(input.displayName, "displayName", inputError),
+      displayName: requiredString(input.displayName, "displayName", providerInputError),
       target: { instanceId },
       content: {
-        source: { sourceType: "TEXT", text: requiredString(input.script, "script", inputError) },
+        source: { sourceType: "TEXT", text: requiredString(input.script, "script", providerInputError) },
         output: { outputType: "TEXT" },
       },
       executionTimeOutInSeconds: executionTimeoutInSeconds,
     },
   });
-  const command = requiredRecord(createResponse.payload, "OCI instance agent command", responseError);
-  const commandId = requireOcid(command.id, "command.id", ["instanceagentcommand"], responseError);
+  const command = requiredRecord(createResponse.payload, "OCI instance agent command", providerResponseError);
+  const commandId = requireOcid(command.id, "command.id", ["instanceagentcommand"], providerResponseError);
   const deadline = Date.now() + commandWaitMs;
   while (Date.now() < deadline) {
     const execution = await requestOracle({
@@ -605,7 +607,7 @@ function listResult(resultName: string, response: OracleResponse): Record<string
 
 function entityResult(resultName: string, response: OracleResponse): Record<string, unknown> {
   return {
-    [resultName]: requiredRecord(response.payload, `OCI ${resultName}`, responseError),
+    [resultName]: requiredRecord(response.payload, `OCI ${resultName}`, providerResponseError),
     opcRequestId: response.opcRequestId,
   };
 }
@@ -681,8 +683,8 @@ function createApiError(response: Response, payload: unknown, phase: RequestPhas
 }
 
 function requireArray(value: unknown): Array<Record<string, unknown>> {
-  if (!Array.isArray(value)) throw responseError("OCI list response must be an array");
-  return value.map((item) => requiredRecord(item, "OCI list item", responseError));
+  if (!Array.isArray(value)) throw providerResponseError("OCI list response must be an array");
+  return value.map((item) => requiredRecord(item, "OCI list item", providerResponseError));
 }
 
 function compartment(input: Record<string, unknown>, context: OracleCloudContext): string {
@@ -695,7 +697,7 @@ function requireOcid(
   value: unknown,
   fieldName: string,
   resourceTypes: readonly string[],
-  errorFactory: (message: string) => ProviderRequestError = inputError,
+  errorFactory: (message: string) => ProviderRequestError = providerInputError,
 ): string {
   const resolved = requiredString(value, fieldName, errorFactory);
   if (!resourceTypes.some((type) => resolved.startsWith(`ocid1.${type}.`))) {
@@ -710,32 +712,32 @@ function optionalOcid(value: unknown, fieldName: string, resourceTypes: readonly
 }
 
 function readLimit(value: unknown): number | undefined {
-  const resolved = optionalIntegerLike(value, "limit", inputError);
+  const resolved = optionalIntegerLike(value, "limit", providerInputError);
   if (resolved !== undefined && (resolved < 1 || resolved > 1_000))
-    throw inputError("limit must be between 1 and 1000");
+    throw providerInputError("limit must be between 1 and 1000");
   return resolved;
 }
 
 function readCommandTimeout(value: unknown): number {
-  const resolved = optionalIntegerLike(value, "executionTimeoutInSeconds", inputError) ?? 30;
+  const resolved = optionalIntegerLike(value, "executionTimeoutInSeconds", providerInputError) ?? 30;
   if (resolved < 1 || resolved > oracleInstanceAgentMaxWaitSeconds) {
-    throw inputError(`executionTimeoutInSeconds must be between 1 and ${oracleInstanceAgentMaxWaitSeconds}`);
+    throw providerInputError(`executionTimeoutInSeconds must be between 1 and ${oracleInstanceAgentMaxWaitSeconds}`);
   }
   return resolved;
 }
 
 function requireFingerprint(value: unknown): string {
-  const resolved = requiredString(value, "fingerprint", credentialError).toLowerCase();
+  const resolved = requiredString(value, "fingerprint", providerInputError).toLowerCase();
   if (!/^(?:[0-9a-f]{2}:){15}[0-9a-f]{2}$/u.test(resolved)) {
-    throw credentialError("fingerprint must be a colon-separated hexadecimal OCI API key fingerprint");
+    throw providerInputError("fingerprint must be a colon-separated hexadecimal OCI API key fingerprint");
   }
   return resolved;
 }
 
 function requireRegion(value: unknown): string {
-  const resolved = requiredString(value, "region", credentialError).toLowerCase();
+  const resolved = requiredString(value, "region", providerInputError).toLowerCase();
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)+$/u.test(resolved)) {
-    throw credentialError("region must be a valid OCI region identifier such as us-ashburn-1");
+    throw providerInputError("region must be a valid OCI region identifier such as us-ashburn-1");
   }
   return resolved;
 }
@@ -743,19 +745,7 @@ function requireRegion(value: unknown): string {
 function requireRealm(value: unknown): string {
   const resolved = optionalString(value)?.toLowerCase() || defaultRealm;
   if (!Object.hasOwn(oracleRealmDomains, resolved)) {
-    throw credentialError(`realm must be one of ${Object.keys(oracleRealmDomains).join(", ")}`);
+    throw providerInputError(`realm must be one of ${Object.keys(oracleRealmDomains).join(", ")}`);
   }
   return resolved;
-}
-
-function credentialError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function responseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

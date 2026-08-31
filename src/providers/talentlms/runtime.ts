@@ -4,7 +4,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, jsonObject, queryParams } from "../../core/request.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const talentlmsApiVersion = "2025-07-01";
 
@@ -226,7 +226,7 @@ async function deleteTalentlmsResource(
 async function talentlmsRequest(options: TalentlmsRequestOptions): Promise<unknown> {
   const url = assertPublicHttpUrl(`${options.apiBaseUrl}${options.path}`, {
     fieldName: "domain",
-    createError: inputError,
+    createError: providerInputError,
   });
   for (const [key, value] of Object.entries(queryParams(options.query ?? {}))) {
     url.searchParams.set(key, value);
@@ -430,7 +430,7 @@ function asRawObject(payload: unknown): Record<string, unknown> {
 }
 
 export function readTalentlmsDomain(input: { domain?: unknown }): string {
-  return requiredString(input.domain, "domain", inputError);
+  return requiredString(input.domain, "domain", providerInputError);
 }
 
 export function buildTalentlmsApiBaseUrl(domain: string): string {
@@ -443,13 +443,13 @@ export function normalizeTalentlmsApiBaseUrl(apiBaseUrl: string): string {
   try {
     url = new URL(apiBaseUrl);
   } catch {
-    throw inputError("TalentLMS API base URL must be a valid URL");
+    throw providerInputError("TalentLMS API base URL must be a valid URL");
   }
   if (url.protocol !== "https:") {
-    throw inputError("TalentLMS API base URL must use HTTPS");
+    throw providerInputError("TalentLMS API base URL must use HTTPS");
   }
   if (url.pathname.replace(/\/$/, "") !== talentlmsApiPathPrefix) {
-    throw inputError("TalentLMS API base URL must end with /api/v2");
+    throw providerInputError("TalentLMS API base URL must end with /api/v2");
   }
 
   const hostname = normalizeTalentlmsDomain(url.hostname);
@@ -465,7 +465,7 @@ function normalizeTalentlmsDomain(domain: string): string {
       : trimmed;
   const hostname = withoutProtocol.split("/")[0]?.replace(/\/$/, "") ?? "";
   if (hostname.includes(".") && !hostname.endsWith(".talentlms.com")) {
-    throw inputError("domain must be a TalentLMS subdomain such as samples or samples.talentlms.com");
+    throw providerInputError("domain must be a TalentLMS subdomain such as samples or samples.talentlms.com");
   }
 
   const normalized = hostname.endsWith(".talentlms.com") ? hostname : `${hostname}.talentlms.com`;
@@ -477,12 +477,8 @@ function normalizeTalentlmsDomain(domain: string): string {
     labels.every((label) => label.length > 0 && label.length <= 63);
 
   if (!isValid) {
-    throw inputError("domain must be a TalentLMS subdomain such as samples or samples.talentlms.com");
+    throw providerInputError("domain must be a TalentLMS subdomain such as samples or samples.talentlms.com");
   }
 
   return normalized;
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

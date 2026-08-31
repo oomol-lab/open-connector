@@ -6,6 +6,7 @@ import { compactObject, optionalRecord, optionalString, requiredString, required
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   readProviderJsonBody,
@@ -256,7 +257,7 @@ function normalizeOptionalStringArray(value: unknown, fieldName: string): string
   if (value === undefined) {
     return undefined;
   }
-  return requiredStringArray(value, fieldName, requestError).map((item, index) =>
+  return requiredStringArray(value, fieldName, providerInputError).map((item, index) =>
     requireInputString(item, `${fieldName}[${index}]`),
   );
 }
@@ -265,7 +266,9 @@ function normalizeOptionalAsins(value: unknown): string[] | undefined {
   if (value === undefined) {
     return undefined;
   }
-  return requiredStringArray(value, "asins", requestError).map((item, index) => requireAsin(item, `asins[${index}]`));
+  return requiredStringArray(value, "asins", providerInputError).map((item, index) =>
+    requireAsin(item, `asins[${index}]`),
+  );
 }
 
 function normalizeOptionalMonth(value: unknown): string | undefined {
@@ -314,11 +317,7 @@ function requireAsin(value: unknown, fieldName: string): string {
 }
 
 function requireInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, requestError);
-}
-
-function requestError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
+  return requiredString(value, fieldName, providerInputError);
 }
 
 function asSellerSpriteEnvelope(value: unknown): SellerSpriteEnvelope {

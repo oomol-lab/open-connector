@@ -11,7 +11,12 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerInputError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "nango";
 const nangoApiBaseUrl = "https://api.nango.dev";
@@ -299,8 +304,4 @@ function readConnectionIdOrIds(value: unknown): string | string[] {
   }
 
   return readRequiredString(value, "connection_id");
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

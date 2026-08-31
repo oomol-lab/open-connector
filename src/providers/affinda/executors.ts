@@ -5,6 +5,7 @@ import { compactObject, optionalBoolean, optionalRecord, optionalString, require
 import { encodePathSegment } from "../../core/request.ts";
 import {
   defineProviderExecutors,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -387,8 +388,4 @@ function resolveAffindaApiBaseUrl(input: Record<string, unknown> | undefined): s
     throw new ProviderRequestError(400, "apiBaseUrl must be an official Affinda API URL");
   }
   return normalized;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

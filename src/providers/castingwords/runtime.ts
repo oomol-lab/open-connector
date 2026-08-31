@@ -14,7 +14,9 @@ import {
 } from "../../core/cast.ts";
 import {
   createProviderTimeout,
+  providerInputError,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   readProviderTextBody,
 } from "../provider-runtime.ts";
@@ -48,7 +50,7 @@ export const castingwordsActionHandlers: ProviderActionHandlers<
   ProviderRuntimeHandler<ApiKeyProviderContext>
 > = {
   async submit_transcription(input, context) {
-    const serviceTier = requiredString(input.serviceTier, "serviceTier", inputError);
+    const serviceTier = requiredString(input.serviceTier, "serviceTier", providerInputError);
     const addons = optionalStringArray(input.addons) ?? [];
     const speakerNames = optionalStringArray(input.speakerNames) ?? [];
     const payload = await requestCastingwords({
@@ -57,43 +59,43 @@ export const castingwordsActionHandlers: ProviderActionHandlers<
       phase: "execute",
       method: "POST",
       body: compactObject({
-        url: requiredString(input.mediaUrl, "mediaUrl", inputError),
+        url: requiredString(input.mediaUrl, "mediaUrl", providerInputError),
         sku: addons.length > 0 ? [serviceTier, ...addons] : serviceTier,
         names: speakerNames.length > 0 ? speakerNames : undefined,
         notes: optionalString(input.notes),
         test: optionalBoolean(input.test) ? "1" : undefined,
       }),
     });
-    const result = requiredRecord(payload, "CastingWords order response", responseError);
+    const result = requiredRecord(payload, "CastingWords order response", providerResponseError);
     const audiofiles = Array.isArray(result.audiofiles) ? result.audiofiles : [];
 
     return {
       orderId: requiredIdentifier(result.order, "order"),
-      audiofileId: positiveInteger(audiofiles[0], "audiofiles[0]", responseError),
+      audiofileId: positiveInteger(audiofiles[0], "audiofiles[0]", providerResponseError),
       message: typeof result.message === "string" ? result.message : null,
       raw: result,
     };
   },
   async get_transcription_status(input, context) {
-    const audiofileId = positiveInteger(input.audiofileId, "audiofileId", inputError);
+    const audiofileId = positiveInteger(input.audiofileId, "audiofileId", providerInputError);
     const payload = await requestCastingwords({
       path: `/audiofile/${audiofileId}`,
       context,
       phase: "execute",
     });
-    const result = requiredRecord(payload, "CastingWords audio file response", responseError);
-    const details = requiredRecord(result.audiofile, "CastingWords audiofile", responseError);
-    const providerStatus = requiredString(details.statename, "audiofile.statename", responseError);
+    const result = requiredRecord(payload, "CastingWords audio file response", providerResponseError);
+    const details = requiredRecord(result.audiofile, "CastingWords audiofile", providerResponseError);
+    const providerStatus = requiredString(details.statename, "audiofile.statename", providerResponseError);
 
     return {
-      audiofileId: positiveInteger(details.id ?? audiofileId, "audiofile.id", responseError),
+      audiofileId: positiveInteger(details.id ?? audiofileId, "audiofile.id", providerResponseError),
       status: normalizeCastingwordsStatus(providerStatus),
       providerStatus,
       details,
     };
   },
   async get_transcript(input, context) {
-    const audiofileId = positiveInteger(input.audiofileId, "audiofileId", inputError);
+    const audiofileId = positiveInteger(input.audiofileId, "audiofileId", providerInputError);
     const format = input.format === "html" ? "html" : "txt";
     const payload = await requestCastingwords({
       path: `/audiofile/${audiofileId}/transcript.${format}`,
@@ -114,7 +116,7 @@ export const castingwordsActionHandlers: ProviderActionHandlers<
       context,
       phase: "execute",
     });
-    const result = requiredRecord(payload, "CastingWords prepay balance response", responseError);
+    const result = requiredRecord(payload, "CastingWords prepay balance response", providerResponseError);
     return {
       balance: requiredIdentifier(result.balance, "balance"),
       raw: result,
@@ -273,12 +275,4 @@ function normalizeCastingwordsStatus(providerStatus: string): CastingwordsNormal
     return "running";
   }
   throw new ProviderRequestError(502, `CastingWords returned an unknown transcription status: ${providerStatus}`);
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function responseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

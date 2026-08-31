@@ -25,7 +25,9 @@ import {
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
+  providerInputError,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
@@ -336,14 +338,6 @@ function readAccountsArray(payload: unknown): Array<Record<string, unknown>> {
     throw new ProviderRequestError(502, "Coinbase response missing accounts");
   }
   return record.accounts.map((item) => requiredRecord(item, "account", providerResponseError));
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }
 
 function base64UrlJson(value: unknown): string {

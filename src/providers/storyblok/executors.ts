@@ -6,6 +6,7 @@ import { compactObject, optionalRecord, optionalString, optionalStringArray, req
 import {
   defineProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -403,8 +404,4 @@ function readInteger(value: unknown): number | undefined {
     }
   }
   return undefined;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

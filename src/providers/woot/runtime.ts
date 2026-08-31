@@ -14,6 +14,7 @@ import {
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
@@ -41,7 +42,7 @@ interface WootJsonRequest {
 
 export const wootActionHandlers: ProviderActionHandlers<"woot", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async list_feed(input, context) {
-    const feedName = requiredString(input.feedName, "feedName", inputError);
+    const feedName = requiredString(input.feedName, "feedName", providerInputError);
     const page = optionalInteger(input.page);
     const url = new URL(`/feed/${encodeURIComponent(feedName)}`, wootApiBaseUrl);
     if (page !== undefined) url.searchParams.set("page", String(page));
@@ -50,7 +51,7 @@ export const wootActionHandlers: ProviderActionHandlers<"woot", ProviderRuntimeH
   },
 
   async get_offers(input, context) {
-    const offerIds = requiredStringArray(input.offerIds, "offerIds", inputError);
+    const offerIds = requiredStringArray(input.offerIds, "offerIds", providerInputError);
     const payload = await requestWootJson({
       context,
       url: new URL("/getoffers", wootApiBaseUrl),
@@ -65,7 +66,7 @@ export const wootActionHandlers: ProviderActionHandlers<"woot", ProviderRuntimeH
   },
 
   async get_offer(input, context) {
-    const offerId = requiredString(input.offerId, "offerId", inputError);
+    const offerId = requiredString(input.offerId, "offerId", providerInputError);
     const payload = await requestWootJson({
       context,
       url: new URL(`/offers/${encodeURIComponent(offerId)}`, wootApiBaseUrl),
@@ -317,8 +318,4 @@ function nullableInteger(value: unknown): number | null {
 
 function nullableBoolean(value: unknown): boolean | null {
   return optionalBoolean(value) ?? null;
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

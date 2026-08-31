@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerInputError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "landbot";
 const landbotApiBaseUrl = "https://api.landbot.io/v1/";
@@ -48,7 +53,7 @@ export const landbotActionHandlers: ProviderActionHandlers<"landbot", LandbotAct
       method: "POST",
       context,
       body: {
-        message: requiredString(input.message, "message", inputError),
+        message: requiredString(input.message, "message", providerInputError),
       },
     });
   },
@@ -56,7 +61,7 @@ export const landbotActionHandlers: ProviderActionHandlers<"landbot", LandbotAct
     validateFieldValue(input.type, input.value);
     return landbotRequest({
       path: `customers/${readCustomerId(input)}/fields/${encodeURIComponent(
-        requiredString(input.field_name, "field_name", inputError),
+        requiredString(input.field_name, "field_name", providerInputError),
       )}/`,
       method: "POST",
       context,
@@ -247,8 +252,4 @@ function readCustomerId(input: Record<string, unknown>): string {
     throw new ProviderRequestError(400, "customer_id is required");
   }
   return encodeURIComponent(String(customerId));
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

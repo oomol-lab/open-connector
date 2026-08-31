@@ -5,6 +5,7 @@ import { compactObject, optionalRecord, optionalString, requiredRecord, stringAr
 import {
   createProviderTimeout,
   isAbortSignalError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   readProviderJsonBody,
@@ -217,7 +218,7 @@ function readOptionalStringArray(value: unknown, fieldName: string): string[] | 
   if (value === undefined) {
     return undefined;
   }
-  return stringArray(value, fieldName, invalidInputError);
+  return stringArray(value, fieldName, providerInputError);
 }
 
 function readOptionalStringRecord(value: unknown, fieldName: string): Record<string, string> | undefined {
@@ -225,7 +226,7 @@ function readOptionalStringRecord(value: unknown, fieldName: string): Record<str
     return undefined;
   }
 
-  const record = requiredRecord(value, fieldName, invalidInputError);
+  const record = requiredRecord(value, fieldName, providerInputError);
   const output: Record<string, string> = {};
   for (const [key, child] of Object.entries(record)) {
     output[key] = String(child);
@@ -252,8 +253,4 @@ function readOptionalJsonArray(value: unknown, fieldName: string): unknown[] | u
     throw new ProviderRequestError(400, `${fieldName} must be an array`);
   }
   return value;
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

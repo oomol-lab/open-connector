@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const viggleApiBaseUrl = "https://apis.viggle.ai";
 
@@ -100,8 +100,8 @@ async function createCharacter(input: Record<string, unknown>, context: ApiKeyPr
           method: "POST",
           path: "/api/characters/preprocess",
           form: compactObject({
-            name: requiredString(input.name, "name", badInput),
-            image_url: requiredString(input.image_url, "image_url", badInput),
+            name: requiredString(input.name, "name", providerInputError),
+            image_url: requiredString(input.image_url, "image_url", providerInputError),
             model: optionalString(input.model),
           }),
         },
@@ -136,7 +136,7 @@ async function getCharacter(input: Record<string, unknown>, context: ApiKeyProvi
       await requestViggleJson(
         {
           method: "GET",
-          path: `/api/characters/${encodeURIComponent(requiredString(input.character_id, "character_id", badInput))}`,
+          path: `/api/characters/${encodeURIComponent(requiredString(input.character_id, "character_id", providerInputError))}`,
         },
         context,
         "execute",
@@ -151,7 +151,7 @@ async function deleteCharacter(input: Record<string, unknown>, context: ApiKeyPr
     await requestViggleJson(
       {
         method: "DELETE",
-        path: `/api/characters/${encodeURIComponent(requiredString(input.character_id, "character_id", badInput))}`,
+        path: `/api/characters/${encodeURIComponent(requiredString(input.character_id, "character_id", providerInputError))}`,
       },
       context,
       "execute",
@@ -168,7 +168,7 @@ async function importTemplate(input: Record<string, unknown>, context: ApiKeyPro
           method: "POST",
           path: "/api/scenes/import",
           json: compactObject({
-            template_uuid: requiredString(input.template_uuid, "template_uuid", badInput),
+            template_uuid: requiredString(input.template_uuid, "template_uuid", providerInputError),
             name: optionalString(input.name),
           }),
         },
@@ -203,7 +203,7 @@ async function getScene(input: Record<string, unknown>, context: ApiKeyProviderC
       await requestViggleJson(
         {
           method: "GET",
-          path: `/api/scenes/${encodeURIComponent(requiredString(input.scene_id, "scene_id", badInput))}`,
+          path: `/api/scenes/${encodeURIComponent(requiredString(input.scene_id, "scene_id", providerInputError))}`,
         },
         context,
         "execute",
@@ -218,7 +218,7 @@ async function deleteScene(input: Record<string, unknown>, context: ApiKeyProvid
     await requestViggleJson(
       {
         method: "DELETE",
-        path: `/api/scenes/${encodeURIComponent(requiredString(input.scene_id, "scene_id", badInput))}`,
+        path: `/api/scenes/${encodeURIComponent(requiredString(input.scene_id, "scene_id", providerInputError))}`,
       },
       context,
       "execute",
@@ -254,7 +254,7 @@ async function getRenderJobStatus(input: Record<string, unknown>, context: ApiKe
       await requestViggleJson(
         {
           method: "GET",
-          path: `/api/render/${encodeURIComponent(requiredString(input.job_id, "job_id", badInput))}`,
+          path: `/api/render/${encodeURIComponent(requiredString(input.job_id, "job_id", providerInputError))}`,
           auth: false,
         },
         context,
@@ -382,12 +382,12 @@ function validateRenderInput(input: Record<string, FormValue>): void {
   const hasPreprocessedInput = Boolean(input.character_id || input.scene_id);
 
   if (hasOnDemandInput) {
-    requiredString(input.ref_image_url, "ref_image_url", badInput);
-    requiredString(input.driving_video_url, "driving_video_url", badInput);
+    requiredString(input.ref_image_url, "ref_image_url", providerInputError);
+    requiredString(input.driving_video_url, "driving_video_url", providerInputError);
   }
   if (hasPreprocessedInput) {
-    requiredString(input.character_id, "character_id", badInput);
-    requiredString(input.scene_id, "scene_id", badInput);
+    requiredString(input.character_id, "character_id", providerInputError);
+    requiredString(input.scene_id, "scene_id", providerInputError);
   }
   if (!hasOnDemandInput && !hasPreprocessedInput) {
     throw new ProviderRequestError(
@@ -413,8 +413,4 @@ function requireRecord(value: unknown, fieldName: string): Record<string, unknow
     throw new ProviderRequestError(502, `${fieldName} must be a JSON object`);
   }
   return record;
-}
-
-function badInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

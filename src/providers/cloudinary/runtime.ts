@@ -4,7 +4,7 @@ import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export interface CloudinaryContext {
   apiKey: string;
@@ -100,7 +100,7 @@ async function updateAsset(input: Record<string, unknown>, context: CloudinaryCo
   const resourceType = readCloudinaryResourceType(input, "image");
   const url = new URL(`${resourceType}/explicit`, buildCloudinaryBaseUrl(context.cloudName));
   const formData = new FormData();
-  formData.set("public_id", requiredString(input.publicId, "publicId", invalidInput));
+  formData.set("public_id", requiredString(input.publicId, "publicId", providerInputError));
   appendOptionalFormField(formData, "display_name", optionalString(input.displayName));
   appendOptionalFormField(formData, "asset_folder", optionalString(input.assetFolder));
   appendOptionalStringList(formData, "tags", input.tags);
@@ -124,8 +124,8 @@ async function renameAsset(input: Record<string, unknown>, context: CloudinaryCo
   const resourceType = readCloudinaryResourceType(input, "image");
   const url = new URL(`${resourceType}/rename`, buildCloudinaryBaseUrl(context.cloudName));
   const formData = new FormData();
-  formData.set("from_public_id", requiredString(input.fromPublicId, "fromPublicId", invalidInput));
-  formData.set("to_public_id", requiredString(input.toPublicId, "toPublicId", invalidInput));
+  formData.set("from_public_id", requiredString(input.fromPublicId, "fromPublicId", providerInputError));
+  formData.set("to_public_id", requiredString(input.toPublicId, "toPublicId", providerInputError));
   const payload = await requestCloudinaryJson(
     url,
     {
@@ -173,7 +173,7 @@ async function listAssets(input: Record<string, unknown>, context: CloudinaryCon
 }
 
 async function getAsset(input: Record<string, unknown>, context: CloudinaryContext): Promise<unknown> {
-  const assetId = requiredString(input.assetId, "assetId", invalidInput);
+  const assetId = requiredString(input.assetId, "assetId", providerInputError);
   const url = new URL(`resources/${encodeURIComponent(assetId)}`, buildCloudinaryBaseUrl(context.cloudName));
   const payload = await requestCloudinaryJson(
     url,
@@ -218,9 +218,9 @@ function resolveCloudinaryCredential(values: Record<string, string>): {
   cloudName: string;
 } {
   return {
-    apiKey: requiredString(values.apiKey, "apiKey", invalidInput),
-    apiSecret: requiredString(values.apiSecret, "apiSecret", invalidInput),
-    cloudName: requiredString(values.cloudName, "cloudName", invalidInput),
+    apiKey: requiredString(values.apiKey, "apiKey", providerInputError),
+    apiSecret: requiredString(values.apiSecret, "apiSecret", providerInputError),
+    cloudName: requiredString(values.cloudName, "cloudName", providerInputError),
   };
 }
 
@@ -385,8 +385,4 @@ function appendOptionalBooleanQuery(url: URL, name: string, value: unknown): voi
 function readOptionalStringifiedInteger(value: unknown): string | undefined {
   const integer = optionalInteger(value);
   return integer === undefined ? undefined : String(integer);
-}
-
-function invalidInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

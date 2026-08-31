@@ -14,7 +14,7 @@ import {
   requiredRecord,
   stringArray,
 } from "../../core/cast.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError } from "../provider-runtime.ts";
 
 export const witAiApiBaseUrl = "https://api.wit.ai";
 export const witAiApiVersion = "20230215";
@@ -764,8 +764,4 @@ function asLooseObject(value: unknown): Record<string, unknown> {
 
 function optionalNumber(value: unknown): number | undefined {
   return typeof value === "number" ? value : undefined;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

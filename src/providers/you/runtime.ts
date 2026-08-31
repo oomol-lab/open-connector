@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerResponseError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const youApiBaseUrl = "https://api.you.com/v1";
 const youApiOrigin = "https://api.you.com";
@@ -62,7 +62,7 @@ async function search(input: Record<string, unknown>, context: ApiKeyProviderCon
     signal: context.signal,
     phase: "execute",
   });
-  const response = requiredRecord(payload, "you search response", providerError);
+  const response = requiredRecord(payload, "you search response", providerResponseError);
   const results = optionalRecord(response.results) ?? {};
   return {
     web: readArray(results.web).map(normalizeWebResult),
@@ -107,7 +107,7 @@ async function research(input: Record<string, unknown>, context: ApiKeyProviderC
     signal: context.signal,
     phase: "execute",
   });
-  const response = requiredRecord(payload, "you research response", providerError);
+  const response = requiredRecord(payload, "you research response", providerResponseError);
   return { output: normalizeResearchOutput(response.output), raw: response };
 }
 
@@ -122,7 +122,7 @@ async function financeResearch(input: Record<string, unknown>, context: ApiKeyPr
     signal: context.signal,
     phase: "execute",
   });
-  const response = requiredRecord(payload, "you finance research response", providerError);
+  const response = requiredRecord(payload, "you finance research response", providerResponseError);
   return { output: normalizeResearchOutput(response.output), raw: response };
 }
 
@@ -280,7 +280,7 @@ function normalizeSearchMetadata(value: unknown): Record<string, unknown> {
 }
 
 function normalizeWebResult(value: unknown): Record<string, unknown> {
-  const input = requiredRecord(value, "you web result", providerError);
+  const input = requiredRecord(value, "you web result", providerResponseError);
   return compactObject({
     url: optionalString(input.url),
     title: optionalString(input.title),
@@ -296,7 +296,7 @@ function normalizeWebResult(value: unknown): Record<string, unknown> {
 }
 
 function normalizeNewsResult(value: unknown): Record<string, unknown> {
-  const input = requiredRecord(value, "you news result", providerError);
+  const input = requiredRecord(value, "you news result", providerResponseError);
   return compactObject({
     url: optionalString(input.url),
     title: optionalString(input.title),
@@ -315,7 +315,7 @@ function normalizeContents(value: unknown): Record<string, unknown> | undefined 
 }
 
 function normalizeContentPage(value: unknown): Record<string, unknown> {
-  const input = requiredRecord(value, "you content page", providerError);
+  const input = requiredRecord(value, "you content page", providerResponseError);
   return compactObject({
     url: optionalString(input.url),
     title: optionalString(input.title),
@@ -327,7 +327,7 @@ function normalizeContentPage(value: unknown): Record<string, unknown> {
 }
 
 function normalizeResearchOutput(value: unknown): Record<string, unknown> {
-  const input = requiredRecord(value, "you output", providerError);
+  const input = requiredRecord(value, "you output", providerResponseError);
   return {
     content: input.content,
     contentType: requiredProviderString(input.content_type, "content_type"),
@@ -337,7 +337,7 @@ function normalizeResearchOutput(value: unknown): Record<string, unknown> {
 }
 
 function normalizeResearchSource(value: unknown): Record<string, unknown> {
-  const input = requiredRecord(value, "you source", providerError);
+  const input = requiredRecord(value, "you source", providerResponseError);
   return compactObject({
     url: requiredProviderString(input.url, "source.url"),
     title: optionalString(input.title),
@@ -353,9 +353,9 @@ function normalizeAccountBalance(value: unknown): {
   balanceUsd: number;
   raw: Record<string, unknown>;
 } {
-  const response = requiredRecord(value, "you balance response", providerError);
-  const data = requiredRecord(response.data, "you balance data", providerError);
-  const attributes = requiredRecord(data.attributes, "you balance attributes", providerError);
+  const response = requiredRecord(value, "you balance response", providerResponseError);
+  const data = requiredRecord(response.data, "you balance data", providerResponseError);
+  const attributes = requiredRecord(data.attributes, "you balance attributes", providerResponseError);
   const balanceCents = requiredProviderNumber(attributes.balance, "balance");
   return {
     type: requiredProviderString(data.type, "type"),
@@ -399,8 +399,4 @@ function requiredProviderString(value: unknown, fieldName: string): string {
 function requiredProviderNumber(value: unknown, fieldName: string): number {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   throw new ProviderRequestError(502, `you response is missing ${fieldName}`);
-}
-
-function providerError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

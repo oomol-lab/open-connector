@@ -6,6 +6,7 @@ import { compactObject, optionalRecord, optionalString, requiredRecord, required
 import {
   defineProviderExecutors,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   requireApiKeyCredential,
   setSearchParams,
@@ -36,7 +37,7 @@ export const axiomActionHandlers: ProviderActionHandlers<"axiom", AxiomActionHan
     });
 
     return {
-      dataset: requiredRecord(payload, "Axiom dataset response", providerPayloadError),
+      dataset: requiredRecord(payload, "Axiom dataset response", providerResponseError),
     };
   },
   async create_dataset(input, context) {
@@ -59,7 +60,7 @@ export const axiomActionHandlers: ProviderActionHandlers<"axiom", AxiomActionHan
     });
 
     return {
-      dataset: requiredRecord(payload, "Axiom create dataset response", providerPayloadError),
+      dataset: requiredRecord(payload, "Axiom create dataset response", providerResponseError),
     };
   },
   async delete_dataset(input, context) {
@@ -96,13 +97,13 @@ export const axiomActionHandlers: ProviderActionHandlers<"axiom", AxiomActionHan
       }),
       phase: "execute",
     });
-    const result = requiredRecord(payload, "Axiom APL query response", providerPayloadError);
+    const result = requiredRecord(payload, "Axiom APL query response", providerResponseError);
 
     return {
       result,
       datasetNames: readStringArray(result.datasetNames, "Axiom query datasetNames"),
       format: optionalString(result.format) ?? "",
-      status: requiredRecord(result.status, "Axiom query status", providerPayloadError),
+      status: requiredRecord(result.status, "Axiom query status", providerResponseError),
     };
   },
 };
@@ -271,10 +272,6 @@ function readStringArray(value: unknown, label: string): string[] {
     throw new ProviderRequestError(502, `${label} must be an array of strings`);
   }
   return value;
-}
-
-function providerPayloadError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }
 
 function isAbortError(error: unknown): boolean {

@@ -14,6 +14,7 @@ import { assertPublicHttpUrl, queryParams, readBoundedResponseBytes } from "../.
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -609,8 +610,8 @@ function buildVimeoPullUploadBody(input: Record<string, unknown>): Record<string
 }
 
 function requireHttpUrl(value: unknown, fieldName: string): string {
-  const raw = requiredString(value, fieldName, badInput);
-  return assertPublicHttpUrl(raw, { fieldName, createError: badInput }).toString();
+  const raw = requiredString(value, fieldName, providerInputError);
+  return assertPublicHttpUrl(raw, { fieldName, createError: providerInputError }).toString();
 }
 
 function normalizeDownloadLinks(value: unknown): Array<Record<string, unknown> & { link: string }> {
@@ -738,8 +739,4 @@ function requireRecord(value: unknown, fieldName: string): Record<string, unknow
     throw new ProviderRequestError(502, `${fieldName} must be an object`);
   }
   return record;
-}
-
-function badInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

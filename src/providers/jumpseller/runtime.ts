@@ -11,7 +11,13 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  providerInputError,
+  providerResponseError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 export const jumpsellerApiBaseUrl = "https://api.jumpseller.com/v1/";
 
@@ -56,7 +62,7 @@ export async function validateJumpsellerCredential(
   signal?: AbortSignal,
 ): Promise<JumpsellerCredentialSummary> {
   const credential = {
-    login: requiredString(login, "login", inputError),
+    login: requiredString(login, "login", providerInputError),
     authtoken: apiKey,
   };
   const payload = await requestJumpsellerJson({
@@ -122,7 +128,7 @@ export const jumpsellerActionHandlers: ProviderActionHandlers<
       outputKey: "products",
       path: "/products/search.json",
       input,
-      query: { query: requiredString(input.query, "query", inputError) },
+      query: { query: requiredString(input.query, "query", providerInputError) },
       ...context,
     });
   },
@@ -131,7 +137,7 @@ export const jumpsellerActionHandlers: ProviderActionHandlers<
       method: "POST",
       resourceKey: "product",
       path: "/products.json",
-      body: { product: requiredRecord(input.product, "product", inputError) },
+      body: { product: requiredRecord(input.product, "product", providerInputError) },
       input,
       ...context,
     });
@@ -141,7 +147,7 @@ export const jumpsellerActionHandlers: ProviderActionHandlers<
       method: "PUT",
       resourceKey: "product",
       path: `/products/${readId(input)}.json`,
-      body: { product: requiredRecord(input.product, "product", inputError) },
+      body: { product: requiredRecord(input.product, "product", providerInputError) },
       input,
       ...context,
     });
@@ -170,7 +176,7 @@ export const jumpsellerActionHandlers: ProviderActionHandlers<
       outputKey: "orders",
       path: "/orders/search.json",
       input,
-      query: { query: requiredString(input.query, "query", inputError) },
+      query: { query: requiredString(input.query, "query", providerInputError) },
       ...context,
     });
   },
@@ -179,7 +185,7 @@ export const jumpsellerActionHandlers: ProviderActionHandlers<
       method: "PUT",
       resourceKey: "order",
       path: `/orders/${readId(input)}.json`,
-      body: { order: requiredRecord(input.order, "order", inputError) },
+      body: { order: requiredRecord(input.order, "order", providerInputError) },
       input,
       ...context,
     });
@@ -208,7 +214,7 @@ export const jumpsellerActionHandlers: ProviderActionHandlers<
       path: "/customers/search.json",
       input,
       query: {
-        query: requiredString(input.query, "query", inputError),
+        query: requiredString(input.query, "query", providerInputError),
         order: optionalString(input.order),
       },
       ...context,
@@ -219,7 +225,7 @@ export const jumpsellerActionHandlers: ProviderActionHandlers<
       method: "POST",
       resourceKey: "customer",
       path: "/customers.json",
-      body: { customer: requiredRecord(input.customer, "customer", inputError) },
+      body: { customer: requiredRecord(input.customer, "customer", providerInputError) },
       input,
       ...context,
     });
@@ -229,7 +235,7 @@ export const jumpsellerActionHandlers: ProviderActionHandlers<
       method: "PUT",
       resourceKey: "customer",
       path: `/customers/${readId(input)}.json`,
-      body: { customer: requiredRecord(input.customer, "customer", inputError) },
+      body: { customer: requiredRecord(input.customer, "customer", providerInputError) },
       input,
       ...context,
     });
@@ -256,7 +262,7 @@ export const jumpsellerActionHandlers: ProviderActionHandlers<
       method: "POST",
       resourceKey: "category",
       path: "/categories.json",
-      body: { category: requiredRecord(input.category, "category", inputError) },
+      body: { category: requiredRecord(input.category, "category", providerInputError) },
       input,
       ...context,
     });
@@ -266,7 +272,7 @@ export const jumpsellerActionHandlers: ProviderActionHandlers<
       method: "PUT",
       resourceKey: "category",
       path: `/categories/${readId(input)}.json`,
-      body: { category: requiredRecord(input.category, "category", inputError) },
+      body: { category: requiredRecord(input.category, "category", providerInputError) },
       input,
       ...context,
     });
@@ -413,7 +419,7 @@ function stringifyOptionalNumber(value: unknown) {
 }
 
 function readId(input: Record<string, unknown>) {
-  return positiveInteger(input.id, "id", inputError);
+  return positiveInteger(input.id, "id", providerInputError);
 }
 
 function unwrapResourceList(payload: unknown, key: JumpsellerResourceKey, outputKey: string) {
@@ -441,7 +447,7 @@ function readResourceArray(payload: unknown, key: JumpsellerResourceKey, outputK
 }
 
 function unwrapResource(payload: unknown, key: JumpsellerResourceKey) {
-  const record = requiredRecord(payload, "Jumpseller response", responseError);
+  const record = requiredRecord(payload, "Jumpseller response", providerResponseError);
   const wrapped = optionalRecord(record[key]);
   if (wrapped) {
     return wrapped;
@@ -511,12 +517,4 @@ function extractJumpsellerErrorMessage(payload: unknown) {
     optionalString(record.detail) ??
     optionalString(record.title)
   );
-}
-
-function inputError(message: string) {
-  return new ProviderRequestError(400, message);
-}
-
-function responseError(message: string) {
-  return new ProviderRequestError(502, message);
 }

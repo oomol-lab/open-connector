@@ -6,6 +6,8 @@ import { optionalString, requiredRecord, requiredString } from "../../core/cast.
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
+  providerResponseError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -60,7 +62,7 @@ export async function validateBugsnagCredential(input: {
   });
 
   const user = requireResponseRecord(payload, "bugsnag user");
-  const userId = requiredString(user.id, "bugsnag user id", providerOutputError);
+  const userId = requiredString(user.id, "bugsnag user id", providerResponseError);
   const email = optionalString(user.email);
   const name = optionalString(user.name);
 
@@ -365,7 +367,7 @@ function requireArrayPayload(payload: unknown, label: string): unknown[] {
 }
 
 function requireResponseRecord(value: unknown, label: string): Record<string, unknown> {
-  return requiredRecord(value, label, providerOutputError);
+  return requiredRecord(value, label, providerResponseError);
 }
 
 function requiredOptionalRecord(value: unknown): Record<string, unknown> | undefined {
@@ -388,12 +390,4 @@ function readNumber(value: unknown): number | undefined {
 
 function readBoolean(value: unknown): boolean | undefined {
   return typeof value === "boolean" ? value : undefined;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerOutputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

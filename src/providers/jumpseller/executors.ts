@@ -11,7 +11,7 @@ import { compactObject, requiredString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
   defineProviderProxy,
-  ProviderRequestError,
+  providerInputError,
   requireApiKeyCredential,
 } from "../provider-runtime.ts";
 import { jumpsellerActionHandlers, jumpsellerApiBaseUrl, validateJumpsellerCredential } from "./runtime.ts";
@@ -68,7 +68,3 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}

@@ -12,6 +12,7 @@ import {
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
   defineProviderExecutors,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderJsonBody,
@@ -117,8 +118,4 @@ export function normalizeCuboxApiUrl(value: string): string {
   }
 
   return url.toString();
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

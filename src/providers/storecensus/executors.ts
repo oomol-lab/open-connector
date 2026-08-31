@@ -7,6 +7,7 @@ import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -24,7 +25,7 @@ export const storecensusActionHandlers: ProviderActionHandlers<"storecensus", St
     const payload = await requestStorecensusJson({
       context,
       method: "GET",
-      path: `/website/${encodeURIComponent(requiredString(input.domain, "domain", invalidInputError))}`,
+      path: `/website/${encodeURIComponent(requiredString(input.domain, "domain", providerInputError))}`,
       query: buildQueryParams(input, [["sections", formatCommaSeparatedArray]]),
       phase: "execute",
     });
@@ -281,8 +282,4 @@ function requireObjectArrayPayload(payload: unknown, label: string): Array<Recor
   }
 
   return payload.map((item) => requireProviderObject(item, `${label} item`));
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

@@ -7,6 +7,7 @@ import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -48,7 +49,7 @@ export const statamicActionHandlers: ProviderActionHandlers<"statamic", Statamic
   async update_site(input, context) {
     assertSiteMutationInput(input, true);
     const payload = await requestStatamicJson({
-      path: `/sites/${encodeURIComponent(requiredString(input.key, "key", invalidInputError))}`,
+      path: `/sites/${encodeURIComponent(requiredString(input.key, "key", providerInputError))}`,
       method: "PATCH",
       context,
       body: buildSiteMutationBody(input),
@@ -61,7 +62,7 @@ export const statamicActionHandlers: ProviderActionHandlers<"statamic", Statamic
   },
   async delete_site(input, context) {
     const payload = await requestStatamicJson({
-      path: `/sites/${encodeURIComponent(requiredString(input.key, "key", invalidInputError))}`,
+      path: `/sites/${encodeURIComponent(requiredString(input.key, "key", providerInputError))}`,
       method: "DELETE",
       context,
       phase: "execute",
@@ -274,7 +275,7 @@ function readOptionalStringList(value: unknown): string[] | undefined {
   if (!Array.isArray(value)) {
     throw new ProviderRequestError(400, "domains must be an array");
   }
-  return value.map((item) => requiredString(item, "domains item", invalidInputError));
+  return value.map((item) => requiredString(item, "domains item", providerInputError));
 }
 
 function readResponseStringList(value: unknown): string[] | undefined {
@@ -285,8 +286,4 @@ function readResponseStringList(value: unknown): string[] | undefined {
     throw new ProviderRequestError(502, "Statamic response has invalid domains field");
   }
   return value.filter((item): item is string => typeof item === "string");
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

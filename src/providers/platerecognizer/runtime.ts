@@ -13,6 +13,7 @@ import {
 import {
   defineApiKeyProviderExecutors,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   readTransitFileInput,
 } from "../provider-runtime.ts";
@@ -283,8 +284,4 @@ function readRequiredInteger(value: unknown, fieldName: string): number {
     return value;
   }
   throw new ProviderRequestError(502, `${fieldName} must be an integer`);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

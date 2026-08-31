@@ -5,6 +5,7 @@ import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/r
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -321,8 +322,4 @@ function createTaigaError(response: Response, phase: TaigaRequestInput["phase"])
   if (response.status == 404) return new ProviderRequestError(400, message);
   if (response.status == 409 || response.status == 429) return new ProviderRequestError(response.status, message);
   return new ProviderRequestError(502, message);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

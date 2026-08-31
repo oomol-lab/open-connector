@@ -5,6 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
@@ -100,7 +101,7 @@ export const appveyorActionHandlers: ProviderActionHandlers<"appveyor", Appveyor
     const artifacts = await appveyorGetJson({
       context,
       accountName: resolveAccountName(input, context),
-      path: `/buildjobs/${encodeURIComponent(requiredString(input.jobId, "jobId", invalidInputError))}/artifacts`,
+      path: `/buildjobs/${encodeURIComponent(requiredString(input.jobId, "jobId", providerInputError))}/artifacts`,
       phase: "execute",
     });
 
@@ -306,8 +307,4 @@ function readOptionalNonEmptyString(value: unknown): string | undefined {
 
   const trimmed = value.trim();
   return trimmed ? trimmed : undefined;
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

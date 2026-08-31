@@ -1,7 +1,7 @@
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const socialFetchApiBaseUrl = "https://api.socialfetch.dev";
 
@@ -25,8 +25,8 @@ export const socialFetchActionHandlers: ProviderActionHandlers<
     return { ...requireObject(payload.data, "data"), meta: requireObject(payload.meta, "meta") };
   },
   async get_profile(input, context) {
-    const platform = requiredString(input.platform, "platform", badInput);
-    const rawHandle = requiredString(input.handle, "handle", badInput);
+    const platform = requiredString(input.platform, "platform", providerInputError);
+    const rawHandle = requiredString(input.handle, "handle", providerInputError);
     const handle = rawHandle.startsWith("@") ? rawHandle.slice(1) : rawHandle;
     const path =
       platform === "telegram"
@@ -111,7 +111,4 @@ function requireObject(value: unknown, field: string): Record<string, unknown> {
   if (!record)
     throw new ProviderRequestError(502, `Social Fetch response did not include an object at ${field}`, value);
   return record;
-}
-function badInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

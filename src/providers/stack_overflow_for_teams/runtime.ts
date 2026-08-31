@@ -6,6 +6,7 @@ import { optionalRecord, optionalString, requiredString } from "../../core/cast.
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderJsonBody,
@@ -66,7 +67,7 @@ export function createStackOverflowForTeamsContext(
   signal?: AbortSignal,
 ): StackOverflowForTeamsContext {
   return {
-    apiKey: requiredString(apiKey, "apiKey", invalidInput),
+    apiKey: requiredString(apiKey, "apiKey", providerInputError),
     team: requireTeam(values.team ?? optionalString(metadata.team)),
     fetcher,
     signal,
@@ -168,8 +169,4 @@ function requirePositiveInteger(value: unknown, fieldName: string): number {
     throw new ProviderRequestError(400, `${fieldName} must be a positive integer`);
   }
   return value;
-}
-
-function invalidInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

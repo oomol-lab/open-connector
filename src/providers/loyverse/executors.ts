@@ -4,7 +4,12 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalRecord, optionalString, requiredString, stringArray } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerInputError,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "loyverse";
 const loyverseApiBaseUrl = "https://api.loyverse.com/v1.0";
@@ -151,11 +156,11 @@ function joinList(value: unknown): string | undefined {
   if (!Array.isArray(value) || value.length === 0) {
     return undefined;
   }
-  return stringArray(value, "ids", inputError).join(",");
+  return stringArray(value, "ids", providerInputError).join(",");
 }
 
 function readRequiredString(input: Record<string, unknown>, key: string): string {
-  return requiredString(input[key], key, inputError);
+  return requiredString(input[key], key, providerInputError);
 }
 
 async function requestLoyverseList(
@@ -283,8 +288,4 @@ function requireObject(value: unknown, label: string): Record<string, unknown> {
     throw new ProviderRequestError(502, `${label} must be an object`);
   }
   return record;
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

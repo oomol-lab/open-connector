@@ -11,6 +11,7 @@ import {
   requiredString,
   requiredStringArray,
 } from "../../core/cast.ts";
+import { providerInputError } from "../provider-runtime.ts";
 import {
   asanaCustomFieldFormats,
   asanaCustomFieldInputRestrictions,
@@ -19,7 +20,6 @@ import {
   asanaEnumOptionColors,
 } from "./custom-field-metadata.ts";
 import {
-  asanaInvalidInputError,
   asanaPathGid,
   buildAsanaFieldsQuery,
   buildAsanaPaginationQuery,
@@ -138,7 +138,7 @@ export const customFieldActionHandlers: ProviderActionHandlerSubset<"asana", Asa
     return writeAsanaResource(
       `/custom_fields/${asanaPathGid(input.customFieldId, "customFieldId")}/enum_options/insert`,
       compactObject({
-        enum_option: requiredString(input.enumOptionId, "enumOptionId", asanaInvalidInputError),
+        enum_option: requiredString(input.enumOptionId, "enumOptionId", providerInputError),
         before_enum_option: before,
         after_enum_option: after,
       }),
@@ -189,7 +189,7 @@ function buildCustomFieldCreateBody(input: Record<string, unknown>): Record<stri
   const subtype = readStringEnum(input.resourceSubtype, "resourceSubtype", customFieldSubtypes);
   validateCustomFieldCreateSubtype(input, subtype);
   return {
-    workspace: requiredString(input.workspaceId, "workspaceId", asanaInvalidInputError),
+    workspace: requiredString(input.workspaceId, "workspaceId", providerInputError),
     resource_subtype: subtype,
     ...buildCustomFieldMutationBody(input, true),
     ...compactObject({
@@ -204,7 +204,7 @@ function buildCustomFieldMutationBody(input: Record<string, unknown>, create: bo
   }
   validateNumberFormatDependencies(input, create);
   const body = compactObject({
-    name: create ? requiredString(input.name, "name", asanaInvalidInputError) : optionalString(input.name),
+    name: create ? requiredString(input.name, "name", providerInputError) : optionalString(input.name),
     description: typeof input.description === "string" ? input.description : undefined,
     enum_options: create && input.enumOptions !== undefined ? readEnumOptions(input.enumOptions) : undefined,
     precision: readOptionalPrecision(input.precision),
@@ -231,14 +231,14 @@ function buildCustomFieldMutationBody(input: Record<string, unknown>, create: bo
 
 function validateCustomFieldUpdateCompatibility(input: Record<string, unknown>): void {
   if (Object.hasOwn(input, "inputRestrictions") && numberOnlyInputFields.some((field) => Object.hasOwn(input, field))) {
-    throw asanaInvalidInputError("inputRestrictions cannot be combined with number custom field properties.");
+    throw providerInputError("inputRestrictions cannot be combined with number custom field properties.");
   }
   if (
     !Object.hasOwn(input, "format") &&
     input.currencyCode != null &&
     (input.customLabel != null || input.customLabelPosition != null)
   ) {
-    throw asanaInvalidInputError(
+    throw providerInputError(
       "currencyCode cannot be combined with customLabel or customLabelPosition without an explicit format.",
     );
   }
@@ -247,16 +247,16 @@ function validateCustomFieldUpdateCompatibility(input: Record<string, unknown>):
 function validateCustomFieldCreateSubtype(input: Record<string, unknown>, subtype: string): void {
   const hasEnumOptions = Object.hasOwn(input, "enumOptions");
   if ((subtype === "enum" || subtype === "multi_enum") && !hasEnumOptions) {
-    throw asanaInvalidInputError("enumOptions is required for enum and multi_enum custom fields.");
+    throw providerInputError("enumOptions is required for enum and multi_enum custom fields.");
   }
   if (subtype !== "enum" && subtype !== "multi_enum" && hasEnumOptions) {
-    throw asanaInvalidInputError("enumOptions is only supported for enum and multi_enum custom fields.");
+    throw providerInputError("enumOptions is only supported for enum and multi_enum custom fields.");
   }
   if (subtype !== "number" && numberOnlyInputFields.some((field) => Object.hasOwn(input, field))) {
-    throw asanaInvalidInputError("Number formatting fields are only supported for number custom fields.");
+    throw providerInputError("Number formatting fields are only supported for number custom fields.");
   }
   if (subtype !== "reference" && Object.hasOwn(input, "inputRestrictions")) {
-    throw asanaInvalidInputError("inputRestrictions is only supported for reference custom fields.");
+    throw providerInputError("inputRestrictions is only supported for reference custom fields.");
   }
 }
 
@@ -264,26 +264,26 @@ function validateNumberFormatDependencies(input: Record<string, unknown>, requir
   const format = optionalString(input.format);
   const hasExplicitFormat = Object.hasOwn(input, "format");
   if (input.currencyCode != null && (requireExplicitFormat || hasExplicitFormat) && format !== "currency") {
-    throw asanaInvalidInputError("currencyCode requires format to be currency.");
+    throw providerInputError("currencyCode requires format to be currency.");
   }
   if (
     (input.customLabel != null || input.customLabelPosition != null) &&
     (requireExplicitFormat || hasExplicitFormat) &&
     format !== "custom"
   ) {
-    throw asanaInvalidInputError("customLabel and customLabelPosition require format to be custom.");
+    throw providerInputError("customLabel and customLabelPosition require format to be custom.");
   }
 }
 
 function readEnumOptions(value: unknown): Array<Record<string, unknown>> {
-  const options = objectArray(value, "enumOptions", asanaInvalidInputError);
+  const options = objectArray(value, "enumOptions", providerInputError);
   if (options.length < 1 || options.length > 500) {
-    throw asanaInvalidInputError("enumOptions must contain from 1 through 500 options.");
+    throw providerInputError("enumOptions must contain from 1 through 500 options.");
   }
   return options.map((option) => {
     const body = buildEnumOptionFields(option, false);
     if (!body.name) {
-      throw asanaInvalidInputError("enumOptions.name is required.");
+      throw providerInputError("enumOptions.name is required.");
     }
     return body;
   });
@@ -293,7 +293,7 @@ function buildEnumOptionBody(input: Record<string, unknown>, create: boolean): R
   const before = create ? optionalString(input.insertBeforeId) : undefined;
   const after = create ? optionalString(input.insertAfterId) : undefined;
   if (before && after) {
-    throw asanaInvalidInputError("insertBeforeId and insertAfterId cannot both be provided.");
+    throw providerInputError("insertBeforeId and insertAfterId cannot both be provided.");
   }
   const fields = buildEnumOptionFields(input, !create);
   const body = {
@@ -304,7 +304,7 @@ function buildEnumOptionBody(input: Record<string, unknown>, create: boolean): R
     }),
   };
   if (create && !fields.name) {
-    throw asanaInvalidInputError("name is required.");
+    throw providerInputError("name is required.");
   }
   if (!create) {
     requireNonEmptyAsanaBody(body, "At least one enum option property must be provided.");
@@ -326,10 +326,10 @@ function readOptionalEnumOptionEnabled(value: unknown, allowDisabled: boolean): 
   }
   const enabled = optionalBoolean(value);
   if (enabled === undefined) {
-    throw asanaInvalidInputError("enabled must be a boolean.");
+    throw providerInputError("enabled must be a boolean.");
   }
   if (!allowDisabled && !enabled) {
-    throw asanaInvalidInputError("New enum options must be enabled.");
+    throw providerInputError("New enum options must be enabled.");
   }
   return enabled;
 }
@@ -340,15 +340,15 @@ function readOptionalPrecision(value: unknown): number | undefined {
   }
   const precision = optionalInteger(value);
   if (precision === undefined || precision < 0 || precision > 6) {
-    throw asanaInvalidInputError("precision must be an integer from 0 through 6.");
+    throw providerInputError("precision must be an integer from 0 through 6.");
   }
   return precision;
 }
 
 function readStringEnum(value: unknown, fieldName: string, allowed: Set<string>): string {
-  const result = requiredString(value, fieldName, asanaInvalidInputError);
+  const result = requiredString(value, fieldName, providerInputError);
   if (!allowed.has(result)) {
-    throw asanaInvalidInputError(`${fieldName} has an unsupported value.`);
+    throw providerInputError(`${fieldName} has an unsupported value.`);
   }
   return result;
 }
@@ -375,9 +375,9 @@ function readOptionalStringEnumArray(value: unknown, fieldName: string, allowed:
   if (value === undefined) {
     return undefined;
   }
-  const values = requiredStringArray(value, fieldName, asanaInvalidInputError);
+  const values = requiredStringArray(value, fieldName, providerInputError);
   if (values.length === 0 || values.some((item) => !allowed.has(item))) {
-    throw asanaInvalidInputError(`${fieldName} must contain supported resource types.`);
+    throw providerInputError(`${fieldName} must contain supported resource types.`);
   }
   return values;
 }
@@ -389,6 +389,6 @@ function requireExactlyOnePlacementAnchor(
   afterField: string,
 ): void {
   if (!!before === !!after) {
-    throw asanaInvalidInputError(`Exactly one of ${beforeField} or ${afterField} must be provided.`);
+    throw providerInputError(`Exactly one of ${beforeField} or ${afterField} must be provided.`);
   }
 }

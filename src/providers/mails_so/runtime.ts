@@ -13,6 +13,7 @@ import {
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -34,7 +35,7 @@ export const mailsSoActionHandlers: ProviderActionHandlers<"mails_so", MailsSoAc
   create_validation_batch(input, context) {
     return requestCreateBatch({
       context,
-      emails: stringArray(input.emails, "emails", inputError),
+      emails: stringArray(input.emails, "emails", providerInputError),
       phase: "execute",
     });
   },
@@ -250,7 +251,7 @@ function normalizeValidationResult(record: Record<string, unknown>): Record<stri
 }
 
 function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, inputError);
+  return requiredString(value, fieldName, providerInputError);
 }
 
 function requireObject(value: unknown, label: string): Record<string, unknown> {
@@ -297,8 +298,4 @@ function readNullableBoolean(value: unknown): boolean | null {
     return null;
   }
   return requireProviderBoolean(value, "boolean field");
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

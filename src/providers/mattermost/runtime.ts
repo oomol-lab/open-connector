@@ -4,7 +4,7 @@ import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const apiPathPrefix = "/api/v4";
 const validationPath = "/users/me";
@@ -310,8 +310,4 @@ function trimTrailingSlashes(value: string): string {
     end -= 1;
   }
   return value.slice(0, end);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

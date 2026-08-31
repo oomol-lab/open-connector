@@ -14,6 +14,7 @@ import {
   createProviderTimeout,
   defineProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
@@ -274,13 +275,13 @@ function normalizeAltiriaDashboardHost(value: unknown) {
   const rawValue = requireString(value, "dashboardHost");
   const url = assertPublicHttpUrl(rawValue, {
     fieldName: "dashboardHost",
-    createError: invalidInput,
+    createError: providerInputError,
   });
   if (url.protocol !== "https:") {
-    throw invalidInput("dashboardHost must use HTTPS");
+    throw providerInputError("dashboardHost must use HTTPS");
   }
   if (url.username || url.password) {
-    throw invalidInput("dashboardHost must not include credentials");
+    throw providerInputError("dashboardHost must not include credentials");
   }
 
   url.hash = "";
@@ -386,13 +387,13 @@ function readAltiriaErrorMessage(payload: unknown) {
 
 function buildContactWriteBody(input: Record<string, unknown>) {
   if (input.email === undefined && input.phone === undefined && input.landline === undefined) {
-    throw invalidInput("email, phone, or landline is required");
+    throw providerInputError("email, phone, or landline is required");
   }
   if ((input.phone !== undefined || input.landline !== undefined) && input.countryIso === undefined) {
-    throw invalidInput("countryIso is required when phone or landline is specified");
+    throw providerInputError("countryIso is required when phone or landline is specified");
   }
   if (input.groupsIds === undefined && input.groupsNames === undefined) {
-    throw invalidInput("groupsIds or groupsNames is required");
+    throw providerInputError("groupsIds or groupsNames is required");
   }
 
   return compactObject({
@@ -467,7 +468,7 @@ function normalizeGroup(value: unknown) {
 function requireString(value: unknown, name: string) {
   const resolved = optionalString(value)?.trim();
   if (!resolved) {
-    throw invalidInput(`${name} is required`);
+    throw providerInputError(`${name} is required`);
   }
   return resolved;
 }
@@ -475,7 +476,7 @@ function requireString(value: unknown, name: string) {
 function requireInteger(value: unknown, name: string) {
   const resolved = optionalInteger(value);
   if (resolved == null) {
-    throw invalidInput(`${name} is required`);
+    throw providerInputError(`${name} is required`);
   }
   return resolved;
 }
@@ -483,13 +484,13 @@ function requireInteger(value: unknown, name: string) {
 function validateSendSmsRelations(input: Record<string, unknown>): void {
   const recipients = Array.isArray(input.to) ? input.to : [];
   if (input.tags !== undefined && input.campaignName === undefined) {
-    throw invalidInput("campaignName is required when tags is specified");
+    throw providerInputError("campaignName is required when tags is specified");
   }
   if (Array.isArray(input.notificationUrl) && input.notificationUrl.length !== recipients.length) {
-    throw invalidInput("notificationUrl must contain one URL per recipient");
+    throw providerInputError("notificationUrl must contain one URL per recipient");
   }
   if (Array.isArray(input.sub) && input.sub.length !== recipients.length) {
-    throw invalidInput("sub must contain one object per recipient");
+    throw providerInputError("sub must contain one object per recipient");
   }
 }
 
@@ -520,8 +521,4 @@ function normalizeCustomFields(value: unknown): unknown {
 
 function basicAuthorization(username: string, password: string): string {
   return `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
-}
-
-function invalidInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

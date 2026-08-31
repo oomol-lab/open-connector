@@ -12,7 +12,12 @@ import {
   stringArray,
 } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  providerResponseError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const surecontactApiBaseUrl = "https://api.surecontact.com/api/v1/public";
 
@@ -52,24 +57,24 @@ export const surecontactActionHandlers: ProviderActionHandlers<"surecontact", Su
   async get_contact(input, context) {
     const payload = await requestSureContactJson({
       ...context,
-      path: `/contacts/${encodeURIComponent(requiredString(input.uuid, "uuid", inputError))}`,
+      path: `/contacts/${encodeURIComponent(requiredString(input.uuid, "uuid", providerInputError))}`,
       phase: "execute",
       notFoundAsInvalidInput: true,
     });
     return {
-      contact: requiredRecord(payload, "contact", providerError),
+      contact: requiredRecord(payload, "contact", providerResponseError),
       raw: payload,
     };
   },
   async get_contact_by_email(input, context) {
     const payload = await requestSureContactJson({
       ...context,
-      path: `/contacts/email/${encodeURIComponent(requiredString(input.email, "email", inputError))}`,
+      path: `/contacts/email/${encodeURIComponent(requiredString(input.email, "email", providerInputError))}`,
       phase: "execute",
       notFoundAsInvalidInput: true,
     });
     return {
-      contact: requiredRecord(payload, "contact", providerError),
+      contact: requiredRecord(payload, "contact", providerResponseError),
       raw: payload,
     };
   },
@@ -83,42 +88,42 @@ export const surecontactActionHandlers: ProviderActionHandlers<"surecontact", Su
     return requestContactMutation(
       input,
       context,
-      `/contacts/${encodeURIComponent(requiredString(input.contactUuid, "contactUuid", inputError))}`,
+      `/contacts/${encodeURIComponent(requiredString(input.contactUuid, "contactUuid", providerInputError))}`,
       "PUT",
     );
   },
   delete_contact(input, context) {
     return requestSureContactMutation(input, context, {
-      path: `/contacts/${encodeURIComponent(requiredString(input.uuid, "uuid", inputError))}`,
+      path: `/contacts/${encodeURIComponent(requiredString(input.uuid, "uuid", providerInputError))}`,
       method: "DELETE",
     });
   },
   attach_contact_tags(input, context) {
     return requestSureContactMutation(input, context, {
-      path: `/contacts/${encodeURIComponent(requiredString(input.contactUuid, "contactUuid", inputError))}/tags/attach`,
+      path: `/contacts/${encodeURIComponent(requiredString(input.contactUuid, "contactUuid", providerInputError))}/tags/attach`,
       method: "POST",
-      body: { tag_uuids: stringArray(input.uuids, "uuids", inputError) },
+      body: { tag_uuids: stringArray(input.uuids, "uuids", providerInputError) },
     });
   },
   detach_contact_tags(input, context) {
     return requestSureContactMutation(input, context, {
-      path: `/contacts/${encodeURIComponent(requiredString(input.contactUuid, "contactUuid", inputError))}/tags/detach`,
+      path: `/contacts/${encodeURIComponent(requiredString(input.contactUuid, "contactUuid", providerInputError))}/tags/detach`,
       method: "POST",
-      body: { tag_uuids: stringArray(input.uuids, "uuids", inputError) },
+      body: { tag_uuids: stringArray(input.uuids, "uuids", providerInputError) },
     });
   },
   attach_contact_lists(input, context) {
     return requestSureContactMutation(input, context, {
-      path: `/contacts/${encodeURIComponent(requiredString(input.contactUuid, "contactUuid", inputError))}/lists/attach`,
+      path: `/contacts/${encodeURIComponent(requiredString(input.contactUuid, "contactUuid", providerInputError))}/lists/attach`,
       method: "POST",
-      body: { list_uuids: stringArray(input.uuids, "uuids", inputError) },
+      body: { list_uuids: stringArray(input.uuids, "uuids", providerInputError) },
     });
   },
   detach_contact_lists(input, context) {
     return requestSureContactMutation(input, context, {
-      path: `/contacts/${encodeURIComponent(requiredString(input.contactUuid, "contactUuid", inputError))}/lists/detach`,
+      path: `/contacts/${encodeURIComponent(requiredString(input.contactUuid, "contactUuid", providerInputError))}/lists/detach`,
       method: "POST",
-      body: { list_uuids: stringArray(input.uuids, "uuids", inputError) },
+      body: { list_uuids: stringArray(input.uuids, "uuids", providerInputError) },
     });
   },
   list_lists(input, context) {
@@ -132,12 +137,12 @@ export const surecontactActionHandlers: ProviderActionHandlers<"surecontact", Su
   async get_list(input, context) {
     const payload = await requestSureContactJson({
       ...context,
-      path: `/lists/${encodeURIComponent(requiredString(input.uuid, "uuid", inputError))}`,
+      path: `/lists/${encodeURIComponent(requiredString(input.uuid, "uuid", providerInputError))}`,
       phase: "execute",
       notFoundAsInvalidInput: true,
     });
     return {
-      list: requiredRecord(payload, "list", providerError),
+      list: requiredRecord(payload, "list", providerResponseError),
       raw: payload,
     };
   },
@@ -149,7 +154,7 @@ export const surecontactActionHandlers: ProviderActionHandlers<"surecontact", Su
         path: "/lists",
         method: "POST",
         body: {
-          name: requiredString(input.name, "name", inputError),
+          name: requiredString(input.name, "name", providerInputError),
           description: optionalString(input.description),
         },
         phase: "execute",
@@ -161,7 +166,7 @@ export const surecontactActionHandlers: ProviderActionHandlers<"surecontact", Su
       "list",
       await requestSureContactJson({
         ...context,
-        path: `/lists/${encodeURIComponent(requiredString(input.listUuid, "listUuid", inputError))}`,
+        path: `/lists/${encodeURIComponent(requiredString(input.listUuid, "listUuid", providerInputError))}`,
         method: "PUT",
         body: {
           name: optionalString(input.name),
@@ -174,22 +179,22 @@ export const surecontactActionHandlers: ProviderActionHandlers<"surecontact", Su
   },
   delete_list(input, context) {
     return requestSureContactMutation(input, context, {
-      path: `/lists/${encodeURIComponent(requiredString(input.uuid, "uuid", inputError))}`,
+      path: `/lists/${encodeURIComponent(requiredString(input.uuid, "uuid", providerInputError))}`,
       method: "DELETE",
     });
   },
   add_contacts_to_list(input, context) {
     return requestSureContactMutation(input, context, {
-      path: `/lists/${encodeURIComponent(requiredString(input.listUuid, "listUuid", inputError))}/contacts/add`,
+      path: `/lists/${encodeURIComponent(requiredString(input.listUuid, "listUuid", providerInputError))}/contacts/add`,
       method: "POST",
-      body: { contact_uuids: stringArray(input.contactUuids, "contactUuids", inputError) },
+      body: { contact_uuids: stringArray(input.contactUuids, "contactUuids", providerInputError) },
     });
   },
   remove_contacts_from_list(input, context) {
     return requestSureContactMutation(input, context, {
-      path: `/lists/${encodeURIComponent(requiredString(input.listUuid, "listUuid", inputError))}/contacts/remove`,
+      path: `/lists/${encodeURIComponent(requiredString(input.listUuid, "listUuid", providerInputError))}/contacts/remove`,
       method: "POST",
-      body: { contact_uuids: stringArray(input.contactUuids, "contactUuids", inputError) },
+      body: { contact_uuids: stringArray(input.contactUuids, "contactUuids", providerInputError) },
     });
   },
   list_tags(input, context) {
@@ -203,12 +208,12 @@ export const surecontactActionHandlers: ProviderActionHandlers<"surecontact", Su
   async get_tag(input, context) {
     const payload = await requestSureContactJson({
       ...context,
-      path: `/tags/${encodeURIComponent(requiredString(input.uuid, "uuid", inputError))}`,
+      path: `/tags/${encodeURIComponent(requiredString(input.uuid, "uuid", providerInputError))}`,
       phase: "execute",
       notFoundAsInvalidInput: true,
     });
     return {
-      tag: requiredRecord(payload, "tag", providerError),
+      tag: requiredRecord(payload, "tag", providerResponseError),
       raw: payload,
     };
   },
@@ -219,7 +224,7 @@ export const surecontactActionHandlers: ProviderActionHandlers<"surecontact", Su
         ...context,
         path: "/tags",
         method: "POST",
-        body: { name: requiredString(input.name, "name", inputError) },
+        body: { name: requiredString(input.name, "name", providerInputError) },
         phase: "execute",
       }),
     );
@@ -229,7 +234,7 @@ export const surecontactActionHandlers: ProviderActionHandlers<"surecontact", Su
       "tag",
       await requestSureContactJson({
         ...context,
-        path: `/tags/${encodeURIComponent(requiredString(input.tagUuid, "tagUuid", inputError))}`,
+        path: `/tags/${encodeURIComponent(requiredString(input.tagUuid, "tagUuid", providerInputError))}`,
         method: "PUT",
         body: { name: optionalString(input.name) },
         phase: "execute",
@@ -239,7 +244,7 @@ export const surecontactActionHandlers: ProviderActionHandlers<"surecontact", Su
   },
   delete_tag(input, context) {
     return requestSureContactMutation(input, context, {
-      path: `/tags/${encodeURIComponent(requiredString(input.uuid, "uuid", inputError))}`,
+      path: `/tags/${encodeURIComponent(requiredString(input.uuid, "uuid", providerInputError))}`,
       method: "DELETE",
     });
   },
@@ -258,7 +263,7 @@ export async function validateSureContactCredential(
     query: { per_page: 1 },
     phase: "validate",
   });
-  const record = requiredRecord(payload, "SureContact validation response", providerError);
+  const record = requiredRecord(payload, "SureContact validation response", providerResponseError);
   const contactCount = optionalInteger(record.total) ?? optionalInteger(optionalRecord(record.meta)?.total);
 
   return {
@@ -305,7 +310,7 @@ async function requestSureContactList(
       phase: "execute",
     }),
     "SureContact list response",
-    providerError,
+    providerResponseError,
   );
 
   return {
@@ -333,7 +338,7 @@ async function requestSureContactMutation(
     notFoundAsInvalidInput: true,
   });
 
-  const object = payload == null ? {} : requiredRecord(payload, "SureContact mutation response", providerError);
+  const object = payload == null ? {} : requiredRecord(payload, "SureContact mutation response", providerResponseError);
   return {
     success: optionalBoolean(object.success) ?? true,
     message: optionalString(object.message) ?? null,
@@ -485,7 +490,7 @@ function contactBody(input: Record<string, unknown>): Record<string, unknown> {
 }
 
 function wrapNamedObject(key: "contact" | "list" | "tag", payload: unknown): Record<string, unknown> {
-  const object = requiredRecord(payload, key, providerError);
+  const object = requiredRecord(payload, key, providerResponseError);
   const nested = optionalRecord(object[key]);
   return {
     [key]: nested ?? object,
@@ -497,7 +502,7 @@ function readItems(payload: Record<string, unknown>, itemKeys: string[]): Array<
   for (const key of itemKeys) {
     const value = payload[key];
     if (Array.isArray(value)) {
-      return value.map((item) => requiredRecord(item, key, providerError));
+      return value.map((item) => requiredRecord(item, key, providerResponseError));
     }
   }
 
@@ -521,12 +526,4 @@ function readPagination(payload: Record<string, unknown>): Record<string, unknow
 
 function optionalStringArray(value: unknown): string[] | undefined {
   return Array.isArray(value) ? value.map((item) => String(item)) : undefined;
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

@@ -17,6 +17,7 @@ import {
   createProviderTimeout,
   isAbortLikeError,
   providerFetch,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   readProviderJsonBody,
@@ -108,7 +109,7 @@ export const memosActionHandlers: ProviderActionHandlers<"memos", ProviderRuntim
       { inputName: "location", maskName: "location" },
     ];
     const updateMask = fields.filter((field) => Object.hasOwn(input, field.inputName)).map((field) => field.maskName);
-    if (updateMask.length === 0) throw inputError("Provide at least one memo field to update.");
+    if (updateMask.length === 0) throw providerInputError("Provide at least one memo field to update.");
     const memo = requireResponseObject(
       await requestMemosJson(context, resourcePath(name, "memos"), {
         method: "PATCH",
@@ -210,8 +211,8 @@ export const memosActionHandlers: ProviderActionHandlers<"memos", ProviderRuntim
 
   async set_memo_attachments(input, context) {
     const name = requiredInputString(input.name, "name");
-    const attachmentNames = requiredStringArray(input.attachmentNames, "attachmentNames", inputError).map((item) =>
-      requiredString(item, "attachmentNames", inputError),
+    const attachmentNames = requiredStringArray(input.attachmentNames, "attachmentNames", providerInputError).map(
+      (item) => requiredString(item, "attachmentNames", providerInputError),
     );
     for (const attachmentName of attachmentNames) resourcePath(attachmentName, "attachments");
     await requestMemosJson(context, `${resourcePath(name, "memos")}/attachments`, {
@@ -262,7 +263,7 @@ export function createMemosContext(
   signal?: AbortSignal,
 ): MemosContext {
   return {
-    apiKey: requiredString(apiKey, "apiKey", inputError),
+    apiKey: requiredString(apiKey, "apiKey", providerInputError),
     baseUrl: normalizeMemosBaseUrl(baseUrl),
     fetcher,
     signal,
@@ -273,12 +274,12 @@ export function normalizeMemosBaseUrl(
   value: unknown,
   allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
 ): string {
-  const url = assertPublicHttpUrl(requiredString(value, "baseUrl", inputError), {
+  const url = assertPublicHttpUrl(requiredString(value, "baseUrl", providerInputError), {
     fieldName: "baseUrl",
-    createError: inputError,
+    createError: providerInputError,
     allowPrivateNetwork,
   });
-  if (url.username || url.password) throw inputError("baseUrl must not include credentials");
+  if (url.username || url.password) throw providerInputError("baseUrl must not include credentials");
   url.search = "";
   url.hash = "";
   const pathname = trimTrailingSlash(url.pathname);
@@ -365,7 +366,7 @@ async function downloadAttachmentSource(
   mimeTypeInput: string | undefined,
   signal?: AbortSignal,
 ): Promise<AttachmentSource> {
-  const url = assertPublicHttpUrl(fileUrl, { fieldName: "fileUrl", createError: inputError });
+  const url = assertPublicHttpUrl(fileUrl, { fieldName: "fileUrl", createError: providerInputError });
   const timeout = createProviderTimeout(signal, requestTimeoutMs);
   try {
     const response = await providerFetch(url, { signal: timeout.signal });
@@ -399,8 +400,8 @@ async function readMemosPayload(response: Response): Promise<unknown> {
 }
 
 function mapMemosHttpError(status: number, message: string, phase: MemosRequestPhase): ProviderRequestError {
-  if (phase === "validate" && (status === 401 || status === 403)) return inputError(message);
-  if ([400, 403, 404, 409, 422].includes(status)) return inputError(message);
+  if (phase === "validate" && (status === 401 || status === 403)) return providerInputError(message);
+  if ([400, 403, 404, 409, 422].includes(status)) return providerInputError(message);
   if (status === 429) return new ProviderRequestError(429, message);
   return new ProviderRequestError(status >= 500 ? 502 : status, message);
 }
@@ -425,17 +426,13 @@ function requireResponseObjectArray(value: unknown, operation: string): Record<s
 function resourcePath(name: string, collection: "attachments" | "memos" | "users"): string {
   const segments = name.split("/");
   if (segments.length !== 2 || segments[0] !== collection || !segments[1] || [".", ".."].includes(segments[1])) {
-    throw inputError(`name must use the ${collection}/{id} resource format`);
+    throw providerInputError(`name must use the ${collection}/{id} resource format`);
   }
   return `/${collection}/${encodeURIComponent(segments[1])}`;
 }
 
 function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, inputError);
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
+  return requiredString(value, fieldName, providerInputError);
 }
 
 function trimLeadingSlash(value: string): string {

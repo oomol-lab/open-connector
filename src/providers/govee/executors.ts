@@ -8,6 +8,7 @@ import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -271,8 +272,4 @@ function readGoveeErrorMessage(payload: unknown): string | undefined {
 
 function readGoveeMessage(payload: Record<string, unknown>): string | undefined {
   return optionalString(payload.message) ?? optionalString(payload.msg);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

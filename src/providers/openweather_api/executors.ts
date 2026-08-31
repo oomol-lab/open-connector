@@ -19,6 +19,7 @@ import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   setSearchParams,
@@ -570,7 +571,7 @@ async function executeSubmitStationMeasurements(
   await openweatherJsonRequest({
     path: "/data/3.0/measurements",
     method: "POST",
-    body: objectArray(input.measurements, "measurements", providerInvalidInput),
+    body: objectArray(input.measurements, "measurements", providerInputError),
     context,
     phase: "execute",
   });
@@ -873,7 +874,7 @@ function readJsonOnlyMode(value: unknown): string | undefined {
 }
 
 function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, providerInvalidInput);
+  return requiredString(value, fieldName, providerInputError);
 }
 
 function readRequiredNumber(value: unknown, fieldName: string): number {
@@ -905,10 +906,6 @@ function readResponseArray(value: unknown, label: string): unknown[] {
     throw new ProviderRequestError(502, `OpenWeather ${label} was not an array`);
   }
   return value;
-}
-
-function providerInvalidInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

@@ -12,6 +12,7 @@ import {
   createProviderTimeout,
   defineProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
@@ -327,10 +328,6 @@ function readPayloadValue(payload: unknown, ...keys: string[]): unknown {
     if (object[key] !== undefined && object[key] !== null) return object[key];
   }
   return optionalRecord(object.data) ? readPayloadValue(object.data, ...keys) : undefined;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function stringifyOptional(value: unknown): string | undefined {

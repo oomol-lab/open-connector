@@ -13,6 +13,7 @@ import {
   createProviderProxyUrl,
   defineApiKeyProviderExecutors,
   normalizeProviderProxyHeaders,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderProxyErrorMessage,
@@ -102,8 +103,8 @@ export const credentialValidators: CredentialValidators = {
 };
 
 async function executeFunction(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const folder = requiredString(input.folder, "folder", invalidInputError);
-  const functionName = requiredString(input.functionName, "functionName", invalidInputError);
+  const folder = requiredString(input.folder, "folder", providerInputError);
+  const functionName = requiredString(input.functionName, "functionName", providerInputError);
   const method = normalizeMethod(input.method);
   const environment = normalizeEnvironment(input.environment);
   const rawResponse = input.rawResponse === true;
@@ -373,8 +374,4 @@ function inferResponseFormat(body: unknown): "empty" | "json" | "text" {
 
 function isAbortError(error: unknown): boolean {
   return error instanceof Error && error.name === "AbortError";
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

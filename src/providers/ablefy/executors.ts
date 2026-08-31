@@ -4,6 +4,7 @@ import { optionalRecord, optionalString, requiredString } from "../../core/cast.
 import {
   defineProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
@@ -17,7 +18,6 @@ interface Context {
   fetcher: typeof fetch;
   signal?: AbortSignal;
 }
-const inputError = (message: string) => new ProviderRequestError(400, message);
 
 async function request(path: string, context: Context): Promise<unknown> {
   const url = new URL(`${baseUrl}${path}`);
@@ -67,7 +67,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<Context>({
     const credential = await requireApiKeyCredential(context, service);
     return {
       apiKey: credential.apiKey,
-      apiSecret: requiredString(credential.values.apiSecret, "apiSecret", inputError),
+      apiSecret: requiredString(credential.values.apiSecret, "apiSecret", providerInputError),
       fetcher,
       signal: context.signal,
     };
@@ -80,8 +80,9 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   skipDnsValidation: true,
   async customizeRequest({ context, url, headers }) {
     const credential = await context.getCredential(service);
-    if (!credential || credential.authType !== "api_key") throw inputError("ablefy api_key credential is required");
-    url.searchParams.set("secret", requiredString(credential.values.apiSecret, "apiSecret", inputError));
+    if (!credential || credential.authType !== "api_key")
+      throw providerInputError("ablefy api_key credential is required");
+    url.searchParams.set("secret", requiredString(credential.values.apiSecret, "apiSecret", providerInputError));
     headers.set("accept", "application/json");
     headers.set("user-agent", providerUserAgent);
   },
@@ -92,7 +93,7 @@ export const credentialValidators: CredentialValidators = {
       optionalRecord(
         await request("/me", {
           apiKey: input.apiKey,
-          apiSecret: requiredString(input.values.apiSecret, "apiSecret", inputError),
+          apiSecret: requiredString(input.values.apiSecret, "apiSecret", providerInputError),
           fetcher,
           signal,
         }),

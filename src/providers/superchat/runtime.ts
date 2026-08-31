@@ -6,6 +6,7 @@ import { compactObject, optionalInteger, optionalRecord, optionalString, require
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -60,7 +61,7 @@ export const superchatActionHandlers: ProviderActionHandlers<"superchat", Superc
     return { channels: readResults(payload), pagination: readPagination(payload, "list_channels") };
   },
   async get_channel(input, context) {
-    const channelId = requiredString(input.channel_id, "channel_id", inputError);
+    const channelId = requiredString(input.channel_id, "channel_id", providerInputError);
     return {
       channel: requiredRecord(
         await requestSuperchatJson({
@@ -91,7 +92,7 @@ export const superchatActionHandlers: ProviderActionHandlers<"superchat", Superc
     };
   },
   async get_contact(input, context) {
-    const contactId = requiredString(input.contact_id, "contact_id", inputError);
+    const contactId = requiredString(input.contact_id, "contact_id", providerInputError);
     return {
       contact: requiredRecord(
         await requestSuperchatJson({
@@ -120,7 +121,7 @@ export const superchatActionHandlers: ProviderActionHandlers<"superchat", Superc
     return { contacts: readResults(payload), pagination: readPagination(payload, "list_contacts") };
   },
   async search_contacts(input, context) {
-    const field = requiredString(input.field, "field", inputError);
+    const field = requiredString(input.field, "field", providerInputError);
     const payload = requiredRecord(
       await requestSuperchatJson({
         path: "/contacts/search",
@@ -135,9 +136,11 @@ export const superchatActionHandlers: ProviderActionHandlers<"superchat", Superc
               compactObject({
                 field,
                 identifier:
-                  field === "custom_attribute" ? requiredString(input.identifier, "identifier", inputError) : undefined,
+                  field === "custom_attribute"
+                    ? requiredString(input.identifier, "identifier", providerInputError)
+                    : undefined,
                 operator: "=",
-                value: requiredString(input.value, "value", inputError),
+                value: requiredString(input.value, "value", providerInputError),
               }),
             ],
           },
@@ -148,7 +151,7 @@ export const superchatActionHandlers: ProviderActionHandlers<"superchat", Superc
     return { contacts: readResults(payload), pagination: readPagination(payload, "search_contacts") };
   },
   async update_contact(input, context) {
-    const contactId = requiredString(input.contact_id, "contact_id", inputError);
+    const contactId = requiredString(input.contact_id, "contact_id", providerInputError);
     return {
       contact: requiredRecord(
         await requestSuperchatJson({
@@ -175,9 +178,9 @@ export const superchatActionHandlers: ProviderActionHandlers<"superchat", Superc
           signal: context.signal,
           phase: "execute",
           body: {
-            to: [{ identifier: requiredString(input.identifier, "identifier", inputError) }],
+            to: [{ identifier: requiredString(input.identifier, "identifier", providerInputError) }],
             from: buildSender(input),
-            content: { type: "text", body: requiredString(input.body, "body", inputError) },
+            content: { type: "text", body: requiredString(input.body, "body", providerInputError) },
           },
         }),
         "Superchat message response",
@@ -195,12 +198,12 @@ export const superchatActionHandlers: ProviderActionHandlers<"superchat", Superc
           signal: context.signal,
           phase: "execute",
           body: compactObject({
-            to: [{ identifier: requiredString(input.identifier, "identifier", inputError) }],
+            to: [{ identifier: requiredString(input.identifier, "identifier", providerInputError) }],
             from: buildSender(input),
             content: compactObject({
               type: "email",
               subject: optionalString(input.subject),
-              text: requiredString(input.text, "text", inputError),
+              text: requiredString(input.text, "text", providerInputError),
               html: optionalString(input.html),
             }),
             in_reply_to: optionalString(input.in_reply_to),
@@ -221,11 +224,11 @@ export const superchatActionHandlers: ProviderActionHandlers<"superchat", Superc
           signal: context.signal,
           phase: "execute",
           body: {
-            to: [{ identifier: requiredString(input.identifier, "identifier", inputError) }],
+            to: [{ identifier: requiredString(input.identifier, "identifier", providerInputError) }],
             from: buildSender(input),
             content: {
               type: "whats_app_template",
-              template_id: requiredString(input.template_id, "template_id", inputError),
+              template_id: requiredString(input.template_id, "template_id", providerInputError),
               variables: Array.isArray(input.variables) ? input.variables : [],
             },
           },
@@ -301,7 +304,7 @@ function buildWritableContactBody(input: Record<string, unknown>): Record<string
 
 function buildSender(input: Record<string, unknown>): Record<string, unknown> {
   return compactObject({
-    channel_id: requiredString(input.channel_id, "channel_id", inputError),
+    channel_id: requiredString(input.channel_id, "channel_id", providerInputError),
     name: optionalString(input.from_name),
   });
 }
@@ -384,8 +387,4 @@ function requiredRecord(value: unknown, label: string): Record<string, unknown> 
   const record = optionalRecord(value);
   if (!record) throw new ProviderRequestError(502, `${label} must be an object`);
   return record;
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

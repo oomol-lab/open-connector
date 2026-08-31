@@ -10,6 +10,7 @@ import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -275,10 +276,6 @@ function readNestedNumber(input: Record<string, unknown>, objectKey: string, chi
   const object = optionalRecord(input[objectKey]);
   const value = object?.[childKey];
   return typeof value === "number" && Number.isFinite(value) ? value : undefined;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function normalizePublicUrl(value: unknown, fieldName: string): string {

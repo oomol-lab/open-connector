@@ -15,7 +15,13 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { ProviderRequestError, providerUserAgent, readProviderJsonBody } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  ProviderRequestError,
+  providerResponseError,
+  providerUserAgent,
+  readProviderJsonBody,
+} from "../provider-runtime.ts";
 
 const muxApiOrigin = "https://api.mux.com";
 const muxWhoAmIPath = "/system/v1/whoami";
@@ -75,7 +81,7 @@ export async function validateMuxCredential(context: MuxContext): Promise<Creden
 async function createAsset(input: Record<string, unknown>, context: MuxContext): Promise<unknown> {
   const sourceUrl = assertPublicHttpUrl(requiredInputString(input.sourceUrl, "sourceUrl"), {
     fieldName: "sourceUrl",
-    createError: inputError,
+    createError: providerInputError,
   });
   const body = compactObject({
     inputs: [{ url: sourceUrl.toString() }],
@@ -105,13 +111,13 @@ async function listAssets(input: Record<string, unknown>, context: MuxContext): 
     upload_id: optionalString(input.uploadId),
   });
   if (query.page && query.cursor) {
-    throw inputError("page and cursor cannot be used together");
+    throw providerInputError("page and cursor cannot be used together");
   }
 
   const payload = await requestMuxJson({ path: "/video/v1/assets", query, context, phase: "execute" });
-  const response = requiredRecord(payload, "Mux list assets response", muxResponseError);
+  const response = requiredRecord(payload, "Mux list assets response", providerResponseError);
   return {
-    assets: objectArray(response.data, "Mux asset", muxResponseError),
+    assets: objectArray(response.data, "Mux asset", providerResponseError),
     nextCursor: optionalString(response.next_cursor) ?? null,
   };
 }
@@ -131,7 +137,7 @@ async function updateAsset(input: Record<string, unknown>, context: MuxContext):
   const passthrough = optionalRawString(input.passthrough);
   const meta = serializeAssetMeta(input.meta);
   if (passthrough === undefined && meta === undefined) {
-    throw inputError("At least one of passthrough or meta must be provided");
+    throw providerInputError("At least one of passthrough or meta must be provided");
   }
 
   const payload = await requestMuxJson({
@@ -160,10 +166,10 @@ async function createPlaybackId(input: Record<string, unknown>, context: MuxCont
   const policy = requiredInputString(input.policy, "policy");
   const drmConfigurationId = optionalString(input.drmConfigurationId);
   if (policy === "drm" && !drmConfigurationId) {
-    throw inputError("drmConfigurationId is required when policy is drm");
+    throw providerInputError("drmConfigurationId is required when policy is drm");
   }
   if (policy !== "drm" && drmConfigurationId) {
-    throw inputError("drmConfigurationId can only be used when policy is drm");
+    throw providerInputError("drmConfigurationId can only be used when policy is drm");
   }
 
   const payload = await requestMuxJson({
@@ -213,8 +219,8 @@ async function listDirectUploads(input: Record<string, unknown>, context: MuxCon
     context,
     phase: "execute",
   });
-  const response = requiredRecord(payload, "Mux list Direct Uploads response", muxResponseError);
-  return { uploads: objectArray(response.data, "Mux Direct Upload", muxResponseError) };
+  const response = requiredRecord(payload, "Mux list Direct Uploads response", providerResponseError);
+  return { uploads: objectArray(response.data, "Mux Direct Upload", providerResponseError) };
 }
 
 async function cancelDirectUpload(input: Record<string, unknown>, context: MuxContext): Promise<unknown> {
@@ -293,8 +299,8 @@ async function requestMuxJson(options: MuxRequestOptions): Promise<unknown> {
 }
 
 function muxDataRecord(payload: unknown, source: string): Record<string, unknown> {
-  const envelope = requiredRecord(payload, source, muxResponseError);
-  return requiredRecord(envelope.data, `${source} data`, muxResponseError);
+  const envelope = requiredRecord(payload, source, providerResponseError);
+  return requiredRecord(envelope.data, `${source} data`, providerResponseError);
 }
 
 function muxErrorMessage(payload: unknown, status: number): string {
@@ -314,16 +320,12 @@ function muxErrorMessage(payload: unknown, status: number): string {
   );
 }
 
-function muxResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
-}
-
 function createMuxAuthorization(context: Pick<MuxContext, "tokenId" | "tokenSecret">): string {
   return `Basic ${Buffer.from(`${context.tokenId}:${context.tokenSecret}`, "utf8").toString("base64")}`;
 }
 
 function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, inputError);
+  return requiredString(value, fieldName, providerInputError);
 }
 
 /**
@@ -337,7 +339,7 @@ function serializeAssetMeta(value: unknown): Record<string, string> | undefined 
   }
   const meta = optionalRecord(value);
   if (!meta) {
-    throw inputError("meta must be an object");
+    throw providerInputError("meta must be an object");
   }
   const serialized = compactObject({
     title: optionalString(meta.title),
@@ -353,7 +355,7 @@ function serializeDirectUploadAssetSettings(value: unknown): Record<string, unkn
   }
   const settings = optionalRecord(value);
   if (!settings) {
-    throw inputError("newAssetSettings must be an object");
+    throw providerInputError("newAssetSettings must be an object");
   }
   return compactObject({
     playback_policies: readOptionalStringArray(settings.playbackPolicies, "newAssetSettings.playbackPolicies"),
@@ -362,10 +364,6 @@ function serializeDirectUploadAssetSettings(value: unknown): Record<string, unkn
     passthrough: optionalString(settings.passthrough),
     meta: serializeAssetMeta(settings.meta),
   });
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function stringifyInteger(value: unknown): string | undefined {
@@ -378,7 +376,7 @@ function readOptionalStringArray(value: unknown, fieldName: string): string[] | 
     return undefined;
   }
   if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) {
-    throw inputError(`${fieldName} must be an array of strings`);
+    throw providerInputError(`${fieldName} must be an array of strings`);
   }
   return value;
 }

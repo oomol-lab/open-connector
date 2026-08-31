@@ -266,11 +266,11 @@ async function requestOctopusDeployObject(
 }
 
 function normalizeApiBaseUrl(value: unknown): string {
-  const raw = requiredString(value, "baseUrl", providerInputError);
+  const raw = requiredString(value, "baseUrl", octopusDeployInputError);
   const url = assertPublicHttpUrl(raw, {
     fieldName: "baseUrl",
     allowPrivateNetwork: isPrivateNetworkAccessAllowed(),
-    createError: providerInputError,
+    createError: octopusDeployInputError,
   });
   if (url.username || url.password) {
     throw new ProviderRequestError(400, "baseUrl must not include credentials");
@@ -283,12 +283,12 @@ function normalizeApiBaseUrl(value: unknown): string {
 }
 
 function buildSpacePath(input: Record<string, unknown>, childPath: string): string {
-  const spaceIdentifier = requiredString(input.spaceIdentifier, "spaceIdentifier", providerInputError);
+  const spaceIdentifier = requiredString(input.spaceIdentifier, "spaceIdentifier", octopusDeployInputError);
   return `/spaces/${encodeURIComponent(spaceIdentifier)}${childPath}`;
 }
 
 function readPathId(input: Record<string, unknown>): string {
-  return encodeURIComponent(requiredString(input.id, "id", providerInputError));
+  return encodeURIComponent(requiredString(input.id, "id", octopusDeployInputError));
 }
 
 function pickQuery(input: Record<string, unknown>, keys: string[]): Record<string, unknown> {
@@ -350,6 +350,6 @@ function mapHttpError(status: number, message: string, phase: "validate" | "exec
   return new ProviderRequestError(status >= 500 ? 502 : status, message);
 }
 
-function providerInputError(message: string): ProviderRequestError {
+function octopusDeployInputError(message: string): ProviderRequestError {
   return new ProviderRequestError(400, message.endsWith(".") ? message.slice(0, -1) : message);
 }

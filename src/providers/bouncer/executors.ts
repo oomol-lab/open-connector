@@ -16,6 +16,7 @@ import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -42,7 +43,7 @@ export const bouncerActionHandlers: ProviderActionHandlers<"bouncer", BouncerAct
       fetcher: context.fetcher,
       signal: context.signal,
       phase: "execute",
-      email: requiredString(input.email, "email", invalidInputError),
+      email: requiredString(input.email, "email", providerInputError),
     });
   },
   verify_domain(input, context) {
@@ -51,7 +52,7 @@ export const bouncerActionHandlers: ProviderActionHandlers<"bouncer", BouncerAct
       fetcher: context.fetcher,
       signal: context.signal,
       phase: "execute",
-      domain: requiredString(input.domain, "domain", invalidInputError),
+      domain: requiredString(input.domain, "domain", providerInputError),
     });
   },
   verify_emails_batch_sync(input, context) {
@@ -60,7 +61,7 @@ export const bouncerActionHandlers: ProviderActionHandlers<"bouncer", BouncerAct
       fetcher: context.fetcher,
       signal: context.signal,
       phase: "execute",
-      emails: stringArray(input.emails, "emails", invalidInputError),
+      emails: stringArray(input.emails, "emails", providerInputError),
     });
   },
   create_batch_request(input, context) {
@@ -69,7 +70,7 @@ export const bouncerActionHandlers: ProviderActionHandlers<"bouncer", BouncerAct
       fetcher: context.fetcher,
       signal: context.signal,
       phase: "execute",
-      emails: stringArray(input.emails, "emails", invalidInputError),
+      emails: stringArray(input.emails, "emails", providerInputError),
       callbackUrl: optionalString(input.callbackUrl),
     });
   },
@@ -79,7 +80,7 @@ export const bouncerActionHandlers: ProviderActionHandlers<"bouncer", BouncerAct
       fetcher: context.fetcher,
       signal: context.signal,
       phase: "execute",
-      batchId: requiredString(input.batchId, "batchId", invalidInputError),
+      batchId: requiredString(input.batchId, "batchId", providerInputError),
       includeStats: optionalBoolean(input.includeStats) === true,
     });
   },
@@ -89,7 +90,7 @@ export const bouncerActionHandlers: ProviderActionHandlers<"bouncer", BouncerAct
       fetcher: context.fetcher,
       signal: context.signal,
       phase: "execute",
-      batchId: requiredString(input.batchId, "batchId", invalidInputError),
+      batchId: requiredString(input.batchId, "batchId", providerInputError),
     });
   },
   get_batch_results(input, context) {
@@ -98,7 +99,7 @@ export const bouncerActionHandlers: ProviderActionHandlers<"bouncer", BouncerAct
       fetcher: context.fetcher,
       signal: context.signal,
       phase: "execute",
-      batchId: requiredString(input.batchId, "batchId", invalidInputError),
+      batchId: requiredString(input.batchId, "batchId", providerInputError),
       download: optionalString(input.download),
     });
   },
@@ -108,7 +109,7 @@ export const bouncerActionHandlers: ProviderActionHandlers<"bouncer", BouncerAct
       fetcher: context.fetcher,
       signal: context.signal,
       phase: "execute",
-      batchId: requiredString(input.batchId, "batchId", invalidInputError),
+      batchId: requiredString(input.batchId, "batchId", providerInputError),
     });
   },
   create_toxicity_list_job(input, context) {
@@ -117,7 +118,7 @@ export const bouncerActionHandlers: ProviderActionHandlers<"bouncer", BouncerAct
       fetcher: context.fetcher,
       signal: context.signal,
       phase: "execute",
-      emails: stringArray(input.emails, "emails", invalidInputError),
+      emails: stringArray(input.emails, "emails", providerInputError),
     });
   },
   get_toxicity_list_job_status(input, context) {
@@ -126,7 +127,7 @@ export const bouncerActionHandlers: ProviderActionHandlers<"bouncer", BouncerAct
       fetcher: context.fetcher,
       signal: context.signal,
       phase: "execute",
-      id: requiredString(input.id, "id", invalidInputError),
+      id: requiredString(input.id, "id", providerInputError),
     });
   },
   get_toxicity_list_results(input, context) {
@@ -135,7 +136,7 @@ export const bouncerActionHandlers: ProviderActionHandlers<"bouncer", BouncerAct
       fetcher: context.fetcher,
       signal: context.signal,
       phase: "execute",
-      id: requiredString(input.id, "id", invalidInputError),
+      id: requiredString(input.id, "id", providerInputError),
     });
   },
   delete_toxicity_list_job(input, context) {
@@ -144,7 +145,7 @@ export const bouncerActionHandlers: ProviderActionHandlers<"bouncer", BouncerAct
       fetcher: context.fetcher,
       signal: context.signal,
       phase: "execute",
-      id: requiredString(input.id, "id", invalidInputError),
+      id: requiredString(input.id, "id", providerInputError),
     });
   },
 };
@@ -736,10 +737,6 @@ function parseTriState(value: unknown, endpoint: string, fieldName: string): str
   }
 
   throw new ProviderRequestError(502, `bouncer ${endpoint} returned invalid ${fieldName}`);
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

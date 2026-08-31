@@ -12,7 +12,13 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { encodePathSegment, jsonObject } from "../../core/request.ts";
-import { defineOAuthProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineOAuthProviderExecutors,
+  defineProviderProxy,
+  providerInputError,
+  ProviderRequestError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 const service = "discord";
 // Pin regular REST calls to v10; use the unversioned OAuth/OIDC URLs from official discovery.
@@ -355,12 +361,4 @@ function normalizeInviteCode(value: string): string {
 
 function readGrantedScopes(scope: unknown): string[] {
   return optionalString(scope)?.split(/\s+/u).filter(Boolean) ?? [];
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

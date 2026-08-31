@@ -4,7 +4,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const demodeskApiBaseUrl = "https://demodesk.com/api/v2";
 
@@ -63,7 +63,7 @@ export const demodeskActionHandlers: ProviderActionHandlers<"demodesk", Demodesk
     };
   },
   async get_recording(input, context) {
-    const token = encodePathSegment(requiredString(input.token, "token", badInput));
+    const token = encodePathSegment(requiredString(input.token, "token", providerInputError));
     const payload = await requestDemodeskJson({
       path: `/recordings/${token}`,
       apiKey: context.apiKey,
@@ -96,7 +96,7 @@ export const demodeskActionHandlers: ProviderActionHandlers<"demodesk", Demodesk
     };
   },
   async list_recording_summaries(input, context) {
-    const token = encodePathSegment(requiredString(input.token, "token", badInput));
+    const token = encodePathSegment(requiredString(input.token, "token", providerInputError));
     const payload = await requestDemodeskJson({
       path: `/recordings/${token}/summaries`,
       apiKey: context.apiKey,
@@ -107,7 +107,7 @@ export const demodeskActionHandlers: ProviderActionHandlers<"demodesk", Demodesk
     return { summaries: readDataArray(payload, "Demodesk recording summaries") };
   },
   async list_recording_scorecards(input, context) {
-    const token = encodePathSegment(requiredString(input.token, "token", badInput));
+    const token = encodePathSegment(requiredString(input.token, "token", providerInputError));
     const payload = await requestDemodeskJson({
       path: `/recordings/${token}/scorecards`,
       apiKey: context.apiKey,
@@ -167,7 +167,7 @@ async function requestDemodeskTranscript(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const token = encodePathSegment(requiredString(input.token, "token", badInput));
+  const token = encodePathSegment(requiredString(input.token, "token", providerInputError));
   const format = optionalString(input.format) ?? "json";
   const response = await fetchDemodesk(
     {
@@ -357,8 +357,4 @@ function extractDemodeskErrorMessage(payload: unknown): string | undefined {
   const payloadObject = optionalRecord(payload);
   const error = optionalRecord(payloadObject?.error);
   return optionalString(error?.message) ?? optionalString(error?.code) ?? optionalString(payloadObject?.message);
-}
-
-function badInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

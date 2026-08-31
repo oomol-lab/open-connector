@@ -3,6 +3,7 @@ import { compactObject, optionalInteger, optionalRecord, optionalString, require
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -135,7 +136,7 @@ export const freshstatusActionHandlers: Record<string, FreshstatusHandler> = {
 };
 
 export function resolveFreshstatusCredential(apiKey: string, subdomainInput: unknown): FreshstatusCredential {
-  const rawSubdomain = requiredString(subdomainInput, "subdomain", invalidInput).toLowerCase();
+  const rawSubdomain = requiredString(subdomainInput, "subdomain", providerInputError).toLowerCase();
   let subdomain = rawSubdomain;
   if (subdomain.startsWith("https://") || subdomain.startsWith("http://")) {
     try {
@@ -294,8 +295,4 @@ function requireMutableBody(body: Record<string, unknown>, objectName: string): 
   if (Object.keys(body).length === 0) {
     throw new ProviderRequestError(400, `at least one mutable ${objectName} field must be provided`);
   }
-}
-
-function invalidInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

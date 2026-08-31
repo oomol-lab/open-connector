@@ -263,7 +263,7 @@ function normalizeCollectionList(payload: Record<string, unknown>) {
 
 function normalizeVideoList(payload: Record<string, unknown>) {
   return {
-    url: requiredString(payload.url, "url", providerResponseError),
+    url: requiredString(payload.url, "url", pexelsResponseError),
     page: requiredInteger(payload.page, "page"),
     perPage: requiredInteger(payload.per_page, "per_page"),
     totalResults: requiredInteger(payload.total_results, "total_results"),
@@ -302,9 +302,9 @@ function normalizePhoto(payload: Record<string, unknown>) {
     id: requiredInteger(payload.id, "id"),
     width: requiredInteger(payload.width, "width"),
     height: requiredInteger(payload.height, "height"),
-    url: requiredString(payload.url, "url", providerResponseError),
-    photographer: requiredString(payload.photographer, "photographer", providerResponseError),
-    photographerUrl: requiredString(payload.photographer_url, "photographer_url", providerResponseError),
+    url: requiredString(payload.url, "url", pexelsResponseError),
+    photographer: requiredString(payload.photographer, "photographer", pexelsResponseError),
+    photographerUrl: requiredString(payload.photographer_url, "photographer_url", pexelsResponseError),
     photographerId: requiredInteger(payload.photographer_id, "photographer_id"),
     avgColor: optionalString(payload.avg_color),
     src: normalizePhotoSrc(requiredResponseRecord(payload.src, "src")),
@@ -315,21 +315,21 @@ function normalizePhoto(payload: Record<string, unknown>) {
 
 function normalizePhotoSrc(payload: Record<string, unknown>) {
   return {
-    original: requiredString(payload.original, "src.original", providerResponseError),
-    large2x: requiredString(payload.large2x, "src.large2x", providerResponseError),
-    large: requiredString(payload.large, "src.large", providerResponseError),
-    medium: requiredString(payload.medium, "src.medium", providerResponseError),
-    small: requiredString(payload.small, "src.small", providerResponseError),
-    portrait: requiredString(payload.portrait, "src.portrait", providerResponseError),
-    landscape: requiredString(payload.landscape, "src.landscape", providerResponseError),
-    tiny: requiredString(payload.tiny, "src.tiny", providerResponseError),
+    original: requiredString(payload.original, "src.original", pexelsResponseError),
+    large2x: requiredString(payload.large2x, "src.large2x", pexelsResponseError),
+    large: requiredString(payload.large, "src.large", pexelsResponseError),
+    medium: requiredString(payload.medium, "src.medium", pexelsResponseError),
+    small: requiredString(payload.small, "src.small", pexelsResponseError),
+    portrait: requiredString(payload.portrait, "src.portrait", pexelsResponseError),
+    landscape: requiredString(payload.landscape, "src.landscape", pexelsResponseError),
+    tiny: requiredString(payload.tiny, "src.tiny", pexelsResponseError),
   };
 }
 
 function normalizeCollection(payload: Record<string, unknown>) {
   return {
     id: requiredStringLike(payload.id, "id"),
-    title: requiredString(payload.title, "title", providerResponseError),
+    title: requiredString(payload.title, "title", pexelsResponseError),
     description: payload.description === null ? null : optionalString(payload.description),
     private: requiredBoolean(payload.private, "private"),
     mediaCount: requiredInteger(payload.media_count, "media_count"),
@@ -344,8 +344,8 @@ function normalizeVideo(payload: Record<string, unknown>) {
     width: requiredInteger(payload.width, "width"),
     height: requiredInteger(payload.height, "height"),
     duration: requiredInteger(payload.duration, "duration"),
-    url: requiredString(payload.url, "url", providerResponseError),
-    image: requiredString(payload.image, "image", providerResponseError),
+    url: requiredString(payload.url, "url", pexelsResponseError),
+    image: requiredString(payload.image, "image", pexelsResponseError),
     fullRes: payload.full_res === null ? null : optionalString(payload.full_res),
     avgColor: payload.avg_color === null ? null : optionalString(payload.avg_color),
     tags: readStringArray(payload.tags, "tags"),
@@ -362,20 +362,20 @@ function normalizeVideo(payload: Record<string, unknown>) {
 function normalizeVideoUser(payload: Record<string, unknown>) {
   return {
     id: requiredInteger(payload.id, "user.id"),
-    name: requiredString(payload.name, "user.name", providerResponseError),
-    url: requiredString(payload.url, "user.url", providerResponseError),
+    name: requiredString(payload.name, "user.name", pexelsResponseError),
+    url: requiredString(payload.url, "user.url", pexelsResponseError),
   };
 }
 
 function normalizeVideoFile(payload: Record<string, unknown>) {
   return {
     id: requiredInteger(payload.id, "video_file.id"),
-    quality: requiredString(payload.quality, "video_file.quality", providerResponseError),
-    fileType: requiredString(payload.file_type, "video_file.file_type", providerResponseError),
+    quality: requiredString(payload.quality, "video_file.quality", pexelsResponseError),
+    fileType: requiredString(payload.file_type, "video_file.file_type", pexelsResponseError),
     width: payload.width === null ? null : optionalNumber(payload.width),
     height: payload.height === null ? null : optionalNumber(payload.height),
     fps: payload.fps === null ? null : optionalNumber(payload.fps),
-    link: requiredString(payload.link, "video_file.link", providerResponseError),
+    link: requiredString(payload.link, "video_file.link", pexelsResponseError),
   };
 }
 
@@ -383,7 +383,7 @@ function normalizeVideoPicture(payload: Record<string, unknown>) {
   return {
     id: requiredInteger(payload.id, "video_picture.id"),
     nr: requiredInteger(payload.nr, "video_picture.nr"),
-    picture: requiredString(payload.picture, "video_picture.picture", providerResponseError),
+    picture: requiredString(payload.picture, "video_picture.picture", pexelsResponseError),
   };
 }
 
@@ -445,6 +445,6 @@ function readStringArray(value: unknown, fieldName: string): string[] {
   });
 }
 
-function providerResponseError(message: string): ProviderRequestError {
+function pexelsResponseError(message: string): ProviderRequestError {
   return new ProviderRequestError(502, `Pexels response ${message}`);
 }

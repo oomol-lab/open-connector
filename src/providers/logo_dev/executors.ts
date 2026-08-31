@@ -13,6 +13,7 @@ import { queryParams } from "../../core/request.ts";
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -84,7 +85,7 @@ function buildLogoImageLookup(actionName: LogoDevActionName, input: Record<strin
   const requested = buildImageRequest(input);
 
   if (actionName === "get_logo_by_domain") {
-    const domain = requiredString(input.domain, "domain", invalidInputError);
+    const domain = requiredString(input.domain, "domain", providerInputError);
     return {
       lookupType: "domain",
       lookupValue: domain,
@@ -93,7 +94,7 @@ function buildLogoImageLookup(actionName: LogoDevActionName, input: Record<strin
     };
   }
   if (actionName === "get_logo_by_name") {
-    const brandName = requiredString(input.brandName, "brandName", invalidInputError);
+    const brandName = requiredString(input.brandName, "brandName", providerInputError);
     return {
       lookupType: "name",
       lookupValue: brandName,
@@ -102,7 +103,7 @@ function buildLogoImageLookup(actionName: LogoDevActionName, input: Record<strin
     };
   }
   if (actionName === "get_logo_by_ticker") {
-    const ticker = requiredString(input.ticker, "ticker", invalidInputError);
+    const ticker = requiredString(input.ticker, "ticker", providerInputError);
     return {
       lookupType: "ticker",
       lookupValue: ticker,
@@ -111,7 +112,7 @@ function buildLogoImageLookup(actionName: LogoDevActionName, input: Record<strin
     };
   }
   if (actionName === "get_logo_by_crypto") {
-    const symbol = requiredString(input.symbol, "symbol", invalidInputError);
+    const symbol = requiredString(input.symbol, "symbol", providerInputError);
     return {
       lookupType: "crypto",
       lookupValue: symbol,
@@ -120,7 +121,7 @@ function buildLogoImageLookup(actionName: LogoDevActionName, input: Record<strin
     };
   }
 
-  const isin = requiredString(input.isin, "isin", invalidInputError);
+  const isin = requiredString(input.isin, "isin", providerInputError);
   return {
     lookupType: "isin",
     lookupValue: isin,
@@ -131,7 +132,7 @@ function buildLogoImageLookup(actionName: LogoDevActionName, input: Record<strin
 
 function buildImageRequest(input: Record<string, unknown>): LogoDevImageRequest {
   return compactObject({
-    token: requiredString(input.token, "token", invalidInputError),
+    token: requiredString(input.token, "token", providerInputError),
     size: optionalInteger(input.size),
     format: optionalString(input.format),
     theme: optionalString(input.theme),
@@ -173,7 +174,7 @@ async function searchLogoDevBrands(
   const url = new URL("/search", logoDevApiBaseUrl);
   url.search = new URLSearchParams(
     queryParams({
-      q: requiredString(input.query, "query", invalidInputError),
+      q: requiredString(input.query, "query", providerInputError),
       strategy: optionalString(input.strategy),
     }),
   ).toString();
@@ -209,7 +210,7 @@ async function describeLogoDevBrand(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const domain = requiredString(input.domain, "domain", invalidInputError);
+  const domain = requiredString(input.domain, "domain", providerInputError);
   const response = await context.fetcher(`${logoDevApiBaseUrl}/describe/${encodeURIComponent(domain)}`, {
     headers: logoDevApiHeaders(context.apiKey),
     signal: context.signal,
@@ -287,10 +288,6 @@ async function readLogoDevJson<T>(response: Response): Promise<T> {
 
 function readLogoDevRemoteLogoUrl(payload: Record<string, unknown>): string | undefined {
   return optionalString(payload.logo_url) ?? optionalString(payload.logoUrl) ?? optionalString(payload.logo);
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

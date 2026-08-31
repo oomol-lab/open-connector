@@ -6,6 +6,7 @@ import { positiveInteger } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   defineProviderExecutors,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -41,7 +42,7 @@ export const dealNewsActionHandlers: ProviderActionHandlers<"dealnews", DealNews
     return requestFeed(new URL("/rss/features/", dealNewsBaseUrl), context);
   },
   list_category_deals(input, context) {
-    const categoryId = positiveInteger(input.categoryId, "categoryId", inputError);
+    const categoryId = positiveInteger(input.categoryId, "categoryId", providerInputError);
     return requestFeed(new URL(`/rss/c${categoryId}/`, dealNewsBaseUrl), context);
   },
 };
@@ -118,8 +119,4 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
 
 function malformedFeedError(): ProviderRequestError {
   return new ProviderRequestError(502, "DealNews returned malformed RSS");
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

@@ -2,7 +2,13 @@ import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { objectArray, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  providerInputError,
+  ProviderRequestError,
+  providerResponseError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 export interface MoxieActionContext {
   apiKey: string;
@@ -41,10 +47,10 @@ export async function validateMoxieCredential(
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<import("../../core/types.ts").CredentialValidationResult> {
-  const apiKey = requiredString(input.apiKey, "apiKey", badInput).trim();
+  const apiKey = requiredString(input.apiKey, "apiKey", providerInputError).trim();
   const baseUrl = normalizeMoxieBaseUrl(input.values?.baseUrl);
   const payload = await requestMoxieJson({ apiKey, baseUrl, path: validationPath, fetcher, signal, validation: true });
-  objectArray(payload, "Moxie pipeline stage response", providerOutput);
+  objectArray(payload, "Moxie pipeline stage response", providerResponseError);
   const host = new URL(baseUrl).host;
   return {
     profile: {
@@ -56,7 +62,7 @@ export async function validateMoxieCredential(
 }
 
 export function normalizeMoxieBaseUrl(value: unknown): string {
-  const raw = requiredString(value, "baseUrl", badInput).trim();
+  const raw = requiredString(value, "baseUrl", providerInputError).trim();
   let url: URL;
   try {
     url = new URL(raw);
@@ -78,7 +84,7 @@ async function requestCollection(
   query: Record<string, unknown> = {},
 ) {
   const payload = await requestMoxieJson({ ...context, path, query });
-  return { [key]: objectArray(payload, `Moxie ${key} response`, providerOutput) };
+  return { [key]: objectArray(payload, `Moxie ${key} response`, providerResponseError) };
 }
 
 async function requestMoxieJson(input: {
@@ -166,12 +172,4 @@ function mapMoxieError(status: number, payload: unknown, validation: boolean): P
 
 function responseTooLarge(): ProviderRequestError {
   return new ProviderRequestError(502, `Moxie response exceeds ${maxResponseBytes} bytes`);
-}
-
-function badInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerOutput(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

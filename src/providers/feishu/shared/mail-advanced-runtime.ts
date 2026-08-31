@@ -2,7 +2,7 @@ import type { FeishuJsonRequest } from "./client.ts";
 
 import { Buffer } from "node:buffer";
 import MailComposer from "nodemailer/lib/mail-composer/index.js";
-import { ProviderRequestError } from "../../provider-runtime.ts";
+import { providerInputError, ProviderRequestError } from "../../provider-runtime.ts";
 
 interface MailAdvancedActionHandler {
   (input: Record<string, unknown>): Promise<Record<string, unknown>>;
@@ -34,12 +34,12 @@ async function sendReadReceipt(input: Record<string, unknown>, request: FeishuJs
   const messageId = requiredString(input.messageId, "messageId");
   const source = await fetchMessage(mailboxId, messageId, request);
   if (!hasReceiptRequest(source)) {
-    throw invalidInput(`message ${messageId} did not request a read receipt; READ_RECEIPT_REQUEST is absent`);
+    throw providerInputError(`message ${messageId} did not request a read receipt; READ_RECEIPT_REQUEST is absent`);
   }
 
   const recipient = address(source.head_from);
   if (!recipient) {
-    throw invalidInput("the original message has no sender address");
+    throw providerInputError("the original message has no sender address");
   }
   const sender = optionalString(input.from) ?? (await resolveMailboxAddress(mailboxId, request));
   const subject = optionalString(source.subject) ?? "";
@@ -144,7 +144,7 @@ async function shareMailToChat(input: Record<string, unknown>, request: FeishuJs
   const messageId = optionalString(input.messageId);
   const threadId = optionalString(input.threadId);
   if (Boolean(messageId) === Boolean(threadId)) {
-    throw invalidInput("provide exactly one of messageId or threadId");
+    throw providerInputError("provide exactly one of messageId or threadId");
   }
   const created = await request({
     method: "POST",
@@ -184,7 +184,7 @@ async function updateMailTemplate(input: Record<string, unknown>, request: Feish
       Object.hasOwn(input, field),
     )
   ) {
-    throw invalidInput("provide at least one template field to update");
+    throw providerInputError("provide at least one template field to update");
   }
   const fetched = await request({ path: mailboxPath(mailboxId, "templates", templateId) });
   const template = { ...recordValue(fetched.template ?? fetched) };
@@ -217,14 +217,14 @@ async function updateMailTemplate(input: Record<string, unknown>, request: Feish
 
 async function triageMailMessages(input: Record<string, unknown>, request: FeishuJsonRequest) {
   if (input.unread === false) {
-    throw invalidInput("unread must be true when provided");
+    throw providerInputError("unread must be true when provided");
   }
   const mailboxId = optionalString(input.mailboxId) ?? "me";
   const maximum = Math.min(optionalNumber(input.maxResults) ?? 20, 400);
   const parsedToken = parseTriageToken(optionalString(input.pageToken));
   const useSearch = parsedToken?.source === "search" || wantsSearch(input);
   if (parsedToken && parsedToken.source !== (useSearch ? "search" : "list")) {
-    throw invalidInput("pageToken source does not match the current triage filters");
+    throw providerInputError("pageToken source does not match the current triage filters");
   }
 
   const messages: Record<string, unknown>[] = [];
@@ -412,7 +412,7 @@ function buildTemplateFromInput(input: Record<string, unknown>, create: boolean)
   const template: Record<string, unknown> = {};
   if (create || "name" in input) {
     const name = requiredString(input.name, "name");
-    if ([...name].length > 100) throw invalidInput("name must not exceed 100 characters");
+    if ([...name].length > 100) throw providerInputError("name must not exceed 100 characters");
     template.name = name;
   }
   assignIfPresent(template, "subject", input, "subject");
@@ -421,7 +421,7 @@ function buildTemplateFromInput(input: Record<string, unknown>, create: boolean)
     typeof template.template_content === "string" &&
     Buffer.byteLength(template.template_content) > maximumTemplateContentBytes
   ) {
-    throw invalidInput("templateContent must not exceed 3 MB");
+    throw providerInputError("templateContent must not exceed 3 MB");
   }
   assignIfPresent(template, "is_plain_text_mode", input, "isPlainText");
   if ("to" in input) template.tos = templateAddresses(input.to, "to");
@@ -439,7 +439,7 @@ function buildTemplateFromInput(input: Record<string, unknown>, create: boolean)
 }
 
 function templateAddresses(value: unknown, field: string) {
-  if (!Array.isArray(value)) throw invalidInput(`${field} must be an array`);
+  if (!Array.isArray(value)) throw providerInputError(`${field} must be an array`);
   return value.map((item, index) => {
     const address = recordValue(item);
     return {
@@ -450,7 +450,7 @@ function templateAddresses(value: unknown, field: string) {
 }
 
 function templateAttachments(value: unknown) {
-  if (!Array.isArray(value)) throw invalidInput("attachments must be an array");
+  if (!Array.isArray(value)) throw providerInputError("attachments must be an array");
   return value.map((item, index) => {
     const attachment = recordValue(item);
     const fileKey = requiredString(attachment.fileKey, `attachments[${index}].fileKey`);
@@ -458,10 +458,10 @@ function templateAttachments(value: unknown) {
     const inline = attachment.inline === true;
     const attachmentType = optionalString(attachment.attachmentType);
     if (inline && !cid) {
-      throw invalidInput("inline attachments require cid");
+      throw providerInputError("inline attachments require cid");
     }
     if (inline && attachmentType === "large") {
-      throw invalidInput("inline attachments cannot use the large attachment type");
+      throw providerInputError("inline attachments cannot use the large attachment type");
     }
     return {
       id: fileKey,
@@ -613,7 +613,7 @@ function parseTriageToken(value: string | undefined): TriageToken | undefined {
   const source = value.slice(0, separator);
   const token = value.slice(separator + 1);
   if ((source !== "list" && source !== "search") || separator < 1 || !token) {
-    throw invalidInput("pageToken must start with list: or search:");
+    throw providerInputError("pageToken must start with list: or search:");
   }
   return { source, token };
 }
@@ -671,7 +671,7 @@ function compact(value: Record<string, unknown>) {
 
 function requiredString(value: unknown, field: string) {
   const result = optionalString(value);
-  if (!result) throw invalidInput(`${field} must be a non-empty string`);
+  if (!result) throw providerInputError(`${field} must be a non-empty string`);
   return result;
 }
 
@@ -693,8 +693,4 @@ function optionalNumber(value: unknown) {
 
 function optionalBoolean(value: unknown) {
   return typeof value === "boolean" ? value : undefined;
-}
-
-function invalidInput(message: string) {
-  return new ProviderRequestError(400, message);
 }

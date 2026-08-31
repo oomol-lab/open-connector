@@ -8,6 +8,7 @@ import { optionalNumber, optionalRecord, optionalString, requiredRecord, require
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   readProviderJsonBody,
@@ -90,7 +91,7 @@ export const waffoActionHandlers: ProviderActionHandlers<"waffo", ProviderRuntim
         }
         total: ${resource}Count(filter: ${filter})
       }`,
-      { storeId: requiredString(input.storeId, "storeId", inputError), limit, offset },
+      { storeId: requiredString(input.storeId, "storeId", providerInputError), limit, offset },
       context,
     );
     const products = requireOutputObjectArray(data.items, "Waffo products").map((product) => ({
@@ -176,7 +177,7 @@ export const waffoActionHandlers: ProviderActionHandlers<"waffo", ProviderRuntim
         }
         total: ${resource}Count(storeId: $storeId${filterArgument})
       }`,
-      { storeId: requiredString(input.storeId, "storeId", inputError), limit, offset },
+      { storeId: requiredString(input.storeId, "storeId", providerInputError), limit, offset },
       context,
     );
     const orders = requireOutputObjectArray(data.items, "Waffo orders").map((order) => ({
@@ -316,8 +317,8 @@ export async function validateWaffoCredential(
 }
 
 export function readWaffoCredential(values: Record<string, string>): WaffoCredential {
-  const merchantId = requiredString(values.merchantId, "merchantId", inputError);
-  const pem = requiredString(values.privateKey, "privateKey", inputError).replaceAll("\\n", "\n");
+  const merchantId = requiredString(values.merchantId, "merchantId", providerInputError);
+  const pem = requiredString(values.privateKey, "privateKey", providerInputError).replaceAll("\\n", "\n");
   try {
     const privateKey = createPrivateKey(pem);
     if (privateKey.asymmetricKeyType !== "rsa") throw new Error("not RSA");
@@ -441,12 +442,12 @@ function readPagination(input: Record<string, unknown>): { limit: number; offset
 
 function requireProductType(value: unknown): "one_time" | "subscription" {
   if (value === "one_time" || value === "subscription") return value;
-  throw inputError("productType must be one_time or subscription");
+  throw providerInputError("productType must be one_time or subscription");
 }
 
 function requireOrderType(value: unknown): "one_time" | "subscription" {
   if (value === "one_time" || value === "subscription") return value;
-  throw inputError("orderType must be one_time or subscription");
+  throw providerInputError("orderType must be one_time or subscription");
 }
 
 function productActionPath(
@@ -461,9 +462,10 @@ function normalizeProductInput(input: Record<string, unknown>, subscription: boo
   const output = { ...input, prices: normalizePrices(input.prices) };
   if (Object.hasOwn(input, "successUrl")) validateProductSuccessUrl(input.successUrl);
   if (Object.hasOwn(input, "metadata")) {
-    const metadata = requiredRecord(input.metadata, "metadata", inputError);
+    const metadata = requiredRecord(input.metadata, "metadata", providerInputError);
     if (subscription) validateTrialDays(metadata);
-    else if (Object.keys(metadata).length > 50) throw inputError("product metadata must contain at most 50 keys");
+    else if (Object.keys(metadata).length > 50)
+      throw providerInputError("product metadata must contain at most 50 keys");
   }
   return output;
 }
@@ -474,30 +476,31 @@ function normalizeProductUpdate(
 ): Record<string, unknown> {
   const editableFields = ["name", "description", "prices", "media", "successUrl", "metadata", "billingPeriod"];
   if (!editableFields.some((field) => Object.hasOwn(input, field))) {
-    throw inputError("at least one product field must be provided");
+    throw providerInputError("at least one product field must be provided");
   }
   if (productType === "one_time" && Object.hasOwn(input, "billingPeriod")) {
-    throw inputError("billingPeriod is only supported for subscription products");
+    throw providerInputError("billingPeriod is only supported for subscription products");
   }
   const output = { ...input };
   if (Object.hasOwn(input, "prices")) output.prices = normalizePrices(input.prices);
   if (Object.hasOwn(input, "successUrl")) validateProductSuccessUrl(input.successUrl);
   if (productType === "subscription" && Object.hasOwn(input, "metadata")) {
-    validateTrialDays(requiredRecord(input.metadata, "metadata", inputError));
+    validateTrialDays(requiredRecord(input.metadata, "metadata", providerInputError));
   }
   return output;
 }
 
 function normalizePrices(value: unknown): Record<string, unknown> {
-  const prices = requiredRecord(value, "prices", inputError);
+  const prices = requiredRecord(value, "prices", providerInputError);
   const entries = Object.entries(prices);
-  if (entries.length === 0) throw inputError("prices must contain at least one uppercase ISO 4217 currency code");
+  if (entries.length === 0)
+    throw providerInputError("prices must contain at least one uppercase ISO 4217 currency code");
   return Object.fromEntries(
     entries.map(([currency, price]) => {
       if (!isUppercaseCode(currency, 3)) {
-        throw inputError("prices must contain at least one uppercase ISO 4217 currency code");
+        throw providerInputError("prices must contain at least one uppercase ISO 4217 currency code");
       }
-      const item = requiredRecord(price, `prices.${currency}`, inputError);
+      const item = requiredRecord(price, `prices.${currency}`, providerInputError);
       return [currency, { ...item, amount: normalizePositiveAmount(item.amount) }];
     }),
   );
@@ -505,18 +508,18 @@ function normalizePrices(value: unknown): Record<string, unknown> {
 
 function normalizeCheckoutInput(input: Record<string, unknown>): Record<string, unknown> {
   if (Object.hasOwn(input, "includePaymentMethods") && Object.hasOwn(input, "excludePaymentMethods")) {
-    throw inputError("includePaymentMethods and excludePaymentMethods cannot be used together");
+    throw providerInputError("includePaymentMethods and excludePaymentMethods cannot be used together");
   }
   const output: Record<string, unknown> = {
     ...input,
     currency: normalizeCurrency(input.currency, "currency", 3),
   };
   if (Object.hasOwn(input, "priceSnapshot")) {
-    const price = requiredRecord(input.priceSnapshot, "priceSnapshot", inputError);
+    const price = requiredRecord(input.priceSnapshot, "priceSnapshot", providerInputError);
     output.priceSnapshot = { ...price, amount: normalizePositiveAmount(price.amount) };
   }
   if (Object.hasOwn(input, "billingDetail")) {
-    const billing = requiredRecord(input.billingDetail, "billingDetail", inputError);
+    const billing = requiredRecord(input.billingDetail, "billingDetail", providerInputError);
     output.billingDetail = {
       ...billing,
       country: normalizeCurrency(billing.country, "billingDetail.country", 2),
@@ -526,7 +529,7 @@ function normalizeCheckoutInput(input: Record<string, unknown>): Record<string, 
 }
 
 function normalizeRefundInput(input: Record<string, unknown>): Record<string, unknown> {
-  const amount = requiredRecord(input.requestedAmount, "requestedAmount", inputError);
+  const amount = requiredRecord(input.requestedAmount, "requestedAmount", providerInputError);
   return {
     ...input,
     requestedAmount: {
@@ -538,18 +541,18 @@ function normalizeRefundInput(input: Record<string, unknown>): Record<string, un
 }
 
 function normalizePositiveAmount(value: unknown): string {
-  const amount = requiredString(value, "amount", inputError);
+  const amount = requiredString(value, "amount", providerInputError);
   const parts = amount.split(".");
   const digitsOnly = parts.every((part) => [...part].every((character) => character >= "0" && character <= "9"));
   if (parts.length > 2 || !parts[0] || (parts.length === 2 && !parts[1]) || !digitsOnly || Number(amount) <= 0) {
-    throw inputError("amount must be a positive decimal string");
+    throw providerInputError("amount must be a positive decimal string");
   }
   return amount;
 }
 
 function normalizeCurrency(value: unknown, fieldName: string, length: number): string {
-  const currency = requiredString(value, fieldName, inputError).toUpperCase();
-  if (!isUppercaseCode(currency, length)) throw inputError(`${fieldName} must be an uppercase currency code`);
+  const currency = requiredString(value, fieldName, providerInputError).toUpperCase();
+  if (!isUppercaseCode(currency, length)) throw providerInputError(`${fieldName} must be an uppercase currency code`);
   return currency;
 }
 
@@ -559,14 +562,14 @@ function isUppercaseCode(value: string, length: number): boolean {
 
 function validateProductSuccessUrl(value: unknown): void {
   if (value === null || value === "") return;
-  if (typeof value !== "string") throw inputError("successUrl must be a valid HTTP(S) URL");
+  if (typeof value !== "string") throw providerInputError("successUrl must be a valid HTTP(S) URL");
   try {
     const url = new URL(value);
     if (url.protocol === "http:" || url.protocol === "https:") return;
   } catch {
     // Return the normalized field error below.
   }
-  throw inputError("successUrl must be a valid HTTP(S) URL");
+  throw providerInputError("successUrl must be a valid HTTP(S) URL");
 }
 
 function validateTrialDays(metadata: Record<string, unknown>): void {
@@ -575,7 +578,7 @@ function validateTrialDays(metadata: Record<string, unknown>): void {
     trialDays !== undefined &&
     (typeof trialDays !== "number" || !Number.isInteger(trialDays) || trialDays < 1 || trialDays > 365)
   ) {
-    throw inputError("metadata.trialDays must be an integer from 1 to 365");
+    throw providerInputError("metadata.trialDays must be an integer from 1 to 365");
   }
 }
 
@@ -586,7 +589,7 @@ function validatePaymentSearchInput(input: Record<string, unknown>): void {
       Object.hasOwn(input, field),
     )
   ) {
-    throw inputError("paymentId cannot be combined with other payment search parameters");
+    throw providerInputError("paymentId cannot be combined with other payment search parameters");
   }
 }
 
@@ -652,8 +655,4 @@ function requireOutputString(value: unknown, fieldName: string): string {
   const string = optionalString(value);
   if (!string) throw new ProviderRequestError(502, `Waffo response is missing ${fieldName}`);
   return string;
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

@@ -16,6 +16,7 @@ import {
   defineApiKeyProviderExecutors,
   isAbortLikeError,
   normalizeProviderProxyHeaders,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderProxyErrorMessage,
@@ -272,8 +273,4 @@ function readMonitorsPayload(payload: unknown): unknown[] {
 
 function requireObject(value: unknown, context: string): Record<string, unknown> {
   return requiredRecord(value, context, (message) => new ProviderRequestError(502, message));
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

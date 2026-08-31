@@ -12,7 +12,12 @@ import {
   optionalString,
   requiredRecord,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  ProviderRequestError,
+  providerResponseError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "grist";
 const gristApiBaseUrl = "https://api.getgrist.com/api";
@@ -133,7 +138,7 @@ export const credentialValidators: CredentialValidators = {
         phase: "validate",
       }),
       "profile",
-      providerError,
+      providerResponseError,
     );
     const id = optionalInteger(payload.id);
     const ref = optionalString(payload.ref);
@@ -164,7 +169,9 @@ async function listGristWorkspaces(context: ApiKeyProviderContext): Promise<Reco
     path: "/orgs",
     phase: "execute",
   });
-  const orgs = Array.isArray(orgsPayload) ? orgsPayload.map((org) => requiredRecord(org, "org", providerError)) : [];
+  const orgs = Array.isArray(orgsPayload)
+    ? orgsPayload.map((org) => requiredRecord(org, "org", providerResponseError))
+    : [];
   const workspaceLists = await Promise.all(
     orgs.map(async (org) => {
       const orgId = readPositiveInteger(org.id, "org id");
@@ -174,7 +181,7 @@ async function listGristWorkspaces(context: ApiKeyProviderContext): Promise<Reco
         phase: "execute",
       });
       const workspaces = Array.isArray(workspacesPayload)
-        ? workspacesPayload.map((workspace) => requiredRecord(workspace, "workspace", providerError))
+        ? workspacesPayload.map((workspace) => requiredRecord(workspace, "workspace", providerResponseError))
         : [];
       return workspaces.map((workspace) => ({
         ...workspace,
@@ -299,15 +306,15 @@ function requireTableId(input: Record<string, unknown>): string {
 }
 
 function readCreateRecords(value: unknown): Array<Record<string, unknown>> {
-  return objectArray(value, "records", providerError).map((record) => ({
-    fields: requiredRecord(record.fields, "fields", providerError),
+  return objectArray(value, "records", providerResponseError).map((record) => ({
+    fields: requiredRecord(record.fields, "fields", providerResponseError),
   }));
 }
 
 function readUpdateRecords(value: unknown): Array<Record<string, unknown>> {
-  return objectArray(value, "records", providerError).map((record) => ({
+  return objectArray(value, "records", providerResponseError).map((record) => ({
     id: readPositiveInteger(record.id, "record id"),
-    fields: requiredRecord(record.fields, "fields", providerError),
+    fields: requiredRecord(record.fields, "fields", providerResponseError),
   }));
 }
 
@@ -340,8 +347,4 @@ function requireInputString(value: unknown, fieldName: string): string {
     throw new ProviderRequestError(400, `${fieldName} is required`);
   }
   return text;
-}
-
-function providerError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

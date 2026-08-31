@@ -7,6 +7,7 @@ import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -223,8 +224,4 @@ function readBooleanArray(value: unknown, label: string): boolean[] {
     throw new ProviderRequestError(502, `${label} must be a boolean array`, value);
   }
   return value as boolean[];
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

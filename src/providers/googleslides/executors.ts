@@ -4,7 +4,12 @@ import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, objectArray, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { googleJsonRequest } from "../google-runtime.ts";
-import { defineOAuthProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineOAuthProviderExecutors,
+  defineProviderProxy,
+  providerInputError,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 export const slidesApiBaseUrl = "https://slides.googleapis.com/v1";
 export const googleDriveApiBaseUrl = "https://www.googleapis.com/drive/v3";
@@ -125,7 +130,7 @@ async function batchUpdatePresentation(input: Record<string, unknown>, context: 
       context,
       method: "POST",
       body: compactObject({
-        requests: objectArray(input.requests, "requests", providerRequestError),
+        requests: objectArray(input.requests, "requests", providerInputError),
         writeControl: optionalRecord(input.writeControl),
       }),
     },
@@ -344,10 +349,6 @@ function requireString(value: string | undefined, message: string): string {
     return value;
   }
   throw new ProviderRequestError(502, message);
-}
-
-function providerRequestError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

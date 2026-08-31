@@ -15,6 +15,7 @@ import {
   createProviderTimeout,
   isAbortSignalError,
   parseProviderJsonBodyText,
+  providerResponseError,
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
@@ -219,7 +220,7 @@ async function requestEnvoyList(input: EnvoyRequestInput): Promise<EnvoyListPayl
     throw new ProviderRequestError(502, "Envoy response data was not an array");
   }
   return {
-    data: data.map((item) => requiredRecord(item, "Envoy response data item", providerError)),
+    data: data.map((item) => requiredRecord(item, "Envoy response data item", providerResponseError)),
     meta: optionalRecord(payload.meta) ?? {},
   };
 }
@@ -227,7 +228,7 @@ async function requestEnvoyList(input: EnvoyRequestInput): Promise<EnvoyListPayl
 async function requestEnvoySingle(input: EnvoyRequestInput): Promise<EnvoySinglePayload> {
   const payload = await requestEnvoy(input);
   return {
-    data: requiredRecord(payload.data, "Envoy response data", providerError),
+    data: requiredRecord(payload.data, "Envoy response data", providerResponseError),
     meta: optionalRecord(payload.meta) ?? {},
   };
 }
@@ -276,7 +277,7 @@ async function requestEnvoy(input: EnvoyRequestInput): Promise<Record<string, un
   if (!response.ok) {
     throw mapEnvoyHttpError(response.status, payload, rawBody, input.phase);
   }
-  return requiredRecord(payload, "Envoy response object", providerError);
+  return requiredRecord(payload, "Envoy response object", providerResponseError);
 }
 
 function appendQueryValue(url: URL, key: string, value: unknown): void {
@@ -302,8 +303,8 @@ function pickQuery(input: Record<string, unknown>, keys: readonly string[]): Rec
 
 function normalizeLocation(input: Record<string, unknown>): Record<string, unknown> {
   return {
-    id: requiredString(input.id, "Envoy location id", providerError),
-    name: requiredString(input.name, "Envoy location name", providerError),
+    id: requiredString(input.id, "Envoy location id", providerResponseError),
+    name: requiredString(input.name, "Envoy location name", providerResponseError),
     enabled: typeof input.enabled === "boolean" ? input.enabled : undefined,
     companyId: optionalString(input.companyId),
     locale: optionalString(input.locale),
@@ -318,9 +319,9 @@ function normalizeLocation(input: Record<string, unknown>): Record<string, unkno
 
 function normalizeEmployee(input: Record<string, unknown>): Record<string, unknown> {
   return {
-    id: requiredString(input.id, "Envoy employee id", providerError),
-    name: requiredString(input.name, "Envoy employee name", providerError),
-    email: requiredString(input.email, "Envoy employee email", providerError),
+    id: requiredString(input.id, "Envoy employee id", providerResponseError),
+    name: requiredString(input.name, "Envoy employee name", providerResponseError),
+    email: requiredString(input.email, "Envoy employee email", providerResponseError),
     createdAt: optionalString(input.createdAt),
     updatedAt: optionalString(input.updatedAt),
   };
@@ -328,8 +329,8 @@ function normalizeEmployee(input: Record<string, unknown>): Record<string, unkno
 
 function normalizeFlow(input: Record<string, unknown>): Record<string, unknown> {
   return {
-    id: requiredString(input.id, "Envoy flow id", providerError),
-    name: requiredString(input.name, "Envoy flow name", providerError),
+    id: requiredString(input.id, "Envoy flow id", providerResponseError),
+    name: requiredString(input.name, "Envoy flow name", providerResponseError),
     type: optionalString(input.type),
     enabled: typeof input.enabled === "boolean" ? input.enabled : undefined,
     locationId: nullableString(input.locationId),
@@ -340,7 +341,7 @@ function normalizeFlow(input: Record<string, unknown>): Record<string, unknown> 
 
 function normalizeInvite(input: Record<string, unknown>): Record<string, unknown> {
   return {
-    id: requiredString(input.id, "Envoy invite id", providerError),
+    id: requiredString(input.id, "Envoy invite id", providerResponseError),
     expectedArrivalAt: optionalString(input.expectedArrivalAt),
     expectedDepartureAt: nullableString(input.expectedDepartureAt),
     type: optionalString(input.type),
@@ -406,8 +407,4 @@ function readEnvoyErrorMessage(payload: unknown): string | undefined {
     }
   }
   return undefined;
-}
-
-function providerError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

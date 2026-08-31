@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerInputError,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 import { missiveMailboxFilterNames } from "./actions.ts";
 
 const service = "missive";
@@ -65,7 +70,7 @@ export const missiveActionHandlers: ProviderActionHandlers<"missive", MissiveAct
   },
   async get_contact(input, context) {
     const payload = await requestMissiveJson({
-      path: `/v1/contacts/${encodeURIComponent(requiredString(input.id, "id", invalidInputError))}`,
+      path: `/v1/contacts/${encodeURIComponent(requiredString(input.id, "id", providerInputError))}`,
       context,
       notFoundAsInvalidInput: true,
     });
@@ -102,7 +107,7 @@ export const missiveActionHandlers: ProviderActionHandlers<"missive", MissiveAct
   },
   async get_conversation(input, context) {
     const payload = await requestMissiveJson({
-      path: `/v1/conversations/${encodeURIComponent(requiredString(input.id, "id", invalidInputError))}`,
+      path: `/v1/conversations/${encodeURIComponent(requiredString(input.id, "id", providerInputError))}`,
       context,
       notFoundAsInvalidInput: true,
     });
@@ -293,8 +298,4 @@ function extractMissiveMessage(payload: unknown): string | undefined {
   }
 
   return undefined;
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

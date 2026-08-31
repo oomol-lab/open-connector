@@ -11,7 +11,7 @@ import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/client/valida
 import { createHash } from "node:crypto";
 import { optionalRecord, requiredString } from "../../core/cast.ts";
 import { withMcpClient } from "../mcp-client.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const helium10McpEndpoint = "https://mcp.helium10.com/mcp";
 const requestTimeoutMs = 30_000;
@@ -67,7 +67,7 @@ export const helium10ActionHandlers: ProviderActionHandlers<
     };
   },
   async call_tool(input, context) {
-    const toolName = requiredString(input.toolName, "toolName", badRequest);
+    const toolName = requiredString(input.toolName, "toolName", providerInputError);
     const args = input.arguments === undefined ? {} : optionalRecord(input.arguments);
     if (!args) throw new ProviderRequestError(400, "arguments must be a JSON object");
     if (!readOnlyTools.has(toolName)) {
@@ -165,8 +165,4 @@ function normalizeResult(result: ToolResult): unknown {
   } catch {
     return text.text;
   }
-}
-
-function badRequest(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

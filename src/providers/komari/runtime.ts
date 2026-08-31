@@ -8,6 +8,7 @@ import {
   createProviderTimeout,
   isAbortLikeError,
   mapProviderActionHandlers,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -132,14 +133,14 @@ export async function validateKomariCredential(
 
 /** Normalize a Komari instance URL while preserving a reverse-proxy base path. */
 export function normalizeKomariBaseUrl(value: unknown, allowPrivateNetwork: boolean): string {
-  const instanceUrl = requiredString(value, "baseUrl", credentialError);
+  const instanceUrl = requiredString(value, "baseUrl", providerInputError);
   const url = assertPublicHttpUrl(instanceUrl, {
     fieldName: "baseUrl",
-    createError: credentialError,
+    createError: providerInputError,
     allowPrivateNetwork,
   });
   if (url.username || url.password) {
-    throw credentialError("baseUrl must not include credentials");
+    throw providerInputError("baseUrl must not include credentials");
   }
   url.hash = "";
   url.search = "";
@@ -445,8 +446,4 @@ function rpcErrorMessage(value: unknown): string | undefined {
 
 function numberOrZero(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
-}
-
-function credentialError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

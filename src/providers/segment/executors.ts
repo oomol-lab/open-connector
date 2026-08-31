@@ -13,6 +13,7 @@ import {
   createProviderProxyUrl,
   defineApiKeyProviderExecutors,
   normalizeProviderProxyHeaders,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderProxyErrorMessage,
@@ -202,7 +203,7 @@ function validateSegmentBatch(value: unknown): void {
   }
 
   value.forEach((item, index) => {
-    const event = requiredRecord(item, `batch[${index}]`, inputError);
+    const event = requiredRecord(item, `batch[${index}]`, providerInputError);
     const type = optionalRawString(event.type);
     switch (type) {
       case "identify":
@@ -236,8 +237,4 @@ function requireStringField(event: Record<string, unknown>, fieldName: string, p
   if (!optionalRawString(event[fieldName])) {
     throw new ProviderRequestError(400, `${prefix}.${fieldName} is required`);
   }
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

@@ -11,6 +11,7 @@ import {
   createProviderTimeout,
   defineProviderExecutors,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -440,8 +441,4 @@ function readArray(value: unknown): unknown[] {
   }
 
   return value;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

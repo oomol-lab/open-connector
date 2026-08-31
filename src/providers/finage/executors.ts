@@ -12,7 +12,12 @@ import {
   requiredString,
   stringArray,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerResponseError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "finage";
 const finageApiBaseUrl = "https://api.finage.co.uk";
@@ -87,7 +92,7 @@ async function listStockSymbols(input: Record<string, unknown>, context: FinageA
 
   return {
     page: readRequiredInteger(payload.page, "page"),
-    symbols: objectArray(payload.symbols, "symbols", providerError).map(normalizeSymbol),
+    symbols: objectArray(payload.symbols, "symbols", providerResponseError).map(normalizeSymbol),
   };
 }
 
@@ -156,10 +161,10 @@ async function getSnapshot(input: Record<string, unknown>, context: FinageAction
   return {
     totalResults: readRequiredInteger(payload.totalResults, "totalResults"),
     lastQuotes: includeQuotes
-      ? objectArray(payload.lastQuotes, "lastQuotes", providerError).map(normalizeSnapshotQuote)
+      ? objectArray(payload.lastQuotes, "lastQuotes", providerResponseError).map(normalizeSnapshotQuote)
       : [],
     lastTrades: includeTrades
-      ? objectArray(payload.lastTrades, "lastTrades", providerError).map(normalizeSnapshotTrade)
+      ? objectArray(payload.lastTrades, "lastTrades", providerResponseError).map(normalizeSnapshotTrade)
       : [],
   };
 }
@@ -308,7 +313,7 @@ function normalizeTrade(input: Record<string, unknown>): Record<string, unknown>
 }
 
 function normalizeAggregateResponse(input: Record<string, unknown>): Record<string, unknown> {
-  const results = objectArray(input.results, "results", providerError).map(normalizeAggregateBar);
+  const results = objectArray(input.results, "results", providerResponseError).map(normalizeAggregateBar);
 
   return {
     symbol: readRequiredString(input.symbol, "symbol"),
@@ -387,8 +392,4 @@ function readRequiredInputInteger(value: unknown, fieldName: string): number {
     throw new ProviderRequestError(400, `${fieldName} must be an integer`);
   }
   return value;
-}
-
-function providerError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

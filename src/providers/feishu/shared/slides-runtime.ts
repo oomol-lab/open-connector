@@ -1,7 +1,7 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
 import { optionalRecord, optionalString, optionalStringArray } from "../../../core/cast.ts";
-import { ProviderRequestError } from "../../provider-runtime.ts";
+import { providerInputError, ProviderRequestError } from "../../provider-runtime.ts";
 
 interface FeishuSlidesActionHandler {
   (input: Record<string, unknown>): Promise<unknown>;
@@ -119,7 +119,7 @@ async function getSlide(input: Record<string, unknown>, request: FeishuJsonReque
   const slideId = optionalString(input.slideId);
   const slideNumber = optionalNumber(input.slideNumber);
   if ((!slideId && slideNumber == null) || (slideId && slideNumber != null)) {
-    throw invalidInput("provide exactly one of slideId or slideNumber");
+    throw providerInputError("provide exactly one of slideId or slideNumber");
   }
   const data = await request({
     path: `/slides_ai/v1/xml_presentations/${encodeURIComponent(presentationId)}/slide`,
@@ -284,14 +284,14 @@ async function resolvePresentationId(input: Record<string, unknown>, request: Fe
   const objectType = optionalString(node?.obj_type);
   const objectToken = optionalString(node?.obj_token);
   if (objectType !== "slides" || !objectToken) {
-    throw invalidInput(`Wiki node must resolve to slides, received ${objectType ?? "unknown"}`);
+    throw providerInputError(`Wiki node must resolve to slides, received ${objectType ?? "unknown"}`);
   }
   return objectToken;
 }
 
 function normalizeReplaceParts(value: unknown) {
   if (!Array.isArray(value) || value.length === 0 || value.length > 200) {
-    throw invalidInput("parts must contain between 1 and 200 items");
+    throw providerInputError("parts must contain between 1 and 200 items");
   }
   return value.map((item, index) => {
     const part = optionalRecord(item);
@@ -314,7 +314,7 @@ function normalizeReplaceParts(value: unknown) {
         insert_before_block_id: optionalString(part?.insertBeforeBlockId),
       };
     } else {
-      throw invalidInput(`parts[${index}].action must be block_replace or block_insert`);
+      throw providerInputError(`parts[${index}].action must be block_replace or block_insert`);
     }
   });
 }
@@ -323,7 +323,7 @@ function ensureBlockReplacement(fragment: string, blockId: string) {
   const withContent = ensureShapeContent(fragment);
   const openingEnd = withContent.indexOf(">");
   if (!withContent.startsWith("<") || openingEnd < 1) {
-    throw invalidInput("replacement must contain one XML root element");
+    throw providerInputError("replacement must contain one XML root element");
   }
   const opening = withContent.slice(0, openingEnd);
   if (opening.includes(" id=")) {
@@ -349,14 +349,14 @@ function ensureShapeContent(fragment: string) {
 
 function readSlideReplacements(value: unknown): SlideReplacement[] {
   if (!Array.isArray(value) || value.length === 0) {
-    throw invalidInput("pages must contain at least one replacement");
+    throw providerInputError("pages must contain at least one replacement");
   }
   const seen = new Set<string>();
   return value.map((item, index) => {
     const page = optionalRecord(item);
     const slideId = requireString(page?.slideId, `pages[${index}].slideId`);
     if (seen.has(slideId)) {
-      throw invalidInput(`pages contains duplicate slideId ${slideId}`);
+      throw providerInputError(`pages contains duplicate slideId ${slideId}`);
     }
     seen.add(slideId);
     return {
@@ -400,7 +400,7 @@ function escapeXml(value: string) {
 function requireString(value: unknown, fieldName: string) {
   const string = optionalString(value);
   if (!string) {
-    throw invalidInput(`${fieldName} is required`);
+    throw providerInputError(`${fieldName} is required`);
   }
   return string;
 }
@@ -419,8 +419,4 @@ function optionalNumber(value: unknown) {
 
 function optionalBoolean(value: unknown) {
   return typeof value === "boolean" ? value : undefined;
-}
-
-function invalidInput(message: string) {
-  return new ProviderRequestError(400, message);
 }

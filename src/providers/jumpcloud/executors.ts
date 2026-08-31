@@ -12,6 +12,7 @@ import {
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
   providerFetch,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderProxyErrorMessage,
@@ -162,7 +163,7 @@ async function getSystemUser(input: Record<string, unknown>, context: JumpcloudA
   return {
     systemUser: await jumpcloudGetJson(
       buildReadRequest(
-        `/systemusers/${encodeURIComponent(requiredString(input.id, "id", jumpcloudInputError))}`,
+        `/systemusers/${encodeURIComponent(requiredString(input.id, "id", providerInputError))}`,
         input,
         context,
         "execute",
@@ -179,7 +180,7 @@ async function getSystem(input: Record<string, unknown>, context: JumpcloudActio
   return {
     system: await jumpcloudGetJson(
       buildReadRequest(
-        `/systems/${encodeURIComponent(requiredString(input.id, "id", jumpcloudInputError))}`,
+        `/systems/${encodeURIComponent(requiredString(input.id, "id", providerInputError))}`,
         input,
         context,
         "execute",
@@ -389,8 +390,4 @@ function readJumpcloudRegion(value: unknown): JumpcloudRegion {
     return defaultJumpcloudRegion;
   }
   throw new ProviderRequestError(400, "region must be one of us, eu, or in");
-}
-
-function jumpcloudInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

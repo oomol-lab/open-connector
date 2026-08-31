@@ -6,6 +6,7 @@ import { compactObject, optionalBoolean, optionalRecord, optionalString, require
 import {
   defineApiKeyProviderExecutors,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -458,8 +459,4 @@ function nullableString(value: unknown): string | null {
 function stringifyOptionalBoolean(value: unknown): string | undefined {
   const parsed = optionalBoolean(value);
   return parsed === undefined ? undefined : String(parsed);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

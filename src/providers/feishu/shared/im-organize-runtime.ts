@@ -1,6 +1,6 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
-import { ProviderRequestError } from "../../provider-runtime.ts";
+import { providerInputError, ProviderRequestError } from "../../provider-runtime.ts";
 
 interface ImOrganizeActionHandler {
   (input: Record<string, unknown>): Promise<Record<string, unknown>>;
@@ -242,7 +242,7 @@ async function resolveFlagItem(input: Record<string, unknown>, request: FeishuJs
     itemType = await detectFeedItemType(messageId, request);
   }
   if (!validFlagCombination(itemType, flagType)) {
-    throw invalidInput("supported itemType/flagType pairs are default+message, thread+feed, and msg_thread+feed");
+    throw providerInputError("supported itemType/flagType pairs are default+message, thread+feed, and msg_thread+feed");
   }
   return flagItem(messageId, itemType, flagType);
 }
@@ -379,10 +379,10 @@ function annotateShortcutFailure(item: Record<string, unknown>): Record<string, 
 
 function chatIdArray(value: unknown) {
   const values = uniqueStrings(requiredStringArray(value, "chatIds"));
-  if (values.length > 10) throw invalidInput("chatIds accepts at most 10 values");
+  if (values.length > 10) throw providerInputError("chatIds accepts at most 10 values");
   for (const value of values) {
     if (!value.startsWith("oc_")) {
-      throw invalidInput(`chatIds must contain open_chat_id values; received ${value}`);
+      throw providerInputError(`chatIds must contain open_chat_id values; received ${value}`);
     }
   }
   return values;
@@ -396,7 +396,7 @@ function requiredStringArray(value: unknown, field: string) {
   const values = Array.isArray(value)
     ? value.filter((item): item is string => typeof item === "string" && item.length > 0)
     : [];
-  if (values.length === 0) throw invalidInput(`${field} must contain at least one value`);
+  if (values.length === 0) throw providerInputError(`${field} must contain at least one value`);
   return values;
 }
 
@@ -414,7 +414,7 @@ function recordArray(value: unknown): Record<string, unknown>[] {
 
 function requiredString(value: unknown, field: string) {
   const result = optionalString(value);
-  if (!result) throw invalidInput(`${field} must be a non-empty string`);
+  if (!result) throw providerInputError(`${field} must be a non-empty string`);
   return result;
 }
 
@@ -436,8 +436,4 @@ function optionalNumber(value: unknown) {
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
-}
-
-function invalidInput(message: string) {
-  return new ProviderRequestError(400, message);
 }

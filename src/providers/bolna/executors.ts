@@ -12,7 +12,13 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerInputError,
+  ProviderRequestError,
+  providerResponseError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "bolna";
 const bolnaApiBaseUrl = "https://api.bolna.ai";
@@ -113,7 +119,7 @@ async function getBolnaAgent(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const agentId = requiredString(input.agent_id, "agent_id", invalidInputError);
+  const agentId = requiredString(input.agent_id, "agent_id", providerInputError);
   const payload = await bolnaJsonRequest(
     {
       path: `/v2/agent/${encodeURIComponent(agentId)}`,
@@ -132,7 +138,7 @@ async function listBolnaAgentExecutions(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const agentId = requiredString(input.agent_id, "agent_id", invalidInputError);
+  const agentId = requiredString(input.agent_id, "agent_id", providerInputError);
   const payload = await bolnaJsonRequest(
     {
       path: `/v2/agent/${encodeURIComponent(agentId)}/executions`,
@@ -153,7 +159,7 @@ async function listBolnaAgentExecutions(
     context,
   );
 
-  const record = requiredRecord(payload, "Bolna execution list response", providerDataError);
+  const record = requiredRecord(payload, "Bolna execution list response", providerResponseError);
   const data = record.data;
   if (!Array.isArray(data)) {
     throw new ProviderRequestError(502, "Bolna execution list did not include data");
@@ -172,7 +178,7 @@ async function getBolnaExecution(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const executionId = requiredString(input.execution_id, "execution_id", invalidInputError);
+  const executionId = requiredString(input.execution_id, "execution_id", providerInputError);
   const payload = await bolnaJsonRequest(
     {
       path: `/executions/${encodeURIComponent(executionId)}`,
@@ -191,7 +197,7 @@ async function getBolnaExecutionRawLogs(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
-  const executionId = requiredString(input.execution_id, "execution_id", invalidInputError);
+  const executionId = requiredString(input.execution_id, "execution_id", providerInputError);
   const payload = await bolnaJsonRequest(
     {
       path: `/executions/${encodeURIComponent(executionId)}/log`,
@@ -201,7 +207,7 @@ async function getBolnaExecutionRawLogs(
     context,
   );
 
-  const record = requiredRecord(payload, "Bolna execution log response", providerDataError);
+  const record = requiredRecord(payload, "Bolna execution log response", providerResponseError);
   const data = record.data;
   if (!Array.isArray(data)) {
     throw new ProviderRequestError(502, "Bolna execution log response did not include data");
@@ -306,7 +312,7 @@ interface BolnaUser extends Record<string, unknown> {
 }
 
 function normalizeBolnaUser(payload: unknown): BolnaUser {
-  const record = requiredRecord(payload, "Bolna user response", providerDataError);
+  const record = requiredRecord(payload, "Bolna user response", providerResponseError);
   return compactObject({
     id: readRequiredString(record.id, "id"),
     name: optionalString(record.name),
@@ -329,7 +335,7 @@ function normalizeBolnaConcurrency(value: unknown): Record<string, unknown> | un
 }
 
 function normalizeBolnaAgent(payload: unknown, context: string): Record<string, unknown> {
-  const record = requiredRecord(payload, `${context} response`, providerDataError);
+  const record = requiredRecord(payload, `${context} response`, providerResponseError);
   return compactObject({
     id: readRequiredString(record.id, `${context}.id`),
     agent_name: readRequiredString(record.agent_name, `${context}.agent_name`),
@@ -344,7 +350,7 @@ function normalizeBolnaAgent(payload: unknown, context: string): Record<string, 
 }
 
 function normalizeBolnaExecution(payload: unknown, context: string): Record<string, unknown> {
-  const record = requiredRecord(payload, `${context} response`, providerDataError);
+  const record = requiredRecord(payload, `${context} response`, providerResponseError);
   return compactObject({
     id: readRequiredString(record.id, `${context}.id`),
     agent_id: readRequiredString(record.agent_id, `${context}.agent_id`),
@@ -367,7 +373,7 @@ function normalizeBolnaExecution(payload: unknown, context: string): Record<stri
 }
 
 function normalizeBolnaExecutionLog(payload: unknown, context: string): Record<string, unknown> {
-  const record = requiredRecord(payload, `${context} response`, providerDataError);
+  const record = requiredRecord(payload, `${context} response`, providerResponseError);
   return compactObject({
     created_at: readRequiredString(record.created_at, `${context}.created_at`),
     type: readRequiredString(record.type, `${context}.type`),
@@ -438,12 +444,4 @@ function readRequiredBoolean(value: unknown, fieldName: string): boolean {
     throw new ProviderRequestError(502, `Bolna response missing ${fieldName}`);
   }
   return parsed;
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerDataError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

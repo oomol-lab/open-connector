@@ -23,6 +23,7 @@ import {
   createProviderProxyUrl,
   defineProviderExecutors,
   normalizeProviderProxyHeaders,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderProxyErrorMessage,
@@ -444,8 +445,4 @@ function requireCrispResponseObject(value: unknown, message: string): Record<str
     throw new ProviderRequestError(502, message, value);
   }
   return record;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

@@ -16,6 +16,8 @@ import { compactJson, encodePathSegment, jsonObject } from "../../core/request.t
 import {
   createProviderTimeout,
   isAbortSignalError,
+  providerInputError,
+  providerResponseError,
   providerUserAgent,
   ProviderRequestError,
   readProviderJsonBody,
@@ -355,12 +357,4 @@ function readOptionalPerPage(value: unknown): number | undefined {
 
 function readOptionalStringArray(value: unknown): string[] | undefined {
   return value === undefined ? undefined : requiredStringArray(value, "array value", providerInputError);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

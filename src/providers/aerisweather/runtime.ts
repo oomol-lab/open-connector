@@ -14,7 +14,9 @@ import {
 import {
   createProviderTimeout,
   isAbortSignalError,
+  providerInputError,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   readProviderJsonBody,
 } from "../provider-runtime.ts";
@@ -39,7 +41,7 @@ export const aerisweatherActionHandlers: ProviderActionHandlers<
 > = {
   async get_place(input, context) {
     const payload = await requestAerisWeatherJson({
-      path: `/places/${encodeURIComponent(requiredString(input.location, "location", inputError))}`,
+      path: `/places/${encodeURIComponent(requiredString(input.location, "location", providerInputError))}`,
       query: {
         fields: joinOptionalStringList(input.fields),
       },
@@ -53,7 +55,7 @@ export const aerisweatherActionHandlers: ProviderActionHandlers<
   },
   async get_observation(input, context) {
     const payload = await requestAerisWeatherJson({
-      path: `/observations/${encodeURIComponent(requiredString(input.location, "location", inputError))}`,
+      path: `/observations/${encodeURIComponent(requiredString(input.location, "location", providerInputError))}`,
       query: {
         fields: joinOptionalStringList(input.fields),
       },
@@ -67,7 +69,7 @@ export const aerisweatherActionHandlers: ProviderActionHandlers<
   },
   async get_forecast(input, context) {
     const payload = await requestAerisWeatherJson({
-      path: `/forecasts/${encodeURIComponent(requiredString(input.location, "location", inputError))}`,
+      path: `/forecasts/${encodeURIComponent(requiredString(input.location, "location", providerInputError))}`,
       query: {
         filter: optionalString(input.filter),
         limit: optionalInteger(input.limit),
@@ -91,7 +93,7 @@ export async function validateAerisWeatherCredential(
 ): Promise<CredentialValidationResult> {
   const context: AerisWeatherContext = {
     apiKey: input.apiKey,
-    clientId: requiredString(input.clientId, "clientId", inputError),
+    clientId: requiredString(input.clientId, "clientId", providerInputError),
     fetcher,
     signal,
   };
@@ -153,7 +155,7 @@ async function requestAerisWeatherJson(input: {
       throw createAerisWeatherError(response.status, payload, input.phase);
     }
     assertSuccessfulPayload(payload, input.phase);
-    return requiredRecord(payload, "Xweather response", responseError);
+    return requiredRecord(payload, "Xweather response", providerResponseError);
   } catch (error) {
     if (error instanceof ProviderRequestError) {
       throw error;
@@ -213,7 +215,7 @@ function requireResponseArray(payload: Record<string, unknown>, label: string): 
   if (!Array.isArray(payload.response)) {
     throw new ProviderRequestError(502, `${label} did not include an array response`);
   }
-  return payload.response.map((value) => requiredRecord(value, label, responseError));
+  return payload.response.map((value) => requiredRecord(value, label, providerResponseError));
 }
 
 function normalizePlace(value: Record<string, unknown>): {
@@ -260,12 +262,4 @@ function joinOptionalStringList(value: unknown): string | undefined {
         .filter(Boolean)
         .join(",")
     : undefined;
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function responseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

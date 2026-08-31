@@ -12,7 +12,12 @@ import {
   stringRecord,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  providerInputError,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const currentUserPath = "/api/2.0/preview/scim/v2/Me";
 const jobsBasePath = "/api/2.2/jobs";
@@ -374,7 +379,7 @@ async function getCluster(input: Record<string, unknown>, context: DatabricksCon
     cluster: asObject(
       await requestJson(context, {
         path: `${clustersBasePath}/get`,
-        query: { cluster_id: requiredString(input.clusterId, "clusterId", badInput) },
+        query: { cluster_id: requiredString(input.clusterId, "clusterId", providerInputError) },
       }),
     ),
   };
@@ -384,11 +389,11 @@ async function createCluster(input: Record<string, unknown>, context: Databricks
   const record = asObject(
     await requestJson(context, { method: "POST", path: `${clustersBasePath}/create`, body: asObject(input.cluster) }),
   );
-  return { clusterId: requiredString(record.cluster_id, "cluster_id", badInput) };
+  return { clusterId: requiredString(record.cluster_id, "cluster_id", providerInputError) };
 }
 
 async function editCluster(input: Record<string, unknown>, context: DatabricksContext) {
-  const id = requiredString(input.clusterId, "clusterId", badInput);
+  const id = requiredString(input.clusterId, "clusterId", providerInputError);
   await requestJson(context, {
     method: "POST",
     path: `${clustersBasePath}/edit`,
@@ -398,13 +403,13 @@ async function editCluster(input: Record<string, unknown>, context: DatabricksCo
 }
 
 async function startCluster(input: Record<string, unknown>, context: DatabricksContext) {
-  const id = requiredString(input.clusterId, "clusterId", badInput);
+  const id = requiredString(input.clusterId, "clusterId", providerInputError);
   await requestJson(context, { method: "POST", path: `${clustersBasePath}/start`, body: { cluster_id: id } });
   return { clusterId: id, started: true };
 }
 
 async function permanentDeleteCluster(input: Record<string, unknown>, context: DatabricksContext) {
-  const id = requiredString(input.clusterId, "clusterId", badInput);
+  const id = requiredString(input.clusterId, "clusterId", providerInputError);
   await requestJson(context, {
     method: "POST",
     path: `${clustersBasePath}/permanent-delete`,
@@ -435,7 +440,7 @@ async function workspaceList(input: Record<string, unknown>, context: Databricks
   const record = asObject(
     await requestJson(context, {
       path: `${workspaceBasePath}/list`,
-      query: { path: requiredString(input.path, "path", badInput) },
+      query: { path: requiredString(input.path, "path", providerInputError) },
     }),
   );
   return { objects: asObjectArray(record.objects) };
@@ -446,7 +451,7 @@ async function workspaceGetStatus(input: Record<string, unknown>, context: Datab
     object: asObject(
       await requestJson(context, {
         path: `${workspaceBasePath}/get-status`,
-        query: { path: requiredString(input.path, "path", badInput) },
+        query: { path: requiredString(input.path, "path", providerInputError) },
       }),
     ),
   };
@@ -457,7 +462,7 @@ async function workspaceExport(input: Record<string, unknown>, context: Databric
   const request = {
     path: `${workspaceBasePath}/export`,
     query: compactObject({
-      path: requiredString(input.path, "path", badInput),
+      path: requiredString(input.path, "path", providerInputError),
       format: optionalString(input.format),
       direct_download: directDownload,
     }),
@@ -471,13 +476,13 @@ async function workspaceExport(input: Record<string, unknown>, context: Databric
 }
 
 async function workspaceImport(input: Record<string, unknown>, context: DatabricksContext) {
-  const targetPath = requiredString(input.path, "path", badInput);
+  const targetPath = requiredString(input.path, "path", providerInputError);
   await requestJson(context, {
     method: "POST",
     path: `${workspaceBasePath}/import`,
     body: compactObject({
       path: targetPath,
-      content: requiredString(input.content, "content", badInput),
+      content: requiredString(input.content, "content", providerInputError),
       format: optionalString(input.format),
       language: optionalString(input.language),
       overwrite: optionalBoolean(input.overwrite),
@@ -487,13 +492,13 @@ async function workspaceImport(input: Record<string, unknown>, context: Databric
 }
 
 async function workspaceMkdirs(input: Record<string, unknown>, context: DatabricksContext) {
-  const targetPath = requiredString(input.path, "path", badInput);
+  const targetPath = requiredString(input.path, "path", providerInputError);
   await requestJson(context, { method: "POST", path: `${workspaceBasePath}/mkdirs`, body: { path: targetPath } });
   return { path: targetPath, created: true };
 }
 
 async function workspaceDelete(input: Record<string, unknown>, context: DatabricksContext) {
-  const targetPath = requiredString(input.path, "path", badInput);
+  const targetPath = requiredString(input.path, "path", providerInputError);
   await requestJson(context, {
     method: "POST",
     path: `${workspaceBasePath}/delete`,
@@ -510,7 +515,7 @@ async function createRepo(input: Record<string, unknown>, context: DatabricksCon
         method: "POST",
         path: reposBasePath,
         body: compactObject({
-          url: requiredString(input.url, "url", badInput),
+          url: requiredString(input.url, "url", providerInputError),
           path: optionalString(input.path),
           provider: optionalString(input.provider),
           branch: optionalString(input.branch),
@@ -557,14 +562,14 @@ async function listSecrets(input: Record<string, unknown>, context: DatabricksCo
   const record = asObject(
     await requestJson(context, {
       path: `${secretsBasePath}/list`,
-      query: { scope: requiredString(input.scope, "scope", badInput) },
+      query: { scope: requiredString(input.scope, "scope", providerInputError) },
     }),
   );
   return { secrets: asObjectArray(record.secrets) };
 }
 
 async function createSecretScope(input: Record<string, unknown>, context: DatabricksContext) {
-  const secretScope = requiredString(input.scope, "scope", badInput);
+  const secretScope = requiredString(input.scope, "scope", providerInputError);
   await requestJson(context, {
     method: "POST",
     path: `${secretsBasePath}/scopes/create`,
@@ -579,7 +584,7 @@ async function createSecretScope(input: Record<string, unknown>, context: Databr
 }
 
 async function deleteSecretScope(input: Record<string, unknown>, context: DatabricksContext) {
-  const secretScope = requiredString(input.scope, "scope", badInput);
+  const secretScope = requiredString(input.scope, "scope", providerInputError);
   await requestJson(context, {
     method: "POST",
     path: `${secretsBasePath}/scopes/delete`,
@@ -589,8 +594,8 @@ async function deleteSecretScope(input: Record<string, unknown>, context: Databr
 }
 
 async function putSecret(input: Record<string, unknown>, context: DatabricksContext) {
-  const secretScope = requiredString(input.scope, "scope", badInput);
-  const secretKey = requiredString(input.key, "key", badInput);
+  const secretScope = requiredString(input.scope, "scope", providerInputError);
+  const secretKey = requiredString(input.key, "key", providerInputError);
   const hasString = input.stringValue !== undefined;
   const hasBytes = input.bytesValue !== undefined;
   if (Number(hasString) + Number(hasBytes) !== 1)
@@ -609,8 +614,8 @@ async function putSecret(input: Record<string, unknown>, context: DatabricksCont
 }
 
 async function deleteSecret(input: Record<string, unknown>, context: DatabricksContext) {
-  const secretScope = requiredString(input.scope, "scope", badInput);
-  const secretKey = requiredString(input.key, "key", badInput);
+  const secretScope = requiredString(input.scope, "scope", providerInputError);
+  const secretKey = requiredString(input.key, "key", providerInputError);
   await requestJson(context, {
     method: "POST",
     path: `${secretsBasePath}/delete`,
@@ -752,8 +757,4 @@ function assertBranchTag(input: Record<string, unknown>): void {
   if (optionalString(input.branch) && optionalString(input.tag)) {
     throw new ProviderRequestError(400, "branch and tag cannot both be set");
   }
-}
-
-function badInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

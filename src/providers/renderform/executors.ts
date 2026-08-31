@@ -11,6 +11,7 @@ import { compactObject, optionalInteger, optionalRecord, optionalString, require
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -136,7 +137,7 @@ async function executeListTemplates(input: Record<string, unknown>, context: Api
 }
 
 async function executeGetTemplate(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
-  const templateId = requiredString(input.templateId, "templateId", inputError);
+  const templateId = requiredString(input.templateId, "templateId", providerInputError);
   const payload = await requestRenderformJson({
     url: new URL(`${getTemplatePath}/${encodeURIComponent(templateId)}`, renderformApiBaseUrl),
     init: {
@@ -161,7 +162,7 @@ async function executeRenderImage(input: Record<string, unknown>, context: ApiKe
       headers: buildHeaders(context.apiKey),
       body: JSON.stringify(
         compactObject({
-          template: requiredString(input.template, "template", inputError),
+          template: requiredString(input.template, "template", providerInputError),
           data: optionalRecord(input.data),
           fileName: optionalString(input.fileName),
           webhookUrl: optionalString(input.webhookUrl),
@@ -210,7 +211,7 @@ async function executeTakeScreenshot(input: Record<string, unknown>, context: Ap
       headers: buildHeaders(context.apiKey),
       body: JSON.stringify(
         compactObject({
-          url: requiredString(input.url, "url", inputError),
+          url: requiredString(input.url, "url", providerInputError),
           width: readRequiredInteger(input.width, "width"),
           height: readRequiredInteger(input.height, "height"),
           waitTime: optionalInteger(input.waitTime),
@@ -547,10 +548,6 @@ function readIntegerWithDefault(value: unknown, defaultValue: number): number {
 
 function readBooleanWithDefault(value: unknown, defaultValue: boolean): boolean {
   return typeof value === "boolean" ? value : defaultValue;
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

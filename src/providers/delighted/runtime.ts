@@ -15,6 +15,7 @@ import {
   createProviderTimeout,
   isAbortLikeError,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
 } from "../provider-runtime.ts";
 
@@ -80,7 +81,7 @@ export async function validateDelightedCredential(
     path: delightedValidationPath,
     mode: "validate",
   });
-  const metrics = requiredRecord(response.payload, "metrics", providerError);
+  const metrics = requiredRecord(response.payload, "metrics", providerResponseError);
 
   return {
     profile: {
@@ -368,7 +369,7 @@ function pickErrorMessage(payload: unknown): string | undefined {
 }
 
 function requireObjectPayload(payload: unknown, label: string): Record<string, unknown> {
-  return requiredRecord(payload, `Delighted ${label} response`, providerError);
+  return requiredRecord(payload, `Delighted ${label} response`, providerResponseError);
 }
 
 function requireArrayPayload(payload: unknown, label: string): unknown[] {
@@ -440,8 +441,4 @@ function assertPersonCreateInput(input: Record<string, unknown>): void {
   if (input.channel === "sms" && !optionalString(input.phone_number)) {
     throw new ProviderRequestError(400, "phone_number is required when channel is sms.");
   }
-}
-
-function providerError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

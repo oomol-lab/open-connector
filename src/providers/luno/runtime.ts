@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError, requireApiKeyCredential } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  providerUserAgent,
+  ProviderRequestError,
+  requireApiKeyCredential,
+} from "../provider-runtime.ts";
 export const lunoApiBaseUrl = "https://api.luno.com";
 interface LunoContext {
   keyId: string;
@@ -14,7 +19,7 @@ interface LunoContext {
 export async function createLunoContext(context: ExecutionContext, fetcher: typeof fetch): Promise<LunoContext> {
   const credential = await requireApiKeyCredential(context, "luno");
   return {
-    keyId: requiredString(credential.values.keyId, "keyId", badInput),
+    keyId: requiredString(credential.values.keyId, "keyId", providerInputError),
     keySecret: credential.apiKey,
     fetcher,
     signal: context.signal,
@@ -65,7 +70,7 @@ export async function validateLuno(
   grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
-  const keyId = requiredString(input.values.keyId, "keyId", badInput);
+  const keyId = requiredString(input.values.keyId, "keyId", providerInputError);
   const payload = object(
     await request(
       "/api/1/balance",
@@ -135,7 +140,7 @@ async function request(
   return payload;
 }
 function required(value: unknown, field: string): string {
-  return requiredString(value, field, badInput);
+  return requiredString(value, field, providerInputError);
 }
 function strings(value: unknown): string[] | undefined {
   if (!Array.isArray(value)) return undefined;
@@ -149,7 +154,4 @@ function object(value: unknown, label: string): Record<string, unknown> {
   const result = optionalRecord(value);
   if (!result) throw new ProviderRequestError(502, `${label} must be an object`);
   return result;
-}
-function badInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

@@ -2,7 +2,7 @@ import type { TransitFileWriter } from "../../../core/types.ts";
 import type { FeishuJsonRequest } from "./client.ts";
 
 import { optionalRecord } from "../../../core/cast.ts";
-import { ProviderRequestError } from "../../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, providerResponseError } from "../../provider-runtime.ts";
 import { withFeishuRawResponse } from "./client.ts";
 import { storeFeishuTransitResponse } from "./media.ts";
 
@@ -158,7 +158,7 @@ async function listDriveVersions(input: Record<string, unknown>, request: Feishu
   const fileToken = requireString(input.fileToken, "fileToken");
   const pageSize = optionalInteger(input.pageSize) ?? 20;
   if (pageSize < 1 || pageSize > 200) {
-    throw invalidInput("pageSize must be between 1 and 200");
+    throw providerInputError("pageSize must be between 1 and 200");
   }
   const cursor = optionalString(input.cursor);
   if (cursor) {
@@ -227,14 +227,14 @@ async function downloadDrivePreview(input: Record<string, unknown>, deps: Feishu
   const candidate = selectPreviewCandidate(listed.candidates, previewType);
   if (!candidate) {
     const available = listed.candidates.map((item) => item.type).join(", ");
-    throw invalidInput(
+    throw providerInputError(
       available
         ? `previewType ${previewType} is unavailable; available types: ${available}`
         : `previewType ${previewType} is unavailable`,
     );
   }
   if (!candidate.downloadable) {
-    throw invalidInput(
+    throw providerInputError(
       candidate.reason ?? `previewType ${candidate.type} is not ready (${candidate.status || candidate.statusCode})`,
     );
   }
@@ -266,7 +266,7 @@ async function downloadDriveCover(input: Record<string, unknown>, deps: FeishuDr
   const specName = requireString(input.spec, "spec");
   const spec = driveCoverSpecs[specName];
   if (!spec) {
-    throw invalidInput(`unsupported Drive cover spec: ${specName}`);
+    throw providerInputError(`unsupported Drive cover spec: ${specName}`);
   }
   const version = optionalString(input.version);
   if (version) {
@@ -336,7 +336,7 @@ async function applyDrivePermission(input: Record<string, unknown>, request: Fei
 async function listDriveSecureLabels(input: Record<string, unknown>, request: FeishuJsonRequest) {
   const pageSize = optionalInteger(input.pageSize) ?? 10;
   if (pageSize < 1 || pageSize > 10) {
-    throw invalidInput("pageSize must be between 1 and 10");
+    throw providerInputError("pageSize must be between 1 and 10");
   }
   const data = await request({
     path: "/drive/v2/my_secure_labels",
@@ -470,7 +470,7 @@ async function downloadDriveArtifact(
       try {
         return await storeFeishuTransitResponse(response, name, mimeType, transit);
       } catch (error) {
-        throw providerError(error instanceof Error ? error.message : "Drive artifact transit upload failed");
+        throw providerResponseError(error instanceof Error ? error.message : "Drive artifact transit upload failed");
       }
     },
   );
@@ -500,7 +500,7 @@ function resolvePermissionTarget(input: Record<string, unknown>): PermissionTarg
     try {
       url = new URL(raw);
     } catch {
-      throw invalidInput("token must be a valid Feishu URL or bare token");
+      throw providerInputError("token must be a valid Feishu URL or bare token");
     }
     for (const [marker, type] of urlTypeMarkers) {
       const markerIndex = url.pathname.indexOf(marker);
@@ -514,15 +514,15 @@ function resolvePermissionTarget(input: Record<string, unknown>): PermissionTarg
       break;
     }
     if (!token || token === raw) {
-      throw invalidInput("could not infer a Drive token from the provided URL");
+      throw providerInputError("could not infer a Drive token from the provided URL");
     }
   }
   const type = explicitType ?? inferredType;
   if (!type) {
-    throw invalidInput("type is required when token is a bare token");
+    throw providerInputError("type is required when token is a bare token");
   }
   if (!permissionTargetTypes.has(type)) {
-    throw invalidInput(`unsupported Drive target type: ${type}`);
+    throw providerInputError(`unsupported Drive target type: ${type}`);
   }
   return { token, type };
 }
@@ -536,11 +536,11 @@ function requireTransit(deps: FeishuDriveAdvancedRuntimeDeps): TransitFileWriter
 
 function requireNumericString(value: string, fieldName: string) {
   if (value.length > 19) {
-    throw invalidInput(`${fieldName} must contain at most 19 digits`);
+    throw providerInputError(`${fieldName} must contain at most 19 digits`);
   }
   for (const character of value) {
     if (character < "0" || character > "9") {
-      throw invalidInput(`${fieldName} must be numeric`);
+      throw providerInputError(`${fieldName} must be numeric`);
     }
   }
   return value;
@@ -548,7 +548,7 @@ function requireNumericString(value: string, fieldName: string) {
 
 function requireString(value: unknown, fieldName: string) {
   if (typeof value !== "string" || !value.trim()) {
-    throw invalidInput(`${fieldName} is required`);
+    throw providerInputError(`${fieldName} is required`);
   }
   return value.trim();
 }
@@ -606,12 +606,4 @@ function safeFileName(value: string, fallback: string) {
 
 function segment(value: string) {
   return encodeURIComponent(value);
-}
-
-function invalidInput(message: string) {
-  return new ProviderRequestError(400, message);
-}
-
-function providerError(message: string) {
-  return new ProviderRequestError(502, message);
 }

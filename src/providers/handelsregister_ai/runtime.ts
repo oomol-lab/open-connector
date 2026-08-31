@@ -2,7 +2,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 export const handelsregisterAiApiBaseUrl = "https://handelsregister.ai/api";
 
 export const handelsregisterAiActionHandlers: ProviderActionHandlers<
@@ -20,7 +20,7 @@ export const handelsregisterAiActionHandlers: ProviderActionHandlers<
   },
   fetch_organization(input, context) {
     const query = new URLSearchParams();
-    appendString(query, "q", requiredString(input.q, "q", badInput));
+    appendString(query, "q", requiredString(input.q, "q", providerInputError));
     if (Array.isArray(input.features)) for (const feature of input.features) appendString(query, "feature", feature);
     appendString(query, "ai_search", input.ai_search);
     appendString(query, "realtime_mode", input.realtime_mode);
@@ -95,7 +95,4 @@ function appendString(query: URLSearchParams, name: string, value: unknown): voi
 }
 function appendNumber(query: URLSearchParams, name: string, value: unknown): void {
   if (typeof value === "number") query.append(name, String(value));
-}
-function badInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

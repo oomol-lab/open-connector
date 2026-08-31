@@ -4,7 +4,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { ProviderRequestError, providerResponseError, providerUserAgent } from "../provider-runtime.ts";
 
 export const devinApiBaseUrl = "https://api.devin.ai";
 
@@ -189,7 +189,7 @@ async function readJsonObject(response: Response, tolerant: boolean): Promise<Js
     return {};
   }
   try {
-    return requiredRecord(JSON.parse(text), "Devin response", providerError);
+    return requiredRecord(JSON.parse(text), "Devin response", providerResponseError);
   } catch (error) {
     if (tolerant) {
       return {};
@@ -319,8 +319,4 @@ function readValidationMessage(detail: unknown): string | undefined {
     .map((item) => optionalString(item?.msg))
     .filter((message): message is string => Boolean(message));
   return messages.length > 0 ? messages.join("; ") : undefined;
-}
-
-function providerError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

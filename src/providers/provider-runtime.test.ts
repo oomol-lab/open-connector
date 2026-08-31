@@ -13,7 +13,9 @@ import {
   isAbortSignalError,
   mapProviderActionSources,
   providerFetch,
+  providerInputError,
   ProviderRequestError,
+  providerResponseError,
   readProviderJson,
   toProviderExecutionError,
 } from "./provider-runtime.ts";
@@ -161,6 +163,21 @@ describe("createProviderTimeout", () => {
     } finally {
       timeout.cleanup();
     }
+  });
+});
+
+describe("providerInputError and providerResponseError", () => {
+  it("bind the two statuses providers map input and upstream failures to", () => {
+    const input = providerInputError("name is required.");
+    expect(input).toBeInstanceOf(ProviderRequestError);
+    expect(input.status).toBe(400);
+    expect(input.message).toBe("name is required.");
+    expect(toProviderExecutionError(input, "fallback").error?.code).toBe("invalid_input");
+
+    const response = providerResponseError("payload must be an object");
+    expect(response.status).toBe(502);
+    expect(response.message).toBe("payload must be an object");
+    expect(toProviderExecutionError(response, "fallback").error?.code).toBe("provider_error");
   });
 });
 

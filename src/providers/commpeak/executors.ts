@@ -14,6 +14,7 @@ import {
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
@@ -99,7 +100,7 @@ async function executeListStreams(input: Record<string, unknown>, context: ApiKe
 }
 
 async function executeGetStream(input: Record<string, unknown>, context: ApiKeyProviderContext) {
-  const streamId = positiveInteger(input.streamId, "streamId", invalidInput);
+  const streamId = positiveInteger(input.streamId, "streamId", providerInputError);
   const payload = await commpeakGetJson(`/streams/${streamId}`, context.apiKey, context.fetcher, undefined, {
     signal: context.signal,
   });
@@ -109,7 +110,7 @@ async function executeGetStream(input: Record<string, unknown>, context: ApiKeyP
 }
 
 async function executeGetStreamToken(input: Record<string, unknown>, context: ApiKeyProviderContext) {
-  const streamId = positiveInteger(input.streamId, "streamId", invalidInput);
+  const streamId = positiveInteger(input.streamId, "streamId", providerInputError);
   const token = await getStreamToken(streamId, context);
   return { token };
 }
@@ -186,7 +187,7 @@ async function executeListIncomingMessages(input: Record<string, unknown>, conte
 }
 
 async function executeSendSms(input: Record<string, unknown>, context: ApiKeyProviderContext) {
-  const streamId = positiveInteger(input.streamId, "streamId", invalidInput);
+  const streamId = positiveInteger(input.streamId, "streamId", providerInputError);
   const sender = optionalString(input.sender);
   const messages = readArray(input.messages).map((message) => {
     const item = requireResponseObject(message);
@@ -198,7 +199,7 @@ async function executeSendSms(input: Record<string, unknown>, context: ApiKeyPro
     });
   });
   if (!sender && messages.some((message) => !message.sender)) {
-    throw invalidInput("sender is required on every message when top-level sender is omitted");
+    throw providerInputError("sender is required on every message when top-level sender is omitted");
   }
 
   const streamToken = await getStreamToken(streamId, context);
@@ -509,8 +510,4 @@ function requireResponseObject(value: unknown): Record<string, unknown> {
 
 function nullableNumber(value: unknown): number | null {
   return optionalNumber(value) ?? null;
-}
-
-function invalidInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

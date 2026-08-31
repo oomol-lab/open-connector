@@ -13,7 +13,9 @@ import {
 } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  providerInputError,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   requireApiKeyCredential,
 } from "../provider-runtime.ts";
@@ -404,8 +406,8 @@ function normalizeCustomer(value: unknown) {
     name: optionalString(record.name) ?? null,
     partnerKey: optionalString(record.partner_key) ?? null,
     partnershipKey: optionalString(record.partnership_key) ?? null,
-    createdAt: optionalIntegerLike(record.created_at, "created_at", providerOutputError) ?? null,
-    updatedAt: optionalIntegerLike(record.updated_at, "updated_at", providerOutputError) ?? null,
+    createdAt: optionalIntegerLike(record.created_at, "created_at", providerResponseError) ?? null,
+    updatedAt: optionalIntegerLike(record.updated_at, "updated_at", providerResponseError) ?? null,
     raw: record,
   };
 }
@@ -422,8 +424,8 @@ function normalizePartnership(value: unknown) {
     name: optionalString(record.name) ?? optionalString(record.company_name) ?? null,
     approvedStatus: optionalString(record.approved_status) ?? null,
     claimed: optionalBoolean(record.claimed) ?? null,
-    createdAt: optionalIntegerLike(record.created_at, "created_at", providerOutputError) ?? null,
-    updatedAt: optionalIntegerLike(record.updated_at, "updated_at", providerOutputError) ?? null,
+    createdAt: optionalIntegerLike(record.created_at, "created_at", providerResponseError) ?? null,
+    updatedAt: optionalIntegerLike(record.updated_at, "updated_at", providerResponseError) ?? null,
     raw: record,
   };
 }
@@ -440,8 +442,8 @@ function normalizeLead(value: unknown) {
     name: optionalString(record.name) ?? optionalString(record.company_name) ?? null,
     partnerKey: optionalString(record.partner_key) ?? null,
     customerKey: optionalString(record.customer_key) ?? null,
-    createdAt: optionalIntegerLike(record.created_at, "created_at", providerOutputError) ?? null,
-    updatedAt: optionalIntegerLike(record.updated_at, "updated_at", providerOutputError) ?? null,
+    createdAt: optionalIntegerLike(record.created_at, "created_at", providerResponseError) ?? null,
+    updatedAt: optionalIntegerLike(record.updated_at, "updated_at", providerResponseError) ?? null,
     raw: record,
   };
 }
@@ -459,24 +461,16 @@ function normalizeDeal(value: unknown) {
     partnerKey: optionalString(record.partner_key) ?? null,
     customerKey: optionalString(record.customer_key) ?? null,
     amount: optionalNumber(record.amount) ?? null,
-    createdAt: optionalIntegerLike(record.created_at, "created_at", providerOutputError) ?? null,
-    updatedAt: optionalIntegerLike(record.updated_at, "updated_at", providerOutputError) ?? null,
+    createdAt: optionalIntegerLike(record.created_at, "created_at", providerResponseError) ?? null,
+    updatedAt: optionalIntegerLike(record.updated_at, "updated_at", providerResponseError) ?? null,
     raw: record,
   };
 }
 
 function readRequiredRecordKey(record: Record<string, unknown>, label: string) {
-  const key = requiredString(record.key, "key", providerOutputError);
+  const key = requiredString(record.key, "key", providerResponseError);
   if (!key) {
     throw new ProviderRequestError(502, `PartnerStack ${label} response is missing key`);
   }
   return key;
-}
-
-function providerInputError(message: string) {
-  return new ProviderRequestError(400, message);
-}
-
-function providerOutputError(message: string) {
-  return new ProviderRequestError(502, message);
 }

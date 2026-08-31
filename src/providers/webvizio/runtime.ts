@@ -6,6 +6,7 @@ import { optionalRecord, optionalString, requiredString } from "../../core/cast.
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -157,8 +158,4 @@ function readRequiredWebhookId(input: Record<string, unknown>, key: string): num
   if (!Number.isInteger(parsed) || parsed <= 0)
     throw new ProviderRequestError(400, `${key} must be a positive integer`);
   return parsed;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

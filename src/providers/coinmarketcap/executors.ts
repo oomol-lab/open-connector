@@ -4,7 +4,12 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalBoolean, optionalNumber, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  ProviderRequestError,
+  providerResponseError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "coinmarketcap";
 const coinmarketcapApiBaseUrl = "https://pro-api.coinmarketcap.com";
@@ -244,8 +249,4 @@ function readRequiredNumber(value: unknown, fieldName: string): number {
     throw new ProviderRequestError(400, `${fieldName} must be a number`);
   }
   return value;
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

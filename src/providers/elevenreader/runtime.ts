@@ -12,7 +12,7 @@ import {
   stringRecord,
 } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const elevenreaderApiBaseUrl = "https://api.elevenlabs.io/v1";
 
@@ -147,7 +147,7 @@ async function getElevenreaderVoice(
   input: Record<string, unknown>,
   context: ApiKeyProviderContext,
 ): Promise<{ voice: Record<string, unknown> }> {
-  const voiceId = requiredString(input.voiceId, "voiceId", badInput);
+  const voiceId = requiredString(input.voiceId, "voiceId", providerInputError);
   const payload = await requestElevenreaderJson<Record<string, unknown>>({
     path: `/voices/${encodeURIComponent(voiceId)}`,
     query: compactObject({
@@ -172,8 +172,8 @@ async function readElevenreaderText(
     throw new ProviderRequestError(400, "ElevenReader read_text requires local transit file storage.");
   }
 
-  const voiceId = requiredString(input.voiceId, "voiceId", badInput);
-  const text = requiredString(input.text, "text", badInput);
+  const voiceId = requiredString(input.voiceId, "voiceId", providerInputError);
+  const text = requiredString(input.text, "text", providerInputError);
   const outputFormat = optionalString(input.outputFormat) ?? "mp3_44100_128";
   const modelId = optionalString(input.modelId);
   const response = await context.fetcher(
@@ -501,8 +501,4 @@ function requireResponseBoolean(value: unknown, fieldName: string): boolean {
     throw new ProviderRequestError(502, `ElevenReader response is missing ${fieldName}`);
   }
   return value;
-}
-
-function badInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

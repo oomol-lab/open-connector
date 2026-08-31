@@ -1,6 +1,6 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
-import { ProviderRequestError } from "../../provider-runtime.ts";
+import { providerInputError } from "../../provider-runtime.ts";
 
 interface OkrActionHandler {
   (input: Record<string, unknown>): Promise<unknown>;
@@ -163,7 +163,7 @@ async function patchOkr(input: Record<string, unknown>, request: FeishuJsonReque
   });
   const patchedFields = Object.keys(body);
   if (patchedFields.length === 0) {
-    throw invalidInput("at least one OKR field must be patched");
+    throw providerInputError("at least one OKR field must be patched");
   }
   await request({
     method: "PATCH",
@@ -193,7 +193,7 @@ async function createAlignment(input: Record<string, unknown>, request: FeishuJs
   const objectiveId = requiredString(input.objectiveId, "objectiveId");
   const toObjectiveId = requiredString(input.toObjectiveId, "toObjectiveId");
   if (objectiveId === toObjectiveId) {
-    throw invalidInput("an objective cannot align to itself");
+    throw providerInputError("an objective cannot align to itself");
   }
   const data = await request({
     method: "POST",
@@ -279,7 +279,7 @@ async function updateProgress(input: Record<string, unknown>, request: FeishuJso
     progress_rate: progressRate(input.percent, input.status),
   });
   if (Object.keys(body).length === 0) {
-    throw invalidInput("content or progress rate is required");
+    throw providerInputError("content or progress rate is required");
   }
   const data = await request({
     method: "PUT",
@@ -417,7 +417,7 @@ function progressRate(percent: unknown, status: unknown) {
     return undefined;
   }
   if (stringStatus && numericPercent == null) {
-    throw invalidInput("percent is required when status is provided");
+    throw providerInputError("percent is required when status is provided");
   }
   const statuses: Record<string, number> = { normal: 0, overdue: 1, done: 2 };
   return compact({
@@ -434,7 +434,7 @@ function requiredTargetType(value: unknown): "objective" | "key_result" {
   if (value === "objective" || value === "key_result") {
     return value;
   }
-  throw invalidInput("targetType must be objective or key_result");
+  throw providerInputError("targetType must be objective or key_result");
 }
 
 function normalizePage(data: Record<string, unknown>) {
@@ -465,7 +465,7 @@ function requiredString(value: unknown, field: string) {
   if (typeof value === "string" && value.length > 0) {
     return value;
   }
-  throw invalidInput(`${field} must be a non-empty string`);
+  throw providerInputError(`${field} must be a non-empty string`);
 }
 
 function optionalString(value: unknown) {
@@ -475,7 +475,7 @@ function optionalString(value: unknown) {
 function requiredStringArray(value: unknown, field: string) {
   const values = optionalStringArray(value);
   if (!values) {
-    throw invalidInput(`${field} must contain at least one string`);
+    throw providerInputError(`${field} must contain at least one string`);
   }
   return values;
 }
@@ -492,7 +492,7 @@ function requiredNumber(value: unknown, field: string) {
   if (typeof value === "number" && Number.isFinite(value)) {
     return value;
   }
-  throw invalidInput(`${field} must be a number`);
+  throw providerInputError(`${field} must be a number`);
 }
 
 function optionalNumber(value: unknown) {
@@ -501,8 +501,4 @@ function optionalNumber(value: unknown) {
 
 function encode(value: string) {
   return encodeURIComponent(value);
-}
-
-function invalidInput(message: string) {
-  return new ProviderRequestError(400, message);
 }

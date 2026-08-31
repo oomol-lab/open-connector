@@ -12,7 +12,9 @@ import {
 import {
   defineApiKeyProviderExecutors,
   mapProviderActionSources,
+  providerInputError,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
 } from "../provider-runtime.ts";
 
@@ -198,7 +200,7 @@ function buildOperationPath(operation: Operation, input: Record<string, unknown>
 function buildQuery(input: Record<string, unknown>, operation: Operation): Record<string, string | undefined> {
   const query = stringRecordWithout(input, operation.idField ? [operation.idField] : []);
   if (operation.search && !query.term) {
-    query.term = requiredString(input.term ?? input.query, "term", invalidInputError);
+    query.term = requiredString(input.term ?? input.query, "term", providerInputError);
   }
   return query;
 }
@@ -312,12 +314,4 @@ function requiredPositiveInteger(value: unknown, fieldName: string): string {
 
 function toSnakeCase(value: string): string {
   return value.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

@@ -15,6 +15,7 @@ import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -388,8 +389,4 @@ function readObjectArray(value: unknown, fieldName: string): Array<Record<string
   }
 
   return value.map((item) => readRequiredObject(item, fieldName));
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

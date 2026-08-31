@@ -13,6 +13,7 @@ import { objectArray, optionalRawString, optionalRecord, requiredRecord, require
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  providerResponseError,
   providerUserAgent,
   ProviderRequestError,
   readProviderJsonBody,
@@ -287,8 +288,4 @@ function validatePassslotUrl(value: unknown, field: string, payload: unknown): s
     throw new ProviderRequestError(502, `PassSlot ${field} must be a valid URL`, payload);
   }
   return value;
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

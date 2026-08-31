@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const linguapopApiBaseUrl = "https://app.linguapop.eu";
 const getLanguagesPath = "/api/actions/getLanguages";
@@ -154,8 +154,8 @@ function normalizeLanguage(value: unknown, index: number): { name: string; code:
     throw new ProviderRequestError(502, `linguapop language at index ${index} must be an object`);
   }
   return {
-    name: requiredString(record.name, `languages[${index}].name`, providerResponseError),
-    code: requiredString(record.code, `languages[${index}].code`, providerResponseError),
+    name: requiredString(record.name, `languages[${index}].name`, linguapopResponseError),
+    code: requiredString(record.code, `languages[${index}].code`, linguapopResponseError),
   };
 }
 
@@ -167,7 +167,7 @@ function normalizeInvitation(value: unknown): Record<string, unknown> {
   return {
     invitationId: readRequiredInteger(record.invitationId, "invitationId"),
     externalIdentifier: readNullableString(record.externalIdentifier, "externalIdentifier"),
-    url: requiredString(record.url, "url", providerResponseError),
+    url: requiredString(record.url, "url", linguapopResponseError),
     emailSent: readRequiredBoolean(record.emailSent, "emailSent"),
     kioskCode: readNullableString(record.kioskCode, "kioskCode"),
   };
@@ -231,10 +231,6 @@ function readRequiredInteger(value: unknown, fieldName: string): number {
   throw new ProviderRequestError(502, `linguapop response field ${fieldName} must be an integer`);
 }
 
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
+function linguapopResponseError(message: string): ProviderRequestError {
   return new ProviderRequestError(502, `linguapop response field ${message} must be a string`);
 }

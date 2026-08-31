@@ -11,7 +11,7 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerResponseError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const tisaneApiBaseUrl: string = "https://api.tisane.ai";
 export const tisaneApiKeyHeader: string = "Ocp-Apim-Subscription-Key";
@@ -95,10 +95,10 @@ async function executeAnalyzeText(input: Record<string, unknown>, context: ApiKe
       settings: input.settings,
     }),
   });
-  const record = requiredRecord(payload, "Tisane analysis response", providerError);
+  const record = requiredRecord(payload, "Tisane analysis response", providerResponseError);
 
   return {
-    text: requiredString(record.text, "Tisane analysis text", providerError),
+    text: requiredString(record.text, "Tisane analysis text", providerResponseError),
     language: optionalString(record.language) ?? null,
     topics: Array.isArray(record.topics) ? record.topics : [],
     abuse: objectArray(record.abuse),
@@ -125,18 +125,18 @@ async function executeDetectLanguage(input: Record<string, unknown>, context: Ap
       delimiter: input.delimiter,
     }),
   });
-  const record = requiredRecord(payload, "Tisane language detection response", providerError);
+  const record = requiredRecord(payload, "Tisane language detection response", providerResponseError);
   if (!Array.isArray(record.languages)) {
     throw new ProviderRequestError(502, "Tisane language detection response must include a languages array");
   }
 
   return {
     languages: record.languages.map((item) => {
-      const language = requiredRecord(item, "Tisane language segment", providerError);
+      const language = requiredRecord(item, "Tisane language segment", providerResponseError);
       return {
         offset: nullableInteger(language.offset) ?? null,
         length: nullableInteger(language.length) ?? null,
-        language: requiredString(language.language, "Tisane detected language", providerError),
+        language: requiredString(language.language, "Tisane detected language", providerResponseError),
         score: optionalNumber(language.score) ?? null,
         raw: language,
       };
@@ -161,11 +161,11 @@ async function executeListSupportedLanguages(context: ApiKeyProviderContext): Pr
 
   return {
     languages: payload.map((item) => {
-      const language = requiredRecord(item, "Tisane language", providerError);
+      const language = requiredRecord(item, "Tisane language", providerResponseError);
       return {
-        isoCode: requiredString(language.isoCode, "Tisane language isoCode", providerError),
-        name: requiredString(language.name, "Tisane language name", providerError),
-        englishName: requiredString(language.englishName, "Tisane language englishName", providerError),
+        isoCode: requiredString(language.isoCode, "Tisane language isoCode", providerResponseError),
+        name: requiredString(language.name, "Tisane language name", providerResponseError),
+        englishName: requiredString(language.englishName, "Tisane language englishName", providerResponseError),
         nativeEncoding: optionalString(language.nativeEncoding) ?? null,
         fontFace: optionalString(language.fontFace) ?? null,
         latin: optionalBooleanOrNull(language.latin),
@@ -188,7 +188,7 @@ async function executeExtractText(input: Record<string, unknown>, context: ApiKe
     body: input.content,
     contentType: "text/plain",
   });
-  return { text: requiredString(text, "Tisane extracted text", providerError) };
+  return { text: requiredString(text, "Tisane extracted text", providerResponseError) };
 }
 
 async function executeCalculateSimilarity(
@@ -230,7 +230,7 @@ async function executeTransformText(input: Record<string, unknown>, context: Api
       settings: input.settings,
     }),
   });
-  return { text: requiredString(text, "Tisane transformed text", providerError) };
+  return { text: requiredString(text, "Tisane transformed text", providerResponseError) };
 }
 
 async function executeCompareEntities(
@@ -247,9 +247,9 @@ async function executeCompareEntities(
     responseMode: "json",
     body: input,
   });
-  const record = requiredRecord(payload, "Tisane entity comparison response", providerError);
+  const record = requiredRecord(payload, "Tisane entity comparison response", providerResponseError);
   return compactObject({
-    result: requiredString(record.result, "Tisane entity comparison result", providerError),
+    result: requiredString(record.result, "Tisane entity comparison result", providerResponseError),
     differences: Array.isArray(record.differences)
       ? record.differences.map((difference) => String(difference))
       : undefined,
@@ -353,8 +353,4 @@ function getFirstLanguage(languages: unknown[]): string | undefined {
     if (code) return code;
   }
   return undefined;
-}
-
-function providerError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

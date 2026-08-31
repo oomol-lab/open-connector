@@ -7,6 +7,7 @@ import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -306,13 +307,9 @@ function isObjectPayload(value: unknown): value is Record<string, unknown> {
 }
 
 function readPathSegment(value: unknown, fieldName: string): string {
-  const trimmed = requiredString(value, fieldName, invalidInputError);
+  const trimmed = requiredString(value, fieldName, providerInputError);
   if (trimmed.includes("/") || trimmed.includes("?") || trimmed.includes("#")) {
     throw new ProviderRequestError(400, `${fieldName} must be a Quipteams path segment`);
   }
   return encodeURIComponent(trimmed);
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

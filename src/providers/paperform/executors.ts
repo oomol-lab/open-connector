@@ -7,6 +7,7 @@ import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -82,7 +83,7 @@ async function listForms(input: Record<string, unknown>, context: PaperformConte
 }
 
 async function getForm(input: Record<string, unknown>, context: PaperformContext): Promise<unknown> {
-  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", invalidInputError);
+  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", providerInputError);
   const payload = await requestJson(`forms/${encodeURIComponent(slugOrId)}`, context, "execute");
   return {
     form: normalizeForm(extractResultObject(payload, "form", "Paperform form")),
@@ -90,7 +91,7 @@ async function getForm(input: Record<string, unknown>, context: PaperformContext
 }
 
 async function listFormFields(input: Record<string, unknown>, context: PaperformContext): Promise<unknown> {
-  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", invalidInputError);
+  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", providerInputError);
   const payload = await requestJson(
     buildPath(`forms/${encodeURIComponent(slugOrId)}/fields`, {
       search: optionalRawString(input.search),
@@ -105,8 +106,8 @@ async function listFormFields(input: Record<string, unknown>, context: Paperform
 }
 
 async function getFormField(input: Record<string, unknown>, context: PaperformContext): Promise<unknown> {
-  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", invalidInputError);
-  const fieldKey = requiredString(input.field_key, "field_key", invalidInputError);
+  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", providerInputError);
+  const fieldKey = requiredString(input.field_key, "field_key", providerInputError);
   const payload = await requestJson(
     `forms/${encodeURIComponent(slugOrId)}/fields/${encodeURIComponent(fieldKey)}`,
     context,
@@ -118,7 +119,7 @@ async function getFormField(input: Record<string, unknown>, context: PaperformCo
 }
 
 async function listFormSubmissions(input: Record<string, unknown>, context: PaperformContext): Promise<unknown> {
-  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", invalidInputError);
+  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", providerInputError);
   const payload = await requestJson(
     buildPath(`forms/${encodeURIComponent(slugOrId)}/submissions`, buildPaginationQuery(input)),
     context,
@@ -133,8 +134,8 @@ async function listFormSubmissions(input: Record<string, unknown>, context: Pape
 }
 
 async function getFormSubmission(input: Record<string, unknown>, context: PaperformContext): Promise<unknown> {
-  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", invalidInputError);
-  const id = requiredString(input.id, "id", invalidInputError);
+  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", providerInputError);
+  const id = requiredString(input.id, "id", providerInputError);
   const payload = await requestJson(
     `forms/${encodeURIComponent(slugOrId)}/submissions/${encodeURIComponent(id)}`,
     context,
@@ -146,7 +147,7 @@ async function getFormSubmission(input: Record<string, unknown>, context: Paperf
 }
 
 async function getSubmission(input: Record<string, unknown>, context: PaperformContext): Promise<unknown> {
-  const id = requiredString(input.id, "id", invalidInputError);
+  const id = requiredString(input.id, "id", providerInputError);
   const payload = await requestJson(`submissions/${encodeURIComponent(id)}`, context, "execute");
   return {
     submission: normalizeSubmission(extractResultObject(payload, "submission", "Paperform submission")),
@@ -154,7 +155,7 @@ async function getSubmission(input: Record<string, unknown>, context: PaperformC
 }
 
 async function listFormPartialSubmissions(input: Record<string, unknown>, context: PaperformContext): Promise<unknown> {
-  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", invalidInputError);
+  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", providerInputError);
   const payload = await requestJson(
     buildPath(`forms/${encodeURIComponent(slugOrId)}/partial-submissions`, buildPaginationQuery(input)),
     context,
@@ -174,8 +175,8 @@ async function listFormPartialSubmissions(input: Record<string, unknown>, contex
 }
 
 async function getFormPartialSubmission(input: Record<string, unknown>, context: PaperformContext): Promise<unknown> {
-  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", invalidInputError);
-  const id = requiredString(input.id, "id", invalidInputError);
+  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", providerInputError);
+  const id = requiredString(input.id, "id", providerInputError);
   const payload = await requestJson(
     `forms/${encodeURIComponent(slugOrId)}/partial-submissions/${encodeURIComponent(id)}`,
     context,
@@ -189,7 +190,7 @@ async function getFormPartialSubmission(input: Record<string, unknown>, context:
 }
 
 async function getPartialSubmission(input: Record<string, unknown>, context: PaperformContext): Promise<unknown> {
-  const id = requiredString(input.id, "id", invalidInputError);
+  const id = requiredString(input.id, "id", providerInputError);
   const payload = await requestJson(`partial-submissions/${encodeURIComponent(id)}`, context, "execute");
   return {
     partial_submission: normalizePartialSubmission(
@@ -199,7 +200,7 @@ async function getPartialSubmission(input: Record<string, unknown>, context: Pap
 }
 
 async function listFormProducts(input: Record<string, unknown>, context: PaperformContext): Promise<unknown> {
-  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", invalidInputError);
+  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", providerInputError);
   const payload = await requestJson(
     buildPath(`forms/${encodeURIComponent(slugOrId)}/products`, {
       search: optionalRawString(input.search),
@@ -214,8 +215,8 @@ async function listFormProducts(input: Record<string, unknown>, context: Paperfo
 }
 
 async function getFormProduct(input: Record<string, unknown>, context: PaperformContext): Promise<unknown> {
-  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", invalidInputError);
-  const productSku = requiredString(input.product_sku, "product_sku", invalidInputError);
+  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", providerInputError);
+  const productSku = requiredString(input.product_sku, "product_sku", providerInputError);
   const payload = await requestJson(
     `forms/${encodeURIComponent(slugOrId)}/products/${encodeURIComponent(productSku)}`,
     context,
@@ -227,7 +228,7 @@ async function getFormProduct(input: Record<string, unknown>, context: Paperform
 }
 
 async function listFormCoupons(input: Record<string, unknown>, context: PaperformContext): Promise<unknown> {
-  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", invalidInputError);
+  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", providerInputError);
   const payload = await requestJson(`forms/${encodeURIComponent(slugOrId)}/coupons`, context, "execute");
   return {
     coupons: normalizeCollection(payload, "coupons", normalizeCoupon, "Paperform coupons response"),
@@ -236,8 +237,8 @@ async function listFormCoupons(input: Record<string, unknown>, context: Paperfor
 }
 
 async function getFormCoupon(input: Record<string, unknown>, context: PaperformContext): Promise<unknown> {
-  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", invalidInputError);
-  const code = requiredString(input.code, "code", invalidInputError);
+  const slugOrId = requiredString(input.slug_or_id, "slug_or_id", providerInputError);
+  const code = requiredString(input.code, "code", providerInputError);
   const payload = await requestJson(
     `forms/${encodeURIComponent(slugOrId)}/coupons/${encodeURIComponent(code)}`,
     context,
@@ -303,8 +304,8 @@ async function readPaperformPayload(response: Response): Promise<unknown> {
 
 function buildPaginationQuery(input: Record<string, unknown>): Record<string, unknown> {
   return removeUndefined({
-    limit: optionalIntegerLike(input.limit, "limit", invalidInputError),
-    skip: optionalIntegerLike(input.skip, "skip", invalidInputError),
+    limit: optionalIntegerLike(input.limit, "limit", providerInputError),
+    skip: optionalIntegerLike(input.skip, "skip", providerInputError),
     after_id: optionalRawString(input.after_id),
     before_id: optionalRawString(input.before_id),
     before_date: optionalRawString(input.before_date),
@@ -555,8 +556,4 @@ function extractErrorMessage(payload: unknown): string | undefined {
 
 function removeUndefined(input: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined));
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

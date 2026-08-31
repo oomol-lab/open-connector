@@ -4,7 +4,12 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { DadataRuActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerInputError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "dadata_ru";
 const dadataRuApiBaseUrl = "https://suggestions.dadata.ru/suggestions/api/4_1/rs";
@@ -191,8 +196,4 @@ function firstSuggestionValue(payload: unknown): string | undefined {
     return undefined;
   }
   return optionalString(optionalRecord(suggestions[0])?.value);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

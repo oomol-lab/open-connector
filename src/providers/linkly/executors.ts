@@ -7,7 +7,9 @@ import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
 } from "../provider-runtime.ts";
 
@@ -63,7 +65,7 @@ export const linklyActionHandlers: ProviderActionHandlers<"linkly", LinklyAction
     };
   },
   async list_links(input, context) {
-    const workspaceId = requiredString(input.workspace_id, "workspace_id", invalidInputError);
+    const workspaceId = requiredString(input.workspace_id, "workspace_id", providerInputError);
     const query: LinklyQuery = {
       search: optionalString(input.search),
       page: optionalNumber(input.page),
@@ -106,7 +108,7 @@ export const linklyActionHandlers: ProviderActionHandlers<"linkly", LinklyAction
     };
   },
   async create_link(input, context) {
-    const workspaceId = requiredString(input.workspace_id, "workspace_id", invalidInputError);
+    const workspaceId = requiredString(input.workspace_id, "workspace_id", providerInputError);
     const payload = await requestLinklyJson({
       context,
       path: `${linklyApiPrefix}/workspace/${encodeURIComponent(workspaceId)}/links`,
@@ -120,7 +122,7 @@ export const linklyActionHandlers: ProviderActionHandlers<"linkly", LinklyAction
     };
   },
   async update_link(input, context) {
-    const workspaceId = requiredString(input.workspace_id, "workspace_id", invalidInputError);
+    const workspaceId = requiredString(input.workspace_id, "workspace_id", providerInputError);
     const payload = await requestLinklyJson({
       context,
       path: `${linklyApiPrefix}/workspace/${encodeURIComponent(workspaceId)}/links`,
@@ -134,7 +136,7 @@ export const linklyActionHandlers: ProviderActionHandlers<"linkly", LinklyAction
     };
   },
   async delete_link(input, context) {
-    const workspaceId = requiredString(input.workspace_id, "workspace_id", invalidInputError);
+    const workspaceId = requiredString(input.workspace_id, "workspace_id", providerInputError);
     const id = readRequiredNumber(input.id, "id");
     const payload = await requestLinklyJson({
       context,
@@ -362,12 +364,4 @@ function readRequiredNumber(value: unknown, fieldName: string): number {
     throw new ProviderRequestError(502, `${fieldName} must be a number.`, value);
   }
   return numberValue;
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

@@ -14,6 +14,7 @@ import {
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -69,7 +70,7 @@ export const kintoneActionHandlers: ProviderActionHandlers<"kintone", KintoneAct
       context,
       path: "/v1/user/organizations.json",
       query: {
-        code: requiredString(input.code, "code", badInput),
+        code: requiredString(input.code, "code", providerInputError),
       },
       phase: "execute",
     });
@@ -82,7 +83,7 @@ export const kintoneActionHandlers: ProviderActionHandlers<"kintone", KintoneAct
       context,
       path: "/v1/user/groups.json",
       query: {
-        code: requiredString(input.code, "code", badInput),
+        code: requiredString(input.code, "code", providerInputError),
       },
       phase: "execute",
     });
@@ -112,7 +113,7 @@ export async function validateKintoneCredential(
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const apiKey = requiredString(input.apiKey, "apiKey", badInput);
+  const apiKey = requiredString(input.apiKey, "apiKey", providerInputError);
   const subdomain = normalizeKintoneSubdomain(input.subdomain);
   const apiBaseUrl = buildKintoneApiBaseUrl(subdomain);
   const payload = await requestKintoneJson({
@@ -376,7 +377,7 @@ function readOptionalStringArray(value: unknown, fieldName: string): string[] | 
   if (!Array.isArray(value)) {
     throw new ProviderRequestError(400, `${fieldName} must be an array`);
   }
-  return value.map((item) => requiredString(item, fieldName, badInput));
+  return value.map((item) => requiredString(item, fieldName, providerInputError));
 }
 
 function readOptionalIntegerArray(value: unknown, fieldName: string): number[] | undefined {
@@ -425,8 +426,4 @@ function isValidKintoneSubdomain(subdomain: string): boolean {
 
 function buildTokenFingerprint(apiKey: string): string {
   return createHash("sha256").update(apiKey).digest("hex").slice(0, 12);
-}
-
-function badInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

@@ -6,6 +6,7 @@ import { optionalIntegerLike, optionalRecord, requiredString } from "../../core/
 import {
   defineApiKeyProviderExecutors,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -299,8 +300,4 @@ function readIntegerLike(value: unknown): number {
 
 function readString(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

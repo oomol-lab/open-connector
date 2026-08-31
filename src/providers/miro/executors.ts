@@ -21,7 +21,9 @@ import { queryParams } from "../../core/request.ts";
 import {
   defineOAuthProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   readProviderJsonBody,
   setSearchParams,
@@ -305,12 +307,4 @@ function requireMiroObject(value: unknown, source: string): Record<string, unkno
 
 function requireInputString(value: unknown, field: string): string {
   return requiredString(value, field, providerInputError);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

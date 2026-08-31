@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 
 import { Buffer } from "node:buffer";
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 type WufooRequestPhase = "validate" | "execute";
 
@@ -320,8 +320,4 @@ function parseEntryId(value: unknown): number | null {
 function requireStringAllowEmpty(value: unknown, fieldName: string): string {
   if (typeof value != "string") throw providerInputError(`${fieldName} must be a string`);
   return value;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

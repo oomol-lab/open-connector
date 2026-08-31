@@ -12,7 +12,9 @@ import {
 import { readBoundedResponseBytes } from "../../core/request.ts";
 import {
   defineOAuthProviderExecutors,
+  providerInputError,
   ProviderRequestError,
+  providerResponseError,
   readProviderJsonBody,
   readTransitFileInput,
 } from "../provider-runtime.ts";
@@ -116,10 +118,10 @@ interface BoxUser {
 async function getCurrentUser(context: BoxRequestContext): Promise<BoxUser> {
   const payload = await boxJsonRequest("/users/me", context);
   return {
-    id: requiredString(payload.id, "Box user id", invalidResponse),
+    id: requiredString(payload.id, "Box user id", providerResponseError),
     type: "user",
-    name: requiredString(payload.name, "Box user name", invalidResponse),
-    login: requiredString(payload.login, "Box user login", invalidResponse),
+    name: requiredString(payload.name, "Box user name", providerResponseError),
+    login: requiredString(payload.login, "Box user login", providerResponseError),
     status: optionalString(payload.status),
     spaceAmount: optionalNumber(payload.space_amount),
     spaceUsed: optionalNumber(payload.space_used),
@@ -159,7 +161,7 @@ async function listFolderItems(
 
 async function search(input: Record<string, unknown>, context: BoxRequestContext): Promise<Record<string, unknown>> {
   const url = new URL(`${boxApiBaseUrl}/search`);
-  setQuery(url, "query", requiredString(input.query, "query", invalidInput));
+  setQuery(url, "query", requiredString(input.query, "query", providerInputError));
   setQuery(url, "type", optionalString(input.type));
   setQuery(url, "ancestor_folder_ids", commaSeparated(input.ancestorFolderIds));
   setQuery(url, "file_extensions", commaSeparated(input.fileExtensions));
@@ -194,7 +196,7 @@ async function downloadFile(
 
   const fileId = requireId(input.fileId, "fileId");
   const { item } = await getItem("files", fileId, context);
-  const name = optionalString(input.fileName) ?? requiredString(item.name, "Box file name", invalidResponse);
+  const name = optionalString(input.fileName) ?? requiredString(item.name, "Box file name", providerResponseError);
   const reportedSize = optionalNumber(item.sizeBytes);
   if (reportedSize != null && reportedSize > context.transitFiles.maxBytes) {
     throw new ProviderRequestError(413, `Box download exceeds ${context.transitFiles.maxBytes} bytes`);
@@ -231,7 +233,7 @@ async function createFolder(
   const payload = await boxJsonRequest("/folders", context, {
     method: "POST",
     body: JSON.stringify({
-      name: requiredString(input.name, "name", invalidInput),
+      name: requiredString(input.name, "name", providerInputError),
       parent: { id: requireId(input.parentFolderId, "parentFolderId") },
     }),
   });
@@ -248,7 +250,7 @@ async function uploadFile(
   }
 
   const attributes: Record<string, unknown> = {
-    name: requiredString(input.name, "name", invalidInput),
+    name: requiredString(input.name, "name", providerInputError),
     parent: { id: requireId(input.parentFolderId, "parentFolderId") },
   };
   const contentCreatedAt = optionalString(input.contentCreatedAt);
@@ -265,7 +267,7 @@ async function uploadFile(
   });
   const entries = readObjectArray(payload.entries);
   const item = entries[0];
-  if (!item) throw invalidResponse("Box upload response did not include a file");
+  if (!item) throw providerResponseError("Box upload response did not include a file");
   return { item: normalizeItem(item) };
 }
 
@@ -337,7 +339,7 @@ async function boxJsonRequest(
     emptyBody: {},
     invalidJsonMessage: "Box returned invalid JSON",
   });
-  return requiredRecord(payload, "Box response", invalidResponse);
+  return requiredRecord(payload, "Box response", providerResponseError);
 }
 
 function boxRequest(path: string | URL, context: BoxRequestContext, init: RequestInit = {}): Promise<Response> {
@@ -373,9 +375,9 @@ async function boxResponseError(response: Response, fallback: string): Promise<P
 function normalizeItem(payload: Record<string, unknown>): Record<string, unknown> {
   return {
     ...payload,
-    id: requiredString(payload.id, "Box item id", invalidResponse),
-    type: requiredString(payload.type, "Box item type", invalidResponse),
-    name: requiredString(payload.name, "Box item name", invalidResponse),
+    id: requiredString(payload.id, "Box item id", providerResponseError),
+    type: requiredString(payload.type, "Box item type", providerResponseError),
+    name: requiredString(payload.name, "Box item name", providerResponseError),
     etag: optionalString(payload.etag) ?? null,
     sequenceId: optionalString(payload.sequence_id) ?? null,
     description: typeof payload.description === "string" ? payload.description : null,
@@ -401,7 +403,7 @@ function normalizeItemPage(payload: Record<string, unknown>): Record<string, unk
 
 function readObjectArray(value: unknown): Record<string, unknown>[] {
   if (!Array.isArray(value)) return [];
-  return value.map((item, index) => requiredRecord(item, `Box entries[${index}]`, invalidResponse));
+  return value.map((item, index) => requiredRecord(item, `Box entries[${index}]`, providerResponseError));
 }
 
 function commaSeparated(value: unknown): string | undefined {
@@ -415,13 +417,5 @@ function setQuery(url: URL, name: string, value: string | number | boolean | und
 }
 
 function requireId(value: unknown, name: string): string {
-  return requiredString(value, name, invalidInput);
-}
-
-function invalidInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function invalidResponse(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
+  return requiredString(value, name, providerInputError);
 }

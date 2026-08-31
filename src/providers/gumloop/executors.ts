@@ -12,6 +12,8 @@ import {
 import {
   defineProviderExecutors,
   isAbortLikeError,
+  providerInputError,
+  providerResponseError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -411,7 +413,7 @@ function buildStartFlowRunContextBody(context: GumloopContext): Record<string, s
 }
 
 function readArrayProperty(payload: Record<string, unknown>, fieldName: string): Array<Record<string, unknown>> {
-  return objectArray(payload[fieldName], fieldName, providerOutputError);
+  return objectArray(payload[fieldName], fieldName, providerResponseError);
 }
 
 function readJsonInputValues(value: unknown): Record<string, unknown> {
@@ -451,12 +453,4 @@ function normalizeRunDetailsOutput(payload: Record<string, unknown>): Record<str
     log: Array.isArray(payload.log) ? payload.log.map((item) => String(item)) : undefined,
     raw: payload,
   });
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerOutputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

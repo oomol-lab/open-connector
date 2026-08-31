@@ -14,6 +14,8 @@ import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
   isAbortLikeError,
+  providerInputError,
+  providerResponseError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -335,12 +337,4 @@ function requireResponseArray(value: unknown, fieldName: string): Array<Record<s
     throw new ProviderRequestError(502, `DigitalOcean response missing ${fieldName}`);
   }
   return value.map((item) => requiredRecord(item, fieldName, providerResponseError));
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

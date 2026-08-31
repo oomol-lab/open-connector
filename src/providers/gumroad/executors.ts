@@ -6,6 +6,7 @@ import { optionalInteger, optionalRecord, optionalString, requiredString } from 
 import {
   defineApiKeyProviderExecutors,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -291,8 +292,4 @@ function mapGumroadError(
     return new ProviderRequestError(400, message ?? fallback, payload);
   }
   return new ProviderRequestError(status || 502, message ?? fallback, payload);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

@@ -15,7 +15,12 @@ import {
   stringArray,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, queryParams } from "../../core/request.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  providerInputError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const oktaRequestTimeoutMs = 30_000;
 export const oktaApiTokenHelpUrl = "https://developer.okta.com/docs/guides/create-an-api-token/main/";
@@ -118,7 +123,7 @@ export const oktaActionHandlers: ProviderActionHandlers<"okta", ProviderRuntimeH
   },
 
   async get_user(input, context) {
-    const userId = requiredString(input.userId, "userId", inputError);
+    const userId = requiredString(input.userId, "userId", providerInputError);
     const raw = await requestOktaObject(context, `/api/v1/users/${encodeURIComponent(userId)}`, "GET", "user");
     return { user: normalizeOktaUser(raw), raw };
   },
@@ -135,13 +140,13 @@ export const oktaActionHandlers: ProviderActionHandlers<"okta", ProviderRuntimeH
         nextLogin: optionalString(input.nextLogin),
       },
       body: compactObject({
-        profile: requiredRecord(input.profile, "profile", inputError),
+        profile: requiredRecord(input.profile, "profile", providerInputError),
         credentials: optionalRecord(input.credentials),
         groupIds:
           input.groupIds == null
             ? undefined
-            : stringArray(input.groupIds, "groupIds", inputError).map((item, index) =>
-                requiredString(item, `groupIds[${index}]`, inputError),
+            : stringArray(input.groupIds, "groupIds", providerInputError).map((item, index) =>
+                requiredString(item, `groupIds[${index}]`, providerInputError),
               ),
       }),
     });
@@ -150,7 +155,7 @@ export const oktaActionHandlers: ProviderActionHandlers<"okta", ProviderRuntimeH
   },
 
   async update_user(input, context) {
-    const userId = requiredString(input.userId, "userId", inputError);
+    const userId = requiredString(input.userId, "userId", providerInputError);
     const body = compactObject({
       profile: optionalRecord(input.profile),
       credentials: optionalRecord(input.credentials),
@@ -171,7 +176,7 @@ export const oktaActionHandlers: ProviderActionHandlers<"okta", ProviderRuntimeH
   },
 
   async delete_user(input, context) {
-    const userId = requiredString(input.userId, "userId", inputError);
+    const userId = requiredString(input.userId, "userId", providerInputError);
     const current = await requestOktaObject(context, `/api/v1/users/${encodeURIComponent(userId)}`, "GET", "user");
     const wasDeactivated = optionalString(current.status) === "DEPROVISIONED";
     await requestOkta({
@@ -189,7 +194,7 @@ export const oktaActionHandlers: ProviderActionHandlers<"okta", ProviderRuntimeH
   },
 
   async lifecycle_user(input, context) {
-    const userId = requiredString(input.userId, "userId", inputError);
+    const userId = requiredString(input.userId, "userId", providerInputError);
     const operation = lifecycleOperation(input.operation);
     const useTemporaryPassword = operation === "expire_password" && input.tempPassword === true;
     const pathOperation = useTemporaryPassword ? "expire_password_with_temp_password" : operation;
@@ -230,7 +235,7 @@ export const oktaActionHandlers: ProviderActionHandlers<"okta", ProviderRuntimeH
   },
 
   async get_group(input, context) {
-    const groupId = requiredString(input.groupId, "groupId", inputError);
+    const groupId = requiredString(input.groupId, "groupId", providerInputError);
     const raw = await requestOktaObject(context, `/api/v1/groups/${encodeURIComponent(groupId)}`, "GET", "group");
     return { group: normalizeOktaGroup(raw), raw };
   },
@@ -248,7 +253,7 @@ export const oktaActionHandlers: ProviderActionHandlers<"okta", ProviderRuntimeH
   },
 
   async update_group(input, context) {
-    const groupId = requiredString(input.groupId, "groupId", inputError);
+    const groupId = requiredString(input.groupId, "groupId", providerInputError);
     const response = await requestOkta({
       ...context,
       path: `/api/v1/groups/${encodeURIComponent(groupId)}`,
@@ -261,7 +266,7 @@ export const oktaActionHandlers: ProviderActionHandlers<"okta", ProviderRuntimeH
   },
 
   async delete_group(input, context) {
-    const groupId = requiredString(input.groupId, "groupId", inputError);
+    const groupId = requiredString(input.groupId, "groupId", providerInputError);
     await requestOkta({
       ...context,
       path: `/api/v1/groups/${encodeURIComponent(groupId)}`,
@@ -272,7 +277,7 @@ export const oktaActionHandlers: ProviderActionHandlers<"okta", ProviderRuntimeH
   },
 
   async list_group_users(input, context) {
-    const groupId = requiredString(input.groupId, "groupId", inputError);
+    const groupId = requiredString(input.groupId, "groupId", providerInputError);
     const response = await requestOkta({
       ...context,
       path: `/api/v1/groups/${encodeURIComponent(groupId)}/users`,
@@ -292,8 +297,8 @@ export const oktaActionHandlers: ProviderActionHandlers<"okta", ProviderRuntimeH
   },
 
   async add_user_to_group(input, context) {
-    const groupId = requiredString(input.groupId, "groupId", inputError);
-    const userId = requiredString(input.userId, "userId", inputError);
+    const groupId = requiredString(input.groupId, "groupId", providerInputError);
+    const userId = requiredString(input.userId, "userId", providerInputError);
     await requestOkta({
       ...context,
       path: `/api/v1/groups/${encodeURIComponent(groupId)}/users/${encodeURIComponent(userId)}`,
@@ -304,8 +309,8 @@ export const oktaActionHandlers: ProviderActionHandlers<"okta", ProviderRuntimeH
   },
 
   async remove_user_from_group(input, context) {
-    const groupId = requiredString(input.groupId, "groupId", inputError);
-    const userId = requiredString(input.userId, "userId", inputError);
+    const groupId = requiredString(input.groupId, "groupId", providerInputError);
+    const userId = requiredString(input.userId, "userId", providerInputError);
     await requestOkta({
       ...context,
       path: `/api/v1/groups/${encodeURIComponent(groupId)}/users/${encodeURIComponent(userId)}`,
@@ -352,9 +357,9 @@ export async function validateOktaCredential(
 }
 
 export function normalizeOktaOrgUrl(value: unknown): string {
-  const raw = requiredString(value, "orgUrl", inputError);
+  const raw = requiredString(value, "orgUrl", providerInputError);
   const candidate = raw.includes("://") ? raw : `https://${raw}`;
-  const url = assertPublicHttpUrl(candidate, { fieldName: "orgUrl", createError: inputError });
+  const url = assertPublicHttpUrl(candidate, { fieldName: "orgUrl", createError: providerInputError });
   if (url.protocol !== "https:") {
     throw new ProviderRequestError(400, "orgUrl must use https");
   }
@@ -468,7 +473,7 @@ function lifecycleQuery(
 }
 
 function lifecycleOperation(value: unknown): OktaLifecycleOperation {
-  const operation = requiredString(value, "operation", inputError);
+  const operation = requiredString(value, "operation", providerInputError);
   if (isOktaLifecycleOperation(operation)) {
     return operation;
   }
@@ -531,10 +536,10 @@ function readNextAfter(headers: Headers): string | null {
 }
 
 function inputGroupProfile(value: unknown): Record<string, unknown> {
-  const profile = requiredRecord(value, "profile", inputError);
+  const profile = requiredRecord(value, "profile", providerInputError);
   return {
     ...profile,
-    name: requiredString(profile.name, "profile.name", inputError),
+    name: requiredString(profile.name, "profile.name", providerInputError),
   };
 }
 
@@ -559,8 +564,4 @@ function responseObjectArray(value: unknown, fieldName: string): Array<Record<st
   } catch {
     throw new ProviderRequestError(502, `Okta returned invalid ${fieldName}`);
   }
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

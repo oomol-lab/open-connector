@@ -15,6 +15,8 @@ import {
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
+  providerResponseError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -531,7 +533,7 @@ function mapNetsuiteError(
 }
 
 function normalizeCollection(payload: unknown): Record<string, unknown> {
-  const object = requiredRecord(payload, "NetSuite response", providerOutputError);
+  const object = requiredRecord(payload, "NetSuite response", providerResponseError);
   return {
     ...object,
     links: Array.isArray(object.links) ? object.links : [],
@@ -540,13 +542,13 @@ function normalizeCollection(payload: unknown): Record<string, unknown> {
     offset: readInteger(object.offset, "offset", 0),
     totalResults: readInteger(object.totalResults, "totalResults", readInteger(object.count, "count", 0)),
     items: Array.isArray(object.items)
-      ? object.items.map((item, index) => requiredRecord(item, `items[${index}]`, providerOutputError))
+      ? object.items.map((item, index) => requiredRecord(item, `items[${index}]`, providerResponseError))
       : [],
   };
 }
 
 function normalizeRecord(payload: unknown): Record<string, unknown> {
-  return requiredRecord(payload, "NetSuite record", providerOutputError);
+  return requiredRecord(payload, "NetSuite record", providerResponseError);
 }
 
 function readInteger(value: unknown, fieldName: string, fallback: number): number {
@@ -583,12 +585,4 @@ function optionalNonNegativeInteger(value: unknown, fieldName: string): number |
     throw new ProviderRequestError(400, `${fieldName} must be a non-negative integer`);
   }
   return result;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerOutputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

@@ -11,6 +11,7 @@ import { requiredString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   ProviderRequestError,
   requireApiKeyCredential,
 } from "../provider-runtime.ts";
@@ -25,7 +26,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<AerisWeather
     const credential = await requireApiKeyCredential(context, service);
     return {
       apiKey: credential.apiKey,
-      clientId: requiredString(credential.values.clientId, "clientId", inputError),
+      clientId: requiredString(credential.values.clientId, "clientId", providerInputError),
       fetcher,
       signal: context.signal,
     };
@@ -39,7 +40,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   customizeRequest({ credential, url }) {
     const clientId =
       credential && credential.authType === "api_key"
-        ? requiredString(credential.values.clientId, "clientId", inputError)
+        ? requiredString(credential.values.clientId, "clientId", providerInputError)
         : undefined;
     if (!clientId) {
       throw new ProviderRequestError(401, "Configure aerisweather API key credentials first.");
@@ -60,7 +61,3 @@ export const credentialValidators: CredentialValidators = {
     );
   },
 };
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}

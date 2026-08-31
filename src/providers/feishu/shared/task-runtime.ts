@@ -1,6 +1,6 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
-import { ProviderRequestError } from "../../provider-runtime.ts";
+import { providerInputError } from "../../provider-runtime.ts";
 
 interface TaskActionHandler {
   (input: Record<string, unknown>): Promise<unknown>;
@@ -85,7 +85,7 @@ async function searchTasks(input: Record<string, unknown>, request: FeishuJsonRe
     due_time: timeRange(input.dueStart, input.dueEnd),
   });
   if (!optionalString(input.query) && Object.keys(filter).length === 0) {
-    throw invalidInput("task search requires query or at least one filter");
+    throw providerInputError("task search requires query or at least one filter");
   }
   const data = await request({
     method: "POST",
@@ -146,7 +146,7 @@ async function updateTask(input: Record<string, unknown>, request: FeishuJsonReq
   }
   const updateFields = Object.keys(task);
   if (updateFields.length === 0) {
-    throw invalidInput("at least one task field must be updated");
+    throw providerInputError("at least one task field must be updated");
   }
   const data = await request({
     method: "PATCH",
@@ -317,7 +317,7 @@ async function createTasklist(input: Record<string, unknown>, request: FeishuJso
 async function searchTasklists(input: Record<string, unknown>, request: FeishuJsonRequest) {
   const ownerIds = optionalStringArray(input.ownerIds);
   if (!optionalString(input.query) && !ownerIds?.length) {
-    throw invalidInput("tasklist search requires query or ownerIds");
+    throw providerInputError("tasklist search requires query or ownerIds");
   }
   const data = await request({
     method: "POST",
@@ -372,7 +372,7 @@ function taskTime(value: unknown) {
   const numeric = Number(raw);
   const milliseconds = Number.isFinite(numeric) ? numeric : Date.parse(raw);
   if (!Number.isFinite(milliseconds)) {
-    throw invalidInput("task time must be an RFC 3339 date-time, date, or Unix timestamp");
+    throw providerInputError("task time must be an RFC 3339 date-time, date, or Unix timestamp");
   }
   return {
     timestamp: Math.trunc(milliseconds).toString(),
@@ -403,7 +403,7 @@ function rfc3339(value: unknown, field: string) {
   const numeric = Number(raw);
   const milliseconds = Number.isFinite(numeric) ? numeric : Date.parse(raw);
   if (!Number.isFinite(milliseconds)) {
-    throw invalidInput(`${field} must be an RFC 3339 date-time or Unix timestamp`);
+    throw providerInputError(`${field} must be an RFC 3339 date-time or Unix timestamp`);
   }
   return new Date(milliseconds).toISOString();
 }
@@ -422,7 +422,7 @@ function optionalMembers(value: unknown) {
 
 function requiredMembers(value: unknown, field: string) {
   if (!Array.isArray(value)) {
-    throw invalidInput(`${field} must be an array`);
+    throw providerInputError(`${field} must be an array`);
   }
   return value.map((item, index) => {
     const member = recordValue(item);
@@ -450,7 +450,7 @@ function requiredString(value: unknown, field: string) {
   if (typeof value === "string" && value.length > 0) {
     return value;
   }
-  throw invalidInput(`${field} must be a non-empty string`);
+  throw providerInputError(`${field} must be a non-empty string`);
 }
 
 function optionalString(value: unknown) {
@@ -460,7 +460,7 @@ function optionalString(value: unknown) {
 function requiredStringArray(value: unknown, field: string) {
   const values = optionalStringArray(value);
   if (!values || values.length === 0) {
-    throw invalidInput(`${field} must contain at least one string`);
+    throw providerInputError(`${field} must contain at least one string`);
   }
   return values;
 }
@@ -478,7 +478,7 @@ function optionalStringArray(value: unknown) {
 function requiredNumberArray(value: unknown, field: string) {
   const values = optionalNumberArray(value);
   if (!values || values.length === 0) {
-    throw invalidInput(`${field} must contain at least one number`);
+    throw providerInputError(`${field} must contain at least one number`);
   }
   return values;
 }
@@ -507,8 +507,4 @@ function compact(value: Record<string, unknown>) {
 
 function encode(value: string) {
   return encodeURIComponent(value);
-}
-
-function invalidInput(message: string) {
-  return new ProviderRequestError(400, message);
 }

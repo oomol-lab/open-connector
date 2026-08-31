@@ -6,6 +6,7 @@ import { compactObject, optionalRecord, optionalString, requiredRecord, required
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -180,9 +181,9 @@ export async function validateLexofficeCredential(
     signal,
   });
 
-  const profileRecord = requiredRecord(profile, "Lexoffice profile", providerResponseError);
-  const organizationId = requiredString(profileRecord.organizationId, "organizationId", providerResponseError);
-  const companyName = requiredString(profileRecord.companyName, "companyName", providerResponseError);
+  const profileRecord = requiredRecord(profile, "Lexoffice profile", lexofficeResponseError);
+  const organizationId = requiredString(profileRecord.organizationId, "organizationId", lexofficeResponseError);
+  const companyName = requiredString(profileRecord.companyName, "companyName", lexofficeResponseError);
   const connectionId = optionalString(profileRecord.connectionId);
   const created = optionalRecord(profileRecord.created);
   const userId = optionalString(created?.userId);
@@ -317,10 +318,6 @@ function pickQuery(input: Record<string, unknown>, keys: readonly string[]): Rec
   );
 }
 
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
+function lexofficeResponseError(message: string): ProviderRequestError {
   return new ProviderRequestError(502, `Lexoffice ${message}`);
 }

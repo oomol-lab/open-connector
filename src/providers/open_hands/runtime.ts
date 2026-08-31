@@ -10,7 +10,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const openHandsApiBaseUrl = "https://app.all-hands.dev";
 const openHandsValidationPath = "/api/v1/app-conversations/search";
@@ -29,13 +29,13 @@ export const openHandsActionHandlers: ProviderActionHandlers<"open_hands", OpenH
   },
   async get_start_task(input, context) {
     const payload = await openHandsRequest(context.apiKey, "/api/v1/app-conversations/start-tasks", context, {
-      query: { ids: requiredString(input.task_id, "task_id", requestInputError) },
+      query: { ids: requiredString(input.task_id, "task_id", providerInputError) },
     });
     return buildStartTaskOutput(readFirstItem(payload, "OpenHands start task was not found"));
   },
   async get_conversation(input, context) {
     const payload = await openHandsRequest(context.apiKey, "/api/v1/app-conversations", context, {
-      query: { ids: requiredString(input.conversation_id, "conversation_id", requestInputError) },
+      query: { ids: requiredString(input.conversation_id, "conversation_id", providerInputError) },
     });
     const conversation = readNullableFirstItem(payload);
     return {
@@ -61,7 +61,7 @@ export const openHandsActionHandlers: ProviderActionHandlers<"open_hands", OpenH
   },
   async send_message(input, context) {
     const conversationId = encodeURIComponent(
-      requiredString(input.conversation_id, "conversation_id", requestInputError),
+      requiredString(input.conversation_id, "conversation_id", providerInputError),
     );
     const payload = await openHandsRequest(
       context.apiKey,
@@ -124,7 +124,7 @@ function buildMessageBody(input: Record<string, unknown>): Record<string, unknow
     content: [
       {
         type: "text",
-        text: requiredString(input.message, "message", requestInputError),
+        text: requiredString(input.message, "message", providerInputError),
       },
     ],
     run: optionalBoolean(input.run),
@@ -141,7 +141,7 @@ async function openHandsRequest(
     body?: Record<string, unknown>;
   } = {},
 ): Promise<OpenHandsPayload> {
-  const token = requiredString(apiKey, "apiKey", requestInputError);
+  const token = requiredString(apiKey, "apiKey", providerInputError);
   const url = new URL(path, openHandsApiBaseUrl);
   appendQuery(url, options.query ?? {});
   let response: Response;
@@ -330,8 +330,4 @@ function readErrorMessage(payload: Record<string, unknown>): string | undefined 
     optionalString(payload.message) ??
     optionalString(payload.error)
   );
-}
-
-function requestInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

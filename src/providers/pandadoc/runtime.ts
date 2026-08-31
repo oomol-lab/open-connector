@@ -13,7 +13,9 @@ import {
 } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
+  providerInputError,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   readTransitFileInput,
 } from "../provider-runtime.ts";
@@ -65,7 +67,7 @@ export const pandadocActionHandlers: ProviderActionHandlers<"pandadoc", Pandadoc
   },
   async delete_contact(input, context) {
     await requestPandadocJson(context, {
-      path: `/public/v1/contacts/${encodeURIComponent(requiredString(input.contact_id, "contact_id", invalidInputError))}`,
+      path: `/public/v1/contacts/${encodeURIComponent(requiredString(input.contact_id, "contact_id", providerInputError))}`,
       method: "DELETE",
       notFoundAsInvalidInput: true,
     });
@@ -100,7 +102,7 @@ export const pandadocActionHandlers: ProviderActionHandlers<"pandadoc", Pandadoc
   async get_template_details(input, context) {
     return requiredRecord(
       await requestPandadocJson(context, {
-        path: `/public/v1/templates/${encodeURIComponent(requiredString(input.template_id, "template_id", invalidInputError))}/details`,
+        path: `/public/v1/templates/${encodeURIComponent(requiredString(input.template_id, "template_id", providerInputError))}/details`,
         notFoundAsInvalidInput: true,
       }),
       "PandaDoc template details response",
@@ -155,7 +157,7 @@ export const pandadocActionHandlers: ProviderActionHandlers<"pandadoc", Pandadoc
   },
   async delete_template(input, context) {
     const payload = await requestPandadocJson(context, {
-      path: `/public/v1/templates/${encodeURIComponent(requiredString(input.template_id, "template_id", invalidInputError))}`,
+      path: `/public/v1/templates/${encodeURIComponent(requiredString(input.template_id, "template_id", providerInputError))}`,
       method: "DELETE",
       notFoundAsInvalidInput: true,
     });
@@ -231,7 +233,7 @@ export const pandadocActionHandlers: ProviderActionHandlers<"pandadoc", Pandadoc
   async get_document_details(input, context) {
     return requiredRecord(
       await requestPandadocJson(context, {
-        path: `/public/v1/documents/${encodeURIComponent(requiredString(input.document_id, "document_id", invalidInputError))}/details`,
+        path: `/public/v1/documents/${encodeURIComponent(requiredString(input.document_id, "document_id", providerInputError))}/details`,
         notFoundAsInvalidInput: true,
       }),
       "PandaDoc document details response",
@@ -259,7 +261,7 @@ export const pandadocActionHandlers: ProviderActionHandlers<"pandadoc", Pandadoc
     formData.set("file", transitFile.file);
     return requiredRecord(
       await requestPandadocJson(context, {
-        path: `/public/v1/documents/${encodeURIComponent(requiredString(input.document_id, "document_id", invalidInputError))}/attachments`,
+        path: `/public/v1/documents/${encodeURIComponent(requiredString(input.document_id, "document_id", providerInputError))}/attachments`,
         method: "POST",
         body: formData,
         notFoundAsInvalidInput: true,
@@ -436,12 +438,4 @@ function stringArray(value: unknown): string[] | undefined {
 
 function arrayValue(value: unknown): unknown[] | undefined {
   return Array.isArray(value) ? value : undefined;
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

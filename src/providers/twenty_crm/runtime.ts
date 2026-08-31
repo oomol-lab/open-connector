@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, requiredRecord } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const twentyCrmApiBaseUrl = "https://api.twenty.com";
 
@@ -147,7 +147,7 @@ async function createRecord(
     {
       method: "POST",
       path: `/rest/${encodeObjectName(readRequiredString(input.objectNamePlural, "objectNamePlural"))}`,
-      body: requiredRecord(input.data, "data", providerInvalidInput),
+      body: requiredRecord(input.data, "data", providerInputError),
     },
     context,
   );
@@ -167,7 +167,7 @@ async function updateRecord(
     {
       method: "PATCH",
       path: buildRecordPath(input),
-      body: requiredRecord(input.data, "data", providerInvalidInput),
+      body: requiredRecord(input.data, "data", providerInputError),
     },
     context,
   );
@@ -314,8 +314,4 @@ function requireProviderObject(payload: unknown, label: string): Record<string, 
   }
 
   return payload as Record<string, unknown>;
-}
-
-function providerInvalidInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

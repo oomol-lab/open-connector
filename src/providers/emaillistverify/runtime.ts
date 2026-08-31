@@ -8,6 +8,7 @@ import { base64Bytes, optionalRecord, optionalString, requiredString } from "../
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -22,7 +23,7 @@ type EmailListVerifyActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext
 
 export const emailListVerifyActionHandlers: ProviderActionHandlers<"emaillistverify", EmailListVerifyActionHandler> = {
   async verify_email(input, context) {
-    const email = requiredString(input.email, "email", badInput);
+    const email = requiredString(input.email, "email", providerInputError);
     const status = await requestEmailListVerifyStatus({
       apiKey: context.apiKey,
       email,
@@ -39,7 +40,7 @@ export const emailListVerifyActionHandlers: ProviderActionHandlers<"emaillistver
   verify_email_detailed(input, context) {
     return requestEmailListVerifyDetailed({
       apiKey: context.apiKey,
-      email: requiredString(input.email, "email", badInput),
+      email: requiredString(input.email, "email", providerInputError),
       fetcher: context.fetcher,
       signal: context.signal,
       phase: "execute",
@@ -68,7 +69,7 @@ export const emailListVerifyActionHandlers: ProviderActionHandlers<"emaillistver
       fetcher: context.fetcher,
       signal: context.signal,
       phase: "execute",
-      domain: requiredString(input.domain, "domain", badInput),
+      domain: requiredString(input.domain, "domain", providerInputError),
     });
   },
   get_email_list_progress(input, context) {
@@ -77,7 +78,7 @@ export const emailListVerifyActionHandlers: ProviderActionHandlers<"emaillistver
       fetcher: context.fetcher,
       signal: context.signal,
       phase: "execute",
-      emailListId: requiredString(input.emailListId, "emailListId", badInput),
+      emailListId: requiredString(input.emailListId, "emailListId", providerInputError),
     });
   },
   download_email_list(input, context) {
@@ -86,7 +87,7 @@ export const emailListVerifyActionHandlers: ProviderActionHandlers<"emaillistver
       fetcher: context.fetcher,
       signal: context.signal,
       phase: "execute",
-      emailListId: requiredString(input.emailListId, "emailListId", badInput),
+      emailListId: requiredString(input.emailListId, "emailListId", providerInputError),
       format: optionalString(input.format),
       results: Array.isArray(input.results) ? input.results.map(String) : undefined,
     });
@@ -97,7 +98,7 @@ export const emailListVerifyActionHandlers: ProviderActionHandlers<"emaillistver
       fetcher: context.fetcher,
       signal: context.signal,
       phase: "execute",
-      emailListId: requiredString(input.emailListId, "emailListId", badInput),
+      emailListId: requiredString(input.emailListId, "emailListId", providerInputError),
     });
   },
 };
@@ -187,7 +188,7 @@ async function requestEmailListVerifyCredits(input: EmailListVerifyRequestInput)
 async function requestEmailListVerifyUpload(
   input: EmailListVerifyRequestInput & { input: Record<string, unknown> },
 ): Promise<{ emailListId: string }> {
-  const fileName = requiredString(input.input.fileName, "fileName", badInput);
+  const fileName = requiredString(input.input.fileName, "fileName", providerInputError);
   const quality = optionalString(input.input.quality);
   const contentText = optionalString(input.input.contentText);
   const contentBase64 = optionalString(input.input.contentBase64);
@@ -442,7 +443,7 @@ function resolveEmailListVerifyUploadBytes(
   if (contentText !== undefined) {
     return new TextEncoder().encode(contentText);
   }
-  return base64Bytes(contentBase64, "contentBase64", badInput);
+  return base64Bytes(contentBase64, "contentBase64", providerInputError);
 }
 
 function inferEmailListVerifyUploadMimeType(fileName: string): string {
@@ -491,8 +492,4 @@ function mapEmailListVerifyRejectedApiKey(phase: EmailListVerifyRequestPhase): P
 
 function buildEmailListVerifyProviderAccountId(apiKey: string): string {
   return `emaillistverify:api_key:${createHash("sha256").update(apiKey).digest("hex").slice(0, 16)}`;
-}
-
-function badInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

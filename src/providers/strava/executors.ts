@@ -10,7 +10,12 @@ import {
   optionalString,
   requiredRecord,
 } from "../../core/cast.ts";
-import { defineOAuthProviderExecutors, ProviderRequestError, readTransitFileInput } from "../provider-runtime.ts";
+import {
+  defineOAuthProviderExecutors,
+  providerInputError,
+  ProviderRequestError,
+  readTransitFileInput,
+} from "../provider-runtime.ts";
 
 const service = "strava";
 const stravaApiBaseUrl = "https://www.strava.com/api/v3/";
@@ -197,7 +202,7 @@ async function stravaGetActivity(input: Record<string, unknown>, context: OAuthP
 }
 
 async function stravaUpdateActivity(input: Record<string, unknown>, context: OAuthProviderContext): Promise<unknown> {
-  const activity = requiredRecord(input.activity, "activity", invalidInputError);
+  const activity = requiredRecord(input.activity, "activity", providerInputError);
   return stravaJsonRequest(`/activities/${requireId(input.activityId, "activityId")}`, {
     ...context,
     method: "PUT",
@@ -709,8 +714,4 @@ function parseScopeList(value: unknown): string[] {
     .split(/[,\s]+/)
     .map((scope) => scope.trim())
     .filter(Boolean);
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

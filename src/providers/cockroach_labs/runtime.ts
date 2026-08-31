@@ -6,6 +6,7 @@ import { compactObject, objectArray, optionalRecord, optionalString, requiredStr
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -51,13 +52,13 @@ export const cockroachLabsActionHandlers: ProviderActionHandlers<"cockroach_labs
     });
 
     return {
-      clusters: objectArray(payload.clusters, "clusters", providerResponseError),
+      clusters: objectArray(payload.clusters, "clusters", cockroachLabsResponseError),
       pagination: normalizePagination(payload.pagination),
     };
   },
 
   async get_cluster(input, context) {
-    const clusterId = requiredString(input.clusterId, "clusterId", invalidInputError);
+    const clusterId = requiredString(input.clusterId, "clusterId", providerInputError);
     return {
       cluster: await requestCockroachLabsObject({
         context,
@@ -85,13 +86,13 @@ export const cockroachLabsActionHandlers: ProviderActionHandlers<"cockroach_labs
     });
 
     return {
-      regions: objectArray(payload.regions, "regions", providerResponseError),
+      regions: objectArray(payload.regions, "regions", cockroachLabsResponseError),
       pagination: normalizePagination(payload.pagination),
     };
   },
 
   async list_cluster_nodes(input, context) {
-    const clusterId = requiredString(input.clusterId, "clusterId", invalidInputError);
+    const clusterId = requiredString(input.clusterId, "clusterId", providerInputError);
     const payload = await requestCockroachLabsObject({
       context,
       path: `/api/v1/clusters/${encodeURIComponent(clusterId)}/nodes`,
@@ -107,13 +108,13 @@ export const cockroachLabsActionHandlers: ProviderActionHandlers<"cockroach_labs
     });
 
     return {
-      nodes: objectArray(payload.nodes, "nodes", providerResponseError),
+      nodes: objectArray(payload.nodes, "nodes", cockroachLabsResponseError),
       pagination: normalizePagination(payload.pagination),
     };
   },
 
   async list_databases(input, context) {
-    const clusterId = requiredString(input.clusterId, "clusterId", invalidInputError);
+    const clusterId = requiredString(input.clusterId, "clusterId", providerInputError);
     const payload = await requestCockroachLabsObject({
       context,
       path: `/api/v1/clusters/${encodeURIComponent(clusterId)}/databases`,
@@ -123,13 +124,13 @@ export const cockroachLabsActionHandlers: ProviderActionHandlers<"cockroach_labs
     });
 
     return {
-      databases: objectArray(payload.databases, "databases", providerResponseError),
+      databases: objectArray(payload.databases, "databases", cockroachLabsResponseError),
       pagination: normalizePagination(payload.pagination),
     };
   },
 
   async list_sql_users(input, context) {
-    const clusterId = requiredString(input.clusterId, "clusterId", invalidInputError);
+    const clusterId = requiredString(input.clusterId, "clusterId", providerInputError);
     const payload = await requestCockroachLabsObject({
       context,
       path: `/api/v1/clusters/${encodeURIComponent(clusterId)}/sql-users`,
@@ -139,7 +140,7 @@ export const cockroachLabsActionHandlers: ProviderActionHandlers<"cockroach_labs
     });
 
     return {
-      users: objectArray(payload.users, "users", providerResponseError),
+      users: objectArray(payload.users, "users", cockroachLabsResponseError),
       pagination: normalizePagination(payload.pagination),
     };
   },
@@ -161,7 +162,7 @@ export async function validateCockroachLabsApiKey(
     responseContext: "CockroachDB Cloud organization response",
   });
 
-  const organizationId = requiredString(organization.id, "id", providerResponseError);
+  const organizationId = requiredString(organization.id, "id", cockroachLabsResponseError);
   const accountLabel =
     optionalString(organization.name) ?? optionalString(organization.label) ?? "CockroachDB Cloud Organization";
 
@@ -334,10 +335,6 @@ function normalizePagination(value: unknown): Record<string, unknown> | null {
   });
 }
 
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
+function cockroachLabsResponseError(message: string): ProviderRequestError {
   return new ProviderRequestError(502, `CockroachDB Cloud ${message}`);
 }

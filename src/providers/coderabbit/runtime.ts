@@ -10,7 +10,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const coderabbitApiBaseUrl = "https://api.coderabbit.ai";
 
@@ -439,7 +439,7 @@ function readObject(value: unknown, fieldName: string): JsonObject {
 }
 
 function requireInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, invalidInputError);
+  return requiredString(value, fieldName, providerInputError);
 }
 
 function requireStringFromResponse(value: unknown, fieldName: string): string {
@@ -452,8 +452,4 @@ function requireInteger(value: unknown, fieldName: string): number {
     throw new ProviderRequestError(502, `CodeRabbit returned invalid ${fieldName}`);
   }
   return integer;
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

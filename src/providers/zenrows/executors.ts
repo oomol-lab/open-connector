@@ -20,6 +20,7 @@ import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
   isAbortLikeError,
+  providerInputError,
   providerProxyEndpointPrefixes,
   ProviderRequestError,
   providerUserAgent,
@@ -322,10 +323,6 @@ function readOptionalHeaderInteger(headers: Headers, name: string): number | nul
 
   const value = Number(raw);
   return Number.isInteger(value) ? value : null;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

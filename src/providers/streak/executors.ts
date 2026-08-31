@@ -7,6 +7,7 @@ import { compactObject, optionalBoolean, optionalRecord, optionalString, require
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -40,7 +41,7 @@ export const streakActionHandlers: ProviderActionHandlers<"streak", StreakAction
     };
   },
   async get_pipeline(input, context) {
-    const pipelineKey = requiredString(input.pipelineKey, "pipelineKey", invalidInputError);
+    const pipelineKey = requiredString(input.pipelineKey, "pipelineKey", providerInputError);
     const payload = await requestStreakJson(`/pipelines/${encodeURIComponent(pipelineKey)}`, context, "execute");
 
     return {
@@ -49,7 +50,7 @@ export const streakActionHandlers: ProviderActionHandlers<"streak", StreakAction
     };
   },
   async get_box(input, context) {
-    const boxKey = requiredString(input.boxKey, "boxKey", invalidInputError);
+    const boxKey = requiredString(input.boxKey, "boxKey", providerInputError);
     const payload = await requestStreakJson(`/boxes/${encodeURIComponent(boxKey)}`, context, "execute");
 
     return {
@@ -172,8 +173,4 @@ function requireObject(value: unknown, label: string): Record<string, unknown> {
     throw new ProviderRequestError(502, `${label} must be an object`);
   }
   return object;
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

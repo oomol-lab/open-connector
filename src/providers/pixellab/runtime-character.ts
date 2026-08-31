@@ -12,7 +12,7 @@ import {
   requiredString,
   requiredStringArray,
 } from "../../core/cast.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, providerResponseError } from "../provider-runtime.ts";
 import {
   downloadPixellabFile,
   encodeTransitImage,
@@ -47,8 +47,8 @@ export const pixellabCharacterActionHandlers: ProviderActionHandlerSubset<"pixel
       "POST",
       "/create-character-pro",
       compactObject({
-        description: requiredString(input.description, "description", invalidInputError),
-        image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+        description: requiredString(input.description, "description", providerInputError),
+        image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
         method,
         view: optionalString(input.view),
         template_id: optionalString(input.templateId),
@@ -72,7 +72,7 @@ export const pixellabCharacterActionHandlers: ProviderActionHandlerSubset<"pixel
       "POST",
       "/create-character-v3",
       compactObject({
-        description: requiredString(input.description, "description", invalidInputError),
+        description: requiredString(input.description, "description", providerInputError),
         reference_image: referenceImage,
         image_size: optionalRecord(input.imageSize),
         view: optionalString(input.view),
@@ -97,7 +97,7 @@ export const pixellabCharacterActionHandlers: ProviderActionHandlerSubset<"pixel
     const directions =
       input.directions === undefined
         ? undefined
-        : requiredStringArray(input.directions, "directions", invalidInputError);
+        : requiredStringArray(input.directions, "directions", providerInputError);
     const customStartFrame = await optionalImage(input.customStartFrame, "customStartFrame", context);
     const endFrame = await optionalImage(input.endFrame, "endFrame", context);
     if ((customStartFrame || endFrame) && directions?.length !== 1) {
@@ -107,7 +107,7 @@ export const pixellabCharacterActionHandlers: ProviderActionHandlerSubset<"pixel
       "POST",
       "/characters/animations",
       compactObject({
-        character_id: requiredString(input.characterId, "characterId", invalidInputError),
+        character_id: requiredString(input.characterId, "characterId", providerInputError),
         animation_name: optionalString(input.animationName),
         description: optionalString(input.description),
         action_description: optionalString(input.actionDescription),
@@ -125,8 +125,8 @@ export const pixellabCharacterActionHandlers: ProviderActionHandlerSubset<"pixel
     );
     const record = requireResponseRecord(payload, "character animation");
     return compactObject({
-      jobIds: requiredStringArray(record.background_job_ids, "PixelLab background_job_ids", invalidResponseError),
-      directions: requiredStringArray(record.directions, "PixelLab directions", invalidResponseError),
+      jobIds: requiredStringArray(record.background_job_ids, "PixelLab background_job_ids", providerResponseError),
+      directions: requiredStringArray(record.directions, "PixelLab directions", providerResponseError),
       status: normalizeResourceStatus(record.status ?? "processing"),
       enhancedPrompt: optionalString(record.enhanced_prompt),
       enhanceUsage: normalizeUsage(record.enhance_usage),
@@ -138,8 +138,8 @@ export const pixellabCharacterActionHandlers: ProviderActionHandlerSubset<"pixel
       "POST",
       "/create-character-state",
       compactObject({
-        character_id: requiredString(input.characterId, "characterId", invalidInputError),
-        edit_description: requiredString(input.editDescription, "editDescription", invalidInputError),
+        character_id: requiredString(input.characterId, "characterId", providerInputError),
+        edit_description: requiredString(input.editDescription, "editDescription", providerInputError),
         no_background: optionalBoolean(input.noBackground),
         seed: optionalInteger(input.seed),
         use_color_palette_from_reference: optionalBoolean(input.useColorPaletteFromReference),
@@ -155,7 +155,7 @@ export const pixellabCharacterActionHandlers: ProviderActionHandlerSubset<"pixel
       "character list",
     );
     if (!Array.isArray(record.characters)) {
-      throw invalidResponseError("PixelLab character list is missing characters.");
+      throw providerResponseError("PixelLab character list is missing characters.");
     }
     return compactObject({
       characters: record.characters.map((character, index) => normalizeCharacter(character, `characters[${index}]`)),
@@ -165,7 +165,7 @@ export const pixellabCharacterActionHandlers: ProviderActionHandlerSubset<"pixel
   },
 
   async get_character(input, context) {
-    const characterId = requiredString(input.characterId, "characterId", invalidInputError);
+    const characterId = requiredString(input.characterId, "characterId", providerInputError);
     const payload = await pixellabRequestJson(
       "GET",
       `/characters/${encodeURIComponent(characterId)}`,
@@ -176,7 +176,7 @@ export const pixellabCharacterActionHandlers: ProviderActionHandlerSubset<"pixel
   },
 
   async delete_character(input, context) {
-    const characterId = requiredString(input.characterId, "characterId", invalidInputError);
+    const characterId = requiredString(input.characterId, "characterId", providerInputError);
     const record = requireResponseRecord(
       await pixellabRequestJson("DELETE", `/characters/${encodeURIComponent(characterId)}`, undefined, context),
       "delete character",
@@ -192,7 +192,7 @@ export const pixellabCharacterActionHandlers: ProviderActionHandlerSubset<"pixel
   },
 
   async download_character_zip(input, context) {
-    const characterId = requiredString(input.characterId, "characterId", invalidInputError);
+    const characterId = requiredString(input.characterId, "characterId", providerInputError);
     const file = await downloadPixellabFile(
       `/characters/${encodeURIComponent(characterId)}/zip`,
       `pixellab-character-${safeFileSegment(characterId)}.zip`,
@@ -202,14 +202,14 @@ export const pixellabCharacterActionHandlers: ProviderActionHandlerSubset<"pixel
   },
 
   async update_character_tags(input, context) {
-    const characterId = requiredString(input.characterId, "characterId", invalidInputError);
-    const tags = requiredStringArray(input.tags, "tags", invalidInputError);
+    const characterId = requiredString(input.characterId, "characterId", providerInputError);
+    const tags = requiredStringArray(input.tags, "tags", providerInputError);
     const record = requireResponseRecord(
       await pixellabRequestJson("PATCH", `/characters/${encodeURIComponent(characterId)}/tags`, { tags }, context),
       "update character tags",
     );
     return compactObject({
-      tags: requiredStringArray(record.tags, "PixelLab tags", invalidResponseError),
+      tags: requiredStringArray(record.tags, "PixelLab tags", providerResponseError),
       usage: normalizeUsage(record.usage),
     });
   },
@@ -225,8 +225,8 @@ async function createDirectionalCharacter(
     "POST",
     path,
     compactObject({
-      description: requiredString(input.description, "description", invalidInputError),
-      image_size: requiredRecord(input.imageSize, "imageSize", invalidInputError),
+      description: requiredString(input.description, "description", providerInputError),
+      image_size: requiredRecord(input.imageSize, "imageSize", providerInputError),
       mode: includeMode ? optionalString(input.mode) : undefined,
       async_mode: true,
       text_guidance_scale: optionalNumber(input.textGuidanceScale),
@@ -249,21 +249,21 @@ function normalizeCharacterJob(payload: unknown): Record<string, unknown> {
   const record = requireResponseRecord(payload, "character job");
   return compactObject({
     ...normalizeStartedJob(payload),
-    characterId: requiredString(record.character_id, "PixelLab character_id", invalidResponseError),
+    characterId: requiredString(record.character_id, "PixelLab character_id", providerResponseError),
   });
 }
 
 function normalizeCharacter(value: unknown, fieldName: string): Record<string, unknown> {
-  const record = requiredRecord(value, fieldName, invalidResponseError);
+  const record = requiredRecord(value, fieldName, providerResponseError);
   return compactObject({
-    id: requiredString(record.id, `${fieldName}.id`, invalidResponseError),
-    name: requiredString(record.name, `${fieldName}.name`, invalidResponseError),
-    prompt: requiredString(record.prompt, `${fieldName}.prompt`, invalidResponseError),
+    id: requiredString(record.id, `${fieldName}.id`, providerResponseError),
+    name: requiredString(record.name, `${fieldName}.name`, providerResponseError),
+    prompt: requiredString(record.prompt, `${fieldName}.prompt`, providerResponseError),
     size: normalizeSize(record.size, `${fieldName}.size`),
     directions: responseInteger(record.directions, `${fieldName}.directions`),
-    createdAt: requiredString(record.created_at, `${fieldName}.created_at`, invalidResponseError),
+    createdAt: requiredString(record.created_at, `${fieldName}.created_at`, providerResponseError),
     animationCount: responseInteger(record.animation_count, `${fieldName}.animation_count`),
-    templateId: requiredString(record.template_id, `${fieldName}.template_id`, invalidResponseError),
+    templateId: requiredString(record.template_id, `${fieldName}.template_id`, providerResponseError),
     view: optionalString(record.view),
     previewUrl: optionalString(record.preview_url),
     tags: Array.isArray(record.tags) ? record.tags.filter((tag): tag is string => typeof tag === "string") : undefined,
@@ -274,7 +274,7 @@ function normalizeCharacter(value: unknown, fieldName: string): Record<string, u
 }
 
 function normalizeSize(value: unknown, fieldName: string): Record<string, number> {
-  const record = requiredRecord(value, fieldName, invalidResponseError);
+  const record = requiredRecord(value, fieldName, providerResponseError);
   return {
     width: responseInteger(record.width, `${fieldName}.width`),
     height: responseInteger(record.height, `${fieldName}.height`),
@@ -286,11 +286,11 @@ async function optionalImage(value: unknown, fieldName: string, context: ApiKeyP
 }
 
 function normalizeResourceStatus(value: unknown): "queued" | "processing" | "completed" | "failed" {
-  const status = requiredString(value, "PixelLab status", invalidResponseError);
+  const status = requiredString(value, "PixelLab status", providerResponseError);
   if (status === "queued" || status === "processing" || status === "completed" || status === "failed") {
     return status;
   }
-  throw invalidResponseError(`PixelLab returned unsupported status: ${status}`);
+  throw providerResponseError(`PixelLab returned unsupported status: ${status}`);
 }
 
 function paginatedPath(path: string, input: Record<string, unknown>): string {
@@ -310,15 +310,7 @@ function safeFileSegment(value: string): string {
 function responseInteger(value: unknown, fieldName: string): number {
   const number = optionalInteger(value);
   if (number === undefined) {
-    throw invalidResponseError(`${fieldName} must be an integer.`);
+    throw providerResponseError(`${fieldName} must be an integer.`);
   }
   return number;
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function invalidResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

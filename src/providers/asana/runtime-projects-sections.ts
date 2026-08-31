@@ -12,9 +12,8 @@ import {
   requiredString,
   requiredStringArray,
 } from "../../core/cast.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError } from "../provider-runtime.ts";
 import {
-  asanaInvalidInputError,
   asanaPathGid,
   buildAsanaFieldsQuery,
   buildAsanaPaginationQuery,
@@ -139,7 +138,7 @@ export const projectSectionActionHandlers: ProviderActionHandlerSubset<"asana", 
     const include = optionalDelimitedStringArray(input.include, "include");
     const scheduleDates = buildScheduleDates(input.scheduleDates);
     if (scheduleDates && !include?.split(",").includes("task_dates")) {
-      throw asanaInvalidInputError("scheduleDates requires include to contain task_dates.");
+      throw providerInputError("scheduleDates requires include to contain task_dates.");
     }
     const payload = await requestAsana({
       path: `/projects/${asanaPathGid(input.projectId, "projectId")}/duplicate`,
@@ -147,7 +146,7 @@ export const projectSectionActionHandlers: ProviderActionHandlerSubset<"asana", 
       method: "POST",
       query: buildAsanaFieldsQuery(input, defaultJobFields),
       body: compactObject({
-        name: requiredString(input.name, "name", asanaInvalidInputError),
+        name: requiredString(input.name, "name", providerInputError),
         include,
         schedule_dates: scheduleDates,
       }),
@@ -262,7 +261,7 @@ export const projectSectionActionHandlers: ProviderActionHandlerSubset<"asana", 
     return writeAsanaResource(
       `/projects/${asanaPathGid(input.projectId, "projectId")}/addCustomFieldSetting`,
       compactObject({
-        custom_field: requiredString(input.customFieldId, "customFieldId", asanaInvalidInputError),
+        custom_field: requiredString(input.customFieldId, "customFieldId", providerInputError),
         is_important: optionalBoolean(input.isImportant),
         insert_before: optionalString(input.insertBefore),
         insert_after: optionalString(input.insertAfter),
@@ -283,7 +282,7 @@ export const projectSectionActionHandlers: ProviderActionHandlerSubset<"asana", 
       context,
       method: "POST",
       body: {
-        custom_field: requiredString(input.customFieldId, "customFieldId", asanaInvalidInputError),
+        custom_field: requiredString(input.customFieldId, "customFieldId", providerInputError),
       },
       notFoundAsInvalidInput: true,
     });
@@ -327,7 +326,7 @@ export const projectSectionActionHandlers: ProviderActionHandlerSubset<"asana", 
   update_section(input, context) {
     return writeAsanaResource(
       `/sections/${asanaPathGid(input.sectionId, "sectionId")}`,
-      { name: requiredString(input.name, "name", asanaInvalidInputError) },
+      { name: requiredString(input.name, "name", providerInputError) },
       "section",
       context,
       {
@@ -356,7 +355,7 @@ export const projectSectionActionHandlers: ProviderActionHandlerSubset<"asana", 
     return writeAsanaResource(
       `/projects/${asanaPathGid(input.projectId, "projectId")}/sections`,
       compactObject({
-        name: requiredString(input.name, "name", asanaInvalidInputError),
+        name: requiredString(input.name, "name", providerInputError),
         insert_before: optionalString(input.insertBefore),
         insert_after: optionalString(input.insertAfter),
       }),
@@ -377,7 +376,7 @@ export const projectSectionActionHandlers: ProviderActionHandlerSubset<"asana", 
       context,
       method: "POST",
       body: compactObject({
-        task: requiredString(input.taskId, "taskId", asanaInvalidInputError),
+        task: requiredString(input.taskId, "taskId", providerInputError),
         insert_before: optionalString(input.insertBefore),
         insert_after: optionalString(input.insertAfter),
       }),
@@ -390,14 +389,14 @@ export const projectSectionActionHandlers: ProviderActionHandlerSubset<"asana", 
     const beforeSection = optionalString(input.beforeSectionId);
     const afterSection = optionalString(input.afterSectionId);
     if ((beforeSection ? 1 : 0) + (afterSection ? 1 : 0) !== 1) {
-      throw asanaInvalidInputError("Exactly one of beforeSectionId or afterSectionId must be provided.");
+      throw providerInputError("Exactly one of beforeSectionId or afterSectionId must be provided.");
     }
     await requestAsana({
       path: `/projects/${asanaPathGid(input.projectId, "projectId")}/sections/insert`,
       context,
       method: "POST",
       body: compactObject({
-        section: requiredString(input.sectionId, "sectionId", asanaInvalidInputError),
+        section: requiredString(input.sectionId, "sectionId", providerInputError),
         before_section: beforeSection,
         after_section: afterSection,
       }),
@@ -416,7 +415,7 @@ function readExclusiveProjectLocation(input: Record<string, unknown>): ProjectLo
   const workspace = optionalString(input.workspaceId);
   const team = optionalString(input.teamId);
   if ((workspace ? 1 : 0) + (team ? 1 : 0) !== 1) {
-    throw asanaInvalidInputError("Exactly one of workspaceId or teamId must be provided.");
+    throw providerInputError("Exactly one of workspaceId or teamId must be provided.");
   }
   return workspace ? { key: "workspace", value: workspace } : { key: "team", value: team! };
 }
@@ -425,7 +424,7 @@ function buildProjectMutationBody(input: Record<string, unknown>, requireName: b
   assertProjectNotes(input);
   assertProjectDates(input);
   const body = compactObject({
-    name: requireName ? requiredString(input.name, "name", asanaInvalidInputError) : optionalString(input.name),
+    name: requireName ? requiredString(input.name, "name", providerInputError) : optionalString(input.name),
     archived: optionalBoolean(input.archived),
     color: nullableString(input.color),
     icon: nullableString(input.icon),
@@ -450,18 +449,18 @@ function buildProjectMutationBody(input: Record<string, unknown>, requireName: b
 
 function assertProjectNotes(input: Record<string, unknown>): void {
   if (Object.hasOwn(input, "notes") && Object.hasOwn(input, "htmlNotes")) {
-    throw asanaInvalidInputError("notes and htmlNotes cannot both be provided.");
+    throw providerInputError("notes and htmlNotes cannot both be provided.");
   }
 }
 
 function assertProjectDates(input: Record<string, unknown>): void {
   if (Object.hasOwn(input, "startOn") && !Object.hasOwn(input, "dueOn")) {
-    throw asanaInvalidInputError("startOn requires dueOn in the same request.");
+    throw providerInputError("startOn requires dueOn in the same request.");
   }
   const startOn = optionalString(input.startOn);
   const dueOn = optionalString(input.dueOn);
   if (startOn && startOn === dueOn) {
-    throw asanaInvalidInputError("startOn and dueOn cannot be the same date.");
+    throw providerInputError("startOn and dueOn cannot be the same date.");
   }
 }
 
@@ -469,15 +468,15 @@ function buildScheduleDates(value: unknown): Record<string, unknown> | undefined
   if (value === undefined) {
     return undefined;
   }
-  const input = requiredRecord(value, "scheduleDates", asanaInvalidInputError);
+  const input = requiredRecord(value, "scheduleDates", providerInputError);
   const shouldSkipWeekends = input.shouldSkipWeekends;
   if (typeof shouldSkipWeekends !== "boolean") {
-    throw asanaInvalidInputError("scheduleDates.shouldSkipWeekends is required.");
+    throw providerInputError("scheduleDates.shouldSkipWeekends is required.");
   }
   const startOn = optionalString(input.startOn);
   const dueOn = optionalString(input.dueOn);
   if ((startOn ? 1 : 0) + (dueOn ? 1 : 0) !== 1) {
-    throw asanaInvalidInputError("scheduleDates requires exactly one of startOn or dueOn.");
+    throw providerInputError("scheduleDates requires exactly one of startOn or dueOn.");
   }
   return compactObject({
     should_skip_weekends: shouldSkipWeekends,
@@ -510,11 +509,11 @@ function requiredDelimitedStringArray(value: unknown, fieldName: string): string
 }
 
 function requiredNonEmptyStringArray(value: unknown, fieldName: string): string[] {
-  const values = requiredStringArray(value, fieldName, asanaInvalidInputError)
+  const values = requiredStringArray(value, fieldName, providerInputError)
     .map((item) => item.trim())
     .filter(Boolean);
   if (values.length === 0) {
-    throw asanaInvalidInputError(`${fieldName} must contain at least one value.`);
+    throw providerInputError(`${fieldName} must contain at least one value.`);
   }
   return values;
 }
@@ -528,16 +527,16 @@ function buildProjectCustomFieldSearchQuery(value: unknown): Record<string, stri
     return {};
   }
   if (!Array.isArray(value)) {
-    throw asanaInvalidInputError("customFieldFilters must be an array.");
+    throw providerInputError("customFieldFilters must be an array.");
   }
 
   const query: Record<string, string> = {};
   for (const [index, item] of value.entries()) {
-    const filter = requiredRecord(item, `customFieldFilters[${index}]`, asanaInvalidInputError);
+    const filter = requiredRecord(item, `customFieldFilters[${index}]`, providerInputError);
     const customFieldId = requiredString(
       filter.customFieldId,
       `customFieldFilters[${index}].customFieldId`,
-      asanaInvalidInputError,
+      providerInputError,
     );
     const conditions = compactAsanaQuery({
       is_set: booleanString(filter.isSet),
@@ -573,7 +572,7 @@ function nullableSearchDate(value: unknown): string | undefined {
 
 function assertOptionalPlacement(input: Record<string, unknown>): void {
   if (optionalString(input.insertBefore) && optionalString(input.insertAfter)) {
-    throw asanaInvalidInputError("insertBefore and insertAfter cannot both be provided.");
+    throw providerInputError("insertBefore and insertAfter cannot both be provided.");
   }
 }
 

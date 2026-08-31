@@ -12,7 +12,12 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  providerResponseError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const codaApiBaseUrl = "https://coda.io/apis/v1";
 const codaWhoamiPath = "/whoami";
@@ -413,7 +418,7 @@ function readOptionalPositiveInteger(value: unknown, fieldName: string): number 
   if (value == null || value === "") {
     return undefined;
   }
-  return positiveInteger(value, fieldName, invalidInputError);
+  return positiveInteger(value, fieldName, providerInputError);
 }
 
 function readOptionalStringArray(value: unknown): string[] | undefined {
@@ -424,20 +429,20 @@ function readOptionalStringArray(value: unknown): string[] | undefined {
 }
 
 function readRowsUpsert(value: unknown): Array<Record<string, unknown>> {
-  const rows = objectArray(value, "rows", invalidInputError);
+  const rows = objectArray(value, "rows", providerInputError);
   if (rows.length === 0) {
     throw new ProviderRequestError(400, "rows is required");
   }
 
   return rows.map((row, rowIndex) => {
-    const cells = objectArray(row.cells, `rows[${rowIndex}].cells`, invalidInputError);
+    const cells = objectArray(row.cells, `rows[${rowIndex}].cells`, providerInputError);
     if (cells.length === 0) {
       throw new ProviderRequestError(400, `rows[${rowIndex}].cells is required`);
     }
 
     return {
       cells: cells.map((cell, cellIndex) => ({
-        column: requiredString(cell.column, `rows[${rowIndex}].cells[${cellIndex}].column`, invalidInputError),
+        column: requiredString(cell.column, `rows[${rowIndex}].cells[${cellIndex}].column`, providerInputError),
         value: cell.value,
       })),
     };
@@ -445,13 +450,5 @@ function readRowsUpsert(value: unknown): Array<Record<string, unknown>> {
 }
 
 function requireInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, invalidInputError);
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
+  return requiredString(value, fieldName, providerInputError);
 }

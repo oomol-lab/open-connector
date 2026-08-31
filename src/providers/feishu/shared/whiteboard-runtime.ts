@@ -1,7 +1,7 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
 import { optionalString, optionalStringArray } from "../../../core/cast.ts";
-import { ProviderRequestError } from "../../provider-runtime.ts";
+import { ProviderRequestError, providerResponseError } from "../../provider-runtime.ts";
 
 interface FeishuWhiteboardActionHandler {
   (input: Record<string, unknown>): Promise<unknown>;
@@ -52,7 +52,7 @@ async function createWhiteboardNodes(input: Record<string, unknown>, request: Fe
   });
   const ids = optionalStringArray(data.ids);
   if (!ids) {
-    throw invalidResponse("Feishu whiteboard response is missing a string ids array");
+    throw providerResponseError("Feishu whiteboard response is missing a string ids array");
   }
   return { createdNodeIds: ids };
 }
@@ -120,11 +120,7 @@ function requireString(value: unknown, fieldName: string) {
 function requireResponseString(value: unknown, fieldName: string) {
   const string = optionalString(value);
   if (!string) {
-    throw invalidResponse(`Feishu whiteboard response is missing ${fieldName}`);
+    throw providerResponseError(`Feishu whiteboard response is missing ${fieldName}`);
   }
   return string;
-}
-
-function invalidResponse(message: string) {
-  return new ProviderRequestError(502, message);
 }

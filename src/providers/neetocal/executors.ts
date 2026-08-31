@@ -4,6 +4,7 @@ import { compactObject, optionalInteger, optionalRecord, optionalString, require
 import {
   defineProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
@@ -18,7 +19,6 @@ interface Context {
   fetcher: typeof fetch;
   signal?: AbortSignal;
 }
-const inputError = (message: string) => new ProviderRequestError(400, message);
 function subdomain(value: unknown): string {
   const text = optionalString(value)?.toLowerCase();
   if (
@@ -31,7 +31,7 @@ function subdomain(value: unknown): string {
       return !((97 <= code && code <= 122) || (48 <= code && code <= 57) || char === "-");
     })
   )
-    throw inputError("subdomain must be a single NeetoCal workspace subdomain");
+    throw providerInputError("subdomain must be a single NeetoCal workspace subdomain");
   return text;
 }
 function baseUrl(value: unknown): string {
@@ -107,7 +107,7 @@ const handlers = {
     return record(
       await request(
         context,
-        `/meetings/${encodeURIComponent(requiredString(input.schedulingLinkSid, "schedulingLinkSid", inputError))}`,
+        `/meetings/${encodeURIComponent(requiredString(input.schedulingLinkSid, "schedulingLinkSid", providerInputError))}`,
       ),
       "scheduling-link response",
     );
@@ -135,19 +135,19 @@ const handlers = {
     return record(
       await request(
         context,
-        `/bookings/${encodeURIComponent(requiredString(input.bookingSid, "bookingSid", inputError))}`,
+        `/bookings/${encodeURIComponent(requiredString(input.bookingSid, "bookingSid", providerInputError))}`,
       ),
       "booking response",
     );
   },
   async list_available_slots(input: Record<string, unknown>, context: Context) {
-    const sid = requiredString(input.schedulingLinkSid, "schedulingLinkSid", inputError);
+    const sid = requiredString(input.schedulingLinkSid, "schedulingLinkSid", providerInputError);
     const payload = record(
       await request(
         context,
         `/meetings/${encodeURIComponent(sid)}/slots`,
         compactObject({
-          time_zone: requiredString(input.timeZone, "timeZone", inputError),
+          time_zone: requiredString(input.timeZone, "timeZone", providerInputError),
           year: optionalInteger(input.year),
           month: optionalInteger(input.month),
           day: optionalInteger(input.day),

@@ -4,6 +4,7 @@ import { optionalRecord, optionalString, requiredString } from "../../core/cast.
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -304,8 +305,4 @@ function readRequiredString(value: unknown, fieldName: string) {
 
 function readOptionalString(value: unknown) {
   return typeof value === "string" && value.trim() !== "" ? value.trim() : undefined;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

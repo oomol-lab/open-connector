@@ -16,6 +16,7 @@ import {
 } from "../../core/cast.ts";
 import {
   createProviderTimeout,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderTextBody,
@@ -108,7 +109,7 @@ export const chatApiForWhatsappActionHandlers: ProviderActionHandlers<
       body: compactObject({
         chatId: optionalString(input.chatId),
         phone: optionalString(input.phone),
-        body: requiredString(input.text, "text", inputError),
+        body: requiredString(input.text, "text", providerInputError),
       }),
     });
     return normalizeSendStatus(payload);
@@ -123,8 +124,8 @@ export const chatApiForWhatsappActionHandlers: ProviderActionHandlers<
       body: compactObject({
         chatId: optionalString(input.chatId),
         phone: optionalString(input.phone),
-        body: requiredString(input.fileUrl, "fileUrl", inputError),
-        filename: requiredString(input.filename, "filename", inputError),
+        body: requiredString(input.fileUrl, "fileUrl", providerInputError),
+        filename: requiredString(input.filename, "filename", providerInputError),
         caption: optionalString(input.caption),
       }),
     });
@@ -147,7 +148,7 @@ export const chatApiForWhatsappActionHandlers: ProviderActionHandlers<
 };
 
 export function requireChatApiForWhatsappInstanceId(value: unknown): string {
-  const instanceId = requiredString(value, "instanceId", inputError);
+  const instanceId = requiredString(value, "instanceId", providerInputError);
   const numericInstanceId = Number(instanceId);
   if (!Number.isInteger(numericInstanceId) || numericInstanceId <= 0) {
     throw new ProviderRequestError(400, "instanceId must be a positive integer string");
@@ -379,10 +380,6 @@ function parseJsonSafely(value: string): unknown {
   } catch {
     return undefined;
   }
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function responseError(message: string): ProviderRequestError {

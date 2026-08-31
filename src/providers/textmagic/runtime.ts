@@ -14,6 +14,7 @@ import { queryParams } from "../../core/request.ts";
 import {
   createProviderTimeout,
   isAbortSignalError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -57,7 +58,7 @@ export const textmagicActionHandlers: ProviderActionHandlers<"textmagic", Textma
         phase: "execute",
         body: compactObject({
           text: input.text,
-          phones: requiredStringArray(input.phones, "phones", invalidInput).join(","),
+          phones: requiredStringArray(input.phones, "phones", providerInputError).join(","),
           from: input.from,
           referenceId: input.referenceId,
           cutExtra: input.cutExtra,
@@ -158,7 +159,7 @@ export async function validateTextmagicCredential(
 }
 
 export function requireTextmagicUsername(value: unknown): string {
-  return requiredString(value, "Textmagic username", invalidInput);
+  return requiredString(value, "Textmagic username", providerInputError);
 }
 
 export function textmagicAuthorization(username: string, apiKey: string): string {
@@ -252,8 +253,4 @@ function readPositiveInteger(value: unknown, fieldName: string): number {
     throw new ProviderRequestError(400, `${fieldName} must be a positive integer`);
   }
   return Number(value);
-}
-
-function invalidInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

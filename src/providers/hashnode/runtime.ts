@@ -2,7 +2,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalRawString, optionalRecord, requiredRecord, requiredString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const hashnodeApiUrl = "https://gql-beta.hashnode.com/";
 
@@ -769,10 +769,6 @@ function normalizeTags(value: unknown): unknown {
       name: readOptionalTrimmedString(tag.name, `tags[${index}].name`),
     });
   });
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function readOptionalNullableBoolean(value: unknown) {

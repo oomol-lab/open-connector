@@ -13,6 +13,7 @@ import {
 } from "../../core/cast.ts";
 import {
   createProviderTimeout,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderJsonBody,
@@ -63,7 +64,7 @@ export const amiliaActionHandlers: ProviderActionHandlers<"amilia", ProviderRunt
     };
   },
   async get_program(input, context) {
-    const programId = positiveInteger(input.programId, "programId", inputError);
+    const programId = positiveInteger(input.programId, "programId", providerInputError);
     const payload = await requestAmiliaJson({
       context,
       path: `/programs/${programId}`,
@@ -75,7 +76,7 @@ export const amiliaActionHandlers: ProviderActionHandlers<"amilia", ProviderRunt
     };
   },
   async list_program_activities(input, context) {
-    const programId = positiveInteger(input.programId, "programId", inputError);
+    const programId = positiveInteger(input.programId, "programId", providerInputError);
     const payload = await requestAmiliaJson({
       context,
       path: `/programs/${programId}/activities`,
@@ -96,7 +97,7 @@ export const amiliaActionHandlers: ProviderActionHandlers<"amilia", ProviderRunt
     };
   },
   async get_activity(input, context) {
-    const activityId = positiveInteger(input.activityId, "activityId", inputError);
+    const activityId = positiveInteger(input.activityId, "activityId", providerInputError);
     const payload = await requestAmiliaJson({
       context,
       path: `/activities/${activityId}`,
@@ -113,7 +114,7 @@ export const amiliaActionHandlers: ProviderActionHandlers<"amilia", ProviderRunt
 };
 
 export function normalizeAmiliaOrganization(value: unknown): string {
-  const organization = requiredString(value, "organization", inputError);
+  const organization = requiredString(value, "organization", providerInputError);
   if (organization.length > 200) {
     throw new ProviderRequestError(400, "organization must be 200 characters or fewer");
   }
@@ -274,16 +275,12 @@ function normalizeAmiliaList(payload: unknown, resourceName: string): AmiliaList
 }
 
 function readOptionalPositiveInteger(value: unknown, fieldName: string): number | undefined {
-  return value === undefined ? undefined : positiveInteger(value, fieldName, inputError);
+  return value === undefined ? undefined : positiveInteger(value, fieldName, providerInputError);
 }
 
 function readNonNegativeInteger(value: unknown): number | null {
   const result = optionalInteger(value);
   return result !== undefined && result >= 0 ? result : null;
-}
-
-function inputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function responseError(message: string): ProviderRequestError {

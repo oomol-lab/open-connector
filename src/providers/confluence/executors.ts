@@ -151,8 +151,8 @@ async function validateConfluenceOAuthCredential(
     );
   }
 
-  const cloudId = requiredString(resource.id, "cloudId", providerResponseError);
-  const siteUrl = requiredString(resource.url, "site URL", providerResponseError);
+  const cloudId = requiredString(resource.id, "cloudId", confluenceResponseError);
+  const siteUrl = requiredString(resource.url, "site URL", confluenceResponseError);
   const siteName = optionalString(resource.name) ?? siteUrl;
   const siteAvatarUrl = optionalString(resource.avatarUrl);
   const resourceScopes = optionalStringArray(resource.scopes) ?? [];
@@ -286,6 +286,6 @@ function extractAtlassianErrorMessage(payload: unknown): string | undefined {
   return optionalString(object?.message) ?? optionalString(object?.error_description) ?? optionalString(object?.error);
 }
 
-function providerResponseError(message: string): ProviderRequestError {
+function confluenceResponseError(message: string): ProviderRequestError {
   return new ProviderRequestError(502, `Confluence ${message}`);
 }

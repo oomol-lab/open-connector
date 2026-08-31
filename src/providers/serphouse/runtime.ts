@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord, stringArray } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerResponseError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 type SerphousePhase = "validate" | "execute";
 type SerphouseQueryValue = string | number | undefined;
@@ -22,7 +22,7 @@ export const serphouseActionHandlers: ProviderActionHandlers<"serphouse", Serpho
         phase: "execute",
       }),
       "SERPHouse account info response",
-      providerOutputError,
+      providerResponseError,
     );
 
     return normalizeAccountInfo(payload);
@@ -36,13 +36,13 @@ export const serphouseActionHandlers: ProviderActionHandlers<"serphouse", Serpho
         phase: "execute",
       }),
       "SERPHouse domain list response",
-      providerOutputError,
+      providerResponseError,
     );
 
     return {
       status: readString(payload.status, "status"),
       msg: readString(payload.msg, "msg"),
-      domains: stringArray(payload.results, "SERPHouse results", providerOutputError),
+      domains: stringArray(payload.results, "SERPHouse results", providerResponseError),
     };
   },
   async list_languages(input, context) {
@@ -54,7 +54,7 @@ export const serphouseActionHandlers: ProviderActionHandlers<"serphouse", Serpho
         phase: "execute",
       }),
       "SERPHouse language list response",
-      providerOutputError,
+      providerResponseError,
     );
 
     return {
@@ -76,7 +76,7 @@ export const serphouseActionHandlers: ProviderActionHandlers<"serphouse", Serpho
         phase: "execute",
       }),
       "SERPHouse location search response",
-      providerOutputError,
+      providerResponseError,
     );
 
     return {
@@ -110,7 +110,7 @@ export const serphouseActionHandlers: ProviderActionHandlers<"serphouse", Serpho
         phase: "execute",
       }),
       "SERPHouse live SERP response",
-      providerOutputError,
+      providerResponseError,
     );
 
     return normalizeSearchWeb(payload);
@@ -134,9 +134,9 @@ export async function validateSerphouseCredential(
       phase: "validate",
     }),
     "SERPHouse account info response",
-    providerOutputError,
+    providerResponseError,
   );
-  const account = sanitizeAccount(requiredRecord(payload.results ?? {}, "SERPHouse account", providerOutputError));
+  const account = sanitizeAccount(requiredRecord(payload.results ?? {}, "SERPHouse account", providerResponseError));
   const email = optionalString(account.email);
   const name = optionalString(account.name);
   const planCount = Array.isArray(account.plan) ? account.plan.length : undefined;
@@ -266,26 +266,26 @@ function normalizeAccountInfo(payload: Record<string, unknown>): Record<string, 
   return {
     status: readString(payload.status, "status"),
     msg: readString(payload.msg, "msg"),
-    account: sanitizeAccount(requiredRecord(payload.results ?? {}, "SERPHouse account", providerOutputError)),
+    account: sanitizeAccount(requiredRecord(payload.results ?? {}, "SERPHouse account", providerResponseError)),
   };
 }
 
 function normalizeSearchWeb(payload: Record<string, unknown>): Record<string, unknown> {
-  const resultEnvelope = requiredRecord(payload.results ?? {}, "SERPHouse results", providerOutputError);
+  const resultEnvelope = requiredRecord(payload.results ?? {}, "SERPHouse results", providerResponseError);
   return {
     status: readString(payload.status, "status"),
     msg: readString(payload.msg, "msg"),
     search_metadata: requiredRecord(
       resultEnvelope.search_metadata ?? {},
       "SERPHouse search_metadata",
-      providerOutputError,
+      providerResponseError,
     ),
     search_parameters: requiredRecord(
       resultEnvelope.search_parameters ?? {},
       "SERPHouse search_parameters",
-      providerOutputError,
+      providerResponseError,
     ),
-    results: requiredRecord(resultEnvelope.results ?? {}, "SERPHouse results.results", providerOutputError),
+    results: requiredRecord(resultEnvelope.results ?? {}, "SERPHouse results.results", providerResponseError),
   };
 }
 
@@ -298,11 +298,11 @@ function asArrayOfObjects(value: unknown): Array<Record<string, unknown>> {
   if (!Array.isArray(value)) {
     throw new ProviderRequestError(502, "SERPHouse returned invalid array payload");
   }
-  return value.map((item) => requiredRecord(item, "SERPHouse array item", providerOutputError));
+  return value.map((item) => requiredRecord(item, "SERPHouse array item", providerResponseError));
 }
 
 function readStringRecord(value: unknown, fieldName: string): Record<string, string> {
-  const record = requiredRecord(value, `SERPHouse ${fieldName}`, providerOutputError);
+  const record = requiredRecord(value, `SERPHouse ${fieldName}`, providerResponseError);
   for (const [key, child] of Object.entries(record)) {
     if (typeof child !== "string") {
       throw new ProviderRequestError(502, `SERPHouse returned invalid ${fieldName}.${key} value`);
@@ -327,8 +327,4 @@ function readString(value: unknown, fieldName: string): string {
 
 function readOptionalNumber(value: unknown): number | undefined {
   return typeof value === "number" ? value : undefined;
-}
-
-function providerOutputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

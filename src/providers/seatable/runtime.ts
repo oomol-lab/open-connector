@@ -15,6 +15,7 @@ import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/r
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -113,7 +114,7 @@ export const seatableActionHandlers: Record<string, SeaTableActionHandler> = {
       }),
       "update rows",
     );
-    return { success: requiredBoolean(payload.success, "success", providerResponseError), raw: payload };
+    return { success: requiredBoolean(payload.success, "success", seatableResponseError), raw: payload };
   },
   async delete_rows(input, context) {
     const payload = requireResponseObject(
@@ -126,7 +127,7 @@ export const seatableActionHandlers: Record<string, SeaTableActionHandler> = {
       }),
       "delete rows",
     );
-    return { success: requiredBoolean(payload.success, "success", providerResponseError), raw: payload };
+    return { success: requiredBoolean(payload.success, "success", seatableResponseError), raw: payload };
   },
 };
 
@@ -315,10 +316,6 @@ function requireResponseInteger(value: unknown, fieldName: string): number {
   return result;
 }
 
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
+function seatableResponseError(message: string): ProviderRequestError {
   return new ProviderRequestError(502, `SeaTable response ${message}`);
 }

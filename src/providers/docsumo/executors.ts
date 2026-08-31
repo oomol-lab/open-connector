@@ -13,6 +13,8 @@ import {
 import { assertPublicHttpUrl, encodePathSegment } from "../../core/request.ts";
 import {
   defineProviderExecutors,
+  providerInputError,
+  providerResponseError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -103,7 +105,7 @@ async function getAccountInfo(context: DocsumoContext): Promise<unknown> {
 }
 
 async function uploadDocumentFromUrl(input: Record<string, unknown>, context: DocsumoContext): Promise<unknown> {
-  const docType = requiredString(input.docType, "docType", invalidInput);
+  const docType = requiredString(input.docType, "docType", providerInputError);
   const fileUrl = readFileUrl(input.fileUrl);
   const formData = new FormData();
   formData.set("file", fileUrl);
@@ -162,7 +164,7 @@ async function listDocuments(input: Record<string, unknown>, context: DocsumoCon
 }
 
 async function getDocumentDetail(input: Record<string, unknown>, context: DocsumoContext): Promise<unknown> {
-  const docId = requiredString(input.docId, "docId", invalidInput);
+  const docId = requiredString(input.docId, "docId", providerInputError);
   const data = readDataObject(
     await request({
       ...context,
@@ -176,7 +178,7 @@ async function getDocumentDetail(input: Record<string, unknown>, context: Docsum
   return {
     document: {
       data: optionalRecord(document.data) ?? {},
-      docId: requiredString(data.doc_id, "doc_id", providerError),
+      docId: requiredString(data.doc_id, "doc_id", providerResponseError),
       pages: Array.isArray(data.pages) ? data.pages : [],
       previewImage: optionalRecord(data.preview_image) ?? null,
       type: optionalString(data.type) ?? null,
@@ -188,7 +190,7 @@ async function getDocumentDetail(input: Record<string, unknown>, context: Docsum
 }
 
 async function getExtractedData(input: Record<string, unknown>, context: DocsumoContext): Promise<unknown> {
-  const docId = requiredString(input.docId, "docId", invalidInput);
+  const docId = requiredString(input.docId, "docId", providerInputError);
   return {
     extractedData: readDataObject(
       await request({
@@ -304,8 +306,8 @@ function normalizeDocumentTypes(value: unknown): Array<Record<string, unknown>> 
         .map((item) => optionalRecord(item))
         .filter((item): item is Record<string, unknown> => item != null)
         .map((item) => ({
-          title: requiredString(item.title, "title", providerError),
-          value: requiredString(item.value, "value", providerError),
+          title: requiredString(item.title, "title", providerResponseError),
+          value: requiredString(item.value, "value", providerResponseError),
         }))
     : [];
 }
@@ -313,11 +315,11 @@ function normalizeDocumentTypes(value: unknown): Array<Record<string, unknown>> 
 function normalizeUploadedDocument(record: Record<string, unknown>): Record<string, unknown> {
   return {
     createdAt: optionalString(record.created_at) ?? null,
-    docId: requiredString(record.doc_id, "doc_id", providerError),
+    docId: requiredString(record.doc_id, "doc_id", providerResponseError),
     docMetaData: optionalString(record.doc_meta_data) ?? null,
     email: optionalString(record.email) ?? null,
     reviewUrl: optionalString(record.review_url) ?? null,
-    status: requiredString(record.status, "status", providerError),
+    status: requiredString(record.status, "status", providerResponseError),
     title: optionalString(record.title) ?? null,
     type: optionalString(record.type) ?? null,
     userDocId: optionalString(record.user_doc_id) ?? null,
@@ -335,7 +337,7 @@ function normalizeDocumentList(value: unknown): Array<Record<string, unknown>> {
             item.approved_with_warnings === null ? null : (optionalBoolean(item.approved_with_warnings) ?? null),
           createdAtIso: optionalString(item.created_at_iso) ?? null,
           displayType: optionalString(item.display_type) ?? null,
-          docId: requiredString(item.doc_id, "doc_id", providerError),
+          docId: requiredString(item.doc_id, "doc_id", providerResponseError),
           docMetaData: optionalString(item.doc_meta_data) ?? null,
           folderId: optionalString(item.folder_id) ?? null,
           folderName: optionalString(item.folder_name) ?? null,
@@ -421,7 +423,7 @@ function normalizeSummaryCounts(value: unknown): Record<string, unknown> | null 
 }
 
 function readFileUrl(value: unknown): string {
-  const raw = requiredString(value, "fileUrl", invalidInput);
+  const raw = requiredString(value, "fileUrl", providerInputError);
   const url = assertPublicHttpUrl(raw, {
     fieldName: "fileUrl",
     createError: (message) => new ProviderRequestError(400, message),
@@ -439,12 +441,4 @@ function isTimeoutError(error: unknown): boolean {
     error instanceof Error &&
     (error.name === "AbortError" || error.name === "TimeoutError" || error.message.toLowerCase().includes("timeout"))
   );
-}
-
-function invalidInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

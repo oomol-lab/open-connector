@@ -12,7 +12,12 @@ import {
   stringArray,
 } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  providerResponseError,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 export const leadfeederApiBaseUrl = "https://api.leadfeeder.com";
 const validationPath = "/v1/users/me";
@@ -117,9 +122,9 @@ export async function validateLeadfeederCredential(
     context: { fetcher, signal },
   });
   const data = requiredRecord(
-    requiredRecord(payload, "Leadfeeder response", providerError).data,
+    requiredRecord(payload, "Leadfeeder response", providerResponseError).data,
     "Leadfeeder current user",
-    providerError,
+    providerResponseError,
   );
   const attributes = optionalRecord(data.attributes) ?? {};
   const email = optionalString(attributes.email);
@@ -342,12 +347,4 @@ function readErrorMessage(payload: unknown, status: number): string {
     optionalString(objectPayload.message) ??
     `Leadfeeder request failed with ${status}`
   );
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

@@ -249,6 +249,22 @@ export class ProviderRequestError extends Error {
   }
 }
 
+/**
+ * Return the 400 error providers throw for invalid action input or credentials.
+ * The message is surfaced verbatim as the `invalid_input` execution error.
+ */
+export function providerInputError(message: string): ProviderRequestError {
+  return new ProviderRequestError(400, message);
+}
+
+/**
+ * Return the 502 error providers throw for an upstream response they cannot
+ * use. The message is surfaced verbatim as the `provider_error` execution error.
+ */
+export function providerResponseError(message: string): ProviderRequestError {
+  return new ProviderRequestError(502, message);
+}
+
 export interface ProviderTimeout {
   signal: AbortSignal;
   didTimeout(): boolean;

@@ -12,6 +12,7 @@ import {
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,
   providerFetch,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderProxyErrorMessage,
@@ -31,7 +32,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(servic
   list_popup_responses(input, context) {
     return requestPoper(
       "/popup/responses",
-      { popup_id: requiredString(input.popup_id, "popup_id", badInput) },
+      { popup_id: requiredString(input.popup_id, "popup_id", providerInputError) },
       context.apiKey,
       context.fetcher,
       context.signal,
@@ -130,8 +131,4 @@ function parseJson(text: string): unknown {
   } catch {
     return text;
   }
-}
-
-function badInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

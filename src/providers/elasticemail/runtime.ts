@@ -12,7 +12,7 @@ import {
   requiredString,
   requiredStringArray,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const elasticemailApiBaseUrl = "https://api.elasticemail.com/v4";
 
@@ -79,7 +79,7 @@ async function listContacts(input: Record<string, unknown>, context: ApiKeyProvi
 async function getContact(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   return requestElasticemailJson({
     apiKey: context.apiKey,
-    path: `/contacts/${encodeURIComponent(requiredString(input.email, "email", inputError))}`,
+    path: `/contacts/${encodeURIComponent(requiredString(input.email, "email", providerInputError))}`,
     fetcher: context.fetcher,
     signal: context.signal,
     mode: "execute",
@@ -104,7 +104,7 @@ async function addContacts(input: Record<string, unknown>, context: ApiKeyProvid
 async function updateContact(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   return requestElasticemailJson({
     apiKey: context.apiKey,
-    path: `/contacts/${encodeURIComponent(requiredString(input.email, "email", inputError))}`,
+    path: `/contacts/${encodeURIComponent(requiredString(input.email, "email", providerInputError))}`,
     method: "PUT",
     body: contactUpdateBody(input),
     fetcher: context.fetcher,
@@ -116,7 +116,7 @@ async function updateContact(input: Record<string, unknown>, context: ApiKeyProv
 async function deleteContact(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   await requestElasticemailNoContent({
     apiKey: context.apiKey,
-    path: `/contacts/${encodeURIComponent(requiredString(input.email, "email", inputError))}`,
+    path: `/contacts/${encodeURIComponent(requiredString(input.email, "email", providerInputError))}`,
     method: "DELETE",
     fetcher: context.fetcher,
     signal: context.signal,
@@ -140,7 +140,7 @@ async function listLists(input: Record<string, unknown>, context: ApiKeyProvider
 async function getList(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   return requestElasticemailJson({
     apiKey: context.apiKey,
-    path: `/lists/${encodeURIComponent(requiredString(input.listName, "listName", inputError))}`,
+    path: `/lists/${encodeURIComponent(requiredString(input.listName, "listName", providerInputError))}`,
     fetcher: context.fetcher,
     signal: context.signal,
     mode: "execute",
@@ -153,7 +153,7 @@ async function createList(input: Record<string, unknown>, context: ApiKeyProvide
     path: "/lists",
     method: "POST",
     body: compactObject({
-      ListName: requiredString(input.listName, "listName", inputError),
+      ListName: requiredString(input.listName, "listName", providerInputError),
       AllowUnsubscribe: optionalBoolean(input.allowUnsubscribe),
       Emails: optionalStringArray(input.emails),
     }),
@@ -166,7 +166,7 @@ async function createList(input: Record<string, unknown>, context: ApiKeyProvide
 async function updateList(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   return requestElasticemailJson({
     apiKey: context.apiKey,
-    path: `/lists/${encodeURIComponent(requiredString(input.listName, "listName", inputError))}`,
+    path: `/lists/${encodeURIComponent(requiredString(input.listName, "listName", providerInputError))}`,
     method: "PUT",
     body: compactObject({
       NewListName: optionalString(input.newListName),
@@ -181,7 +181,7 @@ async function updateList(input: Record<string, unknown>, context: ApiKeyProvide
 async function deleteList(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   await requestElasticemailNoContent({
     apiKey: context.apiKey,
-    path: `/lists/${encodeURIComponent(requiredString(input.listName, "listName", inputError))}`,
+    path: `/lists/${encodeURIComponent(requiredString(input.listName, "listName", providerInputError))}`,
     method: "DELETE",
     fetcher: context.fetcher,
     signal: context.signal,
@@ -194,7 +194,7 @@ async function deleteList(input: Record<string, unknown>, context: ApiKeyProvide
 async function listContactsInList(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   return requestElasticemailJson({
     apiKey: context.apiKey,
-    path: `/lists/${encodeURIComponent(requiredString(input.listName, "listName", inputError))}/contacts`,
+    path: `/lists/${encodeURIComponent(requiredString(input.listName, "listName", providerInputError))}/contacts`,
     query: pageQuery(input),
     fetcher: context.fetcher,
     signal: context.signal,
@@ -205,7 +205,7 @@ async function listContactsInList(input: Record<string, unknown>, context: ApiKe
 async function addContactsToList(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   return requestElasticemailJson({
     apiKey: context.apiKey,
-    path: `/lists/${encodeURIComponent(requiredString(input.listName, "listName", inputError))}/contacts`,
+    path: `/lists/${encodeURIComponent(requiredString(input.listName, "listName", providerInputError))}/contacts`,
     method: "POST",
     body: {
       Emails: nonEmptyStringArray(input.emails, "emails"),
@@ -219,7 +219,7 @@ async function addContactsToList(input: Record<string, unknown>, context: ApiKey
 async function removeContactsFromList(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   await requestElasticemailNoContent({
     apiKey: context.apiKey,
-    path: `/lists/${encodeURIComponent(requiredString(input.listName, "listName", inputError))}/contacts/remove`,
+    path: `/lists/${encodeURIComponent(requiredString(input.listName, "listName", providerInputError))}/contacts/remove`,
     method: "POST",
     body: {
       Emails: nonEmptyStringArray(input.emails, "emails"),
@@ -360,7 +360,7 @@ function pageQuery(input: Record<string, unknown>) {
 
 function contactCreateBody(input: Record<string, unknown>) {
   return compactObject({
-    Email: requiredString(input.email, "email", inputError),
+    Email: requiredString(input.email, "email", providerInputError),
     Status: optionalString(input.status),
     FirstName: optionalString(input.firstName),
     LastName: optionalString(input.lastName),
@@ -391,17 +391,13 @@ function consentBody(value: unknown) {
 }
 
 function asContactPayloadArray(value: unknown) {
-  return objectArray(value, "contacts item", inputError).map(contactCreateBody);
+  return objectArray(value, "contacts item", providerInputError).map(contactCreateBody);
 }
 
 function nonEmptyStringArray(value: unknown, fieldName: string) {
-  const items = requiredStringArray(value, fieldName, inputError);
+  const items = requiredStringArray(value, fieldName, providerInputError);
   if (items.length === 0) {
     throw new ProviderRequestError(400, `${fieldName} must be a non-empty string array`);
   }
   return items;
-}
-
-function inputError(message: string) {
-  return new ProviderRequestError(400, message);
 }

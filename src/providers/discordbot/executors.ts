@@ -4,7 +4,13 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import { Buffer } from "node:buffer";
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment, jsonObject } from "../../core/request.ts";
-import { defineApiKeyProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  providerInputError,
+  ProviderRequestError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 const service = "discordbot";
 const discordApiBaseUrl = "https://discord.com/api";
@@ -244,12 +250,4 @@ function assertSingleCursor(input: Record<string, unknown>): void {
 
 function requiredPath(value: unknown, field: string): string {
   return encodePathSegment(requiredString(value, field, providerInputError));
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

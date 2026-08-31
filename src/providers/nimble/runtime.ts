@@ -6,7 +6,7 @@ import {
   requiredString,
   requiredStringArray,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const nimbleApiBaseUrl = "https://app.nimble.com/api/v1";
 
@@ -84,7 +84,7 @@ async function mutateContact(
     throw new ProviderRequestError(400, "update_contact requires fields, avatarUrl, or isImportant");
   }
   if (body.fields !== undefined) {
-    const fields = requiredRecord(body.fields, "fields", invalidInput);
+    const fields = requiredRecord(body.fields, "fields", providerInputError);
     if (Object.keys(fields).length === 0) throw new ProviderRequestError(400, "fields requires at least one field");
   }
   const payload = requireResponseObject(await requestNimble(context, { method, path, query, body }));
@@ -145,7 +145,7 @@ function readErrorMessage(payload: unknown): string {
 
 function joinStrings(value: unknown): string | undefined {
   if (value === undefined) return undefined;
-  return requiredStringArray(value, "fields", invalidInput)
+  return requiredStringArray(value, "fields", providerInputError)
     .map((field) => field.trim())
     .join(",");
 }
@@ -161,9 +161,5 @@ function requireResponseObject(value: unknown): Record<string, unknown> {
 }
 
 function requiredInputString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, invalidInput);
-}
-
-function invalidInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
+  return requiredString(value, fieldName, providerInputError);
 }

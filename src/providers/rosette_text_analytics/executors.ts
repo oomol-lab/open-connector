@@ -15,6 +15,7 @@ import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
 } from "../provider-runtime.ts";
 
@@ -324,7 +325,7 @@ function objectArray(value: unknown): Array<Record<string, unknown>> {
 }
 
 function requireProviderObject(value: unknown, fieldName: string): Record<string, unknown> {
-  return requiredRecord(value, fieldName, providerError);
+  return requiredRecord(value, fieldName, providerResponseError);
 }
 
 function nullableNumber(value: unknown): number | null {
@@ -338,11 +339,7 @@ function nullableProviderString(value: unknown): string | null {
 function requiredProviderString(value: unknown, fieldName: string): string {
   const result = optionalRawString(value);
   if (result === undefined) {
-    throw providerError(`${fieldName} must be a string`);
+    throw providerResponseError(`${fieldName} must be a string`);
   }
   return result;
-}
-
-function providerError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

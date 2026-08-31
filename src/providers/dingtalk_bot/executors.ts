@@ -16,6 +16,7 @@ import {
   defineProviderExecutors,
   isAbortLikeError,
   normalizeProviderProxyHeaders,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderProxyErrorMessage,
@@ -370,8 +371,4 @@ function applyWebhookAuthentication(url: URL, accessToken: string, signingSecret
 
 function buildProviderAccountId(accessToken: string): string {
   return `dingtalk_bot:${createHash("sha256").update(accessToken).digest("hex").slice(0, 24)}`;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

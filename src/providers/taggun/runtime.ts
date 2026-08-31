@@ -3,7 +3,7 @@ import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-
 
 import { optionalBoolean, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, compactJson } from "../../core/request.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const taggunApiBaseUrl = "https://api.taggun.io";
 const simpleUrlPath = "/api/receipt/v1/simple/url";
@@ -310,8 +310,4 @@ function readStringArray(value: unknown): string[] {
     return [];
   }
   return value.filter((item): item is string => typeof item === "string");
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

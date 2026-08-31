@@ -11,7 +11,7 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError } from "../provider-runtime.ts";
 
 const dailybotApiBaseUrl = "https://api.dailybot.com";
 
@@ -46,7 +46,7 @@ export const dailybotActionHandlers: ProviderActionHandlers<"dailybot", Dailybot
     return { count, users: results };
   },
   async get_user(input, context) {
-    const userUuid = requiredString(input.user_uuid, "user_uuid", badInput);
+    const userUuid = requiredString(input.user_uuid, "user_uuid", providerInputError);
     return {
       user: asObject(
         await dailybotRequest({
@@ -70,7 +70,7 @@ export const dailybotActionHandlers: ProviderActionHandlers<"dailybot", Dailybot
     return { count, teams: results };
   },
   async get_team(input, context) {
-    const teamId = requiredString(input.team_id, "team_id", badInput);
+    const teamId = requiredString(input.team_id, "team_id", providerInputError);
     return {
       team: asObject(
         await dailybotRequest({
@@ -83,7 +83,7 @@ export const dailybotActionHandlers: ProviderActionHandlers<"dailybot", Dailybot
     };
   },
   async list_team_members(input, context) {
-    const teamId = requiredString(input.team_id, "team_id", badInput);
+    const teamId = requiredString(input.team_id, "team_id", providerInputError);
     const payload = await dailybotRequest({
       path: `/v1/teams/${encodePathSegment(teamId)}/members/`,
       method: "GET",
@@ -100,9 +100,9 @@ export const dailybotActionHandlers: ProviderActionHandlers<"dailybot", Dailybot
           path: "/v1/messaging/send-message/",
           method: "POST",
           body: compactObject({
-            target_type: requiredString(input.target_type, "target_type", badInput),
-            target_uuid: requiredString(input.target_uuid, "target_uuid", badInput),
-            message: requiredString(input.message, "message", badInput),
+            target_type: requiredString(input.target_type, "target_type", providerInputError),
+            target_uuid: requiredString(input.target_uuid, "target_uuid", providerInputError),
+            message: requiredString(input.message, "message", providerInputError),
             platform: optionalString(input.platform),
           }),
           context,
@@ -118,9 +118,9 @@ export const dailybotActionHandlers: ProviderActionHandlers<"dailybot", Dailybot
           path: "/v1/messaging/send-email/",
           method: "POST",
           body: {
-            user_uuid: requiredString(input.user_uuid, "user_uuid", badInput),
-            subject: requiredString(input.subject, "subject", badInput),
-            body: requiredString(input.body, "body", badInput),
+            user_uuid: requiredString(input.user_uuid, "user_uuid", providerInputError),
+            subject: requiredString(input.subject, "subject", providerInputError),
+            body: requiredString(input.body, "body", providerInputError),
           },
           context,
           phase: "execute",
@@ -135,7 +135,7 @@ export const dailybotActionHandlers: ProviderActionHandlers<"dailybot", Dailybot
           path: "/v1/messaging/open-conversation/",
           method: "POST",
           body: compactObject({
-            user_uuid: requiredString(input.user_uuid, "user_uuid", badInput),
+            user_uuid: requiredString(input.user_uuid, "user_uuid", providerInputError),
             initial_message: optionalString(input.initial_message),
           }),
           context,
@@ -248,8 +248,4 @@ function buildDisplayName(firstName: unknown, lastName: unknown): string | undef
 
 function asObject(value: unknown): Record<string, unknown> {
   return optionalRecord(value) ?? {};
-}
-
-function badInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

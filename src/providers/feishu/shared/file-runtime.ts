@@ -3,7 +3,7 @@ import type { FeishuJsonRequest } from "./client.ts";
 import type { DownloadedFeishuSource } from "./media.ts";
 
 import { optionalRecord } from "../../../core/cast.ts";
-import { ProviderRequestError } from "../../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, providerResponseError } from "../../provider-runtime.ts";
 import { requestFeishuMultipart, withFeishuRawResponse } from "./client.ts";
 import {
   downloadFeishuSource,
@@ -95,7 +95,7 @@ async function uploadDriveFile(input: Record<string, unknown>, deps: FeishuFileR
   const folderToken = optionalString(input.folderToken);
   const wikiToken = optionalString(input.wikiToken);
   if (folderToken && wikiToken) {
-    throw invalidInput("folderToken and wikiToken are mutually exclusive");
+    throw providerInputError("folderToken and wikiToken are mutually exclusive");
   }
   const source = await downloadFeishuSource(
     {
@@ -200,7 +200,7 @@ function validateExportCombination(type: string, extension: string, subId: strin
     (extension === "csv") !== Boolean(subId) ||
     (onlySchema && (type !== "bitable" || extension !== "base"))
   ) {
-    throw invalidInput("the selected document type and export format are not compatible");
+    throw providerInputError("the selected document type and export format are not compatible");
   }
 }
 
@@ -254,7 +254,7 @@ async function submitDriveImport(input: Record<string, unknown>, deps: FeishuFil
   try {
     const extension = normalizeExtension(optionalString(input.fileExtension)) ?? extensionFromFileName(source.fileName);
     if (!extension) {
-      throw invalidInput("fileExtension is required when the source file name has no extension");
+      throw providerInputError("fileExtension is required when the source file name has no extension");
     }
     const type = requireString(input.type, "type");
     validateImportCombination(extension, type, feishuSourceSizeBytes(source));
@@ -289,7 +289,7 @@ async function submitDriveImport(input: Record<string, unknown>, deps: FeishuFil
     const targetToken = optionalString(input.targetToken);
     if (targetToken) {
       if (type !== "bitable") {
-        throw invalidInput("targetToken is only supported when type is bitable");
+        throw providerInputError("targetToken is only supported when type is bitable");
       }
       body.token = targetToken;
     }
@@ -402,13 +402,13 @@ async function downloadBaseAttachments(input: Record<string, unknown>, deps: Fei
     ? requestedTokens.map((token) => {
         const item = attachments.find((attachment) => attachment.fileToken === token);
         if (!item) {
-          throw invalidInput(`attachment file token ${token} was not found in Base record ${recordId}`);
+          throw providerInputError(`attachment file token ${token} was not found in Base record ${recordId}`);
         }
         return item;
       })
     : attachments;
   if (selected.length === 0) {
-    throw invalidInput(`Base record ${recordId} has no attachments`);
+    throw providerInputError(`Base record ${recordId} has no attachments`);
   }
   const files = [];
   for (const item of selected) {
@@ -618,7 +618,7 @@ async function requireBaseAttachmentField(input: Record<string, unknown>, reques
   const type = optionalString(field.type)?.trim().toLowerCase();
   const uiType = optionalString(field.ui_type)?.trim().toLowerCase();
   if (type !== "attachment" && type !== "17" && uiType !== "attachment") {
-    throw invalidInput(`Base field ${requestedFieldId} is not an attachment field`);
+    throw providerInputError(`Base field ${requestedFieldId} is not an attachment field`);
   }
   return {
     fieldId: optionalString(field.field_id) ?? optionalString(field.id) ?? requestedFieldId,
@@ -683,7 +683,7 @@ function readExportReference(input: Record<string, unknown>) {
         throw error;
       }
     }
-    throw invalidInput("exportHandle is invalid");
+    throw providerInputError("exportHandle is invalid");
   }
   return {
     ticket: requireString(input.ticket, "ticket"),
@@ -709,7 +709,7 @@ function validateImportCombination(extension: string, type: string, sizeBytes: n
     slides: ["pptx"],
   };
   if (!allowed[type]?.includes(extension)) {
-    throw invalidInput(`.${extension} cannot be imported as ${type}`);
+    throw providerInputError(`.${extension} cannot be imported as ${type}`);
   }
   let maxBytes = singlePartMaxBytes;
   if (extension === "docx" || extension === "doc") {
@@ -722,7 +722,7 @@ function validateImportCombination(extension: string, type: string, sizeBytes: n
     maxBytes = 100 * 1024 * 1024;
   }
   if (sizeBytes > maxBytes) {
-    throw invalidInput(`.${extension} import exceeds ${maxBytes} bytes for ${type}`);
+    throw providerInputError(`.${extension} import exceeds ${maxBytes} bytes for ${type}`);
   }
 }
 
@@ -761,7 +761,7 @@ function segment(value: string) {
 
 function requireString(value: unknown, fieldName: string) {
   if (typeof value !== "string" || !value.trim()) {
-    throw invalidInput(`${fieldName} is required`);
+    throw providerInputError(`${fieldName} is required`);
   }
   return value.trim();
 }
@@ -770,7 +770,7 @@ function requireMessageResourceType(value: unknown): "image" | "file" {
   if (value === "image" || value === "file") {
     return value;
   }
-  throw invalidInput("type must be image or file");
+  throw providerInputError("type must be image or file");
 }
 
 function optionalString(value: unknown) {
@@ -790,12 +790,12 @@ function optionalNumber(value: unknown) {
 
 function requireObjectArray(value: unknown, fieldName: string) {
   if (!Array.isArray(value) || value.length === 0) {
-    throw invalidInput(`${fieldName} must be a non-empty array`);
+    throw providerInputError(`${fieldName} must be a non-empty array`);
   }
   return value.map((item, index) => {
     const object = optionalRecord(item);
     if (!object) {
-      throw invalidInput(`${fieldName}[${index}] must be an object`);
+      throw providerInputError(`${fieldName}[${index}] must be an object`);
     }
     return object;
   });
@@ -804,7 +804,7 @@ function requireObjectArray(value: unknown, fieldName: string) {
 function requireStringArray(value: unknown, fieldName: string) {
   const values = optionalStringArray(value);
   if (!values || values.length === 0) {
-    throw invalidInput(`${fieldName} must be a non-empty string array`);
+    throw providerInputError(`${fieldName} must be a non-empty string array`);
   }
   return values;
 }
@@ -814,7 +814,7 @@ function optionalStringArray(value: unknown) {
     return undefined;
   }
   if (!Array.isArray(value)) {
-    throw invalidInput("fileTokens must be a string array");
+    throw providerInputError("fileTokens must be a string array");
   }
   const values = value.map((item) => requireString(item, "fileTokens item"));
   return Array.from(new Set(values));
@@ -855,12 +855,4 @@ function stripWrappingQuotes(value: string) {
 function safeFileName(value: string, fallback: string) {
   const name = value.replaceAll("\\", "/").split("/").at(-1)?.trim();
   return name && name !== "." && name !== ".." ? name : fallback;
-}
-
-function invalidInput(message: string) {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string) {
-  return new ProviderRequestError(502, message);
 }

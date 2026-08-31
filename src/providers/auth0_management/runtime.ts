@@ -10,7 +10,7 @@ import {
   requiredString,
   stringArray,
 } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const auth0ApiSegment = "api/v2";
 const auth0CredentialHelpUrl = "https://auth0.com/docs/api/management/v2";
@@ -567,8 +567,4 @@ function createAuth0ManagementError(
     return new ProviderRequestError(status, message, payload);
   }
   return new ProviderRequestError(status >= 500 ? 502 : status, message, payload);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

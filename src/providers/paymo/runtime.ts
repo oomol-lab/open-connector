@@ -11,7 +11,13 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerInputError,
+  ProviderRequestError,
+  providerResponseError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 export const paymoApiBaseUrl = "https://app.paymoapp.com/api";
 
@@ -200,7 +206,7 @@ export async function validatePaymoCredential(
     fetcher,
     signal,
   });
-  const user = requiredRecord(payload.user, "user", providerOutputError);
+  const user = requiredRecord(payload.user, "user", providerResponseError);
 
   return {
     profile: {
@@ -362,12 +368,4 @@ function readNonEmptyString(value: unknown) {
     return String(value);
   }
   return optionalString(value);
-}
-
-function providerInputError(message: string) {
-  return new ProviderRequestError(400, message);
-}
-
-function providerOutputError(message: string) {
-  return new ProviderRequestError(502, message);
 }

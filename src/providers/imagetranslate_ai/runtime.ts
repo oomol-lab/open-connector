@@ -9,7 +9,7 @@ import type {
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
-import { providerFetch, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerFetch, providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const apiBaseUrl = "https://api.imagetranslate.ai";
 const translatePath = "/translate/image";
@@ -48,12 +48,12 @@ async function translateImage(
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   if (!context.transitFiles) throw new ProviderRequestError(500, "local transit storage is not configured");
-  const imageUrl = requiredString(input.imageUrl, "imageUrl", badRequest);
-  const targetLanguage = requiredString(input.targetLanguage, "targetLanguage", badRequest);
+  const imageUrl = requiredString(input.imageUrl, "imageUrl", providerInputError);
+  const targetLanguage = requiredString(input.targetLanguage, "targetLanguage", providerInputError);
   if (targetLanguage.toLowerCase() === "auto") {
-    throw badRequest("targetLanguage must be an explicit language code and cannot be auto");
+    throw providerInputError("targetLanguage must be an explicit language code and cannot be auto");
   }
-  const idempotencyKey = requiredString(input.idempotencyKey, "idempotencyKey", badRequest);
+  const idempotencyKey = requiredString(input.idempotencyKey, "idempotencyKey", providerInputError);
   const source = await downloadSource(imageUrl, context.signal);
   const response = await requestTranslation(
     {
@@ -106,14 +106,14 @@ async function downloadSource(url: string, signal?: AbortSignal): Promise<{ byte
       error,
     );
   }
-  if (!response.ok) throw badRequest(`imageUrl returned ${response.status}`);
+  if (!response.ok) throw providerInputError(`imageUrl returned ${response.status}`);
   const bytes = await readBoundedResponseBytes(response, {
     maxBytes: maximumSourceBytes,
     fieldName: "imageUrl",
     createError: (message) => new ProviderRequestError(413, message),
   });
   const mimeType = detectMimeType(bytes);
-  if (!mimeType) throw badRequest("imageUrl must return a JPG, PNG, or WebP image");
+  if (!mimeType) throw providerInputError("imageUrl must return a JPG, PNG, or WebP image");
   return { bytes, mimeType };
 }
 
@@ -184,10 +184,6 @@ function detectMimeType(bytes: Uint8Array): string | undefined {
     return "image/webp";
   }
   return undefined;
-}
-
-function badRequest(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function upstreamError(message: string): ProviderRequestError {

@@ -6,6 +6,7 @@ import { compactObject, optionalRecord, optionalString, requiredString } from ".
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -212,8 +213,4 @@ async function readAnthropicError(response: Response) {
       message: raw || `anthropic request failed with ${response.status}`,
     };
   }
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

@@ -2,7 +2,7 @@ import type { CredentialValidationResult, CredentialValidators, ProviderExecutor
 
 import { compactObject } from "../../core/cast.ts";
 import { cloudflareCurrentUserDisplayName } from "../cloudflare-current-user.ts";
-import { defineBearerProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import { defineBearerProviderExecutors } from "../provider-runtime.ts";
 import { cloudflareDnsActionHandlers, requestCloudflareCurrentUser, validateCloudflareDnsToken } from "./runtime.ts";
 
 const service = "cloudflare_dns";
@@ -30,7 +30,3 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
-
-export function createCloudflareDnsCredentialError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}

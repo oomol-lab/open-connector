@@ -11,6 +11,7 @@ import {
 } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  providerResponseError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -109,7 +110,7 @@ async function createDocument(
 }
 
 async function getDocumentJob(input: Record<string, unknown>, context: DocsautomatorContext): Promise<unknown> {
-  const jobId = requiredString(input.jobId, "jobId", providerError);
+  const jobId = requiredString(input.jobId, "jobId", providerResponseError);
   const payload = await request({
     path: `/job/${encodeURIComponent(jobId)}`,
     apiKey: context.apiKey,
@@ -280,14 +281,14 @@ function buildAutomationQuery(input: Record<string, unknown>): Record<string, un
 }
 
 function pickAutomationId(input: Record<string, unknown>): string {
-  return optionalString(input.automationId) ?? requiredString(input.docId, "docId", providerError);
+  return optionalString(input.automationId) ?? requiredString(input.docId, "docId", providerResponseError);
 }
 
 function normalizeAsyncJobHandle(payload: unknown): Record<string, unknown> {
   const record = readObject(payload, "job handle");
   return {
     message: nullableText(record.message),
-    jobId: requiredString(record.jobId, "jobId", providerError),
+    jobId: requiredString(record.jobId, "jobId", providerResponseError),
     logId: nullableText(record.logId),
     raw: record,
   };
@@ -296,8 +297,8 @@ function normalizeAsyncJobHandle(payload: unknown): Record<string, unknown> {
 function normalizeJob(payload: unknown): Record<string, unknown> {
   const record = readObject(payload, "job");
   return {
-    jobId: requiredString(record.jobId, "jobId", providerError),
-    status: requiredString(record.status, "status", providerError),
+    jobId: requiredString(record.jobId, "jobId", providerResponseError),
+    status: requiredString(record.status, "status", providerResponseError),
     progress: optionalIntegerOrNull(record.progress),
     createdAt: nullableText(record.createdAt),
     processedOn: nullableText(record.processedOn),
@@ -351,7 +352,7 @@ function normalizeQueueStats(payload: unknown): Record<string, unknown> {
 function normalizeAutomation(payload: unknown, fieldName: string): Record<string, unknown> {
   const record = readObject(payload, fieldName);
   return {
-    id: requiredString(record._id, `${fieldName}._id`, providerError),
+    id: requiredString(record._id, `${fieldName}._id`, providerResponseError),
     title: nullableText(record.title),
     dataSourceName: nullableText(record.dataSourceName),
     dataSource: optionalRecord(record.dataSource) ?? null,
@@ -383,8 +384,4 @@ function requiredInteger(value: unknown, fieldName: string): number {
 
 function nullableText(value: unknown): string | null {
   return value == null ? null : (optionalString(value) ?? null);
-}
-
-function providerError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

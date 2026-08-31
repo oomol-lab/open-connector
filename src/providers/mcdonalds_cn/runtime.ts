@@ -4,7 +4,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import { createHash } from "node:crypto";
 import { integer, optionalIntegerLike, optionalScalarString, optionalString, requiredString } from "../../core/cast.ts";
 import { compactJson, encodePathSegment } from "../../core/request.ts";
-import { providerUserAgent, ProviderRequestError, readProviderJson } from "../provider-runtime.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError, readProviderJson } from "../provider-runtime.ts";
 
 const prodBaseUrl = "https://api.open.mcd.cn";
 const uatBaseUrl = "https://api-uat.open.mcdchina.net";
@@ -281,8 +281,4 @@ function requiredProviderString(value: unknown, fieldName: string): string {
 
 function requiredCredentialString(value: unknown, fieldName: string): string {
   return requiredString(value, fieldName, (message) => new ProviderRequestError(401, message));
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

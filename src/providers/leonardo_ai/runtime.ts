@@ -13,6 +13,8 @@ import {
 import { encodePathSegment } from "../../core/request.ts";
 import {
   createProviderTimeout,
+  providerInputError,
+  providerResponseError,
   providerUserAgent,
   ProviderRequestError,
   readProviderJsonBody,
@@ -301,12 +303,4 @@ function readGeneratedImages(generation: Record<string, unknown>): Array<Record<
       },
     ];
   });
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerResponseError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

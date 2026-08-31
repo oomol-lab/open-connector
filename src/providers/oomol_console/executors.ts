@@ -11,7 +11,7 @@ import { requiredString } from "../../core/cast.ts";
 import {
   createProviderFetch,
   defineProviderExecutors,
-  ProviderRequestError,
+  providerInputError,
   requireCustomCredential,
 } from "../provider-runtime.ts";
 import { defaultEndpoints } from "./request.ts";
@@ -57,7 +57,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<OomolConsole
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<OomolConsoleContext> {
     const credential = await requireCustomCredential(context, service);
     return {
-      accessToken: requiredString(credential.values.accessToken, "accessToken", badRequest),
+      accessToken: requiredString(credential.values.accessToken, "accessToken", providerInputError),
       teamId: credential.values.teamId?.trim() || undefined,
       fetcher,
       signal: context.signal,
@@ -70,7 +70,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<OomolConsole
 export const credentialValidators: CredentialValidators = {
   async customCredential(input, { fetcher, signal }): Promise<CredentialValidationResult> {
     const context: OomolConsoleContext = {
-      accessToken: requiredString(input.values.accessToken, "accessToken", badRequest),
+      accessToken: requiredString(input.values.accessToken, "accessToken", providerInputError),
       teamId: input.values.teamId?.trim() || undefined,
       fetcher: createProviderFetch({ fetch: fetcher, skipDnsValidation: true }),
       signal,
@@ -104,8 +104,4 @@ function executeAction(
   return executeOomolConsoleAction(actionName, input, context, context.fetcher, {
     endpoints: defaultEndpoints,
   });
-}
-
-function badRequest(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

@@ -19,7 +19,9 @@ import {
   defineProviderExecutors,
   isAbortLikeError,
   normalizeProviderProxyHeaders,
+  providerInputError,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   requireApiKeyCredential,
   toProviderProxyError,
@@ -171,7 +173,7 @@ export const credentialValidators: CredentialValidators = {
       signal,
       phase: "validate",
     });
-    const user = requiredRecord(payload.data, "Habitica user response", providerOutputError);
+    const user = requiredRecord(payload.data, "Habitica user response", providerResponseError);
     const profile = optionalRecord(user.profile);
     const stats = optionalRecord(user.stats);
     const party = optionalRecord(user.party);
@@ -512,7 +514,7 @@ function buildTaskMutationBody(
 }
 
 function normalizeUser(value: unknown): Record<string, unknown> {
-  const record = requiredRecord(value, "Habitica user", providerOutputError);
+  const record = requiredRecord(value, "Habitica user", providerResponseError);
   const profile = optionalRecord(record.profile);
   const stats = optionalRecord(record.stats);
   const party = optionalRecord(record.party);
@@ -532,7 +534,7 @@ function normalizeTaskList(value: unknown): Array<Record<string, unknown>> {
 }
 
 function normalizeTask(value: unknown): Record<string, unknown> {
-  const record = requiredRecord(value, "Habitica task", providerOutputError);
+  const record = requiredRecord(value, "Habitica task", providerResponseError);
   return {
     id: nullableString(record.id) ?? nullableString(record._id),
     text: nullableString(record.text),
@@ -552,7 +554,7 @@ function normalizeTask(value: unknown): Record<string, unknown> {
 
 function normalizeChecklistList(value: unknown): Array<Record<string, unknown>> {
   return optionalArray(value).map((item) => {
-    const record = requiredRecord(item, "Habitica checklist item", providerOutputError);
+    const record = requiredRecord(item, "Habitica checklist item", providerResponseError);
     return {
       id: nullableString(record.id) ?? nullableString(record._id),
       text: nullableString(record.text),
@@ -563,7 +565,7 @@ function normalizeChecklistList(value: unknown): Array<Record<string, unknown>> 
 }
 
 function normalizeScoreResult(value: unknown): Record<string, unknown> {
-  const record = requiredRecord(value, "Habitica score result", providerOutputError);
+  const record = requiredRecord(value, "Habitica score result", providerResponseError);
   return {
     delta: nullableNumber(record.delta),
     hp: nullableNumber(record.hp),
@@ -587,7 +589,7 @@ function normalizeTagList(value: unknown): Array<Record<string, unknown>> {
 }
 
 function normalizeTag(value: unknown): Record<string, unknown> {
-  const record = requiredRecord(value, "Habitica tag", providerOutputError);
+  const record = requiredRecord(value, "Habitica tag", providerResponseError);
   return {
     id: nullableString(record.id) ?? nullableString(record._id),
     name: nullableString(record.name),
@@ -661,12 +663,4 @@ function nullableInteger(value: unknown): number | null {
 
 function nullableBoolean(value: unknown): boolean | null {
   return typeof value === "boolean" ? value : null;
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
-function providerOutputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(502, message);
 }

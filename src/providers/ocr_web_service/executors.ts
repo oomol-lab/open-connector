@@ -188,7 +188,7 @@ async function requestOcrWebService(
 }
 
 async function downloadFileUrl(value: unknown, signal?: AbortSignal): Promise<Uint8Array> {
-  const fileUrl = requiredString(value, "fileUrl", providerInputError);
+  const fileUrl = requiredString(value, "fileUrl", ocrWebServiceInputError);
   const timeout = createProviderTimeout(signal, ocrWebServiceRequestTimeoutMs);
   try {
     const response = await providerFetch(fileUrl, { signal: timeout.signal });
@@ -235,7 +235,9 @@ function buildProcessDocumentQuery(input: Record<string, unknown>): Record<strin
 }
 
 function readOptionalStringList(value: unknown): string[] | undefined {
-  return Array.isArray(value) ? value.map((item) => requiredString(item, "list item", providerInputError)) : undefined;
+  return Array.isArray(value)
+    ? value.map((item) => requiredString(item, "list item", ocrWebServiceInputError))
+    : undefined;
 }
 
 function readOptionalZones(value: unknown): string | undefined {
@@ -249,10 +251,10 @@ function readOptionalZones(value: unknown): string | undefined {
         throw new ProviderRequestError(400, "zone item must be an object");
       }
       return [
-        integer(record.top, "zone.top", providerInputError),
-        integer(record.left, "zone.left", providerInputError),
-        integer(record.height, "zone.height", providerInputError),
-        integer(record.width, "zone.width", providerInputError),
+        integer(record.top, "zone.top", ocrWebServiceInputError),
+        integer(record.left, "zone.left", ocrWebServiceInputError),
+        integer(record.height, "zone.height", ocrWebServiceInputError),
+        integer(record.width, "zone.width", ocrWebServiceInputError),
       ].join(":");
     })
     .join(",");
@@ -348,6 +350,6 @@ function extractOcrWebServiceErrorMessage(payload: unknown): string | null {
   );
 }
 
-function providerInputError(message: string): ProviderRequestError {
+function ocrWebServiceInputError(message: string): ProviderRequestError {
   return new ProviderRequestError(400, message.endsWith(".") ? message.slice(0, -1) : message);
 }

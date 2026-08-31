@@ -12,7 +12,7 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { isAbortLikeError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { isAbortLikeError, providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 type WebscrapingAiPhase = "validate" | "execute";
 type WebscrapingAiQueryValue = string | number | boolean | readonly string[] | undefined;
@@ -349,8 +349,4 @@ function readStringArray(value: unknown, fieldName: string): string[] {
     }
     return text;
   });
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

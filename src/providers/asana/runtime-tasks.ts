@@ -12,9 +12,8 @@ import {
   requiredString,
   requiredStringArray,
 } from "../../core/cast.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError } from "../provider-runtime.ts";
 import {
-  asanaInvalidInputError,
   asanaPathGid,
   buildAsanaFieldsQuery,
   buildAsanaPaginationQuery,
@@ -170,10 +169,10 @@ export const taskActionHandlers: ProviderActionHandlerSubset<"asana", AsanaActio
   set_task_parent(input, context) {
     assertOptionalPlacement(input);
     if (input.parentId === undefined) {
-      throw asanaInvalidInputError("parentId is required.");
+      throw providerInputError("parentId is required.");
     }
     if (input.parentId === null && (input.insertBefore !== undefined || input.insertAfter !== undefined)) {
-      throw asanaInvalidInputError("insertBefore and insertAfter cannot be used when removing a task parent.");
+      throw providerInputError("insertBefore and insertAfter cannot be used when removing a task parent.");
     }
     return writeAsanaResource(
       `/tasks/${asanaPathGid(input.taskId, "taskId")}/setParent`,
@@ -241,7 +240,7 @@ export const taskActionHandlers: ProviderActionHandlerSubset<"asana", AsanaActio
     return writeTaskAssociation(
       `/tasks/${asanaPathGid(input.taskId, "taskId")}/addProject`,
       compactObject({
-        project: requiredString(input.projectId, "projectId", asanaInvalidInputError),
+        project: requiredString(input.projectId, "projectId", providerInputError),
         section: nullableString(input.sectionId),
         insert_before: nullableString(input.insertBefore),
         insert_after: nullableString(input.insertAfter),
@@ -254,7 +253,7 @@ export const taskActionHandlers: ProviderActionHandlerSubset<"asana", AsanaActio
   remove_task_project(input, context) {
     return writeTaskAssociation(
       `/tasks/${asanaPathGid(input.taskId, "taskId")}/removeProject`,
-      { project: requiredString(input.projectId, "projectId", asanaInvalidInputError) },
+      { project: requiredString(input.projectId, "projectId", providerInputError) },
       input,
       context,
     );
@@ -263,7 +262,7 @@ export const taskActionHandlers: ProviderActionHandlerSubset<"asana", AsanaActio
   add_task_tag(input, context) {
     return writeTaskAssociation(
       `/tasks/${asanaPathGid(input.taskId, "taskId")}/addTag`,
-      { tag: requiredString(input.tagId, "tagId", asanaInvalidInputError) },
+      { tag: requiredString(input.tagId, "tagId", providerInputError) },
       input,
       context,
     );
@@ -272,7 +271,7 @@ export const taskActionHandlers: ProviderActionHandlerSubset<"asana", AsanaActio
   remove_task_tag(input, context) {
     return writeTaskAssociation(
       `/tasks/${asanaPathGid(input.taskId, "taskId")}/removeTag`,
-      { tag: requiredString(input.tagId, "tagId", asanaInvalidInputError) },
+      { tag: requiredString(input.tagId, "tagId", providerInputError) },
       input,
       context,
     );
@@ -400,12 +399,12 @@ function buildCreateTaskBody(input: Record<string, unknown>, requireLocation: bo
   const workspace = optionalString(input.workspaceId);
   const parent = optionalString(input.parentId);
   if (requireLocation && projects === undefined && !workspace && !parent) {
-    throw asanaInvalidInputError("projectId, non-empty projectIds, workspaceId, or parentId is required.");
+    throw providerInputError("projectId, non-empty projectIds, workspaceId, or parentId is required.");
   }
 
   return compactObject({
     ...buildTaskMutationBody(input, false),
-    name: requiredString(input.name, "name", asanaInvalidInputError),
+    name: requiredString(input.name, "name", providerInputError),
     projects,
     workspace,
     parent,
@@ -444,43 +443,43 @@ function buildTaskMutationBody(input: Record<string, unknown>, includeUpdateOnly
 
 function assertTaskMutationConstraints(input: Record<string, unknown>): void {
   if (input.notes !== undefined && input.htmlNotes !== undefined) {
-    throw asanaInvalidInputError("notes and htmlNotes cannot both be provided.");
+    throw providerInputError("notes and htmlNotes cannot both be provided.");
   }
   const dueOn = optionalString(input.dueOn);
   const dueAt = optionalString(input.dueAt);
   const startOn = optionalString(input.startOn);
   const startAt = optionalString(input.startAt);
   if (dueOn && dueAt) {
-    throw asanaInvalidInputError("dueOn and dueAt cannot both be provided.");
+    throw providerInputError("dueOn and dueAt cannot both be provided.");
   }
   if (startOn && startAt) {
-    throw asanaInvalidInputError("startOn and startAt cannot both be provided.");
+    throw providerInputError("startOn and startAt cannot both be provided.");
   }
   if (input.startAt !== undefined && input.dueAt === undefined) {
-    throw asanaInvalidInputError("startAt requires dueAt to be provided.");
+    throw providerInputError("startAt requires dueAt to be provided.");
   }
   if (startAt && !dueAt) {
-    throw asanaInvalidInputError("A non-null startAt requires a non-null dueAt.");
+    throw providerInputError("A non-null startAt requires a non-null dueAt.");
   }
   if (input.startOn !== undefined && input.dueOn === undefined && input.dueAt === undefined) {
-    throw asanaInvalidInputError("startOn requires dueOn or dueAt to be provided.");
+    throw providerInputError("startOn requires dueOn or dueAt to be provided.");
   }
   if (startOn && !dueOn && !dueAt) {
-    throw asanaInvalidInputError("A non-null startOn requires a non-null dueOn or dueAt.");
+    throw providerInputError("A non-null startOn requires a non-null dueOn or dueAt.");
   }
 }
 
 function assertGeneralTaskListFilters(input: Record<string, unknown>): void {
   if (input.tagId !== undefined) {
-    throw asanaInvalidInputError("tagId is not supported by list_tasks; use list_tag_tasks instead.");
+    throw providerInputError("tagId is not supported by list_tasks; use list_tag_tasks instead.");
   }
   const assignee = optionalString(input.assignee);
   const workspace = optionalString(input.workspaceId);
   if (!!assignee !== !!workspace) {
-    throw asanaInvalidInputError("assignee and workspaceId must be provided together.");
+    throw providerInputError("assignee and workspaceId must be provided together.");
   }
   if (!optionalString(input.projectId) && !optionalString(input.sectionId) && !(assignee && workspace)) {
-    throw asanaInvalidInputError("projectId, sectionId, or both assignee and workspaceId are required.");
+    throw providerInputError("projectId, sectionId, or both assignee and workspaceId are required.");
   }
 }
 
@@ -514,11 +513,11 @@ function readCreateProjectIds(input: Record<string, unknown>): string[] | undefi
 }
 
 function requiredNonEmptyStringArray(value: unknown, fieldName: string): string[] {
-  const values = requiredStringArray(value, fieldName, asanaInvalidInputError)
+  const values = requiredStringArray(value, fieldName, providerInputError)
     .map((item) => item.trim())
     .filter(Boolean);
   if (values.length === 0) {
-    throw asanaInvalidInputError(`${fieldName} must contain at least one value.`);
+    throw providerInputError(`${fieldName} must contain at least one value.`);
   }
   return values;
 }
@@ -533,7 +532,7 @@ function optionalDelimitedStringArray(value: unknown, fieldName: string): string
 
 function assertOptionalPlacement(input: Record<string, unknown>): void {
   if (input.insertBefore !== undefined && input.insertAfter !== undefined) {
-    throw asanaInvalidInputError("insertBefore and insertAfter cannot both be provided.");
+    throw providerInputError("insertBefore and insertAfter cannot both be provided.");
   }
 }
 
@@ -550,16 +549,16 @@ function buildTaskCustomFieldSearchQuery(value: unknown): Record<string, string>
     return {};
   }
   if (!Array.isArray(value)) {
-    throw asanaInvalidInputError("customFieldFilters must be an array.");
+    throw providerInputError("customFieldFilters must be an array.");
   }
 
   const query: Record<string, string> = {};
   for (const [index, item] of value.entries()) {
-    const filter = requiredRecord(item, `customFieldFilters[${index}]`, asanaInvalidInputError);
+    const filter = requiredRecord(item, `customFieldFilters[${index}]`, providerInputError);
     const customFieldId = requiredString(
       filter.customFieldId,
       `customFieldFilters[${index}].customFieldId`,
-      asanaInvalidInputError,
+      providerInputError,
     );
     const conditions = compactAsanaQuery({
       is_set: booleanString(filter.isSet),
@@ -585,15 +584,11 @@ function buildCustomTaskTypeSearchQuery(input: Record<string, unknown>): Record<
     return {};
   }
   if (optionalString(input.resourceSubtype) !== "custom") {
-    throw asanaInvalidInputError("customTypeFilter requires resourceSubtype to be custom.");
+    throw providerInputError("customTypeFilter requires resourceSubtype to be custom.");
   }
-  const filter = requiredRecord(input.customTypeFilter, "customTypeFilter", asanaInvalidInputError);
-  const customTypeId = requiredString(filter.customTypeId, "customTypeFilter.customTypeId", asanaInvalidInputError);
-  const statusOptionId = requiredString(
-    filter.statusOptionId,
-    "customTypeFilter.statusOptionId",
-    asanaInvalidInputError,
-  );
+  const filter = requiredRecord(input.customTypeFilter, "customTypeFilter", providerInputError);
+  const customTypeId = requiredString(filter.customTypeId, "customTypeFilter.customTypeId", providerInputError);
+  const statusOptionId = requiredString(filter.statusOptionId, "customTypeFilter.statusOptionId", providerInputError);
   return { [`custom_types.${customTypeId}.custom_type_status_option.gid`]: statusOptionId };
 }
 

@@ -17,6 +17,7 @@ import {
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed, readBoundedResponseBytes } from "../../core/request.ts";
 import {
   createProviderTimeout,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderJsonBody,
@@ -320,12 +321,8 @@ export function resolvePiHoleApiPath(input: {
   return normalizePiHoleApiPath(value);
 }
 
-function piHoleInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
-}
-
 function readRequiredString(value: unknown, fieldName: string): string {
-  return requiredString(value, fieldName, piHoleInputError);
+  return requiredString(value, fieldName, providerInputError);
 }
 
 function readRecordPayload(payload: unknown): Record<string, unknown> {
@@ -380,7 +377,7 @@ export const piHoleActionHandlers: ProviderActionHandlerSubset<"pi_hole", PiHole
     return readBlockingStatus(payload);
   },
   async set_dns_blocking(input, context) {
-    const blocking = requiredBoolean(input.blocking, "blocking", piHoleInputError);
+    const blocking = requiredBoolean(input.blocking, "blocking", providerInputError);
     const body: Record<string, unknown> = { blocking };
     if (input.timer !== undefined) {
       if (input.timer === null) {
@@ -388,7 +385,7 @@ export const piHoleActionHandlers: ProviderActionHandlerSubset<"pi_hole", PiHole
       } else {
         const timer = optionalNumber(input.timer);
         if (timer === undefined) {
-          throw piHoleInputError("timer must be a number or null");
+          throw providerInputError("timer must be a number or null");
         }
         body.timer = timer;
       }
@@ -503,10 +500,10 @@ export const piHoleActionHandlers: ProviderActionHandlerSubset<"pi_hole", PiHole
     return { config: optionalRecord(payload.config) ?? {} };
   },
   async update_config(input, context) {
-    const config = requiredRecord(input.config, "config", piHoleInputError);
+    const config = requiredRecord(input.config, "config", providerInputError);
     const restart = input.restart === undefined ? undefined : readRestartFlag(input.restart);
     if (input.restart !== undefined && restart === undefined) {
-      throw piHoleInputError("restart must be a boolean");
+      throw providerInputError("restart must be a boolean");
     }
     const payload = readRecordPayload(
       await requestPiHoleJson({

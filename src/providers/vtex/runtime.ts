@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, positiveInteger, requiredString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const vtexEnvironment = "vtexcommercestable";
 export const vtexCredentialHelpUrl = "https://developers.vtex.com/docs/guides/api-authentication-using-api-keys";
@@ -49,7 +49,7 @@ export async function validateVtexCredential(input: {
   accountName?: string;
   environment?: string;
 }): Promise<CredentialValidationResult> {
-  const appKey = requiredString(input.appKey, "apiKey", invalidInputError);
+  const appKey = requiredString(input.appKey, "apiKey", providerInputError);
   requireVtexAppToken(input.appToken);
   const accountName = readVtexAccountName(input.accountName);
   const environment = normalizeVtexEnvironment(input.environment);
@@ -88,7 +88,7 @@ async function listProductAndSkuIds(input: Record<string, unknown>, context: Vte
 }
 
 async function getProduct(input: Record<string, unknown>, context: VtexContext): Promise<unknown> {
-  const productId = positiveInteger(input.productId, "productId", invalidInputError);
+  const productId = positiveInteger(input.productId, "productId", providerInputError);
   const product = await requestVtexJson(context, {
     path: `/api/catalog/pvt/product/${productId}`,
   });
@@ -103,7 +103,7 @@ async function listBrands(context: VtexContext): Promise<unknown> {
 }
 
 async function listCategoryTree(input: Record<string, unknown>, context: VtexContext): Promise<unknown> {
-  const categoryLevels = positiveInteger(input.categoryLevels, "categoryLevels", invalidInputError);
+  const categoryLevels = positiveInteger(input.categoryLevels, "categoryLevels", providerInputError);
   const categories = await requestVtexJson(context, {
     path: `/api/catalog_system/pub/category/tree/${categoryLevels}`,
   });
@@ -232,7 +232,7 @@ function appendVtexQuery(url: URL, query: Record<string, VtexQueryValue> | undef
 }
 
 export function requireVtexAppToken(value: unknown): string {
-  return requiredString(value, "vtex appToken", invalidInputError);
+  return requiredString(value, "vtex appToken", providerInputError);
 }
 
 export function readVtexAccountName(value: unknown): string {
@@ -294,8 +294,4 @@ function assertSearchPaginationRange(input: Record<string, unknown>): void {
       "to must be greater than or equal to from and no more than 50 greater than from",
     );
   }
-}
-
-function invalidInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

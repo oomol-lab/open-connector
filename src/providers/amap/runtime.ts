@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { requiredString } from "../../core/cast.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError } from "../provider-runtime.ts";
 
 export const amapApiBaseUrl = "https://restapi.amap.com";
 const amapAuthErrorInfos = new Set([
@@ -511,10 +511,6 @@ function readUnexpectedMessage(error: unknown) {
 
 function readRequiredString(value: unknown, key: string) {
   return requiredString(value, key, providerInputError);
-}
-
-function providerInputError(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }
 
 function readOptionalString(value: unknown) {

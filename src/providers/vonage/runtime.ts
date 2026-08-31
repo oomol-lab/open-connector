@@ -7,6 +7,7 @@ import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requi
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderJsonBody,
@@ -53,7 +54,7 @@ export const vonageActionHandlers: ProviderActionHandlers<"vonage", VonageHandle
     return normalizeSms(await requestVonage({ path: "/sms/json", method: "POST", body, context, phase: "execute" }));
   },
   async list_sms_records(input, context) {
-    const direction = requiredString(input.direction, "direction", invalidInput);
+    const direction = requiredString(input.direction, "direction", providerInputError);
     validateShowConcatenated(direction, input.showConcatenated);
     const payload = await requestVonage({
       baseUrl: vonageReportsApiBaseUrl,
@@ -81,8 +82,8 @@ export const vonageActionHandlers: ProviderActionHandlers<"vonage", VonageHandle
     return normalizeSmsReport(payload);
   },
   async get_sms_record(input, context) {
-    const messageId = requiredString(input.messageId, "messageId", invalidInput);
-    const direction = requiredString(input.direction, "direction", invalidInput);
+    const messageId = requiredString(input.messageId, "messageId", providerInputError);
+    const direction = requiredString(input.direction, "direction", providerInputError);
     validateShowConcatenated(direction, input.showConcatenated);
     const payload = await requestVonage({
       baseUrl: vonageReportsApiBaseUrl,
@@ -108,8 +109,8 @@ export function createVonageContext(
   signal?: AbortSignal,
 ): VonageContext {
   return {
-    apiKey: requiredString(values.apiKey, "apiKey", invalidInput),
-    apiSecret: requiredString(values.apiSecret, "apiSecret", invalidInput),
+    apiKey: requiredString(values.apiKey, "apiKey", providerInputError),
+    apiSecret: requiredString(values.apiSecret, "apiSecret", providerInputError),
     fetcher,
     signal,
   };
@@ -294,7 +295,7 @@ function readErrorMessage(payload: unknown): string | undefined {
 }
 
 function appendRequiredFormField(body: URLSearchParams, key: string, value: unknown): void {
-  body.set(key, requiredString(value, key, invalidInput));
+  body.set(key, requiredString(value, key, providerInputError));
 }
 
 function appendOptionalFormField(
@@ -303,8 +304,4 @@ function appendOptionalFormField(
   value: string | number | boolean | undefined,
 ): void {
   if (value !== undefined) body.set(key, String(value));
-}
-
-function invalidInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

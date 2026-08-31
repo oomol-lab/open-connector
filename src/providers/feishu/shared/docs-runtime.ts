@@ -1,7 +1,7 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
 import { optionalRecord, optionalStringArray } from "../../../core/cast.ts";
-import { ProviderRequestError } from "../../provider-runtime.ts";
+import { providerInputError } from "../../provider-runtime.ts";
 
 interface FeishuDocsActionHandler {
   (input: Record<string, unknown>): Promise<unknown>;
@@ -42,7 +42,7 @@ async function createDocument(input: Record<string, unknown>, request: FeishuJso
   const parentToken = optionalString(input.parentToken);
   const parentPosition = optionalString(input.parentPosition);
   if (parentToken && parentPosition) {
-    throw invalidInput("parentToken and parentPosition cannot be used together");
+    throw providerInputError("parentToken and parentPosition cannot be used together");
   }
 
   const data = await request({
@@ -233,11 +233,11 @@ function escapeXml(value: string) {
 
 function validateFetchSelection(input: Record<string, unknown>, scope: string) {
   if (scope === "keyword" && !optionalString(input.keyword)) {
-    throw invalidInput("keyword is required when scope is keyword");
+    throw providerInputError("keyword is required when scope is keyword");
   } else if (scope === "section" && !optionalString(input.startBlockId)) {
-    throw invalidInput("startBlockId is required when scope is section");
+    throw providerInputError("startBlockId is required when scope is section");
   } else if (scope === "range" && !optionalString(input.startBlockId) && !optionalString(input.endBlockId)) {
-    throw invalidInput("startBlockId or endBlockId is required when scope is range");
+    throw providerInputError("startBlockId or endBlockId is required when scope is range");
   }
 }
 
@@ -251,28 +251,28 @@ interface UpdateInput {
 
 function validateUpdateInput(input: UpdateInput) {
   if (input.command === "replace_text" && !input.pattern) {
-    throw invalidInput("pattern is required for replace_text");
+    throw providerInputError("pattern is required for replace_text");
   } else if (input.command === "delete_blocks" && !input.blockId) {
-    throw invalidInput("blockId is required for delete_blocks");
+    throw providerInputError("blockId is required for delete_blocks");
   } else if (
     (input.command === "insert_after" || input.command === "replace_block") &&
     (!input.blockId || !input.content)
   ) {
-    throw invalidInput(`blockId and content are required for ${input.command}`);
+    throw providerInputError(`blockId and content are required for ${input.command}`);
   } else if (
     (input.command === "copy_after" || input.command === "move_after") &&
     (!input.blockId || !input.sourceBlockIds?.length)
   ) {
-    throw invalidInput(`blockId and sourceBlockIds are required for ${input.command}`);
+    throw providerInputError(`blockId and sourceBlockIds are required for ${input.command}`);
   } else if ((input.command === "overwrite" || input.command === "append") && !input.content) {
-    throw invalidInput(`content is required for ${input.command}`);
+    throw providerInputError(`content is required for ${input.command}`);
   }
 }
 
 function requireString(value: unknown, fieldName: string) {
   const stringValue = optionalString(value);
   if (!stringValue) {
-    throw invalidInput(`${fieldName} is required`);
+    throw providerInputError(`${fieldName} is required`);
   }
   return stringValue;
 }
@@ -288,8 +288,4 @@ function optionalNumber(value: unknown) {
 function optionalIntegerString(value: unknown) {
   const number = optionalNumber(value);
   return number == null ? undefined : String(number);
-}
-
-function invalidInput(message: string) {
-  return new ProviderRequestError(400, message);
 }

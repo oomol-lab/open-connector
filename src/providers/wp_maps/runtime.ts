@@ -3,7 +3,7 @@ import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { WpMapsActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const wpMapsApiBaseUrl = "https://svr.wpmaps.net/v1";
 interface WpMapsCredential {
@@ -48,8 +48,8 @@ export const wpMapsActionHandlers: ProviderActionHandlers<"wp_maps", ProviderRun
 
 export function readWpMapsCredential(accessToken: string, values: Record<string, unknown>): WpMapsCredential {
   return {
-    accessToken: requiredString(accessToken, "apiKey", invalidCredential),
-    clientId: requiredString(values.clientId, "clientId", invalidCredential),
+    accessToken: requiredString(accessToken, "apiKey", providerInputError),
+    clientId: requiredString(values.clientId, "clientId", providerInputError),
   };
 }
 export async function validateWpMapsCredential(
@@ -128,7 +128,4 @@ function positiveInteger(value: unknown, field: string): number {
   if (typeof value !== "number" || !Number.isInteger(value) || value <= 0)
     throw new ProviderRequestError(400, `WP Maps ${field} must be a positive integer`);
   return value;
-}
-function invalidCredential(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

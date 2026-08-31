@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
@@ -28,7 +29,7 @@ export async function validateVenafiCloudCredential(
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const apiKey = requiredString(input.apiKey, "apiKey", invalidInput);
+  const apiKey = requiredString(input.apiKey, "apiKey", providerInputError);
   const region = readRegion(input.region);
   const preferences = await requestVenafiCloud({
     apiKey,
@@ -54,7 +55,7 @@ export async function validateVenafiCloudCredential(
 
 const handlers: Record<string, ProviderRuntimeHandler<VenafiCloudContext>> = {
   async get_certificate(input, context) {
-    const certificateId = requiredString(input.certificateId, "certificateId", invalidInput);
+    const certificateId = requiredString(input.certificateId, "certificateId", providerInputError);
     return {
       certificate: await requestVenafiCloud({
         ...context,
@@ -85,7 +86,7 @@ const handlers: Record<string, ProviderRuntimeHandler<VenafiCloudContext>> = {
     return { certificates, total: optionalInteger(object?.total) ?? null };
   },
   async get_certificate_request(input, context) {
-    const requestId = requiredString(input.certificateRequestId, "certificateRequestId", invalidInput);
+    const requestId = requiredString(input.certificateRequestId, "certificateRequestId", providerInputError);
     return {
       certificateRequest: await requestVenafiCloud({
         ...context,
@@ -166,8 +167,4 @@ function stringifyInteger(value: unknown) {
 
 function fingerprint(value: string) {
   return createHash("sha256").update(value).digest("hex").slice(0, 16);
-}
-
-function invalidInput(message: string): ProviderRequestError {
-  return new ProviderRequestError(400, message);
 }

@@ -9,9 +9,8 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError } from "../provider-runtime.ts";
 import {
-  asanaInvalidInputError,
   asanaPathGid,
   buildAsanaCursorQuery,
   buildAsanaFieldsQuery,
@@ -95,7 +94,7 @@ export const workspaceUserTeamActionHandlers: ProviderActionHandlerSubset<"asana
   add_workspace_user(input, context) {
     return writeAsanaResource(
       `/workspaces/${asanaPathGid(input.workspaceId, "workspaceId")}/addUser`,
-      { user: requiredString(input.user, "user", asanaInvalidInputError) },
+      { user: requiredString(input.user, "user", providerInputError) },
       "user",
       context,
       {
@@ -111,7 +110,7 @@ export const workspaceUserTeamActionHandlers: ProviderActionHandlerSubset<"asana
       path: `/workspaces/${asanaPathGid(input.workspaceId, "workspaceId")}/removeUser`,
       context,
       method: "POST",
-      body: { user: requiredString(input.user, "user", asanaInvalidInputError) },
+      body: { user: requiredString(input.user, "user", providerInputError) },
       notFoundAsInvalidInput: true,
     });
     return { success: true };
@@ -200,7 +199,7 @@ export const workspaceUserTeamActionHandlers: ProviderActionHandlerSubset<"asana
     return listAsanaResources(
       `/users/${asanaPathGid(input.userId, "userId")}/favorites`,
       compactAsanaQuery({
-        workspace: requiredString(input.workspaceId, "workspaceId", asanaInvalidInputError),
+        workspace: requiredString(input.workspaceId, "workspaceId", providerInputError),
         resource_type: optionalString(input.resourceType),
         ...buildAsanaPaginationQuery(input, defaultFavoriteFields),
       }),
@@ -254,8 +253,8 @@ export const workspaceUserTeamActionHandlers: ProviderActionHandlerSubset<"asana
     return writeAsanaResource(
       "/teams",
       compactObject({
-        organization: requiredString(input.organizationId, "organizationId", asanaInvalidInputError),
-        name: requiredString(input.name, "name", asanaInvalidInputError),
+        organization: requiredString(input.organizationId, "organizationId", providerInputError),
+        name: requiredString(input.name, "name", providerInputError),
         description: optionalString(input.description),
         html_description: optionalString(input.htmlDescription),
         visibility: optionalString(input.visibility),
@@ -322,7 +321,7 @@ export const workspaceUserTeamActionHandlers: ProviderActionHandlerSubset<"asana
     return listAsanaResources(
       `/users/${asanaPathGid(input.userId, "userId")}/teams`,
       compactAsanaQuery({
-        organization: requiredString(input.organizationId, "organizationId", asanaInvalidInputError),
+        organization: requiredString(input.organizationId, "organizationId", providerInputError),
         ...buildAsanaPaginationQuery(input, defaultTeamFields),
       }),
       "teams",
@@ -333,7 +332,7 @@ export const workspaceUserTeamActionHandlers: ProviderActionHandlerSubset<"asana
   add_team_user(input, context) {
     return writeAsanaResource(
       `/teams/${asanaPathGid(input.teamId, "teamId")}/addUser`,
-      { user: requiredString(input.user, "user", asanaInvalidInputError) },
+      { user: requiredString(input.user, "user", providerInputError) },
       "team_membership",
       context,
       {
@@ -349,7 +348,7 @@ export const workspaceUserTeamActionHandlers: ProviderActionHandlerSubset<"asana
       path: `/teams/${asanaPathGid(input.teamId, "teamId")}/removeUser`,
       context,
       method: "POST",
-      body: { user: requiredString(input.user, "user", asanaInvalidInputError) },
+      body: { user: requiredString(input.user, "user", providerInputError) },
       notFoundAsInvalidInput: true,
     });
     return { success: true };
