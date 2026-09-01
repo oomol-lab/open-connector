@@ -1,12 +1,12 @@
-import type { ProviderActionHandlers, ProviderFetch } from "../provider-runtime.ts";
+import type { ProviderActionHandlers, ProviderFetch, ReadProviderJsonBodyOptions } from "../provider-runtime.ts";
 
 import { looseArray, objectArray, optionalBoolean, optionalInteger, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import {
   ProviderRequestError,
+  providerInputError,
   providerResponseError,
   providerUserAgent,
-  readProviderErrorTextBody,
   readProviderJsonBody,
   readProviderTextBody,
   requiredInputString,
@@ -15,13 +15,36 @@ import {
 } from "../provider-runtime.ts";
 
 const appledbApiBaseUrl = "https://api.appledb.dev";
-const appledbJsonMaxBytes = 2 * 1024 * 1024;
-const appledbCalendarMaxBytes = 5 * 1024 * 1024;
+/**
+ * A per-key build file lists every OTA delta ever published for that build and
+ * only grows. The largest measured in 2026-09 is `/ios/iPadOS;23E261.json` at
+ * 1.43 MiB, and the cap applies before `sources` is dropped, so a compact
+ * result still has to read the whole file.
+ */
+const appledbJsonMaxBytes = 8 * 1024 * 1024;
+/**
+ * Calendars are served uncompressed and only ever gain events. The largest
+ * measured in 2026-09 is the macOS calendar at 3.86 MB.
+ */
+const appledbCalendarMaxBytes = 16 * 1024 * 1024;
+const appledbJsonBodyOptions: ReadProviderJsonBodyOptions = {
+  emptyBody: null,
+  invalidJsonMessage: "AppleDB returned invalid JSON.",
+  maxBytes: appledbJsonMaxBytes,
+};
 const defaultSearchLimit = 20;
+const appledbFirmwarePageUrlPattern = /https:\/\/appledb\.dev\/firmware\/[^\s]+/u;
 
 export interface AppleDbActionContext {
   fetcher: ProviderFetch;
   signal?: AbortSignal;
+}
+
+interface AppleDbRequest<T> {
+  /** Path under the AppleDB API origin, with every caller-supplied segment already guarded. */
+  path: string;
+  accept: string;
+  readBody: (response: Response) => Promise<T>;
 }
 
 interface RankedDevice {
@@ -38,6 +61,11 @@ interface AppleDbCalendarBuild {
   released: string;
   summary: string;
   url?: string;
+}
+
+/** A calendar build together with the lowercased text `search_os_builds` matches against. */
+interface CalendarSearchEntry {
+  build: AppleDbCalendarBuild;
   searchText: string;
 }
 
@@ -50,21 +78,29 @@ export const appledbActionHandlers: ProviderActionHandlers<
 > = {
   async get_device(input, context): Promise<unknown> {
     const key = requiredInputString(input.key, "key");
-    const payload = await requestAppleDbJson(`/device/${encodePathSegment(key)}.json`, context, appledbJsonMaxBytes);
+    const payload = await requestAppleDb(context, {
+      path: `/device/${appledbPathSegment(key, "key")}.json`,
+      accept: "application/json",
+      readBody: (response) => readProviderJsonBody(response, appledbJsonBodyOptions),
+    });
     return requiredResponseRecord(payload, "AppleDB device response");
   },
 
   async search_devices(input, context): Promise<unknown> {
-    const query = requiredInputString(input.query, "query").toLocaleLowerCase();
-    const type = optionalString(input.type)?.toLocaleLowerCase();
+    const query = requiredInputString(input.query, "query").toLowerCase();
+    const type = optionalString(input.type)?.toLowerCase();
     const limit = optionalInteger(input.limit) ?? defaultSearchLimit;
-    const payload = await requestAppleDbJson("/device/main.json", context, appledbJsonMaxBytes);
+    const payload = await requestAppleDb(context, {
+      path: "/device/main.json",
+      accept: "application/json",
+      readBody: (response) => readProviderJsonBody(response, appledbJsonBodyOptions),
+    });
     const devices = objectArray(payload, "AppleDB device search response", providerResponseError);
     const matches: RankedDevice[] = [];
 
     for (const device of devices) {
       const deviceType = optionalString(device.type);
-      if (type && deviceType?.toLocaleLowerCase() !== type) {
+      if (type && deviceType?.toLowerCase() !== type) {
         continue;
       }
       const rank = deviceMatchRank(device, query);
@@ -87,8 +123,11 @@ export const appledbActionHandlers: ProviderActionHandlers<
   async get_os_build(input, context): Promise<unknown> {
     const os = requiredInputString(input.os, "os");
     const build = requiredInputString(input.build, "build");
-    const key = `${os};${build}`;
-    const payload = await requestAppleDbJson(`/ios/${encodePathSegment(key)}.json`, context, appledbJsonMaxBytes);
+    const payload = await requestAppleDb(context, {
+      path: `/ios/${appledbPathSegment(`${os};${build}`, "os and build")}.json`,
+      accept: "application/json",
+      readBody: (response) => readProviderJsonBody(response, appledbJsonBodyOptions),
+    });
     const record = requiredResponseRecord(payload, "AppleDB operating system build response");
     if (optionalBoolean(input.include_sources) === true) {
       return record;
@@ -99,11 +138,21 @@ export const appledbActionHandlers: ProviderActionHandlers<
 
   async search_os_builds(input, context): Promise<unknown> {
     const osType = requiredInputString(input.os_type, "os_type");
-    const query = requiredInputString(input.query, "query").toLocaleLowerCase();
+    const query = requiredInputString(input.query, "query").toLowerCase();
     const limit = optionalInteger(input.limit) ?? defaultSearchLimit;
-    const calendar = await requestAppleDbCalendar(`/ios/${encodePathSegment(osType)}/main.ics`, context);
+    const calendar = await requestAppleDb(context, {
+      path: `/ios/${appledbPathSegment(osType, "os_type")}/main.ics`,
+      accept: "text/calendar",
+      readBody: (response) => readProviderTextBody(response, "AppleDB calendar response", appledbCalendarMaxBytes),
+    });
     const matches = parseAppleDbCalendar(calendar).filter((entry) => entry.searchText.includes(query));
-    const results = matches.slice(0, limit).map(({ searchText: _searchText, ...entry }) => entry);
+    // AppleDB publishes calendar events in neither ascending nor descending
+    // order, so the result limit would otherwise drop the newest builds.
+    matches.sort(
+      (left, right) =>
+        right.build.released.localeCompare(left.build.released) || left.build.key.localeCompare(right.build.key),
+    );
+    const results = matches.slice(0, limit).map((entry) => entry.build);
     return {
       builds: results,
       count: results.length,
@@ -113,47 +162,43 @@ export const appledbActionHandlers: ProviderActionHandlers<
   },
 };
 
-async function requestAppleDbJson(path: string, context: AppleDbActionContext, maxBytes: number): Promise<unknown> {
-  return runProviderRequest({ signal: context.signal, label: "AppleDB" }, async (signal) => {
-    const response = await context.fetcher(`${appledbApiBaseUrl}${path}`, {
-      headers: {
-        accept: "application/json",
-        "user-agent": providerUserAgent,
-      },
-      signal,
-    });
-    if (!response.ok) {
-      throw new ProviderRequestError(
-        response.status,
-        (await readProviderErrorTextBody(response, "AppleDB error response")) ||
-          `AppleDB request failed with HTTP ${response.status}`,
-      );
-    }
-    return readProviderJsonBody(response, {
-      emptyBody: null,
-      invalidJsonMessage: "AppleDB returned invalid JSON.",
-      maxBytes,
-    });
-  });
+/**
+ * AppleDB is served from static hosting that decodes %2F and collapses dot
+ * segments before resolving a file, so encoding alone cannot keep a lookup
+ * inside its /device/ or /ios/ prefix.
+ */
+function appledbPathSegment(value: string, fieldName: string): string {
+  if (value === "." || value === ".." || value.includes("/") || value.includes("\\")) {
+    throw providerInputError(`${fieldName} must not contain path separators or dot segments.`);
+  }
+  return encodePathSegment(value);
 }
 
-async function requestAppleDbCalendar(path: string, context: AppleDbActionContext): Promise<string> {
+async function requestAppleDb<T>(context: AppleDbActionContext, request: AppleDbRequest<T>): Promise<T> {
   return runProviderRequest({ signal: context.signal, label: "AppleDB" }, async (signal) => {
-    const response = await context.fetcher(`${appledbApiBaseUrl}${path}`, {
+    const response = await context.fetcher(`${appledbApiBaseUrl}${request.path}`, {
       headers: {
-        accept: "text/calendar",
+        accept: request.accept,
         "user-agent": providerUserAgent,
       },
       signal,
     });
     if (!response.ok) {
-      throw new ProviderRequestError(
-        response.status,
-        (await readProviderErrorTextBody(response, "AppleDB calendar error response")) ||
-          `AppleDB calendar request failed with HTTP ${response.status}`,
-      );
+      // AppleDB is a static site, so every error body is a full HTML error page
+      // rather than a message worth forwarding.
+      await response.body?.cancel().catch(() => undefined);
+      if (response.status === 404) {
+        throw new ProviderRequestError(404, `AppleDB has no record at ${request.path}`);
+      }
+      // AppleDB takes no credentials, so a 401 or 403 can only be a bot or WAF
+      // block; forwarding it would ask clients to reconnect an account that
+      // does not exist.
+      if (response.status === 401 || response.status === 403) {
+        throw new ProviderRequestError(502, `AppleDB refused the request with HTTP ${response.status}`);
+      }
+      throw new ProviderRequestError(response.status, `AppleDB request failed with HTTP ${response.status}`);
     }
-    return readProviderTextBody(response, "AppleDB calendar response", appledbCalendarMaxBytes);
+    return request.readBody(response);
   });
 }
 
@@ -174,7 +219,7 @@ function deviceMatchRank(device: Record<string, unknown>, query: string): number
     ...looseArray(device.soc).map(optionalString),
   ]
     .filter((value): value is string => value !== undefined)
-    .map((value) => value.toLocaleLowerCase());
+    .map((value) => value.toLowerCase());
 
   if (values.some((value) => value === query)) {
     return 0;
@@ -201,27 +246,40 @@ function compactDeviceSearchResult(device: Record<string, unknown>): Record<stri
   };
 }
 
-function parseAppleDbCalendar(calendar: string): AppleDbCalendarBuild[] {
+function parseAppleDbCalendar(calendar: string): CalendarSearchEntry[] {
   const lines = unfoldCalendarLines(calendar);
-  const builds: AppleDbCalendarBuild[] = [];
+  const entries: CalendarSearchEntry[] = [];
   let event: Record<string, string> | undefined;
+  // RFC 5545 lets a VEVENT hold nested components such as VALARM, whose own
+  // SUMMARY and DESCRIPTION describe the alarm rather than the build.
+  let nestedDepth = 0;
 
   for (const line of lines) {
     if (line === "BEGIN:VEVENT") {
       event = {};
+      nestedDepth = 0;
+      continue;
+    }
+    if (!event) {
       continue;
     }
     if (line === "END:VEVENT") {
-      if (event) {
-        const build = calendarEventToBuild(event);
-        if (build) {
-          builds.push(build);
-        }
+      const entry = calendarEventToEntry(event);
+      if (entry) {
+        entries.push(entry);
       }
       event = undefined;
       continue;
     }
-    if (!event) {
+    if (line.startsWith("BEGIN:")) {
+      nestedDepth += 1;
+      continue;
+    }
+    if (line.startsWith("END:")) {
+      nestedDepth = Math.max(0, nestedDepth - 1);
+      continue;
+    }
+    if (nestedDepth > 0) {
       continue;
     }
     const separatorIndex = line.indexOf(":");
@@ -232,7 +290,7 @@ function parseAppleDbCalendar(calendar: string): AppleDbCalendarBuild[] {
     event[property] = unescapeCalendarValue(line.slice(separatorIndex + 1));
   }
 
-  return builds;
+  return entries;
 }
 
 function unfoldCalendarLines(calendar: string): string[] {
@@ -247,7 +305,7 @@ function unfoldCalendarLines(calendar: string): string[] {
   return lines;
 }
 
-function calendarEventToBuild(event: Record<string, string>): AppleDbCalendarBuild | undefined {
+function calendarEventToEntry(event: Record<string, string>): CalendarSearchEntry | undefined {
   const uid = optionalString(event.UID);
   const summary = optionalString(event.SUMMARY);
   const released = calendarDate(optionalString(event.DTSTART));
@@ -263,24 +321,30 @@ function calendarEventToBuild(event: Record<string, string>): AppleDbCalendarBui
   if (!os || !build) {
     return undefined;
   }
-  const versionPrefix = `${os} `;
-  const versionSuffix = ` (${build})`;
-  const version =
-    summary.startsWith(versionPrefix) && summary.endsWith(versionSuffix)
-      ? summary.slice(versionPrefix.length, -versionSuffix.length)
-      : summary;
+  const version = calendarVersion(summary, os);
   const description = event.DESCRIPTION ?? "";
-  const url = description.match(/https:\/\/appledb\.dev\/firmware\/[^\s]+/u)?.[0];
+  const url = description.match(appledbFirmwarePageUrlPattern)?.[0];
   return {
-    key: `${os};${build}`,
-    os,
-    version,
-    build,
-    released,
-    summary,
-    url,
-    searchText: `${uid}\n${summary}\n${description}`.toLocaleLowerCase(),
+    build: { key: `${os};${build}`, os, version, build, released, summary, url },
+    // The UID prefix and the trailing AppleDB page URL are identical on every
+    // event, so indexing them would make queries such as "firmware" or "https"
+    // match the whole calendar.
+    searchText: [os, version, build, summary, url ? description.replace(url, "") : description]
+      .join("\n")
+      .toLowerCase(),
   };
+}
+
+/**
+ * Read the version out of a calendar summary. AppleDB writes the summary as
+ * `<osStr> <version>` plus the plain Apple build in parentheses, while the UID
+ * carries the build key, which may add a `-RC`, `-sim`, or `-SDK` suffix or be
+ * a bare version for accessory firmware, so the build cannot be matched against
+ * the summary directly.
+ */
+function calendarVersion(summary: string, os: string): string {
+  const withoutOs = summary.startsWith(`${os} `) ? summary.slice(os.length + 1) : summary;
+  return withoutOs.replace(/\s*\([^()]*\)$/u, "") || withoutOs;
 }
 
 function calendarDate(value: string | undefined): string | undefined {
