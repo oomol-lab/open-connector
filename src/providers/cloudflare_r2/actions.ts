@@ -303,7 +303,8 @@ export const cloudflareR2Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "put_object",
-    description: "Upload one R2 object from a public URL, plain text, or base64-encoded content.",
+    description:
+      "Upload one R2 object by relaying a public URL, plain text, or base64-encoded content through the connector. This is the fallback for OAuth connections and callers that cannot PUT directly; custom API token connections should prefer generate_presigned_url with method PUT so the bytes go straight to R2 without the connector size cap.",
     requiredScopes: [r2WriteScope],
     providerPermissions: [r2WritePermission],
     inputSchema: {
@@ -341,7 +342,7 @@ export const cloudflareR2Actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "generate_presigned_url",
     description:
-      "Generate a pre-signed R2 URL for a single GET, PUT, or HEAD request. Requires a custom API token credential; OAuth connections cannot mint R2 S3 signatures.",
+      "Generate a pre-signed R2 URL for a single GET, PUT, or HEAD request so the caller transfers bytes directly with R2. Preferred over the put_object and download_object relays. Requires a custom API token credential; OAuth connections cannot mint R2 S3 signatures.",
     requiredScopes: [r2ReadScope, r2WriteScope],
     providerPermissions: [r2ReadPermission, r2WritePermission],
     inputSchema: s.object(
