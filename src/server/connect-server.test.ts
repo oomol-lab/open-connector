@@ -3192,7 +3192,7 @@ describe("ConnectServer", () => {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-oomol-connector-alias": "work",
+        "x-oo-connector-alias": "work",
       },
       body: JSON.stringify({ input: {} }),
     });
@@ -3229,7 +3229,7 @@ describe("ConnectServer", () => {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-oomol-connector-alias": "work",
+        "x-oo-connector-alias": "work",
       },
       body: JSON.stringify({
         endpoint: "/items",

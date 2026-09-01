@@ -1255,7 +1255,6 @@ function readConnectionName(context: Context, body?: Record<string, unknown>): s
   return (
     optionalString(body?.connectionName) ??
     optionalString(body?.alias) ??
-    optionalString(context.req.header("x-oomol-connector-alias")) ??
     optionalString(context.req.header("x-oo-connector-alias")) ??
     optionalString(context.req.query("connectionName")) ??
     optionalString(context.req.query("alias"))
