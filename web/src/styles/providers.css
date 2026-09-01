@@ -6,10 +6,6 @@
 .provider-browser-tabs-list {
   width: 100%;
   justify-content: flex-start;
-  padding: 0;
-  border-bottom: 1px solid var(--border);
-  border-radius: 0;
-  background: transparent;
 }
 
 .provider-browser-tab-content {
