@@ -21,8 +21,12 @@ function placeholders(value: string): string[] {
   return (value.match(/{{\w+}}/g) ?? []).sort();
 }
 
+function normalize(value: string): string {
+  return value.trim().toLowerCase();
+}
+
 function englishWords(value: string): string {
-  return value.trim().toLowerCase().split(/\s+/).sort().join(" ");
+  return normalize(value).split(/\s+/).sort().join(" ");
 }
 
 describe("resolveInitialLang", () => {
@@ -96,21 +100,21 @@ describe("locales", () => {
 
   // Product and protocol names every locale renders in English on purpose. A
   // multi-word value that matches en without being one of these is an
-  // untranslated string, not a deliberate one. Matching ignores case, so a
-  // locale respelling a term ("OAuth app" -> "OAuth App") still needs it here.
+  // untranslated string, not a deliberate one. Terms are lowercased because the
+  // copied-value check below ignores case, so a locale respelling a term
+  // ("OAuth app" -> "OAuth App") still needs it here.
   const englishTerms = new Set([
-    "API Key",
-    "API key",
-    "API Reference",
-    "Callback URL",
-    "Client ID",
-    "Client Secret",
-    "Connector Marketplace",
-    "Discovery URL",
-    "MCP URL",
-    "OAuth app",
-    "OAuth Apps",
-    "OpenAPI JSON",
+    "api key",
+    "api reference",
+    "callback url",
+    "client id",
+    "client secret",
+    "connector marketplace",
+    "discovery url",
+    "mcp url",
+    "oauth app",
+    "oauth apps",
+    "openapi json",
   ]);
 
   // Entries whose English wording is also the correct wording in that locale.
@@ -147,13 +151,14 @@ describe("locales", () => {
       const allowedKeys = englishKeys[lang] ?? [];
       const untranslated = enEntries
         .filter(([, value]) => value.trim().split(/\s+/).length > 1)
-        .filter(([key, value]) => !englishTerms.has(value) && !allowedKeys.includes(key))
+        .filter(([key, value]) => !englishTerms.has(normalize(value)) && !allowedKeys.includes(key))
         .filter(([key, value]) => {
-          // A value copied from en reads as English, and so does one that only
-          // shuffles the same English words.
+          // A value copied from en reads as English however it is recased, and
+          // so does one that only shuffles the same English words.
           const translated = translations.get(key) ?? "";
           return (
-            translated === value || (nonLatinScriptLangs.has(lang) && englishWords(translated) === englishWords(value))
+            normalize(translated) === normalize(value) ||
+            (nonLatinScriptLangs.has(lang) && englishWords(translated) === englishWords(value))
           );
         })
         .map(([key]) => key);
