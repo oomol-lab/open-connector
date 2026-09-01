@@ -64,6 +64,28 @@ describe("AppleDB runtime", () => {
     });
   });
 
+  it("searches string-valued device fields", async () => {
+    const fetcher: typeof fetch = async () =>
+      Response.json([
+        {
+          key: "AirPods1,1-left",
+          name: "AirPods (1st generation), left",
+          type: "AirPods",
+          identifier: ["AirPods1,1-left"],
+          soc: "W1",
+        },
+      ]);
+
+    const result = await appledbActionHandlers.search_devices({ query: "W1" }, { fetcher });
+
+    expect(result).toMatchObject({
+      devices: [{ key: "AirPods1,1-left", soc: "W1" }],
+      count: 1,
+      total_matches: 1,
+      truncated: false,
+    });
+  });
+
   it("omits build sources by default and includes them on request", async () => {
     const requests: string[] = [];
     const fetcher: typeof fetch = async (input) => {

@@ -163,10 +163,14 @@ function deviceMatchRank(device: Record<string, unknown>, query: string): number
     optionalString(device.name),
     optionalString(device.type),
     optionalString(device.arch),
+    optionalString(device.identifier),
     ...looseArray(device.identifier).map(optionalString),
     ...looseArray(device.alias).map(optionalString),
+    optionalString(device.model),
     ...looseArray(device.model).map(optionalString),
+    optionalString(device.board),
     ...looseArray(device.board).map(optionalString),
+    optionalString(device.soc),
     ...looseArray(device.soc).map(optionalString),
   ]
     .filter((value): value is string => value !== undefined)
