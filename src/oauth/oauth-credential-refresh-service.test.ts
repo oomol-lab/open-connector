@@ -1,8 +1,8 @@
 import type { ResolvedCredential } from "../core/types.ts";
 import type { OAuthClientConfigService } from "./oauth-client-config-service.ts";
-import type { IProviderOAuthRuntimeLoader } from "./oauth-token.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { ProviderLoader } from "../providers/provider-loader.ts";
 import { OAuthCredentialRefreshService } from "./oauth-credential-refresh-service.ts";
 
 type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
@@ -17,12 +17,6 @@ const clientConfigs = {
   getConfig: async () => ({ clientId: "client-id", clientSecret: "client-secret", extra: {} }),
   resolveEndpointUrl: (_service: string, endpointUrl: string) => endpointUrl,
 } as unknown as OAuthClientConfigService;
-
-const noOAuthRuntime: IProviderOAuthRuntimeLoader = {
-  async loadProviderOAuthRuntime() {
-    return undefined;
-  },
-};
 
 /** A stored credential whose access token has already lapsed, which is when a refresh runs. */
 function expiredCredential(metadata: Record<string, unknown>): OAuthCredential {
@@ -55,7 +49,7 @@ describe("OAuthCredentialRefreshService", () => {
     vi.spyOn(Date, "now").mockReturnValue(now);
     stubRefreshResponse({});
 
-    const refreshed = await new OAuthCredentialRefreshService(clientConfigs, noOAuthRuntime).refresh(
+    const refreshed = await new OAuthCredentialRefreshService(clientConfigs).refresh(
       "example",
       expiredCredential({ expires_in: 3600 }),
     );
@@ -64,9 +58,10 @@ describe("OAuthCredentialRefreshService", () => {
   });
 
   it("refreshes through a provider OAuth runtime and preserves connection identity", async () => {
-    const oauthRuntimeLoader: IProviderOAuthRuntimeLoader = {
-      async loadProviderOAuthRuntime() {
-        return {
+    const providerLoader = new ProviderLoader({
+      example: async () => ({
+        executors: {},
+        oauth: {
           async refreshAccessToken() {
             return {
               accessToken: "provider-refreshed-token",
@@ -76,12 +71,12 @@ describe("OAuthCredentialRefreshService", () => {
               metadata: { refreshedBy: "provider-runtime" },
             };
           },
-        };
-      },
-    };
+        },
+      }),
+    });
     const credential = expiredCredential({ permissions: "read,write" });
 
-    const refreshed = await new OAuthCredentialRefreshService(clientConfigs, oauthRuntimeLoader).refresh(
+    const refreshed = await new OAuthCredentialRefreshService(clientConfigs, providerLoader).refresh(
       "example",
       credential,
     );
@@ -105,7 +100,7 @@ describe("OAuthCredentialRefreshService", () => {
     });
     vi.stubGlobal("fetch", fetcher);
 
-    await new OAuthCredentialRefreshService(clientConfigs, noOAuthRuntime).refresh(
+    await new OAuthCredentialRefreshService(clientConfigs).refresh(
       "example",
       expiredCredential({
         oauthClientConfig: {
@@ -127,10 +122,7 @@ describe("OAuthCredentialRefreshService", () => {
     const credential = expiredCredential({ expires_in: 3600 });
     stubRefreshResponse({});
 
-    const refreshed = await new OAuthCredentialRefreshService(clientConfigs, noOAuthRuntime).refresh(
-      "example",
-      credential,
-    );
+    const refreshed = await new OAuthCredentialRefreshService(clientConfigs).refresh("example", credential);
 
     expect(refreshed.expiresAt).not.toBe(credential.expiresAt);
     expect(Date.parse(refreshed.expiresAt!)).toBeGreaterThan(Date.now());
@@ -141,7 +133,7 @@ describe("OAuthCredentialRefreshService", () => {
     vi.spyOn(Date, "now").mockReturnValue(now);
     stubRefreshResponse({ expires_in: 120 });
 
-    const refreshed = await new OAuthCredentialRefreshService(clientConfigs, noOAuthRuntime).refresh(
+    const refreshed = await new OAuthCredentialRefreshService(clientConfigs).refresh(
       "example",
       expiredCredential({ expires_in: 3600 }),
     );
@@ -152,16 +144,13 @@ describe("OAuthCredentialRefreshService", () => {
   it("leaves the expiry unset when no lifetime was ever reported", async () => {
     stubRefreshResponse({});
 
-    const refreshed = await new OAuthCredentialRefreshService(clientConfigs, noOAuthRuntime).refresh(
-      "example",
-      expiredCredential({}),
-    );
+    const refreshed = await new OAuthCredentialRefreshService(clientConfigs).refresh("example", expiredCredential({}));
 
     expect(refreshed.expiresAt).toBeUndefined();
   });
 
   it("carries a reported lifetime through a later refresh that omits it", async () => {
-    const service = new OAuthCredentialRefreshService(clientConfigs, noOAuthRuntime);
+    const service = new OAuthCredentialRefreshService(clientConfigs);
     stubRefreshResponse({ expires_in: 3600 });
     const first = await service.refresh("example", expiredCredential({}));
 
@@ -176,7 +165,7 @@ describe("OAuthCredentialRefreshService", () => {
   it("keeps the last usable lifetime when a refresh reports an unusable value", async () => {
     const now = Date.now();
     vi.spyOn(Date, "now").mockReturnValue(now);
-    const service = new OAuthCredentialRefreshService(clientConfigs, noOAuthRuntime);
+    const service = new OAuthCredentialRefreshService(clientConfigs);
     stubRefreshResponse({ expires_in: 0 });
     const first = await service.refresh("example", expiredCredential({ expires_in: 3600 }));
 
@@ -194,10 +183,7 @@ describe("OAuthCredentialRefreshService", () => {
       providerSecret: { opaque: "provider-owned-secret" },
     };
 
-    const refreshed = await new OAuthCredentialRefreshService(clientConfigs, noOAuthRuntime).refresh(
-      "example",
-      credential,
-    );
+    const refreshed = await new OAuthCredentialRefreshService(clientConfigs).refresh("example", credential);
 
     expect(refreshed.refreshToken).toBe("refresh-token");
     expect(refreshed.providerSecret).toEqual(credential.providerSecret);
@@ -213,7 +199,7 @@ describe("OAuthCredentialRefreshService", () => {
       providerSecret: { oauthRefreshParameters: { employer: "employer-id" } },
     };
 
-    await new OAuthCredentialRefreshService(clientConfigs, noOAuthRuntime).refresh("example", credential);
+    await new OAuthCredentialRefreshService(clientConfigs).refresh("example", credential);
 
     expect(String(fetcher.mock.calls[0]?.[1]?.body)).toContain("employer=employer-id");
   });

@@ -1,15 +1,16 @@
 import type { ConnectionService } from "../connection-service.ts";
+import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { ISecretCodec } from "../server/secrets/secret-codec-core.ts";
 import type {
   OAuthClientConfig,
   OAuthClientConfigInput,
   OAuthClientConfigService,
 } from "./oauth-client-config-service.ts";
-import type { IProviderOAuthRuntimeLoader } from "./oauth-token.ts";
+import type { OAuthTokenResult } from "./oauth-token.ts";
 
 import { createHash, randomBytes } from "node:crypto";
 import { providerFetch } from "../providers/provider-runtime.ts";
-import { exchangeOAuthCode } from "./oauth-token.ts";
+import { requestAuthorizationCodeToken } from "./oauth-token.ts";
 
 /**
  * Started OAuth authorization flow returned to the local console.
@@ -47,7 +48,7 @@ export interface OAuthAuthorizationState {
 export interface OAuthFlowServiceOptions {
   clientConfigs: OAuthClientConfigService;
   connections: ConnectionService;
-  oauthRuntimeLoader: IProviderOAuthRuntimeLoader;
+  providerLoader: IProviderLoader;
   states: IOAuthStateStore;
   stateMaxAgeMs?: number;
   secretCodec?: ISecretCodec;
@@ -70,7 +71,7 @@ export interface IOAuthStateStore {
 export class OAuthFlowService {
   private readonly clientConfigs: OAuthClientConfigService;
   private readonly connections: ConnectionService;
-  private readonly oauthRuntimeLoader: IProviderOAuthRuntimeLoader;
+  private readonly providerLoader: IProviderLoader;
   private readonly states: IOAuthStateStore;
   private readonly stateMaxAgeMs: number;
   private readonly secretCodec?: ISecretCodec;
@@ -79,7 +80,7 @@ export class OAuthFlowService {
   constructor(input: OAuthFlowServiceOptions) {
     this.clientConfigs = input.clientConfigs;
     this.connections = input.connections;
-    this.oauthRuntimeLoader = input.oauthRuntimeLoader;
+    this.providerLoader = input.providerLoader;
     this.states = input.states;
     this.stateMaxAgeMs = input.stateMaxAgeMs ?? 15 * 60 * 1000;
     this.secretCodec = input.secretCodec;
@@ -161,20 +162,36 @@ export class OAuthFlowService {
 
     const redirectUri = this.clientConfigs.expectedRedirectUri(pending.service);
     const tokenUrl = this.clientConfigs.resolveEndpointUrl(pending.service, auth.tokenUrl, config);
-    const tokenResponse = await exchangeOAuthCode({
-      service: pending.service,
-      auth,
-      clientConfig: config,
-      code: input.code,
-      state: pending.state,
-      redirectUri,
-      tokenUrl,
-      extraFields: createTokenExtraFields(pending, auth.tokenRequestCallbackParameters, input.callbackParameters),
-      providerFetcher: providerFetch,
-      signal: input.signal,
-      oauthRuntimeLoader: this.oauthRuntimeLoader,
-      createError: (message) => new OAuthFlowError("oauth_token_exchange_failed", message),
-    });
+    const createError = (message: string): OAuthFlowError => new OAuthFlowError("oauth_token_exchange_failed", message);
+    const providerOAuth = await this.providerLoader.loadProviderOAuthRuntime?.(pending.service);
+    let tokenResponse: OAuthTokenResult;
+    if (providerOAuth?.exchangeCode) {
+      tokenResponse = await providerOAuth.exchangeCode({
+        code: input.code,
+        clientConfig: config,
+        redirectUri,
+        tokenUrl,
+        fetcher: providerFetch,
+        signal: input.signal,
+        createError,
+      });
+    } else {
+      tokenResponse = await requestAuthorizationCodeToken({
+        code: input.code,
+        state: pending.state,
+        clientId: config.clientId,
+        clientSecret: config.clientSecret,
+        redirectUri,
+        responseEnvelope: auth.tokenResponseEnvelope,
+        tokenRequestFields: auth.tokenRequestFields,
+        tokenEndpointAuthMethod: auth.tokenEndpointAuthMethod,
+        tokenRequestFormat: auth.tokenRequestFormat,
+        tokenUrl,
+        extraFields: createTokenExtraFields(pending, auth.tokenRequestCallbackParameters, input.callbackParameters),
+        signal: input.signal,
+        createError,
+      });
+    }
     const refreshParameters = readCallbackParameters(auth.tokenRequestCallbackParameters, input.callbackParameters);
     const oauthCredential = {
       authType: "oauth2" as const,

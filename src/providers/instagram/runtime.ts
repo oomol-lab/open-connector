@@ -425,7 +425,7 @@ async function pollContainer(containerId: string, publishing: InstagramPublishin
       const delay = Math.min(startedAt + pollIndex * pollIntervalMs, deadline) - now();
       if (delay > 0) await sleep(delay, context.signal);
     }
-    if (now() > deadline) break;
+    if (pollIndex > 0 && now() > deadline) break;
     const statusResponse = await instagramRequestJson(
       {
         path: `/${encodePathSegment(containerId)}`,

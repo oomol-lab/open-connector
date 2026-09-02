@@ -4,7 +4,7 @@ import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { ISecretCodec } from "../server/secrets/secret-codec-core.ts";
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "./oauth-client-config-service.ts";
 import type { IOAuthStateStore, OAuthAuthorizationState } from "./oauth-flow-service.ts";
-import type { IProviderOAuthRuntimeLoader, ProviderOAuthRuntime } from "./oauth-token.ts";
+import type { ProviderOAuthRuntime } from "./oauth-token.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "../catalog-store.ts";
@@ -853,7 +853,7 @@ function createServices(
     flow: new OAuthFlowService({
       clientConfigs,
       connections,
-      oauthRuntimeLoader: providerLoader,
+      providerLoader,
       states,
       stateMaxAgeMs: options.stateMaxAgeMs,
       secretCodec: options.secretCodec,
@@ -864,7 +864,7 @@ function createServices(
   };
 }
 
-class EmptyProviderLoader implements IProviderLoader, IProviderOAuthRuntimeLoader {
+class EmptyProviderLoader implements IProviderLoader {
   private readonly oauthRuntime?: ProviderOAuthRuntime;
 
   constructor(oauthRuntime?: ProviderOAuthRuntime) {

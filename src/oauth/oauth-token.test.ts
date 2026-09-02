@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { providerUserAgent } from "../providers/provider-runtime.ts";
-import { exchangeOAuthCode, requestAuthorizationCodeToken, requestRefreshToken } from "./oauth-token.ts";
+import { requestAuthorizationCodeToken, requestRefreshToken } from "./oauth-token.ts";
 
 const authorizationCodeRequest = {
   clientId: "client-id",
@@ -41,53 +41,6 @@ describe("OAuth token requests", () => {
     vi.restoreAllMocks();
   });
 
-  it("delegates non-standard code exchange to a lazy provider OAuth runtime", async () => {
-    const fetcher = vi.fn();
-    const loadProviderOAuthRuntime = vi.fn(async () => ({
-      async exchangeCode() {
-        return {
-          accessToken: "provider-access-token",
-          refreshToken: "provider-access-token",
-          tokenType: "Bearer",
-          expiresAt: "2026-10-30T00:00:00.000Z",
-          metadata: { permissions: "read,write" },
-        };
-      },
-    }));
-
-    const token = await exchangeOAuthCode({
-      service: "instagram",
-      auth: {
-        type: "oauth2",
-        authorizationUrl: "https://www.instagram.com/oauth/authorize",
-        tokenUrl: "https://api.instagram.com/oauth/access_token",
-        scopes: ["instagram_business_basic"],
-        tokenEndpointAuthMethod: "client_secret_post",
-      },
-      clientConfig: {
-        service: "instagram",
-        clientId: "client-id",
-        clientSecret: "client-secret",
-        extra: {},
-        secretExtra: {},
-      },
-      code: "authorization-code",
-      redirectUri: "https://runtime.example.com/oauth/callback",
-      tokenUrl: "https://api.instagram.com/oauth/access_token",
-      providerFetcher: fetcher,
-      oauthRuntimeLoader: { loadProviderOAuthRuntime },
-      createError: (message) => new Error(message),
-    });
-
-    expect(loadProviderOAuthRuntime).toHaveBeenCalledWith("instagram");
-    expect(fetcher).not.toHaveBeenCalled();
-    expect(token).toMatchObject({
-      accessToken: "provider-access-token",
-      refreshToken: "provider-access-token",
-      metadata: { permissions: "read,write" },
-    });
-  });
-
   it("exchanges an authorization code as a form POST that never follows redirects", async () => {
     const fetcher = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => {
       throw new TypeError("transport failed");
@@ -107,6 +60,30 @@ describe("OAuth token requests", () => {
     });
     expect(String(init?.body)).toContain("client_secret=client-secret");
     expect(String(init?.body)).toContain("code=authorization-code");
+  });
+
+  it("cancels a standard authorization-code token request with its caller", async () => {
+    const controller = new AbortController();
+    const fetcher = vi.fn(
+      async (_input: RequestInfo | URL, init?: RequestInit) =>
+        await new Promise<Response>((_resolve, reject) => {
+          if (init?.signal?.aborted) {
+            reject(init.signal.reason);
+            return;
+          }
+          init?.signal?.addEventListener("abort", () => reject(init.signal?.reason), { once: true });
+        }),
+    );
+    vi.stubGlobal("fetch", fetcher);
+
+    const operation = requestAuthorizationCodeToken({
+      ...authorizationCodeRequest,
+      signal: controller.signal,
+    });
+    controller.abort();
+
+    await expect(operation).rejects.toThrow("OAuth token request was cancelled.");
+    expect(fetcher).toHaveBeenCalledOnce();
   });
 
   it("keeps client_secret_basic credentials out of authorization-code and refresh bodies", async () => {

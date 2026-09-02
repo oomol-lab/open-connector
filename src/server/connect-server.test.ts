@@ -3717,11 +3717,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     oauthFlow: new OAuthFlowService({
       clientConfigs,
       connections,
-      oauthRuntimeLoader: {
-        async loadProviderOAuthRuntime() {
-          return undefined;
-        },
-      },
+      providerLoader,
       states: new MemoryOAuthStateStore(),
       secretCodec: options.secretCodec,
       isCustomClientConfigAllowed,

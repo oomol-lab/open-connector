@@ -3,9 +3,13 @@ import type { OAuthClientConfig } from "./oauth-client-config-service.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../core/cast.ts";
 import { readBoundedResponseBytes } from "../core/request.ts";
-import { providerFetch, providerUserAgent } from "../providers/provider-runtime.ts";
+import {
+  createProviderTimeout,
+  isAbortLikeError,
+  providerFetch,
+  providerUserAgent,
+} from "../providers/provider-runtime.ts";
 
-const oauthTokenRequestTimeoutMs = 30_000;
 const oauthTokenResponseMaxBytes = 1024 * 1024;
 /** Longest `expires_in` we accept; anything larger overflows the ECMAScript `Date` range. */
 const maxExpiresInSeconds = 100 * 365 * 24 * 60 * 60;
@@ -45,39 +49,6 @@ export interface ProviderOAuthRuntime {
   refreshAccessToken?(input: OAuthAccessTokenRefreshInput): Promise<OAuthTokenResult>;
 }
 
-/** Loads provider-local OAuth operations from the lazy provider runtime module. */
-export interface IProviderOAuthRuntimeLoader {
-  loadProviderOAuthRuntime(service: string): Promise<ProviderOAuthRuntime | undefined>;
-}
-
-export interface ExchangeOAuthCodeOptions {
-  service: string;
-  auth: OAuth2AuthDefinition;
-  clientConfig: OAuthClientConfig;
-  code: string;
-  state?: string;
-  redirectUri: string;
-  tokenUrl: string;
-  extraFields?: Record<string, string>;
-  providerFetcher: typeof fetch;
-  signal?: AbortSignal;
-  oauthRuntimeLoader: IProviderOAuthRuntimeLoader;
-  createError(message: string): Error;
-}
-
-export interface RefreshOAuthAccessTokenOptions {
-  service: string;
-  auth: OAuth2AuthDefinition;
-  clientConfig: OAuthClientConfig;
-  refreshToken: string;
-  tokenUrl: string;
-  extraFields?: Record<string, string>;
-  providerFetcher: typeof fetch;
-  signal?: AbortSignal;
-  oauthRuntimeLoader: IProviderOAuthRuntimeLoader;
-  createError(message: string): Error;
-}
-
 export interface OAuthTokenRequestOptions {
   clientId: string;
   clientSecret: string;
@@ -86,6 +57,7 @@ export interface OAuthTokenRequestOptions {
   tokenEndpointAuthMethod: "client_secret_basic" | "client_secret_post" | "none";
   tokenRequestFormat?: "form" | "json";
   tokenUrl: string;
+  signal?: AbortSignal;
 }
 
 interface AuthorizationCodeTokenRequest extends OAuthTokenRequestOptions {
@@ -108,64 +80,6 @@ interface TokenRequest extends OAuthTokenRequestOptions {
 }
 
 export type OAuthTokenErrorFactory = (message: string) => Error;
-
-/** Exchange an OAuth code through a provider override or the standard token endpoint protocol. */
-export async function exchangeOAuthCode(input: ExchangeOAuthCodeOptions): Promise<OAuthTokenResult> {
-  const oauth = await input.oauthRuntimeLoader.loadProviderOAuthRuntime(input.service);
-  if (oauth?.exchangeCode) {
-    return oauth.exchangeCode({
-      code: input.code,
-      clientConfig: input.clientConfig,
-      redirectUri: input.redirectUri,
-      tokenUrl: input.tokenUrl,
-      fetcher: input.providerFetcher,
-      signal: input.signal,
-      createError: input.createError,
-    });
-  }
-
-  return requestAuthorizationCodeToken({
-    code: input.code,
-    state: input.state,
-    clientId: input.clientConfig.clientId,
-    clientSecret: input.clientConfig.clientSecret,
-    redirectUri: input.redirectUri,
-    responseEnvelope: input.auth.tokenResponseEnvelope,
-    tokenRequestFields: input.auth.tokenRequestFields,
-    tokenEndpointAuthMethod: input.auth.tokenEndpointAuthMethod,
-    tokenRequestFormat: input.auth.tokenRequestFormat,
-    tokenUrl: input.tokenUrl,
-    extraFields: input.extraFields,
-    createError: input.createError,
-  });
-}
-
-/** Refresh an access token through a provider override or the standard refresh-token protocol. */
-export async function refreshOAuthAccessToken(input: RefreshOAuthAccessTokenOptions): Promise<OAuthTokenResult> {
-  const oauth = await input.oauthRuntimeLoader.loadProviderOAuthRuntime(input.service);
-  if (oauth?.refreshAccessToken) {
-    return oauth.refreshAccessToken({
-      refreshToken: input.refreshToken,
-      clientConfig: input.clientConfig,
-      fetcher: input.providerFetcher,
-      signal: input.signal,
-      createError: input.createError,
-    });
-  }
-
-  return requestRefreshToken({
-    clientId: input.clientConfig.clientId,
-    clientSecret: input.clientConfig.clientSecret,
-    responseEnvelope: input.auth.tokenResponseEnvelope,
-    refreshToken: input.refreshToken,
-    extraFields: input.extraFields,
-    tokenRequestFields: input.auth.tokenRequestFields,
-    tokenEndpointAuthMethod: input.auth.tokenEndpointAuthMethod,
-    tokenRequestFormat: input.auth.tokenRequestFormat,
-    tokenUrl: input.tokenUrl,
-    createError: input.createError,
-  });
-}
 
 export async function requestAuthorizationCodeToken(input: AuthorizationCodeTokenRequest): Promise<OAuthTokenResult> {
   return requestToken({
@@ -212,50 +126,59 @@ async function requestToken(input: TokenRequest): Promise<OAuthTokenResult> {
     body = new URLSearchParams(fields);
   }
 
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   try {
     response = await providerFetch(input.tokenUrl, {
       method: "POST",
       headers,
       body,
-      signal: AbortSignal.timeout(oauthTokenRequestTimeoutMs),
+      signal: timeout.signal,
       // Workers has no "error" redirect mode; "manual" surfaces any 3xx as a
       // non-ok response, which the check below rejects. Same intent as "error"
       // (never follow a redirect from the token endpoint), edge-compatible.
       redirect: "manual",
     });
   } catch (error) {
-    if (error instanceof Error && error.name === "TimeoutError") {
+    timeout.cleanup();
+    if (input.signal?.aborted) {
+      throw input.createError("OAuth token request was cancelled.");
+    }
+    if (timeout.didTimeout() || isAbortLikeError(error)) {
       throw input.createError("OAuth token request timed out.");
     }
     // A rejected fetch has no HTTP response to inspect, but the request may
     // still have reached the provider before the connection failed.
     throw input.createError(`OAuth token request failed without an HTTP response: ${describeCause(error)}`);
   }
-  const bytes = await readTokenResponseBytes(response, input.createError);
-  const rawPayload = decodeTokenPayload(bytes);
-  const payload = unwrapTokenPayload(rawPayload, input.responseEnvelope);
-  if (!response.ok || !isEnvelopeSuccess(rawPayload, input.responseEnvelope)) {
-    const providerMessage = readTokenErrorMessage(rawPayload, payload, input.responseEnvelope);
-    const bodyDescription = bytes.byteLength === 0 ? "empty body" : "unrecognized response body";
-    throw input.createError(
-      providerMessage ??
-        // Token endpoints and intermediaries can echo request credentials. Keep
-        // arbitrary response bytes out of the public error while distinguishing
-        // an empty body from a non-conforming one.
-        `OAuth token request failed (HTTP ${response.status}, ${bodyDescription}).`,
-    );
-  }
+  try {
+    const bytes = await readTokenResponseBytes(response, input.createError);
+    const rawPayload = decodeTokenPayload(bytes);
+    const payload = unwrapTokenPayload(rawPayload, input.responseEnvelope);
+    if (!response.ok || !isEnvelopeSuccess(rawPayload, input.responseEnvelope)) {
+      const providerMessage = readTokenErrorMessage(rawPayload, payload, input.responseEnvelope);
+      const bodyDescription = bytes.byteLength === 0 ? "empty body" : "unrecognized response body";
+      throw input.createError(
+        providerMessage ??
+          // Token endpoints and intermediaries can echo request credentials. Keep
+          // arbitrary response bytes out of the public error while distinguishing
+          // an empty body from a non-conforming one.
+          `OAuth token request failed (HTTP ${response.status}, ${bodyDescription}).`,
+      );
+    }
 
-  const accessToken = requiredString(payload.access_token ?? payload.token, "access_token", input.createError);
-  const tokenType = optionalString(payload.token_type) ?? "Bearer";
-  return {
-    accessToken,
-    tokenType,
-    refreshToken: optionalString(payload.refresh_token),
-    expiresAt: expiresAtFromLifetime(payload.expires_in),
-    metadata: createTokenMetadata(payload),
-  };
+    const accessToken = requiredString(payload.access_token ?? payload.token, "access_token", input.createError);
+    const tokenType = optionalString(payload.token_type) ?? "Bearer";
+    return {
+      accessToken,
+      tokenType,
+      refreshToken: optionalString(payload.refresh_token),
+      expiresAt: expiresAtFromLifetime(payload.expires_in),
+      metadata: createTokenMetadata(payload),
+    };
+  } finally {
+    timeout.cleanup();
+  }
 }
 
 /** Read a bounded token response and map body-stream failures to a safe OAuth error. */

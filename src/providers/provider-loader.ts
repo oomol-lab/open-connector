@@ -1,5 +1,5 @@
 import type { ActionExecutor, CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../core/types.ts";
-import type { IProviderOAuthRuntimeLoader, ProviderOAuthRuntime } from "../oauth/oauth-token.ts";
+import type { ProviderOAuthRuntime } from "../oauth/oauth-token.ts";
 
 import { withProviderFallbackMessage } from "./provider-runtime.ts";
 
@@ -41,14 +41,15 @@ export interface IProviderLoader {
    * Load a provider credential validator only when a connection is created.
    */
   loadCredentialValidators(service: string): Promise<CredentialValidators | undefined>;
-}
 
-export interface IRuntimeProviderLoader extends IProviderLoader, IProviderOAuthRuntimeLoader {}
+  /** Load provider-specific OAuth operations when the provider defines them. */
+  loadProviderOAuthRuntime?(service: string): Promise<ProviderOAuthRuntime | undefined>;
+}
 
 /**
  * Provider loader backed by the executor registry selected by the runtime entry point.
  */
-export class ProviderLoader implements IRuntimeProviderLoader {
+export class ProviderLoader implements IProviderLoader {
   private readonly executorModules: ExecutorModules;
 
   constructor(executorModules: ExecutorModules) {
