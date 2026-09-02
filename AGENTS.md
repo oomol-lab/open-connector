@@ -1,5 +1,25 @@
 # Repository Guidelines
 
+## Using This Guide
+
+- Keep `AGENTS.md` for durable engineering principles that require judgment. Do not add feature history, current project status, rollout notes, or implementation details that code and configuration already make clear.
+- Before adding a rule, identify the future decision it changes, why the constraint cannot be enforced deterministically, and the narrowest directory where it applies. If any answer is missing, do not add the rule.
+- Prefer types, tests, lint rules, and generated checks for deterministic constraints. Do not repeat those constraints in prose.
+
+## Engineering Approach
+
+- Before a non-trivial implementation, state the problem, desired outcome, constraints, and success condition. Distinguish the root cause from its symptoms.
+- Extend the established pattern owned by the same layer. If that pattern is no longer suitable, make the tradeoff explicit and decide whether to improve the shared owner before introducing a competing abstraction.
+- Choose the smallest coherent design with the fewest necessary concepts, states, dependencies, and special cases. Prefer consolidation or deletion when it produces the same outcome.
+- Assign each invariant to the component that owns and can enforce it. Keep dependencies explicit; construct resource-owning dependencies at composition roots, and do not acquire resources or mutate global state merely by importing a module.
+- Treat persistent data and externally visible contracts as owned state. Destructive or irreversible changes require a proven scope, a verification method, defined failure behavior, and a recovery plan.
+- Make every change serve one outcome a reviewer can state in one sentence. Keep unrelated refactors, upgrades, generated churn, and renames separate, and preserve work already present in the tree.
+
+## Tests
+
+- Each test should protect an important invariant, boundary, or failure mode. Test at the lowest layer that proves the behavior, using the real database, filesystem, protocol, or framework boundary when correctness depends on it.
+- Assert observable behavior instead of private call sequences, and remove redundant tests when a stronger test supersedes them.
+
 ## Architecture
 
 - Keep one clear owner for each fact. Do not repeat provider metadata such as `displayName` in executors when it already belongs to `definition.ts`; pass or inject it from the caller that has the definition/catalog.
