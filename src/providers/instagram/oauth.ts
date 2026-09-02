@@ -25,7 +25,6 @@ interface InstagramTokenPayload extends Record<string, unknown> {
   expires_in?: unknown;
   permissions?: unknown;
   token_type?: unknown;
-  user_id?: unknown;
 }
 
 interface InstagramTokenRequest {
@@ -36,11 +35,6 @@ interface InstagramTokenRequest {
   init?: RequestInit;
   sensitiveValues: string[];
   createError(message: string): Error;
-}
-
-interface InstagramTokenResultOptions {
-  permissions?: string;
-  userId?: string;
 }
 
 /** Instagram Login token protocol, kept provider-local because it is not standard OAuth refresh-token behavior. */
@@ -82,10 +76,7 @@ export const oauth: ProviderOAuthRuntime = {
       createError: input.createError,
     });
 
-    return createInstagramTokenResult(longPayload, input.createError, {
-      permissions: normalizePermissions(shortPayload.permissions),
-      userId: optionalString(shortPayload.user_id),
-    });
+    return createInstagramTokenResult(longPayload, input.createError, normalizePermissions(shortPayload.permissions));
   },
 
   async refreshAccessToken(input: OAuthAccessTokenRefreshInput): Promise<OAuthTokenResult> {
@@ -96,7 +87,6 @@ export const oauth: ProviderOAuthRuntime = {
       url,
       operation: "long-lived token refresh",
       fetcher: input.fetcher,
-      signal: input.signal,
       sensitiveValues: [input.refreshToken],
       createError: input.createError,
     });
@@ -189,19 +179,15 @@ function unwrapShortLivedTokenPayload(
 function createInstagramTokenResult(
   payload: InstagramTokenPayload,
   createError: (message: string) => Error,
-  input: InstagramTokenResultOptions = {},
+  permissions?: string,
 ): OAuthTokenResult {
   const accessToken = requiredString(payload.access_token, "Instagram access token", createError);
   const expiresIn = readExpiresIn(payload.expires_in);
   if (expiresIn === undefined) {
     throw createError("Instagram token response is missing a positive expires_in.");
   }
-  const metadata: Record<string, unknown> = {
-    expires_in: expiresIn,
-    rawTokenType: optionalString(payload.token_type),
-  };
-  if (input.permissions) metadata.permissions = input.permissions;
-  if (input.userId) metadata.user_id = input.userId;
+  const metadata: Record<string, unknown> = { expires_in: expiresIn };
+  if (permissions) metadata.permissions = permissions;
   return {
     accessToken,
     refreshToken: accessToken,

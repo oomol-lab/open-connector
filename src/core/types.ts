@@ -369,14 +369,7 @@ export type CredentialValidationResult = {
    * `grantedScopes` for agent-visible identity and capability data.
    */
   metadata?: Record<string, unknown>;
-  /** Definitive credential or account incompatibility that must prevent connection storage. */
-  rejection?: CredentialValidationRejection;
 };
-
-export interface CredentialValidationRejection {
-  code: string;
-  message: string;
-}
 
 export interface CredentialValidatorOptions {
   fetcher: typeof fetch;

@@ -668,10 +668,10 @@ export class ConnectionService {
     signal?: AbortSignal,
   ): Promise<CredentialValidationResult> {
     this.assertNotCancelled(signal);
-    let result: CredentialValidationResult;
     try {
-      result = (await validate()) ?? {};
+      const result = (await validate()) ?? {};
       this.assertNotCancelled(signal);
+      return result;
     } catch (error) {
       if (signal?.aborted) {
         throw cancelledConnectionError();
@@ -681,10 +681,6 @@ export class ConnectionService {
         error instanceof Error ? error.message : `${service} credential verification failed.`,
       );
     }
-    if (result.rejection) {
-      throw new ConnectionError(result.rejection.code, result.rejection.message);
-    }
-    return result;
   }
 
   private assertNotCancelled(signal?: AbortSignal): void {

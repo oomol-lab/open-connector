@@ -40,18 +40,10 @@ const maxPollWaits = 5;
 const maxPollDurationMs = maxPollWaits * pollIntervalMs;
 const instagramErrorTextMaxLength = 2000;
 const instagramRateLimitErrorCodes = new Set([4, 17, 32, 613]);
-const professionalAccountRequiredCode = "instagram_professional_account_required";
 const professionalAccountRequiredMessage = "Instagram connections require a Business or Creator professional account.";
 
 type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
 type InstagramActionHandler = (input: Record<string, unknown>, context: OAuthProviderContext) => Promise<unknown>;
-type InstagramSleep = (milliseconds: number, signal?: AbortSignal) => Promise<void>;
-
-interface InstagramRuntimeOptions {
-  sleep?: InstagramSleep;
-  now?: () => number;
-}
-
 interface InstagramRequest {
   path: string;
   method?: "GET" | "POST";
@@ -85,17 +77,11 @@ interface ContainerRecoveryDetails {
 
 interface InstagramPublishingContext {
   context: OAuthProviderContext;
-  sleep: InstagramSleep;
-  now: () => number;
   deadline: number;
 }
 
-/** Build the complete Instagram handler map with injectable polling time. */
-function createInstagramActionHandlers(
-  options: InstagramRuntimeOptions = {},
-): ProviderActionHandlers<"instagram", InstagramActionHandler> {
-  const sleep = options.sleep ?? sleepWithSignal;
-  const now = options.now ?? Date.now;
+/** Build the complete Instagram handler map. */
+function createInstagramActionHandlers(): ProviderActionHandlers<"instagram", InstagramActionHandler> {
   return {
     get_current_user(_input, context) {
       return getCurrentUser(context);
@@ -107,9 +93,7 @@ function createInstagramActionHandlers(
     publish_media(input, context) {
       return publishMedia(input, {
         context,
-        sleep,
-        now,
-        deadline: now() + maxPollDurationMs,
+        deadline: Date.now() + maxPollDurationMs,
       });
     },
     create_comment: createComment,
@@ -135,26 +119,9 @@ export async function validateInstagramCredential(
     signal,
   };
   const payload = await instagramRequestJson({ path: "/me", query: { fields: currentUserFields } }, context);
-  let rawUser: Record<string, unknown>;
-  try {
-    rawUser = unwrapDirectOrFirstDataItem(payload);
-  } catch {
-    return credentialRejection(
-      "instagram_account_identity_required",
-      "Instagram did not return a stable account ID for this credential.",
-    );
-  }
-  if (!optionalString(rawUser.id)) {
-    return credentialRejection(
-      "instagram_account_identity_required",
-      "Instagram did not return a stable account ID for this credential.",
-    );
-  }
+  const rawUser = unwrapDirectOrFirstDataItem(payload);
   const user = normalizeCurrentUser(rawUser);
-  const accountType = optionalString(user.accountType);
-  if (accountType && !isProfessionalAccountType(accountType)) {
-    return credentialRejection(professionalAccountRequiredCode, professionalAccountRequiredMessage);
-  }
+  assertProfessionalAccount(user);
 
   const accountId = optionalString(user.userId) ?? requiredString(user.id, "Instagram account ID", providerInputError);
   const displayName = optionalString(user.username) ?? optionalString(user.name) ?? accountId;
@@ -417,20 +384,20 @@ async function waitForContainer(
 }
 
 async function pollContainer(containerId: string, publishing: InstagramPublishingContext): Promise<ContainerStatus> {
-  const { context, sleep, now, deadline } = publishing;
-  const startedAt = now();
+  const { context, deadline } = publishing;
+  const startedAt = Date.now();
   let lastStatus = "IN_PROGRESS";
   for (let pollIndex = 0; pollIndex <= maxPollWaits; pollIndex += 1) {
     if (pollIndex > 0) {
-      const delay = Math.min(startedAt + pollIndex * pollIntervalMs, deadline) - now();
-      if (delay > 0) await sleep(delay, context.signal);
+      const delay = Math.min(startedAt + pollIndex * pollIntervalMs, deadline) - Date.now();
+      if (delay > 0) await sleepWithSignal(delay, context.signal);
     }
-    if (pollIndex > 0 && now() > deadline) break;
+    if (pollIndex > 0 && Date.now() > deadline) break;
     const statusResponse = await instagramRequestJson(
       {
         path: `/${encodePathSegment(containerId)}`,
         query: { fields: "id,status_code,status" },
-        timeoutMs: Math.max(1, deadline - now()),
+        timeoutMs: Math.max(1, deadline - Date.now()),
       },
       context,
     );
@@ -454,7 +421,7 @@ async function pollContainer(containerId: string, publishing: InstagramPublishin
         { containerId, statusCode },
       );
     }
-    if (now() >= deadline) break;
+    if (Date.now() >= deadline) break;
   }
   throw new ProviderRequestError(
     504,
@@ -801,10 +768,6 @@ function assertProfessionalAccount(user: Record<string, unknown>): void {
 
 function isProfessionalAccountType(value: string): boolean {
   return value === "Business" || value === "Media_Creator";
-}
-
-function credentialRejection(code: string, message: string): CredentialValidationResult {
-  return { rejection: { code, message } };
 }
 
 function assertExclusiveCursors(input: Record<string, unknown>): void {

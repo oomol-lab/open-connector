@@ -39,7 +39,6 @@ export interface OAuthAccessTokenRefreshInput {
   refreshToken: string;
   clientConfig: OAuthClientConfig;
   fetcher: typeof fetch;
-  signal?: AbortSignal;
   createError(message: string): Error;
 }
 

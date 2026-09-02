@@ -596,35 +596,6 @@ describe("ConnectionService", () => {
     });
   });
 
-  it("does not store OAuth credentials after a definitive provider rejection", async () => {
-    const service = createService([oauthProvider], {
-      providerLoader: new FakeProviderLoader({
-        async oauth2() {
-          return {
-            rejection: {
-              code: "professional_account_required",
-              message: "A professional account is required.",
-            },
-          };
-        },
-      }),
-    });
-
-    await expect(
-      service.setOAuthCredential("example", {
-        authType: "oauth2",
-        accessToken: "access-token",
-        tokenType: "Bearer",
-        profile: testProfile,
-        metadata: {},
-      }),
-    ).rejects.toMatchObject({
-      code: "professional_account_required",
-      message: "A professional account is required.",
-    });
-    await expect(service.getCredential("example")).resolves.toBeUndefined();
-  });
-
   it("does not store OAuth credentials when validation is cancelled", async () => {
     const controller = new AbortController();
     let validationStarted: (() => void) | undefined;
