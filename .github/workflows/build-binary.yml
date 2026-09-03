@@ -1,0 +1,247 @@
+name: Build Binaries
+
+# Builds the Bun single-file executables (`npm run build:binary`, six targets)
+# and smoke-tests every one of them on real hardware:
+#
+#   build (Linux x64)  ->  smoke linux-arm64   (Blacksmith Ubuntu ARM)
+#                      ->  smoke windows-x64   (Blacksmith Windows Server 2025)
+#                      ->  smoke windows-arm64 (GitHub-hosted windows-11-arm)
+#                      ->  smoke darwin-arm64  (Blacksmith macOS 15, Apple Silicon)
+#                      ->  smoke darwin-x64    (GitHub-hosted macos-15-intel)
+#
+# All six targets are cross-compiled on ONE Linux runner: Bun downloads a
+# ~80 MB runtime per target and compiling is a matter of seconds, whereas
+# cross-compiling ON a Windows runner is broken upstream (oven-sh/bun#11198,
+# the workspace and the Bun cache sit on different drives). The Linux job also
+# smoke-tests its own linux-x64 output twice, once against SQLite and once
+# against the PostgreSQL service container (service containers are Linux-only,
+# which is one reason the smoke matrix is a separate job).
+#
+# The smoke matrix mixes runner vendors because Blacksmith offers no Windows
+# ARM64 and no macOS Intel runners; those two targets run on GitHub-hosted
+# runners, which are free for public repositories. Every smoke job only
+# downloads its artifact and runs `node scripts/smoke-binary.ts`, so it needs
+# neither `npm ci` nor Bun.
+#
+# The build job's `npm run build:binary` runs `npm run build:web`, which fetches
+# https://oomol.com/en/apps/catalog.json (the provider icon map) at build time,
+# so an outage there fails the build job. This is the first PR-gated path
+# through the web build.
+#
+# darwin binaries built on Linux carry an invalid ad-hoc signature (Bun 1.4.0
+# writes a wrong page hash, which macOS 27 rejects), so the macOS smoke jobs
+# re-sign the binary with `codesign` and verify the signature before running it.
+#
+# A `runs-on` label that no runner serves queues forever instead of failing, so
+# `workflow_dispatch` is here to verify the labels before relying on them.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Cancel superseded runs for the same ref (e.g. new push to an open PR).
+concurrency:
+  group: build-binary-${{ github.ref }}
+  cancel-in-progress: true
+
+# Least privilege: these jobs only read the repository; the binaries are
+# workflow artifacts, nothing is published.
+permissions:
+  contents: read
+
+env:
+  # This project runs TypeScript directly with `node` (native type stripping) and
+  # forbids `tsx` / `--experimental-strip-types` (see AGENTS.md). Type stripping is
+  # on by default only on Node >= 22.18 / >= 23.6, so pin an LTS that supports it.
+  # Do NOT downgrade below 22.18 — `npm ci` (postinstall codegen) and typecheck fail.
+  NODE_VERSION: "24"
+
+jobs:
+  build:
+    name: Build all targets
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: open_connector_test
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # No step needs the persisted GITHUB_TOKEN in git config; dropping it
+          # keeps `npm ci` postinstall scripts from reading it (zizmor hardening).
+          persist-credentials: false
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      # Pinned to an immutable SHA rather than the mutable v2 tag: this
+      # third-party action installs the toolchain that produces the shipped
+      # binaries, so its supply chain must not be silently updatable.
+      # `.bun-version` is the single owner of the pinned Bun version; the build
+      # script refuses to run under any other version.
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: .bun-version
+
+      # Bun downloads one runtime per cross-compile target (~80 MB each) from
+      # registry.npmjs.org into ~/.bun/install/cache; setup-bun caches only the
+      # host executable. The key changes with the pinned Bun version.
+      - name: Cache Bun cross-compile runtimes
+        uses: actions/cache@v6
+        with:
+          path: ~/.bun/install/cache/bun-*-v*
+          key: bun-runtimes-${{ runner.os }}-${{ hashFiles('.bun-version') }}
+
+      # Runs postinstall codegen (provider registry + catalog).
+      - name: Install dependencies
+        run: npm ci
+
+      # Regenerates the catalog, builds the web console, then compiles all six targets.
+      - name: Build binaries
+        run: npm run build:binary
+
+      # SQLite mode: the embedded catalog, migrations and console all come from the binary.
+      - name: Smoke test linux-x64 (SQLite)
+        run: node scripts/smoke-binary.ts dist/open-connector-linux-x64
+
+      # PostgreSQL mode: the binary's own `migrate` subcommand applies the embedded
+      # postgresql/ migrations, then the server must pass its schema check.
+      - name: Migrate PostgreSQL with linux-x64
+        env:
+          OOMOL_CONNECT_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/open_connector_test
+        run: dist/open-connector-linux-x64 migrate
+
+      - name: Smoke test linux-x64 (PostgreSQL)
+        env:
+          OOMOL_CONNECT_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/open_connector_test
+        run: node scripts/smoke-binary.ts dist/open-connector-linux-x64
+
+      # One artifact per target so each smoke job downloads only its own ~35 MB
+      # zip. upload-artifact drops the exec bit; the smoke jobs chmod after download.
+      - name: Upload linux-x64
+        uses: actions/upload-artifact@v7
+        with:
+          name: binary-linux-x64
+          path: dist/open-connector-linux-x64
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Upload linux-arm64
+        uses: actions/upload-artifact@v7
+        with:
+          name: binary-linux-arm64
+          path: dist/open-connector-linux-arm64
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Upload darwin-x64
+        uses: actions/upload-artifact@v7
+        with:
+          name: binary-darwin-x64
+          path: dist/open-connector-darwin-x64
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Upload darwin-arm64
+        uses: actions/upload-artifact@v7
+        with:
+          name: binary-darwin-arm64
+          path: dist/open-connector-darwin-arm64
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Upload windows-x64
+        uses: actions/upload-artifact@v7
+        with:
+          name: binary-windows-x64
+          path: dist/open-connector-windows-x64.exe
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Upload windows-arm64
+        uses: actions/upload-artifact@v7
+        with:
+          name: binary-windows-arm64
+          path: dist/open-connector-windows-arm64.exe
+          if-no-files-found: error
+          retention-days: 1
+
+  # Run each remaining target on its native OS and architecture. linux-x64 was
+  # already exercised by the build job.
+  smoke:
+    name: Smoke ${{ matrix.target }}
+    needs: build
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-arm64
+            runner: blacksmith-2vcpu-ubuntu-2404-arm
+            file: open-connector-linux-arm64
+          - target: windows-x64
+            runner: blacksmith-2vcpu-windows-2025
+            file: open-connector-windows-x64.exe
+          # Blacksmith has no Windows ARM64 runners.
+          - target: windows-arm64
+            runner: windows-11-arm
+            file: open-connector-windows-arm64.exe
+          - target: darwin-arm64
+            runner: blacksmith-6vcpu-macos-15
+            file: open-connector-darwin-arm64
+          # Blacksmith has no macOS Intel runners.
+          - target: darwin-x64
+            runner: macos-15-intel
+            file: open-connector-darwin-x64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # The smoke script uses only node: builtins, so no `npm ci` is needed.
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Download ${{ matrix.target }} binary
+        uses: actions/download-artifact@v8
+        with:
+          name: binary-${{ matrix.target }}
+          path: dist
+
+      # Artifact zips do not preserve file modes.
+      - name: Restore executable bit
+        if: runner.os != 'Windows'
+        run: chmod +x dist/${{ matrix.file }}
+
+      # Linux-built darwin binaries carry an invalid ad-hoc signature (Bun 1.4.0
+      # writes a wrong page hash); re-sign them and assert the signature is valid,
+      # since macOS 15 would tolerate an invalid one silently.
+      - name: Ad-hoc sign and verify
+        if: runner.os == 'macOS'
+        run: |
+          codesign --force --sign - dist/${{ matrix.file }}
+          codesign --verify --verbose=2 dist/${{ matrix.file }}
+
+      - name: Smoke test ${{ matrix.target }}
+        run: node scripts/smoke-binary.ts dist/${{ matrix.file }}
