@@ -39,6 +39,7 @@ OpenConnector is configured with environment variables.
 | `OOMOL_CONNECT_S3_SECRET_ACCESS_KEY`        | SDK credential chain      | Explicit S3 secret access key. Configure it with the access key ID, or omit both.                                                                                           |
 | `OOMOL_CONNECT_S3_SESSION_TOKEN`            | unset                     | Optional session token used with explicit S3 credentials.                                                                                                                   |
 | `OOMOL_CONNECT_RUN_LIMIT`                   | `5000`                    | Maximum number of recent action run audit records to retain.                                                                                                                |
+| `OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS`        | `false`                   | Read action JSON schemas from the catalog files on demand instead of keeping them in memory. See below.                                                                     |
 
 Example:
 
@@ -225,11 +226,40 @@ multicast, and other unsafe special-use targets remain blocked.
 > a deployment-wide egress exception, not per-connection authorization. Keep
 > entries narrowly scoped to domains you trust.
 
+## Lazy catalog schemas
+
+The generated catalog ships one JSON file per provider, and the `inputSchema` and `outputSchema` of
+their actions are most of those bytes. The server keeps the whole catalog in memory, which is the
+largest allocation it makes and the one that matters on a 256 MB class machine such as the Helm
+chart's default `256Mi` request or a small Fly machine.
+
+Set `OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS=true` to keep those schemas on disk instead:
+
+```bash
+OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS=true npm run dev
+```
+
+Action metadata stays in memory: ids, names, descriptions, required scopes, provider permissions,
+follow-up and async lifecycle links, and execution flags. Only the two schema fields are read back
+from the provider file when something asks for them, and the schemas of the eight most recently
+used provider files stay cached. Responses are byte-identical to the default mode, so this is a
+memory-for-reads trade and not an API change.
+
+What changes operationally:
+
+- The catalog directory must stay readable while the server runs. Replacing or deleting it under a
+  running server makes later schema reads fail. The single-file executable reads the catalog from
+  its own embedded filesystem, so it needs nothing extra.
+- Reading or running one action reads one provider file. `GET /api/actions`, which serializes every
+  action, and action search across many services re-read files as they go.
+- This is a Node and single-binary setting. Cloudflare Workers load the catalog from asset chunks
+  and ignore it.
+
 ## Cloudflare Workers
 
 Cloudflare uses the same environment variable names for origin, static auth tokens, execution
-policy, transit file limits, and data encryption. The JWT settings above, `PORT`, `HOST`, and
-`OOMOL_CONNECT_DATA_DIR` are Node-only settings.
+policy, transit file limits, and data encryption. The JWT settings above, `PORT`, `HOST`,
+`OOMOL_CONNECT_DATA_DIR`, and `OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS` are Node-only settings.
 
 The Worker runtime also requires these bindings in `wrangler.local.jsonc`. Copy
 `wrangler.example.jsonc` to `wrangler.local.jsonc` and fill in your own Cloudflare resource IDs

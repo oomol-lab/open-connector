@@ -85,6 +85,7 @@ async function main(): Promise<void> {
   const assets = await resolveServerAssets();
   const catalog = await loadCatalog(assets.catalogDir, {
     executableServices: Object.keys(executorModules),
+    lazySchemas: parseBooleanEnv("OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS"),
   });
   const runtimeDatabase = databaseUrl
     ? await createNodeRuntimeDatabase({

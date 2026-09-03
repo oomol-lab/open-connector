@@ -12,8 +12,8 @@ import { setTimeout as sleep } from "node:timers/promises";
 // web console, migrations and shutdown path work.
 //
 // Usage: `node scripts/smoke-binary.ts <path-to-binary>`. Set OOMOL_CONNECT_DATABASE_URL to run the PostgreSQL
-// mode; every other OOMOL_CONNECT_* variable is removed from the server's environment. Uses only Node built-ins so
-// the smoke runners need no `npm ci`.
+// mode and OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS to run the lazy catalog mode; every other OOMOL_CONNECT_* variable is
+// removed from the server's environment. Uses only Node built-ins so the smoke runners need no `npm ci`.
 
 interface ProcessExit {
   code: number | null;
@@ -122,6 +122,7 @@ try {
   const indexHtml = await checkConsoleIndex(baseUrl);
   await checkConsoleAssets(baseUrl, indexHtml);
   await checkProviders(baseUrl);
+  await checkActionSchema(baseUrl);
   await checkApps(baseUrl);
   await checkDatabaseBackend(server, dataDir, databaseUrl);
   await checkGracefulShutdown(server);
@@ -170,6 +171,11 @@ function buildServerEnvironment(options: ServerProcessOptions): NodeJS.ProcessEn
   env.OOMOL_CONNECT_DATA_DIR = options.dataDir;
   if (options.databaseUrl) {
     env.OOMOL_CONNECT_DATABASE_URL = options.databaseUrl;
+  }
+  // Forwarded on purpose: it is what makes a smoke run read action schemas from the embedded catalog on demand.
+  const lazyCatalogSchemas = process.env.OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS;
+  if (lazyCatalogSchemas !== undefined) {
+    env.OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS = lazyCatalogSchemas;
   }
 
   return env;
@@ -273,6 +279,18 @@ async function checkProviders(baseUrl: string): Promise<void> {
     data.some((entry) => isRecord(entry) && entry.service === "slack"),
     "/v1/providers does not include slack",
   );
+}
+
+/**
+ * With OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS the schemas are read from the embedded catalog file when the action is
+ * requested, so one action detail proves that on-demand read; slack is already known to be in /v1/providers.
+ */
+async function checkActionSchema(baseUrl: string): Promise<void> {
+  const actionId = "slack.add_reaction";
+  const data = await fetchEnvelopeData(baseUrl, `/v1/actions/${actionId}`);
+  assert(isRecord(data), `/v1/actions/${actionId} data is not an object`);
+  assert(isRecord(data.inputSchema), `/v1/actions/${actionId} inputSchema is not an object`);
+  assert(Object.keys(data.inputSchema).length > 0, `/v1/actions/${actionId} inputSchema is empty`);
 }
 
 async function checkApps(baseUrl: string): Promise<void> {

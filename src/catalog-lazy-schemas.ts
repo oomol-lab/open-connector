@@ -1,0 +1,142 @@
+import type { ActionDefinition, JsonSchema, ProviderDefinition } from "./core/types.ts";
+
+import { readFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+
+interface ActionSchemas {
+  inputSchema: JsonSchema;
+  outputSchema: JsonSchema;
+}
+
+/**
+ * Non-enumerable link from a metadata-only action back to the catalog file that still owns its
+ * schemas. It is a symbol so it never reaches `Object.keys`, `JSON.stringify` or a spread copy,
+ * while `Object.getOwnPropertyDescriptors` still carries it onto the runtime action.
+ */
+const actionSchemaSource = Symbol("catalog action schema source");
+
+interface FileBackedActionDefinition extends ActionDefinition {
+  [actionSchemaSource]: FileActionSchemaSource;
+}
+
+/** Provider files whose action schemas stay cached at once. */
+const defaultCacheFiles = 8;
+
+/**
+ * Read provider catalog files while keeping every `inputSchema`/`outputSchema` on disk.
+ *
+ * Files are read one at a time so peak memory holds a single fully parsed provider, and each action
+ * keeps schema-shaped accessors at their original key positions, so a lazily loaded catalog
+ * serializes byte-for-byte like an eagerly loaded one.
+ */
+export async function readProvidersWithLazySchemas(
+  filePaths: string[],
+  cacheFiles: number = defaultCacheFiles,
+): Promise<ProviderDefinition[]> {
+  const loader = new FileActionSchemaLoader(cacheFiles);
+  const providers: ProviderDefinition[] = [];
+  for (const filePath of filePaths) {
+    const provider = JSON.parse(await readFile(filePath, "utf8")) as ProviderDefinition;
+    const source = new FileActionSchemaSource(filePath, loader);
+    providers.push({
+      ...provider,
+      actions: provider.actions.map((action) => toFileBackedAction(action, source)),
+    });
+  }
+
+  return providers;
+}
+
+/**
+ * Copy one parsed action without its schemas, replacing them with enumerable accessors defined at
+ * the key position they had in the file. Real catalog actions carry `followUpActions` and
+ * `asyncLifecycle` after the schemas, so appending the accessors instead would reorder the keys and
+ * change every serialized response.
+ */
+function toFileBackedAction(action: ActionDefinition, source: FileActionSchemaSource): ActionDefinition {
+  const fileBacked: Record<string, unknown> = {};
+  for (const key of Object.keys(action)) {
+    if (key === "inputSchema" || key === "outputSchema") {
+      Object.defineProperty(fileBacked, key, {
+        get: key === "inputSchema" ? readInputSchema : readOutputSchema,
+        enumerable: true,
+        configurable: true,
+      });
+    } else {
+      fileBacked[key] = action[key as keyof ActionDefinition];
+    }
+  }
+  Object.defineProperty(fileBacked, actionSchemaSource, { value: source });
+
+  return fileBacked as ActionDefinition;
+}
+
+function readInputSchema(this: FileBackedActionDefinition): JsonSchema {
+  return this[actionSchemaSource].read(this.id).inputSchema;
+}
+
+function readOutputSchema(this: FileBackedActionDefinition): JsonSchema {
+  return this[actionSchemaSource].read(this.id).outputSchema;
+}
+
+/** The one catalog file that backs every action loaded from it. */
+class FileActionSchemaSource {
+  private readonly filePath: string;
+  private readonly loader: FileActionSchemaLoader;
+
+  constructor(filePath: string, loader: FileActionSchemaLoader) {
+    this.filePath = filePath;
+    this.loader = loader;
+  }
+
+  read(actionId: string): ActionSchemas {
+    return this.loader.read(this.filePath, actionId);
+  }
+}
+
+/**
+ * Least-recently-used cache of parsed catalog files, shared by every action of one loaded catalog.
+ *
+ * Reads are synchronous because they answer property getters. A miss re-reads the whole file, so an
+ * uncached file that changed on disk is picked up on its next access.
+ */
+class FileActionSchemaLoader {
+  private readonly cache = new Map<string, Map<string, ActionSchemas>>();
+  private readonly maxCachedFiles: number;
+
+  constructor(maxCachedFiles: number) {
+    this.maxCachedFiles = maxCachedFiles;
+  }
+
+  read(filePath: string, actionId: string): ActionSchemas {
+    const cached = this.cache.get(filePath);
+    // Re-inserting a hit moves it to the end of the insertion order, so the first key is the least
+    // recently used file.
+    this.cache.delete(filePath);
+    const schemas = cached ?? readActionSchemas(filePath);
+    this.cache.set(filePath, schemas);
+    while (this.cache.size > this.maxCachedFiles) {
+      const leastRecent = this.cache.keys().next().value;
+      if (leastRecent === undefined) {
+        break;
+      }
+      this.cache.delete(leastRecent);
+    }
+
+    const actionSchemas = schemas.get(actionId);
+    if (!actionSchemas) {
+      throw new Error(`Catalog action ${actionId} is missing from ${filePath}`);
+    }
+    return actionSchemas;
+  }
+}
+
+function readActionSchemas(filePath: string): Map<string, ActionSchemas> {
+  const provider = JSON.parse(readFileSync(filePath, "utf8")) as ProviderDefinition;
+  return new Map(
+    provider.actions.map((action) => [
+      action.id,
+      { inputSchema: action.inputSchema, outputSchema: action.outputSchema },
+    ]),
+  );
+}

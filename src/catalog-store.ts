@@ -2,6 +2,7 @@ import type { ActionDefinition, AuthType, ProviderDefinition, ProviderScenario }
 
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { readProvidersWithLazySchemas } from "./catalog-lazy-schemas.ts";
 import { sortProviders } from "./core/catalog.ts";
 import { resolveProviderScenario } from "./core/provider-scenarios.ts";
 
@@ -76,6 +77,10 @@ export interface CreateCatalogStoreOptions {
 export interface LoadCatalogOptions extends CreateCatalogStoreOptions {
   /** Mark every catalog action owned by these locally loaded provider services as executable. */
   executableServices?: Iterable<string>;
+  /** Keep action schemas on disk and read them back on demand (see `OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS`). */
+  lazySchemas?: boolean;
+  /** Provider files whose schemas stay cached at once in lazy mode. Defaults to 8. */
+  lazySchemaCacheFiles?: number;
 }
 
 export function createCatalogStore(
@@ -85,12 +90,17 @@ export function createCatalogStore(
   const sortedProviders = sortProviders(providers);
   const executableActions = new Set(options.executableActionIds ?? []);
   const runtimeProviders = sortedProviders.map((provider): RuntimeProviderDefinition => {
-    const actions = provider.actions.map(
-      (action): RuntimeActionDefinition => ({
-        ...action,
-        execution: createActionExecutionStatus(provider, action, executableActions),
-      }),
-    );
+    const actions = provider.actions.map((action): RuntimeActionDefinition => {
+      // A descriptor copy instead of a spread: a lazily loaded action exposes its schemas as
+      // accessors, and spreading would read them all back into memory here. Plain JSON actions copy
+      // to the same keys, in the same order, with the same attributes.
+      const runtimeAction = Object.defineProperties(
+        {},
+        Object.getOwnPropertyDescriptors(action),
+      ) as RuntimeActionDefinition;
+      runtimeAction.execution = createActionExecutionStatus(provider, action, executableActions);
+      return runtimeAction;
+    });
 
     return {
       ...provider,
@@ -136,23 +146,45 @@ function weakEtag(content: string): string {
 function toProviderSummary(provider: RuntimeProviderDefinition): ProviderSummaryDefinition {
   return {
     ...provider,
-    actions: provider.actions.map(({ inputSchema: _inputSchema, outputSchema: _outputSchema, ...action }) => action),
+    actions: provider.actions.map(toActionSummary),
   };
 }
 
 /**
+ * Drop the two schema keys by copying the others in order.
+ *
+ * Rest destructuring or a spread would read both schemas, which pulls every file-backed schema of a
+ * lazily loaded catalog into memory while the summaries are built.
+ */
+function toActionSummary(action: RuntimeActionDefinition): ActionSummaryDefinition {
+  const summary: Record<string, unknown> = {};
+  for (const key of Object.keys(action) as (keyof RuntimeActionDefinition)[]) {
+    if (key === "inputSchema" || key === "outputSchema") {
+      continue;
+    }
+    summary[key] = action[key];
+  }
+
+  return summary as ActionSummaryDefinition;
+}
+
+/**
  * Load generated provider catalog files from disk.
+ *
+ * With `lazySchemas`, files are read one at a time and each action keeps only its metadata; the
+ * schemas stay on disk behind accessors backed by a small per-file cache, which trades a
+ * synchronous read on schema access for a much smaller resident catalog.
  */
 export async function loadCatalog(catalogDir: string, options: LoadCatalogOptions = {}): Promise<CatalogStore> {
   const entries = await readdir(catalogDir, { withFileTypes: true });
-  const providers = await Promise.all(
-    entries
-      .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
-      .map(async (entry) => {
-        const content = await readFile(join(catalogDir, entry.name), "utf8");
-        return JSON.parse(content) as ProviderDefinition;
-      }),
-  );
+  const filePaths = entries
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+    .map((entry) => join(catalogDir, entry.name));
+  const providers = options.lazySchemas
+    ? await readProvidersWithLazySchemas(filePaths, options.lazySchemaCacheFiles)
+    : await Promise.all(
+        filePaths.map(async (filePath) => JSON.parse(await readFile(filePath, "utf8")) as ProviderDefinition),
+      );
   return createCatalogStore(providers, {
     executableActionIds: resolveExecutableActionIds(providers, options),
   });
