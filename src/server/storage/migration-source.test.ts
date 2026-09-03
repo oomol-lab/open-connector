@@ -32,6 +32,7 @@ describe("createDirectoryMigrationSource", () => {
     await writeFile(join(directory, "notes.sql"), "select 2;");
     await writeFile(join(directory, "0002_backup.sql.bak"), "select 3;");
     await mkdir(join(directory, "archive"));
+    await mkdir(join(directory, "0002_archive.sql"));
 
     expect(createDirectoryMigrationSource(directory).readMigrations("sqlite")).toEqual([
       { name: "0001_runtime.sql", sql: "select 1;" },

@@ -21,8 +21,9 @@ export function createDirectoryMigrationSource(directory: string): MigrationSour
   return {
     readMigrations(dialect) {
       const dir = dialect === "sqlite" ? directory : join(directory, "postgresql");
-      return readdirSync(dir)
-        .filter((name) => /^\d+_.*\.sql$/.test(name))
+      return readdirSync(dir, { withFileTypes: true })
+        .filter((entry) => entry.isFile() && /^\d+_.*\.sql$/.test(entry.name))
+        .map((entry) => entry.name)
         .sort()
         .map((name) => ({ name, sql: readFileSync(join(dir, name), "utf8") }));
     },
