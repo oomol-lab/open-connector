@@ -275,6 +275,7 @@ Issues and pull requests are welcome.
 - [Fly.io deployment](docs/fly-io.md)
 - [Cloudflare deployment](docs/cloudflare.md)
 - [Docker image (GHCR)](docs/docker-ghcr.md)
+- [Single binary](docs/single-binary.md)
 - [Configuration](docs/configuration.md)
 - [Credentials and OAuth](docs/credentials.md)
 - [Catalog format](docs/catalog-format.md)
