@@ -29,8 +29,7 @@ describe("Jira OAuth credential validation", () => {
 
   it("accepts well-formed resources without Jira product scopes", async () => {
     const result = await credentialValidators.oauth2!(credential, {
-      fetcher: async () =>
-        Response.json([{ id: "cloud-123", url: "https://docs.atlassian.net", scopes: ["read:me"] }]),
+      fetcher: async () => Response.json([{ id: "cloud-123", url: "https://docs.atlassian.net", scopes: ["read:me"] }]),
     });
 
     expect(result).toMatchObject({
