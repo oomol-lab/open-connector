@@ -24,7 +24,11 @@ import { TransitFileService } from "./files/transit-files.ts";
 import { logger } from "./logger.ts";
 import { createSecretCodec } from "./secrets/secret-codec.ts";
 import { resolveServerAssets } from "./server-assets.ts";
-import { createNodeRuntimeDatabase } from "./storage/node-runtime-database.ts";
+import {
+  createNodeRuntimeDatabase,
+  migratePostgresRuntimeDatabase,
+  sqliteMigrationsNotice,
+} from "./storage/node-runtime-database.ts";
 import { DEFAULT_RUN_LIMIT } from "./storage/runtime-store.ts";
 
 const port = Number(process.env.PORT ?? 3000);
@@ -38,10 +42,22 @@ const databaseUrl = optionalEnv("OOMOL_CONNECT_DATABASE_URL");
 const databasePoolMax = readPositiveIntegerEnv("OOMOL_CONNECT_DATABASE_POOL_MAX", 10);
 const databaseConnectTimeoutMs = readPositiveIntegerEnv("OOMOL_CONNECT_DATABASE_CONNECT_TIMEOUT_MS", 10_000);
 
+// The standalone binary embeds migrations/postgresql, but the PostgreSQL startup validator refuses to serve until
+// they are applied and its error text points at `npm run runtime:migrate`, which a binary user does not have.
+// `migrate` applies them from the same source the validator reads, so validation and execution cannot diverge.
+const [command, ...rest] = process.argv.slice(2);
+
 try {
-  await main();
+  if (command === undefined) {
+    await main();
+  } else if (command === "migrate" && rest.length === 0) {
+    await runMigrateCommand();
+  } else {
+    console.error("Usage: open-connector [migrate]");
+    process.exitCode = 1;
+  }
 } catch (error) {
-  logger.error({ err: error }, "connect server failed");
+  logger.error({ err: error }, command === "migrate" ? "migrate failed" : "connect server failed");
   process.exitCode = 1;
 }
 
@@ -146,6 +162,21 @@ async function main(): Promise<void> {
   } finally {
     await runtimeDatabase.close();
   }
+}
+
+async function runMigrateCommand(): Promise<void> {
+  if (!databaseUrl) {
+    logger.info(sqliteMigrationsNotice);
+    return;
+  }
+
+  const assets = await resolveServerAssets();
+  await migratePostgresRuntimeDatabase({
+    connectionString: databaseUrl,
+    connectionTimeoutMs: databaseConnectTimeoutMs,
+    logger,
+    migrations: assets.migrations,
+  });
 }
 
 function waitForShutdown(server: ServerType): Promise<void> {
