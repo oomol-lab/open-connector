@@ -79,6 +79,34 @@ describe("Confluence OAuth credentials", () => {
     ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("multiple sites") });
   });
 
+  it("accepts a token without an accessible Confluence site", async () => {
+    const result = await credentialValidators.oauth2!(oauthCredential, {
+      fetcher: async () => Response.json([]),
+    });
+
+    expect(result).toEqual({
+      profile: {
+        accountId: "confluence",
+        displayName: "Confluence Cloud",
+        grantedScopes: [],
+      },
+      grantedScopes: [],
+      metadata: {
+        resourceCount: 0,
+        validationEndpoint: "/oauth/token/accessible-resources",
+      },
+    });
+  });
+
+  it("rejects malformed accessible-resource responses", async () => {
+    await expect(
+      credentialValidators.oauth2!(oauthCredential, { fetcher: async () => Response.json({}) }),
+    ).rejects.toMatchObject({
+      status: 502,
+      message: "Confluence accessible-resources response must be an array",
+    });
+  });
+
   it("times out accessible-resource discovery", async () => {
     vi.useFakeTimers();
     const validation = credentialValidators.oauth2!(oauthCredential, {

@@ -132,7 +132,17 @@ async function fetchJiraCurrentAccount(
   const resources = readAccessibleResources(accessibleResourcesPayload);
   const primaryResource = pickPrimaryResource(resources);
   if (!primaryResource) {
-    throw new ProviderRequestError(400, "jira authorization does not include an accessible Jira Cloud site");
+    return {
+      profile: {
+        accountId: "jira",
+        displayName: "Jira Cloud",
+      },
+      grantedScopes: [],
+      metadata: {
+        resourceCount: resources.length,
+        validationEndpoint: "/oauth/token/accessible-resources",
+      },
+    };
   }
 
   const cloudId = requireNonEmptyString(primaryResource.id, "jira cloudId");
