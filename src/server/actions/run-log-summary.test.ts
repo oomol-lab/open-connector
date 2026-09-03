@@ -8,6 +8,8 @@ describe("summarizeForRunLog", () => {
         cookies: [{ name: "session", value: "cookie-secret" }],
         headers: { authorization: "Basic dXNlcjpwYXNz" },
         accessKey: "access-secret",
+        aliyunDeviceAccessKeyId: "device-key-id",
+        aliyunDeviceAccessKeySecret: "device-key-secret",
         token: "abc.def.ghi",
         temporaryUrl: "https://user:pass@example.com/file?token=secret#fragment",
       }),
@@ -15,6 +17,8 @@ describe("summarizeForRunLog", () => {
       cookies: "[redacted]",
       headers: "[redacted]",
       accessKey: "[redacted]",
+      aliyunDeviceAccessKeyId: "[redacted]",
+      aliyunDeviceAccessKeySecret: "[redacted]",
       token: "[redacted]",
       temporaryUrl: "[redacted-url]",
     });

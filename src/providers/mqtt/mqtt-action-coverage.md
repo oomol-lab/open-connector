@@ -13,7 +13,9 @@ Implemented actions:
 
 - `receive_messages` is not a durable consumer. Non-retained messages published between action calls are missed.
 - MQTT 3.1.1 is the default. MQTT 5.0 is explicit; the provider does not reconnect with another protocol version after a failed handshake.
-- Raw `mqtt://` and `mqtts://` transport, persistent sessions, background subscriptions, workflow triggers, offline inboxes, mTLS, custom certificate authorities, and cloud-vendor signing are deferred.
+- A fixed Client ID is optional. When it is omitted, every action keeps using a new random Client ID.
+- Alibaba Cloud ApsaraMQ unique-certificate-per-device authentication is supported with saved or per-action device credentials. Other cloud-vendor signing schemes are deferred.
+- Raw `mqtt://` and `mqtts://` transport, persistent sessions, background subscriptions, workflow triggers, offline inboxes, mTLS, and custom certificate authorities are deferred.
 - Private-network brokers require a self-hosted runtime with `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK` enabled. Cloudflare Workers cannot route to LAN brokers.
 
 ## Transport Safety

@@ -5,7 +5,7 @@ import type { IClientOptions, IClientPublishOptions, IClientSubscribeOptions, IP
 
 import mqtt from "mqtt";
 import { Buffer } from "node:buffer";
-import { randomUUID } from "node:crypto";
+import { createHmac, randomUUID } from "node:crypto";
 import { optionalInteger, optionalString } from "../../core/cast.ts";
 import { openGuardedWebSocket } from "../../core/guarded-websocket.ts";
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
@@ -18,6 +18,7 @@ type MqttActionHandler = (input: Record<string, unknown>, context: MqttActionCon
 
 interface MqttCredential {
   websocketUrl: string;
+  clientId?: string;
   username?: string;
   password?: string;
   protocolVersion: MqttProtocolVersion;
@@ -42,6 +43,9 @@ export interface MqttConnectionDependencies {
 }
 
 export interface MqttActionContext extends MqttCredential {
+  aliyunInstanceId?: string;
+  aliyunDeviceAccessKeyId?: string;
+  aliyunDeviceAccessKeySecret?: string;
   signal?: AbortSignal;
 }
 
@@ -69,7 +73,7 @@ export function createMqttActionHandlers(
       const payload = decodePayload(requirePresentString(input.payload, "payload"), payloadEncoding);
       const qos = readQos(input.qos);
       const retain = input.retain === true;
-      const client = await dependencies.openClient(context, context.signal);
+      const client = await dependencies.openClient(resolveMqttActionCredential(input, context), context.signal);
       try {
         const publishOptions: IClientPublishOptions = { qos, retain };
         await withAbort(
@@ -95,7 +99,7 @@ export function createMqttActionHandlers(
       const timeoutSeconds = readBoundedInteger(input.timeoutSeconds, "timeoutSeconds", 10, 1, 30);
       const maxMessages = readBoundedInteger(input.maxMessages, "maxMessages", 1, 1, 100);
       const payloadEncoding = readPayloadEncoding(input.payloadEncoding);
-      const client = await dependencies.openClient(context, context.signal);
+      const client = await dependencies.openClient(resolveMqttActionCredential(input, context), context.signal);
       try {
         const result = await receiveMessages(client, {
           topicFilter,
@@ -117,16 +121,89 @@ export function createMqttContext(values: Record<string, string>, signal?: Abort
   const websocketUrl = normalizeWebSocketUrl(values.websocketUrl);
   const username = optionalString(values.username);
   const password = optionalString(values.password);
+  const clientId = optionalString(values.clientId);
+  const aliyunInstanceId = optionalString(values.aliyunInstanceId);
+  const aliyunDeviceAccessKeyId = optionalString(values.aliyunDeviceAccessKeyId);
+  const aliyunDeviceAccessKeySecret = optionalString(values.aliyunDeviceAccessKeySecret);
   if (password && !username) {
     throw new ProviderRequestError(400, "username is required when password is configured");
   }
-  return {
+  const credential: MqttActionContext = {
     websocketUrl,
+    clientId,
     username,
     password,
+    aliyunInstanceId,
+    aliyunDeviceAccessKeyId,
+    aliyunDeviceAccessKeySecret,
     protocolVersion: readProtocolVersion(values.protocolVersion),
     signal,
   };
+  validateAliyunCredentialFields(credential);
+  return credential;
+}
+
+function resolveMqttActionCredential(input: Record<string, unknown>, context: MqttActionContext): MqttCredential {
+  const runtimeAccessKeyId = optionalString(input.aliyunDeviceAccessKeyId);
+  const runtimeAccessKeySecret = optionalString(input.aliyunDeviceAccessKeySecret);
+  if (Boolean(runtimeAccessKeyId) !== Boolean(runtimeAccessKeySecret)) {
+    throw new ProviderRequestError(
+      400,
+      "aliyunDeviceAccessKeyId and aliyunDeviceAccessKeySecret must be provided together",
+    );
+  }
+  if (!context.aliyunInstanceId) {
+    if (runtimeAccessKeyId) {
+      throw new ProviderRequestError(
+        400,
+        "runtime Alibaba Cloud device credentials require aliyunInstanceId in the MQTT connection",
+      );
+    }
+    return context;
+  }
+  if (context.aliyunDeviceAccessKeyId && runtimeAccessKeyId) {
+    throw new ProviderRequestError(400, "runtime device credentials cannot override saved device credentials");
+  }
+  const deviceAccessKeyId = context.aliyunDeviceAccessKeyId ?? runtimeAccessKeyId;
+  const deviceAccessKeySecret = context.aliyunDeviceAccessKeySecret ?? runtimeAccessKeySecret;
+  if (!deviceAccessKeyId || !deviceAccessKeySecret) {
+    throw new ProviderRequestError(
+      400,
+      "aliyunDeviceAccessKeyId and aliyunDeviceAccessKeySecret are required for this MQTT action",
+    );
+  }
+  const clientId = context.clientId!;
+  return {
+    websocketUrl: context.websocketUrl,
+    clientId,
+    username: `DeviceCredential|${deviceAccessKeyId}|${context.aliyunInstanceId}`,
+    password: createHmac("sha1", deviceAccessKeySecret).update(clientId, "utf8").digest("base64"),
+    protocolVersion: context.protocolVersion,
+  };
+}
+
+function validateAliyunCredentialFields(credential: MqttActionContext): void {
+  const hasAccessKeyId = Boolean(credential.aliyunDeviceAccessKeyId);
+  const hasAccessKeySecret = Boolean(credential.aliyunDeviceAccessKeySecret);
+  if (hasAccessKeyId !== hasAccessKeySecret) {
+    throw new ProviderRequestError(
+      400,
+      "aliyunDeviceAccessKeyId and aliyunDeviceAccessKeySecret must be configured together",
+    );
+  }
+  if (!credential.aliyunInstanceId && (hasAccessKeyId || hasAccessKeySecret)) {
+    throw new ProviderRequestError(400, "aliyunInstanceId is required for Alibaba Cloud device credentials");
+  }
+  if (!credential.aliyunInstanceId) return;
+  if (!credential.clientId) {
+    throw new ProviderRequestError(400, "clientId is required for Alibaba Cloud device credentials");
+  }
+  if (credential.username || credential.password) {
+    throw new ProviderRequestError(
+      400,
+      "username and password cannot be combined with Alibaba Cloud device credentials",
+    );
+  }
 }
 
 export async function validateMqttCredential(
@@ -135,8 +212,11 @@ export async function validateMqttCredential(
   openClient: MqttActionDependencies["openClient"] = openMqttClient,
 ): Promise<CredentialValidationResult> {
   const context = createMqttContext(values, signal);
-  const client = await openClient(context, context.signal);
-  await closeMqttClient(client);
+  if (context.aliyunDeviceAccessKeyId || !context.aliyunInstanceId) {
+    const credential = resolveMqttActionCredential({}, context);
+    const client = await openClient(credential, context.signal);
+    await closeMqttClient(client);
+  }
   const url = new URL(context.websocketUrl);
   return {
     profile: {
@@ -165,7 +245,7 @@ export async function openMqttClient(
   let handedOff = false;
   const options: IClientOptions = {
     clean: true,
-    clientId: `oomol-connect-${randomUUID()}`,
+    clientId: credential.clientId ?? `oomol-connect-${randomUUID()}`,
     connectTimeout: 15_000,
     forceNativeWebSocket: true,
     protocolVersion: credential.protocolVersion === "5.0" ? 5 : 4,

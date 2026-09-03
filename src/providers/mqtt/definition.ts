@@ -33,6 +33,16 @@ export const provider: ProviderDefinition = {
           description: "Optional MQTT CONNECT username configured by the broker operator.",
         },
         {
+          key: "clientId",
+          label: "Client ID",
+          inputType: "text",
+          required: false,
+          secret: false,
+          placeholder: "GID_example@@@device-1",
+          description:
+            "Optional fixed MQTT Client ID. When omitted, each action uses a random Client ID. Alibaba Cloud device credentials require GroupID@@@DeviceID.",
+        },
+        {
           key: "password",
           label: "Password",
           inputType: "password",
@@ -50,6 +60,35 @@ export const provider: ProviderDefinition = {
           secret: false,
           placeholder: "3.1.1",
           description: "MQTT protocol version. Use 3.1.1 by default, or enter 5.0 when the broker supports MQTT 5.",
+        },
+        {
+          key: "aliyunInstanceId",
+          label: "Alibaba Cloud Instance ID",
+          inputType: "text",
+          required: false,
+          secret: false,
+          placeholder: "mqtt-xxxxxxxx",
+          description:
+            "Alibaba Cloud ApsaraMQ instance ID for unique-certificate-per-device authentication. Configure it with a Client ID, then either save both device access key fields or pass them to each action.",
+        },
+        {
+          key: "aliyunDeviceAccessKeyId",
+          label: "Alibaba Cloud Device AccessKey ID",
+          inputType: "password",
+          required: false,
+          secret: true,
+          placeholder: "device-access-key-id",
+          description:
+            "Optional Alibaba Cloud device AccessKey ID. Leave both device key fields empty to provide them at action runtime.",
+        },
+        {
+          key: "aliyunDeviceAccessKeySecret",
+          label: "Alibaba Cloud Device AccessKey Secret",
+          inputType: "password",
+          required: false,
+          secret: true,
+          placeholder: "device-access-key-secret",
+          description: "Optional Alibaba Cloud device AccessKey secret used to sign the Client ID.",
         },
       ],
     },
