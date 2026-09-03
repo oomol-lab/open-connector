@@ -19,6 +19,8 @@ OpenConnector is an open-source connector gateway for AI agents and an alternati
 Connect user app accounts once, then expose a shared catalog of 1,000+ providers and 10,000+
 prebuilt Actions to agents and applications.
 
+[![Deploy on nibrun](https://nibrun.com/button.svg)](https://app.nibrun.com/deploy?name=open-connector&binary=https%3A%2F%2Fgithub.com%2Foomol-lab%2Fopen-connector%2Freleases%2Fdownload%2Fnibrun-latest%2Fopen-connector-linux-x64&port=3000&env=OOMOL_CONNECT_ENCRYPTION_KEY&env=OOMOL_CONNECT_ADMIN_TOKEN&env=OOMOL_CONNECT_RUNTIME_TOKEN)
+
 <table>
   <tr>
     <td width="33.33%" align="center"><img src="assets/deployment-options/oomol.svg" alt="OOMOL" width="140"></td>

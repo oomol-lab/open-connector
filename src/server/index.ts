@@ -31,10 +31,12 @@ import {
 } from "./storage/node-runtime-database.ts";
 import { DEFAULT_RUN_LIMIT } from "./storage/runtime-store.ts";
 
+const nibrunHostname = optionalEnv("NIBRUN_HOSTNAME");
 const port = Number(process.env.PORT ?? 3000);
-const hostname = process.env.HOST ?? "127.0.0.1";
-const publicOrigin = process.env.OOMOL_CONNECT_ORIGIN ?? `http://localhost:${port}`;
-const dataDir = process.env.OOMOL_CONNECT_DATA_DIR ?? join(process.cwd(), "data");
+const hostname = process.env.HOST ?? (nibrunHostname ? "0.0.0.0" : "127.0.0.1");
+const publicOrigin =
+  process.env.OOMOL_CONNECT_ORIGIN ?? (nibrunHostname ? `https://${nibrunHostname}` : `http://localhost:${port}`);
+const dataDir = process.env.OOMOL_CONNECT_DATA_DIR ?? optionalEnv("NIBRUN_DATA_DIR") ?? join(process.cwd(), "data");
 const transitFileTtlSeconds = readPositiveIntegerEnv("OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS", 86_400);
 const transitFileMaxBytes = readPositiveIntegerEnv("OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES", 100 * 1024 * 1024);
 const runLimit = readPositiveIntegerEnv("OOMOL_CONNECT_RUN_LIMIT", DEFAULT_RUN_LIMIT);

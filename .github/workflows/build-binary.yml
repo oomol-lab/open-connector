@@ -23,6 +23,10 @@ name: Build Binaries
 # downloads its artifact and runs `node scripts/smoke-binary.ts`, so it needs
 # neither `npm ci` nor Bun.
 #
+# Successful main builds publish the smoke-tested Linux x64 binary to the
+# dedicated nibrun-latest prerelease. Pull requests keep binaries as short-lived
+# workflow artifacts only.
+#
 # The build job's `npm run build:binary` runs `npm run build:web`, which fetches
 # https://oomol.com/en/apps/catalog.json (the provider icon map) at build time,
 # so an outage there fails the build job. This is the first PR-gated path
@@ -40,13 +44,14 @@ on:
   pull_request:
   workflow_dispatch:
 
-# Cancel superseded runs for the same ref (e.g. new push to an open PR).
+# Cancel superseded PR runs. Main builds update a rolling release asset, so one
+# must finish before the next main build starts.
 concurrency:
   group: build-binary-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-# Least privilege: these jobs only read the repository; the binaries are
-# workflow artifacts, nothing is published.
+# Least privilege by default. The nibrun release job grants itself write access
+# only while updating its dedicated prerelease after a main build.
 permissions:
   contents: read
 
@@ -120,6 +125,9 @@ jobs:
       # SQLite mode: the embedded catalog, migrations and console all come from the binary.
       - name: Smoke test linux-x64 (SQLite)
         run: node scripts/smoke-binary.ts dist/open-connector-linux-x64
+
+      - name: Smoke test linux-x64 (nibrun)
+        run: node scripts/smoke-binary.ts dist/open-connector-linux-x64 --nibrun
 
       # PostgreSQL mode: the binary's own `migrate` subcommand applies the embedded
       # postgresql/ migrations, then the server must pass its schema check.
@@ -245,3 +253,38 @@ jobs:
 
       - name: Smoke test ${{ matrix.target }}
         run: node scripts/smoke-binary.ts dist/${{ matrix.file }}
+
+  publish-nibrun:
+    name: Publish nibrun binary
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build, smoke]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download linux-x64 binary
+        uses: actions/download-artifact@v8
+        with:
+          name: binary-linux-x64
+          path: dist
+
+      - name: Publish rolling prerelease
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view nibrun-latest >/dev/null 2>&1; then
+            gh release upload nibrun-latest dist/open-connector-linux-x64 --clobber
+            gh api --method PATCH "repos/${GH_REPO}/git/refs/tags/nibrun-latest" \
+              --field sha="$GITHUB_SHA" \
+              --field force=true >/dev/null
+            gh release edit nibrun-latest \
+              --notes "Built from ${GITHUB_SHA}. This asset is replaced after every successful build on main."
+          else
+            gh release create nibrun-latest dist/open-connector-linux-x64 \
+              --target "$GITHUB_SHA" \
+              --title "nibrun deployment" \
+              --prerelease \
+              --latest=false \
+              --notes "Built from ${GITHUB_SHA}. This asset is replaced after every successful build on main."
+          fi

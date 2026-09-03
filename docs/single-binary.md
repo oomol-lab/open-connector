@@ -66,6 +66,39 @@ PORT=3000 \
 With SQLite, migrations are applied automatically when the database opens, exactly as with
 `npm start`.
 
+## Deploy on nibrun
+
+The README's **Deploy on nibrun** button creates an app from the latest successful `main` build of
+the Linux x64 binary. It asks for the three secrets a public deployment should use:
+
+- `OOMOL_CONNECT_ENCRYPTION_KEY`
+- `OOMOL_CONNECT_ADMIN_TOKEN`
+- `OOMOL_CONNECT_RUNTIME_TOKEN`
+
+Generate long random values, save them in a password manager, and keep the encryption key stable
+across redeployments. Losing that key makes encrypted credentials in the persistent database
+unreadable.
+
+OpenConnector automatically follows nibrun's runtime contract: it listens on the assigned `PORT`
+at `0.0.0.0`, stores SQLite and transit-file data under `NIBRUN_DATA_DIR`, and uses
+`https://$NIBRUN_HOSTNAME` as its public origin. Explicit `HOST`, `OOMOL_CONNECT_DATA_DIR`, and
+`OOMOL_CONNECT_ORIGIN` values still take precedence.
+
+To deploy with the CLI instead, install and authenticate `nib`, then run:
+
+```bash
+nib run \
+  https://github.com/oomol-lab/open-connector/releases/download/nibrun-latest/open-connector-linux-x64 \
+  --name open-connector \
+  --port 3000 \
+  --env OOMOL_CONNECT_ENCRYPTION_KEY="$OOMOL_CONNECT_ENCRYPTION_KEY" \
+  --env OOMOL_CONNECT_ADMIN_TOKEN="$OOMOL_CONNECT_ADMIN_TOKEN" \
+  --env OOMOL_CONNECT_RUNTIME_TOKEN="$OOMOL_CONNECT_RUNTIME_TOKEN"
+```
+
+For later deployments, replace `--name open-connector` with `--app <app-slug>` so nibrun updates
+the existing app and preserves its environment and data.
+
 ### PostgreSQL Migrations
 
 PostgreSQL migrations are explicit. The binary has a `migrate` subcommand that applies the embedded

@@ -11,9 +11,9 @@ import { setTimeout as sleep } from "node:timers/promises";
 // Start a built single-file executable against a fresh data directory and check that its embedded catalog,
 // web console, migrations and shutdown path work.
 //
-// Usage: `node scripts/smoke-binary.ts <path-to-binary>`. Set OOMOL_CONNECT_DATABASE_URL to run the PostgreSQL
-// mode; every other OOMOL_CONNECT_* variable is removed from the server's environment. Uses only Node built-ins so
-// the smoke runners need no `npm ci`.
+// Usage: `node scripts/smoke-binary.ts <path-to-binary> [--nibrun]`. Set OOMOL_CONNECT_DATABASE_URL to run the
+// PostgreSQL mode; every other OOMOL_CONNECT_* and NIBRUN_* variable is removed from the server's environment. Uses
+// only Node built-ins so the smoke runners need no `npm ci`.
 
 interface ProcessExit {
   code: number | null;
@@ -25,12 +25,14 @@ interface ServerProcessOptions {
   dataDir: string;
   port: number;
   databaseUrl: string | undefined;
+  nibrun: boolean;
 }
 
 const healthTimeoutMs = 60_000;
 const healthPollIntervalMs = 500;
 const requestTimeoutMs = 10_000;
 const shutdownTimeoutMs = 10_000;
+const nibrunHostname = "open-connector-smoke.nibrun.app";
 
 /** The server binary with its captured output and exit state. */
 class ServerProcess {
@@ -107,6 +109,7 @@ class ServerProcess {
 }
 
 const binaryPath = await resolveBinaryPath(process.argv[2]);
+const nibrun = parseNibrunFlag(process.argv.slice(3));
 const databaseUrl = process.env.OOMOL_CONNECT_DATABASE_URL?.trim() || undefined;
 const mode = databaseUrl ? "postgresql" : "sqlite";
 const startedAt = performance.now();
@@ -114,7 +117,7 @@ const startedAt = performance.now();
 const port = await findFreePort();
 const dataDir = await mkdtemp(join(tmpdir(), "open-connector-smoke-"));
 const baseUrl = `http://127.0.0.1:${port}`;
-const server = new ServerProcess({ binaryPath, dataDir, port, databaseUrl });
+const server = new ServerProcess({ binaryPath, dataDir, port, databaseUrl, nibrun });
 
 try {
   await waitForHealth(server, baseUrl);
@@ -123,11 +126,14 @@ try {
   await checkConsoleAssets(baseUrl, indexHtml);
   await checkProviders(baseUrl);
   await checkApps(baseUrl);
+  if (nibrun) {
+    await checkNibrunRuntime(server, baseUrl, port);
+  }
   await checkDatabaseBackend(server, dataDir, databaseUrl);
   await checkGracefulShutdown(server);
   await removeDataDir(dataDir);
   console.log(
-    `PASS ${binaryPath} mode=${mode} startup=${formatMs(readyAt - startedAt)} total=${formatMs(performance.now() - startedAt)}`,
+    `PASS ${binaryPath} mode=${mode}${nibrun ? " deployment=nibrun" : ""} startup=${formatMs(readyAt - startedAt)} total=${formatMs(performance.now() - startedAt)}`,
   );
 } catch (error) {
   console.error(`FAIL ${binaryPath}: ${error instanceof Error ? error.message : String(error)}`);
@@ -141,7 +147,7 @@ try {
 /** Resolve the binary before spawning: spawn resolves relative paths against the child's cwd, which is the data dir. */
 async function resolveBinaryPath(argument: string | undefined): Promise<string> {
   if (!argument) {
-    console.error("Usage: node scripts/smoke-binary.ts <path-to-binary>");
+    console.error("Usage: node scripts/smoke-binary.ts <path-to-binary> [--nibrun]");
     process.exit(1);
   }
 
@@ -156,18 +162,37 @@ async function resolveBinaryPath(argument: string | undefined): Promise<string> 
   return resolved;
 }
 
-/** process.env without OOMOL_CONNECT_* so the caller's shell cannot leak configuration into the server under test. */
+function parseNibrunFlag(arguments_: string[]): boolean {
+  if (arguments_.length === 0) {
+    return false;
+  }
+  if (arguments_.length === 1 && arguments_[0] === "--nibrun") {
+    return true;
+  }
+
+  console.error("Usage: node scripts/smoke-binary.ts <path-to-binary> [--nibrun]");
+  process.exit(1);
+}
+
+/** Remove app and platform configuration so the caller's shell cannot leak it into the server under test. */
 function buildServerEnvironment(options: ServerProcessOptions): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {};
   for (const [key, value] of Object.entries(process.env)) {
-    if (!key.toUpperCase().startsWith("OOMOL_CONNECT_")) {
+    const upperKey = key.toUpperCase();
+    if (!upperKey.startsWith("OOMOL_CONNECT_") && !upperKey.startsWith("NIBRUN_")) {
       env[key] = value;
     }
   }
 
   env.PORT = String(options.port);
-  env.HOST = "127.0.0.1";
-  env.OOMOL_CONNECT_DATA_DIR = options.dataDir;
+  if (options.nibrun) {
+    env.NIBRUN_HTTP_PORT = String(options.port);
+    env.NIBRUN_HOSTNAME = nibrunHostname;
+    env.NIBRUN_DATA_DIR = options.dataDir;
+  } else {
+    env.HOST = "127.0.0.1";
+    env.OOMOL_CONNECT_DATA_DIR = options.dataDir;
+  }
   if (options.databaseUrl) {
     env.OOMOL_CONNECT_DATABASE_URL = options.databaseUrl;
   }
@@ -278,6 +303,28 @@ async function checkProviders(baseUrl: string): Promise<void> {
 async function checkApps(baseUrl: string): Promise<void> {
   const data = await fetchEnvelopeData(baseUrl, "/v1/apps");
   assert(Array.isArray(data), "/v1/apps data is not an array");
+}
+
+async function checkNibrunRuntime(server: ServerProcess, baseUrl: string, port: number): Promise<void> {
+  assert(
+    server.stdout.includes(`"url":"http://0.0.0.0:${port}"`),
+    "server did not bind to 0.0.0.0 under NIBRUN_HOSTNAME",
+  );
+
+  const form = new FormData();
+  form.set("file", new File(["nibrun smoke"], "smoke.txt", { type: "text/plain" }));
+  const response = await fetch(`${baseUrl}/api/files`, {
+    method: "POST",
+    body: form,
+    signal: AbortSignal.timeout(requestTimeoutMs),
+  });
+  const body: unknown = await response.json();
+  assert(response.status === 200, `POST /api/files returned ${response.status}`);
+  assert(isRecord(body), "POST /api/files did not return a JSON object");
+  assert(
+    typeof body.downloadUrl === "string" && body.downloadUrl.startsWith(`https://${nibrunHostname}/api/files/`),
+    `POST /api/files returned unexpected downloadUrl ${JSON.stringify(body.downloadUrl)}`,
+  );
 }
 
 /** Return `data` of a `{ success: true, data }` envelope. */
