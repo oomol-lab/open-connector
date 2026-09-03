@@ -1,20 +1,16 @@
 import type { RuntimeLogger } from "../../core/types.ts";
+import type { MigrationSource } from "./migration-source.ts";
 import type { Pool, PoolClient } from "pg";
 
-import { readFileSync, readdirSync } from "node:fs";
+import { defaultMigrationSource } from "./migration-source.ts";
 
-const migrationDirectory = new URL("../../../migrations/postgresql/", import.meta.url);
 const migrationLockNamespace = 1_326_382_671;
 const migrationLockId = 1;
-
-interface PostgresMigration {
-  name: string;
-  sql: string;
-}
 
 export interface PostgresMigrationOptions {
   pool: Pool;
   logger?: RuntimeLogger;
+  migrations?: MigrationSource;
 }
 
 export async function migratePostgresDatabase(options: PostgresMigrationOptions): Promise<void> {
@@ -31,7 +27,7 @@ export async function migratePostgresDatabase(options: PostgresMigrationOptions)
     `);
 
     const startedAt = Date.now();
-    const migrations = readPostgresMigrations();
+    const migrations = (options.migrations ?? defaultMigrationSource).readMigrations("postgresql");
     const applied = await readAppliedMigrations(client);
     let newlyAppliedCount = 0;
 
@@ -86,8 +82,11 @@ export async function migratePostgresDatabase(options: PostgresMigrationOptions)
   }
 }
 
-export async function assertPostgresSchemaReady(pool: Pool): Promise<void> {
-  const migrations = readPostgresMigrations();
+export async function assertPostgresSchemaReady(
+  pool: Pool,
+  migrations: MigrationSource = defaultMigrationSource,
+): Promise<void> {
+  const required = migrations.readMigrations("postgresql");
   const relation = await pool.query<{ name: string | null }>("select to_regclass($1) as name", ["runtime_migrations"]);
   if (!relation.rows[0]?.name) {
     throw new Error(
@@ -96,22 +95,12 @@ export async function assertPostgresSchemaReady(pool: Pool): Promise<void> {
   }
 
   const applied = await readAppliedMigrations(pool);
-  const missing = migrations.filter((migration) => !applied.has(migration.name)).map((migration) => migration.name);
+  const missing = required.filter((migration) => !applied.has(migration.name)).map((migration) => migration.name);
   if (missing.length > 0) {
     throw new Error(
       `PostgreSQL runtime schema is not ready. Missing migrations: ${missing.join(", ")}. Run \`npm run runtime:migrate\` before starting the server.`,
     );
   }
-}
-
-function readPostgresMigrations(): PostgresMigration[] {
-  return readdirSync(migrationDirectory)
-    .filter((name) => /^\d+_.*\.sql$/.test(name))
-    .sort()
-    .map((name) => ({
-      name,
-      sql: readFileSync(new URL(name, migrationDirectory), "utf8"),
-    }));
 }
 
 async function readAppliedMigrations(queryable: Pool | PoolClient): Promise<Set<string>> {

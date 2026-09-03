@@ -1,12 +1,13 @@
 import type { RuntimeActionHttpResult } from "../api/runtime-api.ts";
 
 import { readFileSync } from "node:fs";
-import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { afterEach, describe, expect, it } from "vitest";
 import { AesGcmSecretCodec } from "../secrets/secret-codec.ts";
+import { createDirectoryMigrationSource } from "./migration-source.ts";
 import { RuntimeTokenService } from "./runtime-token-service.ts";
 import { SqliteRunLogStore, SqliteRuntimeDatabase } from "./sqlite-runtime-store.ts";
 
@@ -457,6 +458,31 @@ describe("SqliteRuntimeDatabase", () => {
     await expect(database.runLogStore.get("run-match")).resolves.toEqual(match);
     await expect(database.runLogStore.get("missing")).resolves.toBeUndefined();
     database.close();
+  });
+
+  it("applies migrations from a custom migration source", async () => {
+    const databasePath = await createDatabasePath();
+    const migrationDirectory = join(dirname(databasePath), "migrations");
+    await mkdir(migrationDirectory);
+    await writeFile(
+      join(migrationDirectory, "0001_custom.sql"),
+      "create table custom_records (id integer primary key);",
+    );
+
+    const database = new SqliteRuntimeDatabase(databasePath, {
+      migrations: createDirectoryMigrationSource(migrationDirectory),
+    });
+    database.close();
+
+    const inspected = new DatabaseSync(databasePath);
+    expect(inspected.prepare("select name from runtime_migrations order by name").all()).toEqual([
+      { name: "0001_custom.sql" },
+    ]);
+    expect(
+      inspected.prepare("select name from sqlite_master where type = 'table' and name = 'custom_records'").get(),
+    ).toEqual({ name: "custom_records" });
+    expect(inspected.prepare("select name from sqlite_master where name = 'connections'").get()).toBeUndefined();
+    inspected.close();
   });
 
   it("keeps an inserted run when retention cleanup fails", async () => {

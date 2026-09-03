@@ -1,10 +1,12 @@
 import type { RuntimeActionHttpResult } from "../api/runtime-api.ts";
+import type { MigrationSource } from "./migration-source.ts";
 
 import { PGlite } from "@electric-sql/pglite";
 import { PGLiteSocketServer } from "@electric-sql/pglite-socket";
 import { Pool } from "pg";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { AesGcmSecretCodec } from "../secrets/secret-codec.ts";
+import { defaultMigrationSource } from "./migration-source.ts";
 import { assertPostgresSchemaReady, migratePostgresDatabase } from "./postgres-migrations.ts";
 import { PostgresRuntimeDatabase } from "./postgres-runtime-store.ts";
 import { RuntimeTokenService } from "./runtime-token-service.ts";
@@ -65,6 +67,62 @@ describe("PostgreSQL migrations with PGlite", () => {
     } finally {
       await pool.end();
     }
+  });
+});
+
+describe("PostgreSQL migrations with a custom migration source", () => {
+  let testServer: PGliteTestServer;
+
+  beforeAll(async () => {
+    testServer = await startPGliteTestServer();
+  });
+
+  afterAll(async () => {
+    await testServer.server.stop();
+    await testServer.database.close();
+  });
+
+  it("validates and executes migrations through the same source", async () => {
+    const migrations: MigrationSource = {
+      readMigrations(dialect) {
+        return [
+          ...defaultMigrationSource.readMigrations(dialect),
+          { name: "9998_custom.sql", sql: "create table custom_records (id integer primary key)" },
+        ];
+      },
+    };
+    const unapplied: MigrationSource = {
+      readMigrations: () => [{ name: "9999_unapplied.sql", sql: "select 1" }],
+    };
+
+    const pool = new Pool({ connectionString: testServer.url, max: 1 });
+    try {
+      await migratePostgresDatabase({ pool, migrations });
+      await expect(assertPostgresSchemaReady(pool, migrations)).resolves.toBeUndefined();
+      await expect(assertPostgresSchemaReady(pool)).resolves.toBeUndefined();
+      await expect(assertPostgresSchemaReady(pool, unapplied)).rejects.toThrow(
+        "Missing migrations: 9999_unapplied.sql",
+      );
+      await expect(pool.query("select name from runtime_migrations order by name")).resolves.toMatchObject({
+        rows: [
+          { name: "0010_runtime.sql" },
+          { name: "0011_runtime_token_connection_scope.sql" },
+          { name: "0012_marketplace.sql" },
+          { name: "9998_custom.sql" },
+        ],
+      });
+      await expect(pool.query("select to_regclass($1) as name", ["custom_records"])).resolves.toMatchObject({
+        rows: [{ name: "custom_records" }],
+      });
+    } finally {
+      await pool.end();
+    }
+
+    await expect(PostgresRuntimeDatabase.open(testServer.url, { migrations: unapplied })).rejects.toThrow(
+      "Missing migrations: 9999_unapplied.sql",
+    );
+    const database = await PostgresRuntimeDatabase.open(testServer.url, { migrations });
+    await database.close();
   });
 });
 

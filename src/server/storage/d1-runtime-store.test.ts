@@ -1,14 +1,12 @@
 import type { RuntimeActionHttpResult } from "../api/runtime-api.ts";
 import type { D1DatabaseBinding, D1PreparedStatementBinding } from "../cloudflare/cloudflare-bindings.ts";
 
-import { readFileSync, readdirSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it } from "vitest";
 import { AesGcmSecretCodec } from "../secrets/secret-codec.ts";
 import { D1RuntimeDatabase } from "./d1-runtime-store.ts";
+import { defaultMigrationSource } from "./migration-source.ts";
 import { RuntimeTokenService } from "./runtime-token-service.ts";
-
-const migrationDirectory = new URL("../../../migrations/", import.meta.url);
 
 const githubProfile = {
   accountId: "github:octocat",
@@ -607,14 +605,8 @@ class SqliteD1Database implements D1DatabaseBinding {
   private readonly database = new DatabaseSync(":memory:");
 
   constructor() {
-    // Derive the migration list the same way runSqliteMigrations does, so a new migration reaches the
-    // D1 harness on its own. The three lines stay duplicated here because sharing an owner would mean
-    // exporting from production code, which this test-only fix deliberately leaves alone.
-    const migrationFiles = readdirSync(migrationDirectory)
-      .filter((name) => /^\d+_.*\.sql$/.test(name))
-      .sort();
-    for (const file of migrationFiles) {
-      this.database.exec(readFileSync(new URL(file, migrationDirectory), "utf8"));
+    for (const migration of defaultMigrationSource.readMigrations("sqlite")) {
+      this.database.exec(migration.sql);
     }
   }
 

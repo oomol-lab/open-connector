@@ -1,11 +1,13 @@
 import { mkdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { Pool } from "pg";
 import { logger } from "../src/server/logger.ts";
 import { createSecretCodec } from "../src/server/secrets/secret-codec.ts";
-import { assertPostgresDatabaseUrl, createNodeRuntimeDatabase } from "../src/server/storage/node-runtime-database.ts";
-import { migratePostgresDatabase } from "../src/server/storage/postgres-migrations.ts";
+import {
+  createNodeRuntimeDatabase,
+  migratePostgresRuntimeDatabase,
+  sqliteMigrationsNotice,
+} from "../src/server/storage/node-runtime-database.ts";
 
 const { positionals, values: options } = parseArgs({
   args: process.argv.slice(2),
@@ -49,20 +51,13 @@ const dataDir = resolve(options["data-dir"] ?? process.env.OOMOL_CONNECT_DATA_DI
 const databasePath = join(dataDir, "connect.sqlite");
 if (command === "migrate") {
   if (!databaseUrl) {
-    console.log("SQLite migrations are applied automatically when the local runtime database opens.");
+    console.log(sqliteMigrationsNotice);
   } else {
-    assertPostgresDatabaseUrl(databaseUrl);
-    const pool = new Pool({
-      application_name: "open-connector-migrate",
+    await migratePostgresRuntimeDatabase({
       connectionString: databaseUrl,
-      connectionTimeoutMillis: readPositiveIntegerEnv("OOMOL_CONNECT_DATABASE_CONNECT_TIMEOUT_MS", 10_000),
-      max: 1,
+      connectionTimeoutMs: readPositiveIntegerEnv("OOMOL_CONNECT_DATABASE_CONNECT_TIMEOUT_MS", 10_000),
+      logger,
     });
-    try {
-      await migratePostgresDatabase({ pool, logger });
-    } finally {
-      await pool.end();
-    }
   }
 } else {
   const secretCodec = createSecretCodec(process.env.OOMOL_CONNECT_ENCRYPTION_KEY);

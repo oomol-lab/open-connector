@@ -15,15 +15,16 @@ import type {
   IdempotencyClaimResult,
   IIdempotencyStore,
 } from "./idempotency-store.ts";
+import type { MigrationSource } from "./migration-source.ts";
 import type { RuntimeDatabase } from "./runtime-database.ts";
 import type { IRuntimePolicyStore, RuntimePolicyRecord } from "./runtime-policy-store.ts";
 import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage, RunLogWriteResult } from "./runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
 
-import { readFileSync, readdirSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { parseRuntimeActionHttpResult } from "../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
+import { defaultMigrationSource } from "./migration-source.ts";
 import {
   listRunLogs,
   parseJson,
@@ -36,12 +37,12 @@ import {
 import { DEFAULT_RUN_LIMIT } from "./runtime-store.ts";
 
 type SecretJsonTable = "oauth_client_configs";
-const migrationDirectory = new URL("../../../migrations/", import.meta.url);
 
 export interface SqliteRuntimeDatabaseOptions {
   logger?: RuntimeLogger;
   runLimit?: number;
   secretCodec?: ISecretCodec;
+  migrations?: MigrationSource;
 }
 
 interface SecretJsonInput {
@@ -95,7 +96,7 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
   constructor(filename: string, options: SqliteRuntimeDatabaseOptions = {}) {
     this.database = new DatabaseSync(filename);
     this.secretCodec = options.secretCodec ?? new PlainTextSecretCodec();
-    this.initialize(options.logger);
+    this.initialize(options.migrations ?? defaultMigrationSource, options.logger);
     this.connectionStore = new SqliteConnectionStore(this.database, this.secretCodec);
     this.oauthClientConfigStore = new SqliteOAuthClientConfigStore(this.database, this.secretCodec);
     this.oauthStateStore = new SqliteOAuthStateStore(this.database, this.secretCodec);
@@ -156,9 +157,9 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
     `);
   }
 
-  private initialize(logger?: RuntimeLogger): void {
+  private initialize(migrations: MigrationSource, logger?: RuntimeLogger): void {
     this.database.exec("pragma journal_mode = wal;");
-    runSqliteMigrations(this.database, logger);
+    runSqliteMigrations(this.database, migrations, logger);
   }
 }
 
@@ -648,7 +649,7 @@ function insertRun(database: DatabaseSync, run: RunLog): void {
     );
 }
 
-function runSqliteMigrations(database: DatabaseSync, logger?: RuntimeLogger): void {
+function runSqliteMigrations(database: DatabaseSync, migrations: MigrationSource, logger?: RuntimeLogger): void {
   const startedAt = Date.now();
   database.exec(`
     create table if not exists runtime_migrations (
@@ -662,42 +663,42 @@ function runSqliteMigrations(database: DatabaseSync, logger?: RuntimeLogger): vo
       .all()
       .map((row) => readString(row, "name")),
   );
-  const migrationFiles = readdirSync(migrationDirectory)
-    .filter((name) => /^\d+_.*\.sql$/.test(name))
-    .sort();
+  const migrationFiles = migrations.readMigrations("sqlite");
   let newlyAppliedCount = 0;
 
-  for (const file of migrationFiles) {
-    if (applied.has(file)) {
+  for (const migration of migrationFiles) {
+    if (applied.has(migration.name)) {
       continue;
     }
 
     const migrationStartedAt = Date.now();
-    logger?.info({ migration: file }, "sqlite migration started");
+    logger?.info({ migration: migration.name }, "sqlite migration started");
     try {
-      const sql = readFileSync(new URL(file, migrationDirectory), "utf8");
       runInTransaction(database, () => {
-        database.exec(sql);
+        database.exec(migration.sql);
         database
           .prepare("insert into runtime_migrations (name, applied_at) values (?, ?)")
-          .run(file, new Date().toISOString());
+          .run(migration.name, new Date().toISOString());
       });
     } catch (error) {
       logger?.error(
-        { migration: file, durationMs: Date.now() - migrationStartedAt, err: error },
+        { migration: migration.name, durationMs: Date.now() - migrationStartedAt, err: error },
         "sqlite migration failed",
       );
       throw error;
     }
-    applied.add(file);
+    applied.add(migration.name);
     newlyAppliedCount += 1;
-    logger?.info({ migration: file, durationMs: Date.now() - migrationStartedAt }, "sqlite migration completed");
+    logger?.info(
+      { migration: migration.name, durationMs: Date.now() - migrationStartedAt },
+      "sqlite migration completed",
+    );
   }
 
   logger?.info(
     {
       migrationCount: migrationFiles.length,
-      appliedCount: migrationFiles.filter((file) => applied.has(file)).length,
+      appliedCount: migrationFiles.filter((migration) => applied.has(migration.name)).length,
       newlyAppliedCount,
       durationMs: Date.now() - startedAt,
     },

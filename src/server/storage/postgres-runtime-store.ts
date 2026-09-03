@@ -15,6 +15,7 @@ import type {
   IdempotencyClaimResult,
   IIdempotencyStore,
 } from "./idempotency-store.ts";
+import type { MigrationSource } from "./migration-source.ts";
 import type { RuntimeDatabase } from "./runtime-database.ts";
 import type { IRuntimePolicyStore, RuntimePolicyRecord } from "./runtime-policy-store.ts";
 import type { RuntimeRow } from "./runtime-sql.ts";
@@ -43,6 +44,7 @@ export interface PostgresRuntimeDatabaseOptions {
   secretCodec?: ISecretCodec;
   poolMax?: number;
   connectionTimeoutMs?: number;
+  migrations?: MigrationSource;
 }
 
 export class PostgresRuntimeDatabase implements RuntimeDatabase {
@@ -86,7 +88,7 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
     });
 
     try {
-      await assertPostgresSchemaReady(pool);
+      await assertPostgresSchemaReady(pool, options.migrations);
       return new PostgresRuntimeDatabase(pool, options);
     } catch (error) {
       await pool.end();
