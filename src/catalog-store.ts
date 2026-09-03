@@ -143,10 +143,7 @@ function toProviderSummary(provider: RuntimeProviderDefinition): ProviderSummary
 /**
  * Load generated provider catalog files from disk.
  */
-export async function loadCatalog(
-  catalogDir: string = join(process.cwd(), "catalog/apps"),
-  options: LoadCatalogOptions = {},
-): Promise<CatalogStore> {
+export async function loadCatalog(catalogDir: string, options: LoadCatalogOptions = {}): Promise<CatalogStore> {
   const entries = await readdir(catalogDir, { withFileTypes: true });
   const providers = await Promise.all(
     entries
