@@ -1,4 +1,4 @@
-import type { CatalogStore, LoadCatalogOptions } from "../../catalog-store.ts";
+import type { CatalogStore, ExecutableActionOptions } from "../../catalog-store.ts";
 import type { ProviderDefinition } from "../../core/types.ts";
 import type { AssetsBinding } from "./cloudflare-bindings.ts";
 
@@ -16,7 +16,7 @@ interface CatalogAssetIndex {
 
 export async function loadCatalogFromAssets(
   assets: AssetsBinding,
-  options: LoadCatalogOptions = {},
+  options: ExecutableActionOptions = {},
 ): Promise<CatalogStore> {
   const index = parseCatalogIndex(await readJsonAsset(assets, catalogIndexPath), catalogIndexPath);
   const chunks = await Promise.all(index.chunks.map((chunk) => requireProviderArrayAsset(assets, `/catalog/${chunk}`)));
@@ -30,7 +30,7 @@ export async function loadCatalogFromAssets(
   return createCatalog(providers, options);
 }
 
-function createCatalog(providers: ProviderDefinition[], options: LoadCatalogOptions): CatalogStore {
+function createCatalog(providers: ProviderDefinition[], options: ExecutableActionOptions): CatalogStore {
   return createCatalogStore(providers, {
     executableActionIds: resolveExecutableActionIds(providers, options),
   });

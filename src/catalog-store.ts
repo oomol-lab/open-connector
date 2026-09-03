@@ -74,9 +74,13 @@ export interface CreateCatalogStoreOptions {
   executableActionIds?: Iterable<string>;
 }
 
-export interface LoadCatalogOptions extends CreateCatalogStoreOptions {
+/** Which actions of a catalog the runtime may execute locally, independent of where the catalog is read from. */
+export interface ExecutableActionOptions extends CreateCatalogStoreOptions {
   /** Mark every catalog action owned by these locally loaded provider services as executable. */
   executableServices?: Iterable<string>;
+}
+
+export interface LoadCatalogOptions extends ExecutableActionOptions {
   /** Keep action schemas on disk and read them back on demand (see `OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS`). */
   lazySchemas?: boolean;
   /** Provider files whose schemas stay cached at once in lazy mode. Defaults to 8. */
@@ -193,7 +197,7 @@ export async function loadCatalog(catalogDir: string, options: LoadCatalogOption
 /** Resolve provider-level executable services into the exact action ids present in a loaded catalog. */
 export function resolveExecutableActionIds(
   providers: ProviderDefinition[],
-  options: LoadCatalogOptions = {},
+  options: ExecutableActionOptions = {},
 ): Set<string> {
   const actionIds = new Set(options.executableActionIds ?? []);
   const services = new Set(options.executableServices ?? []);

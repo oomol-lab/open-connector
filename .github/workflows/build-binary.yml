@@ -13,9 +13,10 @@ name: Build Binaries
 # ~80 MB runtime per target and compiling is a matter of seconds, whereas
 # cross-compiling ON a Windows runner is broken upstream (oven-sh/bun#11198,
 # the workspace and the Bun cache sit on different drives). The Linux job also
-# smoke-tests its own linux-x64 output twice, once against SQLite and once
-# against the PostgreSQL service container (service containers are Linux-only,
-# which is one reason the smoke matrix is a separate job).
+# smoke-tests its own linux-x64 output three times: against SQLite, against
+# SQLite with the lazy catalog schemas, and against the PostgreSQL service
+# container (service containers are Linux-only, which is one reason the smoke
+# matrix is a separate job).
 #
 # The smoke matrix mixes runner vendors because Blacksmith offers no Windows
 # ARM64 and no macOS Intel runners; those two targets run on GitHub-hosted
@@ -119,6 +120,13 @@ jobs:
 
       # SQLite mode: the embedded catalog, migrations and console all come from the binary.
       - name: Smoke test linux-x64 (SQLite)
+        run: node scripts/smoke-binary.ts dist/open-connector-linux-x64
+
+      # Lazy catalog mode: action schemas are read from the binary's embedded catalog
+      # file when an action is requested, which no other smoke run exercises.
+      - name: Smoke test linux-x64 (lazy catalog schemas)
+        env:
+          OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS: "true"
         run: node scripts/smoke-binary.ts dist/open-connector-linux-x64
 
       # PostgreSQL mode: the binary's own `migrate` subcommand applies the embedded

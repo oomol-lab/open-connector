@@ -117,10 +117,14 @@ describe("loadCatalog", () => {
     const catalog = await loadCatalog(catalogDir, { lazySchemas: true });
     const action = catalog.actionsById.get("example.ping")!;
     expect(Object.getOwnPropertyDescriptor(action, "inputSchema")?.get).toBeTypeOf("function");
+    // The link back to the catalog file must stay invisible to key iteration and to spread copies.
+    const [schemaSource] = Object.getOwnPropertySymbols(action);
+    expect(Object.getOwnPropertyDescriptor(action, schemaSource!)?.enumerable).toBe(false);
     await writeProviderFile(catalogDir, providerFixture("example", ["ping"], 2));
 
     expect(action.inputSchema).toEqual(schemaFor("ping", 2));
     expect(action.outputSchema).toEqual({ type: "object", properties: { ok: { type: "boolean" } } });
+    expect(Object.getOwnPropertySymbols({ ...action })).toEqual([]);
   });
 
   it("re-reads a lazy schema file only after the cache evicts it", async () => {
@@ -144,6 +148,32 @@ describe("loadCatalog", () => {
     expect(example.inputSchema).toEqual(schemaFor("ping", 2));
     expect(remote.inputSchema).toEqual(schemaFor("ping", 1));
     expect(example.inputSchema).toEqual(schemaFor("ping", 3));
+  });
+
+  it("keeps a file cached when a hit refreshes its recency", async () => {
+    const catalogDir = await writeCatalogDir([
+      providerFixture("example", ["ping"]),
+      providerFixture("remote", ["ping"]),
+      providerFixture("third", ["ping"]),
+    ]);
+
+    const catalog = await loadCatalog(catalogDir, { lazySchemas: true, lazySchemaCacheFiles: 2 });
+    const example = catalog.actionsById.get("example.ping")!;
+    const remote = catalog.actionsById.get("remote.ping")!;
+    const third = catalog.actionsById.get("third.ping")!;
+
+    expect(example.inputSchema).toEqual(schemaFor("ping", 1));
+    expect(remote.inputSchema).toEqual(schemaFor("ping", 1));
+    // Re-reading "example" makes it the most recent, so caching "third" must evict "remote".
+    expect(example.inputSchema).toEqual(schemaFor("ping", 1));
+    expect(third.inputSchema).toEqual(schemaFor("ping", 1));
+    await writeProviderFile(catalogDir, providerFixture("example", ["ping"], 2));
+    await writeProviderFile(catalogDir, providerFixture("remote", ["ping"], 2));
+
+    // Staleness is the only way to observe which file the cache kept: "example" is still cached and
+    // answers from the parse it already has, while the evicted "remote" re-reads the edited file.
+    expect(example.inputSchema).toEqual(schemaFor("ping", 1));
+    expect(remote.inputSchema).toEqual(schemaFor("ping", 2));
   });
 
   it("reports the action and file when a lazy schema file no longer contains the action", async () => {
