@@ -12,6 +12,7 @@ import {
   optionalInteger as asOptionalInteger,
   optionalRecord as asOptionalObject,
   optionalString as asOptionalString,
+  optionalStringArray,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
@@ -679,6 +680,11 @@ function readAccessibleResources(payload: unknown) {
     const record = asOptionalObject(item);
     if (!record) {
       throw new ProviderRequestError(502, "jira accessible resource must be an object");
+    }
+    requireNonEmptyString(record.id, "jira accessible resource id");
+    requireNonEmptyString(record.url, "jira accessible resource URL");
+    if (!optionalStringArray(record.scopes)) {
+      throw new ProviderRequestError(502, "jira accessible resource scopes must be an array of strings");
     }
     return record as JiraAccessibleResource;
   });

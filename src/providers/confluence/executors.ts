@@ -261,6 +261,11 @@ function readAccessibleResources(payload: unknown): ConfluenceAccessibleResource
     if (!resource) {
       throw new ProviderRequestError(502, "Confluence accessible resource must be an object");
     }
+    requiredString(resource.id, "accessible resource id", confluenceResponseError);
+    requiredString(resource.url, "accessible resource URL", confluenceResponseError);
+    if (!optionalStringArray(resource.scopes)) {
+      throw confluenceResponseError("accessible resource scopes must be an array of strings");
+    }
     return resource;
   });
 }

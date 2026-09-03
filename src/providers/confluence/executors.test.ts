@@ -98,6 +98,18 @@ describe("Confluence OAuth credentials", () => {
     });
   });
 
+  it("accepts well-formed resources without Confluence product scopes", async () => {
+    const result = await credentialValidators.oauth2!(oauthCredential, {
+      fetcher: async () =>
+        Response.json([{ id: "cloud-123", url: "https://jira.atlassian.net", scopes: ["read:jira-work"] }]),
+    });
+
+    expect(result).toMatchObject({
+      profile: { accountId: "confluence", displayName: "Confluence Cloud" },
+      metadata: { resourceCount: 1 },
+    });
+  });
+
   it("rejects malformed accessible-resource responses", async () => {
     await expect(
       credentialValidators.oauth2!(oauthCredential, { fetcher: async () => Response.json({}) }),
@@ -105,6 +117,12 @@ describe("Confluence OAuth credentials", () => {
       status: 502,
       message: "Confluence accessible-resources response must be an array",
     });
+  });
+
+  it("rejects malformed accessible-resource entries", async () => {
+    await expect(
+      credentialValidators.oauth2!(oauthCredential, { fetcher: async () => Response.json([{}]) }),
+    ).rejects.toMatchObject({ status: 502, message: "Confluence accessible resource id is required." });
   });
 
   it("times out accessible-resource discovery", async () => {
