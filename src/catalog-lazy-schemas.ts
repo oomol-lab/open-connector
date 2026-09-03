@@ -19,8 +19,8 @@ interface FileBackedActionDefinition extends ActionDefinition {
   [actionSchemaSource]: FileActionSchemaSource;
 }
 
-/** Provider files whose action schemas stay cached at once. */
-const defaultCacheFiles = 8;
+/** Provider files whose parsed action schemas stay cached at once (`OOMOL_CONNECT_CATALOG_SCHEMA_CACHE_FILES`). */
+export const defaultLazySchemaCacheFiles = 64;
 
 /**
  * Read provider catalog files while keeping every `inputSchema`/`outputSchema` on disk.
@@ -31,7 +31,7 @@ const defaultCacheFiles = 8;
  */
 export async function readProvidersWithLazySchemas(
   filePaths: string[],
-  cacheFiles: number = defaultCacheFiles,
+  cacheFiles: number = defaultLazySchemaCacheFiles,
 ): Promise<ProviderDefinition[]> {
   const loader = new FileActionSchemaLoader(cacheFiles);
   const providers: ProviderDefinition[] = [];

@@ -5,6 +5,7 @@ import { S3Client } from "@aws-sdk/client-s3";
 import { serve } from "@hono/node-server";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
+import { defaultLazySchemaCacheFiles } from "../catalog-lazy-schemas.ts";
 import { loadCatalog } from "../catalog-store.ts";
 import { ActionPolicyService, parseActionPolicyList } from "../core/action-policy.ts";
 import {
@@ -86,6 +87,10 @@ async function main(): Promise<void> {
   const catalog = await loadCatalog(assets.catalogDir, {
     executableServices: Object.keys(executorModules),
     lazySchemas: parseBooleanEnv("OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS"),
+    lazySchemaCacheFiles: readPositiveIntegerEnv(
+      "OOMOL_CONNECT_CATALOG_SCHEMA_CACHE_FILES",
+      defaultLazySchemaCacheFiles,
+    ),
   });
   const runtimeDatabase = databaseUrl
     ? await createNodeRuntimeDatabase({

@@ -40,6 +40,7 @@ OpenConnector is configured with environment variables.
 | `OOMOL_CONNECT_S3_SESSION_TOKEN`            | unset                     | Optional session token used with explicit S3 credentials.                                                                                                                   |
 | `OOMOL_CONNECT_RUN_LIMIT`                   | `5000`                    | Maximum number of recent action run audit records to retain.                                                                                                                |
 | `OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS`        | `false`                   | Read action JSON schemas from the catalog files on demand instead of keeping them in memory. See below.                                                                     |
+| `OOMOL_CONNECT_CATALOG_SCHEMA_CACHE_FILES`  | `64`                      | Provider files whose action schemas stay cached when lazy schemas are on.                                                                                                   |
 
 Example:
 
@@ -241,9 +242,12 @@ OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS=true npm run dev
 
 Action metadata stays in memory: ids, names, descriptions, required scopes, provider permissions,
 follow-up and async lifecycle links, and execution flags. Only the two schema fields are read back
-from the provider file when something asks for them, and the schemas of the eight most recently
-used provider files stay cached. Responses are byte-identical to the default mode, so this is a
-memory-for-reads trade and not an API change.
+from the provider file when something asks for them, and the schemas of the 64 most recently used
+provider files stay cached. `OOMOL_CONNECT_CATALOG_SCHEMA_CACHE_FILES` tunes that number: each
+cached file holds every schema of one provider, typically tens to a few hundred KB parsed, so 64
+files is on the order of a few MB to a few tens of MB. Set it higher when one server serves many
+providers repeatedly, and lower on the tightest machines. Responses are byte-identical to the
+default mode, so this is a memory-for-reads trade and not an API change.
 
 What changes operationally:
 
@@ -259,7 +263,8 @@ What changes operationally:
 
 Cloudflare uses the same environment variable names for origin, static auth tokens, execution
 policy, transit file limits, and data encryption. The JWT settings above, `PORT`, `HOST`,
-`OOMOL_CONNECT_DATA_DIR`, and `OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS` are Node-only settings.
+`OOMOL_CONNECT_DATA_DIR`, `OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS`, and
+`OOMOL_CONNECT_CATALOG_SCHEMA_CACHE_FILES` are Node-only settings.
 
 The Worker runtime also requires these bindings in `wrangler.local.jsonc`. Copy
 `wrangler.example.jsonc` to `wrangler.local.jsonc` and fill in your own Cloudflare resource IDs

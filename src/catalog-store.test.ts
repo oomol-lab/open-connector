@@ -5,6 +5,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { defaultLazySchemaCacheFiles } from "./catalog-lazy-schemas.ts";
 import { createCatalogStore, loadCatalog, resolveExecutableActionIds } from "./catalog-store.ts";
 
 const temporaryDirectories: string[] = [];
@@ -174,6 +175,25 @@ describe("loadCatalog", () => {
     // answers from the parse it already has, while the evicted "remote" re-reads the edited file.
     expect(example.inputSchema).toEqual(schemaFor("ping", 1));
     expect(remote.inputSchema).toEqual(schemaFor("ping", 2));
+  });
+
+  it("caches the default number of provider files when no cache size is given", async () => {
+    const services = Array.from({ length: defaultLazySchemaCacheFiles + 1 }, (_, index) => `service${index}`);
+    const catalogDir = await writeCatalogDir(services.map((service) => providerFixture(service, ["ping"])));
+
+    const catalog = await loadCatalog(catalogDir, { lazySchemas: true });
+    const actionFor = (service: string) => catalog.actionsById.get(`${service}.ping`)!;
+    // One file more than the cache holds, read oldest first, so only the first service is evicted.
+    for (const service of services) {
+      expect(actionFor(service).inputSchema).toEqual(schemaFor("ping", 1));
+    }
+    await writeProviderFile(catalogDir, providerFixture(services[0]!, ["ping"], 2));
+    await writeProviderFile(catalogDir, providerFixture(services[1]!, ["ping"], 2));
+
+    // The second service is checked first because re-reading the evicted first file would cache it
+    // again and push the second one out in turn.
+    expect(actionFor(services[1]!).inputSchema).toEqual(schemaFor("ping", 1));
+    expect(actionFor(services[0]!).inputSchema).toEqual(schemaFor("ping", 2));
   });
 
   it("reports the action and file when a lazy schema file no longer contains the action", async () => {
