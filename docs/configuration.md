@@ -245,9 +245,10 @@ follow-up and async lifecycle links, and execution flags. Only the two schema fi
 from the provider file when something asks for them, and the schemas of the 64 most recently used
 provider files stay cached. `OOMOL_CONNECT_CATALOG_SCHEMA_CACHE_FILES` tunes that number: each
 cached file holds every schema of one provider, typically tens to a few hundred KB parsed, so 64
-files is on the order of a few MB to a few tens of MB. Set it higher when one server serves many
-providers repeatedly, and lower on the tightest machines. Responses are byte-identical to the
-default mode, so this is a memory-for-reads trade and not an API change.
+files is on the order of a few MB to a few tens of MB. Values that are not positive integers fall
+back to the default. Set it higher when one server serves many providers repeatedly, and lower on
+the tightest machines. Responses are byte-identical to the default mode, so this is a
+memory-for-reads trade and not an API change.
 
 What changes operationally:
 

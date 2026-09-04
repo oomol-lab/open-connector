@@ -196,6 +196,16 @@ describe("loadCatalog", () => {
     expect(actionFor(services[0]!).inputSchema).toEqual(schemaFor("ping", 2));
   });
 
+  it("rejects a lazy schema cache size that is not a positive integer", async () => {
+    const catalogDir = await writeCatalogDir([providerFixture("example", ["ping"])]);
+
+    for (const value of [0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+      await expect(loadCatalog(catalogDir, { lazySchemas: true, lazySchemaCacheFiles: value })).rejects.toThrow(
+        "lazySchemaCacheFiles must be a positive integer",
+      );
+    }
+  });
+
   it("reports the action and file when a lazy schema file no longer contains the action", async () => {
     const catalogDir = await writeCatalogDir([
       providerFixture("example", ["ping"]),

@@ -105,6 +105,11 @@ class FileActionSchemaLoader {
   private readonly maxCachedFiles: number;
 
   constructor(maxCachedFiles: number) {
+    // A size below 1 would evict every entry as soon as it is inserted, and NaN or Infinity would
+    // never evict, turning the bounded cache into one that retains every provider file.
+    if (!Number.isInteger(maxCachedFiles) || maxCachedFiles < 1) {
+      throw new Error(`lazySchemaCacheFiles must be a positive integer, got ${maxCachedFiles}`);
+    }
     this.maxCachedFiles = maxCachedFiles;
   }
 

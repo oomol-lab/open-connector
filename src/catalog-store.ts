@@ -84,8 +84,9 @@ export interface LoadCatalogOptions extends ExecutableActionOptions {
   /** Keep action schemas on disk and read them back on demand (see `OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS`). */
   lazySchemas?: boolean;
   /**
-   * Provider files whose schemas stay cached at once in lazy mode. Defaults to `defaultLazySchemaCacheFiles`
-   * from `catalog-lazy-schemas.ts`, which the server reads from `OOMOL_CONNECT_CATALOG_SCHEMA_CACHE_FILES`.
+   * Provider files whose schemas stay cached at once in lazy mode. Must be a positive integer. Defaults to
+   * `defaultLazySchemaCacheFiles` from `catalog-lazy-schemas.ts`, which the server reads from
+   * `OOMOL_CONNECT_CATALOG_SCHEMA_CACHE_FILES`.
    */
   lazySchemaCacheFiles?: number;
 }
