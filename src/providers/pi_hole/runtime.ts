@@ -316,11 +316,15 @@ function readBlockingStatus(payload: Record<string, unknown>): Record<string, un
   };
 }
 
+// The Pi-hole CLI status marks stay written as `\u` escapes: a bundler re-encodes
+// non-ASCII inside a string literal but cannot rewrite a regex literal, and one
+// character above U+00FF forces V8 to hold the whole minified Workers script as a
+// two-byte UTF-16 string, doubling what the script costs in the isolate heap.
 function readGravityStatus(text: string): string | null {
-  if (/\[✗\]|\berror\b|\bfatal\b|\bfailed\b/i.test(text)) {
+  if (/\[\u2717\]|\berror\b|\bfatal\b|\bfailed\b/i.test(text)) {
     return "failed";
   }
-  if (/\[✓\]\s*done|\bdone\.?\s*$/im.test(text.trimEnd())) {
+  if (/\[\u2713\]\s*done|\bdone\.?\s*$/im.test(text.trimEnd())) {
     return "success";
   }
   return null;
