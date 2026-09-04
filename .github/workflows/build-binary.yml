@@ -16,7 +16,9 @@ name: Build Binaries
 # smoke-tests its own linux-x64 output three times: against SQLite, against
 # SQLite with the lazy catalog schemas, and against the PostgreSQL service
 # container (service containers are Linux-only, which is one reason the smoke
-# matrix is a separate job).
+# matrix is a separate job). Every smoke run also calls one no_auth action so
+# that an embedded provider chunk is imported and executed on each of the six
+# targets (the executable is built with Bun code splitting).
 #
 # The smoke matrix mixes runner vendors because Blacksmith offers no Windows
 # ARM64 and no macOS Intel runners; those two targets run on GitHub-hosted

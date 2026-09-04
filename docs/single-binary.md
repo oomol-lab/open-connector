@@ -6,6 +6,11 @@ provider catalog, the database migrations, and the built web console, so it runs
 without a Node.js installation, a checkout, or `node_modules`. Nothing is extracted to disk at
 runtime.
 
+Provider code is split into chunks inside the executable, and each provider's chunk is loaded the
+first time that provider is used, so the process only parses the server itself at startup. This is
+what keeps the binary's resident memory well under what a single bundle needs, and it is invisible
+to clients: the same routes, responses, and ETags.
+
 ## Build
 
 Building requires Node.js for the npm scripts and the Bun version pinned in `.bun-version`; the

@@ -9,7 +9,7 @@ import { join, resolve } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 
 // Start a built single-file executable against a fresh data directory and check that its embedded catalog,
-// web console, migrations and shutdown path work.
+// web console, migrations, provider executor chunks and shutdown path work.
 //
 // Usage: `node scripts/smoke-binary.ts <path-to-binary>`. Set OOMOL_CONNECT_DATABASE_URL to run the PostgreSQL
 // mode and OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS to run the lazy catalog mode; every other OOMOL_CONNECT_* variable is
@@ -124,6 +124,7 @@ try {
   await checkProviders(baseUrl);
   await checkActionSchema(baseUrl);
   await checkApps(baseUrl);
+  await checkProviderExecutor(baseUrl);
   await checkDatabaseBackend(server, dataDir, databaseUrl);
   await checkGracefulShutdown(server);
   await removeDataDir(dataDir);
@@ -298,14 +299,40 @@ async function checkApps(baseUrl: string): Promise<void> {
   assert(Array.isArray(data), "/v1/apps data is not an array");
 }
 
+/**
+ * Provider executors are separate chunks inside the executable (scripts/build-binary.ts builds with code splitting),
+ * so the catalog checks above prove nothing about them. quickchart.build_chart_url is a no_auth action whose executor
+ * assembles the URL locally, so one call imports and runs a provider chunk with no credential, no network egress and a
+ * fixed answer. A chunk that fails to import surfaces as a 500 internal_error envelope (ActionRunner), never as 200.
+ * The URL is checked structurally rather than as a literal so the provider's own serialization details stay its own.
+ */
+async function checkProviderExecutor(baseUrl: string): Promise<void> {
+  const actionId = "quickchart.build_chart_url";
+  const chart = { type: "bar" };
+  const data = await fetchEnvelopeData(baseUrl, `/v1/actions/${actionId}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ input: { chart } }),
+  });
+  assert(isRecord(data), `POST /v1/actions/${actionId} data is not an object`);
+  assert(typeof data.url === "string", `POST /v1/actions/${actionId} url is ${JSON.stringify(data.url)}`);
+  const url = new URL(data.url);
+  assert.equal(`${url.origin}${url.pathname}`, "https://quickchart.io/chart", `POST /v1/actions/${actionId} url`);
+  const chartParameter = url.searchParams.get("chart");
+  assert(chartParameter !== null, `POST /v1/actions/${actionId} url has no chart parameter: ${data.url}`);
+  assert.deepEqual(JSON.parse(chartParameter), chart, `POST /v1/actions/${actionId} chart parameter`);
+}
+
 /** Return `data` of a `{ success: true, data }` envelope. */
-async function fetchEnvelopeData(baseUrl: string, path: string): Promise<unknown> {
-  const response = await fetch(`${baseUrl}${path}`, { signal: AbortSignal.timeout(requestTimeoutMs) });
+async function fetchEnvelopeData(baseUrl: string, path: string, init: RequestInit = {}): Promise<unknown> {
+  const method = init.method ?? "GET";
+  const response = await fetch(`${baseUrl}${path}`, { ...init, signal: AbortSignal.timeout(requestTimeoutMs) });
   const body = await response.text();
-  assert(response.status === 200, `GET ${path} returned ${response.status}`);
+  // The body excerpt is what makes a failed provider chunk import (a 500 internal_error envelope) diagnosable.
+  assert(response.status === 200, `${method} ${path} returned ${response.status}: ${body.slice(0, 300)}`);
   const payload: unknown = JSON.parse(body);
-  assert(isRecord(payload), `GET ${path} did not return a JSON object`);
-  assert(payload.success === true, `GET ${path} envelope success is ${JSON.stringify(payload.success)}`);
+  assert(isRecord(payload), `${method} ${path} did not return a JSON object`);
+  assert(payload.success === true, `${method} ${path} envelope success is ${JSON.stringify(payload.success)}`);
   return payload.data;
 }
 

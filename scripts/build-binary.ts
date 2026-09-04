@@ -92,10 +92,14 @@ async function buildTarget(binaryTarget: BinaryTarget): Promise<void> {
   rmSync(`${outfile}.exe`, { force: true });
 
   const result = await runBunBuild(binaryTarget.target, outfile);
-  const [artifact] = result.outputs;
-  if (!artifact) {
-    fail(`Bun.build produced no output for ${binaryTarget.name}.`);
+  // Code splitting keeps every chunk inside the executable, so exactly one output is expected. A future Bun that
+  // reports chunks as outputs must not have signDarwinBinary sign, or the size log measure, a chunk.
+  if (result.outputs.length !== 1) {
+    fail(
+      `Bun.build produced ${result.outputs.length} outputs for ${binaryTarget.name}; expected the single executable.`,
+    );
   }
+  const [artifact] = result.outputs;
 
   if (binaryTarget.target.startsWith("bun-darwin-")) {
     signDarwinBinary(artifact.path);
@@ -112,6 +116,12 @@ async function runBunBuild(target: Bun.Build.CompileTarget, outfile: string): Pr
       entrypoints: [join(rootDir, "src/server/index.ts")],
       target: "bun",
       format: "esm",
+      // Every provider executor is reached only through the `import()` in src/providers/registry.generated.ts. With
+      // splitting those imports become chunks embedded next to the entry module (/$bunfs/root/chunk-<hash>.js, or
+      // B:/~BUN/root/chunk-<hash>.js on Windows; Bun rewrites the paths per target) that JavaScriptCore reads, parses
+      // and keeps resident only when a provider is first used, instead of one ~30 MB entry module parsed at startup.
+      // compile.outfile still produces exactly one file; no chunk files are written to dist/.
+      splitting: true,
       // ali-oss depends on urllib, which lazily `require("proxy-agent")`, an optional peer dependency that is not
       // installed here. The bundler cannot resolve it, so it stays a runtime require that is never reached.
       external: ["proxy-agent"],
