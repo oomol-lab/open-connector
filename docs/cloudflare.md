@@ -131,9 +131,10 @@ npm run deploy:cloudflare
 `npm run deploy:cloudflare` generates the catalog, builds the Web Console, copies catalog assets,
 and runs `wrangler deploy --config wrangler.local.jsonc --minify`. The copied
 `wrangler.local.jsonc` already maps the built Web Console assets to the `ASSETS` binding used by
-the Worker. `--minify` matters on Workers because the whole script source stays in the isolate heap
-for as long as the isolate lives: the minified script is 13.8 MiB against 28.7 MiB unminified, out
-of the 128 MB a Worker isolate gets.
+the Worker. `--minify` matters on Workers beyond the upload size limit: a heap snapshot of the
+running isolate (taken through the `wrangler dev` inspector) shows the script source retained as one
+string for as long as the isolate lives, so the 13.8 MiB minified script costs about half the
+isolate memory of the 28.7 MiB unminified one, out of the 128 MB each Worker isolate gets.
 
 Use the Worker URL printed by Wrangler to check the deployed runtime, then open the same URL in a
 browser and enter the admin token to access the Web Console:
