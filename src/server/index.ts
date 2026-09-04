@@ -48,6 +48,7 @@ const [command, ...rest] = process.argv.slice(2);
 
 try {
   if (command === undefined) {
+    // Resolves once the server listens; the server's lifetime is deliberately not awaited here, see `main`.
     await main();
   } else if (command === "migrate" && rest.length === 0) {
     await runMigrateCommand();
@@ -56,10 +57,17 @@ try {
     process.exitCode = 1;
   }
 } catch (error) {
-  logger.error({ err: error }, command === "migrate" ? "migrate failed" : "connect server failed");
-  process.exitCode = 1;
+  reportFailure(error);
 }
 
+/**
+ * Start the server and resolve once it listens. Waiting for SIGINT/SIGTERM and closing the runtime database
+ * afterwards belong to a promise chain that is deliberately not awaited, so this entry module finishes evaluating
+ * while the server runs. A Bun single-file executable releases the executable's module-graph pages (the bundle plus
+ * every embedded catalog file read during startup) with one madvise(MADV_DONTNEED) once the entry module has
+ * evaluated; a top-level await spanning the server's lifetime keeps about 85 MB of them resident on Linux, and under
+ * Bun also turns a listen error into a hang instead of an exit.
+ */
 async function main(): Promise<void> {
   setPrivateNetworkAccessAllowed(parsePrivateNetworkAccessFlag(process.env.OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK));
   setEgressTrustedHosts(parseEgressTrustedHosts(process.env.OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS));
@@ -178,10 +186,20 @@ async function main(): Promise<void> {
       },
     );
 
-    await waitForShutdown(server);
-  } finally {
+    // A startup failure above closes the database in the catch; once the listener is up, this chain owns it.
+    waitForShutdown(server)
+      .finally(() => runtimeDatabase.close())
+      .catch(reportFailure);
+  } catch (error) {
     await runtimeDatabase.close();
+    throw error;
   }
+}
+
+/** Log a startup, migrate, or shutdown failure; the process exits with code 1 once its handles are closed. */
+function reportFailure(error: unknown): void {
+  logger.error({ err: error }, command === "migrate" ? "migrate failed" : "connect server failed");
+  process.exitCode = 1;
 }
 
 async function runMigrateCommand(): Promise<void> {

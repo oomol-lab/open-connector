@@ -9,7 +9,8 @@ import { join, resolve } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 
 // Start a built single-file executable against a fresh data directory and check that its embedded catalog,
-// web console, migrations, provider executor chunks, lazily loaded MCP and docs modules and shutdown path work.
+// web console, migrations, provider executor chunks, lazily loaded MCP and docs modules, exit on a port conflict
+// and shutdown path work.
 //
 // Usage: `node scripts/smoke-binary.ts <path-to-binary>`. Set OOMOL_CONNECT_DATABASE_URL to run the PostgreSQL
 // mode and OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS to run the lazy catalog mode, which also proves that the embedded
@@ -132,6 +133,7 @@ try {
   await checkMcp(baseUrl);
   await checkDocs(baseUrl);
   await checkDatabaseBackend(server, dataDir, databaseUrl);
+  await checkPortConflictExit(binaryPath, port, databaseUrl);
   await checkGracefulShutdown(server);
   await removeDataDir(dataDir);
   console.log(
@@ -416,6 +418,45 @@ async function checkDatabaseBackend(
     await access(join(dataDir, "connect.sqlite"));
   } catch {
     throw new Error(`connect.sqlite was not created in ${dataDir}`);
+  }
+}
+
+/**
+ * A second instance on a port that is already in use must exit instead of hanging. src/server/index.ts finishes
+ * evaluating once the server listens; with a top-level await spanning the server's lifetime, Bun printed the listen
+ * failure and then waited forever on that promise, so the binary hung on EADDRINUSE while Node exited with code 1.
+ * The first server is still listening here, and the second one only reaches the conflict after a full startup of its
+ * own, which is why the wait is sized like a startup rather than a shutdown.
+ */
+async function checkPortConflictExit(binaryPath: string, port: number, databaseUrl: string | undefined): Promise<void> {
+  const conflictDataDir = await mkdtemp(join(tmpdir(), "open-connector-smoke-conflict-"));
+  const second = new ServerProcess({ binaryPath, dataDir: conflictDataDir, port, databaseUrl });
+  try {
+    const exit = await second.waitForExit(healthTimeoutMs);
+    if (!exit) {
+      // Whether Bun's second bind of 127.0.0.1:<port> fails on Windows is not established, so a second instance that
+      // keeps running is accepted there and stopped; on Linux and macOS it is exactly the hang this check exists for.
+      if (process.platform === "win32") {
+        console.log(`port conflict: second instance still running after ${healthTimeoutMs} ms on win32; stopping it`);
+        return;
+      }
+
+      throw new Error(
+        `second instance did not exit within ${healthTimeoutMs} ms on a port conflict\n--- second instance stderr ---\n${second.stderr}`,
+      );
+    }
+
+    // A spawn failure also reports code null; only a real non-zero exit code proves the listen error ended the process.
+    assert(
+      exit.signal === null && exit.code !== null && exit.code !== 0,
+      `second instance on a busy port ended with ${second.describeExit()}; expected a non-zero exit code`,
+    );
+    if (process.platform === "win32") {
+      console.log(`port conflict: second instance exited with code ${exit.code} on win32`);
+    }
+  } finally {
+    await second.forceStop();
+    await removeDataDir(conflictDataDir);
   }
 }
 

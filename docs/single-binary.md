@@ -112,3 +112,11 @@ prints a notice that SQLite migrations are applied automatically and exits.
 - On Windows, stopping the process from a process manager or `taskkill` terminates it immediately;
   the graceful shutdown hook that closes the HTTP server and the database on Linux and macOS does
   not run. This matches `node src/server/index.ts` on Windows.
+- The binary exits with code 1 when it cannot listen (for example when `PORT` is already in use)
+  and when an uncaught exception is thrown while serving, as `node src/server/index.ts` always
+  has. Earlier binaries printed the error and kept running; after a listen failure they hung
+  without a server.
+- On Linux, Bun releases the pages of the embedded bundle and catalog once startup has finished,
+  so resident memory after startup is lower than the startup peak. Pages touched later, such as a
+  provider's first use or an on-demand schema read, fault back in, bounded by the size of the
+  embedded section. `BUN_FEATURE_FLAG_DISABLE_STANDALONE_MADVISE=1` disables the release.
