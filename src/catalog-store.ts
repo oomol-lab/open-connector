@@ -53,17 +53,20 @@ export type ProviderSummaryDefinition = Omit<RuntimeProviderDefinition, "actions
 export type CatalogStore = {
   providers: RuntimeProviderDefinition[];
   /**
-   * Schema-free view of `providers`, pre-serialized once because the catalog is
-   * immutable at runtime. Served verbatim by `/api/providers` so the dashboard
-   * does not download every action schema on load, and so the response is
-   * neither re-serialized per request nor able to drift from
-   * {@link providerSummariesEtag}.
+   * Schema-free view of `providers`, serialized once as UTF-8 bytes because the
+   * catalog is immutable at runtime. Served verbatim by `/api/providers` so the
+   * dashboard does not download every action schema on load, and so the
+   * response is neither re-serialized per request nor able to drift from
+   * {@link providerSummariesEtag}. Bytes rather than a string: the catalog
+   * contains code points above U+00FF, which makes the engine keep a JS string
+   * of it as UTF-16 at twice the size.
    */
-  providerSummariesJson: string;
+  providerSummariesJson: Uint8Array<ArrayBuffer>;
   /**
-   * Stable ETag for `providerSummariesJson`. The catalog is immutable at
-   * runtime, so this is computed once and lets `/api/providers` answer
-   * conditional requests with `304 Not Modified`.
+   * Stable ETag for `providerSummariesJson`, computed from the JSON string
+   * before it is encoded so it stays what earlier releases sent. The catalog is
+   * immutable at runtime, so this is computed once and lets `/api/providers`
+   * answer conditional requests with `304 Not Modified`.
    */
   providerSummariesEtag: string;
   actions: RuntimeActionDefinition[];
@@ -134,7 +137,8 @@ export function createCatalogStore(
 
   return {
     providers: runtimeProviders,
-    providerSummariesJson,
+    // TextEncoder rather than Buffer: the Cloudflare Workers build shares this function.
+    providerSummariesJson: new TextEncoder().encode(providerSummariesJson),
     providerSummariesEtag: weakEtag(providerSummariesJson),
     actions,
     actionsById: new Map(actions.map((action) => [action.id, action])),
@@ -146,7 +150,9 @@ export function createCatalogStore(
  * Content-derived ETag using a pure-JS FNV-1a hash. Runtime-agnostic (no
  * `node:crypto`, so the Cloudflare Workers build shares this path) and computed
  * once per catalog. Emitted as a weak validator because the response body may
- * be gzip-transformed downstream.
+ * be gzip-transformed downstream. It hashes UTF-16 code units and reports the
+ * UTF-16 length, so it takes the JSON string rather than the UTF-8 bytes the
+ * store keeps; hashing the bytes would change every ETag clients have cached.
  */
 function weakEtag(content: string): string {
   let hash = 0x811c_9dc5;

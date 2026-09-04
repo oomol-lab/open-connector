@@ -69,7 +69,9 @@ describe("catalog store", () => {
     ];
 
     const catalog = createCatalogStore(providers, { executableActionIds: ["example.ping"] });
-    const [summary] = JSON.parse(catalog.providerSummariesJson) as ProviderSummaryDefinition[];
+    const [summary] = JSON.parse(
+      new TextDecoder().decode(catalog.providerSummariesJson),
+    ) as ProviderSummaryDefinition[];
     const summarizedAction = summary?.actions[0];
 
     expect(summarizedAction).not.toHaveProperty("inputSchema");
@@ -84,6 +86,29 @@ describe("catalog store", () => {
       type: "object",
       properties: { message: { type: "string" } },
     });
+  });
+
+  it("keeps provider summaries as UTF-8 bytes while the ETag still describes the JSON string", () => {
+    const providers: ProviderDefinition[] = [
+      {
+        service: "example",
+        displayName: "示例",
+        categories: ["Developer Tools"],
+        authTypes: ["no_auth"],
+        auth: [{ type: "no_auth" }],
+        actions: [],
+      },
+    ];
+
+    const catalog = createCatalogStore(providers);
+    const json = new TextDecoder().decode(catalog.providerSummariesJson);
+
+    expect(catalog.providerSummariesJson).toBeInstanceOf(Uint8Array);
+    expect(json).toBe(JSON.stringify(catalog.providers));
+    // The non-Latin1 display name takes more UTF-8 bytes than UTF-16 code units, so the length
+    // field below can only match if the ETag still describes the string.
+    expect(catalog.providerSummariesJson.byteLength).toBeGreaterThan(json.length);
+    expect(catalog.providerSummariesEtag).toBe(`W/"${json.length.toString(16)}-a56a243b"`);
   });
 
   it("resolves every action from executable services alongside explicit action ids", () => {
@@ -238,7 +263,7 @@ describe("loadCatalog", () => {
     });
 
     for (const store of [lazy, indexed]) {
-      expect(store.providerSummariesJson).toBe(eager.providerSummariesJson);
+      expect(store.providerSummariesJson).toEqual(eager.providerSummariesJson);
       expect(store.providerSummariesEtag).toBe(eager.providerSummariesEtag);
       expect(JSON.stringify(store.actions)).toBe(JSON.stringify(eager.actions));
       expect([...store.actionsById.keys()]).toEqual([...eager.actionsById.keys()]);
@@ -258,7 +283,8 @@ describe("loadCatalog", () => {
         "execution",
       ]);
     }
-    for (const summaries of [eager.providerSummariesJson, lazy.providerSummariesJson, indexed.providerSummariesJson]) {
+    for (const store of [eager, lazy, indexed]) {
+      const summaries = new TextDecoder().decode(store.providerSummariesJson);
       expect(summaries).not.toContain("inputSchema");
       expect(summaries).not.toContain("outputSchema");
     }
@@ -270,7 +296,9 @@ describe("loadCatalog", () => {
     const catalog = await loadCatalog(catalogDir, { lazySchemas: true });
     await rm(catalogDir, { recursive: true, force: true });
 
-    const [summary] = JSON.parse(catalog.providerSummariesJson) as ProviderSummaryDefinition[];
+    const [summary] = JSON.parse(
+      new TextDecoder().decode(catalog.providerSummariesJson),
+    ) as ProviderSummaryDefinition[];
     expect(summary?.actions[0]?.id).toBe("example.ping");
     // Nothing was cached during store construction, so the first schema access has to hit the
     // deleted file.
@@ -285,7 +313,9 @@ describe("loadCatalog", () => {
     const catalog = await loadCatalog(catalogDir, { lazySchemas: true, lazySchemaIndexFile });
     await rm(catalogDir, { recursive: true, force: true });
 
-    const [summary] = JSON.parse(catalog.providerSummariesJson) as ProviderSummaryDefinition[];
+    const [summary] = JSON.parse(
+      new TextDecoder().decode(catalog.providerSummariesJson),
+    ) as ProviderSummaryDefinition[];
     expect(summary?.actions[0]?.id).toBe("example.ping");
     const action = catalog.actionsById.get("example.ping")!;
     expect(Object.getOwnPropertyDescriptor(action, "inputSchema")?.get).toBeTypeOf("function");

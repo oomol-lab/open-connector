@@ -108,7 +108,10 @@ describe("generated catalog index", () => {
       lazySchemaIndexFile: indexFile,
     });
 
-    expect(indexed.providerSummariesJson).toBe(eager.providerSummariesJson);
+    // Compared as text: `toEqual` on the two 6 MB byte arrays walks every element and exceeds the test timeout.
+    expect(new TextDecoder().decode(indexed.providerSummariesJson)).toBe(
+      new TextDecoder().decode(eager.providerSummariesJson),
+    );
     expect(indexed.providerSummariesEtag).toBe(eager.providerSummariesEtag);
     expect(indexed.executableActionIds).toEqual(eager.executableActionIds);
     expect([...indexed.actionsById.keys()]).toEqual([...eager.actionsById.keys()]);
