@@ -13,31 +13,31 @@ to clients: the same routes, responses, and ETags.
 
 ## Download
 
-Every [release](https://github.com/oomol-lab/open-connector/releases) attaches one archive per
-platform, built and smoke-tested on that platform by CI, plus a `SHA256SUMS` file:
+Every [release](https://github.com/oomol-lab/open-connector/releases) attaches the six executables
+uncompressed, built and smoke-tested on each platform by CI, plus a `SHA256SUMS` file:
 
-| Asset                                | Platform            |
-| ------------------------------------ | ------------------- |
-| `open-connector-linux-x64.tar.gz`    | Linux x86_64        |
-| `open-connector-linux-arm64.tar.gz`  | Linux ARM64         |
-| `open-connector-darwin-arm64.tar.gz` | macOS Apple Silicon |
-| `open-connector-darwin-x64.tar.gz`   | macOS Intel         |
-| `open-connector-windows-x64.zip`     | Windows x86_64      |
-| `open-connector-windows-arm64.zip`   | Windows ARM64       |
+| Asset                              | Platform            |
+| ---------------------------------- | ------------------- |
+| `open-connector-linux-x64`         | Linux x86_64        |
+| `open-connector-linux-arm64`       | Linux ARM64         |
+| `open-connector-darwin-arm64`      | macOS Apple Silicon |
+| `open-connector-darwin-x64`        | macOS Intel         |
+| `open-connector-windows-x64.exe`   | Windows x86_64      |
+| `open-connector-windows-arm64.exe` | Windows ARM64       |
 
 The names are stable across releases, so `releases/latest/download/` always resolves to the newest
-release:
+release. A plain download does not keep the executable bit, so `chmod +x` after it:
 
 ```bash
-curl -fsSLO https://github.com/oomol-lab/open-connector/releases/latest/download/open-connector-linux-x64.tar.gz
+curl -fsSLO https://github.com/oomol-lab/open-connector/releases/latest/download/open-connector-linux-x64
 curl -fsSLO https://github.com/oomol-lab/open-connector/releases/latest/download/SHA256SUMS
 sha256sum --ignore-missing -c SHA256SUMS
-tar -xzf open-connector-linux-x64.tar.gz
+chmod +x open-connector-linux-x64
 ./open-connector-linux-x64
 ```
 
-Replace `latest` with a tag such as `v1.4.1` to pin a release. The macOS archives contain binaries
-that were re-signed on a macOS runner, so they run without the `codesign` step described below.
+Replace `latest` with a tag such as `v1.4.1` to pin a release. The macOS binaries were re-signed on
+a macOS runner, so they run without the `codesign` step described below.
 
 ## Build
 
@@ -122,7 +122,7 @@ prints a notice that SQLite migrations are applied automatically and exits.
 - `NODE_ENV` is fixed to `production` inside the binary, so logs are always JSON (no pretty
   printing). `OOMOL_CONNECT_LOG_LEVEL` and every other environment variable are read at runtime as
   usual.
-- macOS: binaries built on macOS are ad-hoc signed by the build script, and the release archives
+- macOS: binaries built on macOS are ad-hoc signed by the build script, and the release binaries
   are re-signed on a macOS runner. Binaries built on another operating system carry an invalid
   ad-hoc signature, and macOS 27 and newer refuses to run them until you re-sign them:
 

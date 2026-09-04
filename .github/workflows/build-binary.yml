@@ -36,14 +36,14 @@ name: Build Binaries
 # re-sign the binary with `codesign` and verify the signature before running it.
 #
 # On a published release the same build and smoke jobs run against the release
-# tag, and a final `release` job packs the six smoke-tested binaries (the darwin
-# ones re-signed by the macOS smoke jobs) into `open-connector-<target>.tar.gz`
-# / `.zip` archives, writes a `SHA256SUMS` file, and uploads them as release
-# assets. The archives keep a stable name so
-# `releases/latest/download/open-connector-<target>.tar.gz` always resolves.
-# The upload only runs after every smoke job passed, so a release never ships
-# a binary that failed on its own platform. To backfill an existing release,
-# dispatch the workflow on its tag with `release_tag` set.
+# tag, and a final `release` job uploads the six smoke-tested binaries (the
+# darwin ones re-signed by the macOS smoke jobs) as they are, plus a
+# `SHA256SUMS` file, as release assets. The files keep their build names, so
+# `releases/latest/download/open-connector-<target>` always resolves and a
+# `curl | chmod +x` install needs no archive tool. The upload only runs after
+# every smoke job passed, so a release never ships a binary that failed on its
+# own platform. To backfill an existing release, dispatch the workflow on its
+# tag with `release_tag` set.
 #
 # A `runs-on` label that no runner serves queues forever instead of failing, so
 # `workflow_dispatch` is here to verify the labels before relying on them.
@@ -291,9 +291,9 @@ jobs:
           retention-days: 1
           overwrite: true
 
-  # Pack the smoke-tested binaries and attach them to the release. Needs every
-  # smoke job, so one failing platform blocks the whole upload rather than
-  # publishing a partial set.
+  # Attach the smoke-tested binaries to the release. Needs every smoke job, so
+  # one failing platform blocks the whole upload rather than publishing a
+  # partial set.
   release:
     name: Upload release assets
     needs: [build, smoke]
@@ -310,21 +310,16 @@ jobs:
           pattern: binary-*
           merge-multiple: true
 
-      # tar keeps the mode, so restore the exec bit the artifact zip dropped
-      # before packing; Windows executables go into zip archives instead.
-      - name: Pack archives and checksums
+      # The binaries are uploaded uncompressed, exactly as built. Fail early if
+      # any of the six is missing rather than publishing a partial set.
+      - name: Write checksums
         working-directory: dist
         run: |
           set -euo pipefail
-          mkdir -p ../release-assets
-          for target in linux-x64 linux-arm64 darwin-x64 darwin-arm64; do
-            chmod +x "open-connector-${target}"
-            tar -czf "../release-assets/open-connector-${target}.tar.gz" "open-connector-${target}"
+          for file in open-connector-linux-x64 open-connector-linux-arm64 open-connector-darwin-x64 \
+            open-connector-darwin-arm64 open-connector-windows-x64.exe open-connector-windows-arm64.exe; do
+            test -f "${file}" || { echo "::error::missing ${file}"; exit 1; }
           done
-          for target in windows-x64 windows-arm64; do
-            zip -j "../release-assets/open-connector-${target}.zip" "open-connector-${target}.exe"
-          done
-          cd ../release-assets
           sha256sum open-connector-* > SHA256SUMS
           ls -l
           cat SHA256SUMS
@@ -335,4 +330,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-        run: gh release upload "$RELEASE_TAG" release-assets/* --clobber
+        run: gh release upload "$RELEASE_TAG" dist/* --clobber
