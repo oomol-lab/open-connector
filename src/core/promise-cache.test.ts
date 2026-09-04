@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { IsolatePromiseCache } from "./isolate-promise-cache.ts";
+import { PromiseCache } from "./promise-cache.ts";
 
-describe("IsolatePromiseCache", () => {
+describe("PromiseCache", () => {
   it("creates once per key and reuses the resolved promise", async () => {
-    const cache = new IsolatePromiseCache<string>();
+    const cache = new PromiseCache<string>();
     let creations = 0;
     const create = async (): Promise<string> => {
       creations++;
@@ -16,7 +16,7 @@ describe("IsolatePromiseCache", () => {
   });
 
   it("shares one in-flight promise between concurrent callers", async () => {
-    const cache = new IsolatePromiseCache<string>();
+    const cache = new PromiseCache<string>();
     let creations = 0;
     let release = (): void => {};
     const create = (): Promise<string> => {
@@ -35,7 +35,7 @@ describe("IsolatePromiseCache", () => {
   });
 
   it("evicts a rejected promise so the next caller retries", async () => {
-    const cache = new IsolatePromiseCache<string>();
+    const cache = new PromiseCache<string>();
     let attempts = 0;
     const create = async (): Promise<string> => {
       attempts++;
@@ -51,7 +51,7 @@ describe("IsolatePromiseCache", () => {
   });
 
   it("keeps rejecting concurrent callers of the failed attempt, then retries once", async () => {
-    const cache = new IsolatePromiseCache<string>();
+    const cache = new PromiseCache<string>();
     let attempts = 0;
     const create = async (): Promise<string> => {
       attempts++;
@@ -69,7 +69,7 @@ describe("IsolatePromiseCache", () => {
   });
 
   it("replaces the slot when the key changes", async () => {
-    const cache = new IsolatePromiseCache<string>();
+    const cache = new PromiseCache<string>();
     const create = (value: string) => async (): Promise<string> => value;
 
     await expect(cache.get("a", create("first"))).resolves.toBe("first");
@@ -78,7 +78,7 @@ describe("IsolatePromiseCache", () => {
   });
 
   it("does not evict a newer key when an older promise rejects afterwards", async () => {
-    const cache = new IsolatePromiseCache<string>();
+    const cache = new PromiseCache<string>();
     let failOld = (): void => {};
     const oldEntry = cache.get(
       "old",
@@ -103,7 +103,7 @@ describe("IsolatePromiseCache", () => {
   });
 
   it("does not report an unhandled rejection when nobody awaits the evicted promise", async () => {
-    const cache = new IsolatePromiseCache<string>();
+    const cache = new PromiseCache<string>();
     const unhandled: unknown[] = [];
     const onUnhandled = (reason: unknown): void => {
       unhandled.push(reason);

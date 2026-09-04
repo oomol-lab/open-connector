@@ -43,9 +43,9 @@ afterAll(async () => {
 });
 
 describe("createRuntimeJwtVerifier", () => {
-  it("stays disabled when no JWT settings are configured", () => {
-    expect(createRuntimeJwtVerifier({})).toBeUndefined();
-    expect(createRuntimeJwtVerifier({ jwksUri: " ", issuer: " ", audience: " " })).toBeUndefined();
+  it("stays disabled when no JWT settings are configured", async () => {
+    await expect(createRuntimeJwtVerifier({})).resolves.toBeUndefined();
+    await expect(createRuntimeJwtVerifier({ jwksUri: " ", issuer: " ", audience: " " })).resolves.toBeUndefined();
   });
 
   it.each([
@@ -61,14 +61,14 @@ describe("createRuntimeJwtVerifier", () => {
       config: { jwksUri: "https://issuer.example.com/jwks", issuer },
       missing: "OOMOL_CONNECT_JWT_AUDIENCE",
     },
-  ])("rejects incomplete settings missing $missing", ({ config, missing }) => {
-    expect(() => createRuntimeJwtVerifier(config)).toThrow(missing);
+  ])("rejects incomplete settings missing $missing", async ({ config, missing }) => {
+    await expect(createRuntimeJwtVerifier(config)).rejects.toThrow(missing);
   });
 
   it.each(["not a URL", "file:///tmp/jwks.json", "http://idp.example.com/jwks", "http://10.0.0.1/jwks"])(
     "rejects invalid or insecure JWKS URI %s",
-    (value) => {
-      expect(() => createRuntimeJwtVerifier({ jwksUri: value, issuer, audience })).toThrow(
+    async (value) => {
+      await expect(createRuntimeJwtVerifier({ jwksUri: value, issuer, audience })).rejects.toThrow(
         "OOMOL_CONNECT_JWKS_URI must be a valid HTTPS URL or HTTP loopback URL.",
       );
     },
@@ -80,19 +80,19 @@ describe("createRuntimeJwtVerifier", () => {
     "http://localhost./jwks",
     "http://127.0.0.2/jwks",
     "http://[::1]/jwks",
-  ])("accepts secure or loopback JWKS URI %s", (value) => {
-    expect(createRuntimeJwtVerifier({ jwksUri: value, issuer, audience })).toBeTypeOf("function");
+  ])("accepts secure or loopback JWKS URI %s", async (value) => {
+    await expect(createRuntimeJwtVerifier({ jwksUri: value, issuer, audience })).resolves.toBeTypeOf("function");
   });
 
   it("accepts a signed token with the expected issuer and audience", async () => {
-    const verifier = configuredVerifier();
+    const verifier = await configuredVerifier();
     const token = await signToken();
 
     await expect(verifier(token)).resolves.toBe(true);
   });
 
   it("accepts an audience array containing the expected audience", async () => {
-    const verifier = configuredVerifier();
+    const verifier = await configuredVerifier();
     const token = await signToken({ tokenAudience: ["https://other.example.com", audience] });
 
     await expect(verifier(token)).resolves.toBe(true);
@@ -140,11 +140,11 @@ describe("createRuntimeJwtVerifier", () => {
       token: async () => await signToken({ notBefore: "1h" }),
     },
   ])("rejects $name", async ({ token }) => {
-    await expect(configuredVerifier()(await token())).resolves.toBe(false);
+    await expect((await configuredVerifier())(await token())).resolves.toBe(false);
   });
 
   it("fails closed when the JWKS response is invalid", async () => {
-    const verifier = createRuntimeJwtVerifier({
+    const verifier = await createRuntimeJwtVerifier({
       jwksUri: jwksUri.replace("/jwks", "/invalid"),
       issuer,
       audience,
@@ -183,8 +183,8 @@ async function signToken(options: SignTokenOptions = {}): Promise<string> {
   return await token.sign(options.key ?? privateKey);
 }
 
-function configuredVerifier(): (token: string) => Promise<boolean> {
-  const verifier = createRuntimeJwtVerifier({ jwksUri, issuer, audience });
+async function configuredVerifier(): Promise<(token: string) => Promise<boolean>> {
+  const verifier = await createRuntimeJwtVerifier({ jwksUri, issuer, audience });
   if (!verifier) {
     throw new Error("JWT verifier was not configured.");
   }

@@ -1,7 +1,6 @@
 import type { IStagedTransitFileService } from "./files/transit-file-store.ts";
 import type { ServerType } from "@hono/node-server";
 
-import { S3Client } from "@aws-sdk/client-s3";
 import { serve } from "@hono/node-server";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
@@ -20,7 +19,6 @@ import { createRuntimeJwtVerifier } from "./api/runtime-jwt.ts";
 import { registerStaticRoutes } from "./api/static-routes.ts";
 import { createConnectApp } from "./connect-app.ts";
 import { cleanupStagedTransitFiles, createNodeTransitFileUpload } from "./files/node-transit-file-upload.ts";
-import { S3TransitFileService } from "./files/s3-transit-files.ts";
 import { TransitFileService } from "./files/transit-files.ts";
 import { logger } from "./logger.ts";
 import { createSecretCodec } from "./secrets/secret-codec.ts";
@@ -69,7 +67,7 @@ async function main(): Promise<void> {
   const secretCodec = createSecretCodec(process.env.OOMOL_CONNECT_ENCRYPTION_KEY);
   const adminToken = process.env.OOMOL_CONNECT_ADMIN_TOKEN;
   const runtimeToken = process.env.OOMOL_CONNECT_RUNTIME_TOKEN;
-  const verifyRuntimeJwt = createRuntimeJwtVerifier({
+  const verifyRuntimeJwt = await createRuntimeJwtVerifier({
     jwksUri: process.env.OOMOL_CONNECT_JWKS_URI,
     issuer: process.env.OOMOL_CONNECT_JWT_ISSUER,
     audience: process.env.OOMOL_CONNECT_JWT_AUDIENCE,
@@ -129,7 +127,7 @@ async function main(): Promise<void> {
       });
 
   try {
-    const transitFiles = createTransitFileService();
+    const transitFiles = await createTransitFileService();
     const transitFileTempDir = join(dataDir, "tmp", "transit-files");
     await transitFiles.cleanupExpired();
     await cleanupStagedTransitFiles(transitFileTempDir, transitFileTtlSeconds * 1000);
@@ -235,7 +233,7 @@ function readPositiveIntegerEnv(name: string, fallback: number): number {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function createTransitFileService(): IStagedTransitFileService {
+async function createTransitFileService(): Promise<IStagedTransitFileService> {
   const backend = process.env.OOMOL_CONNECT_TRANSIT_FILE_BACKEND ?? "local";
   switch (backend) {
     case "local":
@@ -254,23 +252,22 @@ function createTransitFileService(): IStagedTransitFileService {
         );
       }
 
-      const client = new S3Client({
-        region: optionalEnv("OOMOL_CONNECT_S3_REGION") ?? "us-east-1",
-        endpoint: optionalEnv("OOMOL_CONNECT_S3_ENDPOINT"),
-        forcePathStyle: parseBooleanEnv("OOMOL_CONNECT_S3_FORCE_PATH_STYLE"),
-        requestChecksumCalculation: "WHEN_REQUIRED",
-        responseChecksumValidation: "WHEN_REQUIRED",
-        credentials:
-          accessKeyId && secretAccessKey
-            ? {
-                accessKeyId,
-                secretAccessKey,
-                sessionToken: optionalEnv("OOMOL_CONNECT_S3_SESSION_TOKEN"),
-              }
-            : undefined,
-      });
+      // @aws-sdk/client-s3 is loaded only for this backend; the default local backend never pays for it.
+      const { createS3TransitClient, S3TransitFileService } = await import("./files/s3-transit-files.ts");
       return new S3TransitFileService({
-        client,
+        client: createS3TransitClient({
+          region: optionalEnv("OOMOL_CONNECT_S3_REGION") ?? "us-east-1",
+          endpoint: optionalEnv("OOMOL_CONNECT_S3_ENDPOINT"),
+          forcePathStyle: parseBooleanEnv("OOMOL_CONNECT_S3_FORCE_PATH_STYLE"),
+          credentials:
+            accessKeyId && secretAccessKey
+              ? {
+                  accessKeyId,
+                  secretAccessKey,
+                  sessionToken: optionalEnv("OOMOL_CONNECT_S3_SESSION_TOKEN"),
+                }
+              : undefined,
+        }),
         bucket: requiredEnv("OOMOL_CONNECT_S3_BUCKET"),
         publicOrigin,
         ttlSeconds: transitFileTtlSeconds,

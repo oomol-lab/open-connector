@@ -33,6 +33,36 @@ export interface S3TransitFileOptions {
   maxBytes: number;
 }
 
+export interface S3TransitFileCredentials {
+  accessKeyId: string;
+  secretAccessKey: string;
+  sessionToken?: string;
+}
+
+/** S3 client settings as the Node server reads them from OOMOL_CONNECT_S3_*. */
+export interface S3TransitClientOptions {
+  region: string;
+  endpoint?: string;
+  forcePathStyle: boolean;
+  credentials?: S3TransitFileCredentials;
+}
+
+/**
+ * Build the S3 client for the transit-file backend. Checksum calculation stays opt-in so S3-compatible stores
+ * without CRC support keep working. The server imports this module only when OOMOL_CONNECT_TRANSIT_FILE_BACKEND=s3,
+ * so the AWS SDK stays out of the default startup graph.
+ */
+export function createS3TransitClient(options: S3TransitClientOptions): S3Client {
+  return new S3Client({
+    region: options.region,
+    endpoint: options.endpoint,
+    forcePathStyle: options.forcePathStyle,
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
+    credentials: options.credentials,
+  });
+}
+
 export class S3TransitFileService implements IStagedTransitFileService {
   private readonly client: S3Client;
   private readonly bucket: string;

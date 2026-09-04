@@ -14,18 +14,16 @@ import type { IIdempotencyStore } from "./storage/idempotency-store.ts";
 import type { IRuntimePolicyStore } from "./storage/runtime-policy-store.ts";
 import type { RunLogCaller, RunLogListInput } from "./storage/runtime-store.ts";
 import type { RuntimeGrant, RuntimeTokenService } from "./storage/runtime-token-service.ts";
-import type { Context } from "hono";
+import type { Context, MiddlewareHandler } from "hono";
 
-import { createMcpHandler } from "@modelcontextprotocol/server";
-import { Scalar } from "@scalar/hono-api-reference";
 import { Hono } from "hono";
 import { compress } from "hono/compress";
 import { ConnectionError, defaultConnectionName } from "../connection-service.ts";
 import { ActionPolicyService, emptyPolicyRules } from "../core/action-policy.ts";
 import { DEFAULT_ACTION_SEARCH_LIMIT, createActionSearchIndexProvider, searchActions } from "../core/action-search.ts";
 import { optionalRecord, optionalString, requiredString, requiredStringArray } from "../core/cast.ts";
+import { PromiseCache } from "../core/promise-cache.ts";
 import { MarketplaceError } from "../marketplace/marketplace-service.ts";
-import { createMcpServer, listMcpToolSummaries } from "../mcp.ts";
 import { OAuthClientConfigError, OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import { OAuthFlowError, OAuthFlowService } from "../oauth/oauth-flow-service.ts";
 import {
@@ -60,6 +58,50 @@ import { TransitFileError } from "./files/transit-file-store.ts";
 import { ProxyRunner } from "./proxy/proxy-runner.ts";
 import { decodeRunLogCursor } from "./storage/runtime-store.ts";
 import { summarizeRuntimeToken } from "./storage/runtime-token-service.ts";
+
+type McpModule = typeof import("../mcp.ts");
+
+/**
+ * The MCP module pulls in @modelcontextprotocol/server and zod, which no other startup path needs, so it is
+ * loaded on the first /mcp request. The cache shares one in-flight import; a rejected import is evicted so
+ * transient resolution failures retry, while evaluation errors rethrow identically.
+ */
+const mcpModule = new PromiseCache<McpModule>();
+
+function loadMcpModule(): Promise<McpModule> {
+  return mcpModule.get("", () => import("../mcp.ts"));
+}
+
+/** The Scalar API reference is only rendered for /docs, so its package is loaded on the first request. */
+const docsHandler = new PromiseCache<MiddlewareHandler>();
+
+function loadDocsHandler(): Promise<MiddlewareHandler> {
+  return docsHandler.get("", async () => {
+    const { Scalar } = await import("@scalar/hono-api-reference");
+    return Scalar({
+      pageTitle: "OOMOL Connect API Reference",
+      url: "/openapi.json",
+      theme: "default",
+      darkMode: false,
+      forceDarkModeState: "light",
+      customCss: `
+          :root {
+            --scalar-color-accent: rgb(59, 99, 251);
+            --scalar-background-accent: rgba(59, 99, 251, 0.12);
+          }
+        `,
+    });
+  });
+}
+
+/**
+ * Import and evaluate the modules the /mcp and /docs routes defer to their first request. The Node server never
+ * calls this, so its startup graph stays small; Cloudflare Workers call it at app creation so an isolate keeps
+ * paying module evaluation up front rather than on its first MCP or docs request.
+ */
+export async function preloadOptionalServerModules(): Promise<void> {
+  await Promise.all([loadMcpModule(), loadDocsHandler()]);
+}
 
 /**
  * Dependencies required to construct the local connector server.
@@ -166,22 +208,7 @@ export class ConnectServer {
         }),
       ),
     );
-    app.get(
-      "/docs",
-      Scalar({
-        pageTitle: "OOMOL Connect API Reference",
-        url: "/openapi.json",
-        theme: "default",
-        darkMode: false,
-        forceDarkModeState: "light",
-        customCss: `
-          :root {
-            --scalar-color-accent: rgb(59, 99, 251);
-            --scalar-background-accent: rgba(59, 99, 251, 0.12);
-          }
-        `,
-      }),
-    );
+    app.get("/docs", async (context, next) => (await loadDocsHandler())(context, next));
 
     // Schema-free listing. The action detail view loads full schemas on demand
     // from /api/actions/:actionId. The catalog is immutable at runtime, so the
@@ -227,7 +254,7 @@ export class ConnectServer {
     app.post("/mcp", (context) => this.handleMcp(context));
     app.get("/mcp", (context) => this.rejectMcpMethod(context));
     app.delete("/mcp", (context) => this.rejectMcpMethod(context));
-    app.get("/mcp/tools", (context) => context.json({ tools: listMcpToolSummaries() }));
+    app.get("/mcp/tools", async (context) => context.json({ tools: (await loadMcpModule()).listMcpToolSummaries() }));
 
     this.options.registerStaticRoutes?.(app);
     app.onError((error, context) => {
@@ -790,24 +817,16 @@ export class ConnectServer {
   }
 
   private async handleMcp(context: Context): Promise<Response> {
-    const handler = createMcpHandler(
-      () =>
-        createMcpServer({
-          catalog: this.options.catalog,
-          connections: this.options.connections,
-          actions: this.options.actions,
-          actionSearch: this.actionSearch,
-          getPolicySnapshot: () => this.getPolicySnapshot(context),
-          runtimeGrant: readRuntimeGrant(context),
-          signal: context.req.raw.signal,
-        }),
-      { legacy: "stateless", responseMode: "json" },
-    );
-    try {
-      return await handler.fetch(context.req.raw);
-    } finally {
-      await handler.close();
-    }
+    const { handleMcpRequest } = await loadMcpModule();
+    return await handleMcpRequest(context.req.raw, {
+      catalog: this.options.catalog,
+      connections: this.options.connections,
+      actions: this.options.actions,
+      actionSearch: this.actionSearch,
+      getPolicySnapshot: () => this.getPolicySnapshot(context),
+      runtimeGrant: readRuntimeGrant(context),
+      signal: context.req.raw.signal,
+    });
   }
 
   private rejectMcpMethod(context: Context): Response {

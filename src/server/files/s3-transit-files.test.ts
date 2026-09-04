@@ -11,7 +11,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Readable } from "node:stream";
 import { describe, expect, it, vi } from "vitest";
-import { S3TransitFileService } from "./s3-transit-files.ts";
+import { createS3TransitClient, S3TransitFileService } from "./s3-transit-files.ts";
 
 describe("S3TransitFileService", () => {
   it("shares transit files across service instances", async () => {
@@ -113,6 +113,43 @@ describe("S3TransitFileService", () => {
     await expect(service.read("../secret")).rejects.toMatchObject({ status: 404, code: "file_not_found" });
     await expect(service.delete("transit/evil")).rejects.toMatchObject({ status: 404, code: "file_not_found" });
     expect(storage.send).not.toHaveBeenCalled();
+  });
+});
+
+describe("createS3TransitClient", () => {
+  it("configures the client from the server settings and keeps checksums opt-in", async () => {
+    const client = createS3TransitClient({
+      region: "eu-west-1",
+      endpoint: "http://127.0.0.1:9000",
+      forcePathStyle: true,
+      credentials: { accessKeyId: "id", secretAccessKey: "secret", sessionToken: "token" },
+    });
+
+    try {
+      await expect(client.config.region()).resolves.toBe("eu-west-1");
+      expect(client.config.forcePathStyle).toBe(true);
+      await expect(client.config.endpoint?.()).resolves.toMatchObject({ hostname: "127.0.0.1", port: 9000 });
+      await expect(client.config.credentials()).resolves.toMatchObject({
+        accessKeyId: "id",
+        secretAccessKey: "secret",
+        sessionToken: "token",
+      });
+      await expect(client.config.requestChecksumCalculation()).resolves.toBe("WHEN_REQUIRED");
+      await expect(client.config.responseChecksumValidation()).resolves.toBe("WHEN_REQUIRED");
+    } finally {
+      client.destroy();
+    }
+  });
+
+  it("leaves endpoint and credentials to the SDK defaults when they are not configured", () => {
+    const client = createS3TransitClient({ region: "us-east-1", forcePathStyle: false });
+
+    try {
+      expect(client.config.endpoint).toBeUndefined();
+      expect(client.config.forcePathStyle).toBe(false);
+    } finally {
+      client.destroy();
+    }
   });
 });
 

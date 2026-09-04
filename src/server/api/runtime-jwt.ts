@@ -1,5 +1,3 @@
-import { createRemoteJWKSet, jwtVerify } from "jose";
-
 export interface RuntimeJwtConfig {
   jwksUri?: string;
   issuer?: string;
@@ -10,8 +8,9 @@ export type RuntimeJwtVerifier = (token: string) => Promise<boolean>;
 
 /**
  * Creates a JWT access-token verifier when all runtime JWT settings are configured.
+ * jose is imported only once the settings pass validation, so a runtime without JWT authentication never loads it.
  */
-export function createRuntimeJwtVerifier(config: RuntimeJwtConfig): RuntimeJwtVerifier | undefined {
+export async function createRuntimeJwtVerifier(config: RuntimeJwtConfig): Promise<RuntimeJwtVerifier | undefined> {
   const jwksUri = config.jwksUri?.trim();
   const issuer = config.issuer?.trim();
   const audience = config.audience?.trim();
@@ -40,6 +39,7 @@ export function createRuntimeJwtVerifier(config: RuntimeJwtConfig): RuntimeJwtVe
     throw new Error("OOMOL_CONNECT_JWKS_URI must be a valid HTTPS URL or HTTP loopback URL.");
   }
 
+  const { createRemoteJWKSet, jwtVerify } = await import("jose");
   const jwks = createRemoteJWKSet(url);
   return async (token) => {
     try {

@@ -9,7 +9,7 @@ import { join, resolve } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 
 // Start a built single-file executable against a fresh data directory and check that its embedded catalog,
-// web console, migrations, provider executor chunks and shutdown path work.
+// web console, migrations, provider executor chunks, lazily loaded MCP and docs modules and shutdown path work.
 //
 // Usage: `node scripts/smoke-binary.ts <path-to-binary>`. Set OOMOL_CONNECT_DATABASE_URL to run the PostgreSQL
 // mode and OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS to run the lazy catalog mode, which also proves that the embedded
@@ -129,6 +129,8 @@ try {
   }
   await checkApps(baseUrl);
   await checkProviderExecutor(baseUrl);
+  await checkMcp(baseUrl);
+  await checkDocs(baseUrl);
   await checkDatabaseBackend(server, dataDir, databaseUrl);
   await checkGracefulShutdown(server);
   await removeDataDir(dataDir);
@@ -338,6 +340,49 @@ async function checkProviderExecutor(baseUrl: string): Promise<void> {
   const chartParameter = url.searchParams.get("chart");
   assert(chartParameter !== null, `POST /v1/actions/${actionId} url has no chart parameter: ${data.url}`);
   assert.deepEqual(JSON.parse(chartParameter), chart, `POST /v1/actions/${actionId} chart parameter`);
+}
+
+/**
+ * The MCP module (@modelcontextprotocol/server and zod) is imported on the first /mcp request rather than at
+ * startup, so /health proves nothing about it. One stateless initialize round trip imports and evaluates that chunk
+ * inside the binary; the body is matched as text because the transport may frame the JSON-RPC result as SSE.
+ * GET /mcp/tools then reads the tool summaries from the same module.
+ */
+async function checkMcp(baseUrl: string): Promise<void> {
+  const response = await fetch(`${baseUrl}/mcp`, {
+    method: "POST",
+    headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "initialize",
+      params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "smoke", version: "0" } },
+    }),
+    signal: AbortSignal.timeout(requestTimeoutMs),
+  });
+  const body = await response.text();
+  assert(response.status === 200, `POST /mcp initialize returned ${response.status}: ${body.slice(0, 300)}`);
+  assert(
+    body.includes('"name":"oomol-connect"'),
+    `POST /mcp initialize body has no server info: ${body.slice(0, 300)}`,
+  );
+
+  const toolsResponse = await fetch(`${baseUrl}/mcp/tools`, { signal: AbortSignal.timeout(requestTimeoutMs) });
+  const toolsBody = await toolsResponse.text();
+  assert(toolsResponse.status === 200, `GET /mcp/tools returned ${toolsResponse.status}: ${toolsBody.slice(0, 300)}`);
+  const payload: unknown = JSON.parse(toolsBody);
+  assert(isRecord(payload) && Array.isArray(payload.tools), "GET /mcp/tools did not return a tools array");
+  assert(payload.tools.length === 5, `GET /mcp/tools returned ${payload.tools.length} tools; expected 5`);
+}
+
+/** The Scalar API reference package is imported on the first /docs request; one page render proves that chunk. */
+async function checkDocs(baseUrl: string): Promise<void> {
+  const response = await fetch(`${baseUrl}/docs`, { signal: AbortSignal.timeout(requestTimeoutMs) });
+  const body = await response.text();
+  assert(response.status === 200, `GET /docs returned ${response.status}: ${body.slice(0, 300)}`);
+  const contentType = response.headers.get("content-type") ?? "";
+  assert(contentType.startsWith("text/html"), `GET /docs content-type is ${contentType || "missing"}`);
+  assert(body.includes("OOMOL Connect API Reference"), "GET /docs body does not contain the API reference title");
 }
 
 /** Return `data` of a `{ success: true, data }` envelope. */
