@@ -456,13 +456,6 @@ async function checkPortConflictExit(binaryPath: string, port: number, databaseU
   try {
     const exit = await second.waitForExit(healthTimeoutMs);
     if (!exit) {
-      // Whether Bun's second bind of 127.0.0.1:<port> fails on Windows is not established, so a second instance that
-      // keeps running is accepted there and stopped; on Linux and macOS it is exactly the hang this check exists for.
-      if (process.platform === "win32") {
-        console.log(`port conflict: second instance still running after ${healthTimeoutMs} ms on win32; stopping it`);
-        return;
-      }
-
       throw new Error(
         `second instance did not exit within ${healthTimeoutMs} ms on a port conflict\n--- second instance stderr ---\n${second.stderr}`,
       );
@@ -473,17 +466,14 @@ async function checkPortConflictExit(binaryPath: string, port: number, databaseU
       exit.signal === null && exit.code !== null && exit.code !== 0,
       `second instance on a busy port ended with ${second.describeExit()}; expected a non-zero exit code`,
     );
-    if (process.platform === "win32") {
-      console.log(`port conflict: second instance exited with code ${exit.code} on win32`);
-    } else {
-      // Bun prints "Failed to start server. Is port N in use?" and Node "listen EADDRINUSE"; without this, a crash
-      // for an unrelated reason would pass as the port conflict exit.
-      const stderr = second.stderr.trim();
-      assert(
-        /EADDRINUSE|in use/i.test(stderr),
-        `second instance on a busy port exited with code ${exit.code} but its stderr does not mention the port conflict\n--- second instance stderr ---\n${stderr.slice(0, 1000) || "(empty)"}`,
-      );
-    }
+    // Bun prints "Failed to start server. Is port N in use?" on every platform, Windows included, and Node "listen
+    // EADDRINUSE"; without this, a crash for an unrelated reason would pass as the port conflict exit.
+    const stderr = second.stderr.trim();
+    assert(
+      /EADDRINUSE|in use/i.test(stderr),
+      `second instance on a busy port exited with code ${exit.code} but its stderr does not mention the port conflict\n--- second instance stderr ---\n${stderr.slice(0, 1000) || "(empty)"}`,
+    );
+    console.log(`port conflict: second instance exited with code ${exit.code}`);
   } finally {
     await second.forceStop();
     await removeDataDir(conflictDataDir);
