@@ -461,10 +461,12 @@ async function checkPortConflictExit(binaryPath: string, port: number, databaseU
       );
     }
 
-    // A spawn failure also reports code null; only a real non-zero exit code proves the listen error ended the process.
+    // A spawn failure also reports code null, so requiring exactly 1 still excludes it. The documented contract is
+    // exit code 1: Bun's and Node's unhandled 'error' event both end the process with 1, verified on macOS, Linux and
+    // Windows, so any other code means the listen failure was not what ended the process.
     assert(
-      exit.signal === null && exit.code !== null && exit.code !== 0,
-      `second instance on a busy port ended with ${second.describeExit()}; expected a non-zero exit code`,
+      exit.signal === null && exit.code === 1,
+      `second instance on a busy port ended with ${second.describeExit()}; expected exit code 1`,
     );
     // Bun prints "Failed to start server. Is port N in use?" on every platform, Windows included, and Node "listen
     // EADDRINUSE"; without this, a crash for an unrelated reason would pass as the port conflict exit.
