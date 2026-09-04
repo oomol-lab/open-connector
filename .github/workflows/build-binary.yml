@@ -105,6 +105,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
         with:
+          # Build the release tag itself, never the ref the run was dispatched
+          # from: a manual backfill started on main with `release_tag` set
+          # would otherwise --clobber that release's assets with binaries built
+          # from main. An empty value (push, pull_request) falls back to the
+          # action's default ref.
+          ref: ${{ env.RELEASE_TAG }}
           # No step needs the persisted GITHUB_TOKEN in git config; dropping it
           # keeps `npm ci` postinstall scripts from reading it (zizmor hardening).
           persist-credentials: false
@@ -247,6 +253,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
         with:
+          # Same ref as the build job, so the smoke script matches the binaries.
+          ref: ${{ env.RELEASE_TAG }}
           persist-credentials: false
 
       # The smoke script uses only node: builtins, so no `npm ci` is needed.
