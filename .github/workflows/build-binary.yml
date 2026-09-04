@@ -35,21 +35,39 @@ name: Build Binaries
 # writes a wrong page hash, which macOS 27 rejects), so the macOS smoke jobs
 # re-sign the binary with `codesign` and verify the signature before running it.
 #
+# On a published release the same build and smoke jobs run against the release
+# tag, and a final `release` job packs the six smoke-tested binaries (the darwin
+# ones re-signed by the macOS smoke jobs) into `open-connector-<target>.tar.gz`
+# / `.zip` archives, writes a `SHA256SUMS` file, and uploads them as release
+# assets. The archives keep a stable name so
+# `releases/latest/download/open-connector-<target>.tar.gz` always resolves.
+# The upload only runs after every smoke job passed, so a release never ships
+# a binary that failed on its own platform. To backfill an existing release,
+# dispatch the workflow on its tag with `release_tag` set.
+#
 # A `runs-on` label that no runner serves queues forever instead of failing, so
 # `workflow_dispatch` is here to verify the labels before relying on them.
 on:
   push:
     branches: [main]
   pull_request:
+  release:
+    types: [published]
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Upload the binaries to this existing release (leave empty to only build and smoke)"
+        required: false
+        type: string
 
 # Cancel superseded runs for the same ref (e.g. new push to an open PR).
+# Release runs use their own per-tag group and are never cancelled.
 concurrency:
   group: build-binary-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name != 'release' }}
 
-# Least privilege: these jobs only read the repository; the binaries are
-# workflow artifacts, nothing is published.
+# Least privilege: the build and smoke jobs only read the repository; only the
+# `release` job gets `contents: write`, to upload the release assets.
 permissions:
   contents: read
 
@@ -59,6 +77,10 @@ env:
   # on by default only on Node >= 22.18 / >= 23.6, so pin an LTS that supports it.
   # Do NOT downgrade below 22.18 — `npm ci` (postinstall codegen) and typecheck fail.
   NODE_VERSION: "24"
+  # The release the binaries are uploaded to: the published release, or the
+  # `release_tag` input of a manual dispatch. Empty on push and pull_request
+  # runs, which build and smoke-test only.
+  RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
 
 jobs:
   build:
@@ -255,3 +277,62 @@ jobs:
 
       - name: Smoke test ${{ matrix.target }}
         run: node scripts/smoke-binary.ts dist/${{ matrix.file }}
+
+      # The release must ship the re-signed darwin binary, not the Linux-built
+      # one with the invalid signature, so replace the build job's artifact with
+      # the file that just passed codesign --verify and the smoke test.
+      - name: Replace ${{ matrix.target }} artifact with the signed binary
+        if: runner.os == 'macOS' && env.RELEASE_TAG != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: binary-${{ matrix.target }}
+          path: dist/${{ matrix.file }}
+          if-no-files-found: error
+          retention-days: 1
+          overwrite: true
+
+  # Pack the smoke-tested binaries and attach them to the release. Needs every
+  # smoke job, so one failing platform blocks the whole upload rather than
+  # publishing a partial set.
+  release:
+    name: Upload release assets
+    needs: [build, smoke]
+    if: github.event_name == 'release' || inputs.release_tag != ''
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Download all binaries
+        uses: actions/download-artifact@v8
+        with:
+          path: dist
+          pattern: binary-*
+          merge-multiple: true
+
+      # tar keeps the mode, so restore the exec bit the artifact zip dropped
+      # before packing; Windows executables go into zip archives instead.
+      - name: Pack archives and checksums
+        working-directory: dist
+        run: |
+          set -euo pipefail
+          mkdir -p ../release-assets
+          for target in linux-x64 linux-arm64 darwin-x64 darwin-arm64; do
+            chmod +x "open-connector-${target}"
+            tar -czf "../release-assets/open-connector-${target}.tar.gz" "open-connector-${target}"
+          done
+          for target in windows-x64 windows-arm64; do
+            zip -j "../release-assets/open-connector-${target}.zip" "open-connector-${target}.exe"
+          done
+          cd ../release-assets
+          sha256sum open-connector-* > SHA256SUMS
+          ls -l
+          cat SHA256SUMS
+
+      # --clobber lets a re-run (or a manual backfill) replace assets that are
+      # already attached instead of failing on the name conflict.
+      - name: Upload to release ${{ env.RELEASE_TAG }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release upload "$RELEASE_TAG" release-assets/* --clobber
