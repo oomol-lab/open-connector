@@ -138,6 +138,23 @@ describe("loadCatalog", () => {
     expect(descriptor.value).toEqual(schemaFor("ping", 1));
   });
 
+  it("loads every provider file by default when the catalog spans several read batches", async () => {
+    // More files than two full read batches (see providerReadBatchSize in catalog-store.ts), so the
+    // batched loop has to carry results across batch boundaries and through a partial last batch.
+    const providers = Array.from({ length: 9 }, (_, index) =>
+      providerFixture(`service${String(index).padStart(2, "0")}`, ["ping", "pong"]),
+    );
+    const catalogDir = await writeCatalogDir(providers);
+
+    const catalog = await loadCatalog(catalogDir);
+
+    expect(catalog.providers.map((provider) => provider.service)).toEqual(
+      providers.map((provider) => provider.service),
+    );
+    expect(catalog.actions).toHaveLength(18);
+    expect(catalog.actionsById.get("service08.pong")?.inputSchema).toEqual(schemaFor("pong", 1));
+  });
+
   it("reads lazy schemas from disk on access, so a change to an uncached file is picked up", async () => {
     const catalogDir = await writeCatalogDir([providerFixture("example", ["ping"])]);
 

@@ -192,10 +192,11 @@ function toActionSummary(action: RuntimeActionDefinition): ActionSummaryDefiniti
 /**
  * Load generated provider catalog files from disk.
  *
- * With `lazySchemas`, files are read one at a time and each action keeps only its metadata; the
- * schemas stay on disk behind accessors backed by a small per-file cache, which trades a
- * synchronous read on schema access for a much smaller resident catalog. With `lazySchemaIndexFile`
- * as well, the metadata comes from that one index file and no provider file is read at startup.
+ * By default every file is read and parsed in full, a few files at a time (see `readProviderFiles`).
+ * With `lazySchemas`, each action keeps only its metadata; the schemas stay on disk behind accessors
+ * backed by a small per-file cache, which trades a synchronous read on schema access for a much
+ * smaller resident catalog. With `lazySchemaIndexFile` as well, the metadata comes from that one
+ * index file and no provider file is read at startup.
  */
 export async function loadCatalog(catalogDir: string, options: LoadCatalogOptions = {}): Promise<CatalogStore> {
   const entries = await readdir(catalogDir, { withFileTypes: true });
@@ -210,9 +211,7 @@ export async function loadCatalog(catalogDir: string, options: LoadCatalogOption
           options.lazySchemaCacheFiles,
         )
       : await readProvidersWithLazySchemas(filePaths, options.lazySchemaCacheFiles)
-    : await Promise.all(
-        filePaths.map(async (filePath) => JSON.parse(await readFile(filePath, "utf8")) as ProviderDefinition),
-      );
+    : await readProviderFiles(filePaths);
   return createCatalogStore(providers, {
     executableActionIds: resolveExecutableActionIds(providers, options),
   });
@@ -248,4 +247,29 @@ function createActionExecutionStatus(
     noAuthRunnable: provider.authTypes.includes("no_auth"),
     needsCredential: !provider.authTypes.includes("no_auth"),
   };
+}
+
+/** Provider files whose reads `readProviderFiles` keeps in flight before it parses them. */
+const providerReadBatchSize = 4;
+
+/**
+ * Read and parse provider files a few at a time, in directory order.
+ *
+ * Starting every read at once lets the reads outrun the parses that consume them, so the text of
+ * most of the catalog is alive at the same moment, and the allocator keeps that peak resident long
+ * after startup. A small batch bounds the unparsed text to a few files while still overlapping
+ * enough reads that startup does not wait on one file at a time.
+ */
+async function readProviderFiles(filePaths: string[]): Promise<ProviderDefinition[]> {
+  const providers: ProviderDefinition[] = [];
+  for (let start = 0; start < filePaths.length; start += providerReadBatchSize) {
+    const batch = filePaths.slice(start, start + providerReadBatchSize);
+    providers.push(
+      ...(await Promise.all(
+        batch.map(async (filePath) => JSON.parse(await readFile(filePath, "utf8")) as ProviderDefinition),
+      )),
+    );
+  }
+
+  return providers;
 }

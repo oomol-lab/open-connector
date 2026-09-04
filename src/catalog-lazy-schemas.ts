@@ -26,9 +26,10 @@ export const defaultLazySchemaCacheFiles = 64;
 /**
  * Read provider catalog files while keeping every `inputSchema`/`outputSchema` on disk.
  *
- * Files are read one at a time so peak memory holds a single fully parsed provider, and each action
- * keeps schema-shaped accessors at their original key positions, so a lazily loaded catalog
- * serializes byte-for-byte like an eagerly loaded one.
+ * Each action keeps schema-shaped accessors at their original key positions, so a lazily loaded
+ * catalog serializes byte-for-byte like an eagerly loaded one, and an accessor reads its schemas
+ * back from the file that owns them. Because every parsed provider is reduced to its metadata
+ * before the next file is read, peak memory here holds a single fully parsed provider.
  */
 export async function readProvidersWithLazySchemas(
   filePaths: string[],
