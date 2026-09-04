@@ -250,11 +250,19 @@ back to the default. Set it higher when one server serves many providers repeate
 the tightest machines. Responses are byte-identical to the default mode, so this is a
 memory-for-reads trade and not an API change.
 
+`npm run generate:catalog` also writes `catalog/apps-index.json`, the catalog without its schemas.
+With lazy schemas on, the server reads that one file at startup instead of every provider file (on
+the single-file executable this is what keeps the embedded provider files from being paged in);
+schemas still come from the provider files on access. An index that does not describe the provider
+files next to it is refused at startup, and a missing index falls back to reading the provider files
+with a warning; both are fixed by regenerating the catalog.
+
 What changes operationally:
 
 - The catalog directory must stay readable while the server runs. Replacing or deleting it under a
   running server makes later schema reads fail. The single-file executable reads the catalog from
   its own embedded filesystem, so it needs nothing extra.
+- Keep `catalog/apps-index.json` next to `catalog/apps/` when copying a generated catalog.
 - Reading or running one action reads one provider file. `GET /api/actions`, which serializes every
   action, and action search across many services re-read files as they go.
 - This is a Node and single-binary setting. Cloudflare Workers load the catalog from asset chunks

@@ -1,3 +1,4 @@
+import type { CatalogIndexAction, CatalogIndexProvider, IndexedProvider } from "./catalog-index.ts";
 import type { ActionDefinition, JsonSchema, ProviderDefinition } from "./core/types.ts";
 
 import { readFileSync } from "node:fs";
@@ -37,23 +38,48 @@ export async function readProvidersWithLazySchemas(
   const providers: ProviderDefinition[] = [];
   for (const filePath of filePaths) {
     const provider = JSON.parse(await readFile(filePath, "utf8")) as ProviderDefinition;
-    const source = new FileActionSchemaSource(filePath, loader);
-    providers.push({
-      ...provider,
-      actions: provider.actions.map((action) => toFileBackedAction(action, source)),
-    });
+    providers.push(toFileBackedProvider(provider, filePath, loader));
   }
 
   return providers;
 }
 
 /**
+ * Attach lazy schema accessors to providers read from the catalog index, which already carries every
+ * action without its schemas. Nothing is read here: each provider file is opened only when one of its
+ * schemas is first accessed.
+ */
+export function indexedProvidersWithLazySchemas(
+  providers: IndexedProvider[],
+  cacheFiles: number = defaultLazySchemaCacheFiles,
+): ProviderDefinition[] {
+  const loader = new FileActionSchemaLoader(cacheFiles);
+  return providers.map((entry) => toFileBackedProvider(entry.provider, entry.filePath, loader));
+}
+
+function toFileBackedProvider(
+  provider: ProviderDefinition | CatalogIndexProvider,
+  filePath: string,
+  loader: FileActionSchemaLoader,
+): ProviderDefinition {
+  const source = new FileActionSchemaSource(filePath, loader);
+  return {
+    ...provider,
+    actions: provider.actions.map((action) => toFileBackedAction(action, source)),
+  };
+}
+
+/**
  * Copy one parsed action without its schemas, replacing them with enumerable accessors defined at
  * the key position they had in the file. Real catalog actions carry `followUpActions` and
  * `asyncLifecycle` after the schemas, so appending the accessors instead would reorder the keys and
- * change every serialized response.
+ * change every serialized response. An index action holds `null` at those positions, which the copy
+ * never reads.
  */
-function toFileBackedAction(action: ActionDefinition, source: FileActionSchemaSource): ActionDefinition {
+function toFileBackedAction(
+  action: ActionDefinition | CatalogIndexAction,
+  source: FileActionSchemaSource,
+): ActionDefinition {
   const fileBacked: Record<string, unknown> = {};
   for (const key of Object.keys(action)) {
     if (key === "inputSchema" || key === "outputSchema") {

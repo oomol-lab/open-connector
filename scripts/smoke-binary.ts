@@ -12,8 +12,9 @@ import { setTimeout as sleep } from "node:timers/promises";
 // web console, migrations, provider executor chunks and shutdown path work.
 //
 // Usage: `node scripts/smoke-binary.ts <path-to-binary>`. Set OOMOL_CONNECT_DATABASE_URL to run the PostgreSQL
-// mode and OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS to run the lazy catalog mode; every other OOMOL_CONNECT_* variable is
-// removed from the server's environment. Uses only Node built-ins so the smoke runners need no `npm ci`.
+// mode and OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS to run the lazy catalog mode, which also proves that the embedded
+// catalog index was found and used at startup; every other OOMOL_CONNECT_* variable is removed from the server's
+// environment. Uses only Node built-ins so the smoke runners need no `npm ci`.
 
 interface ProcessExit {
   code: number | null;
@@ -123,6 +124,9 @@ try {
   await checkConsoleAssets(baseUrl, indexHtml);
   await checkProviders(baseUrl);
   await checkActionSchema(baseUrl);
+  if (process.env.OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS !== undefined) {
+    checkCatalogIndexUsed(server);
+  }
   await checkApps(baseUrl);
   await checkProviderExecutor(baseUrl);
   await checkDatabaseBackend(server, dataDir, databaseUrl);
@@ -292,6 +296,19 @@ async function checkActionSchema(baseUrl: string): Promise<void> {
   assert(isRecord(data), `/v1/actions/${actionId} data is not an object`);
   assert(isRecord(data.inputSchema), `/v1/actions/${actionId} inputSchema is not an object`);
   assert(Object.keys(data.inputSchema).length > 0, `/v1/actions/${actionId} inputSchema is empty`);
+}
+
+/**
+ * In lazy catalog mode the server reads the embedded catalog index (scripts/build-binary.ts embeds
+ * catalog/apps-index.json under its basename) instead of every provider file and reports that in its "catalog
+ * loaded" line. The line is what proves the embed name and the resolver name in src/server/server-assets.ts still
+ * agree inside a real binary; a missing index only warns and falls back, so /health alone would not catch it.
+ */
+function checkCatalogIndexUsed(server: ServerProcess): void {
+  assert(
+    server.stdout.includes('"catalogIndex":true'),
+    'server log has no "catalogIndex":true line; lazy catalog mode did not use the embedded catalog index',
+  );
 }
 
 async function checkApps(baseUrl: string): Promise<void> {

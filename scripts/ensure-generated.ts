@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
+import { catalogIndexFileName } from "../src/catalog-index.ts";
 
 const rootDir = process.cwd();
 const generatedPaths = [
@@ -9,6 +10,7 @@ const generatedPaths = [
   join(process.cwd(), "src/providers/action-contracts.generated.ts"),
 ];
 const catalogDir = join(process.cwd(), "catalog/apps");
+const catalogIndexFile = join(process.cwd(), "catalog", catalogIndexFileName);
 const sourcePaths = [
   join(rootDir, "src/core"),
   join(rootDir, "src/providers"),
@@ -76,10 +78,14 @@ async function isFreshCatalog(sourceMtimeMs: number): Promise<boolean> {
       return false;
     }
 
-    const mtimes = await Promise.all(
-      jsonFiles.map(async (entry) => (await stat(join(catalogDir, entry.name))).mtimeMs),
-    );
-    return Math.min(...mtimes) >= sourceMtimeMs;
+    const [indexMtimeMs, ...providerMtimes] = await Promise.all([
+      // A missing index throws ENOENT and is treated like a missing catalog, so the two are regenerated together.
+      stat(catalogIndexFile).then((stats) => stats.mtimeMs),
+      ...jsonFiles.map(async (entry) => (await stat(join(catalogDir, entry.name))).mtimeMs),
+    ]);
+    // The generator writes the index after the provider files; an older index was left behind by a generator run
+    // that did not write one and would be refused at startup in lazy mode.
+    return Math.min(indexMtimeMs, ...providerMtimes) >= sourceMtimeMs && indexMtimeMs >= Math.max(...providerMtimes);
   } catch (error) {
     if (isNotFoundError(error)) {
       return false;

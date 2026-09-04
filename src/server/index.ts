@@ -84,14 +84,30 @@ async function main(): Promise<void> {
 
   await mkdir(dataDir, { recursive: true });
   const assets = await resolveServerAssets();
+  const lazySchemas = parseBooleanEnv("OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS");
+  if (lazySchemas && !assets.catalogIndexFile) {
+    logger.warn(
+      { catalogDir: assets.catalogDir },
+      "catalog index is missing; reading every provider file at startup. Run npm run generate:catalog to write catalog/apps-index.json",
+    );
+  }
   const catalog = await loadCatalog(assets.catalogDir, {
     executableServices: Object.keys(executorModules),
-    lazySchemas: parseBooleanEnv("OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS"),
+    lazySchemas,
     lazySchemaCacheFiles: readPositiveIntegerEnv(
       "OOMOL_CONNECT_CATALOG_SCHEMA_CACHE_FILES",
       defaultLazySchemaCacheFiles,
     ),
+    lazySchemaIndexFile: assets.catalogIndexFile,
   });
+  logger.info(
+    {
+      providers: catalog.providers.length,
+      actions: catalog.actions.length,
+      catalogIndex: lazySchemas && assets.catalogIndexFile !== undefined,
+    },
+    "catalog loaded",
+  );
   const runtimeDatabase = databaseUrl
     ? await createNodeRuntimeDatabase({
         backend: "postgresql",

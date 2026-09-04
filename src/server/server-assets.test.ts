@@ -18,10 +18,13 @@ describe("resolveServerAssets", () => {
     const cwd = await createTempCwd();
     await mkdir(join(cwd, "dist", "web"), { recursive: true });
     await writeFile(join(cwd, "dist", "web", "index.html"), "<!doctype html>");
+    await mkdir(join(cwd, "catalog", "apps"), { recursive: true });
+    await writeFile(join(cwd, "catalog", "apps-index.json"), '{"version":1,"providers":[]}\n');
 
     const assets = await resolveServerAssets();
 
     expect(assets.catalogDir).toBe(join(cwd, "catalog/apps"));
+    expect(assets.catalogIndexFile).toBe(join(cwd, "catalog/apps-index.json"));
     expect(assets.migrations).toBe(defaultMigrationSource);
     expect(assets.staticRoot).toBe(join(cwd, "dist/web"));
     expect(assets.embedded).toBe(false);
@@ -39,6 +42,16 @@ describe("resolveServerAssets", () => {
     expect(assets.embedded).toBe(false);
   });
 
+  it("reports no catalog index when catalog/apps-index.json is missing", async () => {
+    const cwd = await createTempCwd();
+    await mkdir(join(cwd, "catalog", "apps"), { recursive: true });
+
+    const assets = await resolveServerAssets();
+
+    expect(assets.catalogDir).toBe(join(cwd, "catalog/apps"));
+    expect(assets.catalogIndexFile).toBeUndefined();
+  });
+
   it("reads the tree embedded next to the module inside a Bun standalone executable", async () => {
     vi.stubGlobal("Bun", { isStandaloneExecutable: true });
     const root = import.meta.dirname;
@@ -50,8 +63,9 @@ describe("resolveServerAssets", () => {
     // The directory source touches the filesystem lazily; the ENOENT it raises names the embedded directory.
     expect(assets.migrations).not.toBe(defaultMigrationSource);
     expect(() => assets.migrations.readMigrations("sqlite")).toThrow(join(root, "migrations"));
-    // No web/index.html lives beside this module, so the console is reported as not built.
+    // Neither web/index.html nor apps-index.json lives beside this module, so both are reported as absent.
     expect(assets.staticRoot).toBeUndefined();
+    expect(assets.catalogIndexFile).toBeUndefined();
   });
 });
 

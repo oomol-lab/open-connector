@@ -2,7 +2,8 @@ import type { ActionDefinition, AuthType, ProviderDefinition, ProviderScenario }
 
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { readProvidersWithLazySchemas } from "./catalog-lazy-schemas.ts";
+import { readCatalogIndex } from "./catalog-index.ts";
+import { indexedProvidersWithLazySchemas, readProvidersWithLazySchemas } from "./catalog-lazy-schemas.ts";
 import { sortProviders } from "./core/catalog.ts";
 import { resolveProviderScenario } from "./core/provider-scenarios.ts";
 
@@ -89,6 +90,12 @@ export interface LoadCatalogOptions extends ExecutableActionOptions {
    * `OOMOL_CONNECT_CATALOG_SCHEMA_CACHE_FILES`.
    */
   lazySchemaCacheFiles?: number;
+  /**
+   * Startup index written by `npm run generate:catalog` next to the catalog directory
+   * (`catalog/apps-index.json`). Given together with `lazySchemas`, startup reads it instead of every
+   * provider file; ignored otherwise.
+   */
+  lazySchemaIndexFile?: string;
 }
 
 export function createCatalogStore(
@@ -181,15 +188,22 @@ function toActionSummary(action: RuntimeActionDefinition): ActionSummaryDefiniti
  *
  * With `lazySchemas`, files are read one at a time and each action keeps only its metadata; the
  * schemas stay on disk behind accessors backed by a small per-file cache, which trades a
- * synchronous read on schema access for a much smaller resident catalog.
+ * synchronous read on schema access for a much smaller resident catalog. With `lazySchemaIndexFile`
+ * as well, the metadata comes from that one index file and no provider file is read at startup.
  */
 export async function loadCatalog(catalogDir: string, options: LoadCatalogOptions = {}): Promise<CatalogStore> {
   const entries = await readdir(catalogDir, { withFileTypes: true });
-  const filePaths = entries
+  const fileNames = entries
     .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
-    .map((entry) => join(catalogDir, entry.name));
+    .map((entry) => entry.name);
+  const filePaths = fileNames.map((name) => join(catalogDir, name));
   const providers = options.lazySchemas
-    ? await readProvidersWithLazySchemas(filePaths, options.lazySchemaCacheFiles)
+    ? options.lazySchemaIndexFile
+      ? indexedProvidersWithLazySchemas(
+          await readCatalogIndex({ indexFile: options.lazySchemaIndexFile, catalogDir, fileNames }),
+          options.lazySchemaCacheFiles,
+        )
+      : await readProvidersWithLazySchemas(filePaths, options.lazySchemaCacheFiles)
     : await Promise.all(
         filePaths.map(async (filePath) => JSON.parse(await readFile(filePath, "utf8")) as ProviderDefinition),
       );

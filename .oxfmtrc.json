@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "ignorePatterns": ["node_modules", "dist", "coverage", "catalog/apps", "deploy/helm/open-connector/templates"],
+  "ignorePatterns": ["node_modules", "dist", "coverage", "catalog", "deploy/helm/open-connector/templates"],
   "printWidth": 120,
   "trailingComma": "all",
   "sortImports": {

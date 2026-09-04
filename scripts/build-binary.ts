@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
+import { catalogIndexFileName } from "../src/catalog-index.ts";
 
 // Build the single-file server executables with Bun.
 //
@@ -45,6 +46,9 @@ function assertBuildInputs(): void {
   const problems: string[] = [];
   if (listFiles(join(rootDir, "catalog/apps"), ".json").length === 0) {
     problems.push("catalog/apps contains no .json files");
+  }
+  if (!existsSync(join(rootDir, "catalog", catalogIndexFileName))) {
+    problems.push(`catalog/${catalogIndexFileName} is missing`);
   }
   if (listFiles(join(rootDir, "migrations"), ".sql").length === 0) {
     problems.push("migrations contains no .sql files");
@@ -132,10 +136,16 @@ async function runBunBuild(target: Bun.Build.CompileTarget, outfile: string): Pr
       compile: {
         target,
         outfile,
-        // Each directory is embedded under its basename next to the bundle: migrations/, apps/ and web/.
-        // catalog/apps rather than catalog/: an interrupted `npm run generate:catalog` leaves catalog/.apps-<pid>-<ts>
-        // temp directories behind, and they must never end up inside a release.
-        assets: [join(rootDir, "migrations"), join(rootDir, "catalog/apps"), join(rootDir, "dist/web")],
+        // Each directory is embedded under its basename next to the bundle (migrations/, apps/ and web/), and the
+        // catalog index file under its basename beside them (apps-index.json). catalog/apps rather than catalog/: an
+        // interrupted `npm run generate:catalog` leaves catalog/.apps-<pid>-<ts> temp files behind, and they must
+        // never end up inside a release.
+        assets: [
+          join(rootDir, "migrations"),
+          join(rootDir, "catalog/apps"),
+          join(rootDir, "catalog", catalogIndexFileName),
+          join(rootDir, "dist/web"),
+        ],
         // `node src/server/index.ts` reads neither .env nor bunfig.toml; keep the binary's configuration surface the same.
         autoloadDotenv: false,
         autoloadBunfig: false,
