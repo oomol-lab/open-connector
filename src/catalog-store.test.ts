@@ -1,7 +1,7 @@
 import type { CatalogStore, ProviderSummaryDefinition } from "./catalog-store.ts";
 import type { JsonSchema, ProviderDefinition } from "./core/types.ts";
 
-import { mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -323,21 +323,21 @@ describe("loadCatalog", () => {
   });
 
   it("reads only the index at startup when one is given", async () => {
-    const providers = [providerFixture("example", ["ping"])];
+    const providers = [providerFixture("example", ["ping"]), providerFixture("remote", ["ping"])];
     const catalogDir = await writeCatalogDir(providers);
     const lazySchemaIndexFile = await writeCatalogIndex(catalogDir, providers);
+    const eager = await loadCatalog(catalogDir);
+    // Spaces of the same byte length keep the index's size check passing while any read of a provider
+    // file, at startup or on schema access, fails to parse.
+    await blankProviderFiles(catalogDir);
 
+    await expect(loadCatalog(catalogDir, { lazySchemas: true })).rejects.toThrow(SyntaxError);
     const catalog = await loadCatalog(catalogDir, { lazySchemas: true, lazySchemaIndexFile });
-    await rm(catalogDir, { recursive: true, force: true });
 
-    const [summary] = JSON.parse(
-      new TextDecoder().decode(catalog.providerSummariesJson),
-    ) as ProviderSummaryDefinition[];
-    expect(summary?.actions[0]?.id).toBe("example.ping");
+    expect(catalog.providerSummariesJson).toEqual(eager.providerSummariesJson);
     const action = catalog.actionsById.get("example.ping")!;
     expect(Object.getOwnPropertyDescriptor(action, "inputSchema")?.get).toBeTypeOf("function");
-    // No provider file was read while the store was built, so the first schema access has to hit the deleted file.
-    expect(() => action.inputSchema).toThrow();
+    expect(() => action.inputSchema).toThrow(SyntaxError);
   });
 
   it("refuses an index that no longer describes the catalog files", async () => {
@@ -391,6 +391,14 @@ async function writeCatalogIndex(catalogDir: string, providers: ProviderDefiniti
 
 function writeProviderFile(catalogDir: string, provider: ProviderDefinition): Promise<void> {
   return writeFile(join(catalogDir, `${provider.service}.json`), JSON.stringify(provider));
+}
+
+/** Overwrite every provider file in `catalogDir` with spaces of the same byte length, so only its size survives. */
+async function blankProviderFiles(catalogDir: string): Promise<void> {
+  for (const name of await readdir(catalogDir)) {
+    const filePath = join(catalogDir, name);
+    await writeFile(filePath, " ".repeat((await stat(filePath)).size));
+  }
 }
 
 /**

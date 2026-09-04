@@ -13,9 +13,10 @@ import { setTimeout as sleep } from "node:timers/promises";
 // and shutdown path work.
 //
 // Usage: `node scripts/smoke-binary.ts <path-to-binary>`. Set OOMOL_CONNECT_DATABASE_URL to run the PostgreSQL
-// mode and OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS to run the lazy catalog mode, which also proves that the embedded
-// catalog index was found and used at startup; every other OOMOL_CONNECT_* variable is removed from the server's
-// environment. Uses only Node built-ins so the smoke runners need no `npm ci`.
+// mode and OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS to a value the server reads as true (1, true, yes or on) to run the
+// lazy catalog mode, which also proves that the embedded catalog index was found and used at startup; every other
+// OOMOL_CONNECT_* variable is removed from the server's environment. Uses only Node built-ins so the smoke runners
+// need no `npm ci`.
 
 interface ProcessExit {
   code: number | null;
@@ -111,6 +112,7 @@ class ServerProcess {
 const binaryPath = await resolveBinaryPath(process.argv[2]);
 const databaseUrl = process.env.OOMOL_CONNECT_DATABASE_URL?.trim() || undefined;
 const mode = databaseUrl ? "postgresql" : "sqlite";
+const lazyCatalogSchemas = isTruthyEnv(process.env.OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS);
 const startedAt = performance.now();
 // Probe the port before creating the data directory so a probe failure cannot leak the temp directory.
 const port = await findFreePort();
@@ -125,7 +127,7 @@ try {
   await checkConsoleAssets(baseUrl, indexHtml);
   await checkProviders(baseUrl);
   await checkActionSchema(baseUrl);
-  if (process.env.OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS !== undefined) {
+  if (lazyCatalogSchemas) {
     checkCatalogIndexUsed(server);
   }
   await checkApps(baseUrl);
@@ -181,13 +183,24 @@ function buildServerEnvironment(options: ServerProcessOptions): NodeJS.ProcessEn
   if (options.databaseUrl) {
     env.OOMOL_CONNECT_DATABASE_URL = options.databaseUrl;
   }
-  // Forwarded on purpose: it is what makes a smoke run read action schemas from the embedded catalog on demand.
-  const lazyCatalogSchemas = process.env.OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS;
-  if (lazyCatalogSchemas !== undefined) {
-    env.OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS = lazyCatalogSchemas;
+  // Forwarded verbatim on purpose: it is what makes a smoke run read action schemas from the embedded catalog on
+  // demand, and the server applies its own reading of the value.
+  const lazyCatalogSchemasValue = process.env.OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS;
+  if (lazyCatalogSchemasValue !== undefined) {
+    env.OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS = lazyCatalogSchemasValue;
   }
 
   return env;
+}
+
+/**
+ * Whether the server reads an OOMOL_CONNECT_* value as true. Mirrors parseBooleanEnv in src/server/index.ts token
+ * for token (1, true, yes, on; trimmed, case-insensitive). It is a copy rather than an import because this script
+ * must stay free of src imports so the smoke runners can run it with nothing but Node.
+ */
+function isTruthyEnv(value: string | undefined): boolean {
+  const normalized = value?.trim().toLowerCase();
+  return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
 }
 
 function findFreePort(): Promise<number> {

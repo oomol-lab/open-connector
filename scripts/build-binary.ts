@@ -41,7 +41,10 @@ function assertPinnedBunVersion(): void {
   }
 }
 
-/** The embedded directories are generated; refuse to build a binary that would ship an empty catalog or console. */
+/**
+ * The embedded directories are generated; refuse to build a binary that would ship an empty catalog or console, or
+ * the Cloudflare Workers catalog chunks on top of the catalog it already embeds.
+ */
 function assertBuildInputs(): void {
   const problems: string[] = [];
   if (listFiles(join(rootDir, "catalog/apps"), ".json").length === 0) {
@@ -62,6 +65,13 @@ function assertBuildInputs(): void {
   if (problems.length > 0) {
     fail(
       `Build inputs are missing:\n  - ${problems.join("\n  - ")}\nRun "npm run build:binary" so the catalog and the web console are generated before the binary is built.`,
+    );
+  }
+  // scripts/copy-catalog-assets.ts writes the Workers catalog chunks under dist/web, and compile.assets embeds
+  // dist/web wholesale, so a leftover copy would ship the whole catalog a second time inside the executable.
+  if (existsSync(join(rootDir, "dist/web/catalog"))) {
+    fail(
+      'dist/web/catalog exists (Cloudflare Workers catalog chunks written by scripts/copy-catalog-assets.ts) and would be embedded into the binary. Remove that directory or rebuild the console with "npm run build:web".',
     );
   }
 }
