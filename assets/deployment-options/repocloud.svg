@@ -1,0 +1,22 @@
+<svg width="176" height="50" viewBox="0 0 176 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .repocloud-wordmark {
+      fill: #2f2cff;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .repocloud-wordmark {
+        fill: #b4b6ff;
+      }
+    }
+  </style>
+  <title>RepoCloud</title>
+  <text
+    class="repocloud-wordmark"
+    x="4"
+    y="33"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="22"
+    font-weight="800"
+  >RepoCloud</text>
+</svg>

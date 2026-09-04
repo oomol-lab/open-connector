@@ -1,0 +1,41 @@
+<svg width="176" height="50" viewBox="0 0 176 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Clouds icon adapted from Tabler Icons (MIT). -->
+  <style>
+    .more-platforms-icon {
+      stroke: #0d1117;
+    }
+
+    .more-platforms-wordmark {
+      fill: #0d1117;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .more-platforms-icon {
+        stroke: #f6f8fa;
+      }
+
+      .more-platforms-wordmark {
+        fill: #f6f8fa;
+      }
+    }
+  </style>
+  <title>More platforms</title>
+  <g
+    class="more-platforms-icon"
+    transform="translate(4 9) scale(1.3333)"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M6.657 18c-2.572 0 -4.657 -2.007 -4.657 -4.483c0 -2.475 2.085 -4.482 4.657 -4.482c.393 -1.762 1.794 -3.2 3.675 -3.743c1.88 -.543 3.943 -.05 5.27 1.262c1.327 1.311 1.745 3.253 1.1 5.12"/>
+    <path d="M16.5 18h3.5c1.657 0 3 -1.343 3 -3s-1.343 -3 -3 -3h-.05a7.004 7.004 0 0 0 -12.45 -2"/>
+  </g>
+  <text
+    class="more-platforms-wordmark"
+    x="42"
+    y="31"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="13"
+    font-weight="700"
+  >MORE PLATFORMS</text>
+</svg>

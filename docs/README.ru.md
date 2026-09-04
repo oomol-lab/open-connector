@@ -22,18 +22,18 @@ OpenConnector — open-source connector gateway для AI agents и альтер
 <table>
   <tr>
     <td width="33.33%" align="center"><img src="../assets/deployment-options/oomol.svg" alt="OOMOL" width="140"></td>
-    <td width="33.33%" align="center"><img src="../assets/deployment-options/cloudflare.svg" alt="Cloudflare" width="140"></td>
     <td width="33.33%" align="center"><img src="../assets/deployment-options/self-hosted.svg" alt="Self-hosted" width="140"></td>
+    <td width="33.33%" align="center"><img src="../assets/deployment-options/more-platforms.svg" alt="Другие платформы" width="140"></td>
   </tr>
   <tr>
     <td width="33.33%" valign="top">Managed OAuth и hosted runtime готовы к использованию. Не нужно разворачивать runtime или настраивать OAuth apps.</td>
-    <td width="33.33%" valign="top">Workers, D1, R2 и Static Assets в вашем аккаунте Cloudflare. Вы самостоятельно управляете deployment и OAuth apps.</td>
     <td width="33.33%" valign="top">Запуск локально или в собственной инфраструктуре через Docker или Node.js. Вы управляете storage и OAuth apps.</td>
+    <td width="33.33%" valign="top"><strong>Cloudflare</strong>, <strong>Fly.io</strong>, <strong>RepoCloud</strong> и другие.</td>
   </tr>
   <tr>
     <td width="33.33%" align="center">🚀 <a href="https://oomol.com/docs/connector-saas/"><strong>OOMOL Hosted</strong></a></td>
-    <td width="33.33%" align="center"><a href="cloudflare.md"><strong>Развернуть в Cloudflare</strong></a></td>
     <td width="33.33%" align="center"><a href="https://oomol.com/docs/openconnector-self-hosting/"><strong>Self-host</strong></a></td>
+    <td width="33.33%" align="center"><a href="deployment-options/README.ru.md"><strong>Другие платформы</strong></a></td>
   </tr>
 </table>
 
@@ -42,8 +42,7 @@ local-agent relay — [oo CLI](https://github.com/oomol-lab/oo-cli), для agen
 custom clients — HTTP/OpenAPI, а для администрирования и отладки — локальную Web Console.
 
 - Держите credentials, scopes, schemas, policies и run logs внутри проверяемого runtime.
-- Запускайте локально, на Fly.io, в Cloudflare-совместимой инфраструктуре или через hosted runtime
-  OOMOL.
+- Запускайте локально, в собственной инфраструктуре или через hosted runtime OOMOL.
 - Используйте одни и те же provider ids, Action ids, schemas и contracts в open-source и
   commercial SaaS deployments.
 
@@ -57,8 +56,8 @@ custom clients — HTTP/OpenAPI, а для администрирования и
   lazy-loaded executor source.
 - Runtime controls для production: connection identity, scopes, runtime tokens, action allow/block
   policies, временный транзит файлов и редактированные журналы запусков.
-- Варианты развертывания через локальный Docker или Node.js, Fly.io с persistent SQLite storage,
-  Cloudflare Workers / D1 / R2 / Static Assets и hosted runtime OOMOL.
+- Варианты развертывания через локальный Docker или Node.js и hosted runtime OOMOL. Дополнительные
+  управляемые платформы перечислены в [вариантах развертывания](deployment-options/README.ru.md).
 
 ## Где Это Уместно
 
@@ -127,22 +126,10 @@ flowchart LR
 
 ## Пути Использования
 
-| Путь                                 | Лучше всего подходит для                                | Включает                                                                                                                                                              |
-| ------------------------------------ | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Open-source self-host                | Разработчиков и команд, которым нужен полный контроль   | Локальный Docker или Node runtime, SQLite storage, MCP, HTTP, OpenAPI и Web Console                                                                                   |
-| Fly.io self-host                     | Команд, которым нужен hosted Docker runtime             | Node Docker runtime, SQLite storage на Fly volume, TLS, health checks, MCP, HTTP, OpenAPI и Web Console                                                               |
-| Cloudflare-совместимое развертывание | Команд, которым нужен легкий hosted runtime             | Workers runtime, состояние D1, транзитные файлы R2 и Static Assets для console                                                                                        |
-| [OOMOL](https://oomol.com/)          | Команд, ограниченных OAuth approval или сроками запуска | Hosted auth и runtime infrastructure с теми же provider и Action contracts; совместимость с open-source interface для последующего private или self-hosted deployment |
-
-## Видео Быстрого Старта Cloudflare
-
-[![Развернуть OpenConnector на Cloudflare Workers](../assets/cloudflare-quickstart-video.png)](https://www.youtube.com/watch?v=R0V1ZdCuTgc)
-
-[Пошаговое видео по развертыванию на Cloudflare Workers](https://www.youtube.com/watch?v=R0V1ZdCuTgc)
-показывает, как запустить OpenConnector на Cloudflare с Workers, D1, R2 и Web Console. Видео
-следует тому же процессу, что и [cloudflare.md](cloudflare.md): создать ресурсы Cloudflare,
-скопировать `wrangler.example.jsonc` в `wrangler.local.jsonc`, применить D1 migrations, задать
-обязательные secrets и выполнить `npm run deploy:cloudflare`.
+| Путь                        | Лучше всего подходит для                                | Включает                                                                                                                                                              |
+| --------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Open-source self-host       | Разработчиков и команд, которым нужен полный контроль   | Локальный Docker или Node runtime, SQLite storage, MCP, HTTP, OpenAPI и Web Console                                                                                   |
+| [OOMOL](https://oomol.com/) | Команд, ограниченных OAuth approval или сроками запуска | Hosted auth и runtime infrastructure с теми же provider и Action contracts; совместимость с open-source interface для последующего private или self-hosted deployment |
 
 ## Быстрый Старт
 
@@ -206,22 +193,6 @@ OAuth2 apps, named connections, credential encryption, token refresh и action p
 настройку API key и OAuth client, создание runtime tokens, просмотр Action schemas, отладку
 Actions, проверку недавних запусков и доступ к сгенерированным OpenAPI и MCP metadata.
 
-## Развертывание Cloudflare
-
-OpenConnector можно развернуть на Cloudflare: Workers запускает runtime, D1 хранит state, R2
-обрабатывает transit files, а Static Assets обслуживает Web Console.
-
-Создание ресурсов, migrations, secrets, локальная Worker preview и remote deployment описаны в
-[cloudflare.md](cloudflare.md).
-
-## Развертывание Fly.io
-
-OpenConnector также можно развернуть на Fly.io с Node Docker runtime и persistent SQLite storage на
-Fly volume.
-
-Создание Fly app, настройка volume, secrets, deployment, custom domain и scaling описаны в
-[fly-io.md](fly-io.md).
-
 ## Docker-образ (GHCR)
 
 Запускайте OpenConnector из готового образа в GitHub Packages (GHCR): `ghcr.io/oomol-lab/open-connector`.
@@ -251,6 +222,7 @@ Issues и pull requests приветствуются.
 - [Инструменты разработчика](sdk-cli.md)
 - [Руководство Gmail OAuth и SDK (на английском)](gmail-oauth-sdk.md)
 - [Runtime API и MCP](runtime-api.md)
+- [Варианты развертывания](deployment-options/README.ru.md)
 - [Развертывание Fly.io](fly-io.md)
 - [Развертывание Cloudflare](cloudflare.md)
 - [Docker-образ (GHCR) (на английском)](docker-ghcr.md)

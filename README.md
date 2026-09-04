@@ -22,18 +22,18 @@ prebuilt Actions to agents and applications.
 <table>
   <tr>
     <td width="33.33%" align="center"><img src="assets/deployment-options/oomol.svg" alt="OOMOL" width="140"></td>
-    <td width="33.33%" align="center"><img src="assets/deployment-options/cloudflare.svg" alt="Cloudflare" width="140"></td>
     <td width="33.33%" align="center"><img src="assets/deployment-options/self-hosted.svg" alt="Self-hosted" width="140"></td>
+    <td width="33.33%" align="center"><img src="assets/deployment-options/more-platforms.svg" alt="More platforms" width="140"></td>
   </tr>
   <tr>
     <td width="33.33%" valign="top">Managed OAuth and hosted runtime, ready to use. No deployment or OAuth app setup.</td>
-    <td width="33.33%" valign="top">Run on Workers, D1, R2, and Static Assets in your Cloudflare account. You manage deployment and OAuth apps.</td>
     <td width="33.33%" valign="top">Run locally or on your own infrastructure with Docker or Node.js. You manage storage and OAuth apps.</td>
+    <td width="33.33%" valign="top"><strong>Cloudflare</strong>, <strong>Fly.io</strong>, <strong>RepoCloud</strong>, and more.</td>
   </tr>
   <tr>
     <td width="33.33%" align="center">🚀 <a href="https://oomol.com/docs/connector-saas/"><strong>OOMOL Hosted</strong></a></td>
-    <td width="33.33%" align="center"><a href="docs/cloudflare.md"><strong>Deploy to Cloudflare</strong></a></td>
     <td width="33.33%" align="center"><a href="https://oomol.com/docs/openconnector-self-hosting/"><strong>Self-host</strong></a></td>
+    <td width="33.33%" align="center"><a href="docs/deployment-options/"><strong>More platforms</strong></a></td>
   </tr>
 </table>
 
@@ -42,8 +42,7 @@ Use the [Connector SDK](https://github.com/oomol-lab/connector-sdk) from app cod
 HTTP/OpenAPI from custom clients, and the Web Console for administration and debugging.
 
 - Keep credentials, scopes, schemas, policies, and run logs inside an inspectable runtime.
-- Run locally, on Fly.io, on Cloudflare-compatible infrastructure, or through OOMOL's hosted
-  runtime.
+- Run locally, on your own infrastructure, or through OOMOL's hosted runtime.
 - Use the same provider ids, Action ids, schemas, and contracts across open-source and commercial
   SaaS deployments.
 
@@ -57,8 +56,8 @@ HTTP/OpenAPI from custom clients, and the Web Console for administration and deb
 - Runtime controls for connection identity, scopes, runtime tokens, action allow/block policies,
   temporary file transit, and redacted run logs.
 - Deployment options for local Docker or Node.js with SQLite or PostgreSQL state and local or
-  S3-compatible transit storage, Fly.io, Cloudflare Workers with D1/R2/Static Assets, and OOMOL's
-  hosted runtime.
+  S3-compatible transit storage, plus OOMOL's hosted runtime. Additional managed platforms are
+  listed in [deployment options](docs/deployment-options/).
 
 ## Where It Fits
 
@@ -131,20 +130,7 @@ safe account labels, and execution results needed for the run.
 | --------------------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Open-source self-host                                     | Developers and teams that want full control             | Local Docker or Node runtime, SQLite or PostgreSQL state, local or S3-compatible transit files, MCP, HTTP, OpenAPI, and Web Console                                                                |
 | [Kubernetes (Helm)](deploy/helm/open-connector/README.md) | Teams that run their own clusters                       | Hardened Helm chart with PVC-backed SQLite or PostgreSQL plus migration hooks, Ingress, autoscaling, and NetworkPolicy toggles                                                                     |
-| Fly.io self-host                                          | Teams that want a hosted Docker runtime                 | Node Docker runtime, SQLite on a Fly volume or external PostgreSQL, TLS, health checks, MCP, HTTP, OpenAPI, and Web Console                                                                        |
-| Cloudflare-compatible deploy                              | Teams that want a lightweight hosted runtime            | Workers runtime, D1 state, R2 transit files, and Static Assets for the console                                                                                                                     |
 | [OOMOL](https://oomol.com/apps)                           | Teams that want users to authorize accounts immediately | OOMOL-provided OAuth apps, monthly included Connect credits, and hosted runtime infrastructure; the same provider and Action contracts keep a path open to later private or self-hosted deployment |
-
-## Cloudflare Quick Start Video
-
-[![Deploy OpenConnector on Cloudflare Workers](assets/cloudflare-quickstart-video.png)](https://www.youtube.com/watch?v=R0V1ZdCuTgc)
-
-The
-[Cloudflare Workers deployment walkthrough](https://www.youtube.com/watch?v=R0V1ZdCuTgc) shows how
-to launch OpenConnector on Cloudflare with Workers, D1, R2, and the Web Console. The video follows
-the same flow as [docs/cloudflare.md](docs/cloudflare.md): create Cloudflare resources, copy
-`wrangler.example.jsonc` to `wrangler.local.jsonc`, apply D1 migrations, set required secrets, and
-run `npm run deploy:cloudflare`.
 
 ## Quick Start
 
@@ -210,14 +196,6 @@ The console supports provider browsing, API key and OAuth client configuration, 
 creation, Action schema inspection, Action debugging, recent run review, and access to the
 generated OpenAPI and MCP metadata.
 
-## Cloudflare Deployment
-
-OpenConnector can run on Cloudflare with Workers for the runtime, D1 for state, R2 for transit
-files, and Static Assets for the Web Console.
-
-See [docs/cloudflare.md](docs/cloudflare.md) for resource creation, migrations, secrets, local Worker
-preview, and remote deployment.
-
 ## PostgreSQL Runtime Storage
 
 The Node runtime uses SQLite by default and can use PostgreSQL 15 or newer when
@@ -228,14 +206,6 @@ checks schema readiness and never applies PostgreSQL DDL. See
 and multi-instance requirements. The Docker image exposes the same runner as its `migrate`
 subcommand; see [docs/docker-ghcr.md](docs/docker-ghcr.md#postgresql-migrations).
 
-## Fly.io Deployment
-
-OpenConnector can also run on Fly.io with the Node Docker runtime and persistent SQLite storage on a
-Fly volume.
-
-See [docs/fly-io.md](docs/fly-io.md) for app creation, volume setup, secrets, deployment, custom
-domains, and scaling.
-
 ## Docker Image (GHCR)
 
 Run OpenConnector from a prebuilt image on GitHub Packages (GHCR): `ghcr.io/oomol-lab/open-connector`. Use
@@ -243,13 +213,6 @@ Run OpenConnector from a prebuilt image on GitHub Packages (GHCR): `ghcr.io/oomo
 `main` build.
 
 See [docs/docker-ghcr.md](docs/docker-ghcr.md) for tags, pulling, and running.
-
-## RepoCloud Deployment
-
-Deploy OpenConnector to the cloud with one click on RepoCloud with competitive pricing and no
-infrastructure setup required.
-
-See [RepoCloud](https://repocloud.io/details/Open%20Connector/) for one-click cloud deployment.
 
 ## Build a Desktop Agent with Wanta
 
@@ -272,6 +235,7 @@ Issues and pull requests are welcome.
 - [Gmail OAuth and SDK tutorial](docs/gmail-oauth-sdk.md)
 - [Instagram OAuth and Actions](docs/instagram-oauth.md)
 - [Runtime API and MCP](docs/runtime-api.md)
+- [Deployment options](docs/deployment-options/)
 - [Fly.io deployment](docs/fly-io.md)
 - [Cloudflare deployment](docs/cloudflare.md)
 - [Docker image (GHCR)](docs/docker-ghcr.md)
