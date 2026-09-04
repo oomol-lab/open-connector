@@ -35,7 +35,7 @@ dist/open-connector-windows-x64.exe
 dist/open-connector-windows-arm64.exe
 ```
 
-Each file is roughly 145 to 170 MiB. To build a subset, pass one or more target names after `--`:
+Each file is roughly 150 to 175 MiB. To build a subset, pass one or more target names after `--`:
 
 ```bash
 npm run build:binary -- linux-x64 darwin-arm64

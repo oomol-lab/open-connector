@@ -387,7 +387,16 @@ async function checkMcp(baseUrl: string): Promise<void> {
   assert(toolsResponse.status === 200, `GET /mcp/tools returned ${toolsResponse.status}: ${toolsBody.slice(0, 300)}`);
   const payload: unknown = JSON.parse(toolsBody);
   assert(isRecord(payload) && Array.isArray(payload.tools), "GET /mcp/tools did not return a tools array");
-  assert(payload.tools.length === 5, `GET /mcp/tools returned ${payload.tools.length} tools; expected 5`);
+  const tools: unknown[] = payload.tools;
+  assert(tools.length > 0, "GET /mcp/tools returned an empty tools array");
+  const names = tools.map((tool) => (isRecord(tool) && typeof tool.name === "string" ? tool.name : undefined));
+  const unnamed = names.indexOf(undefined);
+  assert(unnamed === -1, `GET /mcp/tools entry ${unnamed} has no string name: ${toolsBody.slice(0, 300)}`);
+  // src/mcp.ts registers more tools than these; only the two that cannot go away are pinned, so adding an MCP tool
+  // later does not break the release smoke.
+  for (const expected of ["search_actions", "execute_action"]) {
+    assert(names.includes(expected), `GET /mcp/tools does not list ${expected}: ${names.join(", ")}`);
+  }
 }
 
 /** The Scalar API reference package is imported on the first /docs request; one page render proves that chunk. */
@@ -466,6 +475,14 @@ async function checkPortConflictExit(binaryPath: string, port: number, databaseU
     );
     if (process.platform === "win32") {
       console.log(`port conflict: second instance exited with code ${exit.code} on win32`);
+    } else {
+      // Bun prints "Failed to start server. Is port N in use?" and Node "listen EADDRINUSE"; without this, a crash
+      // for an unrelated reason would pass as the port conflict exit.
+      const stderr = second.stderr.trim();
+      assert(
+        /EADDRINUSE|in use/i.test(stderr),
+        `second instance on a busy port exited with code ${exit.code} but its stderr does not mention the port conflict\n--- second instance stderr ---\n${stderr.slice(0, 1000) || "(empty)"}`,
+      );
     }
   } finally {
     await second.forceStop();

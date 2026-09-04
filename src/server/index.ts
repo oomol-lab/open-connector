@@ -48,7 +48,8 @@ const [command, ...rest] = process.argv.slice(2);
 
 try {
   if (command === undefined) {
-    // Resolves once the server listens; the server's lifetime is deliberately not awaited here, see `main`.
+    // Resolves once `serve()` has requested the listener, before it is up; a bind failure and the server's lifetime
+    // are deliberately not awaited here, see `main`.
     await main();
   } else if (command === "migrate" && rest.length === 0) {
     await runMigrateCommand();
@@ -61,12 +62,14 @@ try {
 }
 
 /**
- * Start the server and resolve once it listens. Waiting for SIGINT/SIGTERM and closing the runtime database
- * afterwards belong to a promise chain that is deliberately not awaited, so this entry module finishes evaluating
- * while the server runs. A Bun single-file executable releases the executable's module-graph pages (the bundle plus
- * every embedded catalog file read during startup) with one madvise(MADV_DONTNEED) once the entry module has
- * evaluated; a top-level await spanning the server's lifetime keeps about 85 MB of them resident on Linux, and under
- * Bun also turns a listen error into a hang instead of an exit.
+ * Start the server and resolve as soon as `serve()` returns, which only requests the listener: the bind completes
+ * later, and a bind failure such as EADDRINUSE surfaces as the server's unhandled 'error' event, which ends the
+ * process with exit code 1 without closing the runtime database, under Bun as under Node. Waiting for SIGINT/SIGTERM
+ * and closing the runtime database afterwards belong to a promise chain that is deliberately not awaited, so this
+ * entry module finishes evaluating while the server runs. A Bun single-file executable releases the executable's
+ * module-graph pages (the bundle plus every embedded catalog file read during startup) with one
+ * madvise(MADV_DONTNEED) once the entry module has evaluated; a top-level await spanning the server's lifetime keeps
+ * about 85 MB of them resident on Linux, and under Bun also turns a listen error into a hang instead of an exit.
  */
 async function main(): Promise<void> {
   setPrivateNetworkAccessAllowed(parsePrivateNetworkAccessFlag(process.env.OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK));
@@ -186,7 +189,8 @@ async function main(): Promise<void> {
       },
     );
 
-    // A startup failure above closes the database in the catch; once the listener is up, this chain owns it.
+    // A startup failure above closes the database in the catch. From here this chain owns it; a bind failure never
+    // reaches it and ends the process through the server's unhandled 'error' event instead.
     waitForShutdown(server)
       .finally(() => runtimeDatabase.close())
       .catch(reportFailure);
