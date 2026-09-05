@@ -40,4 +40,32 @@ describe("OAuth authorization option selection", () => {
       toggleOAuthAuthorizationOption(options, ["channels:read", "channels:history"], "channels:read", false),
     ).toEqual(["channels:read"]);
   });
+
+  it("restores the dependencies of a required option", () => {
+    const dependentRequiredOptions: OAuthAuthorizationOption[] = [
+      {
+        id: "base",
+        label: "Base",
+        description: "Base permission.",
+        required: false,
+        defaultSelected: false,
+        risk: "standard",
+      },
+      {
+        id: "feature",
+        label: "Feature",
+        description: "Required feature.",
+        required: true,
+        defaultSelected: true,
+        risk: "standard",
+        requires: ["base"],
+      },
+    ];
+
+    expect(initialOAuthAuthorizationOptionIds(dependentRequiredOptions, [])).toEqual(["base", "feature"]);
+    expect(toggleOAuthAuthorizationOption(dependentRequiredOptions, ["base", "feature"], "base", false)).toEqual([
+      "base",
+      "feature",
+    ]);
+  });
 });

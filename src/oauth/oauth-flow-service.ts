@@ -44,6 +44,7 @@ export interface OAuthAuthorizationState {
   state: string;
   createdAt: string;
   pkceCodeVerifier?: string;
+  authorizationScopes?: string[];
   clientConfig?: OAuthClientConfig;
 }
 
@@ -115,6 +116,7 @@ export class OAuthFlowService {
       state,
       createdAt: now.toISOString(),
       pkceCodeVerifier,
+      authorizationScopes: auth.authorizationOptions ? authorizationScopes : undefined,
       clientConfig: input.clientConfig ? config : undefined,
     });
 
@@ -206,7 +208,7 @@ export class OAuthFlowService {
       profile: {
         accountId: "oauth2",
         displayName: "OAuth Credential",
-        grantedScopes: [],
+        grantedScopes: pending.authorizationScopes ?? [],
       },
       providerSecret:
         Object.keys(refreshParameters).length > 0 ? { oauthRefreshParameters: refreshParameters } : undefined,
@@ -300,10 +302,16 @@ function resolveAuthorizationScopes(
   const byId = new Map(options.map((option) => [option.id, option]));
   const selected = new Set(optionIds);
   for (const option of options) if (option.required) selected.add(option.id);
-  for (const id of [...selected]) {
+  const pendingIds = [...selected];
+  for (const id of pendingIds) {
     const option = byId.get(id);
     if (!option) throw new OAuthFlowError("invalid_input", `Unknown OAuth authorization option: ${id}.`);
-    for (const required of option.requires ?? []) selected.add(required);
+    for (const required of option.requires ?? []) {
+      if (!selected.has(required)) {
+        selected.add(required);
+        pendingIds.push(required);
+      }
+    }
   }
   return options.filter((option) => selected.has(option.id)).map((option) => option.id);
 }

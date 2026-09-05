@@ -1,5 +1,11 @@
 import type { IConnectionStore, StoredConnection } from "../connection-service.ts";
-import type { ActionExecutor, CredentialValidators, ProviderDefinition, ResolvedCredential } from "../core/types.ts";
+import type {
+  ActionExecutor,
+  CredentialValidators,
+  OAuthAuthorizationOption,
+  ProviderDefinition,
+  ResolvedCredential,
+} from "../core/types.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { ISecretCodec } from "../server/secrets/secret-codec-core.ts";
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "./oauth-client-config-service.ts";
@@ -40,6 +46,38 @@ const oauthProvider: ProviderDefinition = {
   ],
   actions: [],
 };
+
+const selectableOAuthProvider: ProviderDefinition = {
+  ...oauthProvider,
+  service: "selectable",
+  auth: [
+    {
+      type: "oauth2",
+      authorizationUrl: "https://example.com/oauth/authorize",
+      tokenUrl: "https://example.com/oauth/token",
+      scopes: ["core", "base", "middle", "feature"],
+      tokenEndpointAuthMethod: "client_secret_post",
+      authorizationOptions: [
+        authorizationOption("core", true),
+        authorizationOption("base"),
+        authorizationOption("middle", false, ["base"]),
+        authorizationOption("feature", false, ["middle"]),
+      ],
+    },
+  ],
+};
+
+function authorizationOption(id: string, required = false, requires?: string[]): OAuthAuthorizationOption {
+  return {
+    id,
+    label: id,
+    description: `${id} access.`,
+    required,
+    defaultSelected: required,
+    risk: "standard",
+    requires,
+  };
+}
 
 const pkceOAuthProvider: ProviderDefinition = {
   ...oauthProvider,
@@ -233,6 +271,30 @@ describe("OAuthFlowService", () => {
     const started = await services.flow.startAuthorization({ service: "example" });
 
     expect(new URL(started.authorizationUrl).searchParams.get("scope")).toBe("read");
+  });
+
+  it("resolves transitive option requirements and preserves the selected scopes", async () => {
+    const services = createServices([selectableOAuthProvider]);
+    await services.clientConfigs.upsertConfig({
+      service: "selectable",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ access_token: "access-token", token_type: "Bearer" })),
+    );
+
+    const started = await services.flow.startAuthorization({
+      service: "selectable",
+      authorizationOptionIds: ["feature"],
+    });
+    expect(new URL(started.authorizationUrl).searchParams.get("scope")).toBe("core base middle feature");
+
+    await services.flow.completeAuthorization({ state: started.state, code: "code" });
+    await expect(services.connections.getCredential("selectable")).resolves.toMatchObject({
+      profile: { grantedScopes: ["core", "base", "middle", "feature"] },
+    });
   });
 
   it("requires OAuth client config before authorization", async () => {

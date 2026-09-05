@@ -272,7 +272,7 @@ async function slackSearchContext(input: Record<string, unknown>, context: Slack
   const query = requiredString(input.query, "query", (message) => new ProviderRequestError(400, message));
   const payload = await slackRequestJson<{
     ok: boolean;
-    messages?: Array<Record<string, unknown>>;
+    results?: { messages?: Array<Record<string, unknown>> };
     response_metadata?: { next_cursor?: string };
     error?: string;
   }>({
@@ -282,19 +282,25 @@ async function slackSearchContext(input: Record<string, unknown>, context: Slack
       query,
       content_types: ["messages"],
       channel_types: Array.isArray(input.channelTypes) ? input.channelTypes : undefined,
+      context_channel_id: optionalString(input.contextChannelId),
       cursor: optionalString(input.cursor),
       limit: input.limit,
       sort: input.sort,
       sort_dir: input.sortDir,
-      before: optionalString(input.before),
-      after: optionalString(input.after),
+      before: input.before,
+      after: input.after,
       include_context_messages: optionalBoolean(input.includeContextMessages),
       include_bots: optionalBoolean(input.includeBots),
+      include_message_blocks: optionalBoolean(input.includeMessageBlocks),
       highlight: optionalBoolean(input.highlight),
+      term_clauses: Array.isArray(input.termClauses) ? input.termClauses : undefined,
+      modifiers: optionalString(input.modifiers),
+      include_archived_channels: optionalBoolean(input.includeArchivedChannels),
+      disable_semantic_search: optionalBoolean(input.disableSemanticSearch),
     },
   });
   return {
-    messages: payload.messages ?? [],
+    messages: payload.results?.messages ?? [],
     nextCursor: normalizeNextCursor(payload.response_metadata?.next_cursor),
   };
 }
@@ -1016,6 +1022,7 @@ function assertSlackPayload(payload: SlackPayloadError): void {
     case "token_revoked":
       throw new ProviderRequestError(401, message, payload);
     case "ratelimited":
+    case "rate_limited":
       throw new ProviderRequestError(429, message, payload);
     default:
       throw new ProviderRequestError(400, message, payload);

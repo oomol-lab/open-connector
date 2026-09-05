@@ -187,7 +187,7 @@ export type OAuth2AuthDefinition = {
   clientSetup?: OAuthClientSetupDefinition;
 };
 
-export type OAuthAuthorizationOption = {
+export interface OAuthAuthorizationOption {
   id: string;
   label: string;
   description: string;
@@ -195,7 +195,7 @@ export type OAuthAuthorizationOption = {
   defaultSelected: boolean;
   risk: "standard" | "sensitive" | "destructive";
   requires?: string[];
-};
+}
 
 /**
  * Provider authentication capabilities advertised in the public catalog.
