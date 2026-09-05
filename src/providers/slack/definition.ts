@@ -21,8 +21,7 @@ export const provider: ProviderDefinition = {
       refreshTokenUrl: "https://slack.com/api/oauth.v2.access",
       scopes: [...slackUserOAuthScopes, ...slackSearchOAuthScopes],
       scopeSeparator: ",",
-      tokenEndpointAuthMethod: "none",
-      pkce: { method: "S256" },
+      tokenEndpointAuthMethod: "client_secret_post",
       authorizationOptions: [
         {
           id: "channels:read",
