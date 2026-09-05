@@ -29,8 +29,10 @@ first.
 NOTION_TOKEN=secret_... node examples/local-http/notion.ts
 ```
 
-Run App Store Connect with an API key created in App Store Connect. Pass the `.p8` file by path, or
-inline its PEM contents. Omit `APP_STORE_CONNECT_ISSUER_ID` when you use an Individual API Key.
+Run App Store Connect with an API key created in App Store Connect. Pass the `.p8` file through
+`APP_STORE_CONNECT_PRIVATE_KEY_PATH`, or inline its PEM contents through
+`APP_STORE_CONNECT_PRIVATE_KEY`. Omit `APP_STORE_CONNECT_ISSUER_ID` when you use an Individual API
+Key.
 
 ```bash
 APP_STORE_CONNECT_KEY_ID=2X9R4HXF34 \
