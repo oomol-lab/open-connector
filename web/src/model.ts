@@ -11,10 +11,21 @@ export type AuthDefinition =
   | {
       type: "oauth2";
       scopes: string[];
+      authorizationOptions?: OAuthAuthorizationOption[];
       tokenEndpointAuthMethod?: "client_secret_basic" | "client_secret_post" | "none";
       clientConfigFields?: CredentialField[];
       clientSetup?: OAuthClientSetup;
     };
+
+export interface OAuthAuthorizationOption {
+  id: string;
+  label: string;
+  description: string;
+  required: boolean;
+  defaultSelected: boolean;
+  risk: "standard" | "sensitive" | "destructive";
+  requires?: string[];
+}
 
 export type ProviderScenario =
   | "ai"

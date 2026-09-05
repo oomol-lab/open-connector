@@ -1280,6 +1280,9 @@ function createOAuthAuthorizationPath(): Record<string, unknown> {
                   minItems: 1,
                   description: "Optional non-empty provider-declared scope subset to request.",
                 }),
+                authorizationOptionIds: jsonSchema.array(jsonSchema.string(), {
+                  description: "Optional provider authorization option ids selected for this connection.",
+                }),
                 extra: {
                   type: "object",
                   additionalProperties: { type: "string" },

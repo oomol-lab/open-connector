@@ -952,6 +952,7 @@ export class ConnectServer {
         service,
         connectionName,
         clientConfig: readOAuthClientConfigInput(body),
+        authorizationOptionIds: readAuthorizationOptionIds(body),
       });
       const authorizationUrl = new URL(authorization.authorizationUrl);
       this.options.logger?.info(
@@ -1229,6 +1230,15 @@ function readOAuthClientConfigInput(body: Record<string, unknown>): OAuthClientC
     extra: optionalRecord(body.extra),
     secretExtra: optionalRecord(body.secretExtra),
   };
+}
+
+function readAuthorizationOptionIds(body: Record<string, unknown>): string[] | undefined {
+  if (!("authorizationOptionIds" in body)) return undefined;
+  return requiredStringArray(
+    body.authorizationOptionIds,
+    "authorizationOptionIds",
+    (message) => new HttpRequestError("invalid_input", `${message}.`),
+  );
 }
 
 function readRequestedScopes(body: Record<string, unknown>): string[] | undefined {

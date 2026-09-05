@@ -77,6 +77,9 @@ export const slackActionHandlers: ProviderActionHandlers<"slack", SlackActionHan
   search_messages(input, context) {
     return slackSearchMessages(input, context);
   },
+  search_context(input, context) {
+    return slackSearchContext(input, context);
+  },
   post_message(input, context) {
     return slackPostMessage(input, context);
   },
@@ -261,6 +264,37 @@ async function slackSearchMessages(input: Record<string, unknown>, context: Slac
     total: typeof payload.messages?.total === "number" ? payload.messages.total : 0,
     pagination: payload.messages?.pagination ?? {},
     paging: payload.messages?.paging ?? {},
+    nextCursor: normalizeNextCursor(payload.response_metadata?.next_cursor),
+  };
+}
+
+async function slackSearchContext(input: Record<string, unknown>, context: SlackActionContext): Promise<unknown> {
+  const query = requiredString(input.query, "query", (message) => new ProviderRequestError(400, message));
+  const payload = await slackRequestJson<{
+    ok: boolean;
+    messages?: Array<Record<string, unknown>>;
+    response_metadata?: { next_cursor?: string };
+    error?: string;
+  }>({
+    ...context,
+    method: "assistant.search.context",
+    body: {
+      query,
+      content_types: ["messages"],
+      channel_types: Array.isArray(input.channelTypes) ? input.channelTypes : undefined,
+      cursor: optionalString(input.cursor),
+      limit: input.limit,
+      sort: input.sort,
+      sort_dir: input.sortDir,
+      before: optionalString(input.before),
+      after: optionalString(input.after),
+      include_context_messages: optionalBoolean(input.includeContextMessages),
+      include_bots: optionalBoolean(input.includeBots),
+      highlight: optionalBoolean(input.highlight),
+    },
+  });
+  return {
+    messages: payload.messages ?? [],
     nextCursor: normalizeNextCursor(payload.response_metadata?.next_cursor),
   };
 }

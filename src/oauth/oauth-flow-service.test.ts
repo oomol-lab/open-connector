@@ -436,6 +436,8 @@ describe("OAuthFlowService", () => {
     const userAuthorizationUrl = new URL(userStarted.authorizationUrl);
     expect(userAuthorizationUrl.pathname).toBe("/oauth/v2_user/authorize");
     expect(userAuthorizationUrl.searchParams.get("scope")).toContain("search:read");
+    expect(userAuthorizationUrl.searchParams.get("code_challenge_method")).toBe("S256");
+    expect(userAuthorizationUrl.searchParams.get("code_challenge")).toBeTruthy();
     await services.flow.completeAuthorization({ state: userStarted.state, code: "user-code" });
 
     const botStarted = await services.flow.startAuthorization({ service: "slackbot" });

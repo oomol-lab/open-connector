@@ -17,6 +17,9 @@ const searchSortSchema = s.stringEnum(["score", "timestamp"], {
 const sortDirectionSchema = s.stringEnum(["asc", "desc"], {
   description: "The sort direction for Slack search results.",
 });
+const searchChannelTypeSchema = s.stringEnum(["public_channel", "private_channel"], {
+  description: "The Slack channel type to search.",
+});
 
 const conversationTypeSchema = s.stringEnum([...slackConversationTypes], {
   description: "A Slack conversation type.",
@@ -221,6 +224,36 @@ export const slackActions: ActionDefinition[] = [
         required: ["query", "matches", "total", "pagination", "paging", "nextCursor"],
         description: "The output payload for this action.",
       },
+    ),
+  }),
+  action({
+    name: "search_context",
+    description: "Search Slack messages with the granular Real-time Search API.",
+    requiredScopes: ["search:read.public"],
+    inputSchema: s.object(
+      {
+        query: nonEmptyString("The Slack search query."),
+        channelTypes: s.array(searchChannelTypeSchema, { minItems: 1, description: "Channel types to search." }),
+        cursor: s.string({ description: "The cursor for the next page." }),
+        limit: s.integer({ minimum: 1, maximum: 20, description: "The number of results to return." }),
+        sort: searchSortSchema,
+        sortDir: sortDirectionSchema,
+        before: s.string({ description: "Only return messages before this timestamp." }),
+        after: s.string({ description: "Only return messages after this timestamp." }),
+        includeContextMessages: s.boolean({ description: "Whether to include surrounding context messages." }),
+        includeBots: s.boolean({ description: "Whether to include messages posted by bots." }),
+        highlight: s.boolean({ description: "Whether Slack should highlight matching terms." }),
+      },
+      { required: ["query"], description: "Input parameters for Slack Real-time Search." },
+    ),
+    outputSchema: s.object(
+      {
+        messages: s.array(s.unknownObject("A Slack Real-time Search message."), {
+          description: "The matching Slack messages.",
+        }),
+        nextCursor: s.nullable(s.string({ description: "The cursor for the next page." })),
+      },
+      { required: ["messages", "nextCursor"], description: "The output payload for Slack Real-time Search." },
     ),
   }),
   action({

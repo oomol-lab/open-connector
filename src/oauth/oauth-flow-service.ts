@@ -1,4 +1,5 @@
 import type { ConnectionService } from "../connection-service.ts";
+import type { OAuth2AuthDefinition } from "../core/types.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { ISecretCodec } from "../server/secrets/secret-codec-core.ts";
 import type {
@@ -24,6 +25,7 @@ export interface OAuthAuthorizationStartInput {
   service: string;
   connectionName?: string;
   clientConfig?: OAuthClientConfigInput;
+  authorizationOptionIds?: string[];
 }
 
 export interface OAuthAuthorizationCompleteInput {
@@ -42,6 +44,7 @@ export interface OAuthAuthorizationState {
   state: string;
   createdAt: string;
   pkceCodeVerifier?: string;
+  authorizationScopes?: string[];
   clientConfig?: OAuthClientConfig;
 }
 
@@ -102,12 +105,18 @@ export class OAuthFlowService {
     const state = crypto.randomUUID();
     const pkceCodeVerifier = auth.pkce ? createPkceCodeVerifier() : undefined;
     await this.states.deleteCreatedBefore(new Date(now.getTime() - this.stateMaxAgeMs).toISOString());
+    const authorizationScopes = resolveAuthorizationScopes(
+      auth,
+      input.authorizationOptionIds,
+      this.clientConfigs.getEffectiveScopes(service, config),
+    );
     await this.states.set({
       service,
       connectionName,
       state,
       createdAt: now.toISOString(),
       pkceCodeVerifier,
+      authorizationScopes,
       clientConfig: input.clientConfig ? config : undefined,
     });
 
@@ -124,7 +133,7 @@ export class OAuthFlowService {
     );
     setAuthorizationParam(authorizationUrl, auth.authorizationRequestFields?.responseType, "response_type", "code");
     setAuthorizationParam(authorizationUrl, auth.authorizationRequestFields?.state, "state", state);
-    const effectiveScopes = this.clientConfigs.getEffectiveScopes(service, config);
+    const effectiveScopes = authorizationScopes;
     if (effectiveScopes.length > 0 && auth.authorizationRequestFields?.scope !== false) {
       authorizationUrl.searchParams.set(
         auth.authorizationRequestFields?.scope ?? "scope",
@@ -280,6 +289,25 @@ function createPkceCodeVerifier(): string {
 
 function createPkceCodeChallenge(codeVerifier: string): string {
   return createHash("sha256").update(codeVerifier).digest("base64url");
+}
+
+function resolveAuthorizationScopes(
+  auth: OAuth2AuthDefinition,
+  optionIds: string[] | undefined,
+  fallback: string[],
+): string[] {
+  const options = auth.authorizationOptions;
+  if (!options) return fallback;
+  if (optionIds === undefined) return fallback;
+  const byId = new Map(options.map((option) => [option.id, option]));
+  const selected = new Set(optionIds);
+  for (const option of options) if (option.required) selected.add(option.id);
+  for (const id of [...selected]) {
+    const option = byId.get(id);
+    if (!option) throw new OAuthFlowError("invalid_input", `Unknown OAuth authorization option: ${id}.`);
+    for (const required of option.requires ?? []) selected.add(required);
+  }
+  return options.filter((option) => selected.has(option.id)).map((option) => option.id);
 }
 
 /**

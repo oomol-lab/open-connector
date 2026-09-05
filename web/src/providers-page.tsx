@@ -161,6 +161,7 @@ export interface OAuthAuthorizationRequestBody {
   clientSecret?: string;
   extra?: Record<string, string>;
   secretExtra?: Record<string, string>;
+  authorizationOptionIds?: string[];
 }
 
 export interface ManualOAuthAuthorizationInput {
@@ -1228,6 +1229,7 @@ export function oauthAuthorizationRequestBody(
   service: string,
   connectionName: string,
   manual?: ManualOAuthAuthorizationInput,
+  authorizationOptionIds?: string[],
 ): OAuthAuthorizationRequestBody {
   const body: OAuthAuthorizationRequestBody = { service, connectionName };
   if (manual) {
@@ -1240,6 +1242,7 @@ export function oauthAuthorizationRequestBody(
     body.extra = extra;
     body.secretExtra = secretExtra;
   }
+  if (authorizationOptionIds) body.authorizationOptionIds = authorizationOptionIds;
   return body;
 }
 
@@ -1375,6 +1378,15 @@ function UnavailableProviderConnection(props: {
 function ConnectionForm(props: ConnectionFormProps): ReactNode {
   const t = useTranslate();
   const [values, setValues] = useState<Record<string, string>>({});
+  const authorizationOptions = props.auth.type === "oauth2" ? (props.auth.authorizationOptions ?? []) : [];
+  const [selectedAuthorizationOptionIds, setSelectedAuthorizationOptionIds] = useState<string[]>(() => {
+    const granted = props.connection?.profile?.grantedScopes;
+    if (Array.isArray(granted))
+      return authorizationOptions.filter((option) => granted.includes(option.id)).map((option) => option.id);
+    return authorizationOptions
+      .filter((option) => option.defaultSelected || option.required)
+      .map((option) => option.id);
+  });
   const [manualClientId, setManualClientId] = useState("");
   const [manualClientSecret, setManualClientSecret] = useState("");
   const manualClientConfigFields = useMemo(() => clientConfigFieldsFor(props.auth), [props.auth]);
@@ -1470,6 +1482,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
             props.provider.service,
             connectionName,
             props.oauthClientMode === "manual" ? { auth: props.auth, values: manualValues } : undefined,
+            selectedAuthorizationOptionIds,
           ),
         );
         if (result.authorizationUrl) {
@@ -1593,6 +1606,36 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
             />
           ))}
         </>
+      ) : null}
+      {props.auth.type === "oauth2" && authorizationOptions.length > 0 ? (
+        <div className="form-grid">
+          <Label>
+            <span>Permissions</span>
+          </Label>
+          {authorizationOptions.map((option) => {
+            const checked = selectedAuthorizationOptionIds.includes(option.id);
+            return (
+              <label key={option.id} className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  disabled={option.required}
+                  onChange={(event) => {
+                    setSelectedAuthorizationOptionIds((current) =>
+                      event.target.checked
+                        ? [...new Set([...current, option.id])]
+                        : current.filter((id) => id !== option.id),
+                    );
+                  }}
+                />
+                <span>
+                  <strong>{option.label}</strong>
+                  <small className="block text-muted-foreground">{option.description}</small>
+                </span>
+              </label>
+            );
+          })}
+        </div>
       ) : null}
       {fields.map((field) => (
         <CredentialInput

@@ -6,7 +6,7 @@ import { slackActions } from "../slack/actions.ts";
 const service = "slackbot";
 
 export const slackbotActions: ActionDefinition[] = slackActions
-  .filter((action) => action.name != "search_messages")
+  .filter((action) => action.name != "search_messages" && action.name != "search_context")
   .map((action) =>
     defineProviderAction(service, {
       name: action.name,
