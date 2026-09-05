@@ -1,13 +1,11 @@
 import type { OAuthAuthorizationOption } from "./model";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 
 export function useOAuthAuthorizationOptions(options: OAuthAuthorizationOption[], grantedScopes?: unknown) {
-  const initialSelection = useMemo(
-    () => initialOAuthAuthorizationOptionIds(options, grantedScopes),
-    [options, grantedScopes],
+  const [selectedOptionIds, setSelectedOptionIds] = useState(() =>
+    initialOAuthAuthorizationOptionIds(options, grantedScopes),
   );
-  const [selectedOptionIds, setSelectedOptionIds] = useState(initialSelection);
   const toggleOption = useCallback(
     (optionId: string, selected: boolean) => {
       setSelectedOptionIds((current) => toggleOAuthAuthorizationOption(options, current, optionId, selected));
