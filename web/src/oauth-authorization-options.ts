@@ -9,7 +9,7 @@ export interface OAuthAuthorizationOptionSelection {
 
 export function useOAuthAuthorizationOptions(
   options: OAuthAuthorizationOption[] | undefined,
-  grantedScopes?: string[],
+  grantedScopes?: unknown,
 ): OAuthAuthorizationOptionSelection {
   const [selectedOptionIds, setSelectedOptionIds] = useState(() =>
     initialOAuthAuthorizationOptionIds(options ?? [], grantedScopes),
@@ -25,12 +25,12 @@ export function useOAuthAuthorizationOptions(
 
 export function initialOAuthAuthorizationOptionIds(
   options: OAuthAuthorizationOption[],
-  grantedScopes?: string[],
+  grantedScopes?: unknown,
 ): string[] {
   const selectedIds = new Set(
     options
       .filter((option) =>
-        grantedScopes
+        Array.isArray(grantedScopes)
           ? option.required || grantedScopes.includes(option.id)
           : option.required || option.defaultSelected,
       )
