@@ -48,11 +48,21 @@ const expTypeSchema = s.nonEmptyString("The carrier business or product type, su
 
 const tipsSchema = s.string("An upstream notice, present when the call consumed the Kuaidi100 free daily quota.");
 
-const trajectoryEventSchema = s.object("One logistics trajectory event.", {
+const trajectoryEventSchema = s.requiredObject("One logistics trajectory event.", {
   time: s.string("The event time in yyyy-MM-dd HH:mm:ss format."),
   status: s.string("The event status, such as 揽收, 在途, or 已签收."),
   context: s.string("The event description."),
 });
+
+const logisticEventSchema = s.object(
+  "One historical logistics trajectory event.",
+  {
+    time: s.string("The event time in yyyy-MM-dd HH:mm:ss format."),
+    context: s.string("The event description."),
+    status: s.string("The event status, such as 揽收, 在途, or 已签收."),
+  },
+  { optional: ["status"] },
+);
 
 const queryTraceOutputSchema = s.object(
   "The Kuaidi100 logistics trajectory for a tracking number.",
@@ -73,7 +83,7 @@ const autoNumberOutputSchema = s.object(
   {
     companies: s.array(
       "The candidate carriers for the tracking number.",
-      s.object("One candidate carrier.", {
+      s.requiredObject("One candidate carrier.", {
         comCode: s.string("The Kuaidi100 carrier code."),
         name: s.string("The carrier display name."),
         lengthPre: s.string("The tracking number length the carrier uses."),
@@ -109,7 +119,7 @@ const estimatePriceOutputSchema = s.object(
     weight: s.string("The parcel weight in kilograms the estimate used."),
     combos: s.array(
       "The per-product price estimates.",
-      s.object("One product price estimate.", {
+      s.requiredObject("One product price estimate.", {
         expType: s.string("The business or product type."),
         price: s.string("The estimated shipping price in CNY."),
         productName: s.nullableString("The product name when the carrier distinguishes products."),
@@ -139,7 +149,7 @@ export const kuaidi100Actions: ActionDefinition[] = [
       {
         kuaidi_num: trackingNumberSchema,
         phone: s.nonEmptyString(
-          "The sender or recipient phone number; required only for SF Express (顺丰) and ZTO (中通) shipments.",
+          "The sender or recipient phone number; required only for SF Express (顺丰), SF Freight (顺丰快运), and ZTO (中通) shipments.",
         ),
       },
       { optional: ["phone"] },
@@ -151,7 +161,7 @@ export const kuaidi100Actions: ActionDefinition[] = [
     name: "auto_number",
     description: "Detect the likely express carriers for a tracking number from its format.",
     requiredScopes: [],
-    inputSchema: s.object("The tracking number to identify.", {
+    inputSchema: s.requiredObject("The tracking number to identify.", {
       kuaidi_num: trackingNumberSchema,
     }),
     outputSchema: autoNumberOutputSchema,
@@ -178,7 +188,7 @@ export const kuaidi100Actions: ActionDefinition[] = [
         ...estimateTimeInputProperties,
         logistic: s.array(
           "The historical logistics trajectory events, usually the data returned by kuaidi100.query_trace.",
-          trajectoryEventSchema,
+          logisticEventSchema,
           {
             minItems: 1,
           },
@@ -192,7 +202,7 @@ export const kuaidi100Actions: ActionDefinition[] = [
     name: "estimate_price",
     description: "Estimate the shipping price for a carrier, sender and recipient addresses, and parcel weight.",
     requiredScopes: [],
-    inputSchema: s.object("The shipment whose price should be estimated.", {
+    inputSchema: s.requiredObject("The shipment whose price should be estimated.", {
       kuaidi_com: priceEstimateCarrierSchema,
       send_addr: s.nonEmptyString("The sender address, for example 北京市海淀区."),
       rec_addr: s.nonEmptyString("The recipient address, for example 广东省深圳市南山区."),

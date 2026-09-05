@@ -7,11 +7,13 @@ import type {
 } from "../provider-runtime.ts";
 
 import {
-  nullableInteger,
-  nullableString,
   objectArray,
+  optionalIntegerOrNull,
   optionalNumberLike,
+  optionalRecord,
+  optionalScalarString,
   optionalString,
+  optionalStringOrNull,
   requiredString,
 } from "../../core/cast.ts";
 import {
@@ -19,7 +21,7 @@ import {
   providerInputError,
   providerResponseError,
   providerUserAgent,
-  readProviderJson,
+  readProviderJsonBody,
   requiredInputString,
   requiredResponseRecord,
   runProviderRequest,
@@ -123,24 +125,33 @@ async function requestKuaidi100(
       },
       signal,
     });
+    const payload = await readProviderJsonBody(response, {
+      emptyBody: {},
+      invalidJsonMessage: "Kuaidi100 returned an invalid JSON response",
+    });
+    const record = optionalRecord(payload);
     // Kuaidi100 answers business errors with HTTP 200 and a { code, message, result: false } envelope.
-    return assertKuaidi100Success(await readProviderJson<unknown>(response, "Kuaidi100"), phase);
+    const code = optionalScalarString(record?.code);
+    if (code !== undefined || record?.result === false) {
+      throwKuaidi100Error(Number(code), optionalString(record?.message) ?? "Kuaidi100 request failed", phase);
+    }
+    if (!response.ok) {
+      throwKuaidi100Error(
+        response.status,
+        optionalString(record?.message) ?? `Kuaidi100 request failed with HTTP ${response.status}`,
+        phase,
+      );
+    }
+    return requiredResponseRecord(payload, "Kuaidi100 response");
   });
 }
 
-function assertKuaidi100Success(payload: unknown, phase: Kuaidi100Phase): Record<string, unknown> {
-  const record = requiredResponseRecord(payload, "Kuaidi100 response");
-  const code = optionalString(record.code);
-  if (code === undefined && record.result !== false) {
-    return record;
+function throwKuaidi100Error(status: number, message: string, phase: Kuaidi100Phase): never {
+  if (status === 400 || status === 429) {
+    throw new ProviderRequestError(status, message);
   }
-
-  const message = optionalString(record.message) ?? "Kuaidi100 request failed";
-  if (code === "401" || code === "403") {
-    throw new ProviderRequestError(phase === "validate" ? 400 : Number(code), message);
-  }
-  if (code === "400" || code === "429") {
-    throw new ProviderRequestError(Number(code), message);
+  if (status === 401 || status === 403) {
+    throw new ProviderRequestError(phase === "validate" ? 400 : status, message);
   }
   throw providerResponseError(message);
 }
@@ -163,11 +174,12 @@ function readWeight(value: unknown): string {
   return String(weight);
 }
 
-function readLogisticEvents(value: unknown): Array<Record<string, string>> {
+// `status` is optional upstream; JSON.stringify drops it from the serialized event when absent.
+function readLogisticEvents(value: unknown): Array<Record<string, string | undefined>> {
   return objectArray(value, "logistic", providerInputError).map((event, index) => ({
     time: requiredInputString(event.time, `logistic[${index}].time`),
     context: requiredInputString(event.context, `logistic[${index}].context`),
-    status: requiredInputString(event.status, `logistic[${index}].status`),
+    status: optionalString(event.status),
   }));
 }
 
@@ -205,8 +217,8 @@ function normalizeEstimateTime(payload: Record<string, unknown>): Record<string,
     orderTime: requiredString(payload.orderTime, "orderTime", providerResponseError),
     arrivalTime: requiredString(payload.arrivalTime, "arrivalTime", providerResponseError),
     deliveryExpendTime: requiredString(payload.deliveryExpendTime, "deliveryExpendTime", providerResponseError),
-    remainTime: nullableInteger(payload.remainTime) ?? null,
-    expType: nullableString(payload.expType) ?? null,
+    remainTime: optionalIntegerOrNull(payload.remainTime),
+    expType: optionalStringOrNull(payload.expType),
     tips: optionalString(payload.tips),
   };
 }
@@ -221,7 +233,7 @@ function normalizeEstimatePrice(payload: Record<string, unknown>): Record<string
     combos: objectArray(payload.combos, "combos", providerResponseError).map((combo, index) => ({
       expType: requiredString(combo.expType, `combos[${index}].expType`, providerResponseError),
       price: requiredString(combo.price, `combos[${index}].price`, providerResponseError),
-      productName: nullableString(combo.productName) ?? null,
+      productName: optionalStringOrNull(combo.productName),
     })),
     tips: optionalString(payload.tips),
   };
