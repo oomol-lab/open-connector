@@ -44,7 +44,6 @@ export interface OAuthAuthorizationState {
   state: string;
   createdAt: string;
   pkceCodeVerifier?: string;
-  authorizationScopes?: string[];
   clientConfig?: OAuthClientConfig;
 }
 
@@ -116,7 +115,6 @@ export class OAuthFlowService {
       state,
       createdAt: now.toISOString(),
       pkceCodeVerifier,
-      authorizationScopes,
       clientConfig: input.clientConfig ? config : undefined,
     });
 

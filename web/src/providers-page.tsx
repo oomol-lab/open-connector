@@ -51,6 +51,7 @@ import {
   OAuthAppDialog,
   splitClientConfigFieldValues,
 } from "./oauth-app-form";
+import { useOAuthAuthorizationOptions } from "./oauth-authorization-options";
 import {
   featuredProvidersForScenario,
   filterProvidersByScenario,
@@ -1379,14 +1380,10 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
   const t = useTranslate();
   const [values, setValues] = useState<Record<string, string>>({});
   const authorizationOptions = props.auth.type === "oauth2" ? (props.auth.authorizationOptions ?? []) : [];
-  const [selectedAuthorizationOptionIds, setSelectedAuthorizationOptionIds] = useState<string[]>(() => {
-    const granted = props.connection?.profile?.grantedScopes;
-    if (Array.isArray(granted))
-      return authorizationOptions.filter((option) => granted.includes(option.id)).map((option) => option.id);
-    return authorizationOptions
-      .filter((option) => option.defaultSelected || option.required)
-      .map((option) => option.id);
-  });
+  const { selectedOptionIds: selectedAuthorizationOptionIds, toggleOption } = useOAuthAuthorizationOptions(
+    authorizationOptions,
+    props.connection?.profile?.grantedScopes,
+  );
   const [manualClientId, setManualClientId] = useState("");
   const [manualClientSecret, setManualClientSecret] = useState("");
   const manualClientConfigFields = useMemo(() => clientConfigFieldsFor(props.auth), [props.auth]);
@@ -1620,13 +1617,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
                   type="checkbox"
                   checked={checked}
                   disabled={option.required}
-                  onChange={(event) => {
-                    setSelectedAuthorizationOptionIds((current) =>
-                      event.target.checked
-                        ? [...new Set([...current, option.id])]
-                        : current.filter((id) => id !== option.id),
-                    );
-                  }}
+                  onChange={(event) => toggleOption(option.id, event.target.checked)}
                 />
                 <span>
                   <strong>{option.label}</strong>
