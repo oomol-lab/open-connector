@@ -1,4 +1,4 @@
-export const slackReadScopes: string[] = [
+const slackReadScopes = [
   "channels:read",
   "groups:read",
   "im:read",
@@ -12,10 +12,6 @@ export const slackReadScopes: string[] = [
   "reactions:read",
 ];
 
-export const slackWriteScopes: string[] = ["chat:write", "im:write", "files:write", "reactions:write"];
+const slackWriteScopes = ["chat:write", "im:write", "files:write", "reactions:write"];
 
 export const slackBotOAuthScopes: string[] = [...slackReadScopes, ...slackWriteScopes];
-
-export const slackUserOAuthScopes: string[] = [...slackReadScopes, ...slackWriteScopes, "search:read"];
-
-export const slackSearchOAuthScopes: string[] = ["search:read.public", "search:read.private"];

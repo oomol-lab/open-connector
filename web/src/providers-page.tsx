@@ -1232,7 +1232,7 @@ export function oauthAuthorizationRequestBody(
   manual?: ManualOAuthAuthorizationInput,
   authorizationOptionIds?: string[],
 ): OAuthAuthorizationRequestBody {
-  const body: OAuthAuthorizationRequestBody = { service, connectionName };
+  const body: OAuthAuthorizationRequestBody = { service, connectionName, authorizationOptionIds };
   if (manual) {
     const { extra, secretExtra } = splitClientConfigFieldValues(
       clientConfigFieldsFor(manual.auth),
@@ -1243,7 +1243,6 @@ export function oauthAuthorizationRequestBody(
     body.extra = extra;
     body.secretExtra = secretExtra;
   }
-  if (authorizationOptionIds) body.authorizationOptionIds = authorizationOptionIds;
   return body;
 }
 
@@ -1379,7 +1378,7 @@ function UnavailableProviderConnection(props: {
 function ConnectionForm(props: ConnectionFormProps): ReactNode {
   const t = useTranslate();
   const [values, setValues] = useState<Record<string, string>>({});
-  const authorizationOptions = props.auth.type === "oauth2" ? (props.auth.authorizationOptions ?? []) : [];
+  const authorizationOptions = props.auth.type === "oauth2" ? props.auth.authorizationOptions : undefined;
   const { selectedOptionIds: selectedAuthorizationOptionIds, toggleOption } = useOAuthAuthorizationOptions(
     authorizationOptions,
     props.connection?.profile?.grantedScopes,
@@ -1604,7 +1603,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
           ))}
         </>
       ) : null}
-      {props.auth.type === "oauth2" && authorizationOptions.length > 0 ? (
+      {authorizationOptions?.length ? (
         <div className="form-grid">
           <Label>
             <span>Permissions</span>

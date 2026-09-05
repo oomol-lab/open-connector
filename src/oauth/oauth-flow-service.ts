@@ -133,11 +133,10 @@ export class OAuthFlowService {
     );
     setAuthorizationParam(authorizationUrl, auth.authorizationRequestFields?.responseType, "response_type", "code");
     setAuthorizationParam(authorizationUrl, auth.authorizationRequestFields?.state, "state", state);
-    const effectiveScopes = authorizationScopes;
-    if (effectiveScopes.length > 0 && auth.authorizationRequestFields?.scope !== false) {
+    if (authorizationScopes.length > 0 && auth.authorizationRequestFields?.scope !== false) {
       authorizationUrl.searchParams.set(
         auth.authorizationRequestFields?.scope ?? "scope",
-        effectiveScopes.join(auth.scopeSeparator ?? " "),
+        authorizationScopes.join(auth.scopeSeparator ?? " "),
       );
     }
     if (pkceCodeVerifier) {
@@ -302,16 +301,10 @@ function resolveAuthorizationScopes(
   const byId = new Map(options.map((option) => [option.id, option]));
   const selected = new Set(optionIds);
   for (const option of options) if (option.required) selected.add(option.id);
-  const pendingIds = [...selected];
-  for (const id of pendingIds) {
+  for (const id of selected) {
     const option = byId.get(id);
     if (!option) throw new OAuthFlowError("invalid_input", `Unknown OAuth authorization option: ${id}.`);
-    for (const required of option.requires ?? []) {
-      if (!selected.has(required)) {
-        selected.add(required);
-        pendingIds.push(required);
-      }
-    }
+    for (const required of option.requires ?? []) selected.add(required);
   }
   return options.filter((option) => selected.has(option.id)).map((option) => option.id);
 }

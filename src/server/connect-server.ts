@@ -952,7 +952,7 @@ export class ConnectServer {
         service,
         connectionName,
         clientConfig: readOAuthClientConfigInput(body),
-        authorizationOptionIds: readAuthorizationOptionIds(body),
+        authorizationOptionIds: readOptionalStringArray(body, "authorizationOptionIds"),
       });
       const authorizationUrl = new URL(authorization.authorizationUrl);
       this.options.logger?.info(
@@ -1049,7 +1049,7 @@ export class ConnectServer {
         service,
         clientId: optionalString(body.clientId) ?? "",
         clientSecret: optionalString(body.clientSecret) ?? "",
-        requestedScopes: readRequestedScopes(body),
+        requestedScopes: readOptionalStringArray(body, "requestedScopes"),
         extra: optionalRecord(body.extra),
         secretExtra: optionalRecord(body.secretExtra),
       }),
@@ -1226,28 +1226,17 @@ function readOAuthClientConfigInput(body: Record<string, unknown>): OAuthClientC
   return {
     clientId: optionalString(body.clientId) ?? "",
     clientSecret: optionalString(body.clientSecret) ?? "",
-    requestedScopes: readRequestedScopes(body),
+    requestedScopes: readOptionalStringArray(body, "requestedScopes"),
     extra: optionalRecord(body.extra),
     secretExtra: optionalRecord(body.secretExtra),
   };
 }
 
-function readAuthorizationOptionIds(body: Record<string, unknown>): string[] | undefined {
-  if (!("authorizationOptionIds" in body)) return undefined;
+function readOptionalStringArray(body: Record<string, unknown>, fieldName: string): string[] | undefined {
+  if (!(fieldName in body)) return undefined;
   return requiredStringArray(
-    body.authorizationOptionIds,
-    "authorizationOptionIds",
-    (message) => new HttpRequestError("invalid_input", `${message}.`),
-  );
-}
-
-function readRequestedScopes(body: Record<string, unknown>): string[] | undefined {
-  if (!("requestedScopes" in body)) {
-    return undefined;
-  }
-  return requiredStringArray(
-    body.requestedScopes,
-    "requestedScopes",
+    body[fieldName],
+    fieldName,
     (message) => new HttpRequestError("invalid_input", `${message}.`),
   );
 }
