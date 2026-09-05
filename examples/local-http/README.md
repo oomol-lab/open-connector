@@ -29,6 +29,16 @@ first.
 NOTION_TOKEN=secret_... node examples/local-http/notion.ts
 ```
 
+Run App Store Connect with an API key created in App Store Connect. Pass the `.p8` file by path, or
+inline its PEM contents. Omit `APP_STORE_CONNECT_ISSUER_ID` when you use an Individual API Key.
+
+```bash
+APP_STORE_CONNECT_KEY_ID=2X9R4HXF34 \
+APP_STORE_CONNECT_ISSUER_ID=57246542-96fe-1a63-e053-0824d011072a \
+APP_STORE_CONNECT_PRIVATE_KEY_PATH=~/.appstoreconnect/private_keys/AuthKey_2X9R4HXF34.p8 \
+node examples/local-http/app_store_connect.ts
+```
+
 Prepare Gmail OAuth with your own Google OAuth app:
 
 ```bash
