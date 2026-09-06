@@ -32,7 +32,8 @@ import { DEFAULT_RUN_LIMIT } from "./storage/runtime-store.ts";
 
 const port = Number(process.env.PORT ?? 3000);
 const hostname = process.env.HOST ?? "127.0.0.1";
-const publicOrigin = process.env.OOMOL_CONNECT_ORIGIN ?? `http://localhost:${port}`;
+// Strip trailing slashes once so every consumer (OAuth redirects, transit files, action guides) joins paths safely.
+const publicOrigin = (process.env.OOMOL_CONNECT_ORIGIN ?? `http://localhost:${port}`).replace(/\/+$/, "");
 const dataDir = process.env.OOMOL_CONNECT_DATA_DIR ?? join(process.cwd(), "data");
 const transitFileTtlSeconds = readPositiveIntegerEnv("OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS", 86_400);
 const transitFileMaxBytes = readPositiveIntegerEnv("OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES", 100 * 1024 * 1024);

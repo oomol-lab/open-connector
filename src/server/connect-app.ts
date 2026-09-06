@@ -81,6 +81,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
   return {
     app: new ConnectServer({
       catalog: options.catalog,
+      publicOrigin: options.publicOrigin,
       providerLoader: options.providerLoader,
       connections,
       oauthClientConfigs,

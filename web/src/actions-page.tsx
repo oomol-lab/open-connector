@@ -243,7 +243,10 @@ function ActionDetail(props: ActionDetailProps): ReactNode {
     };
   }, [actionId]);
 
-  const examples = useMemo(() => (fullAction ? buildActionExamples(fullAction) : null), [fullAction]);
+  const examples = useMemo(
+    () => (fullAction ? buildActionExamples(fullAction, window.location.origin) : null),
+    [fullAction],
+  );
 
   return (
     <>
@@ -590,9 +593,9 @@ function actionConnectionLabel(connection: ConnectionRecord): string {
 function buildAgentPrompt(action: ActionDefinition): { prompt: string } {
   const markdownUrl = `${window.location.origin}/api/actions/${action.id}/agent.md`;
   const prompt = [
-    `Read ${markdownUrl} to discover the local request contract for ${action.name}.`,
+    `Read ${markdownUrl} to discover the request contract for ${action.name}.`,
     `Then call ${window.location.origin}/v1/actions/${action.id} with JSON shaped as { "input": ... }.`,
-    "Use the localhost runtime endpoint. Do not call the provider API directly unless I explicitly ask.",
+    "Use the runtime endpoint above. Do not call the provider API directly unless I explicitly ask.",
   ].join("\n");
 
   return { prompt };

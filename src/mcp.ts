@@ -91,7 +91,8 @@ const mcpToolConfigs = {
   },
   get_action_guide: {
     title: "Get Action Guide",
-    description: "Return one action's compact markdown guide, including local execute examples and input parameters.",
+    description:
+      "Return one action's compact markdown guide, including an execute_action example and input parameters.",
     inputSchema: {
       actionId: z.string().describe("Full action id, for example github.get_current_user."),
       connectionName: optionalConnectionNameSchema,
@@ -295,7 +296,11 @@ async function getActionGuide(
     const capability = describeActionCapability(action, policy, connection);
     return successPayload({
       capability,
-      markdown: renderActionMarkdown(action, { connection: capability.connection, policy: capability.policy }),
+      markdown: renderActionMarkdown(action, {
+        transport: { kind: "mcp" },
+        connection: capability.connection,
+        policy: capability.policy,
+      }),
     });
   } catch (error) {
     return connectionErrorPayload(error, policy);

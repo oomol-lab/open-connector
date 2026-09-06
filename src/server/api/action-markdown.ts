@@ -9,43 +9,40 @@ import { toMarkdown } from "mdast-util-to-markdown";
 import { gfm } from "micromark-extension-gfm";
 import { describeSchemaType, readSchemaProperties, readSchemaRequired } from "../../core/json-schema.ts";
 
-export type ActionMarkdownContext = {
+/** HTTP callers get request examples against the runtime's public origin. */
+interface HttpActionGuideTransport {
+  kind: "http";
+  /** Public origin of the runtime, for example `https://connector.example.com`. */
+  origin: string;
+}
+
+/** MCP callers get an `execute_action` tool example instead of HTTP requests. */
+interface McpActionGuideTransport {
+  kind: "mcp";
+}
+
+type ActionGuideTransport = HttpActionGuideTransport | McpActionGuideTransport;
+
+export interface ActionMarkdownContext {
+  /** How the caller executes actions; selects the examples and agent notes the guide renders. */
+  transport: ActionGuideTransport;
   connection?: ConnectionSummary;
   policy?: ActionPolicyDecision;
-};
+}
 
 /**
  * Render a compact action guide for coding agents and humans who want the raw
- * local HTTP contract without browsing the full catalog JSON.
+ * execution contract without browsing the full catalog JSON.
  */
-export function renderActionMarkdown(action: ActionDefinition, context: ActionMarkdownContext = {}): string {
+export function renderActionMarkdown(action: ActionDefinition, context: ActionMarkdownContext): string {
   const exampleInput = buildExampleInput(action.inputSchema);
-  const exampleBody = JSON.stringify({ input: exampleInput }, null, 2);
   const root: Root = {
     type: "root",
     children: [
       heading(1, action.id),
       ...markdownBlocks(action.description),
       heading(2, "Execute"),
-      code(
-        "bash",
-        [
-          `curl -s http://localhost:3000/v1/actions/${action.id} \\`,
-          "  -H 'content-type: application/json' \\",
-          `  -d '${JSON.stringify({ input: exampleInput })}'`,
-        ].join("\n"),
-      ),
-      code(
-        "ts",
-        [
-          `const response = await fetch("http://localhost:3000/v1/actions/${action.id}", {`,
-          `  method: "POST",`,
-          `  headers: { "content-type": "application/json" },`,
-          `  body: JSON.stringify(${indentMultiline(exampleBody, 2)}),`,
-          `});`,
-          `const result = await response.json();`,
-        ].join("\n"),
-      ),
+      ...describeExecute(action, context.transport, exampleInput),
       heading(2, "Input Parameters"),
       ...describeParameters(action.inputSchema),
       heading(2, "Required Scopes"),
@@ -58,7 +55,13 @@ export function renderActionMarkdown(action: ActionDefinition, context: ActionMa
       ...describeConnection(context.connection),
       heading(2, "Notes For Agents"),
       list([
-        textParagraph("Use the local runtime endpoint above; do not call provider APIs directly unless the user asks."),
+        context.transport.kind === "mcp"
+          ? paragraph([
+              "Use the ",
+              inlineCode("execute_action"),
+              " tool above; do not call provider APIs directly unless the user asks.",
+            ])
+          : textParagraph("Use the runtime endpoint above; do not call provider APIs directly unless the user asks."),
         paragraph(["Send JSON with a top-level ", inlineCode("input"), " object."]),
         textParagraph("Check the current connection and provider scopes before choosing actions on the user's behalf."),
         textParagraph(
@@ -73,6 +76,48 @@ export function renderActionMarkdown(action: ActionDefinition, context: ActionMa
     fences: true,
     extensions: [gfmToMarkdown()],
   });
+}
+
+function describeExecute(
+  action: ActionDefinition,
+  transport: ActionGuideTransport,
+  exampleInput: Record<string, unknown>,
+): BlockContent[] {
+  if (transport.kind === "mcp") {
+    return [
+      paragraph(["Call the ", inlineCode("execute_action"), " tool with these arguments:"]),
+      code("json", JSON.stringify({ actionId: action.id, input: exampleInput }, null, 2)),
+      paragraph([
+        "Add ",
+        inlineCode("connectionName"),
+        " to run the action with a named connection instead of the default one.",
+      ]),
+    ];
+  }
+
+  const endpoint = `${transport.origin}/v1/actions/${action.id}`;
+  const exampleBody = JSON.stringify({ input: exampleInput }, null, 2);
+  return [
+    code(
+      "bash",
+      [
+        `curl -s ${endpoint} \\`,
+        "  -H 'content-type: application/json' \\",
+        `  -d '${JSON.stringify({ input: exampleInput })}'`,
+      ].join("\n"),
+    ),
+    code(
+      "ts",
+      [
+        `const response = await fetch(${JSON.stringify(endpoint)}, {`,
+        `  method: "POST",`,
+        `  headers: { "content-type": "application/json" },`,
+        `  body: JSON.stringify(${indentMultiline(exampleBody, 2)}),`,
+        `});`,
+        `const result = await response.json();`,
+      ].join("\n"),
+    ),
+  ];
 }
 
 function describePolicy(policy: ActionPolicyDecision | undefined): BlockContent[] {

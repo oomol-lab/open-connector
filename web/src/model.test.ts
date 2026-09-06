@@ -1,13 +1,44 @@
-import type { AppData, ProviderDefinition, RunLog } from "./model";
+import type { AppData, FullActionDefinition, ProviderDefinition, RunLog } from "./model";
 
 import { describe, expect, it } from "vitest";
 import {
+  buildActionExamples,
   createOverviewSummary,
   filterProvidersByCategory,
   providerCategoryCounts,
   resolveProviderConnectionStatus,
   sortProviders,
 } from "./model";
+
+describe("buildActionExamples", () => {
+  it("builds request examples against the given origin", () => {
+    const action: FullActionDefinition = {
+      id: "github.get_current_user",
+      service: "github",
+      name: "get_current_user",
+      description: "Get the current user.",
+      requiredScopes: [],
+      inputSchema: { type: "object" },
+      outputSchema: { type: "object" },
+      execution: {
+        locallyExecutable: true,
+        catalogOnly: false,
+        requiredAuthTypes: ["oauth2"],
+        noAuthRunnable: false,
+        needsCredential: true,
+      },
+    };
+
+    const examples = buildActionExamples(action, "https://connector.example.com");
+
+    expect(
+      examples.curl.startsWith("curl -s https://connector.example.com/v1/actions/github.get_current_user \\"),
+    ).toBe(true);
+    expect(examples.typescript).toContain('fetch("https://connector.example.com/v1/actions/github.get_current_user"');
+    expect(examples.curl).not.toContain("localhost");
+    expect(examples.typescript).not.toContain("localhost");
+  });
+});
 
 function provider(service: string, displayName: string): ProviderDefinition {
   return {

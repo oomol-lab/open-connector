@@ -163,6 +163,23 @@ describe("MCP server", () => {
     });
   });
 
+  it("renders an execute_action example in action guides instead of HTTP requests", async () => {
+    await withMcpClient(async (client) => {
+      const guide = await client.callTool({ name: "get_action_guide", arguments: { actionId: "example.echo" } });
+
+      expect(guide.structuredContent).toMatchObject({
+        ok: true,
+        data: {
+          markdown: expect.stringContaining("Call the `execute_action` tool with these arguments:"),
+        },
+      });
+      const markdown = (guide.structuredContent as { data: { markdown: string } }).data.markdown;
+      expect(markdown).toContain('"actionId": "example.echo"');
+      expect(markdown).not.toContain("curl");
+      expect(markdown).not.toContain("localhost");
+    });
+  });
+
   it("lists safe connection profiles without exposing credentials", async () => {
     await withAuthenticatedMcpClient(async (client) => {
       const result = await client.callTool({

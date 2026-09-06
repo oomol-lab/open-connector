@@ -108,6 +108,8 @@ export async function preloadOptionalServerModules(): Promise<void> {
  */
 export interface IConnectServerOptions {
   catalog: CatalogStore;
+  /** Public origin of this runtime, used for the HTTP request examples in Action guides. */
+  publicOrigin: string;
   providerLoader: IProviderLoader;
   connections: ConnectionService;
   oauthClientConfigs: OAuthClientConfigService;
@@ -427,6 +429,7 @@ export class ConnectServer {
       const policy = (await this.getPolicySnapshot(context)).evaluate(action);
       return context.text(
         renderActionMarkdown(action, {
+          transport: { kind: "http", origin: this.options.publicOrigin },
           connection: await this.options.connections.getConnectionSummary(action.service, readConnectionName(context)),
           policy,
         }),

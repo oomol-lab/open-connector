@@ -2432,6 +2432,20 @@ describe("ConnectServer", () => {
     expect(markdown).toContain("`messages:read`");
   });
 
+  it("renders agent.md request examples against the configured public origin", async () => {
+    const app = createTestServer([{ ...apiKeyProvider, actions: [echoAction] }], {
+      publicOrigin: "https://connector.example.com",
+    }).createApp();
+
+    const response = await app.request("/api/actions/example.echo/agent.md");
+
+    expect(response.status).toBe(200);
+    const markdown = await response.text();
+    expect(markdown).toContain("curl -s https://connector.example.com/v1/actions/example.echo \\");
+    expect(markdown).toContain('fetch("https://connector.example.com/v1/actions/example.echo"');
+    expect(markdown).not.toContain("localhost");
+  });
+
   it("returns connection errors for action agent.md instead of 500", async () => {
     const app = createTestServer([
       {
@@ -3652,6 +3666,7 @@ interface TestAuthOptions {
 
 interface CreateTestServerOptions {
   auth?: TestAuthOptions;
+  publicOrigin?: string;
   actionPolicy?: ActionPolicyService;
   actionSearch?: ActionSearchIndexProvider;
   providerLoader?: IProviderLoader;
@@ -3711,6 +3726,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
 
   return new ConnectServer({
     catalog,
+    publicOrigin: options.publicOrigin ?? "http://localhost:3000",
     providerLoader,
     connections,
     oauthClientConfigs: clientConfigs,

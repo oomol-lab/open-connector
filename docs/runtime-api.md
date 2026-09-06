@@ -235,6 +235,10 @@ permissions, current connection identity, and request examples:
 curl -s http://localhost:3000/api/actions/github.get_current_user/agent.md
 ```
 
+The HTTP request examples in the guide use the runtime's public origin (`OOMOL_CONNECT_ORIGIN`, see
+[configuration.md](configuration.md)). The MCP `get_action_guide` tool returns the same guide with
+an `execute_action` example instead of HTTP requests.
+
 The Web Console also lets you copy cURL, TypeScript, and agent prompt examples for each Action.
 
 ## Transit Files
