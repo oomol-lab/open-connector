@@ -103,7 +103,7 @@ function describeExecute(
       [
         `curl -s ${endpoint} \\`,
         "  -H 'content-type: application/json' \\",
-        `  -d '${JSON.stringify({ input: exampleInput })}'`,
+        `  -d ${shellSingleQuote(JSON.stringify({ input: exampleInput }))}`,
       ].join("\n"),
     ),
     code(
@@ -276,6 +276,11 @@ function textTableCell(value: string): TableCell {
 
 function inlineCodeTableCell(value: string): TableCell {
   return { type: "tableCell", children: [{ type: "inlineCode", value }] };
+}
+
+/** Quote a value for a POSIX shell so an apostrophe inside an example does not end the argument. */
+function shellSingleQuote(value: string): string {
+  return `'${value.replace(/'/g, "'\\''")}'`;
 }
 
 function indentMultiline(value: string, spaces: number): string {

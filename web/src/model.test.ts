@@ -38,6 +38,33 @@ describe("buildActionExamples", () => {
     expect(examples.curl).not.toContain("localhost");
     expect(examples.typescript).not.toContain("localhost");
   });
+
+  it("keeps the cURL example valid when an example value contains an apostrophe", () => {
+    const action: FullActionDefinition = {
+      id: "github.list_repositories",
+      service: "github",
+      name: "list_repositories",
+      description: "List repositories.",
+      requiredScopes: [],
+      inputSchema: {
+        type: "object",
+        properties: { owner: { type: "string", default: "O'Reilly" } },
+        required: ["owner"],
+      },
+      outputSchema: { type: "object" },
+      execution: {
+        locallyExecutable: true,
+        catalogOnly: false,
+        requiredAuthTypes: ["oauth2"],
+        noAuthRunnable: false,
+        needsCredential: true,
+      },
+    };
+
+    const examples = buildActionExamples(action, "https://connector.example.com");
+
+    expect(examples.curl).toContain(`  -d '{"input":{"owner":"O'\\''Reilly"}}'`);
+  });
 });
 
 function provider(service: string, displayName: string): ProviderDefinition {

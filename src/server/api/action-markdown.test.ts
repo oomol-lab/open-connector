@@ -32,6 +32,22 @@ describe("renderActionMarkdown", () => {
     expect(markdown).not.toContain("execute_action");
   });
 
+  it("keeps the curl example valid when an example value contains an apostrophe", () => {
+    const markdown = renderActionMarkdown(
+      {
+        ...action,
+        inputSchema: {
+          type: "object",
+          properties: { owner: { type: "string", default: "O'Reilly" } },
+          required: ["owner"],
+        },
+      },
+      { transport: { kind: "http", origin: "https://connector.example.com" } },
+    );
+
+    expect(markdown).toContain(`  -d '{"input":{"owner":"O'\\''Reilly"}}'`);
+  });
+
   it("renders an execute_action example for MCP callers instead of HTTP requests", () => {
     const markdown = renderActionMarkdown(action, { transport: { kind: "mcp" } });
 

@@ -523,9 +523,11 @@ export function buildActionExamples(
   const body = { input: JSON.parse(exampleInput(action.inputSchema)) as unknown };
   const bodyText = JSON.stringify(body, null, 2);
   return {
-    curl: [`curl -s ${endpoint} \\`, "  -H 'content-type: application/json' \\", `  -d '${JSON.stringify(body)}'`].join(
-      "\n",
-    ),
+    curl: [
+      `curl -s ${endpoint} \\`,
+      "  -H 'content-type: application/json' \\",
+      `  -d ${shellSingleQuote(JSON.stringify(body))}`,
+    ].join("\n"),
     typescript: [
       `const response = await fetch(${JSON.stringify(endpoint)}, {`,
       `  method: "POST",`,
@@ -535,6 +537,11 @@ export function buildActionExamples(
       `const result = await response.json();`,
     ].join("\n"),
   };
+}
+
+/** Quote a value for a POSIX shell so an apostrophe inside an example does not end the argument. */
+function shellSingleQuote(value: string): string {
+  return `'${value.replace(/'/g, "'\\''")}'`;
 }
 
 export function formatDate(value: string): string {
