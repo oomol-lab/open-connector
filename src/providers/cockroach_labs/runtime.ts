@@ -11,7 +11,7 @@ import {
 } from "../provider-runtime.ts";
 
 export const cockroachLabsApiBaseUrl = "https://cockroachlabs.cloud";
-const cockroachLabsApiVersion = "2024-09-16";
+export const cockroachLabsApiVersion = "2024-09-16";
 
 interface CockroachLabsCredentialInput {
   apiKey: string;

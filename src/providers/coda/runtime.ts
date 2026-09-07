@@ -20,7 +20,7 @@ import {
   requiredInputString,
 } from "../provider-runtime.ts";
 
-const codaApiBaseUrl = "https://coda.io/apis/v1";
+export const codaApiBaseUrl = "https://coda.io/apis/v1";
 const codaWhoamiPath = "/whoami";
 
 interface CodaCredentialInput {

@@ -5,7 +5,7 @@ import { optionalString } from "../../core/cast.ts";
 import { withMcpClient } from "../mcp-client.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 
-const cloudflareDocsMcpUrl = "https://docs.mcp.cloudflare.com/mcp";
+export const cloudflareDocsMcpUrl = "https://docs.mcp.cloudflare.com/mcp";
 
 export interface CloudflareDocsActionContext {
   fetcher?: typeof fetch;

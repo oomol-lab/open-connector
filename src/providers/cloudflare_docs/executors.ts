@@ -1,8 +1,8 @@
-import type { ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ExecutionContext, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { CloudflareDocsActionContext } from "./runtime.ts";
 
-import { defineProviderExecutors, requireCustomCredential } from "../provider-runtime.ts";
-import { cloudflareDocsActionHandlers } from "./runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, requireCustomCredential } from "../provider-runtime.ts";
+import { cloudflareDocsActionHandlers, cloudflareDocsMcpUrl } from "./runtime.ts";
 
 const service = "cloudflare_docs";
 
@@ -15,5 +15,15 @@ export const executors: ProviderExecutors = defineProviderExecutors<CloudflareDo
       fetcher,
       signal: context.signal,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: cloudflareDocsMcpUrl,
+  auth: { type: "none" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json, text/event-stream");
   },
 });

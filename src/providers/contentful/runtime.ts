@@ -10,8 +10,8 @@ import {
   requiredResponseRecord,
 } from "../provider-runtime.ts";
 
-const contentfulApiBaseUrl = "https://api.contentful.com";
-const contentfulJsonContentType = "application/vnd.contentful.management.v1+json";
+export const contentfulApiBaseUrl = "https://api.contentful.com";
+export const contentfulJsonContentType = "application/vnd.contentful.management.v1+json";
 
 interface ContentfulRequestInput {
   path: string;

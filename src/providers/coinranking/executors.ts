@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
@@ -14,6 +14,7 @@ import {
 import { queryParams } from "../../core/request.ts";
 import {
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   providerInputError,
   ProviderRequestError,
   providerResponseError,
@@ -48,6 +49,16 @@ export const coinrankingActionHandlers: ProviderActionHandlers<"coinranking", Co
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, coinrankingActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: coinrankingApiBaseUrl,
+  auth: { type: "api_key_header", name: "x-access-token" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

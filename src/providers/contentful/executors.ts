@@ -1,9 +1,26 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors } from "../provider-runtime.ts";
-import { contentfulActionHandlers, validateContentfulCredential } from "./runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import {
+  contentfulActionHandlers,
+  contentfulApiBaseUrl,
+  contentfulJsonContentType,
+  validateContentfulCredential,
+} from "./runtime.ts";
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors("contentful", contentfulActionHandlers);
+const service = "contentful";
+
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, contentfulActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: contentfulApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", contentfulJsonContentType);
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

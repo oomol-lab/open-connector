@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { Client } from "@modelcontextprotocol/client";
@@ -8,7 +8,12 @@ import { SdkHttpError } from "@modelcontextprotocol/client";
 import { ProtocolError } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
 import { withMcpClient } from "../mcp-client.ts";
-import { defineBearerProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineBearerProviderExecutors,
+  defineProviderProxy,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "cloudflare_mcp";
 const cloudflareMcpEndpoint = "https://mcp.cloudflare.com/mcp";
@@ -34,6 +39,16 @@ export const cloudflareMcpActionHandlers: ProviderActionHandlers<
 
 export const executors: ProviderExecutors = defineBearerProviderExecutors(service, cloudflareMcpActionHandlers, {
   skipDnsValidation: true,
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: cloudflareMcpEndpoint,
+  auth: { type: "bearer" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json, text/event-stream");
+  },
 });
 
 export const credentialValidators: CredentialValidators = {

@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
@@ -6,6 +6,7 @@ import { optionalBoolean, optionalNumber, optionalRecord, optionalString, requir
 import { queryParams } from "../../core/request.ts";
 import {
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   ProviderRequestError,
   providerResponseError,
   providerUserAgent,
@@ -122,6 +123,16 @@ export const coinmarketcapActionHandlers: ProviderActionHandlers<"coinmarketcap"
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, coinmarketcapActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: coinmarketcapApiBaseUrl,
+  auth: { type: "api_key_header", name: "X-CMC_PRO_API_KEY" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
