@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const firefliesGraphqlBaseUrl = "https://api.fireflies.ai";
+export const firefliesGraphqlBaseUrl = "https://api.fireflies.ai";
 const firefliesGraphqlUrl = `${firefliesGraphqlBaseUrl}/graphql`;
 
 const userGroupSelection = `

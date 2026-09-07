@@ -1,9 +1,9 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "geocodio";
 const geocodioApiBaseUrl = "https://api.geocod.io";
@@ -33,6 +33,16 @@ export const geocodioActionHandlers: ProviderActionHandlers<"geocodio", Geocodio
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, geocodioActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: `${geocodioApiBaseUrl}/${geocodioApiVersion}`,
+  auth: { type: "api_key_query", name: "api_key" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const fernApiBaseUrl = "https://api.fernhq.com";
+export const fernApiBaseUrl = "https://api.fernhq.com";
 const fernValidationPath = "/customers?pageSize=1";
 
 type FernRequestPhase = "validate" | "execute";
