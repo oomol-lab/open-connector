@@ -6,7 +6,7 @@ import { compactObject, optionalRecord, optionalString, requiredString } from ".
 import { encodePathSegment } from "../../core/request.ts";
 import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const demodeskApiBaseUrl = "https://demodesk.com/api/v2";
+export const demodeskApiBaseUrl = "https://demodesk.com/api/v2";
 
 type DemodeskMode = "validate" | "execute";
 type DemodeskHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;

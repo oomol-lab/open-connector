@@ -9,7 +9,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const fomoApiBaseUrl = "https://api.fomo.com/api/v1";
+export const fomoApiBaseUrl = "https://api.fomo.com/api/v1";
 const fomoEventsPath = "/applications/me/events";
 
 type FomoRequestMode = "validate" | "execute";

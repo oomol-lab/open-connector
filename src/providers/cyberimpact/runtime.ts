@@ -13,7 +13,7 @@ import {
 import { encodePathSegment } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const cyberimpactApiBaseUrl = "https://api.cyberimpact.com";
+export const cyberimpactApiBaseUrl: string = "https://api.cyberimpact.com";
 
 type CyberimpactPhase = "validate" | "execute";
 type CyberimpactHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;

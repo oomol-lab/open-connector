@@ -5,7 +5,7 @@ import { compactObject, optionalRecord, optionalString } from "../../core/cast.t
 import { encodePathSegment, jsonObject } from "../../core/request.ts";
 import { isAbortLikeError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const flyApiBaseUrl = "https://api.machines.dev/v1/";
+export const flyApiBaseUrl = "https://api.machines.dev/v1/";
 const flyValidationPath = "tokens/current";
 
 type FlyRequestPhase = "validate" | "execute";

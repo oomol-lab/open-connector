@@ -11,7 +11,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const dialpadWfmApiBaseUrl = "https://api.teamsurfboard.com/api/v1";
+export const dialpadWfmApiBaseUrl = "https://api.teamsurfboard.com/api/v1";
 const validationScheduleQuery = {
   start: "2024-06-25T00:00:00.000Z",
   end: "2024-06-25T00:01:00.000Z",

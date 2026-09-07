@@ -13,7 +13,7 @@ import {
 import { encodePathSegment } from "../../core/request.ts";
 import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
-const deepgramApiBaseUrl = "https://api.deepgram.com/v1";
+export const deepgramApiBaseUrl: string = "https://api.deepgram.com/v1";
 
 type DeepgramPhase = "validate" | "execute";
 type DeepgramActionHandler = (
