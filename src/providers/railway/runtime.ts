@@ -15,7 +15,7 @@ import {
 import { objectPayload, requestJson } from "../http-json-runtime.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 
-const railwayApiBaseUrl = "https://backboard.railway.com";
+export const railwayApiBaseUrl: string = "https://backboard.railway.com";
 const railwayGraphqlPath = "/graphql/v2";
 
 export interface RailwayActionContext extends ApiKeyProviderContext {

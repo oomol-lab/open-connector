@@ -15,6 +15,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
   createProviderTimeout,
   defineProviderExecutors,
@@ -78,6 +79,7 @@ export const seqeraActionHandlers: ProviderActionHandlers<"seqera", SeqeraAction
 export const seqeraExecutorDefinition: ProviderExecutorDefinition<SeqeraActionContext> = {
   service: "seqera",
   handlers: seqeraActionHandlers,
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
   async createContext(context: ExecutionContext, fetcher: ProviderFetch): Promise<SeqeraActionContext> {
     return createSeqeraContext(await requireApiKeyCredential(context, service), fetcher, context.signal);
   },
@@ -446,16 +448,14 @@ function buildSeqeraUrl(apiBaseUrl: string, path: string, query?: Record<string,
   return url;
 }
 
-function normalizeSeqeraApiBaseUrl(value: string | undefined, fieldName: string): string {
+export function normalizeSeqeraApiBaseUrl(value: string | undefined, fieldName: string): string {
   const raw = value?.trim() || defaultSeqeraApiBaseUrl;
   const withProtocol = raw.startsWith("http://") || raw.startsWith("https://") ? raw : `https://${raw}`;
-
-  let parsed: URL;
-  try {
-    parsed = new URL(withProtocol);
-  } catch {
-    throw new ProviderRequestError(400, `${fieldName} must be a valid absolute URL`);
-  }
+  const parsed = assertPublicHttpUrl(withProtocol, {
+    fieldName,
+    createError: (message) => new ProviderRequestError(400, message),
+    allowPrivateNetwork: isPrivateNetworkAccessAllowed(),
+  });
 
   if (parsed.protocol !== "https:" && !isLocalhostHostname(parsed.hostname)) {
     throw new ProviderRequestError(400, "seqera apiBaseUrl must use https unless connecting to localhost");

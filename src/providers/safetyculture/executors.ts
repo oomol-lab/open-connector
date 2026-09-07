@@ -1,4 +1,9 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
@@ -14,6 +19,7 @@ import {
 } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
   requiredInputString,
@@ -23,6 +29,16 @@ const service = "safetyculture";
 const safetycultureApiBaseUrl = "https://api.safetyculture.io";
 const safetycultureCredentialHelpUrl = "https://developer.safetyculture.com/reference/authentication";
 const validationPath = "/audits/search";
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: safetycultureApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
+  },
+});
 
 type SafetycultureRequestPhase = "validate" | "execute";
 type SafetycultureQueryValue = string | number | boolean | readonly string[] | undefined;

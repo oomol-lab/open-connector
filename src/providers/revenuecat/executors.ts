@@ -1,4 +1,9 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
@@ -15,6 +20,7 @@ import {
 import { encodePathSegment } from "../../core/request.ts";
 import {
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   providerInputError,
   ProviderRequestError,
   providerResponseError,
@@ -24,6 +30,16 @@ import {
 
 const service = "revenuecat";
 const revenueCatApiBaseUrl = "https://api.revenuecat.com";
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: revenueCatApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
+  },
+});
 
 type RevenueCatPhase = "validate" | "execute";
 type RevenueCatActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;

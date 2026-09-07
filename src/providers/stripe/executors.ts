@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
@@ -6,6 +6,7 @@ import { compactObject, optionalRecord, optionalString } from "../../core/cast.t
 import {
   ProviderRequestError,
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   providerUserAgent,
   requiredResponseRecord,
 } from "../provider-runtime.ts";
@@ -116,6 +117,16 @@ export const stripeActionHandlers: ProviderActionHandlers<"stripe", StripeAction
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, stripeActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: stripeApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("stripe-version")) headers.set("stripe-version", stripeApiVersion);
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher }) {

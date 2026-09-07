@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
-import { assertPublicHttpUrl } from "../../core/request.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -486,10 +486,8 @@ function normalizeSvixBaseUrl(value: string): string {
   const url = assertPublicHttpUrl(value, {
     fieldName: "serverUrl",
     createError: (message) => new ProviderRequestError(400, message),
+    allowPrivateNetwork: isPrivateNetworkAccessAllowed(),
   });
-  if (url.protocol !== "https:") {
-    throw new ProviderRequestError(400, "svix serverUrl must use https");
-  }
   let normalizedPath = url.pathname;
   while (normalizedPath.length > 1 && normalizedPath.endsWith("/")) normalizedPath = normalizedPath.slice(0, -1);
   if (normalizedPath === svixApiPrefix) normalizedPath = "";

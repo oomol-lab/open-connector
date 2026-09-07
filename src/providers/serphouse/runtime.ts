@@ -10,7 +10,7 @@ type SerphouseQueryValue = string | number | undefined;
 type SerphouseActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type SerphouseActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
-const serphouseBaseUrl = "https://api.serphouse.com";
+export const serphouseBaseUrl = "https://api.serphouse.com";
 
 export const serphouseActionHandlers: ProviderActionHandlers<"serphouse", SerphouseActionHandler> = {
   async account_info(_input, context) {

@@ -1,4 +1,9 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
@@ -12,6 +17,7 @@ import {
 } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
   requiredInputString,
@@ -20,6 +26,16 @@ import {
 const service = "saas_custom_domains";
 const saasCustomDomainsApiBaseUrl = "https://app.saascustomdomains.com/api/v1";
 const saasCustomDomainsApiUrl = new URL(saasCustomDomainsApiBaseUrl);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: saasCustomDomainsApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
+  },
+});
 
 type SaasCustomDomainsPhase = "validate" | "execute";
 type QueryValue = string | number | undefined;

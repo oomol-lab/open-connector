@@ -1,9 +1,23 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { createProviderFetch, defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
-import { executeSplunkHttpEventCollectorAction, validateSplunkHttpEventCollectorCredential } from "./runtime.ts";
+import {
+  createProviderFetch,
+  defineProviderExecutors,
+  defineProviderProxy,
+  requireApiKeyCredential,
+} from "../provider-runtime.ts";
+import {
+  executeSplunkHttpEventCollectorAction,
+  normalizeSplunkHecBaseUrl,
+  validateSplunkHttpEventCollectorCredential,
+} from "./runtime.ts";
 
 const service = "splunk_http_event_collector";
 
@@ -53,6 +67,19 @@ export const executors: ProviderExecutors = defineProviderExecutors({
     const credential = await requireApiKeyCredential(context, service);
     return { apiKey: credential.apiKey, values: credential.values, metadata: credential.metadata, fetcher };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  async baseUrl(context) {
+    const credential = await requireApiKeyCredential(context, service);
+    return normalizeSplunkHecBaseUrl(
+      credential.metadata.baseUrl ?? credential.values.baseUrl,
+      isPrivateNetworkAccessAllowed(),
+    );
+  },
+  auth: { type: "api_key_authorization", prefix: "Splunk " },
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
 });
 
 export const credentialValidators: CredentialValidators = {

@@ -1,4 +1,4 @@
-import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidationResult, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
@@ -6,6 +6,7 @@ import { looseArray, optionalInteger, optionalRecord, optionalString, requiredSt
 import { compactJson, queryParams } from "../../core/request.ts";
 import {
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
   requiredInputString,
@@ -14,6 +15,17 @@ import {
 const service = "readwise";
 const readwiseApiBaseUrl = "https://readwise.io/api";
 const validationPath = "/v2/auth/";
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: readwiseApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Token " },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
+    if (!headers.has("content-type")) headers.set("content-type", "application/json");
+  },
+});
 
 type ReadwiseActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 

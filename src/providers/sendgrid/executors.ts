@@ -1,9 +1,10 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRawString, optionalRecord } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -88,6 +89,19 @@ export const executors: ProviderExecutors = defineProviderExecutors<SendgridActi
       baseUrl: resolveSendgridBaseUrl(credential.values.baseUrl ?? credential.metadata.baseUrl),
       fetcher,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service: "sendgrid",
+  async baseUrl(context) {
+    const credential = await requireApiKeyCredential(context, "sendgrid");
+    return resolveSendgridBaseUrl(credential.values.baseUrl ?? credential.metadata.baseUrl);
+  },
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
   },
 });
 
