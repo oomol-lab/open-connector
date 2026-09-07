@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
 
-const godialApiBaseUrl = "https://enterprise.godial.cc";
+export const godialApiBaseUrl = "https://enterprise.godial.cc";
 const godialValidationPath = "/meta/api/externals/accounts/list";
 
 type GodialMode = "validation" | "execution";

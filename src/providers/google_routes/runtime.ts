@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const googleRoutesApiBaseUrl = "https://routes.googleapis.com";
+export const googleRoutesApiBaseUrl = "https://routes.googleapis.com";
 
 type GoogleRoutesRequestPhase = "validate" | "execute";
 type GoogleRoutesActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;

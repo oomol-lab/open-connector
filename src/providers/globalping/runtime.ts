@@ -13,7 +13,7 @@ import {
 } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
 
-const globalpingApiBaseUrl = "https://api.globalping.io";
+export const globalpingApiBaseUrl = "https://api.globalping.io";
 
 type GlobalpingRequestPhase = "validate" | "execute";
 type GlobalpingActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;

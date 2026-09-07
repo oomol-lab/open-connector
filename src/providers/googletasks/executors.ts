@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
@@ -11,7 +11,7 @@ import {
   pickOptionalString,
 } from "../../core/cast.ts";
 import { googleJsonRequest, googleRequest } from "../google-runtime.ts";
-import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
 
 export const googleTasksApiBaseUrl = "https://tasks.googleapis.com/tasks/v1";
 
@@ -122,6 +122,13 @@ export const googleTasksActionHandlers: ProviderActionHandlers<"googletasks", Go
 };
 
 export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, googleTasksActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: googleTasksApiBaseUrl,
+  auth: { type: "oauth_bearer" },
+  skipDnsValidation: true,
+});
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher, signal }) {

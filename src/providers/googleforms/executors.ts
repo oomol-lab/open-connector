@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
@@ -11,7 +11,12 @@ import {
   optionalString,
 } from "../../core/cast.ts";
 import { googleJsonRequest } from "../google-runtime.ts";
-import { defineOAuthProviderExecutors, providerInputError, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineOAuthProviderExecutors,
+  defineProviderProxy,
+  providerInputError,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 export const googleFormsApiBaseUrl = "https://forms.googleapis.com/v1/forms";
 
@@ -88,6 +93,13 @@ export const googleFormsActionHandlers: ProviderActionHandlers<"googleforms", Go
 };
 
 export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, googleFormsActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: googleFormsApiBaseUrl,
+  auth: { type: "oauth_bearer" },
+  skipDnsValidation: true,
+});
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher, signal }) {

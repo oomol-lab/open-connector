@@ -12,7 +12,7 @@ import {
 } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const giphyApiBaseUrl = "https://api.giphy.com/v1";
+export const giphyApiBaseUrl = "https://api.giphy.com/v1";
 const giphyValidationPath = "/gifs/trending";
 
 type QueryValue = string | number | boolean | undefined;

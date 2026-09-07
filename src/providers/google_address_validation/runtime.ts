@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, requiredResponseRecord } from "../provider-runtime.ts";
 
-const googleAddressValidationApiBaseUrl = "https://addressvalidation.googleapis.com";
+export const googleAddressValidationApiBaseUrl = "https://addressvalidation.googleapis.com";
 
 type GoogleAddressValidationActionHandler = (
   input: Record<string, unknown>,

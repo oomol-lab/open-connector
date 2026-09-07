@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
@@ -13,6 +13,7 @@ import {
 import {
   combineProviderActionHandlers,
   defineOAuthProviderExecutors,
+  defineProviderProxy,
   ProviderRequestError,
 } from "../provider-runtime.ts";
 import { googlecalendarEventActionHandlers } from "./runtime-events.ts";
@@ -159,6 +160,13 @@ export const executors: ProviderExecutors = defineOAuthProviderExecutors(
   "googlecalendar",
   googlecalendarActionHandlers,
 );
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service: "googlecalendar",
+  baseUrl: googlecalendarApiBaseUrl,
+  auth: { type: "oauth_bearer" },
+  skipDnsValidation: true,
+});
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher, signal }) {

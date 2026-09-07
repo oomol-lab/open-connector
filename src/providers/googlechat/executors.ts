@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
@@ -12,7 +12,7 @@ import {
 } from "../../core/cast.ts";
 import { googleJsonRequest } from "../google-runtime.ts";
 import { asObject } from "../googledrive/runtime-shared.ts";
-import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
 
 export const googleChatApiBaseUrl = "https://chat.googleapis.com/v1";
 
@@ -42,6 +42,13 @@ export const googleChatActionHandlers: ProviderActionHandlers<"googlechat", Goog
 };
 
 export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, googleChatActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: googleChatApiBaseUrl,
+  auth: { type: "oauth_bearer" },
+  skipDnsValidation: true,
+});
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher, signal }) {
