@@ -1,10 +1,11 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
   requiredInputString,
@@ -14,6 +15,17 @@ const service = "omnisend";
 const omnisendApiBaseUrl = "https://api.omnisend.com/api";
 const omnisendApiVersion = "2026-03-15";
 const omnisendValidationPath = "/contacts";
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: omnisendApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Omnisend-API-Key " },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
+    if (!headers.has("omnisend-version")) headers.set("omnisend-version", omnisendApiVersion);
+  },
+});
 
 const contactBodyKeys = [
   "address",

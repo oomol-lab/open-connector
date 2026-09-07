@@ -153,7 +153,7 @@ function buildEventCursorBody(input: Record<string, unknown>): Record<string, un
   });
 }
 
-function resolveOnePasswordEventsBaseUrl(
+export function resolveOnePasswordEventsBaseUrl(
   values: Record<string, string>,
   metadata: Record<string, unknown> | undefined,
 ): string {

@@ -1,12 +1,18 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { assertPublicHttpUrl } from "../../core/request.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
   createProviderTimeout,
   defineProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
@@ -126,6 +132,22 @@ export const executors: ProviderExecutors = defineProviderExecutors<OnePasswordC
       fetcher,
       signal: context.signal,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  async baseUrl(context) {
+    const credential = await requireApiKeyCredential(context, service);
+    return normalizeOnePasswordBaseUrl(
+      credential.metadata.baseUrl ?? credential.values.baseUrl,
+      isPrivateNetworkAccessAllowed(),
+    );
+  },
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
   },
 });
 
@@ -260,7 +282,7 @@ function extractOnePasswordErrorMessage(payload: unknown): string | undefined {
   return optionalString(record.message) ?? optionalString(record.error) ?? optionalString(record.detail);
 }
 
-function normalizeOnePasswordBaseUrl(value: unknown): string {
+function normalizeOnePasswordBaseUrl(value: unknown, allowPrivateNetwork = isPrivateNetworkAccessAllowed()): string {
   const raw = optionalString(value);
   if (!raw) {
     throw new ProviderRequestError(400, "baseUrl is required");
@@ -269,6 +291,7 @@ function normalizeOnePasswordBaseUrl(value: unknown): string {
   const url = assertPublicHttpUrl(raw, {
     fieldName: "baseUrl",
     createError: (message) => new ProviderRequestError(400, message),
+    allowPrivateNetwork,
   });
 
   if (url.protocol !== "https:") {

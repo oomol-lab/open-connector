@@ -4,7 +4,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const plainApiUrl = "https://core-api.uk.plain.com/graphql/v1";
+export const plainApiUrl = "https://core-api.uk.plain.com/graphql/v1";
 
 const customerSelection = `
   id

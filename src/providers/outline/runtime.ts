@@ -11,7 +11,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { assertPublicHttpUrl } from "../../core/request.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 export const outlineCloudApiBaseUrl = "https://app.getoutline.com/api";
@@ -466,11 +466,15 @@ function readData(payload: unknown) {
   return record.data;
 }
 
-export function normalizeOutlineBaseUrl(value: unknown): string {
+export function normalizeOutlineBaseUrl(
+  value: unknown,
+  allowPrivateNetwork: boolean = isPrivateNetworkAccessAllowed(),
+): string {
   const candidate = optionalString(value) ?? outlineCloudApiBaseUrl;
   const parsed = assertPublicHttpUrl(candidate, {
     fieldName: "baseUrl",
     createError: (message) => new ProviderRequestError(400, message),
+    allowPrivateNetwork,
   });
   if (parsed.protocol !== "https:") {
     throw new ProviderRequestError(400, "baseUrl must use https");

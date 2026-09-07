@@ -1,4 +1,9 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
@@ -12,6 +17,7 @@ import {
 } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
@@ -44,6 +50,23 @@ interface MocoJsonResponse {
 }
 
 const service = "moco";
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  async baseUrl(context) {
+    const credential = await requireApiKeyCredential(context, service);
+    return (
+      optionalString(credential.metadata.apiBaseUrl) ??
+      buildMocoApiBaseUrl(normalizeMocoAccount(credential.values.account))
+    );
+  },
+  auth: { type: "api_key_authorization", prefix: "Token token=" },
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
+    if (!headers.has("content-type")) headers.set("content-type", "application/json");
+  },
+});
+
 const mocoValidationPath = "/session";
 const mocoCredentialHelpUrl = "https://everii-group.github.io/mocoapp-api-docs/authentication.html";
 

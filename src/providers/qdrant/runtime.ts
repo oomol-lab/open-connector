@@ -243,7 +243,7 @@ async function requestQdrantJson(
   }
 }
 
-function normalizeQdrantClusterUrl(value: string | undefined): URL {
+export function normalizeQdrantClusterUrl(value: unknown): URL {
   const url = assertPublicHttpUrl(requiredString(value, "clusterUrl", providerInputError), {
     fieldName: "clusterUrl",
     createError: providerInputError,

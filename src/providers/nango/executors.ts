@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
@@ -12,6 +12,7 @@ import {
 } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
@@ -21,6 +22,16 @@ import {
 
 const service = "nango";
 const nangoApiBaseUrl = "https://api.nango.dev";
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: nangoApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
+  },
+});
 
 type NangoMethod = "GET" | "POST" | "PATCH" | "DELETE";
 type QueryValue = string | number | boolean | readonly string[] | Record<string, string> | undefined;
