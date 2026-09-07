@@ -1,9 +1,21 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors } from "../provider-runtime.ts";
-import { ahrefsActionHandlers, validateAhrefsCredential } from "./runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { ahrefsActionHandlers, ahrefsApiBaseUrl, validateAhrefsCredential } from "./runtime.ts";
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors("ahrefs", ahrefsActionHandlers);
+const service = "ahrefs";
+
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, ahrefsActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: ahrefsApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

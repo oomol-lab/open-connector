@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.t
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const bugbugApiBaseUrl = "https://app.bugbug.io";
+export const bugbugApiBaseUrl = "https://app.bugbug.io";
 const bugbugValidationPath = "/api/v2/tests/";
 
 type BugbugRequestPhase = "validate" | "execute";

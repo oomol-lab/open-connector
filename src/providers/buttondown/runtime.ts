@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } fro
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const buttondownApiBaseUrl = "https://api.buttondown.com/v1/";
+export const buttondownApiBaseUrl = "https://api.buttondown.com/v1/";
 
 type ButtondownPhase = "validate" | "execute";
 type ButtondownActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;

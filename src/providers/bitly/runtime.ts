@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } fro
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
 
-const bitlyApiBaseUrl = "https://api-ssl.bitly.com/v4";
+export const bitlyApiBaseUrl = "https://api-ssl.bitly.com/v4";
 const bitlyValidationPath = "/user";
 
 type BitlyRequestPhase = "validate" | "execute";
