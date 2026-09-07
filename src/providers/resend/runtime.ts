@@ -24,7 +24,7 @@ import {
   setSearchParams,
 } from "../provider-runtime.ts";
 
-const resendApiBaseUrl = "https://api.resend.com";
+export const resendApiBaseUrl = "https://api.resend.com";
 const resendCredentialValidationErrors = new Set(["validation_error", "missing_required_field"]);
 
 type ResendActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
