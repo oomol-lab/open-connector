@@ -14,7 +14,7 @@ import {
 } from "../provider-runtime.ts";
 
 const service = "elorus";
-const elorusApiBaseUrl = "https://api.elorus.com";
+export const elorusApiBaseUrl = "https://api.elorus.com";
 const elorusValidationPath = "/v1.2/contacts/";
 
 interface ElorusActionContext {

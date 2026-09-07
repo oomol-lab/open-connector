@@ -6,7 +6,7 @@ import { compactObject, objectArray, optionalInteger, optionalRecord, optionalSt
 import { encodePathSegment } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
 
-const emailoctopusApiBaseUrl = "https://emailoctopus.com/api/1.6";
+export const emailoctopusApiBaseUrl = "https://emailoctopus.com/api/1.6";
 const emailoctopusValidationPath = "/lists";
 
 interface EmailoctopusRequestOptions {

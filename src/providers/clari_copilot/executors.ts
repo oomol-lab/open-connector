@@ -1,10 +1,11 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
@@ -83,6 +84,24 @@ export const executors: ProviderExecutors = defineProviderExecutors<ClariCopilot
       fetcher,
       signal: context.signal,
     });
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: clariCopilotApiBaseUrl,
+  auth: {
+    type: "credential_headers",
+    headers: [
+      { name: "X-Api-Key", source: { type: "api_key" } },
+      { name: "X-Api-Password", source: { type: "credential_value", name: "apiPassword" } },
+    ],
+  },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) {
+      headers.set("accept", "application/json");
+    }
   },
 });
 

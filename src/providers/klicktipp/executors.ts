@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
@@ -6,6 +6,7 @@ import { optionalNumber, optionalRecord, optionalString, requiredString } from "
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerInputError,
   providerUserAgent,
@@ -15,6 +16,17 @@ import {
 const service = "klicktipp";
 const klicktippApiBaseUrl = "https://api.klicktipp.com";
 const klicktippDocsUrl = "https://developers.klicktipp.com/guides/listbuilding-api";
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: klicktippApiBaseUrl,
+  auth: { type: "api_key_json_body", name: "apikey" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
+    if (!headers.has("content-type")) headers.set("content-type", "application/json");
+  },
+});
 
 type KlicktippActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type KlicktippActionHandler = (input: Record<string, unknown>, context: KlicktippActionContext) => Promise<unknown>;

@@ -1,10 +1,11 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerInputError,
   providerUserAgent,
@@ -142,6 +143,18 @@ export const gumroadActionHandlers: ProviderActionHandlers<"gumroad", GumroadAct
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, gumroadActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: gumroadApiBaseUrl,
+  auth: { type: "api_key_query_or_form_body", name: "access_token" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) {
+      headers.set("accept", "application/json");
+    }
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

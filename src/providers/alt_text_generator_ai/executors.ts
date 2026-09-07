@@ -1,10 +1,26 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "alt_text_generator_ai";
 const baseUrl = "https://alttextgeneratorai.com";
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl,
+  auth: { type: "api_key_json_body", name: "wpkey" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "text/plain");
+    if (!headers.has("content-type")) headers.set("content-type", "application/json");
+  },
+});
 
 const handlers: ProviderActionHandlers<"alt_text_generator_ai", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async generate_alt_text(input, context: ApiKeyProviderContext) {

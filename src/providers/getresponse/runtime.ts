@@ -109,6 +109,10 @@ export async function validateGetresponseCredential(
   };
 }
 
+export function resolveStoredGetresponseApiBaseUrl(providerMetadata: Record<string, unknown>): string {
+  return readStoredConnection(providerMetadata).apiBaseUrl;
+}
+
 function listCampaigns(input: GetresponseInput, fetcher: typeof fetch) {
   return requestList(input, fetcher, {
     path: "/campaigns",
