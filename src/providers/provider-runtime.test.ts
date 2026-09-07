@@ -471,6 +471,31 @@ describe("provider egress SSRF guard", () => {
     expect(calls[0]?.url).toBe("https://eu.api.example.com/v1/items");
   });
 
+  it("accepts only allowlisted absolute HTTPS proxy endpoints", async () => {
+    const calls = stubFetchSequence([new Response(JSON.stringify({ ok: true }), { status: 200 })]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com/v1",
+      allowedOrigins: ["https://content.example.net"],
+      auth: { type: "none" },
+    });
+
+    const allowed = await proxy(
+      { method: "GET", endpoint: "https://content.example.net/articles/1?format=xml", query: { page: 2 } },
+      executionContext,
+    );
+    const rejected = await proxy(
+      { method: "GET", endpoint: "https://attacker.example.org/articles/1" },
+      executionContext,
+    );
+
+    expect(allowed.ok).toBe(true);
+    expect(calls[0]?.url).toBe("https://content.example.net/articles/1?format=xml&page=2");
+    expect(rejected.ok).toBe(false);
+    if (rejected.ok) throw new Error("expected failure");
+    expect(rejected.error.message).toBe("absolute endpoint origin is not allowed");
+  });
+
   it("strips the configured proxy API key header from cross-origin redirects", async () => {
     const calls = stubFetchSequence([
       new Response(null, { status: 302, headers: { location: "https://cdn.example.net/items" } }),

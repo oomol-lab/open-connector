@@ -385,23 +385,38 @@ const defaultProviderJsonMaxResponseBytes = 20 * 1024 * 1024;
 const defaultProviderErrorMaxResponseBytes = 64 * 1024;
 const defaultProviderRequestTimeoutMs = 30_000;
 
-export function createProviderProxyUrl(baseUrl: string, endpointInput: unknown, queryInput?: unknown): URL {
-  const endpoint = normalizeProviderProxyEndpoint(endpointInput);
+export function createProviderProxyUrl(
+  baseUrl: string,
+  endpointInput: unknown,
+  queryInput?: unknown,
+  allowedOrigins?: readonly string[],
+): URL {
+  const endpoint = normalizeProviderProxyEndpoint(endpointInput, allowedOrigins);
   const base = new URL(baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`);
-  const url = new URL(`./${endpoint.slice(1)}`, base);
-  if (url.origin !== base.origin) {
-    throw new ProviderRequestError(400, "endpoint must stay on the provider origin");
-  }
+  const url = endpoint.startsWith("/") ? new URL(`./${endpoint.slice(1)}`, base) : new URL(endpoint);
   for (const [key, value] of Object.entries(normalizeProviderProxyQuery(queryInput))) {
     url.searchParams.set(key, value);
   }
   return url;
 }
 
-export function normalizeProviderProxyEndpoint(endpointInput: unknown): string {
+export function normalizeProviderProxyEndpoint(endpointInput: unknown, allowedOrigins?: readonly string[]): string {
   const endpoint = requiredString(endpointInput, "endpoint", (message) => new ProviderRequestError(400, message));
   if (!endpoint.startsWith("/") || endpoint.startsWith("//")) {
-    throw new ProviderRequestError(400, "endpoint must be a relative path starting with /");
+    let absolute: URL;
+    try {
+      absolute = new URL(endpoint);
+    } catch {
+      throw new ProviderRequestError(400, "endpoint must be a relative path or an allowed absolute HTTPS URL");
+    }
+    const origins = new Set(allowedOrigins?.map((value) => new URL(value).origin));
+    if (absolute.protocol !== "https:" || absolute.username || absolute.password || !origins.has(absolute.origin)) {
+      throw new ProviderRequestError(400, "absolute endpoint origin is not allowed");
+    }
+    if (endpoint.includes("\\") || hasPathTraversalSegment(absolute.pathname)) {
+      throw new ProviderRequestError(400, "endpoint must not contain path traversal segments");
+    }
+    return absolute.toString();
   }
   try {
     const url = new URL(endpoint.slice(1));
@@ -577,16 +592,14 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
   });
   return async (proxyInput: ProxyRequestInput, context: ExecutionContext): Promise<ProxyExecutionResult> => {
     try {
-      const endpoint = normalizeProviderProxyEndpoint(proxyInput.endpoint);
+      const baseUrl = await resolveProviderProxyBaseUrl(input.baseUrl, context, input.service);
+      const endpointOrigins = [baseUrl, ...(input.allowedOrigins ?? [])];
+      const endpoint = normalizeProviderProxyEndpoint(proxyInput.endpoint, endpointOrigins);
       if (input.allowedEndpoint && !input.allowedEndpoint(endpoint)) {
         throw new ProviderRequestError(400, "endpoint is not supported for this provider");
       }
 
-      const url = createProviderProxyUrl(
-        await resolveProviderProxyBaseUrl(input.baseUrl, context, input.service),
-        endpoint,
-        proxyInput.query,
-      );
+      const url = createProviderProxyUrl(baseUrl, endpoint, proxyInput.query, endpointOrigins);
       const providerOrigin = url.origin;
       const headers = normalizeProviderProxyHeaders(proxyInput.headers);
       headers.set("user-agent", providerUserAgent);
