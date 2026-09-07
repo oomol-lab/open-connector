@@ -11,7 +11,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const heyreachApiBaseUrl = "https://api.heyreach.io/api/public";
+export const heyreachApiBaseUrl = "https://api.heyreach.io/api/public";
 
 type HeyreachPhase = "validate" | "execute";
 

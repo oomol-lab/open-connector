@@ -1,7 +1,12 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { HoneycombActionContext } from "./runtime.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
 import { honeycombActionHandlers, resolveHoneycombApiBaseUrl, validateHoneycombCredential } from "./runtime.ts";
 
 const service = "honeycomb";
@@ -20,6 +25,20 @@ export const executors: ProviderExecutors = defineProviderExecutors<HoneycombAct
       fetcher,
       signal: context.signal,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  async baseUrl(context): Promise<string> {
+    const credential = await requireApiKeyCredential(context, service);
+    return resolveHoneycombApiBaseUrl({ metadata: credential.metadata });
+  },
+  allowedOrigins: ["https://api.honeycomb.io", "https://api.eu1.honeycomb.io"],
+  auth: { type: "api_key_header", name: "X-Honeycomb-Team" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
   },
 });
 

@@ -1,11 +1,24 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import { defineOAuthProviderExecutors } from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
 import { fetchHelpscoutCurrentUser, helpscoutActionHandlers } from "./runtime.ts";
 
-export const executors: ProviderExecutors = defineOAuthProviderExecutors("helpscout", helpscoutActionHandlers, {
+const service = "helpscout";
+const helpscoutApiBaseUrl = "https://api.helpscout.net/v2";
+
+export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, helpscoutActionHandlers, {
   skipDnsValidation: true,
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: helpscoutApiBaseUrl,
+  auth: { type: "oauth_bearer" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/hal+json, application/json");
+  },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -17,7 +30,7 @@ export const credentialValidators: CredentialValidators = {
     return {
       profile: { accountId: id, displayName: name || email || (id ? `Help Scout User ${id}` : "Help Scout User") },
       grantedScopes: input.profile.grantedScopes,
-      metadata: { apiBaseUrl: "https://api.helpscout.net/v2" },
+      metadata: { apiBaseUrl: helpscoutApiBaseUrl },
     };
   },
 };

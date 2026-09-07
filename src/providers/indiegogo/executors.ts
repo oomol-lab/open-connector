@@ -1,7 +1,9 @@
+import type { ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers, ProviderActionSources, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   mapProviderActionSources,
   ProviderRequestError,
   providerUserAgent,
@@ -39,9 +41,19 @@ const handlers: ProviderActionHandlers<"indiegogo", ProviderRuntimeHandler<Conte
   (name, path) => (input, context) => execute(input, context, name, path),
 );
 
-export const executors: import("../../core/types.ts").ProviderExecutors = defineProviderExecutors<Context>({
+export const executors: ProviderExecutors = defineProviderExecutors<Context>({
   service: "indiegogo",
   createContext: (_context, fetcher) => ({ fetcher }),
   skipDnsValidation: true,
   handlers,
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service: "indiegogo",
+  baseUrl: "https://www.indiegogo.com",
+  auth: { type: "none" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
 });

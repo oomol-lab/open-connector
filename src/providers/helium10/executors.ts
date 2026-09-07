@@ -1,10 +1,22 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineOAuthProviderExecutors } from "../provider-runtime.ts";
-import { helium10ActionHandlers, validateHelium10Credential } from "./runtime.ts";
+import { defineOAuthProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { helium10ActionHandlers, helium10McpEndpoint, validateHelium10Credential } from "./runtime.ts";
 
-export const executors: ProviderExecutors = defineOAuthProviderExecutors("helium10", helium10ActionHandlers, {
+const service = "helium10";
+
+export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, helium10ActionHandlers, {
   skipDnsValidation: true,
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: helium10McpEndpoint,
+  auth: { type: "oauth_bearer" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json, text/event-stream");
+  },
 });
 
 export const credentialValidators: CredentialValidators = {

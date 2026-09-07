@@ -1,9 +1,14 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "imgbb";
 const imgbbApiBaseUrl = "https://api.imgbb.com";
@@ -33,6 +38,16 @@ export const imgbbActionHandlers: ProviderActionHandlers<"imgbb", ImgbbActionHan
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, imgbbActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: imgbbApiBaseUrl,
+  auth: { type: "api_key_query", name: "key" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

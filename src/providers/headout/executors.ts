@@ -1,4 +1,9 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
@@ -13,6 +18,7 @@ import {
 } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerInputError,
   providerUserAgent,
@@ -194,6 +200,21 @@ export const executors: ProviderExecutors = defineProviderExecutors<HeadoutActio
       fetcher,
       signal: context.signal,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  async baseUrl(context) {
+    const credential = await requireApiKeyCredential(context, service);
+    return optionalString(credential.metadata.apiBaseUrl) === headoutSandboxApiBaseUrl
+      ? headoutSandboxApiBaseUrl
+      : headoutProductionApiBaseUrl;
+  },
+  allowedOrigins: [headoutProductionApiBaseUrl, headoutSandboxApiBaseUrl],
+  auth: { type: "api_key_header", name: "Headout-Auth" },
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
   },
 });
 

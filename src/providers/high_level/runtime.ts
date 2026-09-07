@@ -13,8 +13,8 @@ import {
 } from "../../core/cast.ts";
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const highLevelApiBaseUrl = "https://services.leadconnectorhq.com";
-const highLevelApiVersion = "2021-07-28";
+export const highLevelApiBaseUrl = "https://services.leadconnectorhq.com";
+export const highLevelApiVersion = "2021-07-28";
 
 type HighLevelRequestPhase = "validate" | "execute";
 
