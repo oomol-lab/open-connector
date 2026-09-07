@@ -350,8 +350,11 @@ export interface ProviderProxyRequestCustomizationInput {
   context: ExecutionContext;
   service: string;
   endpoint: string;
+  method: string;
   url: URL;
   headers: Headers;
+  body: unknown;
+  setBody(body: unknown): void;
   credential?: ResolvedCredential;
   /** Guarded fetcher used by the proxy for provider-owned auxiliary requests such as token exchange. */
   fetcher: typeof fetch;
@@ -604,12 +607,18 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
       const headers = normalizeProviderProxyHeaders(proxyInput.headers);
       headers.set("user-agent", providerUserAgent);
       const authResult = await applyProviderProxyAuth(input, context, url, headers, proxyInput.method, proxyInput.body);
+      let requestBody = authResult.body;
       await input.customizeRequest?.({
         context,
         service: input.service,
         endpoint,
+        method: proxyInput.method,
         url,
         headers,
+        body: requestBody,
+        setBody(body) {
+          requestBody = body;
+        },
         credential: authResult.credential,
         fetcher: egressFetch,
       });
@@ -624,9 +633,9 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
           headers,
           signal: timeout.signal,
         };
-        if (authResult.body !== undefined) {
-          init.body = typeof authResult.body === "string" ? authResult.body : JSON.stringify(authResult.body);
-          if (!headers.has("content-type") && typeof authResult.body !== "string") {
+        if (requestBody !== undefined) {
+          init.body = typeof requestBody === "string" ? requestBody : JSON.stringify(requestBody);
+          if (!headers.has("content-type") && typeof requestBody !== "string") {
             headers.set("content-type", "application/json");
           }
         }

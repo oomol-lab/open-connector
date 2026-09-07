@@ -713,6 +713,25 @@ describe("provider egress SSRF guard", () => {
     expect(new Headers(calls[0]?.init?.headers).get("content-type")).toBe("application/json");
   });
 
+  it("lets provider customization replace the request body", async () => {
+    const calls = stubFetchSequence([new Response(JSON.stringify({ ok: true }), { status: 200 })]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: { type: "none" },
+      customizeRequest({ method, body, setBody }) {
+        expect(method).toBe("POST");
+        expect(body).toEqual({ value: 1 });
+        setBody({ value: 2 });
+      },
+    });
+
+    const result = await proxy({ method: "POST", endpoint: "/items", body: { value: 1 } }, executionContext);
+
+    expect(result.ok).toBe(true);
+    expect(calls[0]?.init?.body).toBe('{"value":2}');
+  });
+
   it.each(["text", [], 1])("rejects a non-object JSON auth body: %j", async (body) => {
     const calls = stubFetchSequence([]);
     const proxy = defineProviderProxy({
