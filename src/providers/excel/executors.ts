@@ -1,10 +1,10 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalString, requiredString } from "../../core/cast.ts";
-import { defineOAuthProviderExecutors, mapProviderActionHandlers } from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors, defineProviderProxy, mapProviderActionHandlers } from "../provider-runtime.ts";
 import { excelActions } from "./actions.ts";
-import { excelJsonRequest, executeExcelAction } from "./runtime.ts";
+import { excelJsonRequest, executeExcelAction, graphBaseUrl } from "./runtime.ts";
 
 const service = "excel";
 
@@ -26,6 +26,13 @@ export const excelActionHandlers: ProviderActionHandlers<"excel", ExcelActionHan
 );
 
 export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, excelActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: graphBaseUrl,
+  auth: { type: "oauth_bearer" },
+  skipDnsValidation: true,
+});
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher }) {

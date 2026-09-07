@@ -4,7 +4,7 @@ import { compactObject, optionalBoolean, optionalNumber } from "../../core/cast.
 import { getProviderActionHandler, ProviderRequestError } from "../provider-runtime.ts";
 import { emptyWorkbookBytes, excelWorkbookMimeType } from "./workbook-template.ts";
 
-const graphBaseUrl = "https://graph.microsoft.com/v1.0";
+export const graphBaseUrl = "https://graph.microsoft.com/v1.0";
 const graphHost = "graph.microsoft.com";
 const defaultWorkbookExtensions = [".xlsx", ".xlsm", ".xlsb"] as const;
 const excelUploadChunkSizeBytes = 10 * 1024 * 1024;

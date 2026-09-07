@@ -1,16 +1,22 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 import type { FeishuActionRuntimeContext } from "./shared/client.ts";
 
 import { optionalString } from "../../core/cast.ts";
 import {
   defineOAuthProviderExecutors,
+  defineProviderProxy,
   getProviderActionHandler,
   mapProviderActionHandlers,
   ProviderRequestError,
 } from "../provider-runtime.ts";
 import { feishuActions } from "./actions.ts";
-import { feishuActionHandlers, fetchFeishuUserInfo } from "./runtime.ts";
+import { feishuActionHandlers, feishuOpenBaseUrl, fetchFeishuUserInfo } from "./runtime.ts";
 import { createFeishuApplicationActionHandlers } from "./shared/application-runtime.ts";
 import { createFeishuApprovalActionHandlers } from "./shared/approval-runtime.ts";
 import { createFeishuAttendanceActionHandlers } from "./shared/attendance-runtime.ts";
@@ -67,6 +73,16 @@ const allFeishuActionHandlers = mapProviderActionHandlers(
 );
 
 export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, allFeishuActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: feishuOpenBaseUrl,
+  auth: { type: "oauth_bearer" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
+});
 
 function createFeishuSharedHandlers(
   context: OAuthProviderContext,

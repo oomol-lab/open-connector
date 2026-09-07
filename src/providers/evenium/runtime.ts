@@ -11,7 +11,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const eveniumApiBaseUrl = "https://evenium.com";
+export const eveniumApiBaseUrl = "https://evenium.com";
 const eveniumValidationPath = "/api/1/events";
 
 type EveniumRequestMode = "validate" | "execute";

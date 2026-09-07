@@ -10,7 +10,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const eventzillaApiBaseUrl = "https://www.eventzillaapi.net/api/v2";
+export const eventzillaApiBaseUrl = "https://www.eventzillaapi.net/api/v2";
 const eventzillaValidationPath = "/users";
 const eventzillaDefaultTimeoutMs = 30_000;
 

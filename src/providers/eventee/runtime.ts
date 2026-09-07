@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } fro
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { isAbortLikeError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const eventeeApiBaseUrl = "https://api.eventee.com/public/v1";
+export const eventeeApiBaseUrl = "https://api.eventee.com/public/v1";
 const eventeeValidationPath = "/groups";
 
 type EventeeRequestMode = "validate" | "execute";

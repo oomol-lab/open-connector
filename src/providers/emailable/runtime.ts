@@ -19,7 +19,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const emailableApiBaseUrl = "https://api.emailable.com";
+export const emailableApiBaseUrl = "https://api.emailable.com";
 
 type EmailableRequestPhase = "validate" | "execute";
 type EmailableActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;

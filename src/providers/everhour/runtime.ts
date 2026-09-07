@@ -10,7 +10,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const everhourApiBaseUrl = "https://api.everhour.com";
+export const everhourApiBaseUrl = "https://api.everhour.com";
 const everhourValidationPath = "/users/me";
 
 type EverhourRequestPhase = "validate" | "execute";

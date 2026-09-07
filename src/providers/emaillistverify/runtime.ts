@@ -13,7 +13,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const emailListVerifyApiBaseUrl = "https://apps.emaillistverify.com";
+export const emailListVerifyApiBaseUrl = "https://apps.emaillistverify.com";
 const emailListVerifyApiKeyRejectedStatus = "error_credit";
 
 type EmailListVerifyRequestPhase = "validate" | "execute";

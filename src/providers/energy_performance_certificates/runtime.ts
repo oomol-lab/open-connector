@@ -10,7 +10,7 @@ import {
   providerUserAgent,
 } from "../provider-runtime.ts";
 
-const energyPerformanceCertificatesApiBaseUrl = "https://api.get-energy-performance-data.communities.gov.uk";
+export const energyPerformanceCertificatesApiBaseUrl = "https://api.get-energy-performance-data.communities.gov.uk";
 
 type EnergyPerformanceCertificatesPhase = "validate" | "execute";
 type SearchFamily = "domestic" | "non-domestic" | "display";
