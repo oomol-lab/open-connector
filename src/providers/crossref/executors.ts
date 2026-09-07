@@ -1,8 +1,20 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 
-import { defineProviderExecutors, mapProviderActionSources, ProviderRequestError } from "../provider-runtime.ts";
-import { crossrefActionHandlers, validateCrossrefCredential } from "./runtime.ts";
+import {
+  defineProviderExecutors,
+  defineProviderProxy,
+  mapProviderActionSources,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
+import { crossrefActionHandlers, crossrefApiBaseUrl, validateCrossrefCredential } from "./runtime.ts";
+
 const service = "crossref";
+
 interface CrossrefContext {
   apiKey?: string;
   fetcher: typeof fetch;
@@ -24,6 +36,14 @@ export const executors: ProviderExecutors = defineProviderExecutors<CrossrefCont
   },
   skipDnsValidation: true,
 });
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: crossrefApiBaseUrl,
+  auth: { type: "optional_api_key_header", name: "Crossref-Plus-API-Token", prefix: "Bearer " },
+  skipDnsValidation: true,
+});
+
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher }) {
     return validateCrossrefCredential({ apiKey: input.apiKey, ...input.values }, fetcher);

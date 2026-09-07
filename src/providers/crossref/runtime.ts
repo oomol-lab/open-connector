@@ -1,5 +1,5 @@
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
-const crossrefApiBaseUrl = "https://api.crossref.org/v1";
+export const crossrefApiBaseUrl = "https://api.crossref.org/v1";
 const crossrefMaxResponseBytes = 4 * 1024 * 1024;
 const crossrefCursorPrefix = "crossref_cursor_v1.";
 

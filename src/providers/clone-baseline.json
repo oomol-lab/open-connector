@@ -594,6 +594,7 @@
       "src/providers/captainbi/executors.ts": 1,
       "src/providers/chaserhq/executors.ts": 1,
       "src/providers/cin7_core/executors.ts": 1,
+      "src/providers/clinicaltrials_gov/executors.ts": 1,
       "src/providers/clickhouse/executors.ts": 1,
       "src/providers/cloudflare_r2/executors.ts": 1,
       "src/providers/cloudinary/executors.ts": 1,

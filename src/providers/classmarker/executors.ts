@@ -3,15 +3,17 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { createHash } from "node:crypto";
+import { sha256Hex } from "../../core/aws-sigv4.ts";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
-  ProviderRequestError,
+  defineProviderProxy,
   providerUserAgent,
+  ProviderRequestError,
   requireApiKeyCredential,
 } from "../provider-runtime.ts";
 
@@ -93,6 +95,22 @@ export const credentialValidators: CredentialValidators = {
     return validateClassmarkerCredential(input.apiKey, input.values, fetcher, signal);
   },
 };
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: classmarkerApiBaseUrl,
+  auth: { type: "none" },
+  skipDnsValidation: true,
+  async customizeRequest({ context, url, headers }) {
+    const credential = await requireApiKeyCredential(context, service);
+    const apiSecret = readStoredApiSecret(credential.values, credential.metadata);
+    const timestamp = String(Math.floor(Date.now() / 1000));
+    url.searchParams.set("api_key", credential.apiKey);
+    url.searchParams.set("signature", sha256Hex(`${credential.apiKey}${apiSecret}${timestamp}`));
+    url.searchParams.set("timestamp", timestamp);
+    if (!headers.has("accept")) headers.set("accept", "application/json");
+  },
+});
 
 async function validateClassmarkerCredential(
   apiKey: string,
@@ -197,7 +215,7 @@ function buildSignedUrl(input: {
 }
 
 function createClassmarkerSignature(apiKey: string, apiSecret: string, timestamp: number): string {
-  return createHash("sha256").update(`${apiKey}${apiSecret}${timestamp}`).digest("hex");
+  return sha256Hex(`${apiKey}${apiSecret}${timestamp}`);
 }
 
 async function readClassmarkerPayload(response: Response): Promise<Record<string, unknown>> {

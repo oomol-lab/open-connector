@@ -8,13 +8,13 @@ import {
   requiredResponseRecord,
 } from "../provider-runtime.ts";
 
-const clinicalTrialsGovApiBaseUrl = "https://clinicaltrials.gov/api/v2";
+export const clinicalTrialsGovApiBaseUrl = "https://clinicaltrials.gov/api/v2";
 
 const requestTimeoutMs = 30_000;
-const maxResponseBytes = 16 * 1024 * 1024;
+export const maxResponseBytes: number = 16 * 1024 * 1024;
 const maxBatchIdsPerRequest = 100;
 const maxRequestUrlBytes = 7_000;
-const maxRedirects = 3;
+export const maxRedirects = 3;
 const studySummaryFields = [
   "NCTId",
   "BriefTitle",

@@ -1,7 +1,7 @@
 import { optionalRawString, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const openfdaApiBaseUrl = "https://api.fda.gov";
+export const openfdaApiBaseUrl = "https://api.fda.gov";
 
 interface OpenfdaRequestInput {
   apiKey?: string;

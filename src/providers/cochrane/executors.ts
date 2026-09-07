@@ -1,9 +1,25 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { defineProviderExecutors, mapProviderActionHandlers, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineProviderExecutors,
+  defineProviderProxy,
+  mapProviderActionHandlers,
+  ProviderRequestError,
+  requireCustomCredential,
+} from "../provider-runtime.ts";
 import { cochraneActions } from "./actions.ts";
-import { executeCochraneAction, validateCochraneCredential } from "./runtime.ts";
+import {
+  applyCochraneAuthorization,
+  cochraneApiBaseUrl,
+  executeCochraneAction,
+  validateCochraneCredential,
+} from "./runtime.ts";
 const service = "cochrane";
 interface CochraneContext {
   values: Record<string, string>;
@@ -24,6 +40,16 @@ export const executors: ProviderExecutors = defineProviderExecutors<CochraneCont
     return { values: credential.values, fetcher };
   },
   skipDnsValidation: true,
+});
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: cochraneApiBaseUrl,
+  auth: { type: "none" },
+  skipDnsValidation: true,
+  async customizeRequest({ context, headers }) {
+    const credential = await requireCustomCredential(context, service);
+    applyCochraneAuthorization(headers, credential.values);
+  },
 });
 export const credentialValidators: CredentialValidators = {
   customCredential(input, { fetcher }) {

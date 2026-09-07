@@ -1,8 +1,13 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
-import { defineProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
-import { executeQichachaAction, requireQichachaCredentials } from "./runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createQichachaToken,
+  executeQichachaAction,
+  qichachaApiBaseUrl,
+  requireQichachaCredentials,
+} from "./runtime.ts";
 
 const service = "qichacha";
 interface QichachaContext {
@@ -38,3 +43,23 @@ export const credentialValidators: CredentialValidators = {
     });
   },
 };
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: qichachaApiBaseUrl,
+  auth: { type: "none" },
+  sensitiveHeaders: ["timespan", "token"],
+  skipDnsValidation: true,
+  async customizeRequest({ context, url, headers }) {
+    const credential = await context.getCredential(service);
+    if (!credential || credential.authType !== "custom_credential") {
+      throw new ProviderRequestError(401, "Configure Qichacha credentials.");
+    }
+    const credentials = requireQichachaCredentials(credential.values);
+    const timespan = String(Math.floor(Date.now() / 1000));
+    url.searchParams.set("key", credentials.appKey);
+    if (!headers.has("accept")) headers.set("accept", "application/json");
+    headers.set("timespan", timespan);
+    headers.set("token", createQichachaToken(credentials.appKey, timespan, credentials.secretKey));
+  },
+});
