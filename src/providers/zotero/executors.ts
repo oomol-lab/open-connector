@@ -1,12 +1,18 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { randomUUID } from "node:crypto";
 import { optionalRawString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "zotero";
 const baseUrl = "https://api.zotero.org";
+const apiVersion = "3";
 interface Context extends ApiKeyProviderContext {
   userId?: number;
 }
@@ -151,6 +157,16 @@ const handlers = {
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, handlers, {
   skipDnsValidation: true,
 });
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl,
+  auth: { type: "api_key_header", name: "Zotero-API-Key" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
+    if (!headers.has("zotero-api-version")) headers.set("zotero-api-version", apiVersion);
+  },
+});
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const result = await request("/keys/current", {}, { apiKey: input.apiKey, fetcher, signal });
@@ -160,7 +176,7 @@ export const credentialValidators: CredentialValidators = {
     return {
       profile: { accountId: String(userId), displayName: username ?? `Zotero user ${userId}` },
       grantedScopes: [],
-      metadata: { apiBaseUrl: baseUrl, apiVersion: "3", userId, username, access: identity.access },
+      metadata: { apiBaseUrl: baseUrl, apiVersion, userId, username, access: identity.access },
     };
   },
 };
@@ -183,7 +199,7 @@ async function request(
     accept: "application/json",
     "user-agent": providerUserAgent,
     "zotero-api-key": context.apiKey,
-    "zotero-api-version": "3",
+    "zotero-api-version": apiVersion,
   });
   if (options.body !== undefined) headers.set("content-type", "application/json");
   if (options.version !== undefined) headers.set("if-unmodified-since-version", String(options.version));

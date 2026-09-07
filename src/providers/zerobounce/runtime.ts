@@ -19,7 +19,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const zerobounceApiBaseUrl = "https://api.zerobounce.net";
+export const zerobounceApiBaseUrl = "https://api.zerobounce.net";
 
 type ZerobounceRequestPhase = "validate" | "execute";
 type ZerobounceActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;

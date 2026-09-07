@@ -1,9 +1,14 @@
-import type { CredentialValidators } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
 import { withMcpClient } from "../mcp-client.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const endpoint = "https://stargate.yingmi.com/mcp/v2";
 const timeoutMs = 60_000;
@@ -61,10 +66,19 @@ const handlers: ProviderActionHandlers<"yingmi_mcp", ProviderRuntimeHandler<ApiK
   },
 };
 
-export const executors: import("../../core/types.ts").ProviderExecutors = defineApiKeyProviderExecutors(
-  "yingmi_mcp",
-  handlers,
-);
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors("yingmi_mcp", handlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service: "yingmi_mcp",
+  baseUrl: endpoint,
+  auth: { type: "api_key_header", name: "x-api-key" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) {
+      headers.set("accept", "application/json, text/event-stream");
+    }
+  },
+});
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const tools = await withClient({ apiKey: input.apiKey, fetcher, signal }, "validate", (client) =>

@@ -6,7 +6,7 @@ import { compactObject, optionalRecord, optionalString } from "../../core/cast.t
 import { encodePathSegment } from "../../core/request.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const ynabApiBaseUrl = "https://api.ynab.com/v1";
+export const ynabApiBaseUrl = "https://api.ynab.com/v1";
 
 interface YnabRequestSpec {
   path: string;

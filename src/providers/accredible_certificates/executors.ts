@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
@@ -14,6 +14,7 @@ import { jsonObject } from "../../core/request.ts";
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
@@ -70,6 +71,16 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
   service,
   accredibleCertificatesActionHandlers,
 );
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: accredibleCertificatesApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Token token=" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
+    if (!headers.has("content-type")) headers.set("content-type", "application/json");
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

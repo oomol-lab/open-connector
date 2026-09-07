@@ -5,7 +5,7 @@ import { compactObject, optionalInteger, optionalString, requiredString } from "
 import { readBoundedResponseBytes } from "../../core/request.ts";
 import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const apiBaseUrl = "https://api.archiveapi.com";
+export const zipArchiveApiBaseUrl = "https://api.archiveapi.com";
 const maxExtractionResponseBytes = 512 * 1024 * 1024;
 const maxExtractedFiles = 1_000;
 
@@ -88,7 +88,7 @@ async function requestArchiveApi(
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
   accept = "application/zip, application/octet-stream",
 ): Promise<Response> {
-  const url = new URL(path, apiBaseUrl);
+  const url = new URL(path, zipArchiveApiBaseUrl);
   url.searchParams.set("secret", context.apiKey);
   let response: Response;
   try {

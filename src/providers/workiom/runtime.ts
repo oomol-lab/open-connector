@@ -5,8 +5,8 @@ import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { providerResponseError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const workiomApiBaseUrl = "https://api.workiom.com";
-const workiomApiPathPrefix = "/api/services/app";
+export const workiomApiBaseUrl = "https://api.workiom.com";
+export const workiomApiPathPrefix = "/api/services/app";
 
 type WorkiomRequestPhase = "validate" | "execute";
 

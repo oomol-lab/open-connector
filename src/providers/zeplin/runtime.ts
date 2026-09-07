@@ -16,7 +16,7 @@ import { encodePathSegment, queryParams } from "../../core/request.ts";
 import { providerResponseError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 import { zeplinReadScope } from "./scopes.ts";
 
-const zeplinApiBaseUrl = "https://api.zeplin.dev/v1";
+export const zeplinApiBaseUrl = "https://api.zeplin.dev/v1";
 
 type ZeplinRequestPhase = "validate" | "execute";
 type ZeplinActionHandler = ProviderRuntimeHandler<OAuthProviderContext>;

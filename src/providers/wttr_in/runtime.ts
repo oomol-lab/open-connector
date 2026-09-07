@@ -4,7 +4,7 @@ import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 import { optionalObjectArray, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 
-const wttrInApiBaseUrl = "https://wttr.in";
+export const wttrInApiBaseUrl = "https://wttr.in";
 
 type WttrInJsonFormat = "j1" | "j2";
 type WttrInUnits = "metric" | "us";
