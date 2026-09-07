@@ -28,8 +28,15 @@ name: Build Binaries
 #
 # The build job's `npm run build:binary` runs `npm run build:web`, which fetches
 # https://oomol.com/en/apps/catalog.json (the provider icon map) at build time,
-# so an outage there fails the build job. This is the first PR-gated path
-# through the web build.
+# so an outage there fails the build job.
+#
+# This workflow does not run on pull requests. Every run cross-compiles six
+# targets and then occupies five extra runners (two of them macOS, which
+# Blacksmith bills at a large multiple), so gating each PR push on it costs
+# far more than it catches: the PR-facing `ci.yml` already lints, typechecks
+# and tests the same sources, and a binary-only regression is caught by the
+# push to `main` before any release is cut. To check a branch by hand,
+# dispatch the workflow on that branch with `release_tag` left empty.
 #
 # darwin binaries built on Linux carry an invalid ad-hoc signature (Bun 1.4.0
 # writes a wrong page hash, which macOS 27 rejects), so the macOS smoke jobs
@@ -50,7 +57,6 @@ name: Build Binaries
 on:
   push:
     branches: [main]
-  pull_request:
   release:
     types: [published]
   workflow_dispatch:
@@ -60,7 +66,7 @@ on:
         required: false
         type: string
 
-# Cancel superseded runs for the same ref (e.g. new push to an open PR).
+# Cancel superseded runs for the same ref (e.g. a newer push to main).
 # Release runs use their own per-tag group and are never cancelled.
 concurrency:
   group: build-binary-${{ github.ref }}
@@ -78,8 +84,8 @@ env:
   # Do NOT downgrade below 22.18 — `npm ci` (postinstall codegen) and typecheck fail.
   NODE_VERSION: "24"
   # The release the binaries are uploaded to: the published release, or the
-  # `release_tag` input of a manual dispatch. Empty on push and pull_request
-  # runs, which build and smoke-test only.
+  # `release_tag` input of a manual dispatch. Empty on push runs, which build
+  # and smoke-test only.
   RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
 
 jobs:
@@ -108,8 +114,8 @@ jobs:
           # Build the release tag itself, never the ref the run was dispatched
           # from: a manual backfill started on main with `release_tag` set
           # would otherwise --clobber that release's assets with binaries built
-          # from main. An empty value (push, pull_request) falls back to the
-          # action's default ref.
+          # from main. An empty value (push) falls back to the action's
+          # default ref.
           ref: ${{ env.RELEASE_TAG }}
           # No step needs the persisted GITHUB_TOKEN in git config; dropping it
           # keeps `npm ci` postinstall scripts from reading it (zizmor hardening).
