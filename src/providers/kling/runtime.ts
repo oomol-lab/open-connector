@@ -25,7 +25,7 @@ import {
 } from "../provider-runtime.ts";
 import { defaultKlingModel, klingModels, klingPromptMaxLength } from "./actions.ts";
 
-const klingApiBaseUrl = "https://api-beijing.klingai.com";
+export const klingApiBaseUrl: string = "https://api-beijing.klingai.com";
 const klingResolutions = ["720p", "1080p", "4k"] as const;
 const klingAspectRatios = ["16:9", "9:16", "1:1"] as const;
 const klingAudioModes = ["off", "native", "original"] as const;

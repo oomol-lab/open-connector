@@ -379,6 +379,10 @@ function buildMakeApiBaseUrl(zoneUrl: string): string {
   return `${zoneUrl}${makeApiVersionPath}`;
 }
 
+export function makeProxyBaseUrl(metadata: Record<string, unknown>): string {
+  return buildMakeApiBaseUrl(normalizeMakeZoneUrl(metadata.zoneUrl));
+}
+
 function isOfficialMakeHostname(hostname: string): boolean {
   const normalized = hostname.toLowerCase();
   return normalized === "make.com" || normalized.endsWith(".make.com");

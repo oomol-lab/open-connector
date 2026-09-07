@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderTransitFile } from "../provider-runtime.ts";
 
@@ -15,6 +15,7 @@ import { readBoundedResponseBytes } from "../../core/request.ts";
 import {
   createProviderFetch,
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   providerInputError,
   providerResponseError,
   providerUserAgent,
@@ -42,6 +43,16 @@ export const latchshotActionHandlers: ProviderActionHandlers<"latchshot", Latchs
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, latchshotActionHandlers, {
   skipDnsValidation: true,
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: latchshotApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
+  },
 });
 
 export const credentialValidators: CredentialValidators = {

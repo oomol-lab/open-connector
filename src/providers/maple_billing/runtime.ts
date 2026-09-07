@@ -126,7 +126,7 @@ export async function validateMapleBillingCredential(
   };
 }
 
-function normalizeMapleBillingCompanyId(value: unknown): string {
+export function normalizeMapleBillingCompanyId(value: unknown): string {
   const normalized = optionalString(value);
   if (!normalized) {
     throw new ProviderRequestError(400, "companyId is required");
@@ -137,7 +137,7 @@ function normalizeMapleBillingCompanyId(value: unknown): string {
   return normalized;
 }
 
-function buildMapleBillingApiBaseUrl(companyId: string): string {
+export function buildMapleBillingApiBaseUrl(companyId: string): string {
   return `${mapleBillingApiBaseUrl}/companies/${encodeURIComponent(companyId)}`;
 }
 

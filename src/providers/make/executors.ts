@@ -1,7 +1,12 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
-import { makeActionHandlers, resolveMakeZoneUrl, validateMakeCredential } from "./runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import { makeActionHandlers, makeProxyBaseUrl, resolveMakeZoneUrl, validateMakeCredential } from "./runtime.ts";
 
 const service = "make";
 
@@ -16,6 +21,18 @@ export const executors: ProviderExecutors = defineProviderExecutors({
       fetcher,
       signal: context.signal,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  async baseUrl(context) {
+    const credential = await requireApiKeyCredential(context, service);
+    return makeProxyBaseUrl(credential.metadata);
+  },
+  auth: { type: "api_key_authorization", prefix: "Token " },
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
   },
 });
 

@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
-const mem0ApiBaseUrl = "https://api.mem0.ai";
+export const mem0ApiBaseUrl = "https://api.mem0.ai";
 
 type Mem0ActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type Mem0ActionHandler = (input: Record<string, unknown>, context: Mem0ActionContext) => Promise<unknown>;
