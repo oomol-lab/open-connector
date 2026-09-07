@@ -16,7 +16,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const theCatApiBaseUrl = "https://api.thecatapi.com/v1/";
+export const theCatApiBaseUrl = "https://api.thecatapi.com/v1/";
 const theCatApiValidationPath = "/breeds";
 
 type TheCatApiRequestPhase = "validate" | "execute";
@@ -65,7 +65,7 @@ export async function validateTheCatApiCredential(context: TheCatApiContext): Pr
     },
     grantedScopes: [],
     metadata: compactObject({
-      apiBaseUrl: "https://api.thecatapi.com/v1",
+      apiBaseUrl: theCatApiBaseUrl,
       validationEndpoint: theCatApiValidationPath,
       sampleBreedId: sampleBreed?.id,
       sampleBreedName: sampleBreed?.name,

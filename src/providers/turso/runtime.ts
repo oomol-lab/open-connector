@@ -11,7 +11,7 @@ import {
   requiredInputString,
 } from "../provider-runtime.ts";
 
-const tursoApiBaseUrl = "https://api.turso.tech";
+export const tursoApiBaseUrl: string = "https://api.turso.tech";
 
 type TursoPhase = "validate" | "execute";
 type TursoMethod = "GET" | "POST" | "DELETE";

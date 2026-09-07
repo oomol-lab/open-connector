@@ -18,7 +18,7 @@ import {
 } from "./endpoint-policy.ts";
 import { TikHubRequestError } from "./errors.ts";
 
-const tikhubApiBaseUrl = "https://api.tikhub.io";
+export const tikhubApiBaseUrl = "https://api.tikhub.io";
 const tikhubUserScope = "/api/v1/tikhub/user/";
 const tikhubUserRequestTimeoutMs = 45_000;
 const tikhubDynamicRequestTimeoutMs = 60_000;

@@ -17,7 +17,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const tinyurlApiBaseUrl = "https://api.tinyurl.com";
+export const tinyurlApiBaseUrl = "https://api.tinyurl.com";
 const tinyurlValidationPath = "/urls/available?page=1&limit=1";
 
 type TinyurlRequestPhase = "validate" | "execute";

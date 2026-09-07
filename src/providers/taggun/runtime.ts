@@ -5,7 +5,7 @@ import { optionalBoolean, optionalNumber, optionalRecord, optionalString, requir
 import { assertPublicHttpUrl, compactJson } from "../../core/request.ts";
 import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const taggunApiBaseUrl = "https://api.taggun.io";
+export const taggunApiBaseUrl = "https://api.taggun.io";
 const simpleUrlPath = "/api/receipt/v1/simple/url";
 const verboseUrlPath = "/api/receipt/v1/verbose/url";
 const campaignSettingsListPath = "/api/validation/v1/campaign/settings/list";
