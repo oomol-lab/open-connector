@@ -119,6 +119,7 @@ describe("SF Express freight install-service handlers", () => {
   });
 
   it("creates a recovery order with the fixed single product", async () => {
+    const withinThreeDays = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
     const fetcher = vi.fn<typeof fetch>(async (_url, init) => {
       const msgData = JSON.parse(readForm(init).get("msgData")!);
       expect(msgData).toEqual({
@@ -126,7 +127,7 @@ describe("SF Express freight install-service handlers", () => {
         senderContact: "顺小丰",
         senderMobile: "13322222222",
         senderAddress: "广东省深圳市南山区软件产业基地B栋23楼",
-        expectDate: "2025-05-22",
+        expectDate: withinThreeDays,
         expectStartTime: "09:00",
         expectEndTime: "10:00",
         productList: [{ productSku: "8895138", count: 1 }],
@@ -144,7 +145,7 @@ describe("SF Express freight install-service handlers", () => {
         sender_contact: "顺小丰",
         sender_mobile: "13322222222",
         sender_address: "广东省深圳市南山区软件产业基地B栋23楼",
-        expect_date: "2025-05-22",
+        expect_date: withinThreeDays,
         expect_start_time: "09:00",
         expect_end_time: "10:00",
         product_list: [{ product_sku: "8895138", count: 1 }],
@@ -153,6 +154,33 @@ describe("SF Express freight install-service handlers", () => {
     );
 
     expect(output).toMatchObject({ orderId: "SJA12324353123123", outerOrderId: "456461849464654" });
+  });
+
+  it("rejects a recovery expect_date outside the 3-day window or a non-calendar date", async () => {
+    const fetcher = vi.fn<typeof fetch>();
+    const base = {
+      outer_order_id: "x",
+      sender_contact: "顺小丰",
+      sender_mobile: "13322222222",
+      sender_address: "广东省深圳市南山区",
+      expect_start_time: "09:00",
+      expect_end_time: "10:00",
+      product_list: [{ product_sku: "8895138" }],
+    };
+    const beyond = new Date(Date.now() + 4 * 86_400_000).toISOString().slice(0, 10);
+    await expect(
+      sfExpressFreightInstallHandlers.freight_create_recovery_order!(
+        { ...base, expect_date: beyond },
+        context(fetcher),
+      ),
+    ).rejects.toMatchObject({ status: 400, message: "expect_date must be within 3 days from today." });
+    await expect(
+      sfExpressFreightInstallHandlers.freight_create_recovery_order!(
+        { ...base, expect_date: "2026-02-30" },
+        context(fetcher),
+      ),
+    ).rejects.toMatchObject({ status: 400, message: "expect_date must be a valid date in yyyy-MM-dd format." });
+    expect(fetcher).not.toHaveBeenCalled();
   });
 
   it("normalizes the recovery product catalog from a bare array obj", async () => {

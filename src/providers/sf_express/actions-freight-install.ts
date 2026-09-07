@@ -22,21 +22,21 @@ const appendCargoSchema = s.object(
   "One install cargo entry; the standard category pair and the customer category pair are mutually exclusive (provide one).",
   {
     count: s.integer("The install quantity.", { minimum: 1 }),
-    standServiceName: s.string("The standard category name."),
-    standServiceCode: s.string("The standard category code."),
-    cusServiceName: s.string("The customer category name."),
-    cusServiceCode: s.string("The customer category code."),
-    cargoImages: s.stringArray("The cargo image URLs, up to 8.", { maxItems: 8 }),
-    cargoEvnImages: s.stringArray("The install environment image URLs, up to 8.", { maxItems: 8 }),
+    stand_service_name: s.string("The standard category name."),
+    stand_service_code: s.string("The standard category code."),
+    cus_service_name: s.string("The customer category name."),
+    cus_service_code: s.string("The customer category code."),
+    cargo_images: s.stringArray("The cargo image URLs, up to 8.", { maxItems: 8 }),
+    cargo_evn_images: s.stringArray("The install environment image URLs, up to 8.", { maxItems: 8 }),
   },
   {
     optional: [
-      "standServiceName",
-      "standServiceCode",
-      "cusServiceName",
-      "cusServiceCode",
-      "cargoImages",
-      "cargoEvnImages",
+      "stand_service_name",
+      "stand_service_code",
+      "cus_service_name",
+      "cus_service_code",
+      "cargo_images",
+      "cargo_evn_images",
     ],
   },
 );
@@ -45,27 +45,27 @@ const installCargoSchema = s.object(
   "One install cargo entry; provide either the standard category (product_name/product_sku) or the customer category (customer_product_name/customer_product_sku).",
   {
     count: s.integer("The install quantity.", { minimum: 1 }),
-    productName: s.string("The standard category name."),
-    productSku: s.string("The standard category code."),
-    customerProductSku: s.string("The customer category code."),
-    customerProductName: s.string("The customer category name."),
-    goodsRemark: s.string("The goods remark, for example special installation notes."),
-    repairRemark: s.string("The repair remark; recommended when service_type is 7 (维修)."),
-    imgUrls: s.stringArray("The cargo image URLs, up to 8.", { maxItems: 8 }),
-    videoLinkUrls: s.stringArray("The cargo or install-process video URLs; at most one is supported.", {
+    product_name: s.string("The standard category name."),
+    product_sku: s.string("The standard category code."),
+    customer_product_sku: s.string("The customer category code."),
+    customer_product_name: s.string("The customer category name."),
+    goods_remark: s.string("The goods remark, for example special installation notes."),
+    repair_remark: s.string("The repair remark; recommended when service_type is 7 (维修)."),
+    img_urls: s.stringArray("The cargo image URLs, up to 8.", { maxItems: 8 }),
+    video_link_urls: s.stringArray("The cargo or install-process video URLs; at most one is supported.", {
       maxItems: 1,
     }),
   },
   {
     optional: [
-      "productName",
-      "productSku",
-      "customerProductSku",
-      "customerProductName",
-      "goodsRemark",
-      "repairRemark",
-      "imgUrls",
-      "videoLinkUrls",
+      "product_name",
+      "product_sku",
+      "customer_product_sku",
+      "customer_product_name",
+      "goods_remark",
+      "repair_remark",
+      "img_urls",
+      "video_link_urls",
     ],
   },
 );
@@ -73,17 +73,17 @@ const installCargoSchema = s.object(
 const addedServiceSchema = s.object(
   "One value-added service.",
   {
-    addedServiceName: s.nonEmptyString("The value-added service name, for example 好评返现."),
-    addedServiceCode: s.string("The value-added service code, for example JZ17 for 好评返现."),
-    addedServicePrice: s.string("The service price, when the service supports pricing."),
+    added_service_name: s.nonEmptyString("The value-added service name, for example 好评返现."),
+    added_service_code: s.string("The value-added service code, for example JZ17 for 好评返现."),
+    added_service_price: s.string("The service price, when the service supports pricing."),
   },
   { optional: ["added_service_code", "added_service_price"] },
 );
 
-const feeItemSchema = s.object("One fee item.", {
+const feeItemSchema = s.requiredObject("One fee item.", {
   feeName: s.string("The fee name, for example 安装费."),
   feeTypeCode: s.string("The fee type code, for example JZ01."),
-  feeAmt: s.number("The fee amount in CNY."),
+  feeAmt: s.nullableNumber("The fee amount in CNY; null when SF omits it."),
 });
 
 const installOrderResultOutputSchema = s.object("The install order result.", {
@@ -145,7 +145,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
           "The customer mobile number; virtual numbers are supported, extensions split by comma or dash.",
         ),
         receiver_address: s.nonEmptyString("The customer detailed address."),
-        pickup_zone: s.string("The pickup location name; required when service_type is 2 (提货并安装)."),
+        pickup_zone: s.string("The pickup location name (提货地名称), used for pickup-and-install orders."),
         pickup_contact: s.string("The pickup contact name."),
         pickup_mobile: s.string("The pickup contact mobile number."),
         pickup_address: s.string("The pickup detailed address."),
@@ -212,14 +212,14 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
           cargo_update_info_list: s.array(
             "The cargo image updates; category code/name must match the values used when ordering.",
             s.object("One cargo image update.", {
-              cusServiceCode: s.string("The customer category code used at order time."),
-              cusServiceName: s.string("The customer category name used at order time."),
-              standServiceCode: s.string("The standard category code used at order time."),
-              standServiceName: s.string("The standard category name used at order time."),
-              cargoImages: s.stringArray("The cargo image URLs, up to 8; an empty array clears them.", {
+              cus_service_code: s.string("The customer category code used at order time."),
+              cus_service_name: s.string("The customer category name used at order time."),
+              stand_service_code: s.string("The standard category code used at order time."),
+              stand_service_name: s.string("The standard category name used at order time."),
+              cargo_images: s.stringArray("The cargo image URLs, up to 8; an empty array clears them.", {
                 maxItems: 8,
               }),
-              cargoEvnImages: s.stringArray("The install environment image URLs, up to 8.", { maxItems: 8 }),
+              cargo_evn_images: s.stringArray("The install environment image URLs, up to 8.", { maxItems: 8 }),
             }),
           ),
         },
@@ -284,12 +284,16 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
       expect_date: s.nonEmptyString("The expected pickup date in yyyy-MM-dd format; within 3 days.", {
         pattern: "^\\d{4}-\\d{2}-\\d{2}$",
       }),
-      expect_start_time: s.nonEmptyString("The expected pickup window start in HH:mm format, earliest 08:00.", {
-        pattern: "^\\d{2}:\\d{2}$",
-      }),
-      expect_end_time: s.nonEmptyString("The expected pickup window end in HH:mm format, latest 21:00.", {
-        pattern: "^\\d{2}:\\d{2}$",
-      }),
+      expect_start_time: s.nonEmptyString(
+        "The expected pickup window start in HH:mm format, whole hours from 08:00 through 21:00.",
+        {
+          pattern: "^(0[89]|1[0-9]|2[01]):00$",
+        },
+      ),
+      expect_end_time: s.nonEmptyString(
+        "The expected pickup window end in HH:mm format, whole hours from 08:00 through 21:00.",
+        { pattern: "^(0[89]|1[0-9]|2[01]):00$" },
+      ),
       product_list: s.array(
         "The recovery products; exactly one product with count 1 is supported.",
         s.object(
@@ -453,9 +457,9 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
         part_logistics_infos: s.array(
           "The return logistics entries; required for code 23.",
           s.requiredObject("One part return logistics entry.", {
-            recycleNo: s.nonEmptyString("The part return number from the install task push."),
-            logisticsName: s.nonEmptyString("The carrier name."),
-            waybillNo: s.nonEmptyString("The return waybill number."),
+            recycle_no: s.nonEmptyString("The part return number from the install task push."),
+            logistics_name: s.nonEmptyString("The carrier name."),
+            waybill_no: s.nonEmptyString("The return waybill number."),
             images: s.stringArray("The return waybill photos, up to 3.", { maxItems: 3 }),
           }),
         ),

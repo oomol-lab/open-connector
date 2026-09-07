@@ -377,10 +377,14 @@ export const sfExpressFreightTlCityActions: ActionDefinition[] = [
     description: "Get the details of an SF Freight city-delivery order by order number or client order number.",
     requiredScopes: [],
     inputSchema: s.requireAnyProperty(
-      s.object("The order whose details should be returned.", {
-        order_no: s.nonEmptyString("The SF city-delivery order number."),
-        customer_order_no: s.nonEmptyString("Your own order reference number."),
-      }),
+      s.object(
+        "The order whose details should be returned.",
+        {
+          order_no: s.nonEmptyString("The SF city-delivery order number."),
+          customer_order_no: s.nonEmptyString("Your own order reference number."),
+        },
+        { optional: ["order_no", "customer_order_no"] },
+      ),
       ["order_no", "customer_order_no"],
     ),
     outputSchema: s.object("The city-delivery order detail.", {

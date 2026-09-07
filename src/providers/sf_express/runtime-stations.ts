@@ -1107,7 +1107,7 @@ function readStoreAddress(input: Record<string, unknown>): Record<string, unknow
     provincename: requiredInputString(input.provincename, "provincename"),
     cityname: requiredInputString(input.cityname, "cityname"),
     countyname: requiredInputString(input.countyname, "countyname"),
-    townname: requiredInputString(input.townname, "townname"),
+    townname: optionalString(input.townname),
     address: requiredInputString(input.address, "address"),
   };
 }

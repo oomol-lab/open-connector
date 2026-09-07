@@ -118,7 +118,7 @@ export const sfExpressFreightInstallHandlers: ProviderActionHandlerSubset<"sf_ex
         senderContact: requiredInputString(input.sender_contact, "sender_contact"),
         senderMobile: requiredInputString(input.sender_mobile, "sender_mobile"),
         senderAddress: requiredInputString(input.sender_address, "sender_address"),
-        expectDate: requiredInputString(input.expect_date, "expect_date"),
+        expectDate: readRecoveryDate(input.expect_date),
         expectStartTime: requiredInputString(input.expect_start_time, "expect_start_time"),
         expectEndTime: requiredInputString(input.expect_end_time, "expect_end_time"),
         productList: objectArray(input.product_list, "product_list", providerInputError).map((item, index) => ({
@@ -513,15 +513,41 @@ function optionalStringList(value: unknown, fieldName: string): string[] | undef
   return value === undefined ? undefined : requiredStringArray(value, fieldName, providerInputError);
 }
 
+/** Read the recovery pickup date, enforcing the documented within-3-days window. */
+function readRecoveryDate(value: unknown): string {
+  const date = requiredInputString(value, "expect_date");
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  // Date() normalizes impossible dates (e.g. Feb 30 rolls into March) instead of rejecting.
+  const parsed = match ? new Date(`${date}T00:00:00`) : null;
+  if (
+    !match ||
+    !parsed ||
+    parsed.getFullYear() !== Number(match[1]) ||
+    parsed.getMonth() !== Number(match[2]) - 1 ||
+    parsed.getDate() !== Number(match[3])
+  ) {
+    throw providerInputError("expect_date must be a valid date in yyyy-MM-dd format.");
+  }
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((parsed.getTime() - today.getTime()) / 86_400_000);
+  if (diffDays < 0 || diffDays > 3) {
+    throw providerInputError("expect_date must be within 3 days from today.");
+  }
+  return date;
+}
+
 function readAppendCargoes(value: unknown): Array<Record<string, unknown>> {
   return objectArray(value, "cargo_list", providerInputError).map((item, index) => {
     const standServiceName = optionalString(item.stand_service_name);
     const standServiceCode = optionalString(item.stand_service_code);
     const cusServiceName = optionalString(item.cus_service_name);
     const cusServiceCode = optionalString(item.cus_service_code);
-    if (!(standServiceName || standServiceCode) && !(cusServiceName || cusServiceCode)) {
+    const hasStandardPair = standServiceName !== undefined && standServiceCode !== undefined;
+    const hasCustomerPair = cusServiceName !== undefined && cusServiceCode !== undefined;
+    if (hasStandardPair === hasCustomerPair) {
       throw providerInputError(
-        `cargo_list[${index}] requires either the standard category (stand_service_name/stand_service_code) or the customer category (cus_service_name/cus_service_code).`,
+        `cargo_list[${index}] requires exactly one complete category pair: stand_service_name + stand_service_code, or cus_service_name + cus_service_code.`,
       );
     }
     return compactObject({
@@ -542,9 +568,11 @@ function readInstallCargoes(value: unknown): Array<Record<string, unknown>> {
     const productSku = optionalString(item.product_sku);
     const customerProductSku = optionalString(item.customer_product_sku);
     const customerProductName = optionalString(item.customer_product_name);
-    if (!(productName || productSku) && !(customerProductSku || customerProductName)) {
+    const hasStandardPair = productName !== undefined && productSku !== undefined;
+    const hasCustomerPair = customerProductSku !== undefined && customerProductName !== undefined;
+    if (hasStandardPair === hasCustomerPair) {
       throw providerInputError(
-        `cargoes[${index}] requires either the standard category (product_name/product_sku) or the customer category (customer_product_name/customer_product_sku).`,
+        `cargoes[${index}] requires exactly one complete category pair: product_name + product_sku, or customer_product_name + customer_product_sku.`,
       );
     }
     return compactObject({

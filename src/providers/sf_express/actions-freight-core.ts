@@ -523,20 +523,23 @@ export const sfExpressFreightCoreActions: ActionDefinition[] = [
     name: "freight_reply_work_order",
     description: "Reply to an SF Freight work order, identified by work_order_id or report_source_no (at least one).",
     requiredScopes: [],
-    inputSchema: s.object(
-      "The work order reply.",
-      {
-        work_order_id: s.nonEmptyString("The SF work order id from freight_report_work_order."),
-        report_source_no: s.nonEmptyString("The third-party work order number used when reporting."),
-        reply_id: s.nonEmptyString("A unique reply id used for deduplication."),
-        content: s.nonEmptyString("The reply content."),
-        reply_name: s.nonEmptyString("The replier name."),
-        reply_phone: s.nonEmptyString("The replier contact number."),
-        pics: s.stringArray("Up to 6 picture URLs, each at most 10MB.", { maxItems: 6 }),
-        is_done: s.boolean("Whether this reply closes the work order."),
-        is_solve: s.boolean("Whether the issue is solved."),
-      },
-      { optional: ["work_order_id", "report_source_no", "reply_phone", "pics", "is_solve"] },
+    inputSchema: s.requireAnyProperty(
+      s.object(
+        "The work order reply.",
+        {
+          work_order_id: s.nonEmptyString("The SF work order id from freight_report_work_order."),
+          report_source_no: s.nonEmptyString("The third-party work order number used when reporting."),
+          reply_id: s.nonEmptyString("A unique reply id used for deduplication."),
+          content: s.nonEmptyString("The reply content."),
+          reply_name: s.nonEmptyString("The replier name."),
+          reply_phone: s.nonEmptyString("The replier contact number."),
+          pics: s.stringArray("Up to 6 picture URLs, each at most 10MB.", { maxItems: 6 }),
+          is_done: s.boolean("Whether this reply closes the work order."),
+          is_solve: s.boolean("Whether the issue is solved."),
+        },
+        { optional: ["work_order_id", "report_source_no", "reply_phone", "pics", "is_solve"] },
+      ),
+      ["work_order_id", "report_source_no"],
     ),
     outputSchema: s.object("The reply result.", {
       replyId: s.string("The reply id, echoed back."),
