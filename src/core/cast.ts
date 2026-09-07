@@ -79,6 +79,23 @@ export function requiredString(
 }
 
 /**
+ * Return a finite number or throw a caller-provided error. Examples:
+ * `requiredNumber(1.5, "weight") => 1.5`; `requiredNumber("x", "weight")` throws.
+ */
+export function requiredNumber(
+  value: unknown,
+  fieldName: string,
+  createError: CastErrorFactory = (message) => new CastError(message),
+): number {
+  const result = optionalNumber(value);
+  if (result !== undefined) {
+    return result;
+  }
+
+  throw createError(`${fieldName} must be a number`);
+}
+
+/**
  * Decode a strict non-empty Base64 string into bytes, or throw.
  */
 export function base64Bytes(

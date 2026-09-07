@@ -18,6 +18,7 @@ import {
   optionalRecord,
   optionalScalarString,
   optionalString,
+  requiredNumber,
   requiredRecord,
   requiredString,
 } from "../core/cast.ts";
@@ -296,6 +297,15 @@ export function providerResponseError(message: string): ProviderRequestError {
  */
 export function requiredInputString(value: unknown, fieldName: string): string {
   return requiredString(value, fieldName, providerInputError);
+}
+
+/**
+ * Read a required number action input, raising the 400 error providers map
+ * missing or non-numeric fields to. Example: `requiredInputNumber(1.5, "weight") => 1.5`;
+ * `requiredInputNumber("x", "weight")` throws `weight must be a number.`.
+ */
+export function requiredInputNumber(value: unknown, fieldName: string): number {
+  return requiredNumber(value, fieldName, providerInputError);
 }
 
 /**

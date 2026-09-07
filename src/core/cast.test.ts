@@ -11,6 +11,7 @@ import {
   recordOrEmpty,
   requiredBoolean,
   requiredRawString,
+  requiredNumber,
   requiredStringArray,
 } from "./cast.ts";
 
@@ -61,6 +62,12 @@ describe("cast helpers", () => {
   it("requires a boolean without coercion", () => {
     expect(requiredBoolean(false, "enabled")).toBe(false);
     expect(() => requiredBoolean(0, "enabled")).toThrow("enabled must be a boolean");
+  });
+
+  it("requires a finite number without coercion", () => {
+    expect(requiredNumber(1.5, "weight")).toBe(1.5);
+    expect(() => requiredNumber("1.5", "weight")).toThrow("weight must be a number");
+    expect(() => requiredNumber(undefined, "weight")).toThrow("weight must be a number");
   });
 
   it("reads an array containing only strings", () => {
