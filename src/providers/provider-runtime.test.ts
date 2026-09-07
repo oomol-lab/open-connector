@@ -489,6 +489,37 @@ describe("provider egress SSRF guard", () => {
     expect(new Headers(calls[1]?.init?.headers).has("x-provider-credential")).toBe(false);
   });
 
+  it("injects a custom credential field and strips its header from cross-origin redirects", async () => {
+    const calls = stubFetchSequence([
+      new Response(null, { status: 302, headers: { location: "https://cdn.example.net/items" } }),
+      new Response(JSON.stringify({ ok: true }), { status: 200 }),
+    ]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: {
+        type: "custom_credential_header",
+        field: "token",
+        name: "X-Provider-Credential",
+        prefix: "Bearer ",
+      },
+    });
+    const context: ExecutionContext = {
+      getCredential: async () => ({
+        authType: "custom_credential",
+        values: { token: "custom-token" },
+        profile: { accountId: "acct", displayName: "Test", grantedScopes: [] },
+        metadata: {},
+      }),
+    };
+
+    const result = await proxy({ method: "GET", endpoint: "/items" }, context);
+
+    expect(result.ok).toBe(true);
+    expect(new Headers(calls[0]?.init?.headers).get("x-provider-credential")).toBe("Bearer custom-token");
+    expect(new Headers(calls[1]?.init?.headers).has("x-provider-credential")).toBe(false);
+  });
+
   it("rejects origin-escaping endpoints even when DNS validation is skipped", async () => {
     const calls = stubFetchSequence([]);
     const proxy = defineProviderProxy({

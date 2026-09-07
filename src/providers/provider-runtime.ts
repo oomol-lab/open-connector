@@ -320,7 +320,8 @@ export type ProviderProxyAuth =
   | { type: "api_key_header"; name: string }
   | { type: "api_key_query"; name: string }
   | { type: "api_key_basic"; suffix?: string }
-  | { type: "api_key_authorization"; prefix: string; suffix?: string };
+  | { type: "api_key_authorization"; prefix: string; suffix?: string }
+  | { type: "custom_credential_header"; field: string; name: string; prefix?: string };
 
 export type ProviderProxyBaseUrlResolver = (context: ExecutionContext, service: string) => Promise<string> | string;
 export type ProviderProxyBaseUrl = string | ProviderProxyBaseUrlResolver;
@@ -538,7 +539,10 @@ export function toProviderProxyError(error: unknown, fallbackMessage: string): P
 
 export function defineProviderProxy(input: ProviderProxyDefinition): ProviderProxyExecutor {
   const allowedOrigins = new Set(input.allowedOrigins?.map((value) => new URL(value).origin));
-  const additionalSensitiveHeaders = input.auth.type === "api_key_header" ? [input.auth.name] : undefined;
+  const additionalSensitiveHeaders =
+    input.auth.type === "api_key_header" || input.auth.type === "custom_credential_header"
+      ? [input.auth.name]
+      : undefined;
   const egressFetch = createProviderFetch({
     allowPrivateNetwork: input.allowPrivateNetwork,
     skipDnsValidation: input.skipDnsValidation,
@@ -689,6 +693,18 @@ async function applyProviderProxyAuth(
     case "api_key_authorization": {
       const credential = await requireApiKeyCredential(context, input.service);
       headers.set("authorization", `${input.auth.prefix}${credential.apiKey}${input.auth.suffix ?? ""}`);
+      return credential;
+    }
+    case "custom_credential_header": {
+      const credential = await requireCustomCredential(context, input.service);
+      const value = credential.values[input.auth.field];
+      if (!value) {
+        throw new ProviderRequestError(
+          401,
+          `Configure ${input.service} custom credential field ${input.auth.field} first.`,
+        );
+      }
+      headers.set(input.auth.name, `${input.auth.prefix ?? ""}${value}`);
       return credential;
     }
   }
