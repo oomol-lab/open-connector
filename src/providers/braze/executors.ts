@@ -1,4 +1,9 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
@@ -14,6 +19,7 @@ import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
   createProviderTimeout,
   defineProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
@@ -121,6 +127,20 @@ export const executors: ProviderExecutors = defineProviderExecutors<BrazeActionC
       fetcher,
       signal: context.signal,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  async baseUrl(context): Promise<string> {
+    const credential = await requireApiKeyCredential(context, service);
+    return normalizeBrazeRestEndpoint(
+      optionalString(credential.values.restEndpoint) ?? optionalString(credential.metadata.restEndpoint),
+    );
+  },
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
   },
 });
 

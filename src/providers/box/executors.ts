@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers, OAuthProviderContext } from "../provider-runtime.ts";
 
 import {
@@ -12,6 +12,7 @@ import {
 import { readBoundedResponseBytes } from "../../core/request.ts";
 import {
   defineOAuthProviderExecutors,
+  defineProviderProxy,
   providerInputError,
   ProviderRequestError,
   providerResponseError,
@@ -20,6 +21,7 @@ import {
   requiredInputString,
 } from "../provider-runtime.ts";
 
+const service = "box";
 const boxApiBaseUrl = "https://api.box.com/2.0";
 const boxUploadBaseUrl = "https://upload.box.com/api/2.0";
 const boxSimpleUploadMaxBytes = 50 * 1024 * 1024;
@@ -82,7 +84,17 @@ export const boxActionHandlers: ProviderActionHandlers<"box", ActionHandler> = {
   },
 };
 
-export const executors: ProviderExecutors = defineOAuthProviderExecutors("box", boxActionHandlers);
+export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, boxActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: boxApiBaseUrl,
+  auth: { type: "oauth_bearer" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher }) {

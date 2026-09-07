@@ -11,7 +11,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const browserlessApiBaseUrl = "https://production-sfo.browserless.io";
+export const browserlessApiBaseUrl = "https://production-sfo.browserless.io";
 const browserlessRequestTimeoutMs = 60_000;
 const browserlessValidationUrl = "https://example.com";
 

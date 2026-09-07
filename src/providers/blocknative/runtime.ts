@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } fro
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const blocknativeApiBaseUrl = "https://api.blocknative.com";
+export const blocknativeApiBaseUrl = "https://api.blocknative.com";
 
 type BlocknativeRequestPhase = "validate" | "execute";
 type BlocknativeQueryValue = number | string | readonly number[] | readonly string[] | undefined;

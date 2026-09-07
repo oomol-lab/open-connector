@@ -1,11 +1,17 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { BettercontactContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
 import { bettercontactActionHandlers, validateBettercontactCredential } from "./runtime.ts";
 
 const service = "bettercontact";
+const bettercontactApiBaseUrl = "https://app.bettercontact.rocks/api/v2";
 
 export const executors: ProviderExecutors = defineProviderExecutors<BettercontactContext>({
   service,
@@ -18,6 +24,16 @@ export const executors: ProviderExecutors = defineProviderExecutors<Bettercontac
       fetcher,
       signal: context.signal,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: bettercontactApiBaseUrl,
+  auth: { type: "api_key_header", name: "x-api-key" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
   },
 });
 
