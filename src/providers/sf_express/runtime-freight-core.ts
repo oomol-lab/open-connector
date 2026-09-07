@@ -9,6 +9,7 @@ import {
   optionalInteger,
   optionalIntegerLike,
   optionalNumber,
+  optionalNumberLike,
   optionalRecord,
   optionalString,
   optionalStringArray,
@@ -42,7 +43,7 @@ export const sfExpressFreightCoreHandlers: ProviderActionHandlerSubset<"sf_expre
         // A provided reserved waybill means SF must not generate one.
         isGenBillNo: waybillNo === undefined ? 1 : 0,
         waybillNo,
-        subWaybills: optionalStringArray(input.sub_waybills)?.join(","),
+        subWaybills: optionalStringArray(input.sub_waybills)?.join(",") || undefined,
         ...readFreightContact(input.sender, "sender", "send"),
         ...readFreightContact(input.recipient, "recipient", "delivery"),
         customId: optionalString(input.monthly_card),
@@ -159,9 +160,9 @@ export const sfExpressFreightCoreHandlers: ProviderActionHandlerSubset<"sf_expre
     );
     const record = requiredResponseRecord(payload, "SF Express standard price response");
     return {
-      totalPrice: optionalNumber(record.totalPrice),
+      totalPrice: optionalNumberLike(record.totalPrice),
       currencyType: optionalString(record.currencyType),
-      rate: optionalNumber(record.rate),
+      rate: optionalNumberLike(record.rate),
     };
   },
   async freight_register_ltl_picture_push(input, context) {
@@ -205,8 +206,8 @@ export const sfExpressFreightCoreHandlers: ProviderActionHandlerSubset<"sf_expre
       "execute",
     );
     return {
-      routes: objectArray(payload, "obj", providerResponseError).map((route, index) =>
-        readRouteInfo(route, `obj[${index}]`),
+      routes: objectArray(payload ?? [], "transferRoutes", providerResponseError).map((route, index) =>
+        readRouteInfo(route, `transferRoutes[${index}]`),
       ),
     };
   },
@@ -261,7 +262,7 @@ export const sfExpressFreightCoreHandlers: ProviderActionHandlerSubset<"sf_expre
         orderCategoryThree: optionalString(input.category_three),
         urgencyDegree: input.urgency === "urgent" ? 2 : 1,
         reportContent: requiredInputString(input.content, "content"),
-        pics: optionalStringArray(input.pics)?.join(","),
+        pics: optionalStringArray(input.pics)?.join(",") || undefined,
         afterHandleReplyTime: optionalInteger(input.handle_time_limit_minutes),
         reportSourceNo: requiredInputString(input.report_source_no, "report_source_no"),
       }),
@@ -289,7 +290,7 @@ export const sfExpressFreightCoreHandlers: ProviderActionHandlerSubset<"sf_expre
         replyContent: requiredInputString(input.content, "content"),
         replyName: requiredInputString(input.reply_name, "reply_name"),
         replyPhone: optionalString(input.reply_phone),
-        pics: optionalStringArray(input.pics)?.join(","),
+        pics: optionalStringArray(input.pics)?.join(",") || undefined,
         isDone: input.is_done === true ? 1 : 0,
         isSolve: optionalFlagNumber(input.is_solve),
       }),
@@ -344,9 +345,9 @@ function readCargoList(value: unknown): Array<Record<string, unknown>> | undefin
   if (value === undefined) {
     return undefined;
   }
-  return objectArray(value, "cargo_list", providerInputError).map((item) =>
+  return objectArray(value, "cargo_list", providerInputError).map((item, index) =>
     compactObject({
-      name: optionalString(item.name),
+      name: requiredInputString(item.name, `cargo_list[${index}].name`),
       unit: optionalString(item.unit),
       category: optionalString(item.category),
       spec: optionalString(item.spec),
@@ -387,9 +388,9 @@ function readAdditionServices(value: unknown): Array<Record<string, unknown>> | 
   if (value === undefined) {
     return undefined;
   }
-  return objectArray(value, "addition_services", providerInputError).map((item) =>
+  return objectArray(value, "addition_services", providerInputError).map((item, index) =>
     compactObject({
-      name: requiredInputString(item.name, "addition_services.name"),
+      name: requiredInputString(item.name, `addition_services[${index}].name`),
       value: optionalString(item.value),
       value1: optionalString(item.value1),
       value2: optionalString(item.value2),
@@ -452,11 +453,11 @@ function normalizeCrossborderRoute(payload: unknown): Record<string, unknown> {
   const record = requiredResponseRecord(payload, "SF Express cross-border route response");
   return compactObject({
     waybillNo: requiredString(record.waybillNo, "waybillNo", providerResponseError),
-    cargoVolume: optionalNumber(record.cargoVolume),
-    cargoWeight: optionalNumber(record.cargoWeight),
+    cargoVolume: optionalNumberLike(record.cargoVolume),
+    cargoWeight: optionalNumberLike(record.cargoWeight),
     cargoAmount: optionalIntegerLike(record.cargoAmount, "cargoAmount", providerResponseError),
     expectDeliveryTime: optionalIntegerLike(record.expectDeliveryTime, "expectDeliveryTime", providerResponseError),
-    orderStatus: optionalString(record.orderStatus),
+    orderStatus: optionalIntegerLike(record.orderStatus, "orderStatus", providerResponseError),
     payMethod: optionalString(record.payMethod),
     senderCity: optionalString(record.senderCity),
     receiverCity: optionalString(record.receiverCity),

@@ -349,8 +349,8 @@ function normalizeDeliveryEstimates(payload: unknown): Record<string, unknown> {
               arriveTime: optionalString(effectiveInfo.arriveTime),
               delayRemark: optionalString(effectiveInfo.delayRemark),
               planDescription: optionalString(effectiveInfo.planDescription),
-              delayDay: optionalString(effectiveInfo.delayDay),
-              effectiveDay: optionalString(effectiveInfo.effectiveDay),
+              delayDay: optionalScalarString(effectiveInfo.delayDay),
+              effectiveDay: optionalScalarString(effectiveInfo.effectiveDay),
             }
           : undefined,
       };

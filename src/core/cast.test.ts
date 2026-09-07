@@ -10,8 +10,8 @@ import {
   rawStringOrNull,
   recordOrEmpty,
   requiredBoolean,
-  requiredRawString,
   requiredNumber,
+  requiredRawString,
   requiredStringArray,
 } from "./cast.ts";
 

@@ -10,6 +10,7 @@ import {
   optionalRecord,
   optionalString,
   optionalStringArray,
+  recordOrEmpty,
   requiredBoolean,
   requiredRawString,
   requiredRecord,
@@ -75,7 +76,7 @@ export const sfExpressStationHandlers: ProviderActionHandlerSubset<"sf_express",
       context,
       "execute",
     );
-    return { msg: optionalString(requiredResponseRecord(payload, "SF Express station response content").msg) };
+    return { msg: optionalString(recordOrEmpty(payload).msg) };
   },
   async station_query_waybill_route(input, context) {
     const payload = await requestSfExpress(
@@ -113,7 +114,7 @@ export const sfExpressStationHandlers: ProviderActionHandlerSubset<"sf_express",
       context,
       "execute",
     );
-    return { msg: optionalString(requiredResponseRecord(payload, "SF Express station response content").msg) };
+    return { msg: optionalString(recordOrEmpty(payload).msg) };
   },
   async station_send_waybill_sms(input, context) {
     const payload = await requestSfExpress(
@@ -130,7 +131,7 @@ export const sfExpressStationHandlers: ProviderActionHandlerSubset<"sf_express",
       context,
       "execute",
     );
-    return { msg: optionalString(requiredResponseRecord(payload, "SF Express station response content").msg) };
+    return { msg: optionalString(recordOrEmpty(payload).msg) };
   },
   async station_store_batch_inventory(input, context) {
     const payload = await requestSfExpress(
@@ -923,7 +924,7 @@ export const sfExpressStationHandlers: ProviderActionHandlerSubset<"sf_express",
   },
   station_pre_handover_pack: kbPackHandler("COM_RECE_KB_PRE_HANDOVER_PACK"),
   station_handover_pack: kbPackHandler("COM_RECE_KB_HANDOVER_PACK"),
-  station_customer_receive_pack: kbPackHandler("COM_RECE_CUST_REC_PACK"),
+  station_customer_receive_pack: kbPackHandler("COM_RECE_KB_CUST_REC_PACK"),
 
   async station_save_store(input, context) {
     const storeCode = requiredInputString(input.store_code, "store_code");
@@ -1009,7 +1010,7 @@ export const sfExpressStationHandlers: ProviderActionHandlerSubset<"sf_express",
     );
     return {
       waybillNo,
-      msg: optionalString(requiredResponseRecord(payload, "SF Express station response content").msg),
+      msg: optionalString(recordOrEmpty(payload).msg),
     };
   },
   async station_temp_store(input, context) {
@@ -1064,7 +1065,7 @@ export const sfExpressStationHandlers: ProviderActionHandlerSubset<"sf_express",
     );
     return {
       waybillNo,
-      msg: optionalString(requiredResponseRecord(payload, "SF Express station response content").msg),
+      msg: optionalString(recordOrEmpty(payload).msg),
     };
   },
 };
@@ -1083,7 +1084,9 @@ function stationHandoverMessage(
         agent_code: requiredInputString(input.agent_code, "agent_code"),
         partner_id: requiredInputString(input.partner_id, "partner_id"),
         area_code: requiredInputString(input.area_code, "area_code"),
+        city_id: optionalString(input.city_id),
         waybill_no: requiredInputString(input.waybill_no, "waybill_no"),
+        // The 655 handover requires city_id, so its extraParam overrides the optional read.
         ...extraParam,
         extendJson: readExtendJson(input.extend_json),
       }),
@@ -1132,8 +1135,9 @@ function readOutsourceStoreContent(
     lng: requiredInputNumber(input.lng, "lng"),
     lat: requiredInputNumber(input.lat, "lat"),
     placeType: optionalString(input.place_type),
-    serviceContentType: integer(input.service_content_type, "service_content_type", providerInputError),
-    serviceContentTypeEx: integer(input.service_content_type_ex, "service_content_type_ex", providerInputError),
+    // SF requires at least one of the two service-type fields; the action schemas declare that rule.
+    serviceContentType: optionalNumber(input.service_content_type),
+    serviceContentTypeEx: optionalNumber(input.service_content_type_ex),
     siteType: integer(input.site_type, "site_type", providerInputError),
     contractor: optionalString(input.contractor),
     contractorPhone: optionalString(input.contractor_phone),
@@ -1167,7 +1171,7 @@ function normalizeInventoryResult(payload: unknown): Record<string, unknown> {
     msg: optionalString(record.msg),
     failList: objectArray(record.failList ?? [], "failList", providerResponseError).map((item, index) => ({
       waybill_no: requiredString(item.waybill_no, `failList[${index}].waybill_no`, providerResponseError),
-      reason: requiredString(item.reason, `failList[${index}].reason`, providerResponseError),
+      reason: optionalString(item.reason),
     })),
   };
 }

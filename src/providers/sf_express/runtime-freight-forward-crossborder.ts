@@ -225,11 +225,10 @@ export const sfExpressFreightForwardCrossborderHandlers: ProviderActionHandlerSu
     if (["SIGN_03", "SIGN_05", "SIGN_15", "TRANSITING_15"].includes(abnormalCode) && input.delay_days === undefined) {
       throw providerInputError(`delay_days is required when abnormal_code is ${abnormalCode}.`);
     }
-    if (
-      ["HANDOVER_06", "TRANSITING_17"].includes(abnormalCode) &&
-      (input.weight === undefined || input.sub_items === undefined)
-    ) {
-      throw providerInputError(`weight and sub_items are required when abnormal_code is ${abnormalCode} (复磅申诉).`);
+    const weight = optionalString(input.weight);
+    const subItems = readSubItems(input.sub_items);
+    if (["HANDOVER_06", "TRANSITING_17"].includes(abnormalCode) && (weight === undefined || !subItems?.length)) {
+      throw providerInputError(`weight and sub_items are required for the reweigh appeal code ${abnormalCode}.`);
     }
     const waybillNo = requiredInputString(input.waybill_no, "waybill_no");
     await requestSfExpress(
@@ -242,11 +241,11 @@ export const sfExpressFreightForwardCrossborderHandlers: ProviderActionHandlerSu
         uploadTime: optionalString(input.upload_time),
         uploadOperator: optionalString(input.upload_operator),
         remark: optionalString(input.remark),
-        weight: optionalString(input.weight),
+        weight,
         volume: optionalString(input.volume),
         delayDays: optionalInteger(input.delay_days),
         picUrl: optionalString(input.pic_url),
-        subVolume: readSubItems(input.sub_items),
+        subVolume: subItems,
       }),
       context,
       "execute",
@@ -562,17 +561,14 @@ function readTrackPoint(track: Record<string, unknown>, fieldName: string): Reco
 function readRouterInfos(value: unknown): Array<Record<string, unknown>> {
   return objectArray(value, "router_infos", providerInputError).map((route, index) =>
     compactObject({
-      uniqueId: requiredInputString(route.uniqueId ?? route.unique_id, `router_infos[${index}].uniqueId`),
+      uniqueId: requiredInputString(route.uniqueId, `router_infos[${index}].uniqueId`),
       status: integer(route.status, `router_infos[${index}].status`, providerInputError),
       operator: requiredInputString(route.operator, `router_infos[${index}].operator`),
-      operateTime: requiredInputString(route.operateTime ?? route.operate_time, `router_infos[${index}].operate_time`),
+      operateTime: requiredInputString(route.operateTime, `router_infos[${index}].operateTime`),
       context: requiredInputString(route.context, `router_infos[${index}].context`),
-      cityName: requiredInputString(route.cityName ?? route.city_name, `router_infos[${index}].city_name`),
-      provinceName: requiredInputString(
-        route.provinceName ?? route.province_name,
-        `router_infos[${index}].province_name`,
-      ),
-      countyName: optionalString(route.countyName ?? route.county_name),
+      cityName: requiredInputString(route.cityName, `router_infos[${index}].cityName`),
+      provinceName: requiredInputString(route.provinceName, `router_infos[${index}].provinceName`),
+      countyName: optionalString(route.countyName),
     }),
   );
 }
@@ -594,9 +590,9 @@ function readSubItems(value: unknown): Array<Record<string, unknown>> | undefine
 function readTraceRoutes(value: unknown): Array<Record<string, unknown>> {
   return objectArray(value, "routes", providerInputError).map((route, index) =>
     compactObject({
-      opTime: integer(route.opTime ?? route.op_time, `routes[${index}].opTime`, providerInputError),
-      opDesc: requiredInputString(route.opDesc ?? route.op_desc, `routes[${index}].opDesc`),
-      mileStone: optionalString(route.mileStone ?? route.mile_stone),
+      opTime: integer(route.opTime, `routes[${index}].opTime`, providerInputError),
+      opDesc: requiredInputString(route.opDesc, `routes[${index}].opDesc`),
+      mileStone: optionalString(route.mileStone),
     }),
   );
 }
@@ -604,16 +600,16 @@ function readTraceRoutes(value: unknown): Array<Record<string, unknown>> {
 function readBaseRoutes(value: unknown): Array<Record<string, unknown>> {
   return objectArray(value, "base_routes", providerInputError).map((route) =>
     compactObject({
-      serviceType: optionalString(route.serviceType ?? route.service_type),
-      transferNo: optionalString(route.transferNo ?? route.transfer_no),
-      shipNo: optionalString(route.shipNo ?? route.ship_no),
-      flightNo: optionalString(route.flightNo ?? route.flight_no),
+      serviceType: optionalString(route.serviceType),
+      transferNo: optionalString(route.transferNo),
+      shipNo: optionalString(route.shipNo),
+      flightNo: optionalString(route.flightNo),
       etd: optionalString(route.etd),
       eta: optionalString(route.eta),
-      isaId: optionalString(route.isaId ?? route.isa_id),
-      carrierCode: optionalString(route.carrierCode ?? route.carrier_code),
-      departPort: optionalString(route.departPort ?? route.depart_port),
-      arrivePort: optionalString(route.arrivePort ?? route.arrive_port),
+      isaId: optionalString(route.isaId),
+      carrierCode: optionalString(route.carrierCode),
+      departPort: optionalString(route.departPort),
+      arrivePort: optionalString(route.arrivePort),
     }),
   );
 }
@@ -622,44 +618,44 @@ function readCrossborderContact(value: unknown, fieldName: string): Record<strin
   const contact = requiredRecord(value, fieldName, providerInputError);
   return compactObject({
     country: optionalString(contact.country),
-    countryCode: optionalString(contact.countryCode ?? contact.country_code),
+    countryCode: optionalString(contact.country_code),
     address: optionalString(contact.address),
     city: optionalString(contact.city),
     company: optionalString(contact.company),
     contact: optionalString(contact.contact),
     mobile: optionalString(contact.mobile),
-    postCode: optionalString(contact.postCode ?? contact.post_code),
+    postCode: optionalString(contact.post_code),
     province: optionalString(contact.province),
-    provinceCode: optionalString(contact.provinceCode ?? contact.province_code),
-    cityCode: optionalString(contact.cityCode ?? contact.city_code),
+    provinceCode: optionalString(contact.province_code),
+    cityCode: optionalString(contact.city_code),
     county: optionalString(contact.county),
-    countyCode: optionalString(contact.countyCode ?? contact.county_code),
+    countyCode: optionalString(contact.county_code),
   });
 }
 
 function readCrossborderPackages(value: unknown): Array<Record<string, unknown>> {
   return objectArray(value, "packages", providerInputError).map((pkg, index) =>
     compactObject({
-      boxNo: requiredInputString(pkg.boxNo ?? pkg.box_no, `packages[${index}].box_no`),
-      packageHigh: requiredInputNumber(pkg.packageHigh ?? pkg.package_high, `packages[${index}].package_high`),
-      packageLong: requiredInputNumber(pkg.packageLong ?? pkg.package_long, `packages[${index}].package_long`),
-      packageWeight: requiredInputNumber(pkg.packageWeight ?? pkg.package_weight, `packages[${index}].package_weight`),
-      netWeight: requiredInputNumber(pkg.netWeight ?? pkg.net_weight, `packages[${index}].net_weight`),
-      packageWidth: requiredInputNumber(pkg.packageWidth ?? pkg.package_width, `packages[${index}].package_width`),
-      SKU: optionalString(pkg.SKU ?? pkg.sku),
-      englishName: optionalString(pkg.englishName ?? pkg.english_name),
-      chineseName: optionalString(pkg.chineseName ?? pkg.chinese_name),
+      boxNo: requiredInputString(pkg.box_no, `packages[${index}].box_no`),
+      packageHigh: requiredInputNumber(pkg.package_high, `packages[${index}].package_high`),
+      packageLong: requiredInputNumber(pkg.package_long, `packages[${index}].package_long`),
+      packageWeight: requiredInputNumber(pkg.package_weight, `packages[${index}].package_weight`),
+      netWeight: requiredInputNumber(pkg.net_weight, `packages[${index}].net_weight`),
+      packageWidth: requiredInputNumber(pkg.package_width, `packages[${index}].package_width`),
+      SKU: optionalString(pkg.sku),
+      englishName: optionalString(pkg.english_name),
+      chineseName: optionalString(pkg.chinese_name),
       brand: optionalString(pkg.brand),
       model: optionalString(pkg.model),
-      chineseMaterial: optionalString(pkg.chineseMaterial ?? pkg.chinese_material),
-      englishMaterial: optionalString(pkg.englishMaterial ?? pkg.english_material),
+      chineseMaterial: optionalString(pkg.chinese_material),
+      englishMaterial: optionalString(pkg.english_material),
       purpose: optionalString(pkg.purpose),
       packing: optionalString(pkg.packing),
-      customsCode: optionalString(pkg.customsCode ?? pkg.customs_code),
-      numberOfBoxes: optionalString(pkg.numberOfBoxes ?? pkg.number_of_boxes),
-      declaredValue: optionalString(pkg.declaredValue ?? pkg.declared_value),
-      declaredTotalValue: optionalString(pkg.declaredTotalValue ?? pkg.declared_total_value),
-      salesLink: optionalString(pkg.salesLink ?? pkg.sales_link),
+      customsCode: optionalString(pkg.customs_code),
+      numberOfBoxes: optionalString(pkg.number_of_boxes),
+      declaredValue: optionalString(pkg.declared_value),
+      declaredTotalValue: optionalString(pkg.declared_total_value),
+      salesLink: optionalString(pkg.sales_link),
       pic: optionalString(pkg.pic),
     }),
   );
@@ -671,8 +667,8 @@ function readBillFbaList(value: unknown): Array<Record<string, unknown>> | undef
   }
   return objectArray(value, "bill_fba_list", providerInputError).map((entry) =>
     compactObject({
-      fbaNo: optionalString(entry.fbaNo ?? entry.fba_no),
-      trackingNo: optionalString(entry.trackingNo ?? entry.tracking_no),
+      fbaNo: optionalString(entry.fba_no),
+      trackingNo: optionalString(entry.tracking_no),
     }),
   );
 }

@@ -2,7 +2,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
-import { waybillNoSchema } from "./schemas.ts";
+import { dateTimeSchema, waybillNoSchema } from "./schemas.ts";
 
 const service = "sf_express";
 
@@ -33,10 +33,12 @@ const routeEventSchema = s.object(
     secondaryStatusCode: s.string("The second-level status code."),
     secondaryStatusName: s.string("The second-level status name."),
   },
-  { optional: ["acceptAddress", "firstStatusCode", "firstStatusName"] },
+  {
+    optional: ["acceptAddress", "firstStatusCode", "firstStatusName", "secondaryStatusCode", "secondaryStatusName"],
+  },
 );
 
-const searchRoutesOutputSchema = s.object("The SF Express route query results.", {
+const searchRoutesOutputSchema = s.requiredObject("The SF Express route query results.", {
   results: s.array(
     "One result per queried tracking number.",
     s.object(
@@ -61,7 +63,7 @@ const searchRoutesOutputSchema = s.object("The SF Express route query results.",
   ),
 });
 
-const deliveryOptionsOutputSchema = s.object("The SF Express delivery standards and prices.", {
+const deliveryOptionsOutputSchema = s.requiredObject("The SF Express delivery standards and prices.", {
   options: s.array(
     "The delivery products with their promised time and optional price.",
     s.object(
@@ -94,7 +96,7 @@ const filterAddressSchema = (role: string): ReturnType<typeof s.object> =>
     { optional: ["tel", "country", "province", "city", "county", "address", "post_code"] },
   );
 
-const filterResultOutputSchema = s.object("The coverage check results.", {
+const filterResultOutputSchema = s.requiredObject("The coverage check results.", {
   results: s.array(
     "One result per checked order.",
     s.object(
@@ -171,7 +173,11 @@ const productOptionSchema = s.object("One recommended SF product.", {
   specialCommodityMsg: s.string("A warning shown for special cargo, for example perishables."),
   serviceFeeList: s.array(
     "The value-added service fee details.",
-    s.unknownObject("A value-added service fee entry with serviceCode, serviceName, and serviceFee fields."),
+    s.object("One value-added service fee.", {
+      serviceCode: s.string("The value-added service code."),
+      serviceName: s.string("The value-added service name."),
+      serviceFee: s.number("The service fee in the response currency."),
+    }),
   ),
 });
 
@@ -181,7 +187,7 @@ const controlStrategySchema = s.object("One peak-season control strategy for a p
   notificationMsg: s.string("The control notice, in the response language."),
 });
 
-const recommendProductOutputSchema = s.object("The recommended SF products.", {
+const recommendProductOutputSchema = s.requiredObject("The recommended SF products.", {
   products: s.array("The recommended products, best first.", productOptionSchema),
   controlStrategies: s.array("The peak-season control strategies per product.", controlStrategySchema),
 });
@@ -239,9 +245,7 @@ const paymentMethodSchema = s.stringEnum("The payment method: 1 寄付, 2 到付
   "4",
 ]);
 
-const sendTimeSchema = s.nonEmptyString("The shipment or pickup time in yyyy-MM-dd HH:mm:ss format.", {
-  pattern: "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$",
-});
+const sendTimeSchema = dateTimeSchema("The shipment or pickup time in YYYY-MM-DD HH:mm:ss format.");
 
 /** Actions for the SF Express service-query endpoints. */
 export const sfExpressQueryActions: ActionDefinition[] = [
@@ -290,9 +294,7 @@ export const sfExpressQueryActions: ActionDefinition[] = [
         ),
         weight: s.number("The total weight in kilograms, up to 2 decimal places.", { exclusiveMinimum: 0 }),
         volume: s.number("The volume in cubic centimeters, up to 2 decimal places."),
-        consigned_time: s.string("The planned shipment time in YYYY-MM-DD HH:mm:ss format.", {
-          pattern: "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$",
-        }),
+        consigned_time: dateTimeSchema("The planned shipment time in YYYY-MM-DD HH:mm:ss format."),
         search_price: s.boolean("Whether to include freight prices in the response."),
       },
       {
@@ -321,7 +323,7 @@ export const sfExpressQueryActions: ActionDefinition[] = [
       },
       { optional: ["check_type"] },
     ),
-    outputSchema: s.object("The promised delivery time.", {
+    outputSchema: s.requiredObject("The promised delivery time.", {
       searchNo: s.string("The queried waybill number."),
       promiseTm: s.string("The promised delivery time in YYYY-MM-DD HH:mm:ss format."),
     }),
@@ -333,7 +335,7 @@ export const sfExpressQueryActions: ActionDefinition[] = [
     inputSchema: s.requiredObject("The waybill number to validate.", {
       waybill_no: waybillNoSchema,
     }),
-    outputSchema: s.object("The validation result.", {
+    outputSchema: s.requiredObject("The validation result.", {
       waybillNo: s.string("The checked waybill number."),
       valid: s.boolean("Whether the waybill number is valid."),
     }),
@@ -376,10 +378,6 @@ export const sfExpressQueryActions: ActionDefinition[] = [
       address: s.nonEmptyString("The address to search around; provide address, or both longitude and latitude."),
       longitude: s.number("The longitude of the search center; required with latitude when address is omitted."),
       latitude: s.number("The latitude of the search center; required with longitude when address is omitted."),
-      format: s.stringEnum("formatted (default) returns formatted fields; raw returns the original response fields.", [
-        "formatted",
-        "raw",
-      ]),
       dept_types: s.array(
         "The point types to include: 1 自营服务点, 2 合作商家店, 3 嘿客店/顺丰优选, 4 顺丰站, 5 丰巢柜.",
         s.stringEnum("A point type code.", ["1", "2", "3", "4", "5"]),
@@ -410,9 +408,7 @@ export const sfExpressQueryActions: ActionDefinition[] = [
         src_address: s.nonEmptyString("The origin street address."),
         dest_address: s.nonEmptyString("The destination street address."),
         send_time: sendTimeSchema,
-        order_time: s.string("The order time in yyyy-MM-dd HH:mm:ss format; defaults to the current time.", {
-          pattern: "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$",
-        }),
+        order_time: dateTimeSchema("The order time in YYYY-MM-DD HH:mm:ss format; defaults to the current time."),
         weight: s.number("The total weight in kilograms.", { exclusiveMinimum: 0 }),
         length: s.number("The parcel length in centimeters."),
         width: s.number("The parcel width in centimeters."),
@@ -467,15 +463,13 @@ export const sfExpressQueryActions: ActionDefinition[] = [
         dest_city: s.nonEmptyString("The destination city."),
         dest_county: s.nonEmptyString("The destination district or county."),
         send_time: sendTimeSchema,
-        order_time: s.string("The order time in yyyy-MM-dd HH:mm:ss format; defaults to the current time.", {
-          pattern: "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$",
-        }),
+        order_time: dateTimeSchema("The order time in YYYY-MM-DD HH:mm:ss format; defaults to the current time."),
         weight: s.number("The total weight in kilograms.", { exclusiveMinimum: 0 }),
-        weight_unit: s.integer("The weight unit: 1 千克 (default), 2 克, 3 吨, 4 英镑."),
+        weight_unit: s.integer("The weight unit: 1 千克 (default), 2 克, 3 吨, 4 英镑.", { minimum: 1, maximum: 4 }),
         length: s.number("The parcel length in centimeters."),
         width: s.number("The parcel width in centimeters."),
         height: s.number("The parcel height in centimeters."),
-        length_unit: s.integer("The length unit: 1 厘米 (default), 2 米, 3 千米, 4 英寸."),
+        length_unit: s.integer("The length unit: 1 厘米 (default), 2 米, 3 千米, 4 英寸.", { minimum: 1, maximum: 4 }),
         pay_method: paymentMethodSchema,
         monthly_card: s.nonEmptyString("The SF monthly settlement card (月结卡号)."),
         package_number: s.positiveInteger("The number of parcels."),
@@ -509,11 +503,13 @@ export const sfExpressQueryActions: ActionDefinition[] = [
         ),
         client_code: s.nonEmptyString("The access code; required for access-code scenarios."),
         order_type: s.nonEmptyString("The order type, for example 31/32/33/34."),
-        label_fresh: s.array("The freshness labels: 1 保鲜, 0 非保鲜.", s.integer("1 for 保鲜, 0 for 非保鲜.")),
+        label_fresh: s.array(
+          "The freshness labels: 1 保鲜, 0 非保鲜.",
+          s.integer("1 for 保鲜, 0 for 非保鲜.", { minimum: 0, maximum: 1 }),
+        ),
         pay_country: s.nonEmptyString("The payment country code used for pricing, for example CN."),
-        arrival_time: s.nonEmptyString(
-          "The estimated delivery time in yyyy-MM-dd HH:mm:ss format, usually the reachTime returned by sf_express.recommend_product.",
-          { pattern: "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$" },
+        arrival_time: dateTimeSchema(
+          "The estimated delivery time in YYYY-MM-DD HH:mm:ss format, usually the reachTime returned by sf_express.recommend_product.",
         ),
         src_phone_num: s.nonEmptyString(
           "The sender phone when pay_method is 1 or 3, or the recipient phone when it is 2 or 4.",
@@ -535,7 +531,7 @@ export const sfExpressQueryActions: ActionDefinition[] = [
         ],
       },
     ),
-    outputSchema: s.object("The recommended value-added services.", {
+    outputSchema: s.requiredObject("The recommended value-added services.", {
       services: s.array("The recommended services.", vasOptionSchema),
     }),
     followUpActions: ["sf_express.create_order"],

@@ -159,7 +159,7 @@ describe("SF Express freight forwarding handlers", () => {
       ),
     ).rejects.toMatchObject({
       status: 400,
-      message: "weight and sub_items are required when abnormal_code is HANDOVER_06 (复磅申诉).",
+      message: "weight and sub_items are required for the reweigh appeal code HANDOVER_06.",
     });
 
     expect(fetcher).not.toHaveBeenCalled();

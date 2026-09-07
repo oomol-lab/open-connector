@@ -9,7 +9,9 @@ import {
   optionalBoolean,
   optionalIntegerLike,
   optionalNumber,
+  optionalScalarString,
   optionalString,
+  requiredNumber,
   requiredRecord,
   requiredString,
   requiredStringArray,
@@ -20,7 +22,7 @@ import {
   requiredInputString,
   requiredResponseRecord,
 } from "../provider-runtime.ts";
-import { readServiceValueList, requestSfExpress } from "./runtime.ts";
+import { optionalFlagNumber, readServiceValueList, requestSfExpress } from "./runtime.ts";
 
 /** Handlers for the SF Express Freight truckload and city-delivery endpoints. */
 export const sfExpressFreightTlCityHandlers: ProviderActionHandlerSubset<"sf_express", SfExpressActionHandler> = {
@@ -44,7 +46,7 @@ export const sfExpressFreightTlCityHandlers: ProviderActionHandlerSubset<"sf_exp
         operaterType: 1,
         custId: monthlyCard,
         payMethod,
-        isGenWaybillNo: generateWaybillNo === true ? 1 : waybillNo !== undefined ? 0 : undefined,
+        isGenWaybillNo: generateWaybillNo === true ? 1 : 0,
         waybillNo,
         sendCompany: sender.company,
         sendContact: sender.contact,
@@ -69,7 +71,7 @@ export const sfExpressFreightTlCityHandlers: ProviderActionHandlerSubset<"sf_exp
         totalCargoVolume: optionalNumber(input.total_cargo_volume),
         vehicleType: optionalString(input.vehicle_type),
         carType: optionalString(input.car_type),
-        needTrackingReturn: optionalBoolean(input.need_tracking_return) === true ? 1 : undefined,
+        needTrackingReturn: optionalFlagNumber(input.need_tracking_return),
         receiveRemark: optionalString(input.receive_remark),
         deliveryRemark: optionalString(input.delivery_remark),
         empCode: optionalString(input.emp_code),
@@ -132,7 +134,7 @@ export const sfExpressFreightTlCityHandlers: ProviderActionHandlerSubset<"sf_exp
         vehicle: requiredInputString(input.vehicle, "vehicle"),
         carNum: integer(input.car_num, "car_num", providerInputError),
         sendStartTime: requiredInputString(input.send_start_time, "send_start_time"),
-        addressList: readCityAddresses(input.address_list),
+        addressList: readCityAddresses(input.address_list, "address_list"),
         vasFeeList: readCityVasFees(input.vas_fee_list),
         phone: requiredInputString(input.phone, "phone"),
         nickname: requiredInputString(input.nickname, "nickname"),
@@ -157,7 +159,7 @@ export const sfExpressFreightTlCityHandlers: ProviderActionHandlerSubset<"sf_exp
         vehicle: requiredInputString(input.vehicle, "vehicle"),
         carNum: integer(input.car_num, "car_num", providerInputError),
         sendStartTime: requiredInputString(input.send_start_time, "send_start_time"),
-        orderAddressVOList: readCityAddresses(input.addresses),
+        orderAddressVOList: readCityAddresses(input.addresses, "addresses"),
         orderVasFeeList: readCityVasFees(input.vas_fee_list),
         city: requiredInputString(input.city, "city"),
         orderSource: requiredInputString(input.order_source, "order_source"),
@@ -167,17 +169,17 @@ export const sfExpressFreightTlCityHandlers: ProviderActionHandlerSubset<"sf_exp
     );
     const record = requiredResponseRecord(payload, "SF Express city-delivery fee response");
     return {
-      baseFee: requiredFee(record.baseFee, "baseFee"),
-      totalFee: requiredFee(record.totalFee, "totalFee"),
-      totalVasFee: requiredFee(record.totalVasFee, "totalVasFee"),
-      mileage: requiredFee(record.mileage, "mileage"),
+      baseFee: requiredNumber(record.baseFee, "baseFee", providerResponseError),
+      totalFee: requiredNumber(record.totalFee, "totalFee", providerResponseError),
+      totalVasFee: requiredNumber(record.totalVasFee, "totalVasFee", providerResponseError),
+      mileage: requiredNumber(record.mileage, "mileage", providerResponseError),
       cutPayment: optionalNumber(record.cutPayment),
       orderVasFeeList: objectArray(record.orderVasFeeList ?? [], "orderVasFeeList", providerResponseError).map(
         (item, index) => ({
           vasCode: requiredString(item.vasCode, `orderVasFeeList[${index}].vasCode`, providerResponseError),
           vehicle: requiredString(item.vehicle, `orderVasFeeList[${index}].vehicle`, providerResponseError),
           num: optionalIntegerLike(item.num, `orderVasFeeList[${index}].num`, providerResponseError),
-          fee: requiredFee(item.fee, `orderVasFeeList[${index}].fee`),
+          fee: requiredNumber(item.fee, `orderVasFeeList[${index}].fee`, providerResponseError),
           name: requiredString(item.name, `orderVasFeeList[${index}].name`, providerResponseError),
         }),
       ),
@@ -293,8 +295,8 @@ export const sfExpressFreightTlCityHandlers: ProviderActionHandlerSubset<"sf_exp
         vasCode: requiredString(service.vasCode, `services[${index}].vasCode`, providerResponseError),
         name: requiredString(service.name, `services[${index}].name`, providerResponseError),
         numUnit: nullableString(service.numUnit) ?? null,
-        bailMinFee: optionalString(service.bailMinFee),
-        fee: optionalString(service.fee),
+        bailMinFee: optionalScalarString(service.bailMinFee),
+        fee: optionalScalarString(service.fee),
         infoName: nullableString(service.infoName) ?? null,
       })),
     };
@@ -425,16 +427,17 @@ function readTlExtraInfos(value: unknown): Array<Record<string, unknown>> | unde
   );
 }
 
-function readCityAddresses(value: unknown): Array<Record<string, unknown>> {
-  return objectArray(value, "address_list", providerInputError).map((address, index) =>
+/** The two city-delivery actions spell the address array differently, so the error text follows the caller's field. */
+function readCityAddresses(value: unknown, fieldName: string): Array<Record<string, unknown>> {
+  return objectArray(value, fieldName, providerInputError).map((address, index) =>
     compactObject({
-      coordinate: requiredInputString(address.coordinate, `address_list[${index}].coordinate`),
-      contact: requiredInputString(address.contact, `address_list[${index}].contact`),
-      tel: requiredInputString(address.tel, `address_list[${index}].tel`),
-      address: requiredInputString(address.address, `address_list[${index}].address`),
+      coordinate: requiredInputString(address.coordinate, `${fieldName}[${index}].coordinate`),
+      contact: requiredInputString(address.contact, `${fieldName}[${index}].contact`),
+      tel: requiredInputString(address.tel, `${fieldName}[${index}].tel`),
+      address: requiredInputString(address.address, `${fieldName}[${index}].address`),
       addressDetail: optionalString(address.address_detail),
-      floor: optionalIntegerLike(address.floor, `address_list[${index}].floor`, providerInputError) ?? 0,
-      lift: optionalBoolean(address.lift) === true ? 1 : 0,
+      floor: optionalIntegerLike(address.floor, `${fieldName}[${index}].floor`, providerInputError) ?? 0,
+      lift: optionalFlagNumber(address.lift) ?? 0,
       replyStatus: optionalBoolean(address.reply_status) === true ? 7 : 0,
     }),
   );
@@ -459,12 +462,4 @@ function normalizeTlOrderResult(payload: unknown): Record<string, unknown> {
     waybillNo: nullableString(record.waybillNo) ?? null,
     signBackWaybillNo: nullableString(record.signBackWaybillNo) ?? null,
   };
-}
-
-function requiredFee(value: unknown, fieldName: string): number {
-  const fee = optionalNumber(value);
-  if (fee === undefined) {
-    throw providerResponseError(`SF Express response field ${fieldName} is not a number`);
-  }
-  return fee;
 }

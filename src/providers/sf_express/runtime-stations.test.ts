@@ -254,6 +254,29 @@ describe("SF Express station handlers", () => {
     expect(output).toEqual({ waybillNo: "033222868176" });
   });
 
+  it("routes every KB pack handover to its own documented service code", async () => {
+    const cases = [
+      ["station_pre_handover_pack", "COM_RECE_KB_PRE_HANDOVER_PACK"],
+      ["station_handover_pack", "COM_RECE_KB_HANDOVER_PACK"],
+      ["station_customer_receive_pack", "COM_RECE_KB_CUST_REC_PACK"],
+    ] as const;
+
+    for (const [action, serviceCode] of cases) {
+      const fetcher = vi.fn<typeof fetch>(async (url, init) => {
+        expect(String(url)).toBe("https://sfapi.sf-express.com/std/service");
+        expect(new URLSearchParams(String(init?.body)).get("serviceCode")).toBe(serviceCode);
+        return okEnvelope(null);
+      });
+
+      await sfExpressStationHandlers[action]!(
+        { partner_id: "KBWL8S6H", store_code: "KBYZ2094091", waybill_no: "033222868176" },
+        context(fetcher),
+      );
+
+      expect(fetcher).toHaveBeenCalledOnce();
+    }
+  });
+
   it("maps the station_save_store inputs to the camelCase msgData with numeric enums", async () => {
     const fetcher = vi.fn<typeof fetch>(async (_url, init) => {
       expect(readMsgData(init)).toEqual({

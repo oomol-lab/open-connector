@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sfExpressFreightInstallHandlers } from "./runtime-freight-install.ts";
 
 const context = (fetcher: typeof fetch) => ({ partnerId: "TEST_PARTNER", checkWord: "TEST_CHECKWORD", fetcher });
@@ -22,6 +22,17 @@ const businessError = (errorCode: string, errorMsg: string): Response =>
 const readForm = (init?: RequestInit): URLSearchParams => new URLSearchParams(String(init?.body));
 
 describe("SF Express freight install-service handlers", () => {
+  // The recovery pickup window is measured on SF's Asia/Shanghai calendar, so the
+  // clock is frozen at an instant that is 2026-09-07 in Shanghai in every host timezone.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-09-07T04:00:00Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("creates an install order with receiver, cargoes, and added services", async () => {
     const fetcher = vi.fn<typeof fetch>(async (_url, init) => {
       const msgData = JSON.parse(readForm(init).get("msgData")!);
@@ -147,7 +158,8 @@ describe("SF Express freight install-service handlers", () => {
   });
 
   it("creates a recovery order with the fixed single product", async () => {
-    const withinThreeDays = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+    // 2026-09-10 is the last day inside SF's 3-day window from 2026-09-07.
+    const withinThreeDays = "2026-09-10";
     const fetcher = vi.fn<typeof fetch>(async (_url, init) => {
       const msgData = JSON.parse(readForm(init).get("msgData")!);
       expect(msgData).toEqual({
@@ -195,7 +207,7 @@ describe("SF Express freight install-service handlers", () => {
       expect_end_time: "10:00",
       product_list: [{ product_sku: "8895138" }],
     };
-    const beyond = new Date(Date.now() + 4 * 86_400_000).toISOString().slice(0, 10);
+    const beyond = "2026-09-11";
     await expect(
       sfExpressFreightInstallHandlers.freight_create_recovery_order!(
         { ...base, expect_date: beyond },

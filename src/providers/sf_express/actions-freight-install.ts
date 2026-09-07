@@ -436,8 +436,9 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
         emerg_contact_phone: s.nonEmptyString("The install master's emergency contact; used with code 1."),
         app_start_time: dateTimeSchema("The appointment window start; required for code 10."),
         app_end_time: dateTimeSchema("The appointment window end; required for code 10."),
-        biz_exception_code: s.string(
+        biz_exception_code: s.stringEnum(
           "The appointment failure reason: 1 电话不通, 2 电话错误, 3 未确定安装时间, 4 产品未到货, 5 暂未装修好; used with code 14.",
+          ["1", "2", "3", "4", "5"],
         ),
         images: s.stringArray("The operation image URLs, up to 10; required for codes 3, 17, 20, 21.", {
           maxItems: 10,
@@ -568,7 +569,10 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
           ["OP000006", "OP000004", "OP000000", "OP000007", "OP000008", "OP000001", "OP000010", "OP000011", "OP000013"],
         ),
         operate_time: operateTimeSchema,
-        operate_data: s.record("The operation data; required keys depend on operate_code.", s.string("")),
+        operate_data: s.record(
+          "The operation data; required keys depend on operate_code.",
+          s.string("One operation data value; see the action description for the key each operate_code requires."),
+        ),
       },
       { optional: ["operate_data"] },
     ),

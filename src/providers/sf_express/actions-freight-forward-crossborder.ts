@@ -397,7 +397,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
         }),
         abnormal_code: abnormalCodeSchema,
         supplier_code: s.string("The forwarding supplier code; required for reweigh appeals."),
-        upload_time: s.string("The upload time."),
+        upload_time: dateTimeSchema("The upload time in YYYY-MM-DD HH:mm:ss format."),
         upload_operator: s.string("The uploader name."),
         remark: s.string("The exception description."),
         weight: s.string("The weight in kg; required for reweigh codes."),
@@ -527,7 +527,6 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
           },
           {
             optional: [
-              "serviceType",
               "transferNo",
               "shipNo",
               "flightNo",

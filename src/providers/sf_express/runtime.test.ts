@@ -19,8 +19,27 @@ const platformError = (code: string, message: string): Response =>
 
 const readForm = (init?: RequestInit): URLSearchParams => new URLSearchParams(String(init?.body ?? ""));
 
+/**
+ * The documented SF Express signature, restated byte by byte instead of through
+ * `encodeURIComponent`, so this stays an independent check of the runtime rather
+ * than a copy of it: everything outside Java's URLEncoder unreserved set is
+ * percent-encoded from its UTF-8 bytes, a space becomes `+`, then MD5/Base64.
+ */
+const referenceDigest = (msgData: string, timestamp: string, checkWord: string): string => {
+  const encoded = Array.from(Buffer.from(msgData + timestamp + checkWord, "utf8"))
+    .map((byte) => {
+      const character = String.fromCharCode(byte);
+      if (/[A-Za-z0-9.\-*_]/.test(character)) {
+        return character;
+      }
+      return character === " " ? "+" : `%${byte.toString(16).toUpperCase().padStart(2, "0")}`;
+    })
+    .join("");
+  return createHash("md5").update(encoded).digest("base64");
+};
+
 describe("SF Express provider core runtime", () => {
-  it("signs the form envelope with Base64(MD5(msgData + timestamp + checkWord))", async () => {
+  it("signs the form envelope with Base64(MD5(URLEncoder.encode(msgData + timestamp + checkWord)))", async () => {
     const fetcher = vi.fn<typeof fetch>(async (url, init) => {
       expect(String(url)).toBe(sfExpressApiBaseUrl);
       expect(init?.method).toBe("POST");
@@ -31,10 +50,7 @@ describe("SF Express provider core runtime", () => {
       expect(form.get("requestID")).toBeTruthy();
       const msgData = form.get("msgData")!;
       const timestamp = form.get("timestamp")!;
-      const expectedDigest = createHash("md5")
-        .update(msgData + timestamp + "TEST_CHECKWORD")
-        .digest("base64");
-      expect(form.get("msgDigest")).toBe(expectedDigest);
+      expect(form.get("msgDigest")).toBe(referenceDigest(msgData, timestamp, "TEST_CHECKWORD"));
       expect(JSON.parse(msgData)).toEqual({ waybillNo: "SF1040275268927" });
       return okEnvelope(true);
     });
@@ -46,6 +62,27 @@ describe("SF Express provider core runtime", () => {
 
     expect(fetcher).toHaveBeenCalledOnce();
     expect(output).toEqual({ waybillNo: "SF1040275268927", valid: true });
+  });
+
+  it("signs payloads carrying spaces, Chinese, and characters encodeURIComponent leaves alone", async () => {
+    const fetcher = vi.fn<typeof fetch>(async (_url, init) => {
+      const form = readForm(init);
+      const msgData = form.get("msgData")!;
+      expect(msgData).toContain("2026-09-05 17:01:48");
+      expect(form.get("msgDigest")).toBe(referenceDigest(msgData, form.get("timestamp")!, "TEST_CHECKWORD"));
+      return okEnvelope({ deliverTmDto: [] });
+    });
+
+    await sfExpressQueryHandlers.query_delivery_time_price!(
+      {
+        src_address: { province: "广东省", city: "深圳市", address: "南山区科技园 A'座(1~2)!*栋" },
+        dest_address: { code: "020" },
+        consigned_time: "2026-09-05 17:01:48",
+      },
+      context(fetcher),
+    );
+
+    expect(fetcher).toHaveBeenCalledOnce();
   });
 
   it("accepts apiResultData as an already-parsed object", async () => {
@@ -131,6 +168,28 @@ describe("SF Express provider core runtime", () => {
     expect(fetcher).toHaveBeenCalledOnce();
   });
 
+  it("reads the sandbox credential flag case-insensitively and rejects any other value", async () => {
+    const fetcher = vi.fn<typeof fetch>(async (url) => {
+      expect(String(url)).toBe("https://sfapi-sbox.sf-express.com/std/service");
+      return okEnvelope(true);
+    });
+
+    const sandboxResult = await validateSfExpressCredential(
+      { partnerId: "TEST_PARTNER", checkWord: "TEST_CHECKWORD", sandbox: " TRUE " },
+      fetcher,
+    );
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(sandboxResult.metadata).toMatchObject({
+      environment: "sandbox",
+      apiBaseUrl: "https://sfapi-sbox.sf-express.com/std/service",
+    });
+
+    await expect(
+      validateSfExpressCredential({ partnerId: "TEST_PARTNER", checkWord: "TEST_CHECKWORD", sandbox: "yes" }, fetcher),
+    ).rejects.toMatchObject({ status: 400, message: "sandbox must be true or false." });
+    expect(fetcher).toHaveBeenCalledOnce();
+  });
+
   it("maps a bad signature to 400 when validating a credential", async () => {
     const fetcher = vi.fn<typeof fetch>(async () => platformError("A1006", "数字签名无效"));
 
@@ -152,6 +211,6 @@ describe("SF Express provider core runtime", () => {
     );
 
     expect(result.profile).toEqual({ accountId: "sf_express:TEST_PARTNER", displayName: "SF Express (TEST_PARTNER)" });
-    expect(result.metadata?.apiBaseUrl).toBe(sfExpressApiBaseUrl);
+    expect(result.metadata).toMatchObject({ environment: "production", apiBaseUrl: sfExpressApiBaseUrl });
   });
 });

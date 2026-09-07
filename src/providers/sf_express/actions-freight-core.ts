@@ -2,6 +2,7 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { dateTimeSchema } from "./schemas.ts";
 
 const service = "sf_express";
 
@@ -23,7 +24,7 @@ const freightContactSchema = (role: string, includeEmail: boolean): ReturnType<t
     properties.email = s.nonEmptyString(`The ${role} email address.`);
     optional.push("email");
   }
-  return s.object(`The ${role} party.`, properties, { optional });
+  return s.requireAnyProperty(s.object(`The ${role} party.`, properties, { optional }), ["mobile", "tel"]);
 };
 
 const cargoItemSchema = s.object(
@@ -46,7 +47,6 @@ const cargoItemSchema = s.object(
   },
   {
     optional: [
-      "name",
       "unit",
       "category",
       "spec",
@@ -125,7 +125,9 @@ const ltlOrderResultSchema = s.object(
     filterRemark: s.string("The reason code or note when the order is not deliverable."),
     mappingMark: s.string("The address mapping code."),
     paymentLink: s.string("The third-party freight payment URL."),
-    rlsInfo: s.unknownObject("The route label information used for waybill printing."),
+    rlsInfo: s.unknownObject(
+      "The route label information used for waybill printing; carries invokeResult plus the printable route-label fields.",
+    ),
   },
   {
     optional: [
@@ -151,7 +153,7 @@ const routeInfoSchema = s.object(
     time: s.integer("The event time as epoch milliseconds."),
     opCode: s.string("The operation code."),
   },
-  { optional: ["opCode"] },
+  { optional: ["status", "time", "opCode"] },
 );
 
 /** Actions for the SF Express Freight LTL ordering, business query, and work order endpoints. */
@@ -176,9 +178,8 @@ export const sfExpressFreightCoreActions: ActionDefinition[] = [
         is_do_call: s.boolean(
           "Whether to dispatch a courier call (下call): true = a courier picks up within about an hour; false = the shipper prints labels and the courier collects on a fixed schedule.",
         ),
-        expected_pickup_time: s.string(
-          "The expected pickup time in yyyy-MM-dd HH:mm:ss format; effective only when is_do_call is true. A time past 20:00 is moved to the next day.",
-          { pattern: "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$" },
+        expected_pickup_time: dateTimeSchema(
+          "The expected pickup time in YYYY-MM-DD HH:mm:ss format; effective only when is_do_call is true. A time past 20:00 is moved to the next day.",
         ),
         pay_method: s.integer(
           "The freight payment method: 1 = sender pays (寄方付), 2 = recipient pays (收方付), 3 = third party pays.",
@@ -321,54 +322,55 @@ export const sfExpressFreightCoreActions: ActionDefinition[] = [
     description:
       "Query the standard base freight price for an SF Freight product between two addresses. At least one of weight, size, or declare_value is required for pricing.",
     requiredScopes: [],
-    inputSchema: s.object(
-      "The shipment to price.",
-      {
-        sender: s.object(
-          "The sender location.",
-          {
-            province: s.nonEmptyString("The sender province."),
-            city: s.nonEmptyString("The sender city."),
-            district: s.nonEmptyString("The sender district."),
-            address: s.nonEmptyString(
-              "The sender detailed address; required, and needed for areas where coverage does not span the whole district.",
-            ),
-          },
-          { optional: ["district"] },
-        ),
-        recipient: s.object(
-          "The recipient location.",
-          {
-            province: s.nonEmptyString("The recipient province."),
-            city: s.nonEmptyString("The recipient city."),
-            district: s.nonEmptyString("The recipient district."),
-            address: s.nonEmptyString("The recipient detailed address; needed where coverage is partial."),
-          },
-          { optional: ["district", "address"] },
-        ),
-        product_code: s.nonEmptyString("The SF Freight product code, for example SE0100 重货包裹."),
-        currency_type: s.nonEmptyString("The payment currency, default CNY."),
-        weight: s.number("The actual weight in kilograms."),
-        size: s.number("The sum of length, width, and height in centimeters."),
-        declare_value: s.number("The declared value of the goods."),
-        volume: s.number("The volume in cubic centimeters; when set it is used for volumetric weight."),
-        consigned_time: s.string("The shipment time in yyyy-MM-dd HH:mm:ss format.", {
-          pattern: "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$",
-        }),
-        suburb_flg: s.boolean("Whether this is a suburban shipment (郊区件)."),
-      },
-      {
-        optional: [
-          "product_code",
-          "currency_type",
-          "weight",
-          "size",
-          "declare_value",
-          "volume",
-          "consigned_time",
-          "suburb_flg",
-        ],
-      },
+    inputSchema: s.requireAnyProperty(
+      s.object(
+        "The shipment to price.",
+        {
+          sender: s.object(
+            "The sender location.",
+            {
+              province: s.nonEmptyString("The sender province."),
+              city: s.nonEmptyString("The sender city."),
+              district: s.nonEmptyString("The sender district."),
+              address: s.nonEmptyString(
+                "The sender detailed address; required, and needed for areas where coverage does not span the whole district.",
+              ),
+            },
+            { optional: ["district"] },
+          ),
+          recipient: s.object(
+            "The recipient location.",
+            {
+              province: s.nonEmptyString("The recipient province."),
+              city: s.nonEmptyString("The recipient city."),
+              district: s.nonEmptyString("The recipient district."),
+              address: s.nonEmptyString("The recipient detailed address; needed where coverage is partial."),
+            },
+            { optional: ["district", "address"] },
+          ),
+          product_code: s.nonEmptyString("The SF Freight product code, for example SE0100 重货包裹."),
+          currency_type: s.nonEmptyString("The payment currency, default CNY."),
+          weight: s.number("The actual weight in kilograms."),
+          size: s.number("The sum of length, width, and height in centimeters."),
+          declare_value: s.number("The declared value of the goods."),
+          volume: s.number("The volume in cubic centimeters; when set it is used for volumetric weight."),
+          consigned_time: dateTimeSchema("The shipment time in YYYY-MM-DD HH:mm:ss format."),
+          suburb_flg: s.boolean("Whether this is a suburban shipment (郊区件)."),
+        },
+        {
+          optional: [
+            "product_code",
+            "currency_type",
+            "weight",
+            "size",
+            "declare_value",
+            "volume",
+            "consigned_time",
+            "suburb_flg",
+          ],
+        },
+      ),
+      ["weight", "size", "declare_value"],
     ),
     outputSchema: s.object("The standard price estimate.", {
       totalPrice: s.number("The total base freight price."),
@@ -384,9 +386,12 @@ export const sfExpressFreightCoreActions: ActionDefinition[] = [
     inputSchema: s.requiredObject("The waybill to register for picture push.", {
       order_id: orderIdSchema,
       waybill_no: s.nonEmptyString("The SF waybill number."),
-      image_types: s.stringArray("The picture type codes to push, per the SF 图片查询 documentation.", {
-        minItems: 1,
-      }),
+      image_types: s.stringArray(
+        "The picture type codes to push, for example 68 (waybill image), per the SF 图片查询 documentation.",
+        {
+          minItems: 1,
+        },
+      ),
     }),
     outputSchema: s.object("The registration result.", {
       orderId: s.string("The registered client order number, echoed back."),
@@ -414,7 +419,7 @@ export const sfExpressFreightCoreActions: ActionDefinition[] = [
         cargoWeight: s.number("The cargo weight in kilograms."),
         cargoAmount: s.integer("The cargo item count."),
         expectDeliveryTime: s.integer("The delivery or expected delivery time as epoch milliseconds; see timeTag."),
-        orderStatus: s.string("The shipment status: 10 = 已揽收, 20 = 运输中, 50 = 已签收."),
+        orderStatus: s.integer("The shipment status: 10 = 已揽收, 20 = 运输中, 50 = 已签收."),
         payMethod: s.string("The payment method."),
         senderCity: s.string("The sender city."),
         receiverCity: s.string("The recipient city."),
@@ -434,6 +439,8 @@ export const sfExpressFreightCoreActions: ActionDefinition[] = [
           "expectDeliveryTime",
           "orderStatus",
           "payMethod",
+          "senderCity",
+          "receiverCity",
           "routeInfos",
           "timeTag",
           "waybillAmount",

@@ -18,11 +18,13 @@ import {
   requiredRecord,
   requiredString,
   requiredStringArray,
+  stringArray,
 } from "../../core/cast.ts";
 import {
   parseProviderJsonBodyText,
   providerInputError,
   providerResponseError,
+  requiredInputNumber,
   requiredInputString,
   requiredResponseRecord,
 } from "../provider-runtime.ts";
@@ -38,7 +40,7 @@ export const sfExpressQueryHandlers: ProviderActionHandlerSubset<"sf_express", S
       compactObject({
         trackingType: input.tracking_type === "client_order" ? 2 : 1,
         trackingNumber: trackingNumbers,
-        checkPhoneNo: checkPhoneNos?.join(","),
+        checkPhoneNo: checkPhoneNos?.join(",") || undefined,
         language: optionalString(input.language),
       }),
       context,
@@ -131,9 +133,8 @@ export const sfExpressQueryHandlers: ProviderActionHandlerSubset<"sf_express", S
         address,
         x: longitude === undefined ? undefined : String(longitude),
         y: latitude === undefined ? undefined : String(latitude),
-        opt: input.format === "raw" ? "dq0" : undefined,
-        deptType: optionalStringArray(input.dept_types)?.join("|"),
-        servType: optionalStringArray(input.service_types)?.join("|"),
+        deptType: optionalStringArray(input.dept_types)?.join("|") || undefined,
+        servType: optionalStringArray(input.service_types)?.join("|") || undefined,
         count: optionalInteger(input.count),
         distance: optionalInteger(input.distance),
         city: optionalString(input.city),
@@ -167,10 +168,7 @@ export const sfExpressQueryHandlers: ProviderActionHandlerSubset<"sf_express", S
     };
   },
   async recommend_product(input, context) {
-    const weight = optionalNumber(input.weight);
-    if (weight === undefined) {
-      throw providerInputError("weight is required.");
-    }
+    const weight = requiredInputNumber(input.weight, "weight");
     const payload = await requestSfExpress(
       "EXP_RECE_PSDS_PRODUCT_RECOMMEND",
       compactObject({
@@ -206,10 +204,7 @@ export const sfExpressQueryHandlers: ProviderActionHandlerSubset<"sf_express", S
     return normalizeProductRecommendations(payload);
   },
   async recommend_vas(input, context) {
-    const weight = optionalNumber(input.weight);
-    if (weight === undefined) {
-      throw providerInputError("weight is required.");
-    }
+    const weight = requiredInputNumber(input.weight, "weight");
     const payload = await requestSfExpress(
       "EXP_RECE_PSDS_RECOMMEND_VAS",
       compactObject({
@@ -339,22 +334,19 @@ function normalizeRouteResults(payload: unknown): Record<string, unknown> {
           ),
           firstStatusCode: optionalString(route.firstStatusCode),
           firstStatusName: optionalString(route.firstStatusName),
-          secondaryStatusCode: requiredString(
-            route.secondaryStatusCode,
-            `routeResps[${index}].routes[${routeIndex}].secondaryStatusCode`,
-            providerResponseError,
-          ),
-          secondaryStatusName: requiredString(
-            route.secondaryStatusName,
-            `routeResps[${index}].routes[${routeIndex}].secondaryStatusName`,
-            providerResponseError,
-          ),
+          secondaryStatusCode: optionalString(route.secondaryStatusCode),
+          secondaryStatusName: optionalString(route.secondaryStatusName),
         }),
       ),
-      reasonCode: Array.isArray(result.reasonCode) ? result.reasonCode : undefined,
-      reasonRemark: Array.isArray(result.reasonRemark) ? result.reasonRemark : undefined,
+      reasonCode: readReasonList(result.reasonCode, `routeResps[${index}].reasonCode`),
+      reasonRemark: readReasonList(result.reasonRemark, `routeResps[${index}].reasonRemark`),
     })),
   };
+}
+
+/** SF returns the screening reason lists with numeric-looking members; the contract declares strings. */
+function readReasonList(value: unknown, fieldName: string): string[] | undefined {
+  return Array.isArray(value) ? stringArray(value, fieldName, providerResponseError) : undefined;
 }
 
 function normalizeDeliveryOptions(payload: unknown): Record<string, unknown> {
@@ -451,23 +443,31 @@ function normalizeProductRecommendations(payload: unknown): Record<string, unkno
         reachTime: optionalString(product.reachTime),
         standardTime: optionalString(product.standardTime),
         cutOffTime: optionalString(product.cutOffTime),
-        weight: optionalNumber(product.weight),
-        chargedWeight: optionalNumber(product.chargedWeight),
-        totalFee: optionalNumber(product.totalFee),
-        freight: optionalNumber(product.freight),
-        stdFreight: optionalNumber(product.stdFreight),
-        initialFreight: optionalNumber(product.initialFreight),
-        totalServiceFee: optionalNumber(product.totalServiceFee),
-        selfMailingFee: optionalNumber(product.selfMailingFee),
-        selfTakeFee: optionalNumber(product.selfTakeFee),
-        otherFee: optionalNumber(product.otherFee),
+        weight: optionalNumberLike(product.weight),
+        chargedWeight: optionalNumberLike(product.chargedWeight),
+        totalFee: optionalNumberLike(product.totalFee),
+        freight: optionalNumberLike(product.freight),
+        stdFreight: optionalNumberLike(product.stdFreight),
+        initialFreight: optionalNumberLike(product.initialFreight),
+        totalServiceFee: optionalNumberLike(product.totalServiceFee),
+        selfMailingFee: optionalNumberLike(product.selfMailingFee),
+        selfTakeFee: optionalNumberLike(product.selfTakeFee),
+        otherFee: optionalNumberLike(product.otherFee),
         currency: optionalString(product.currency),
         suburbFlg: optionalBoolean(product.suburbFlg),
         reverseLogistics: optionalString(product.reverseLogistics),
         deliverySfbox: optionalString(product.deliverySfbox),
         overtimeRefund: optionalString(product.overtimeRefund),
         specialCommodityMsg: optionalString(product.specialCommodityMsg),
-        serviceFeeList: Array.isArray(product.serviceFeeList) ? product.serviceFeeList : undefined,
+        serviceFeeList: Array.isArray(product.serviceFeeList)
+          ? objectArray(product.serviceFeeList, "serviceFeeList", providerResponseError).map((fee) =>
+              compactObject({
+                serviceCode: optionalString(fee.serviceCode),
+                serviceName: optionalString(fee.serviceName),
+                serviceFee: optionalNumberLike(fee.serviceFee),
+              }),
+            )
+          : undefined,
       }),
     ),
     controlStrategies: objectArray(
@@ -485,12 +485,23 @@ function normalizeProductRecommendations(payload: unknown): Record<string, unkno
 function normalizeVasRecommendations(payload: unknown): Record<string, unknown> {
   // The doc's response table defines the per-service fields but never names the
   // wrapper: accept a bare array, or a record carrying the list as its single
-  // array-valued property.
-  const items = Array.isArray(payload)
-    ? payload
-    : Object.values(requiredResponseRecord(payload, "SF Express VAS response")).find((value) => Array.isArray(value));
-  if (items === undefined) {
-    throw providerResponseError("SF Express VAS response is missing the service list");
+  // array-valued property. More than one candidate means the shape changed, and
+  // guessing which array is the service list would answer with silently wrong data.
+  let items: unknown[];
+  if (Array.isArray(payload)) {
+    items = payload;
+  } else {
+    const arrays = Object.values(requiredResponseRecord(payload, "SF Express VAS response")).filter((value) =>
+      Array.isArray(value),
+    );
+    if (arrays.length !== 1) {
+      throw providerResponseError(
+        arrays.length === 0
+          ? "SF Express VAS response is missing the service list"
+          : "SF Express VAS response carries more than one candidate service list",
+      );
+    }
+    items = arrays[0] as unknown[];
   }
   return {
     services: items.map((item, index) => {

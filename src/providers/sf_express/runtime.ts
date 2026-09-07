@@ -83,6 +83,9 @@ const sfExpressBaseUrlByServiceCode: Record<string, string> = {
 
 const sfExpressPlatformSuccessCode = "A1000";
 
+/** The inner envelope's own success marker, which some dialects send instead of `success`. */
+const sfExpressBusinessSuccessCode = "S0000";
+
 /** Inner error codes that mean the failure is ours or the platform's, never the caller's input. */
 const sfExpressSystemErrorCodes = new Set(["S0001", "S0003"]);
 
@@ -107,10 +110,26 @@ export function createSfExpressContext(
   return {
     partnerId: requiredInputString(values.partnerId, "partnerId"),
     checkWord: requiredInputString(values.checkWord, "checkWord"),
-    sandbox: values.sandbox === "true",
+    sandbox: readSandboxFlag(values.sandbox),
     fetcher,
     signal,
   };
+}
+
+/**
+ * Read the optional sandbox credential field. An unrecognized value is rejected
+ * rather than ignored, because falling back to production would send live
+ * shipment orders from a credential its owner meant for sandbox onboarding.
+ */
+function readSandboxFlag(value: unknown): boolean {
+  const flag = optionalString(value)?.toLowerCase();
+  if (flag === undefined || flag === "false") {
+    return false;
+  }
+  if (flag === "true") {
+    return true;
+  }
+  throw providerInputError("sandbox must be true or false.");
 }
 
 /** Map an optional boolean action input to the 1/0 flags SF Express expects on the wire. */
@@ -151,17 +170,43 @@ export async function validateSfExpressCredential(
     },
     grantedScopes: [],
     metadata: {
-      apiBaseUrl: sfExpressApiBaseUrl,
+      environment: context.sandbox ? "sandbox" : "production",
+      // The default gateway for that environment; a few services document their own host.
+      apiBaseUrl: context.sandbox ? sfExpressSandboxBaseUrl : sfExpressApiBaseUrl,
       validationEndpoint: "EXP_RECE_VALIDATE_WAYBILLNO",
     },
   };
 }
 
 /**
+ * Percent-encode the way `java.net.URLEncoder.encode(text, "UTF-8")` does, which
+ * is the form SF Express hashes. `encodeURIComponent` differs from it on the
+ * space and on the characters JavaScript leaves unescaped, so both are fixed up
+ * here; `*` is the one punctuation mark both implementations pass through.
+ */
+function javaFormUrlEncode(value: string): string {
+  return encodeURIComponent(value)
+    .replace(/%20/g, "+")
+    .replace(/[!'()~]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`);
+}
+
+/**
+ * Sign one request the way the SF Express Open Platform documents it:
+ * Base64(MD5(URLEncoder.encode(msgData + timestamp + checkWord))). Skipping the
+ * URL-encoding step fails signature verification for every payload, because JSON
+ * always carries characters the encoder rewrites.
+ */
+function signSfExpressPayload(msgData: string, timestamp: string, checkWord: string): string {
+  return createHash("md5")
+    .update(javaFormUrlEncode(msgData + timestamp + checkWord))
+    .digest("base64");
+}
+
+/**
  * Call one SF Express Open Platform service: POST form-urlencoded with the
- * business JSON in msgData, signed as Base64(MD5(msgData + timestamp + checkWord)).
- * msgData is usually an object; a few services (e.g. EXP_RECE_FILTER_ORDER_BSP)
- * take a JSON array instead.
+ * business JSON in msgData, signed by {@link signSfExpressPayload}. msgData is
+ * usually an object; a few services (e.g. EXP_RECE_FILTER_ORDER_BSP) take a JSON
+ * array instead.
  */
 export async function requestSfExpress(
   serviceCode: string,
@@ -177,9 +222,7 @@ export async function requestSfExpress(
       requestID: randomUUID(),
       serviceCode,
       timestamp,
-      msgDigest: createHash("md5")
-        .update(body + timestamp + context.checkWord)
-        .digest("base64"),
+      msgDigest: signSfExpressPayload(body, timestamp, context.checkWord),
       msgData: body,
     });
     const baseUrl = context.sandbox
@@ -236,7 +279,7 @@ function unwrapSfExpressEnvelope(outer: Record<string, unknown>, phase: SfExpres
   const uftlStatus = optionalNumberLike(record.status);
   if (record.success === undefined && uftlStatus !== undefined) {
     if (uftlStatus !== 200) {
-      throw createSfExpressBusinessError(String(record.status), optionalString(record.msg));
+      throw createSfExpressUftlError(uftlStatus, optionalString(record.msg), phase);
     }
     return record.data;
   }
@@ -244,7 +287,7 @@ function unwrapSfExpressEnvelope(outer: Record<string, unknown>, phase: SfExpres
   // Raw-spec truckload envelope: { errorCode, errorMessage, obj } with no success marker.
   if (record.success === undefined) {
     const errorCode = optionalString(record.errorCode) ?? optionalString(record.code);
-    if (errorCode !== undefined) {
+    if (errorCode !== undefined && errorCode !== sfExpressBusinessSuccessCode) {
       throw createSfExpressBusinessError(
         errorCode,
         optionalString(record.errorMessage) ?? optionalString(record.errorMsg),
@@ -290,6 +333,30 @@ function createSfExpressPlatformError(
     return providerInputError(detail);
   }
   return providerResponseError(detail);
+}
+
+/**
+ * The UFTL envelope answers with 200 for success, an HTTP status for a transport
+ * or auth failure, and a five-digit business code (10000 and up) for a rejected
+ * request. Only the HTTP range gets HTTP meaning; everything else is the
+ * caller's to fix.
+ */
+function createSfExpressUftlError(
+  status: number,
+  message: string | undefined,
+  phase: SfExpressPhase,
+): ProviderRequestError {
+  const detail = message ?? `SF Express request failed with status ${status}`;
+  if (status >= 500 && status < 600) {
+    return providerResponseError(detail);
+  }
+  if (status === 429) {
+    return new ProviderRequestError(429, detail);
+  }
+  if (status === 401 || status === 403) {
+    return new ProviderRequestError(phase === "validate" ? 400 : status, detail);
+  }
+  return providerInputError(detail);
 }
 
 function createSfExpressBusinessError(code: string | undefined, message: string | undefined): ProviderRequestError {

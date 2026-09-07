@@ -202,19 +202,21 @@ export const sfExpressFreightInstallHandlers: ProviderActionHandlerSubset<"sf_ex
     );
     const record = requiredResponseRecord(payload, "SF Express delivery rules response");
     return {
-      rules: objectArray(record.serviceInfoResList, "serviceInfoResList", providerResponseError).map((rule, index) => ({
-        seviceId: requiredString(rule.seviceId, `serviceInfoResList[${index}].seviceId`, providerResponseError),
-        serviceName: requiredString(
-          rule.serviceName,
-          `serviceInfoResList[${index}].serviceName`,
-          providerResponseError,
-        ),
-        monthlyCard: requiredString(
-          rule.monthlyCard,
-          `serviceInfoResList[${index}].monthlyCard`,
-          providerResponseError,
-        ),
-      })),
+      rules: objectArray(record.serviceInfoResList ?? [], "serviceInfoResList", providerResponseError).map(
+        (rule, index) => ({
+          seviceId: requiredString(rule.seviceId, `serviceInfoResList[${index}].seviceId`, providerResponseError),
+          serviceName: requiredString(
+            rule.serviceName,
+            `serviceInfoResList[${index}].serviceName`,
+            providerResponseError,
+          ),
+          monthlyCard: requiredString(
+            rule.monthlyCard,
+            `serviceInfoResList[${index}].monthlyCard`,
+            providerResponseError,
+          ),
+        }),
+      ),
     };
   },
   async freight_audit_value_added_service(input, context) {
@@ -274,12 +276,13 @@ export const sfExpressFreightInstallHandlers: ProviderActionHandlerSubset<"sf_ex
       partLogisticsInfos: readPartLogisticsInfos(input.part_logistics_infos),
     });
     if (operateCode === 21) {
-      const isSendPart = payload.isSendPart === 1;
-      const isSelfPurchasePart = payload.isSelfPurchasePart === 1;
-      if (isSendPart === false && isSelfPurchasePart === false) {
+      // Both flags must be stated for code 21; false is an answer, not an omission.
+      if (payload.isSendPart === undefined || payload.isSelfPurchasePart === undefined) {
         throw providerInputError("is_send_part and is_self_purchase_part are required when operate_code is 21.");
       }
-      if ((isSendPart || isSelfPurchasePart) && !payload.partModels) {
+      const isSendPart = payload.isSendPart === 1;
+      const isSelfPurchasePart = payload.isSelfPurchasePart === 1;
+      if ((isSendPart || isSelfPurchasePart) && !payload.partModels?.length) {
         throw providerInputError(
           "part_models is required when operate_code is 21 and is_send_part or is_self_purchase_part is set.",
         );
@@ -294,7 +297,7 @@ export const sfExpressFreightInstallHandlers: ProviderActionHandlerSubset<"sf_ex
     if (operateCode === 22 && payload.orderStatus === undefined) {
       throw providerInputError("order_status is required when operate_code is 22.");
     }
-    if (operateCode === 23 && payload.partLogisticsInfos === undefined) {
+    if (operateCode === 23 && !payload.partLogisticsInfos?.length) {
       throw providerInputError("part_logistics_infos is required when operate_code is 23.");
     }
     await requestSfExpress("FOP_RECE_FIS_ROUTER", payload, context, "execute");
@@ -312,9 +315,9 @@ export const sfExpressFreightInstallHandlers: ProviderActionHandlerSubset<"sf_ex
     );
     const record = requiredResponseRecord(payload, "SF Express appointment times response");
     return {
-      days: objectArray(record.days, "days", providerResponseError).map((day, index) => ({
+      days: objectArray(record.days ?? [], "days", providerResponseError).map((day, index) => ({
         day: requiredString(day.day, `days[${index}].day`, providerResponseError),
-        periods: objectArray(day.periods, `days[${index}].periods`, providerResponseError).map((period) => ({
+        periods: objectArray(day.periods ?? [], `days[${index}].periods`, providerResponseError).map((period) => ({
           start: requiredString(period.start, "periods[].start", providerResponseError),
           end: requiredString(period.end, "periods[].end", providerResponseError),
         })),
@@ -348,9 +351,10 @@ export const sfExpressFreightInstallHandlers: ProviderActionHandlerSubset<"sf_ex
   async freight_bid_report_operation_node(input, context) {
     const operateCode = requiredInputString(input.operate_code, "operate_code");
     const operateData = optionalRecord(input.operate_data);
-    const requiredDataKey = bidOperateDataRequiredKey[operateCode];
-    if (requiredDataKey !== undefined && optionalString(operateData?.[requiredDataKey]) === undefined) {
-      throw providerInputError(`operate_data.${requiredDataKey} is required when operate_code is ${operateCode}.`);
+    for (const requiredDataKey of bidOperateDataRequiredKeys[operateCode] ?? []) {
+      if (optionalString(operateData?.[requiredDataKey]) === undefined) {
+        throw providerInputError(`operate_data.${requiredDataKey} is required when operate_code is ${operateCode}.`);
+      }
     }
     if (operateCode === "OP000004" && operateData?.functionFlag === "1" && !optionalString(operateData.remark)) {
       throw providerInputError("operate_data.remark is required when operate_data.functionFlag is 1.");
@@ -498,14 +502,14 @@ export const sfExpressFreightInstallHandlers: ProviderActionHandlerSubset<"sf_ex
   },
 };
 
-/** The operate_data key each bidding operate_code requires; absent means no key is mandated. */
-const bidOperateDataRequiredKey: Record<string, string> = {
-  OP000006: "installMaster",
-  OP000004: "appTime",
-  OP000008: "imgUrl",
-  OP000001: "imgUrl",
-  OP000010: "imgUrl",
-  OP000013: "closeReason",
+/** The operate_data keys each bidding operate_code requires; absent means no key is mandated. */
+const bidOperateDataRequiredKeys: Record<string, string[]> = {
+  OP000006: ["installMaster", "installConcat"],
+  OP000004: ["appTime"],
+  OP000008: ["imgUrl"],
+  OP000001: ["imgUrl"],
+  OP000010: ["imgUrl"],
+  OP000013: ["closeReason"],
 };
 
 /** Read an optional list of strings from action input, requiring a valid string array when present. */
@@ -513,24 +517,26 @@ function optionalStringList(value: unknown, fieldName: string): string[] | undef
   return value === undefined ? undefined : requiredStringArray(value, fieldName, providerInputError);
 }
 
+/** SF measures the pickup window on its own calendar, not the connector host's. */
+const sfExpressCalendarTimeZone = "Asia/Shanghai";
+
 /** Read the recovery pickup date, enforcing the documented within-3-days window. */
 function readRecoveryDate(value: unknown): string {
   const date = requiredInputString(value, "expect_date");
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
   // Date() normalizes impossible dates (e.g. Feb 30 rolls into March) instead of rejecting.
-  const parsed = match ? new Date(`${date}T00:00:00`) : null;
+  const parsed = match ? new Date(`${date}T00:00:00Z`) : null;
   if (
     !match ||
     !parsed ||
-    parsed.getFullYear() !== Number(match[1]) ||
-    parsed.getMonth() !== Number(match[2]) - 1 ||
-    parsed.getDate() !== Number(match[3])
+    parsed.getUTCFullYear() !== Number(match[1]) ||
+    parsed.getUTCMonth() !== Number(match[2]) - 1 ||
+    parsed.getUTCDate() !== Number(match[3])
   ) {
     throw providerInputError("expect_date must be a valid date in yyyy-MM-dd format.");
   }
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((parsed.getTime() - today.getTime()) / 86_400_000);
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: sfExpressCalendarTimeZone }).format(new Date());
+  const diffDays = Math.round((parsed.getTime() - Date.parse(`${today}T00:00:00Z`)) / 86_400_000);
   if (diffDays < 0 || diffDays > 3) {
     throw providerInputError("expect_date must be within 3 days from today.");
   }
@@ -545,7 +551,7 @@ function readAppendCargoes(value: unknown): Array<Record<string, unknown>> {
     const cusServiceCode = optionalString(item.cus_service_code);
     const standardFields = [standServiceName, standServiceCode].filter((field) => field !== undefined).length;
     const customerFields = [cusServiceName, cusServiceCode].filter((field) => field !== undefined).length;
-    // The contract's 二选一: exactly one pair fully present, the other fully absent.
+    // SF's either-or rule: exactly one pair fully present, the other fully absent.
     if (!((standardFields === 2 && customerFields === 0) || (standardFields === 0 && customerFields === 2))) {
       throw providerInputError(
         `cargo_list[${index}] requires exactly one complete category pair: stand_service_name + stand_service_code, or cus_service_name + cus_service_code.`,
@@ -571,7 +577,7 @@ function readInstallCargoes(value: unknown): Array<Record<string, unknown>> {
     const customerProductName = optionalString(item.customer_product_name);
     const standardFields = [productName, productSku].filter((field) => field !== undefined).length;
     const customerFields = [customerProductSku, customerProductName].filter((field) => field !== undefined).length;
-    // The contract's 二选一: exactly one pair fully present, the other fully absent.
+    // SF's either-or rule: exactly one pair fully present, the other fully absent.
     if (!((standardFields === 2 && customerFields === 0) || (standardFields === 0 && customerFields === 2))) {
       throw providerInputError(
         `cargoes[${index}] requires exactly one complete category pair: product_name + product_sku, or customer_product_name + customer_product_sku.`,

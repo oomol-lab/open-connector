@@ -86,12 +86,12 @@ const tlAdditionServiceSchema = s.object(
   { optional: ["value", "value1", "value2", "value3", "value4"] },
 );
 
-const tlExtraInfoSchema = s.object("One extension attribute.", {
+const tlExtraInfoSchema = s.requiredObject("One extension attribute.", {
   attr_name: s.nonEmptyString("The extension attribute key."),
   attr_val: s.nonEmptyString("The extension attribute value."),
 });
 
-const tlOrderOutputSchema = s.object("The created truckload order.", {
+const tlOrderOutputSchema = s.requiredObject("The truckload order.", {
   orderId: s.string("The client order number, echoed back."),
   waybillNo: s.nullableString("The SF waybill number; present when one was generated."),
   signBackWaybillNo: s.nullableString("The sign-back receipt waybill number, when the sign-back service applies."),
@@ -105,8 +105,10 @@ const cityAddressSchema = s.object(
     tel: s.nonEmptyString("The contact phone number."),
     address: s.nonEmptyString("The address."),
     address_detail: s.nonEmptyString("The detailed address line."),
-    floor: s.integer("The floor; pass 0 when no upstairs service is needed."),
-    lift: s.boolean("Whether the building has an elevator."),
+    floor: s.integer("The floor; pass 0 when no upstairs service is needed. Defaults to 0 when omitted."),
+    lift: s.boolean(
+      "Whether the building has an elevator. Defaults to no elevator when omitted, which can raise the upstairs fee.",
+    ),
     reply_status: s.boolean("Whether a signed receipt is uploaded for this address."),
   },
   { optional: ["address_detail", "floor", "lift", "reply_status"] },
@@ -228,7 +230,8 @@ export const sfExpressFreightTlCityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_query_tl_order",
-    description: "Query an SF Freight truckload order by client order number or waybill number.",
+    description:
+      "Query an SF Freight truckload order by client order number; pass waybill_no as well when you have it.",
     requiredScopes: [],
     inputSchema: s.object(
       "The order to query.",
@@ -238,11 +241,7 @@ export const sfExpressFreightTlCityActions: ActionDefinition[] = [
       },
       { optional: ["waybill_no"] },
     ),
-    outputSchema: s.object("The truckload order.", {
-      orderId: s.string("The client order number."),
-      waybillNo: s.nullableString("The SF waybill number."),
-      signBackWaybillNo: s.nullableString("The sign-back receipt waybill number."),
-    }),
+    outputSchema: tlOrderOutputSchema,
   }),
   defineProviderAction(service, {
     name: "freight_create_vehicle_track_url",
@@ -298,23 +297,7 @@ export const sfExpressFreightTlCityActions: ActionDefinition[] = [
         vehicle: s.nonEmptyString("The vehicle model, for example 4.2米箱货."),
         car_num: s.integer("The number of vehicles.", { minimum: 1 }),
         send_start_time: dateTimeSchema("The planned pickup time in YYYY-MM-DD HH:mm:ss format."),
-        addresses: s.array(
-          "The order addresses.",
-          s.object(
-            "One order address.",
-            {
-              contact: s.nonEmptyString("The contact name."),
-              tel: s.nonEmptyString("The contact phone number."),
-              address: s.nonEmptyString("The address."),
-              coordinate: s.nonEmptyString("The longitude,latitude pair."),
-              floor: s.integer("The floor; pass 0 when no upstairs service is needed."),
-              lift: s.boolean("Whether the building has an elevator."),
-              reply_status: s.boolean("Whether a signed receipt is uploaded for this address."),
-            },
-            { optional: ["floor", "lift", "reply_status"] },
-          ),
-          { minItems: 1 },
-        ),
+        addresses: s.array("The order addresses.", cityAddressSchema, { minItems: 1 }),
         city: s.nonEmptyString("The city, for example 深圳市."),
         order_source: s.nonEmptyString("The order source tag."),
         vas_fee_list: s.array("The value-added services to price.", cityVasFeeSchema),
@@ -322,7 +305,7 @@ export const sfExpressFreightTlCityActions: ActionDefinition[] = [
       { optional: ["vas_fee_list"] },
     ),
     outputSchema: s.object("The city-delivery fee breakdown.", {
-      baseFee: s.number("The mileage fee in CNY."),
+      baseFee: s.number("The base freight fee in CNY."),
       totalFee: s.number("The total fee in CNY."),
       totalVasFee: s.number("The total value-added service fee in CNY."),
       mileage: s.number("The mileage in kilometers."),
@@ -491,7 +474,9 @@ export const sfExpressFreightTlCityActions: ActionDefinition[] = [
             ),
             photo: s.string("The vehicle model picture URL."),
           },
-          { optional: ["specialModelList"] },
+          {
+            optional: ["weight", "length", "width", "height", "volume", "flag", "photo", "specialModelList"],
+          },
         ),
       ),
     }),
@@ -507,9 +492,9 @@ export const sfExpressFreightTlCityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_city_list_appointment_times",
-    description: "List the available pickup appointment time windows for a city in SF Freight city delivery.",
+    description: "Get the pickup appointment time window available for a city in SF Freight city delivery.",
     requiredScopes: [],
-    inputSchema: s.requiredObject("The city whose appointment windows should be listed.", {
+    inputSchema: s.requiredObject("The city whose appointment window should be read.", {
       city: s.nonEmptyString("The city, for example 深圳市."),
     }),
     outputSchema: s.object("The available appointment time window.", {

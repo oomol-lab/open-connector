@@ -62,7 +62,7 @@ describe("SF Express waybill-printing handlers", () => {
     });
   });
 
-  it("returns an empty file list for an asynchronous PDF print", async () => {
+  it("returns an empty result for an asynchronous PDF print", async () => {
     const fetcher = vi.fn<typeof fetch>(async (_url, init) => {
       expect(JSON.parse(readForm(init).get("msgData")!).sync).toBe(false);
       return okObjEnvelope(undefined);
@@ -73,7 +73,7 @@ describe("SF Express waybill-printing handlers", () => {
       context(fetcher),
     );
 
-    expect(output).toEqual({ files: undefined, clientCode: undefined, templateCode: undefined, fileType: undefined });
+    expect(output).toEqual({});
   });
 
   it("rejects a sign-back-only print without any waybill number", async () => {
@@ -97,7 +97,7 @@ describe("SF Express waybill-printing handlers", () => {
         clientCode: "TEST_PARTNER",
         templateCode: "t",
         fileType: "command",
-        files: [{ waybillNo: "SF1234567890999", contents: [{ area: "master", content: "^XA..." }] }],
+        files: [{ waybillNo: "SF1234567890999", contents: [{ area: "master", content: "^XA...\r\n" }] }],
       });
     });
 
@@ -110,7 +110,8 @@ describe("SF Express waybill-printing handlers", () => {
       files: [
         {
           waybillNo: "SF1234567890999",
-          contents: [{ area: "master", content: "^XA..." }],
+          // The command stream reaches the printer verbatim, trailing CRLF included.
+          contents: [{ area: "master", content: "^XA...\r\n" }],
           url: undefined,
           token: undefined,
           seqNo: undefined,

@@ -6,8 +6,6 @@ import { dateTimeSchema, waybillNoSchema } from "./schemas.ts";
 
 const service = "sf_express";
 
-const consignedTimeSchema = dateTimeSchema("The time in YYYY-MM-DD HH:mm:ss format.");
-
 const languageSchema = s.stringEnum("The response language.", ["zh-CN", "zh-TW", "zh-HK", "zh-MO", "en"]);
 
 const orderContactSchema = (role: string): ReturnType<typeof s.object> =>
@@ -286,7 +284,9 @@ const createOrderInputProperties = {
   total_height: s.number("The total shipment height in centimeters."),
   total_volume: s.number("The total shipment volume in cubic centimeters, used for volumetric weight."),
   total_net_weight: s.number("The total net weight of the goods in kilograms."),
-  send_start_time: consignedTimeSchema,
+  send_start_time: dateTimeSchema(
+    "The start of the requested pickup window (要求上门取件开始时间) in YYYY-MM-DD HH:mm:ss format; defaults to the order time.",
+  ),
   is_docall: s.boolean(
     "Whether SF should dispatch a courier for pickup at the appointment time (1) or the shipment is dropped at an agreed site (0, default).",
   ),
@@ -303,7 +303,7 @@ const createOrderInputProperties = {
   extra_info_list: extraInfoListSchema,
   special_delivery_type_code: s.nonEmptyString("The special delivery type code, for example 2 = 极效前置单(当日达)."),
   special_delivery_value: s.nonEmptyString("The special delivery value, for example 1:09296231 for ID verification."),
-  language: languageSchema,
+  language: s.withDefault(languageSchema, "zh-CN"),
 };
 
 const createOrderOptionalFields = [
@@ -361,7 +361,9 @@ export const sfExpressOrderActions: ActionDefinition[] = [
           maxLength: 20,
         }),
         monthly_card: s.nonEmptyString("The SF monthly settlement card (月结卡号)."),
-        pre_order_time: consignedTimeSchema,
+        pre_order_time: dateTimeSchema(
+          "The pickup time to check availability for (预约取件时间) in YYYY-MM-DD HH:mm:ss format.",
+        ),
         total_weight: s.number("The total shipment weight in kilograms.", { exclusiveMinimum: 0 }),
         pay_method: s.integer("The payment method: 1 = 寄方付, 2 = 收方付, 3 = 第三方付.", { minimum: 1, maximum: 3 }),
         parcel_qty: s.positiveInteger("The number of packages."),
@@ -413,8 +415,12 @@ export const sfExpressOrderActions: ActionDefinition[] = [
         is_docall: s.boolean("Whether to notify the courier for pickup via the handheld terminal."),
         special_delivery_type_code: s.nonEmptyString("The special delivery type code."),
         special_delivery_value: s.nonEmptyString("The special delivery value."),
-        send_start_time: consignedTimeSchema,
-        pickup_appoint_end_time: consignedTimeSchema,
+        send_start_time: dateTimeSchema(
+          "The start of the requested pickup window (要求上门取件开始时间) in YYYY-MM-DD HH:mm:ss format.",
+        ),
+        pickup_appoint_end_time: dateTimeSchema(
+          "The end of the requested pickup window (预约取件截止时间) in YYYY-MM-DD HH:mm:ss format.",
+        ),
         customs_batchs: s.nonEmptyString("The customs declaration batch."),
         collect_emp_code: s.nonEmptyString("The pickup courier employee code."),
         source_zone_code: s.nonEmptyString("The origin site code."),
@@ -475,6 +481,7 @@ export const sfExpressOrderActions: ActionDefinition[] = [
         origincode: s.string("The origin area code (lowercase field name is upstream's)."),
         destcode: s.string("The destination area code (lowercase field name is upstream's)."),
         filterResult: s.nullableString("The screening (筛单) result: 1 = 人工确认, 2 = 可收派, 3 = 不可以收派."),
+        remark: s.string("The reason when the shipment cannot be served (filterResult 3)."),
         waybillNoInfoList: s.array("The allocated SF waybill numbers.", waybillNoInfoOutputSchema),
         routeLabelInfo: routeLabelInfoOutputSchema,
         returnExtraInfoList: s.array(
@@ -482,7 +489,7 @@ export const sfExpressOrderActions: ActionDefinition[] = [
           s.unknownObject("One extended attribute."),
         ),
       },
-      { optional: ["origincode", "destcode", "returnExtraInfoList"] },
+      { optional: ["origincode", "destcode", "remark", "returnExtraInfoList"] },
     ),
     followUpActions: ["sf_express.search_routes"],
   }),
@@ -692,7 +699,7 @@ export const sfExpressOrderActions: ActionDefinition[] = [
           {
             type: s.string("The fee type code, for example 1 = 运费, 3 = 基础保."),
             name: s.string("The fee name."),
-            value: s.number("The fee amount."),
+            value: s.nullableNumber("The fee amount; null when the fee item carries no amount."),
             paymentTypeCode: s.string("The payment type: 1 = 寄付, 2 = 到付, 3 = 第三方付."),
             settlementTypeCode: s.string("The settlement type: 1 = 现结, 2 = 月结."),
             serviceProdCode: s.string("The value-added service code."),
@@ -700,15 +707,7 @@ export const sfExpressOrderActions: ActionDefinition[] = [
             customerAcctCode: s.string("The monthly settlement account."),
           },
           {
-            optional: [
-              "type",
-              "name",
-              "paymentTypeCode",
-              "settlementTypeCode",
-              "serviceProdCode",
-              "insuredValue",
-              "customerAcctCode",
-            ],
+            optional: ["paymentTypeCode", "settlementTypeCode", "serviceProdCode", "insuredValue", "customerAcctCode"],
           },
         ),
       ),

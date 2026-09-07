@@ -11,6 +11,7 @@ import {
   optionalRecord,
   optionalString,
   optionalStringArray,
+  requiredRawString,
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
@@ -281,7 +282,9 @@ function normalizeCommandResult(payload: unknown): Record<string, unknown> {
                   `files[${index}].contents[${contentIndex}].area`,
                   providerResponseError,
                 ),
-                content: requiredString(
+                // Printer commands are a byte stream the caller forwards verbatim,
+                // so leading and trailing whitespace must survive the read.
+                content: requiredRawString(
                   part.content,
                   `files[${index}].contents[${contentIndex}].content`,
                   providerResponseError,

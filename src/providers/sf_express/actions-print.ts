@@ -14,43 +14,50 @@ const customTemplateCodeSchema = s.nonEmptyString(
   "The published custom template code, for layouts edited in the SF template editor.",
 );
 
-const printDocumentSchema = s.object(
-  "One waybill to print; masterWaybillNo is required unless printing a sign-back receipt (backWaybillNo only).",
-  {
-    masterWaybillNo: s.nonEmptyString(
-      "The master waybill number (主运单号); omit only when printing a sign-back receipt.",
-    ),
-    branchWaybillNo: s.nonEmptyString("The branch waybill number (子运单号); omit for single-parcel shipments."),
-    backWaybillNo: s.nonEmptyString(
-      "The sign-back waybill number (签回单号); when printing a sign-back receipt, masterWaybillNo and branchWaybillNo stay empty.",
-    ),
-    seq: s.nonEmptyString(
-      "The print sequence number of this waybill; required for master/branch printing (master = 1).",
-    ),
-    sum: s.nonEmptyString(
-      "The total number of waybills in a master/branch shipment; required for master/branch printing.",
-    ),
-    remark: s.nonEmptyString("A remark printed in the custom area."),
-    waybillNoCheckType: s.stringEnum(
-      "The waybill ownership check type: 1 = last 6 digits of the recipient phone, 2 = last 6 digits of the sender phone. Required when the partnerID check does not suffice (third-party ERP).",
-      ["1", "2"],
-    ),
-    waybillNoCheckValue: s.nonEmptyString("The phone last-6 value matching waybillNoCheckType."),
-    customData: s.record("The variable fields for a custom template, keyed by placeholder name.", true),
-  },
-  {
-    optional: [
-      "masterWaybillNo",
-      "branchWaybillNo",
-      "backWaybillNo",
-      "seq",
-      "sum",
-      "remark",
-      "waybillNoCheckType",
-      "waybillNoCheckValue",
-      "customData",
-    ],
-  },
+const cloudPrintSyncSchema = s.boolean(
+  "Whether to return the files synchronously (default true). When false, SF pushes the files to the configured print callback instead.",
+);
+
+const printDocumentSchema = s.requireAnyProperty(
+  s.object(
+    "One waybill to print; masterWaybillNo is required unless printing a sign-back receipt (backWaybillNo only).",
+    {
+      masterWaybillNo: s.nonEmptyString(
+        "The master waybill number (主运单号); omit only when printing a sign-back receipt.",
+      ),
+      branchWaybillNo: s.nonEmptyString("The branch waybill number (子运单号); omit for single-parcel shipments."),
+      backWaybillNo: s.nonEmptyString(
+        "The sign-back waybill number (签回单号); when printing a sign-back receipt, masterWaybillNo and branchWaybillNo stay empty.",
+      ),
+      seq: s.nonEmptyString(
+        "The print sequence number of this waybill; required for master/branch printing (master = 1).",
+      ),
+      sum: s.nonEmptyString(
+        "The total number of waybills in a master/branch shipment; required for master/branch printing.",
+      ),
+      remark: s.nonEmptyString("A remark printed in the custom area."),
+      waybillNoCheckType: s.stringEnum(
+        "The waybill ownership check type: 1 = last 6 digits of the recipient phone, 2 = last 6 digits of the sender phone. Required when the partnerID check does not suffice (third-party ERP).",
+        ["1", "2"],
+      ),
+      waybillNoCheckValue: s.nonEmptyString("The phone last-6 value matching waybillNoCheckType."),
+      customData: s.record("The variable fields for a custom template, keyed by placeholder name.", true),
+    },
+    {
+      optional: [
+        "masterWaybillNo",
+        "branchWaybillNo",
+        "backWaybillNo",
+        "seq",
+        "sum",
+        "remark",
+        "waybillNoCheckType",
+        "waybillNoCheckValue",
+        "customData",
+      ],
+    },
+  ),
+  ["masterWaybillNo", "backWaybillNo"],
 );
 
 const citywideDocumentSchema = s.object(
@@ -146,9 +153,7 @@ export const sfExpressPrintActions: ActionDefinition[] = [
           minItems: 1,
           maxItems: 20,
         }),
-        sync: s.boolean(
-          "Whether to return the files synchronously (default true). When false, SF pushes the files to the configured print callback instead.",
-        ),
+        sync: cloudPrintSyncSchema,
         custom_template_code: customTemplateCodeSchema,
         encrypt_flag: encryptFlagSchema,
         merge_pdf: s.boolean("Whether to merge the batch into one PDF file."),
@@ -195,9 +200,9 @@ export const sfExpressPrintActions: ActionDefinition[] = [
               waybillNo: s.string("The waybill number."),
               contents: s.array(
                 "The command text per print copy.",
-                s.object("The command text for one copy.", {
+                s.requiredObject("The command text for one copy.", {
                   area: s.string(
-                    "The copy name: master 主运单联, dditional 附加联, stub 存根联, receipt 发票联, custom 自定义联.",
+                    "The copy name: master 主运单联, additional 附加联, stub 存根联, receipt 发票联, custom 自定义联.",
                   ),
                   content: s.string("The printer command text for this copy."),
                 }),
@@ -229,27 +234,32 @@ export const sfExpressPrintActions: ActionDefinition[] = [
           minItems: 1,
           maxItems: 20,
         }),
+        sync: cloudPrintSyncSchema,
         custom_template_code: customTemplateCodeSchema,
       },
-      { optional: ["custom_template_code"] },
+      { optional: ["sync", "custom_template_code"] },
     ),
     outputSchema: s.object(
       "The generated Cainiao templates.",
       {
         files: s.array(
           "One entry per waybill.",
-          s.object("The Cainiao template files for one waybill.", {
-            waybillNo: s.string("The waybill number."),
-            seqNo: s.integer("The print sequence number."),
-            contents: s.array(
-              "The template file per copy.",
-              s.object("The Cainiao template for one copy.", {
-                templateURL: s.string("The Cainiao template download URL (valid 24h)."),
-                areaNo: s.integer("The copy number; 1 for single-copy templates."),
-                pageNo: s.integer("The page number within the copy."),
-              }),
-            ),
-          }),
+          s.object(
+            "The Cainiao template files for one waybill.",
+            {
+              waybillNo: s.string("The waybill number."),
+              seqNo: s.integer("The print sequence number."),
+              contents: s.array(
+                "The template file per copy.",
+                s.requiredObject("The Cainiao template for one copy.", {
+                  templateURL: s.string("The Cainiao template download URL (valid 24h)."),
+                  areaNo: s.integer("The copy number; 1 for single-copy templates."),
+                  pageNo: s.integer("The page number within the copy."),
+                }),
+              ),
+            },
+            { optional: ["seqNo"] },
+          ),
         ),
         clientCode: s.string("The partnerID the templates were generated for."),
         templateCode: s.string("The template code used."),
@@ -271,10 +281,11 @@ export const sfExpressPrintActions: ActionDefinition[] = [
           minItems: 1,
           maxItems: 20,
         }),
+        sync: cloudPrintSyncSchema,
         custom_template_code: customTemplateCodeSchema,
         encrypt_flag: encryptFlagSchema,
       },
-      { optional: ["custom_template_code", "encrypt_flag"] },
+      { optional: ["sync", "custom_template_code", "encrypt_flag"] },
     ),
     outputSchema: printResultSchema("html"),
   }),
@@ -357,7 +368,7 @@ export const sfExpressPrintActions: ActionDefinition[] = [
         "The custom template content in the SF markup language (a JSON array string of layout elements).",
       ),
     }),
-    outputSchema: s.object("The saved template.", {
+    outputSchema: s.requiredObject("The saved template.", {
       customTemplateCode: s.string("The assigned custom template code."),
     }),
   }),
@@ -370,7 +381,7 @@ export const sfExpressPrintActions: ActionDefinition[] = [
       seller_user_id: sellerUserIdSchema,
       custom_template_code: s.nonEmptyString("The custom template code to delete."),
     }),
-    outputSchema: s.object("The deletion result.", {
+    outputSchema: s.requiredObject("The deletion result.", {
       deleted: s.boolean("Whether the template was deleted."),
       customTemplateCode: s.string("The deleted custom template code."),
     }),

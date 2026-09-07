@@ -103,8 +103,9 @@ export const sfExpressOrderHandlers: ProviderActionHandlerSubset<"sf_express", S
         serviceList: readServiceValueList(input.service_list, "service_list"),
         customsInfo: readCustomsInfo(input.customs_info),
         waybillNoInfoList,
-        // Bringing your own waybill numbers means SF must not allocate new ones.
-        isGenWaybillNo: waybillNoInfoList === undefined ? undefined : 0,
+        // Only a list that actually carries a waybill number means SF must not
+        // allocate one; the same list also carries dimensions-only entries.
+        isGenWaybillNo: hasWaybillNo(waybillNoInfoList) ? 0 : undefined,
         extraInfoList: readExtraInfoList(input.extra_info_list),
         specialDeliveryTypeCode: optionalString(input.special_delivery_type_code),
         specialDeliveryValue: optionalString(input.special_delivery_value),
@@ -145,8 +146,8 @@ export const sfExpressOrderHandlers: ProviderActionHandlerSubset<"sf_express", S
   async update_order(input, context) {
     const dealType = input.deal_type === "cancel" ? 2 : 1;
     const waybillNoInfoList = readWaybillNoInfoList(input.waybill_no_info_list);
-    if (dealType === 1 && waybillNoInfoList === undefined) {
-      throw providerInputError("waybill_no_info_list is required when confirming an order.");
+    if (dealType === 1 && !hasWaybillNo(waybillNoInfoList)) {
+      throw providerInputError("waybill_no_info_list must carry at least one waybill_no when confirming an order.");
     }
     const payload = await requestSfExpress(
       "EXP_RECE_UPDATE_ORDER",
@@ -171,7 +172,7 @@ export const sfExpressOrderHandlers: ProviderActionHandlerSubset<"sf_express", S
         specialDeliveryTypeCode: optionalString(input.special_delivery_type_code),
         specialDeliveryValue: optionalString(input.special_delivery_value),
         sendStartTm: optionalString(input.send_start_time),
-        pickupAppointEndtime: optionalString(input.pickup_appoint_end_time),
+        pickupAppointEndTime: optionalString(input.pickup_appoint_end_time),
         remark: optionalString(input.remark),
       }),
       context,
@@ -202,7 +203,8 @@ export const sfExpressOrderHandlers: ProviderActionHandlerSubset<"sf_express", S
       orderId: requiredString(record.orderId, "orderId", providerResponseError),
       origincode: optionalString(record.origincode),
       destcode: optionalString(record.destcode),
-      filterResult: nullableString(record.filterResult),
+      filterResult: nullableString(record.filterResult) ?? null,
+      remark: optionalString(record.remark),
       waybillNoInfoList: normalizeWaybillNoInfoList(record.waybillNoInfoList),
       routeLabelInfo: looseArray(record.routeLabelInfo),
       returnExtraInfoList: Array.isArray(record.returnExtraInfoList) ? record.returnExtraInfoList : undefined,
@@ -395,6 +397,11 @@ function readExtraInfoList(value: unknown): Array<Record<string, unknown>> | und
       attrVal: optionalString(extra.attr_val),
     }),
   );
+}
+
+/** Whether the caller brought at least one of their own waybill numbers. */
+function hasWaybillNo(list: Array<Record<string, unknown>> | undefined): boolean {
+  return list?.some((item) => item.waybillNo !== undefined) ?? false;
 }
 
 function readWaybillNoInfoList(value: unknown): Array<Record<string, unknown>> | undefined {

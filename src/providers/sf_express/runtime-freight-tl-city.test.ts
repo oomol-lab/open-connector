@@ -228,6 +228,24 @@ describe("SF Express freight city-delivery handlers", () => {
     ).rejects.toMatchObject({ status: 400, message: "车型不能为空" });
   });
 
+  it("maps a UFTL gateway status to the matching execution error", async () => {
+    const cases = [
+      [500, 502],
+      [429, 429],
+      [403, 403],
+    ] as const;
+
+    for (const [status, expected] of cases) {
+      const fetcher = vi.fn<typeof fetch>(async () => uftlEnvelope(status, null, `UFTL ${status}`));
+      await expect(
+        sfExpressFreightTlCityHandlers.freight_city_list_vehicles!(
+          { city: "深圳市", order_category: 2 },
+          context(fetcher),
+        ),
+      ).rejects.toMatchObject({ status: expected, message: `UFTL ${status}` });
+    }
+  });
+
   it("normalizes the fee breakdown", async () => {
     const fetcher = vi.fn<typeof fetch>(async (_url, init) => {
       const msgData = readMsgData(init) as Record<string, unknown>;

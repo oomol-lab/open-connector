@@ -1,4 +1,4 @@
-import type { ActionDefinition } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
@@ -21,46 +21,50 @@ const productCodeSchema = s.stringEnum(
   ["SE0030", "SE003001", "SE0031", "SE0059", "SE003003"],
 );
 
-const orderItemSchema = s.object(
-  "One goods line; sku_code/sku_name/quantity are additionally required when creating an order.",
-  {
-    sku_code: s.nonEmptyString(
-      "The goods category, from the official category list (e.g. 海鲜水产, 畜禽肉, 乳制品) or a custom category.",
-    ),
-    sku_name: s.nonEmptyString("The goods name."),
-    quantity: s.number("The number of pieces or boxes."),
-    gross_weight: s.number("The gross weight in kilograms."),
-    volume: s.number("The volume in cubic meters; may be provided without dimensions."),
-    length: s.number("The length in centimeters."),
-    width: s.number("The width in centimeters."),
-    height: s.number("The height in centimeters."),
-    net_height: s.number("The net weight in kilograms (upstream field name netHeight)."),
-    imported_flag: s.integer("Whether the goods are imported: 1 = not imported, 2 = imported.", {
-      minimum: 1,
-      maximum: 2,
-    }),
-    carrier_name: s.string("The supplier name."),
-    sku: s.string("The SKU code."),
-    sku_unit: s.string("The unit of measure, e.g. kg or 个."),
-    price: s.number("The unit price in CNY."),
-  },
-  {
-    optional: [
-      "sku_code",
-      "sku_name",
-      "quantity",
-      "length",
-      "width",
-      "height",
-      "net_height",
-      "imported_flag",
-      "carrier_name",
-      "sku",
-      "sku_unit",
-      "price",
-    ],
-  },
-);
+const orderItemOptionalFields = [
+  "length",
+  "width",
+  "height",
+  "net_height",
+  "imported_flag",
+  "carrier_name",
+  "sku",
+  "sku_unit",
+  "price",
+];
+
+/**
+ * One goods line. Order creation additionally requires sku_code, sku_name and
+ * quantity; the fee estimate leaves all three optional.
+ */
+const orderItemSchema = (forOrder: boolean): JsonSchema =>
+  s.object(
+    "One goods line.",
+    {
+      sku_code: s.nonEmptyString(
+        "The goods category, from the official category list (e.g. 海鲜水产, 畜禽肉, 乳制品) or a custom category.",
+      ),
+      sku_name: s.nonEmptyString("The goods name."),
+      quantity: s.number("The number of pieces or boxes."),
+      gross_weight: s.number("The gross weight in kilograms."),
+      volume: s.number("The volume in cubic meters; may be provided without dimensions."),
+      length: s.number("The length in centimeters."),
+      width: s.number("The width in centimeters."),
+      height: s.number("The height in centimeters."),
+      net_height: s.number("The net weight in kilograms (upstream field name netHeight)."),
+      imported_flag: s.integer("Whether the goods are imported: 1 = not imported, 2 = imported.", {
+        minimum: 1,
+        maximum: 2,
+      }),
+      carrier_name: s.string("The supplier name."),
+      sku: s.string("The SKU code."),
+      sku_unit: s.string("The unit of measure, e.g. kg or 个."),
+      price: s.number("The unit price in CNY."),
+    },
+    {
+      optional: forOrder ? orderItemOptionalFields : ["sku_code", "sku_name", "quantity", ...orderItemOptionalFields],
+    },
+  );
 
 const orderServiceSchema = s.object(
   "One value-added service.",
@@ -165,7 +169,7 @@ export const sfExpressColdchainActions: ActionDefinition[] = [
         order_time: dateTimeSchema("The order time in yyyy-MM-dd HH:mm:ss format."),
         ...flowAddressFields("shipper"),
         ...flowAddressFields("consignee"),
-        order_items: s.array("The goods lines; weight and volume are required per line.", orderItemSchema),
+        order_items: s.array("The goods lines; weight and volume are required per line.", orderItemSchema(false)),
         order_services: s.array("The value-added services to price in.", orderServiceSchema),
       },
       { optional: ["order_items", "order_services"] },
@@ -181,7 +185,7 @@ export const sfExpressColdchainActions: ActionDefinition[] = [
             s.object("One fee item.", {
               feeName: s.string("The fee name, e.g. 保费."),
               serviceCode: s.string("The value-added service code this fee belongs to."),
-              totalAmount: s.number("The fee amount in CNY."),
+              totalAmount: s.nullableNumber("The fee amount in CNY; null when SF does not price the line."),
             }),
           ),
         }),
@@ -220,7 +224,7 @@ export const sfExpressColdchainActions: ActionDefinition[] = [
               }),
             ),
           },
-          { optional: ["effectiveInfo"] },
+          { optional: ["code", "message", "effectiveInfo"] },
         ),
       ),
     }),
@@ -271,7 +275,7 @@ export const sfExpressColdchainActions: ActionDefinition[] = [
           },
         ),
         source_code: s.string("The order source code (订单来源)."),
-        order_items: s.array("The goods lines.", orderItemSchema, { minItems: 1 }),
+        order_items: s.array("The goods lines.", orderItemSchema(true), { minItems: 1 }),
         order_services: s.array("The value-added services.", orderServiceSchema),
       },
       {
@@ -349,7 +353,7 @@ export const sfExpressColdchainActions: ActionDefinition[] = [
     requiredScopes: [],
     inputSchema: s.requireAnyProperty(
       s.object(
-        "The route query; exactly one identifier plus the order source code.",
+        "The route query; at least one identifier plus the order source code.",
         {
           waybill_no: s.nonEmptyString("The waybill number to query by."),
           sf_order_no: s.nonEmptyString("The SF order number to query by."),

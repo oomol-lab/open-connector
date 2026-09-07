@@ -227,7 +227,10 @@ describe("SF Express general-shipping handlers", () => {
         { order_id: "ORDER-3", deal_type: "confirm" },
         context(vi.fn<typeof fetch>()),
       ),
-    ).rejects.toMatchObject({ status: 400, message: "waybill_no_info_list is required when confirming an order." });
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "waybill_no_info_list must carry at least one waybill_no when confirming an order.",
+    });
   });
 
   it("builds query_order_result with search_type mapping and normalizes the response", async () => {
