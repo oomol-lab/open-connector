@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
@@ -13,6 +13,7 @@ import {
 } from "../../core/cast.ts";
 import {
   defineOAuthProviderExecutors,
+  defineProviderProxy,
   providerInputError,
   ProviderRequestError,
   readTransitFileInput,
@@ -129,6 +130,16 @@ export const stravaActionHandlers: ProviderActionHandlers<"strava", StravaAction
 };
 
 export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, stravaActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: stravaApiBaseUrl,
+  auth: { type: "oauth_bearer" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher, signal }) {

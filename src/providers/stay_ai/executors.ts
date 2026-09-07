@@ -1,10 +1,11 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   providerInputError,
   providerResponseError,
   providerUserAgent,
@@ -87,6 +88,16 @@ const stayAiActionHandlers: ProviderActionHandlers<"stay_ai", StayAiActionHandle
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, stayAiActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: stayAiApiBaseUrl,
+  auth: { type: "api_key_header", name: "X-RETEXTION-ACCESS-TOKEN" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

@@ -1,9 +1,21 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors } from "../provider-runtime.ts";
-import { signalbaseActionHandlers, validateSignalbaseCredential } from "./runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { signalbaseActionHandlers, signalbaseApiBaseUrl, validateSignalbaseCredential } from "./runtime.ts";
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors("signalbase", signalbaseActionHandlers);
+const service = "signalbase";
+
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, signalbaseActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: signalbaseApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }): ReturnType<typeof validateSignalbaseCredential> {

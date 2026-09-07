@@ -5,8 +5,8 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, requiredResponseRecord } from "../provider-runtime.ts";
 
-const sitespeakaiApiBaseUrl = "https://api.sitespeak.ai";
-const sitespeakaiApiVersion = "v1";
+export const sitespeakaiApiBaseUrl = "https://api.sitespeak.ai";
+export const sitespeakaiApiVersion = "v1";
 
 type SitespeakaiRequestPhase = "validate" | "execute";
 type SitespeakaiActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;

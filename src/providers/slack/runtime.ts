@@ -15,7 +15,7 @@ import {
 } from "../provider-runtime.ts";
 import { slackConversationTypes } from "./constants.ts";
 
-const slackApiBaseUrl = "https://slack.com/api";
+export const slackApiBaseUrl = "https://slack.com/api";
 const slackFileUrlMaxBytes = 100 * 1024 * 1024;
 
 type SlackActionContext = Omit<OAuthProviderContext, "providerSecret" | "tokenType">;

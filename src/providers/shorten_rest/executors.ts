@@ -1,9 +1,14 @@
-import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidationResult, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "shorten_rest";
 const shortenRestApiBaseUrl = "https://api.shorten.rest";
@@ -95,6 +100,16 @@ export const shortenRestActionHandlers: ProviderActionHandlers<"shorten_rest", S
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, shortenRestActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: shortenRestApiBaseUrl,
+  auth: { type: "api_key_header", name: "x-api-key" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
+});
 
 export const credentialValidators = {
   apiKey(
