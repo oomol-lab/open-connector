@@ -19,7 +19,7 @@ import {
 } from "../provider-runtime.ts";
 
 const service = "polygon_io";
-const polygonIoApiBaseUrl = "https://api.massive.com";
+export const polygonIoApiBaseUrl = "https://api.massive.com";
 
 type PolygonIoPhase = "validate" | "execute";
 type PolygonIoQueryValue = string | number | boolean | undefined;

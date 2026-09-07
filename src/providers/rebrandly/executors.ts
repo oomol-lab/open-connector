@@ -1,4 +1,4 @@
-import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidationResult, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
@@ -12,6 +12,7 @@ import {
 } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
   requiredInputString,
@@ -143,6 +144,16 @@ export const rebrandlyActionHandlers: ProviderActionHandlers<"rebrandly", Rebran
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, rebrandlyActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: rebrandlyApiBaseUrl,
+  auth: { type: "api_key_header", name: "apikey" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
+});
 
 export async function validateRebrandlyCredential(
   input: Record<string, string>,

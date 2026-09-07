@@ -4,7 +4,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import { compactObject, looseArray, optionalBoolean, optionalRawString } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 
-const ragieApiBaseUrl = "https://api.ragie.ai";
+export const ragieApiBaseUrl: string = "https://api.ragie.ai";
 
 interface RagieRequestInput {
   method?: string;

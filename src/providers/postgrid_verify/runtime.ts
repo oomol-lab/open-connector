@@ -11,7 +11,7 @@ import {
 } from "../provider-runtime.ts";
 
 const service = "postgrid_verify";
-const postgridVerifyApiBaseUrl = "https://api.postgrid.com/v1/addver";
+export const postgridVerifyApiBaseUrl = "https://api.postgrid.com/v1/addver";
 const postgridVerifyValidationEndpoint = "/zip_codes";
 
 type PostgridVerifyPhase = "validate" | "execute";

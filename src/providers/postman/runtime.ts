@@ -3,7 +3,7 @@ import type { PostmanActionName } from "./actions.ts";
 import { compactObject, optionalScalarString, optionalString, requiredRecord } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const postmanApiBaseUrl = "https://api.getpostman.com";
+export const postmanApiBaseUrl = "https://api.getpostman.com";
 const postmanDefaultAccept = "application/json";
 const postmanV10Accept = "application/vnd.api.v10+json";
 

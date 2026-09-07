@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const podscribeApiBaseUrl = "https://backend.podscribe.ai";
+export const podscribeApiBaseUrl = "https://backend.podscribe.ai";
 const validationPath = "/api/public/integration-health";
 
 type PodscribePhase = "validate" | "execute";

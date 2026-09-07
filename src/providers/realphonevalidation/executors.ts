@@ -1,10 +1,15 @@
-import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidationResult, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "realphonevalidation";
 const realPhoneValidationApiBaseUrl = "https://api.realvalidation.com";
@@ -51,6 +56,16 @@ export const realPhoneValidationActionHandlers: ProviderActionHandlers<
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, realPhoneValidationActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: realPhoneValidationApiBaseUrl,
+  auth: { type: "api_key_query", name: "token" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
+});
 
 export async function validateRealPhoneValidationCredential(
   input: Record<string, string>,
