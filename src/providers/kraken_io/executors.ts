@@ -3,6 +3,7 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
   TransitFileWriter,
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
@@ -19,6 +20,8 @@ import {
 import { readBoundedResponseBytes } from "../../core/request.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -29,6 +32,21 @@ const krakenApiBaseUrl = "https://api.kraken.io";
 const krakenOptimizeUrl = `${krakenApiBaseUrl}/v1/url`;
 const krakenUploadUrl = `${krakenApiBaseUrl}/v1/upload`;
 const krakenUserStatusUrl = `${krakenApiBaseUrl}/user_status`;
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: krakenApiBaseUrl,
+  auth: { type: "none" },
+  skipDnsValidation: true,
+  async customizeRequest({ body, context, headers, setBody }) {
+    const credential = await requireApiKeyCredential(context, service);
+    const apiSecret = requireKrakenApiSecret(credential.values.apiSecret ?? credential.metadata.apiSecret);
+    const record = body == null ? {} : optionalRecord(body);
+    if (!record) throw providerInputError("auth proxy auth requires a JSON object body");
+    setBody({ ...record, auth: { api_key: credential.apiKey, api_secret: apiSecret } });
+    if (!headers.has("accept")) headers.set("accept", "application/json");
+  },
+});
 
 type KrakenRequestPhase = "validate" | "execute";
 type KrakenIoActionHandler = (input: Record<string, unknown>, context: KrakenIoActionContext) => Promise<unknown>;

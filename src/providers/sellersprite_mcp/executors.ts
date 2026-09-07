@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { Client } from "@modelcontextprotocol/client";
@@ -10,6 +10,7 @@ import { createHash } from "node:crypto";
 import { withMcpClient } from "../mcp-client.ts";
 import {
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   mapProviderActionHandlers,
   providerUserAgent,
   ProviderRequestError,
@@ -52,6 +53,22 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: "https://mcp.sellersprite.com",
+  auth: { type: "api_key_header", name: "secret-key" },
+  skipDnsValidation: true,
+  timeoutMs,
+  redirect: "error",
+  customizeRequest({ url, headers }) {
+    if (url.toString() !== endpoint) {
+      throw new ProviderRequestError(400, "SellerSprite MCP proxy only supports the official /mcp endpoint");
+    }
+    if (!headers.has("accept")) headers.set("accept", "application/json, text/event-stream");
+    if (!headers.has("content-type")) headers.set("content-type", "application/json");
+  },
+});
 async function discover(context: Context): Promise<unknown[]> {
   return withClient(context, async (client) => {
     const result = await client.listTools({}, { timeout: timeoutMs });

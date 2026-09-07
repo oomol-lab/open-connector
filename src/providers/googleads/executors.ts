@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
@@ -12,7 +12,13 @@ import {
   optionalString,
 } from "../../core/cast.ts";
 import { googleJsonRequest, googleRequest } from "../google-runtime.ts";
-import { defineProviderExecutors, ProviderRequestError, requireOAuthCredential } from "../provider-runtime.ts";
+import {
+  defineProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  requireOAuthCredential,
+  requiredInputString,
+} from "../provider-runtime.ts";
 import { googleAdsScope } from "./scopes.ts";
 
 export const googleAdsApiBaseUrl = "https://googleads.googleapis.com/v22";
@@ -94,6 +100,19 @@ export const executors: ProviderExecutors = defineProviderExecutors<GoogleAdsRun
       fetcher,
       signal: context.signal,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: googleAdsApiBaseUrl,
+  auth: { type: "oauth_bearer" },
+  sensitiveHeaders: ["developer-token"],
+  skipDnsValidation: true,
+  async customizeRequest({ context, headers }) {
+    const credential = await requireOAuthCredential(context, service);
+    const secretExtra = optionalRecord(credential.metadata.oauthClientSecretExtra);
+    headers.set("developer-token", requiredInputString(secretExtra?.developerToken, "developerToken"));
   },
 });
 

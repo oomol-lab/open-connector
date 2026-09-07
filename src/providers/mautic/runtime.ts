@@ -1,9 +1,9 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 
-import { Buffer } from "node:buffer";
 import { compactObject, optionalInteger, optionalRecord, optionalString, positiveInteger } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
+  basicAuthorizationHeader,
   createProviderTimeout,
   isAbortSignalError,
   ProviderRequestError,
@@ -280,7 +280,7 @@ async function requestMauticJson(input: MauticRequest): Promise<Record<string, u
       method: input.method ?? "GET",
       headers: {
         accept: "application/json",
-        authorization: `Basic ${Buffer.from(`${input.credential.username}:${input.credential.password}`).toString("base64")}`,
+        authorization: basicAuthorizationHeader(`${input.credential.username}:${input.credential.password}`),
         "user-agent": providerUserAgent,
         ...(input.jsonBody ? { "content-type": "application/json" } : {}),
       },

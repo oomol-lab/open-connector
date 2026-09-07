@@ -12,7 +12,7 @@ import {
 } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const heyzineApiBaseUrl = "https://heyzine.com";
+export const heyzineApiBaseUrl = "https://heyzine.com";
 
 type HeyzineRequestPhase = "validate" | "execute";
 type HeyzineActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -323,6 +323,18 @@ async function readHeyzinePayload(response: Response): Promise<unknown> {
   } catch {
     return text;
   }
+}
+
+export async function readHeyzineProxyPayload(response: Response): Promise<unknown> {
+  const payload = await readHeyzinePayload(response);
+  const payloadStatus = resolveHeyzinePayloadStatus(payload);
+  if (payloadStatus !== undefined) {
+    throw createHeyzineError(payloadStatus, payload, "execute", response.statusText);
+  }
+  if (!response.ok) {
+    throw createHeyzineError(response.status, payload, "execute", response.statusText);
+  }
+  return payload;
 }
 
 function createHeyzineError(

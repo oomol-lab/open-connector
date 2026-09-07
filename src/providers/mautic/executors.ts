@@ -1,7 +1,20 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 
+import { optionalString } from "../../core/cast.ts";
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { createProviderFetch, defineProviderExecutors, requireCustomCredential } from "../provider-runtime.ts";
+import {
+  basicAuthorizationHeader,
+  createProviderFetch,
+  defineProviderExecutors,
+  defineProviderProxy,
+  requireCustomCredential,
+  requiredInputString,
+} from "../provider-runtime.ts";
 import { mauticActionHandlers, normalizeMauticBaseUrl, validateMauticCredential } from "./runtime.ts";
 
 interface MauticContext {
@@ -35,6 +48,24 @@ export const executors: ProviderExecutors = defineProviderExecutors({
   async createContext(context: ExecutionContext, fetcher: typeof fetch) {
     const credential = await requireCustomCredential(context, "mautic");
     return { values: credential.values, fetcher, signal: context.signal };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service: "mautic",
+  async baseUrl(context) {
+    const credential = await requireCustomCredential(context, "mautic");
+    return normalizeMauticBaseUrl(optionalString(credential.metadata.baseUrl) ?? credential.values.baseUrl ?? "");
+  },
+  auth: { type: "none" },
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
+  maxResponseBytes: 10 * 1024 * 1024,
+  async customizeRequest({ context, headers }) {
+    const credential = await requireCustomCredential(context, "mautic");
+    const username = requiredInputString(credential.values.username, "username");
+    const password = requiredInputString(credential.values.password, "password");
+    headers.set("authorization", basicAuthorizationHeader(`${username}:${password}`));
+    if (!headers.has("accept")) headers.set("accept", "application/json");
   },
 });
 

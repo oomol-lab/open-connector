@@ -1,8 +1,25 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
-import { executeMoreTreesAction, validateMoreTreesCredential } from "./runtime.ts";
+import { optionalString } from "../../core/cast.ts";
+import {
+  defineProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  requireApiKeyCredential,
+} from "../provider-runtime.ts";
+import {
+  executeMoreTreesAction,
+  moreTreesAccountOrigin,
+  moreTreesProjectOrigin,
+  moreTreesTransactionOrigin,
+  validateMoreTreesCredential,
+} from "./runtime.ts";
 
 const service = "more_trees";
 
@@ -76,6 +93,31 @@ export const executors: ProviderExecutors = defineProviderExecutors({
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<ProviderContext> {
     const credential = await requireApiKeyCredential(context, service);
     return { apiKey: credential.apiKey, values: credential.values, metadata: credential.metadata, fetcher };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: moreTreesAccountOrigin,
+  allowedOrigins: [moreTreesProjectOrigin, moreTreesTransactionOrigin],
+  auth: { type: "api_key_header", name: "x-api-key" },
+  skipDnsValidation: true,
+  customizeRequest({ credential, url, headers }) {
+    if (!credential || credential.authType !== "api_key") {
+      throw new ProviderRequestError(401, "Configure More Trees credentials.");
+    }
+    if (
+      url.origin === moreTreesAccountOrigin &&
+      (url.pathname === "/user-management-api/external/forest" ||
+        url.pathname.startsWith("/user-management-api/external/forest/"))
+    ) {
+      headers.delete("x-api-key");
+    } else if (url.origin === moreTreesProjectOrigin) {
+      const publicValidationKey = optionalString(credential.values.publicValidationKey);
+      if (!publicValidationKey) throw new ProviderRequestError(400, "publicValidationKey is required");
+      headers.set("x-api-key", publicValidationKey);
+    }
+    if (!headers.has("accept")) headers.set("accept", "application/json");
   },
 });
 

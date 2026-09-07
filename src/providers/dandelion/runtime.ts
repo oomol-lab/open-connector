@@ -4,14 +4,14 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { compactObject, optionalNumber, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, readProviderJson } from "../provider-runtime.ts";
 
-const apiBaseUrl = "https://api.dandelion.eu";
+export const dandelionApiBaseUrl: string = "https://api.dandelion.eu";
 
 async function request(path: string, input: Record<string, unknown>, context: ApiKeyProviderContext) {
   const body = new URLSearchParams({ token: context.apiKey });
   for (const [name, value] of Object.entries(input)) {
     if (value != null) body.set(name, String(value));
   }
-  const response = await context.fetcher(new URL(path, apiBaseUrl), {
+  const response = await context.fetcher(new URL(path, dandelionApiBaseUrl), {
     method: "POST",
     headers: { accept: "application/json", "content-type": "application/x-www-form-urlencoded" },
     body,
@@ -97,6 +97,6 @@ export async function validateDandelionApiKey(
   await request("/datatxt/li/v1/", { text: "Hello" }, { apiKey, fetcher });
   return {
     profile: { displayName: "Dandelion API Token" },
-    metadata: { apiBaseUrl, validationEndpoint: "/datatxt/li/v1/" },
+    metadata: { apiBaseUrl: dandelionApiBaseUrl, validationEndpoint: "/datatxt/li/v1/" },
   };
 }

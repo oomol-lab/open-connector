@@ -623,6 +623,7 @@
       "src/providers/guru/executors.ts": 1,
       "src/providers/habitica/executors.ts": 1,
       "src/providers/harvest/executors.ts": 1,
+      "src/providers/heyzine/executors.ts": 1,
       "src/providers/higgsfield_ai/executors.ts": 1,
       "src/providers/hithink_finance/executors.ts": 1,
       "src/providers/hotjar/executors.ts": 1,

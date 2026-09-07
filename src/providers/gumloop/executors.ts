@@ -1,4 +1,9 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
@@ -11,6 +16,7 @@ import {
 } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerInputError,
   providerResponseError,
@@ -88,6 +94,26 @@ export const executors: ProviderExecutors = defineProviderExecutors<GumloopActio
       fetcher,
       signal: context.signal,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: gumloopApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  sensitiveHeaders: ["x-auth-key"],
+  skipDnsValidation: true,
+  async customizeRequest({ context, headers }) {
+    const credential = await requireApiKeyCredential(context, service);
+    const userId = optionalString(credential.values.userId) ?? optionalString(credential.metadata.userId);
+    if (userId) {
+      headers.set("x-auth-key", userId);
+    } else {
+      headers.delete("x-auth-key");
+    }
+    if (!headers.has("accept")) {
+      headers.set("accept", "application/json");
+    }
   },
 });
 

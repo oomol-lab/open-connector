@@ -10,7 +10,12 @@ import {
   optionalString,
   stringArray,
 } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  basicAuthorizationHeader,
+  createProviderTimeout,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 export type PayPalEnvironment = "sandbox" | "live";
 
@@ -302,6 +307,10 @@ function resolvePayPalEnvironment(value: unknown): PayPalEnvironment {
   throw new ProviderRequestError(400, "environment must be sandbox or live");
 }
 
+export function resolvePayPalApiBaseUrl(value: unknown): string {
+  return paypalApiBaseUrls[resolvePayPalEnvironment(value)];
+}
+
 export function createPayPalAccessTokenRequest(input: {
   clientId: string;
   clientSecret: string;
@@ -314,7 +323,7 @@ export function createPayPalAccessTokenRequest(input: {
       headers: {
         accept: "application/json",
         "accept-language": "en_US",
-        authorization: `Basic ${Buffer.from(`${input.clientId}:${input.clientSecret}`).toString("base64")}`,
+        authorization: basicAuthorizationHeader(`${input.clientId}:${input.clientSecret}`),
         "content-type": "application/x-www-form-urlencoded",
         "user-agent": providerUserAgent,
       },
