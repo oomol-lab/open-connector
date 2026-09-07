@@ -101,8 +101,11 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: arxivApiBaseUrl,
   auth: { type: "none" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    headers.set("accept", "application/atom+xml, application/xml, text/xml");
+  async customizeRequest({ headers }) {
+    if (!headers.has("accept")) {
+      headers.set("accept", "application/atom+xml, application/xml, text/xml");
+    }
+    await throttleArxivRequest();
   },
 });
 
@@ -256,7 +259,9 @@ async function requestArxiv(options: QueryOptions, fetcher: typeof fetch): Promi
 
   let response: Response;
   try {
-    await throttleDefaultFetch(fetcher);
+    if (fetcher === providerFetch) {
+      await throttleArxivRequest();
+    }
     response = await fetcher(url, {
       method: "GET",
       headers: {
@@ -287,11 +292,7 @@ async function requestArxiv(options: QueryOptions, fetcher: typeof fetch): Promi
   return parseArxivFeed(body);
 }
 
-function throttleDefaultFetch(fetcher: typeof fetch): Promise<void> {
-  if (fetcher !== providerFetch) {
-    return Promise.resolve();
-  }
-
+function throttleArxivRequest(): Promise<void> {
   const queued = defaultFetchQueue.then(async () => {
     const now = Date.now();
     const waitMs = Math.max(0, nextDefaultFetchAt - now);
