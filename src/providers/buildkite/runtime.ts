@@ -11,7 +11,7 @@ import {
   requiredInputString,
 } from "../provider-runtime.ts";
 
-const buildkiteApiBaseUrl = "https://api.buildkite.com/v2";
+export const buildkiteApiBaseUrl = "https://api.buildkite.com/v2";
 
 type BuildkiteRequestPhase = "validate" | "execute";
 type BuildkiteQueryValue = string | number | boolean | undefined;

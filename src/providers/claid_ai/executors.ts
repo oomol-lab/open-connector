@@ -1,10 +1,11 @@
-import type { ProviderExecutors } from "../../core/types.ts";
+import type { ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
   requiredResponseRecord,
@@ -46,6 +47,16 @@ export const claidAiActionHandlers: ProviderActionHandlers<"claid_ai", ClaidAiAc
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, claidAiActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: `${claidAiApiBaseUrl}/${claidAiApiVersion}`,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
+});
 
 function buildEditRequestBody(input: Record<string, unknown>): Record<string, unknown> {
   return compactObject({

@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } fro
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { isAbortLikeError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const bunnyApiBaseUrl = "https://api.bunny.net";
+export const bunnyApiBaseUrl = "https://api.bunny.net";
 const validationPath = "/pullzone";
 
 type BunnyRequestPhase = "validate" | "execute";

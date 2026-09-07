@@ -3,6 +3,7 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
@@ -10,6 +11,7 @@ import { compactObject, optionalNumber, optionalRecord, optionalString } from ".
 import {
   createProviderTimeout,
   defineProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
@@ -83,6 +85,18 @@ export const executors: ProviderExecutors = defineProviderExecutors<ClearoutCont
       fetcher,
       signal: context.signal,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  async baseUrl(context): Promise<string> {
+    const credential = await requireApiKeyCredential(context, service);
+    return normalizeBaseUrl(optionalString(credential.values.baseUrl) ?? optionalString(credential.metadata.baseUrl));
+  },
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
   },
 });
 

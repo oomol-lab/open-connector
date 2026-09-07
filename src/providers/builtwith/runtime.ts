@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
-const builtwithApiBaseUrl = "https://api.builtwith.com";
+export const builtwithApiBaseUrl = "https://api.builtwith.com";
 const builtwithValidationPath = "/whoamiv1/api.json";
 
 type BuiltwithActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;

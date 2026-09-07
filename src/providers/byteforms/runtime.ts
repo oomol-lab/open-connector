@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } fro
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const byteformsApiBaseUrl = "https://api.forms.bytesuite.io";
+export const byteformsApiBaseUrl = "https://api.forms.bytesuite.io";
 const validationPath = "/api/form";
 
 interface ByteformsEnvelope<T> {

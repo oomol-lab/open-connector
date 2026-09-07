@@ -1,11 +1,21 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors } from "../provider-runtime.ts";
-import { bunnycdnActionHandlers, validateBunnycdnCredential } from "./runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { bunnyApiBaseUrl, bunnycdnActionHandlers, validateBunnycdnCredential } from "./runtime.ts";
 
 const service = "bunnycdn";
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, bunnycdnActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: bunnyApiBaseUrl,
+  auth: { type: "api_key_header", name: "AccessKey" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }) {
