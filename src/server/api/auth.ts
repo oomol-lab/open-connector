@@ -5,6 +5,7 @@ import type { Context, MiddlewareHandler } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { isConsoleShellRequest } from "./console-paths.ts";
 import { jsonError } from "./http-utils.ts";
+import { writeRuntimeFailure } from "./runtime-api.ts";
 
 const bearerScheme = "bearer";
 const authCookieName = "oomol_connect_admin_session";
@@ -58,6 +59,19 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
       return;
     }
 
+    if (
+      isConnectionManagementPath(context.req.path) &&
+      !adminToken &&
+      (runtimeToken ||
+        options.verifyRuntimeJwt ||
+        (options.hasRuntimeTokens ? await options.hasRuntimeTokens() : options.resolveRuntimeToken !== undefined))
+    ) {
+      return writeRuntimeFailure(context, {
+        status: 403,
+        errorCode: "forbidden",
+        message: "Configure an admin token to manage connections.",
+      });
+    }
     if (await hasValidToken(context, options, scope)) {
       if (scope === "admin") {
         await installAdminCookieForBearer(context, options);
@@ -79,6 +93,13 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
       return;
     }
 
+    if (isConnectionManagementPath(context.req.path)) {
+      return writeRuntimeFailure(context, {
+        status: 401,
+        errorCode: "unauthorized",
+        message: "A valid administrator bearer token is required.",
+      });
+    }
     return jsonError(context, 401, "unauthorized", "A valid local bearer token is required.");
   };
 }
@@ -237,6 +258,7 @@ function normalizeToken(token: string | undefined): string | undefined {
 }
 
 function readAuthScope(path: string): AuthScope {
+  if (isConnectionManagementPath(path)) return "admin";
   return path === "/mcp" || path.startsWith("/mcp/") || path === "/v1" || path.startsWith("/v1/") ? "runtime" : "admin";
 }
 
@@ -281,4 +303,10 @@ function readBearerCredential(context: Context): string {
   }
 
   return authorization.slice(separator + 1);
+}
+
+function isConnectionManagementPath(path: string): boolean {
+  return (
+    path === "/v1/connections" || path.startsWith("/v1/connections/") || path.startsWith("/v1/connection-requests/")
+  );
 }

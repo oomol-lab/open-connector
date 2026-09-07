@@ -46,6 +46,7 @@ import { TransitFileService } from "./files/transit-files.ts";
 import { AesGcmSecretCodec } from "./secrets/secret-codec.ts";
 import { decodeRunLogCursor, encodeRunLogCursor } from "./storage/runtime-store.ts";
 import { RuntimeTokenService } from "./storage/runtime-token-service.ts";
+import { SqliteRuntimeDatabase } from "./storage/sqlite-runtime-store.ts";
 
 const apiKeyProvider: ProviderDefinition = {
   service: "example",
@@ -55,6 +56,11 @@ const apiKeyProvider: ProviderDefinition = {
   auth: [{ type: "api_key" }],
   actions: [],
 };
+
+const requestDatabases: SqliteRuntimeDatabase[] = [];
+afterEach(() => {
+  for (const database of requestDatabases.splice(0)) database.close();
+});
 
 const oauthProvider: ProviderDefinition = {
   service: "oauth_example",
@@ -3683,6 +3689,8 @@ interface CreateTestServerOptions {
 }
 
 function createTestServer(providers: ProviderDefinition[], options: CreateTestServerOptions = {}): ConnectServer {
+  const requestDatabase = new SqliteRuntimeDatabase(":memory:");
+  requestDatabases.push(requestDatabase);
   const catalog = createCatalogStore(providers, {
     executableActionIds: ["example.echo"],
   });
@@ -3735,6 +3743,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
       connections,
       providerLoader,
       states: new MemoryOAuthStateStore(),
+      requests: requestDatabase.connectionRequestStore,
       secretCodec: options.secretCodec,
       isCustomClientConfigAllowed,
     }),

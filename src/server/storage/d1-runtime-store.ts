@@ -24,6 +24,7 @@ import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-ser
 
 import { parseRuntimeActionHttpResult } from "../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
+import { ConnectionRequestStore } from "./connection-request-store.ts";
 import {
   listRunLogs,
   parseJson,
@@ -43,6 +44,7 @@ export interface D1RuntimeDatabaseOptions {
 }
 
 export class D1RuntimeDatabase implements RuntimeDatabase {
+  readonly connectionRequestStore: ConnectionRequestStore;
   readonly connectionStore: D1ConnectionStore;
   readonly oauthClientConfigStore: D1OAuthClientConfigStore;
   readonly oauthStateStore: D1OAuthStateStore;
@@ -54,6 +56,10 @@ export class D1RuntimeDatabase implements RuntimeDatabase {
 
   constructor(database: D1DatabaseBinding, options: D1RuntimeDatabaseOptions = {}) {
     const secretCodec = options.secretCodec ?? new PlainTextSecretCodec();
+    this.connectionRequestStore = new ConnectionRequestStore(async (statements) => {
+      const results = await database.batch(statements.map(({ sql, values }) => database.prepare(sql).bind(...values)));
+      return results.map((result) => result.results);
+    }, secretCodec);
     this.connectionStore = new D1ConnectionStore(database, secretCodec);
     this.oauthClientConfigStore = new D1OAuthClientConfigStore(database, secretCodec);
     this.oauthStateStore = new D1OAuthStateStore(database, secretCodec);

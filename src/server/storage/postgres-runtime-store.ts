@@ -26,6 +26,7 @@ import type { PoolClient } from "pg";
 import { Pool } from "pg";
 import { parseRuntimeActionHttpResult } from "../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
+import { ConnectionRequestStore } from "./connection-request-store.ts";
 import { assertPostgresSchemaReady } from "./postgres-migrations.ts";
 import {
   listRunLogs,
@@ -48,6 +49,7 @@ export interface PostgresRuntimeDatabaseOptions {
 }
 
 export class PostgresRuntimeDatabase implements RuntimeDatabase {
+  readonly connectionRequestStore: ConnectionRequestStore;
   readonly connectionStore: IConnectionStore;
   readonly oauthClientConfigStore: IOAuthClientConfigStore;
   readonly oauthStateStore: IOAuthStateStore;
@@ -63,6 +65,27 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
   private constructor(pool: Pool, options: PostgresRuntimeDatabaseOptions) {
     this.pool = pool;
     this.secretCodec = options.secretCodec ?? new PlainTextSecretCodec();
+    this.connectionRequestStore = new ConnectionRequestStore(
+      (statements) =>
+        runInTransaction(pool, async (client) => {
+          // Serialize request transitions across processes, including first requests with no row to lock.
+          await client.query("select pg_advisory_xact_lock(1326382671, 2)");
+          const results: Record<string, unknown>[][] = [];
+          for (const { sql, values } of statements) {
+            let index = 0;
+            results.push(
+              (
+                await client.query(
+                  sql.replaceAll("?", () => `$${++index}`),
+                  values,
+                )
+              ).rows,
+            );
+          }
+          return results;
+        }),
+      this.secretCodec,
+    );
     this.connectionStore = new PostgresConnectionStore(pool, this.secretCodec);
     this.oauthClientConfigStore = new PostgresOAuthClientConfigStore(pool, this.secretCodec);
     this.oauthStateStore = new PostgresOAuthStateStore(pool, this.secretCodec);
@@ -106,6 +129,7 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
         delete from connections;
         delete from oauth_client_configs;
         delete from oauth_states;
+        delete from connection_requests;
         delete from runtime_tokens;
         delete from runtime_policy;
         delete from runs;
@@ -119,7 +143,7 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
   async rotateSecretCodec(nextSecretCodec: ISecretCodec): Promise<void> {
     await runInTransaction(this.pool, async (client) => {
       await client.query(
-        "lock table connections, oauth_client_configs, oauth_states, idempotency_records in access exclusive mode",
+        "lock table connections, oauth_client_configs, oauth_states, connection_requests, idempotency_records in access exclusive mode",
       );
 
       const connectionRows = await client.query<RuntimeRow>("select service, connection_name, value from connections");
@@ -152,6 +176,13 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
         ]);
       }
 
+      const requestRows = await client.query<RuntimeRow>(
+        "select id, value from connection_requests where value is not null",
+      );
+      for (const row of requestRows.rows) {
+        const value = await nextSecretCodec.encode(await this.secretCodec.decode(readString(row, "value")));
+        await client.query("update connection_requests set value = $1 where id = $2", [value, readString(row, "id")]);
+      }
       const stateRows = await client.query<RuntimeRow>("select state, value from oauth_states");
       const states = await Promise.all(
         stateRows.rows.map(async (row) => ({

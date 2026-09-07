@@ -231,6 +231,9 @@ function memoryAssets(files: Record<string, unknown>): AssetsBinding {
 }
 
 class EmptyMarketplaceD1Database implements D1DatabaseBinding {
+  async batch(): Promise<{ results: Record<string, unknown>[] }[]> {
+    throw new Error("Unexpected D1 batch");
+  }
   prepare(query: string): D1PreparedStatementBinding {
     if (query === "select value from marketplace_config where id = 1") {
       return new EmptyMarketplaceConfigStatement();

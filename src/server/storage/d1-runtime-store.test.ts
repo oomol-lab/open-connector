@@ -2,8 +2,9 @@ import type { RuntimeActionHttpResult } from "../api/runtime-api.ts";
 import type { D1DatabaseBinding, D1PreparedStatementBinding } from "../cloudflare/cloudflare-bindings.ts";
 
 import { DatabaseSync } from "node:sqlite";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { AesGcmSecretCodec } from "../secrets/secret-codec.ts";
+import { connectionRequestStoreTests } from "./connection-request-store.cases.ts";
 import { D1RuntimeDatabase } from "./d1-runtime-store.ts";
 import { defaultMigrationSource } from "./migration-source.ts";
 import { RuntimeTokenService } from "./runtime-token-service.ts";
@@ -610,6 +611,18 @@ class SqliteD1Database implements D1DatabaseBinding {
     }
   }
 
+  async batch(statements: D1PreparedStatementBinding[]): Promise<{ results: Record<string, unknown>[] }[]> {
+    this.database.exec("begin immediate");
+    try {
+      const results = statements.map((statement) => ({ results: (statement as SqliteD1PreparedStatement).readRows() }));
+      this.database.exec("commit");
+      return results;
+    } catch (error) {
+      this.database.exec("rollback");
+      throw error;
+    }
+  }
+
   prepare(query: string): D1PreparedStatementBinding {
     return new SqliteD1PreparedStatement(this.database, query);
   }
@@ -650,8 +663,12 @@ class SqliteD1PreparedStatement implements D1PreparedStatementBinding {
     return (this.database.prepare(this.query).get(...toSqlValues(this.values)) as T | undefined) ?? null;
   }
 
+  readRows(): Record<string, unknown>[] {
+    return this.database.prepare(this.query).all(...toSqlValues(this.values));
+  }
+
   async all<T = Record<string, unknown>>(): Promise<{ results: T[] }> {
-    return { results: this.database.prepare(this.query).all(...toSqlValues(this.values)) as T[] };
+    return { results: this.readRows() as T[] };
   }
 
   async run(): Promise<{ success: boolean; meta: { changes?: number } }> {
@@ -663,3 +680,11 @@ class SqliteD1PreparedStatement implements D1PreparedStatementBinding {
 function toSqlValues(values: unknown[]): Array<string | number | bigint | null | Uint8Array> {
   return values.map((value) => (value === undefined ? null : (value as string | number | bigint | null | Uint8Array)));
 }
+
+describe("D1 connection requests", () => {
+  let database: D1RuntimeDatabase;
+  beforeEach(() => {
+    database = new D1RuntimeDatabase(new SqliteD1Database());
+  });
+  connectionRequestStoreTests(() => database);
+});

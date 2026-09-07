@@ -130,7 +130,7 @@ export type OAuth2AuthDefinition = {
   refreshTokenUrl?: string;
   /** OAuth scopes joined with spaces into the authorization URL `scope` parameter. */
   scopes: string[];
-  /** Optional per-connection scope choices shown by the local console. */
+  /** Selectable provider-native OAuth scopes for programmatic connections. */
   authorizationOptions?: OAuthAuthorizationOption[];
   /** Separator used when joining OAuth scopes. Defaults to a space. */
   scopeSeparator?: " " | ",";

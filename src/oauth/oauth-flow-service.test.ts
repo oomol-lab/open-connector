@@ -18,8 +18,14 @@ import { ConnectionService } from "../connection-service.ts";
 import { provider as slackProvider } from "../providers/slack/definition.ts";
 import { provider as slackbotProvider } from "../providers/slackbot/definition.ts";
 import { AesGcmSecretCodec } from "../server/secrets/secret-codec.ts";
+import { SqliteRuntimeDatabase } from "../server/storage/sqlite-runtime-store.ts";
 import { OAuthClientConfigService } from "./oauth-client-config-service.ts";
 import { OAuthFlowService } from "./oauth-flow-service.ts";
+
+const requestDatabases: SqliteRuntimeDatabase[] = [];
+afterEach(() => {
+  for (const database of requestDatabases.splice(0)) database.close();
+});
 
 const oauthProvider: ProviderDefinition = {
   service: "example",
@@ -895,6 +901,8 @@ function createServices(
   flow: OAuthFlowService;
   states: MemoryOAuthStateStore;
 } {
+  const requestDatabase = new SqliteRuntimeDatabase(":memory:");
+  requestDatabases.push(requestDatabase);
   const catalog = createCatalogStore(providers);
   const providerLoader = new EmptyProviderLoader(options.oauthRuntime);
   const connections = new ConnectionService({
@@ -917,6 +925,7 @@ function createServices(
       connections,
       providerLoader,
       states,
+      requests: requestDatabase.connectionRequestStore,
       stateMaxAgeMs: options.stateMaxAgeMs,
       secretCodec: options.secretCodec,
       isCustomClientConfigAllowed: (service) =>

@@ -1,7 +1,14 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { githubActions } from "./actions.ts";
-import { githubOAuthScopes } from "./scopes.ts";
+import {
+  githubOAuthScopes,
+  githubReadUserScope,
+  githubUserEmailScope,
+  githubRepoScope,
+  githubWorkflowScope,
+  githubDeleteRepoScope,
+} from "./scopes.ts";
 
 const service = "github";
 
@@ -22,6 +29,49 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://github.com/login/oauth/authorize",
       tokenUrl: "https://github.com/login/oauth/access_token",
       scopes: githubOAuthScopes,
+      authorizationOptions: [
+        {
+          id: githubReadUserScope,
+          label: "Account profile",
+          description: "Identify the connected GitHub account.",
+          required: true,
+          defaultSelected: true,
+          risk: "standard",
+        },
+        {
+          id: githubRepoScope,
+          label: "Repositories",
+          description: "Read and modify public and private repositories.",
+          required: false,
+          defaultSelected: true,
+          risk: "sensitive",
+        },
+        {
+          id: githubUserEmailScope,
+          label: "Email addresses",
+          description: "Read the account's email addresses.",
+          required: false,
+          defaultSelected: false,
+          risk: "sensitive",
+        },
+        {
+          id: githubWorkflowScope,
+          label: "Workflows",
+          description: "Update GitHub Actions workflow files.",
+          required: false,
+          defaultSelected: false,
+          risk: "sensitive",
+          requires: [githubRepoScope],
+        },
+        {
+          id: githubDeleteRepoScope,
+          label: "Delete repositories",
+          description: "Permanently delete repositories.",
+          required: false,
+          defaultSelected: false,
+          risk: "destructive",
+        },
+      ],
       tokenEndpointAuthMethod: "client_secret_post",
     },
     {

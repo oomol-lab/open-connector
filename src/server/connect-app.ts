@@ -90,6 +90,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
         connections,
         providerLoader: options.providerLoader,
         states: options.runtimeDatabase.oauthStateStore,
+        requests: options.runtimeDatabase.connectionRequestStore,
         secretCodec: options.secretCodec,
         isCustomClientConfigAllowed,
       }),

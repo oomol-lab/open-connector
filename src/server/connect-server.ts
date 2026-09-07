@@ -25,7 +25,7 @@ import { optionalRecord, optionalString, requiredString, requiredStringArray } f
 import { PromiseCache } from "../core/promise-cache.ts";
 import { MarketplaceError } from "../marketplace/marketplace-service.ts";
 import { OAuthClientConfigError, OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
-import { OAuthFlowError, OAuthFlowService } from "../oauth/oauth-flow-service.ts";
+import { OAuthCallbackError, OAuthFlowError, OAuthFlowService } from "../oauth/oauth-flow-service.ts";
 import {
   ActionInputDepthError,
   createIdempotencyExpiry,
@@ -37,9 +37,9 @@ import { ActionRunner } from "./actions/action-runner.ts";
 import { renderActionMarkdown } from "./api/action-markdown.ts";
 import { clearLocalAuthCookie, createLocalAuthMiddleware, readLocalAuthSession, readRuntimeGrant } from "./api/auth.ts";
 import { getResponseCachePolicy } from "./api/cache-policy.ts";
+import { createConnectionRoutes } from "./api/connection-routes.ts";
 import { HttpRequestError, internalError, jsonError, notFound, readJsonBody } from "./api/http-utils.ts";
 import { renderOAuthCompletionPage } from "./api/oauth-completion-page.ts";
-import { createOpenApiDocument } from "./api/openapi.ts";
 import { policyRequestMaxBytes, readRuntimePolicyRules, readTokenPolicy } from "./api/policy-input.ts";
 import {
   mapConnectionErrorStatus,
@@ -196,6 +196,7 @@ export class ConnectServer {
     app.get("/v1/actions/search", (context) => this.searchRuntimeActions(context));
     app.get("/v1/actions/:actionId", (context) => this.getRuntimeAction(context, context.req.param("actionId")));
     app.post("/v1/actions/:actionId", (context) => this.createRuntimeActionRun(context, context.req.param("actionId")));
+    app.route("/v1", createConnectionRoutes(this.options));
     app.get("/v1/apps", (context) => this.listRuntimeApps(context));
     app.get("/v1/apps/authenticated", (context) => this.listAuthenticatedRuntimeApps(context));
     app.get("/v1/apps/services/:service", (context) =>
@@ -203,13 +204,14 @@ export class ConnectServer {
     );
     app.post("/v1/proxy/:service", (context) => this.createRuntimeProxyRequest(context, context.req.param("service")));
 
-    app.get("/openapi.json", (context) =>
-      context.json(
+    app.get("/openapi.json", async (context) => {
+      const { createOpenApiDocument } = await import("./api/openapi.ts");
+      return context.json(
         createOpenApiDocument(this.options.catalog.providers, {
           actionId: optionalString(context.req.query("actionId")),
         }),
-      ),
-    );
+      );
+    });
     app.get("/docs", async (context, next) => (await loadDocsHandler())(context, next));
 
     // Schema-free listing. The action detail view loads full schemas on demand
@@ -278,6 +280,13 @@ export class ConnectServer {
         },
         "request failed",
       );
+      if (context.req.path.startsWith("/v1/connections") || context.req.path.startsWith("/v1/connection-requests")) {
+        return writeRuntimeFailure(context, {
+          status: 500,
+          errorCode: "internal_error",
+          message: "Internal server error.",
+        });
+      }
       return internalError(context, error);
     });
 
@@ -1074,6 +1083,10 @@ export class ConnectServer {
     this.options.logger?.info(logContext, "oauth callback received");
     const providerError = context.req.query("error");
     if (providerError) {
+      const returnUri = state
+        ? await this.options.oauthFlow.rejectAuthorization(state, providerError === "access_denied")
+        : undefined;
+      if (returnUri) return context.redirect(returnUri);
       const providerErrorDescription = context.req.query("error_description");
       this.options.logger?.warn(
         {
@@ -1092,6 +1105,7 @@ export class ConnectServer {
       );
     }
     if (!state || !code) {
+      if (state) await this.options.oauthFlow.rejectAuthorization(state, false);
       this.options.logger?.warn(
         {
           ...logContext,
@@ -1104,14 +1118,14 @@ export class ConnectServer {
 
     let service: string;
     try {
-      service = (
-        await this.options.oauthFlow.completeAuthorization({
-          state,
-          code,
-          callbackParameters: Object.fromEntries(new URL(context.req.url).searchParams),
-          signal: context.req.raw.signal,
-        })
-      ).service;
+      const completed = await this.options.oauthFlow.completeAuthorization({
+        state,
+        code,
+        callbackParameters: Object.fromEntries(new URL(context.req.url).searchParams),
+        signal: context.req.raw.signal,
+      });
+      service = completed.service;
+      if (completed.returnUri) return context.redirect(completed.returnUri);
       this.options.logger?.info(
         {
           ...logContext,
@@ -1120,6 +1134,7 @@ export class ConnectServer {
         "oauth callback completed",
       );
     } catch (error) {
+      if (error instanceof OAuthCallbackError && error.returnUri) return context.redirect(error.returnUri);
       if (error instanceof OAuthFlowError || error instanceof ConnectionError) {
         const cancelled = error instanceof ConnectionError && error.code === "connection_cancelled";
         this.options.logger?.[cancelled ? "info" : "warn"](

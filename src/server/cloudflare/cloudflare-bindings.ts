@@ -1,4 +1,5 @@
 export interface D1DatabaseBinding {
+  batch(statements: D1PreparedStatementBinding[]): Promise<{ results: Record<string, unknown>[] }[]>;
   prepare(query: string): D1PreparedStatementBinding;
 }
 

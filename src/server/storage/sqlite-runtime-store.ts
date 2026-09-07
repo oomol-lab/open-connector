@@ -24,6 +24,7 @@ import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-ser
 import { DatabaseSync } from "node:sqlite";
 import { parseRuntimeActionHttpResult } from "../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
+import { ConnectionRequestStore } from "./connection-request-store.ts";
 import { defaultMigrationSource } from "./migration-source.ts";
 import {
   listRunLogs,
@@ -81,6 +82,7 @@ interface RotatedStateSecret {
  * Shared SQLite connection for local runtime state.
  */
 export class SqliteRuntimeDatabase implements RuntimeDatabase {
+  readonly connectionRequestStore: ConnectionRequestStore;
   readonly connectionStore: SqliteConnectionStore;
   readonly oauthClientConfigStore: SqliteOAuthClientConfigStore;
   readonly oauthStateStore: SqliteOAuthStateStore;
@@ -97,6 +99,13 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
     this.database = new DatabaseSync(filename);
     this.secretCodec = options.secretCodec ?? new PlainTextSecretCodec();
     this.initialize(options.migrations ?? defaultMigrationSource, options.logger);
+    this.connectionRequestStore = new ConnectionRequestStore(
+      async (statements) =>
+        runInTransaction(this.database, () =>
+          statements.map(({ sql, values }) => this.database.prepare(sql).all(...values)),
+        ),
+      this.secretCodec,
+    );
     this.connectionStore = new SqliteConnectionStore(this.database, this.secretCodec);
     this.oauthClientConfigStore = new SqliteOAuthClientConfigStore(this.database, this.secretCodec);
     this.oauthStateStore = new SqliteOAuthStateStore(this.database, this.secretCodec);
@@ -119,6 +128,15 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
       nextSecretCodec,
       "oauth_client_configs",
     );
+    const requestSecrets = await Promise.all(
+      this.database
+        .prepare("select id, value from connection_requests where value is not null")
+        .all()
+        .map(async (row) => ({
+          id: readString(row, "id"),
+          value: await nextSecretCodec.encode(await this.secretCodec.decode(readString(row, "value"))),
+        })),
+    );
     const oauthStates = await readRotatedStateSecrets(this.database, this.secretCodec, nextSecretCodec);
     const idempotencyResponses = await readRotatedIdempotencySecrets(this.database, this.secretCodec, nextSecretCodec);
     const marketplaceConfig = await this.marketplaceStore.getConfig();
@@ -134,6 +152,10 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
       writeRotatedConnectionSecrets(this.database, connections);
       writeRotatedServiceSecrets(this.database, "oauth_client_configs", oauthConfigs);
       writeRotatedStateSecrets(this.database, oauthStates);
+      for (const request of requestSecrets)
+        this.database
+          .prepare("update connection_requests set value = ? where id = ? and value is not null")
+          .run(request.value, request.id);
       writeRotatedIdempotencySecrets(this.database, idempotencyResponses);
       if (rotatedMarketplaceConfig) {
         this.database
@@ -148,6 +170,7 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
       delete from connections;
       delete from oauth_client_configs;
       delete from oauth_states;
+      delete from connection_requests;
       delete from runtime_tokens;
       delete from runtime_policy;
       delete from runs;

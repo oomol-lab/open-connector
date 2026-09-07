@@ -1,5 +1,5 @@
 import type { RuntimeActionDefinition, RuntimeProviderDefinition } from "../../catalog-store.ts";
-import type { ConnectionError, ConnectionSummary } from "../../connection-service.ts";
+import type { ConnectionError, ConnectionSummary, ManagedConnectionSummary } from "../../connection-service.ts";
 import type { ExecutionResult, ProviderScenario } from "../../core/types.ts";
 import type { Context } from "hono";
 
@@ -300,4 +300,37 @@ function isRuntimeStatus(value: unknown): value is RuntimeStatus {
     value === 500 ||
     value === 501
   );
+}
+
+/** Management view adds stored account metadata without exposing credentials. */
+export function serializeManagedConnection(connection: ManagedConnectionSummary): Omit<
+  RuntimeConnectedApp,
+  "status"
+> & {
+  status: ManagedConnectionSummary["status"];
+  providerAccountId: string;
+  comment: string | null;
+} {
+  return {
+    ...serializeRuntimeConnectedApp(connection),
+    status: connection.status,
+    providerAccountId: connection.profile.accountId,
+    comment: connection.comment,
+  };
+}
+
+export function connectionManagementFailure(error: { code: string; message: string }): RuntimeFailureInput {
+  const errorCode =
+    error.code === "connection_not_found"
+      ? "app_not_found"
+      : error.code === "unknown_service" || error.code === "unsupported_auth_type"
+        ? "invalid_input"
+        : error.code === "connection_changed"
+          ? "request_key_conflict"
+          : error.code;
+  return {
+    status: errorCode === "app_not_found" ? 404 : errorCode === "request_key_conflict" ? 409 : 400,
+    errorCode,
+    message: error.message,
+  };
 }
