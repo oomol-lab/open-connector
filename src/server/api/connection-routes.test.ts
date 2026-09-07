@@ -3,8 +3,11 @@ import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "../../catalog-store.ts";
+import { requestAuthorizationCodeToken } from "../../oauth/oauth-token.ts";
 import { provider as githubProvider } from "../../providers/github/definition.ts";
 import { ProviderLoader } from "../../providers/provider-loader.ts";
+import { provider as slackProvider } from "../../providers/slack/definition.ts";
+import { slackCredentialValidators } from "../../providers/slack/runtime.ts";
 import { createConnectApp } from "../connect-app.ts";
 import { TransitFileService } from "../files/transit-files.ts";
 import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
@@ -34,6 +37,7 @@ const provider: ProviderDefinition = {
 const databases: SqliteRuntimeDatabase[] = [];
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllGlobals();
   for (const database of databases.splice(0)) database.close();
 });
 
@@ -305,11 +309,11 @@ it("does not save credentials when a callback is cancelled during token exchange
   );
 });
 
-it("reports current reauthorization needs separately from a successful request", async () => {
+it.each([-1000, 30_000])("reports reauthorization needs for an expiry offset of %i ms", async (offset) => {
   const { call, start } = await setup(async () => ({
     accessToken: "secret",
     tokenType: "Bearer",
-    expiresAt: new Date(Date.now() - 1000).toISOString(),
+    expiresAt: new Date(Date.now() + offset).toISOString(),
     metadata: {},
   }));
   const request = await start();
@@ -361,4 +365,47 @@ it("does not overwrite credentials when a synchronous replacement loses a valida
   expect(conflict.status).toBe(409);
   expect((await conflict.json()).errorCode).toBe("request_key_conflict");
   expect((await database.connectionStore.list())[0].credential).toMatchObject({ apiKey: "winner" });
+});
+
+it("connects Slack using granted scopes from the nested user token response", async () => {
+  const fetcher = vi.fn(async (input: string | URL | Request) => {
+    const url = input instanceof Request ? input.url : String(input);
+    if (url === "https://slack.com/api/oauth.v2.user.access") {
+      return Response.json({
+        ok: true,
+        access_token: "xoxp-user-token",
+        token_type: "user",
+        authed_user: { id: "U12345", scope: "channels:read,users:read" },
+        team: { id: "T12345" },
+      });
+    }
+    expect(url).toBe("https://slack.com/api/auth.test");
+    return Response.json({ ok: true, user_id: "U12345", team_id: "T12345", team: "Workspace" });
+  });
+  vi.stubGlobal("fetch", fetcher);
+  const { call } = await setup(
+    async () =>
+      requestAuthorizationCodeToken({
+        clientId: "client",
+        clientSecret: "secret",
+        code: "code",
+        redirectUri: "http://localhost/oauth/callback",
+        tokenUrl: "https://slack.com/api/oauth.v2.user.access",
+        tokenEndpointAuthMethod: "client_secret_post",
+        createError: (message) => new Error(message),
+      }),
+    {},
+    { ...slackProvider, service: "example", actions: [] },
+    slackCredentialValidators,
+  );
+  const started = await (await call("/v1/connections/example/connect", {})).json();
+  expect(started).toMatchObject({ success: true });
+  const request = started.data;
+  const callback = await call(`/oauth/callback?state=${request.stateHandle}&code=code`);
+  expect(callback.status).toBe(200);
+  const result = (await (await call(`/v1/connection-requests/${request.connectionRequestId}`)).json()).data;
+  expect(result.status).toBe("connected");
+  const connection = (await (await call(`/v1/connections/by-id/${result.appId}`)).json()).data;
+  expect(connection.scopes).toEqual(["channels:read", "users:read"]);
+  expect(fetcher).toHaveBeenCalledTimes(2);
 });

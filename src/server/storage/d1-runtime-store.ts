@@ -58,7 +58,7 @@ export class D1RuntimeDatabase implements RuntimeDatabase {
     const secretCodec = options.secretCodec ?? new PlainTextSecretCodec();
     this.connectionRequestStore = new ConnectionRequestStore(async (statements) => {
       const results = await database.batch(statements.map(({ sql, values }) => database.prepare(sql).bind(...values)));
-      return results.map((result) => result.results);
+      return results.map((result) => result.results ?? []);
     }, secretCodec);
     this.connectionStore = new D1ConnectionStore(database, secretCodec);
     this.oauthClientConfigStore = new D1OAuthClientConfigStore(database, secretCodec);

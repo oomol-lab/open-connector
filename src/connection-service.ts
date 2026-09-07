@@ -435,10 +435,7 @@ export class ConnectionService {
     const credential = stored.credential;
     return {
       status:
-        credential.authType === "oauth2" &&
-        credential.expiresAt &&
-        Date.parse(credential.expiresAt) <= Date.now() &&
-        !credential.refreshToken
+        credential.authType === "oauth2" && !credential.refreshToken && isOAuthCredentialExpired(credential)
           ? "reauth_required"
           : "active",
       ...this.createConfiguredConnectionSummary(

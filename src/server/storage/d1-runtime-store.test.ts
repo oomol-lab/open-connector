@@ -611,10 +611,13 @@ class SqliteD1Database implements D1DatabaseBinding {
     }
   }
 
-  async batch(statements: D1PreparedStatementBinding[]): Promise<{ results: Record<string, unknown>[] }[]> {
+  async batch(statements: D1PreparedStatementBinding[]): Promise<{ results: Record<string, unknown>[] | null }[]> {
     this.database.exec("begin immediate");
     try {
-      const results = statements.map((statement) => ({ results: (statement as SqliteD1PreparedStatement).readRows() }));
+      const results = statements.map((statement) => {
+        const rows = (statement as SqliteD1PreparedStatement).readRows();
+        return { results: rows.length ? rows : null };
+      });
       this.database.exec("commit");
       return results;
     } catch (error) {
