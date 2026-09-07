@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
@@ -12,6 +12,7 @@ import {
 } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   providerInputError,
   ProviderRequestError,
   providerUserAgent,
@@ -79,6 +80,19 @@ export const executors: ProviderExecutors = defineProviderExecutors<AyrshareCont
       signal: context.signal,
       transitFiles: context.transitFiles,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: ayrshareBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  skipDnsValidation: true,
+  customizeRequest({ credential, headers }) {
+    if (credential?.authType !== "api_key") throw new ProviderRequestError(400, "api_key credential is required");
+    const profileKey = optionalString(credential?.values[profileKeyField]);
+    if (profileKey) headers.set("profile-key", profileKey);
+    if (!headers.has("accept")) headers.set("accept", "application/json");
   },
 });
 

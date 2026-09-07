@@ -12,7 +12,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const bugHerdApiBaseUrl = "https://www.bugherd.com";
+export const bugHerdApiBaseUrl = "https://www.bugherd.com";
 
 type BugHerdPhase = "validate" | "execute";
 type BugHerdQuery = Record<string, string | number | boolean | undefined>;

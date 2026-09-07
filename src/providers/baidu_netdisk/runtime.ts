@@ -5,7 +5,7 @@ import { compactObject, optionalInteger, optionalString, requiredRawString, requ
 import { readBoundedResponseBytes } from "../../core/request.ts";
 import { providerFetch, ProviderRequestError, readProviderTextBody } from "../provider-runtime.ts";
 
-const baiduPanBaseUrl = "https://pan.baidu.com";
+export const baiduPanBaseUrl = "https://pan.baidu.com";
 const losslessIntegerKeys = new Set(["fs_id", "fsid", "pid", "uk", "request_id", "cursor"]);
 
 type BaiduRequestPhase = "read" | "write";

@@ -1,8 +1,18 @@
-import type { CredentialValidators, ProviderExecutors, TransitFileWriter } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+  TransitFileWriter,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalString, requiredString } from "../../core/cast.ts";
-import { defineProviderExecutors, mapProviderActionHandlers, requireOAuthCredential } from "../provider-runtime.ts";
+import {
+  defineProviderExecutors,
+  defineProviderProxy,
+  mapProviderActionHandlers,
+  requireOAuthCredential,
+} from "../provider-runtime.ts";
 import { baiduNetdiskActions } from "./actions.ts";
 import { executeBaiduNetdiskMcpAction, verifyBaiduNetdiskMcpConnection } from "./runtime-mcp.ts";
 import {
@@ -10,7 +20,10 @@ import {
   downloadBaiduNetdiskFile,
   fetchBaiduNetdiskAccount,
   getBaiduNetdiskQuota,
+  baiduPanBaseUrl,
 } from "./runtime.ts";
+
+const service = "baidu_netdisk";
 
 interface BaiduNetdiskContext {
   accessToken: string;
@@ -22,7 +35,7 @@ interface BaiduNetdiskContext {
 type BaiduNetdiskHandler = (input: Record<string, unknown>, context: BaiduNetdiskContext) => Promise<unknown>;
 
 const handlers: ProviderActionHandlers<"baidu_netdisk", BaiduNetdiskHandler> = mapProviderActionHandlers(
-  "baidu_netdisk",
+  service,
   baiduNetdiskActions,
   (_action, name): BaiduNetdiskHandler => {
     switch (name) {
@@ -49,10 +62,10 @@ const handlers: ProviderActionHandlers<"baidu_netdisk", BaiduNetdiskHandler> = m
 );
 
 export const executors: ProviderExecutors = defineProviderExecutors({
-  service: "baidu_netdisk",
+  service,
   handlers,
   async createContext(context, fetcher) {
-    const credential = await requireOAuthCredential(context, "baidu_netdisk");
+    const credential = await requireOAuthCredential(context, service);
     return {
       accessToken: credential.accessToken,
       fetcher,
@@ -60,6 +73,14 @@ export const executors: ProviderExecutors = defineProviderExecutors({
       signal: context.signal,
     };
   },
+  skipDnsValidation: true,
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: baiduPanBaseUrl,
+  allowedOrigins: [baiduPanBaseUrl, "https://d.pcs.baidu.com"],
+  auth: { type: "oauth_query", name: "access_token" },
   skipDnsValidation: true,
 });
 

@@ -4,7 +4,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const ambientWeatherApiBaseUrl = "https://rt.ambientweather.net";
+export const ambientWeatherApiBaseUrl = "https://rt.ambientweather.net";
 
 type AmbientWeatherPhase = "validate" | "execute";
 
