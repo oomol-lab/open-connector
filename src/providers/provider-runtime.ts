@@ -333,6 +333,8 @@ export type ProviderProxyAuth =
   | { type: "oauth_query"; name: string }
   | { type: "api_key_header"; name: string }
   | { type: "api_key_query"; name: string }
+  | { type: "optional_api_key_header"; name: string; prefix?: string }
+  | { type: "optional_api_key_query"; name: string }
   | { type: "api_key_json_body"; name: string }
   | { type: "api_key_query_or_json_body"; name: string; bodyMethods?: readonly string[] }
   | { type: "api_key_query_or_form_body"; name: string; bodyMethods?: readonly string[] }
@@ -560,7 +562,9 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
   const additionalSensitiveHeaders =
     input.auth.type === "credential_headers"
       ? [...new Set(input.auth.headers.map((header) => header.name.toLowerCase()))]
-      : input.auth.type === "api_key_header" || input.auth.type === "custom_credential_header"
+      : input.auth.type === "api_key_header" ||
+          input.auth.type === "optional_api_key_header" ||
+          input.auth.type === "custom_credential_header"
         ? [input.auth.name]
         : undefined;
   const egressFetch = createProviderFetch({
@@ -712,6 +716,24 @@ async function applyProviderProxyAuth(
       url.searchParams.set(input.auth.name, credential.apiKey);
       return { credential, body };
     }
+    case "optional_api_key_header": {
+      const credential = await optionalProviderProxyApiKeyCredential(context, input.service);
+      if (credential) {
+        headers.set(input.auth.name, `${input.auth.prefix ?? ""}${credential.apiKey}`);
+      } else {
+        headers.delete(input.auth.name);
+      }
+      return { credential, body };
+    }
+    case "optional_api_key_query": {
+      const credential = await optionalProviderProxyApiKeyCredential(context, input.service);
+      if (credential) {
+        url.searchParams.set(input.auth.name, credential.apiKey);
+      } else {
+        url.searchParams.delete(input.auth.name);
+      }
+      return { credential, body };
+    }
     case "api_key_json_body": {
       const credential = await requireApiKeyCredential(context, input.service);
       return { credential, body: injectProviderProxyJsonBodyField(body, input.auth.name, credential.apiKey) };
@@ -784,6 +806,16 @@ async function applyProviderProxyAuth(
 interface ProviderProxyAuthResult {
   credential: ResolvedCredential | undefined;
   body: unknown;
+}
+
+async function optionalProviderProxyApiKeyCredential(
+  context: ExecutionContext,
+  service: string,
+): Promise<Extract<ResolvedCredential, { authType: "api_key" }> | undefined> {
+  const credential = await context.getCredential(service);
+  if (!credential || credential.authType === "no_auth") return undefined;
+  if (credential.authType === "api_key") return credential;
+  throw new ProviderRequestError(401, `Connect ${service} without authentication or configure an API key.`);
 }
 
 function providerProxyBodyMethods(methods: readonly string[] | undefined): Set<string> {

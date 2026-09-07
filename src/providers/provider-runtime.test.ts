@@ -591,6 +591,33 @@ describe("provider egress SSRF guard", () => {
     expect(calls).toHaveLength(0);
   });
 
+  it("injects an optional API key and removes caller credentials for no-auth connections", async () => {
+    const calls = stubFetchSequence([
+      new Response(JSON.stringify({ ok: true }), { status: 200 }),
+      new Response(JSON.stringify({ ok: true }), { status: 200 }),
+      new Response(JSON.stringify({ ok: true }), { status: 200 }),
+    ]);
+    const headerProxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: { type: "optional_api_key_header", name: "X-Api-Key", prefix: "Bearer " },
+    });
+    const queryProxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: { type: "optional_api_key_query", name: "api_key" },
+    });
+    const noAuthContext: ExecutionContext = { getCredential: async () => ({ authType: "no_auth" }) };
+
+    await headerProxy({ method: "GET", endpoint: "/items", headers: { "x-api-key": "caller-key" } }, executionContext);
+    await queryProxy({ method: "GET", endpoint: "/items", query: { api_key: "caller-key" } }, noAuthContext);
+    await headerProxy({ method: "GET", endpoint: "/items", headers: { "x-api-key": "caller-key" } }, noAuthContext);
+
+    expect(new Headers(calls[0]?.init?.headers).get("x-api-key")).toBe("Bearer test-key");
+    expect(calls[1]?.url).toBe("https://api.example.com/items");
+    expect(new Headers(calls[2]?.init?.headers).has("x-api-key")).toBe(false);
+  });
+
   it("overwrites a caller query parameter with the OAuth access token", async () => {
     const calls = stubFetchSequence([new Response(JSON.stringify({ ok: true }), { status: 200 })]);
     const proxy = defineProviderProxy({
