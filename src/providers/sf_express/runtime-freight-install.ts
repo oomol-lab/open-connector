@@ -520,6 +520,28 @@ function optionalStringList(value: unknown, fieldName: string): string[] | undef
 /** SF measures the pickup window on its own calendar, not the connector host's. */
 const sfExpressCalendarTimeZone = "Asia/Shanghai";
 
+/**
+ * Read the numeric parts rather than a formatted string: a locale's date layout
+ * is ICU data, not a serialization contract, so a host whose `en-CA` falls back
+ * to another pattern would otherwise turn the window check into `NaN` and let
+ * every date through.
+ */
+const sfExpressCalendarParts = new Intl.DateTimeFormat("en-US", {
+  timeZone: sfExpressCalendarTimeZone,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+/** Midnight UTC on the current SF calendar day, the anchor the pickup window is measured from. */
+function sfExpressCalendarToday(): number {
+  const parts: Record<string, string> = {};
+  for (const part of sfExpressCalendarParts.formatToParts(new Date())) {
+    parts[part.type] = part.value;
+  }
+  return Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day));
+}
+
 /** Read the recovery pickup date, enforcing the documented within-3-days window. */
 function readRecoveryDate(value: unknown): string {
   const date = requiredInputString(value, "expect_date");
@@ -535,8 +557,7 @@ function readRecoveryDate(value: unknown): string {
   ) {
     throw providerInputError("expect_date must be a valid date in yyyy-MM-dd format.");
   }
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: sfExpressCalendarTimeZone }).format(new Date());
-  const diffDays = Math.round((parsed.getTime() - Date.parse(`${today}T00:00:00Z`)) / 86_400_000);
+  const diffDays = Math.round((parsed.getTime() - sfExpressCalendarToday()) / 86_400_000);
   if (diffDays < 0 || diffDays > 3) {
     throw providerInputError("expect_date must be within 3 days from today.");
   }
