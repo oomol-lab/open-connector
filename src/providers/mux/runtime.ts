@@ -23,7 +23,7 @@ import {
   requiredInputString,
 } from "../provider-runtime.ts";
 
-const muxApiOrigin = "https://api.mux.com";
+export const muxApiOrigin = "https://api.mux.com";
 const muxWhoAmIPath = "/system/v1/whoami";
 
 export interface MuxContext {

@@ -1,10 +1,27 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { GistActionContext } from "./runtime-shared.ts";
 
-import { defineProviderExecutors, requireBearerCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, requireBearerCredential } from "../provider-runtime.ts";
+import { gistApiBaseUrl, gistApiVersion, gistDefaultAcceptHeader } from "./runtime-shared.ts";
 import { gistActionHandlers, validateGistCredential } from "./runtime.ts";
 
 const service = "gist";
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: gistApiBaseUrl,
+  auth: { type: "bearer" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", gistDefaultAcceptHeader);
+    if (!headers.has("x-github-api-version")) headers.set("x-github-api-version", gistApiVersion);
+  },
+});
 
 export const executors: ProviderExecutors = defineProviderExecutors<GistActionContext>({
   service,

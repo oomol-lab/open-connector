@@ -21,7 +21,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const gtmetrixApiBaseUrl = "https://gtmetrix.com/api/2.0";
+export const gtmetrixApiBaseUrl: string = "https://gtmetrix.com/api/2.0";
 const gtmetrixJsonMediaType = "application/vnd.api+json";
 
 type GtmetrixRequestPhase = "validate" | "execute";

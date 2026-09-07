@@ -6,7 +6,7 @@ import { compactObject, optionalIntegerLike, optionalRecord, optionalString, req
 import { encodePathSegment, queryParams } from "../../core/request.ts";
 import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const giteeApiBaseUrl = "https://gitee.com/api/v5";
+export const giteeApiBaseUrl: string = "https://gitee.com/api/v5";
 
 type GiteeRequestPhase = "validate" | "execute";
 
