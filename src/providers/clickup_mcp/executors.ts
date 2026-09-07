@@ -3,7 +3,6 @@ import type { OAuthProviderContext, ProviderActionSources, ProviderRuntimeHandle
 import type { Client } from "@modelcontextprotocol/client";
 
 import { ProtocolError, SdkHttpError, UnauthorizedError } from "@modelcontextprotocol/client";
-import { createHash } from "node:crypto";
 import { optionalString } from "../../core/cast.ts";
 import { withMcpClient } from "../mcp-client.ts";
 import {
@@ -60,12 +59,7 @@ export const credentialValidators: CredentialValidators = {
     if (!Object.values(toolsByAction).some((name) => available.has(name))) {
       throw new ProviderRequestError(502, "ClickUp MCP did not expose any supported tools for this account");
     }
-    const tokenHash = createHash("sha256").update(input.accessToken).digest("hex").slice(0, 16);
     return {
-      profile: {
-        accountId: `clickup:mcp:${tokenHash}`,
-        displayName: `ClickUp MCP · ${tokenHash.slice(-6)}`,
-      },
       grantedScopes: optionalString(input.metadata.scope)?.split(" ") ?? [],
       metadata: { mcpEndpoint: endpoint, discoveredToolCount: tools.tools.length },
     };
@@ -100,7 +94,8 @@ function mapClickUpMcpError(error: unknown, phase: "validate" | "execute"): unkn
     if (status === 401 || status === 403) {
       return new ProviderRequestError(phase === "validate" ? 400 : 401, "ClickUp MCP credential is invalid or expired");
     }
-    return new ProviderRequestError(status === 429 ? 429 : 502, `ClickUp MCP request failed: ${error.message}`, error);
+    const providerStatus = 400 <= status && status < 500 ? status : 502;
+    return new ProviderRequestError(providerStatus, `ClickUp MCP request failed: ${error.message}`, error);
   }
   if (error instanceof ProtocolError) {
     return new ProviderRequestError(502, `ClickUp MCP request failed: ${error.message}`, error);

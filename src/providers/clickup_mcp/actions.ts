@@ -141,8 +141,7 @@ export const clickupMcpActions: ActionDefinition[] = [
     "Add a comment to a ClickUp task.",
     writeScope,
     {
-      entity_type: s.stringEnum("The type of ClickUp entity receiving the comment.", ["task", "list", "view"]),
-      entity_id: s.nonEmptyString("The target task, List, or view ID."),
+      entity_id: s.nonEmptyString("The target task ID."),
       comment_text: s.string("The comment text, with Markdown supported unless it contains a mention.", {
         minLength: 1,
         maxLength: 40_000,
@@ -153,7 +152,7 @@ export const clickupMcpActions: ActionDefinition[] = [
         pattern: "^\\d+$",
       }),
     },
-    ["comment_text"],
+    ["entity_id", "comment_text"],
   ),
   action(
     "send_chat_message",
