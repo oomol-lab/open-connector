@@ -1,4 +1,4 @@
-const dataciteApiBaseUrl = "https://api.datacite.org";
+export const dataciteApiBaseUrl = "https://api.datacite.org";
 
 type DatacitePhase = "validate" | "execute";
 

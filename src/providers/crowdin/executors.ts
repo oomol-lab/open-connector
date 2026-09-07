@@ -3,6 +3,7 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
   ResolvedCredential,
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
@@ -16,7 +17,12 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { defineProviderExecutors, providerInputError, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineProviderExecutors,
+  defineProviderProxy,
+  providerInputError,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "crowdin";
 const crowdinUserUrl = "https://api.crowdin.com/api/v2/user";
@@ -73,6 +79,18 @@ export const executors: ProviderExecutors = defineProviderExecutors<CrowdinActio
       providerMetadata:
         credential?.authType === "api_key" || credential?.authType === "oauth2" ? credential.metadata : undefined,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  async baseUrl(context) {
+    const credential = await context.getCredential(service);
+    return resolveCrowdinApiBaseUrl(credential && "metadata" in credential ? credential.metadata : undefined);
+  },
+  auth: { type: "bearer" },
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
   },
 });
 

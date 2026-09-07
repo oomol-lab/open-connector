@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { isIP } from "node:net";
@@ -13,6 +13,7 @@ import {
 import { queryParams } from "../../core/request.ts";
 import {
   defineBearerProviderExecutors,
+  defineProviderProxy,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
@@ -20,6 +21,16 @@ import {
 
 const service = "convex";
 const apiBaseUrl = "https://api.convex.dev/v1";
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: apiBaseUrl,
+  auth: { type: "bearer" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
+  },
+});
 const grantedScopes = [
   "convex.token.read",
   "convex.projects.read",

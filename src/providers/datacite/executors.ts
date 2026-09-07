@@ -1,9 +1,20 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
-import { defineProviderExecutors, mapProviderActionHandlers, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  basicAuthorizationHeader,
+  defineProviderExecutors,
+  defineProviderProxy,
+  mapProviderActionHandlers,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 import { dataciteActions } from "./actions.ts";
-import { executeDataciteAction, validateDataciteCredential } from "./runtime.ts";
+import { dataciteApiBaseUrl, executeDataciteAction, validateDataciteCredential } from "./runtime.ts";
 const service = "datacite";
 interface DataciteContext {
   apiKey?: string;
@@ -24,6 +35,22 @@ export const executors: ProviderExecutors = defineProviderExecutors<DataciteCont
     throw new ProviderRequestError(401, "Connect DataCite without authentication or configure an API key.");
   },
   skipDnsValidation: true,
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: dataciteApiBaseUrl,
+  auth: { type: "none" },
+  skipDnsValidation: true,
+  async customizeRequest({ context, headers }) {
+    const credential = await context.getCredential(service);
+    if (credential?.authType === "api_key")
+      headers.set("authorization", basicAuthorizationHeader(`${credential.apiKey}:`));
+    else if (credential && credential.authType !== "no_auth")
+      throw new ProviderRequestError(401, "DataCite requires no_auth or api_key credential");
+    if (!headers.has("accept")) headers.set("accept", "application/vnd.api+json");
+    if (!headers.has("content-type")) headers.set("content-type", "application/vnd.api+json");
+  },
 });
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher }) {
