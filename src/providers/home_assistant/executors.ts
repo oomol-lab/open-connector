@@ -1,10 +1,16 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { HomeAssistantActionContext, HomeAssistantActionHandler } from "./runtime.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
   combineProviderActionHandlers,
   defineProviderExecutors,
+  defineProviderProxy,
   requireApiKeyCredential,
 } from "../provider-runtime.ts";
 import { homeAssistantConfigActionHandlers } from "./runtime-config.ts";
@@ -37,6 +43,19 @@ export const executors: ProviderExecutors = defineProviderExecutors<HomeAssistan
       fetcher,
       signal: context.signal,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  async baseUrl(context) {
+    const credential = await requireApiKeyCredential(context, service);
+    return resolveHomeAssistantBaseUrl({ values: credential.values, metadata: credential.metadata });
+  },
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
   },
 });
 

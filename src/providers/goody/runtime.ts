@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, requiredResponseRecord } from "../provider-runtime.ts";
 
-const goodyApiBaseUrl = "https://api.ongoody.com";
+export const goodyApiBaseUrl: string = "https://api.ongoody.com";
 
 type GoodyRequestPhase = "validate" | "execute";
 type GoodyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;

@@ -1,9 +1,15 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -11,6 +17,7 @@ import {
 
 const keygenApiBaseUrl = "https://api.keygen.sh/v1/accounts";
 const keygenValidationPath = "/me";
+const service = "keygen";
 
 type KeygenRequestPhase = "validate" | "execute";
 type KeygenResourceKey =
@@ -374,16 +381,29 @@ export const keygenActionHandlers: ProviderActionHandlers<"keygen", KeygenAction
 };
 
 export const executors: ProviderExecutors = defineProviderExecutors<KeygenRequestContext>({
-  service: "keygen",
+  service,
   handlers: keygenActionHandlers,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<KeygenRequestContext> {
-    const credential = await requireApiKeyCredential(context, "keygen");
+    const credential = await requireApiKeyCredential(context, service);
     return {
       apiKey: credential.apiKey,
       account: requireKeygenAccount(credential.metadata.account ?? credential.values.account),
       fetcher,
       signal: context.signal,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  async baseUrl(context) {
+    const credential = await requireApiKeyCredential(context, service);
+    const account = requireKeygenAccount(credential.metadata.account ?? credential.values.account);
+    return `${keygenApiBaseUrl}/${encodeURIComponent(account)}`;
+  },
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/vnd.api+json");
   },
 });
 

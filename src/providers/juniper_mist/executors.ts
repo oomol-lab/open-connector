@@ -1,7 +1,12 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { JuniperMistActionContext } from "./runtime.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
 import { juniperMistActionHandlers, resolveJuniperMistApiBaseUrl, validateJuniperMistCredential } from "./runtime.ts";
 
 const service = "juniper_mist";
@@ -19,6 +24,19 @@ export const executors: ProviderExecutors = defineProviderExecutors<JuniperMistA
     };
   },
   fallbackMessage: "Juniper Mist request failed",
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  async baseUrl(context) {
+    const credential = await requireApiKeyCredential(context, service);
+    return resolveJuniperMistApiBaseUrl(credential.metadata.apiBaseUrl);
+  },
+  auth: { type: "api_key_authorization", prefix: "Token " },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
+  },
 });
 
 export const credentialValidators: CredentialValidators = {
