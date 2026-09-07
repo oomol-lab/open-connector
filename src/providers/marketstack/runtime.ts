@@ -13,7 +13,7 @@ import {
 } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
-const marketstackApiBaseUrl = "https://api.marketstack.com/v2";
+export const marketstackApiBaseUrl = "https://api.marketstack.com/v2";
 
 type MarketstackActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type MarketstackActionHandler = (input: Record<string, unknown>, context: MarketstackActionContext) => Promise<unknown>;

@@ -1,12 +1,19 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { optionalString, requiredString } from "../../core/cast.ts";
-import { defineOAuthProviderExecutors } from "../provider-runtime.ts";
-import { microsoftTodoActionHandlers, microsoftTodoJsonRequest } from "./runtime.ts";
+import { defineOAuthProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { microsoftTodoActionHandlers, microsoftTodoGraphBaseUrl, microsoftTodoJsonRequest } from "./runtime.ts";
 
 const service = "microsoft_todo";
 
 export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, microsoftTodoActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: microsoftTodoGraphBaseUrl,
+  auth: { type: "oauth_bearer" },
+  skipDnsValidation: true,
+});
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher }) {

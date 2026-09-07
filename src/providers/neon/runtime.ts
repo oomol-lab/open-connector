@@ -12,7 +12,7 @@ import {
 } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const neonApiBaseUrl = "https://console.neon.tech/api/v2";
+export const neonApiBaseUrl: string = "https://console.neon.tech/api/v2";
 
 type NeonRequestPhase = "validate" | "execute";
 type NeonQueryValue = string | number | boolean | undefined;

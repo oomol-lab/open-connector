@@ -5,7 +5,7 @@ import { compactObject, optionalRecord, optionalString, requiredString } from ".
 import { encodePathSegment } from "../../core/request.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 
-const microsoftTodoGraphBaseUrl = "https://graph.microsoft.com/v1.0";
+export const microsoftTodoGraphBaseUrl = "https://graph.microsoft.com/v1.0";
 const graphHost = "graph.microsoft.com";
 
 export type MicrosoftTodoActionHandler = (

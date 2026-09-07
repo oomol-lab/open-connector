@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
@@ -6,6 +6,7 @@ import { optionalBoolean, optionalInteger, optionalString, requiredString } from
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerInputError,
   providerUserAgent,
@@ -41,6 +42,16 @@ export const momentumIoActionHandlers: ProviderActionHandlers<"momentum_io", Mom
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, momentumIoActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: momentumIoApiBaseUrl,
+  auth: { type: "api_key_header", name: "X-API-Key" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

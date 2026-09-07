@@ -1,4 +1,9 @@
-import type { CredentialValidators, ProviderExecutors, TransitFileWriter } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+  TransitFileWriter,
+} from "../../core/types.ts";
 import type {
   ApiKeyProviderContext,
   ProviderActionHandlers,
@@ -10,6 +15,7 @@ import { base64Bytes, compactObject, optionalRecord, optionalString, requiredStr
 import { assertPublicHttpUrl, compactJson, readBoundedResponseBytes } from "../../core/request.ts";
 import {
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   mapProviderActionSources,
   providerInputError,
   ProviderRequestError,
@@ -187,6 +193,13 @@ export const mistralAiActionHandlers: ProviderActionHandlers<"mistral_ai", Mistr
   );
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, mistralAiActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: mistralApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  skipDnsValidation: true,
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

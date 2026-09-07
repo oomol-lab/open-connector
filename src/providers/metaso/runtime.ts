@@ -6,7 +6,7 @@ import { compactObject, optionalBoolean, optionalRecord, optionalString } from "
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import { isAbortLikeError, providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
-const metasoApiBaseUrl = "https://metaso.cn/api/v1";
+export const metasoApiBaseUrl = "https://metaso.cn/api/v1";
 
 type MetasoActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type MetasoActionHandler = (input: Record<string, unknown>, context: MetasoActionContext) => Promise<unknown>;

@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const mindbodyApiBaseUrl = "https://api.mindbodyonline.com";
+export const mindbodyApiBaseUrl = "https://api.mindbodyonline.com";
 const mindbodyBusinessDirectoryPath = "/partnergateway/consumer/activity/v1/businesses";
 
 interface MindbodyBusinessPayload extends Record<string, unknown> {

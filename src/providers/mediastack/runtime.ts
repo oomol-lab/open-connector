@@ -19,7 +19,7 @@ import {
   requiredInputString,
 } from "../provider-runtime.ts";
 
-const mediastackApiBaseUrl = "https://api.mediastack.com/v1";
+export const mediastackApiBaseUrl = "https://api.mediastack.com/v1";
 
 type MediastackPhase = "validate" | "execute";
 type MediastackQueryValue = string | number | undefined;

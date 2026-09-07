@@ -1,7 +1,17 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
-import { createMetatextaiContext, metatextaiActionHandlers, validateMetatextaiCredential } from "./runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import {
+  createMetatextaiContext,
+  metatextaiActionHandlers,
+  metatextaiApiBaseUrl,
+  validateMetatextaiCredential,
+} from "./runtime.ts";
 
 const service = "metatextai";
 
@@ -11,6 +21,16 @@ export const executors: ProviderExecutors = defineProviderExecutors({
   async createContext(context: ExecutionContext, fetcher: typeof fetch) {
     const credential = await requireApiKeyCredential(context, service);
     return createMetatextaiContext(credential.apiKey, credential.values.applicationId, fetcher, context.signal);
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: metatextaiApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
   },
 });
 

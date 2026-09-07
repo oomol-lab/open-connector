@@ -6,7 +6,7 @@ import { compactObject, optionalBoolean, optionalInteger, optionalRecord, option
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
-const mineruApiBaseUrl = "https://mineru.net";
+export const mineruApiBaseUrl = "https://mineru.net";
 const mineruValidationTaskId = "oomol-connector-validation";
 
 type MineruRequestPhase = "validate" | "execute";

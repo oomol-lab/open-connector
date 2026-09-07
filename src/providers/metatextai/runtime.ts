@@ -10,7 +10,7 @@ import {
   runProviderRequest,
 } from "../provider-runtime.ts";
 
-const metatextaiApiBaseUrl = "https://guard-api.metatext.ai";
+export const metatextaiApiBaseUrl = "https://guard-api.metatext.ai";
 
 type MetatextaiPhase = "validate" | "execute";
 type MetatextaiActionHandler = (input: Record<string, unknown>, context: MetatextaiActionContext) => Promise<unknown>;

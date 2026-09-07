@@ -1,9 +1,10 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import {
   defineOAuthProviderExecutors,
+  defineProviderProxy,
   mapProviderActionHandlers,
   ProviderRequestError,
   providerUserAgent,
@@ -34,6 +35,16 @@ const handlers: ProviderActionHandlers<
   (_action, name) => (input, context) => executeMendeleyAction(name, input, context.accessToken, context.fetcher),
 );
 export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, handlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: mendeleyApiBaseUrl,
+  auth: { type: "oauth_bearer" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher }) {

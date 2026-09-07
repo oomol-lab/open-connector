@@ -1,4 +1,9 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
@@ -7,6 +12,7 @@ import { optionalRecord, optionalString, requiredString } from "../../core/cast.
 import {
   createProviderTimeout,
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerInputError,
   providerUserAgent,
@@ -55,6 +61,16 @@ const meituanActionHandlers: ProviderActionHandlers<"meituan", ProviderRuntimeHa
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, meituanActionHandlers, {
   skipDnsValidation: true,
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: meituanTravelEndpoint,
+  auth: { type: "api_key_header", name: "Authorization" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
 });
 
 export const credentialValidators: CredentialValidators = {
