@@ -4,7 +4,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
-const klipfolioApiBaseUrl = "https://api.klipfolio.com/api/1.0";
+export const klipfolioApiBaseUrl = "https://api.klipfolio.com/api/1.0";
 
 type KlipfolioPhase = "validate" | "execute";
 type KlipfolioAssetKey = "clients" | "dashboards" | "klips" | "datasources";

@@ -11,7 +11,7 @@ import {
 import { intercomGrantedPermissions } from "./scopes.ts";
 
 const intercomDefaultApiBaseUrl = "https://api.intercom.io";
-const intercomApiVersion = "2.13";
+export const intercomApiVersion = "2.13";
 const intercomJobsApiVersion = "2.15";
 
 const intercomRegionBaseUrlByCode: Record<string, string> = {
@@ -19,9 +19,8 @@ const intercomRegionBaseUrlByCode: Record<string, string> = {
   EU: "https://api.eu.intercom.io",
   AU: "https://api.au.intercom.io",
 };
-const allowedIntercomHosts = new Set(
-  Object.values(intercomRegionBaseUrlByCode).map((value) => new URL(value).hostname.toLowerCase()),
-);
+export const intercomAllowedApiBaseUrls: readonly string[] = Object.values(intercomRegionBaseUrlByCode);
+const allowedIntercomHosts = new Set(intercomAllowedApiBaseUrls.map((value) => new URL(value).hostname.toLowerCase()));
 
 export interface IntercomActionContext {
   accessToken: string;
@@ -650,7 +649,7 @@ function buildIntercomAccountLabel(input: {
   return input.workspaceName ? `${input.workspaceName} (${adminLabel})` : adminLabel;
 }
 
-function resolveIntercomApiBaseUrl(
+export function resolveIntercomApiBaseUrl(
   providerMetadata?: { workspaceRegion?: string; apiBaseUrl?: string } | Record<string, unknown>,
 ): string {
   const metadata = providerMetadata as Record<string, unknown> | undefined;

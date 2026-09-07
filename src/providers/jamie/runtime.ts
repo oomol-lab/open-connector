@@ -5,7 +5,7 @@ import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const jamieApiBaseUrl = "https://beta-api.meetjamie.ai";
+export const jamieApiBaseUrl = "https://beta-api.meetjamie.ai";
 
 type JamieKeyScope = "personal" | "workspace";
 

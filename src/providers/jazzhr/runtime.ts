@@ -11,7 +11,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const jazzhrApiBaseUrl = "https://api.resumatorapi.com/v1";
+export const jazzhrApiBaseUrl = "https://api.resumatorapi.com/v1";
 
 type JazzhrRequestPhase = "validate" | "execute";
 

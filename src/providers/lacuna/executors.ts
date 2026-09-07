@@ -1,9 +1,9 @@
-import type { ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ExecutionContext, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 import type { LacunaActionContext } from "./runtime.ts";
 
-import { defineProviderExecutors, providerFetch } from "../provider-runtime.ts";
-import { lacunaActionHandlers, skipRetryDelay, sleepBeforeRetry } from "./runtime.ts";
+import { defineProviderExecutors, defineProviderProxy, providerFetch } from "../provider-runtime.ts";
+import { lacunaActionHandlers, lacunaBaseUrl, skipRetryDelay, sleepBeforeRetry } from "./runtime.ts";
 
 export const executors: ProviderExecutors = defineProviderExecutors<LacunaActionContext>({
   service: "lacuna",
@@ -18,4 +18,14 @@ export const executors: ProviderExecutors = defineProviderExecutors<LacunaAction
     };
   },
   fallbackMessage: "Lacuna request failed.",
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service: "lacuna",
+  baseUrl: lacunaBaseUrl,
+  auth: { type: "none" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
 });
