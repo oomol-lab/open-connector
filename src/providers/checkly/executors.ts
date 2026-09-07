@@ -1,9 +1,15 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalBoolean, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerResponseError,
   providerUserAgent,
@@ -151,6 +157,26 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: apiBaseUrl,
+  auth: {
+    type: "credential_headers",
+    headers: [
+      { name: "authorization", source: { type: "api_key" }, prefix: "Bearer " },
+      { name: "x-checkly-account", source: { type: "credential_value", name: "accountId" }, optional: true },
+    ],
+  },
+  customizeRequest({ credential, headers }) {
+    if (!credential || credential.authType !== "api_key") {
+      throw new ProviderRequestError(401, "Configure Checkly credentials.");
+    }
+    headers.set("x-checkly-account", resolveAccountId(credential.values.accountId, credential.metadata.accountId));
+    if (!headers.has("accept")) headers.set("accept", "application/json");
+  },
+  skipDnsValidation: true,
+});
+
 async function requestChecklyJson(input: {
   context: ChecklyContext;
   path: string;
@@ -250,8 +276,8 @@ function requireArray(value: unknown, label: string): unknown[] {
   return value;
 }
 
-function resolveAccountId(value: unknown): string {
-  const accountId = optionalString(value);
+function resolveAccountId(value: unknown, fallback?: unknown): string {
+  const accountId = optionalString(value) ?? optionalString(fallback);
   if (!accountId) throw new ProviderRequestError(400, "checkly accountId is required");
   return accountId;
 }

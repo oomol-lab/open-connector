@@ -8,7 +8,7 @@ import {
   runProviderRequest,
 } from "../provider-runtime.ts";
 
-const embaseApiBaseUrl = "https://api.elsevier.com/content/embase";
+export const embaseApiBaseUrl = "https://api.elsevier.com/content/embase";
 
 type EmbasePhase = "validate" | "execute";
 interface EmbaseCredentials {

@@ -1,7 +1,13 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
-import { defineProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+  requireCustomCredential,
+} from "../provider-runtime.ts";
 const service = "unpaywall";
 const baseUrl = "https://api.unpaywall.org/v2";
 interface Context {
@@ -41,6 +47,19 @@ export const executors: ProviderExecutors = defineProviderExecutors({
     return { email, fetcher, signal: execution.signal };
   },
   skipDnsValidation: true,
+});
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl,
+  auth: { type: "none" },
+  skipDnsValidation: true,
+  async customizeRequest({ context, url, headers }) {
+    const credential = await requireCustomCredential(context, service);
+    url.searchParams.set("email", required(credential.values.email, "email"));
+    if (!headers.has("accept")) {
+      headers.set("accept", "application/json");
+    }
+  },
 });
 export const credentialValidators: CredentialValidators = {
   async customCredential(input, { fetcher, signal }) {

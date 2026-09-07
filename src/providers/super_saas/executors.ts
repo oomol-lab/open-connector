@@ -1,8 +1,19 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeContextFactory } from "../provider-runtime.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
-import { superSaasActionHandlers, validateSuperSaasCredential } from "./runtime.ts";
+import { requiredString } from "../../core/cast.ts";
+import {
+  defineProviderExecutors,
+  defineProviderProxy,
+  providerInputError,
+  requireApiKeyCredential,
+} from "../provider-runtime.ts";
+import { superSaasActionHandlers, superSaasApiBaseUrl, validateSuperSaasCredential } from "./runtime.ts";
 
 const service = "super_saas";
 
@@ -28,6 +39,20 @@ export const executors: ProviderExecutors = defineProviderExecutors<SuperSaasCon
   service,
   handlers: superSaasActionHandlers,
   createContext: createSuperSaasContext,
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: superSaasApiBaseUrl,
+  auth: { type: "api_key_query", name: "api_key" },
+  skipDnsValidation: true,
+  async customizeRequest({ context, url, headers }) {
+    const credential = await requireApiKeyCredential(context, service);
+    url.searchParams.set("account", requiredString(credential.values.accountName, "accountName", providerInputError));
+    if (!headers.has("accept")) {
+      headers.set("accept", "application/json");
+    }
+  },
 });
 
 export const credentialValidators: CredentialValidators = {

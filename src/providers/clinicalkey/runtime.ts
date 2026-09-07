@@ -8,8 +8,8 @@ import {
   runProviderRequest,
 } from "../provider-runtime.ts";
 
-const clinicalKeyApiBaseUrl = "https://api.elsevier.com/sushi/r51";
-const clinicalKeyPlatformCode = "ck";
+export const clinicalKeyApiBaseUrl = "https://api.elsevier.com/sushi/r51";
+export const clinicalKeyPlatformCode = "ck";
 
 type ClinicalKeyRequestPhase = "validate" | "execute";
 type ClinicalKeyCredentials = {
