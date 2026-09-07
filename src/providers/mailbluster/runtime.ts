@@ -10,7 +10,7 @@ import {
   requiredInputString,
 } from "../provider-runtime.ts";
 
-const mailblusterApiBaseUrl = "https://api.mailbluster.com";
+export const mailblusterApiBaseUrl = "https://api.mailbluster.com";
 const mailblusterDefaultRequestTimeoutMs = 30_000;
 
 type MailblusterActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;

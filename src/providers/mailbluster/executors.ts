@@ -1,11 +1,22 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors } from "../provider-runtime.ts";
-import { mailblusterActionHandlers, validateMailblusterCredential } from "./runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { mailblusterActionHandlers, mailblusterApiBaseUrl, validateMailblusterCredential } from "./runtime.ts";
 
 const service = "mailbluster";
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, mailblusterActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: mailblusterApiBaseUrl,
+  auth: { type: "api_key_header", name: "Authorization" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+    headers.set("content-type", "application/json");
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }) {

@@ -24,7 +24,7 @@ import { longbridgeOAuthScopes } from "./actions.ts";
 import { indexSymbolToCounterId, symbolToCounterId } from "./counter-id.ts";
 import { longbridgeReadonlyActionSpecs, longbridgeScreenerDefaultReturns } from "./readonly-action-specs.ts";
 
-const longbridgeApiBaseUrl = "https://openapi.longbridge.com";
+export const longbridgeApiBaseUrl = "https://openapi.longbridge.com";
 
 export type LongbridgeHttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 type LongbridgeRequestPhase = "connect" | "execute";

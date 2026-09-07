@@ -20,7 +20,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const mailtrapApiBaseUrl = "https://mailtrap.io";
+export const mailtrapApiBaseUrl: string = "https://mailtrap.io";
 const mailtrapRequestTimeoutMs = 30_000;
 
 type MailtrapPhase = "validate" | "execute";

@@ -11,7 +11,7 @@ import {
   requiredResponseRecord,
 } from "../provider-runtime.ts";
 
-const lemonSqueezyApiBaseUrl = "https://api.lemonsqueezy.com/v1";
+export const lemonSqueezyApiBaseUrl = "https://api.lemonsqueezy.com/v1";
 const lemonSqueezyValidationPath = "/users/me";
 
 type LemonSqueezyRequestPhase = "validate" | "execute";

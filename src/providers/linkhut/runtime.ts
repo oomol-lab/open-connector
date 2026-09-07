@@ -6,7 +6,7 @@ import { compactObject, optionalRecord, optionalString } from "../../core/cast.t
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 import { linkhutOAuthScopes } from "./actions.ts";
 
-const linkhutApiBaseUrl = "https://api.ln.ht/v1";
+export const linkhutApiBaseUrl = "https://api.ln.ht/v1";
 
 type LinkhutActionContext = OAuthProviderContext;
 type LinkhutActionHandler = (input: Record<string, unknown>, context: LinkhutActionContext) => Promise<unknown>;

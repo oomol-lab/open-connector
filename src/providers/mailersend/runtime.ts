@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
-const mailersendApiBaseUrl = "https://api.mailersend.com";
+export const mailersendApiBaseUrl: string = "https://api.mailersend.com";
 const validationPath = "/v1/domains";
 
 type MailersendMode = "validate" | "execute";

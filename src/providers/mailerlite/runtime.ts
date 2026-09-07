@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
-const mailerliteApiBaseUrl = "https://connect.mailerlite.com/api";
+export const mailerliteApiBaseUrl: string = "https://connect.mailerlite.com/api";
 const validationPath = "/groups";
 
 type MailerliteMode = "validate" | "execute";

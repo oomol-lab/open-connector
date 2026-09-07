@@ -10,7 +10,7 @@ import {
   runProviderRequest,
 } from "../provider-runtime.ts";
 
-const lexofficeApiBaseUrl = "https://api.lexware.io";
+export const lexofficeApiBaseUrl = "https://api.lexware.io";
 const lexofficeValidationPath = "/v1/profile";
 
 type LexofficeRequestPhase = "validate" | "execute";
