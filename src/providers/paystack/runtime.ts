@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const paystackApiBaseUrl = "https://api.paystack.co";
+export const paystackApiBaseUrl = "https://api.paystack.co";
 const paystackValidationPath = "/customer";
 
 interface PaystackResponseBody {

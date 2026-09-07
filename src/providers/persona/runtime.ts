@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { looseArray, nullableString, optionalRecord, optionalString, stringArray } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const personaApiBaseUrl = "https://api.withpersona.com/api/v1";
+export const personaApiBaseUrl = "https://api.withpersona.com/api/v1";
 
 const personaFilterParams: Record<string, string> = {
   inquiryId: "inquiry-id",

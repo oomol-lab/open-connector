@@ -14,7 +14,7 @@ import {
 import { defineApiKeyProviderExecutors, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 const service = "pexels";
-const pexelsApiBaseUrl = "https://api.pexels.com";
+export const pexelsApiBaseUrl = "https://api.pexels.com";
 
 type PexelsQueryValue = string | number | undefined;
 type PexelsPhase = "validate" | "execute";

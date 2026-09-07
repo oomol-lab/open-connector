@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const pingdomApiBaseUrl = "https://api.pingdom.com/api/3.1";
+export const pingdomApiBaseUrl: string = "https://api.pingdom.com/api/3.1";
 
 type PingdomActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 

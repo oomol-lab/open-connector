@@ -13,7 +13,7 @@ import {
 import { compactJson } from "../../core/request.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const placekeyApiBaseUrl = "https://api.placekey.io";
+export const placekeyApiBaseUrl: string = "https://api.placekey.io";
 const placekeyLookupPath = "/v1/placekey";
 const placekeyBulkLookupPath = "/v1/placekeys";
 const validationQuery = { latitude: 37.7371, longitude: -122.44283 };

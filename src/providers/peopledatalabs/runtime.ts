@@ -10,7 +10,7 @@ import {
   requiredResponseRecord,
 } from "../provider-runtime.ts";
 
-const peopledatalabsApiBaseUrl = "https://api.peopledatalabs.com";
+export const peopledatalabsApiBaseUrl = "https://api.peopledatalabs.com";
 const validationSearchPath = "/v5/person/search";
 const validationSql = "SELECT * FROM person WHERE job_company_name='__oomol_connector_validation__'";
 

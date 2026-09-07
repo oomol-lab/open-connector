@@ -12,7 +12,7 @@ import {
 } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const pdflessApiBaseUrl = "https://api.pdfless.com";
+export const pdflessApiBaseUrl = "https://api.pdfless.com";
 const pdflessWorkspacePath = "/v1/workspaces";
 
 type PdflessRequestPhase = "validate" | "execute";

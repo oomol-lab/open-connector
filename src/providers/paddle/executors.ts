@@ -1,10 +1,16 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
+const service = "paddle";
 const paddleApiBaseUrl = "https://api.paddle.com";
 const paddleValidationPath = "/products";
 
@@ -50,7 +56,17 @@ export const paddleActionHandlers: ProviderActionHandlers<"paddle", PaddleAction
   },
 };
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors("paddle", paddleActionHandlers);
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, paddleActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: paddleApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher }) {

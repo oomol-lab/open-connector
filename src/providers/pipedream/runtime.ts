@@ -17,7 +17,7 @@ import {
   providerUserAgent,
 } from "../provider-runtime.ts";
 
-const pipedreamApiBaseUrl = "https://api.pipedream.com/v1";
+export const pipedreamApiBaseUrl: string = "https://api.pipedream.com/v1";
 
 type PipedreamActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 type PipedreamQueryValue = string | number | undefined;

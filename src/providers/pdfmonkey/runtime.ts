@@ -14,7 +14,7 @@ import {
 } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const pdfmonkeyApiBaseUrl = "https://api.pdfmonkey.io";
+export const pdfmonkeyApiBaseUrl = "https://api.pdfmonkey.io";
 const currentUserPath = "/api/v1/current_user";
 const documentsPath = "/api/v1/documents";
 const documentCardsPath = "/api/v1/document_cards";

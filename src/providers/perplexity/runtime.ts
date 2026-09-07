@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const perplexityApiBaseUrl = "https://api.perplexity.ai";
+export const perplexityApiBaseUrl = "https://api.perplexity.ai";
 
 type PerplexityMode = "validate" | "execute";
 type PerplexityActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;

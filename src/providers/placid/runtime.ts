@@ -5,7 +5,7 @@ import { optionalInteger, optionalRecord, optionalString, requiredString } from 
 import { compactObject } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const placidApiBaseUrl = "https://api.placid.app";
+export const placidApiBaseUrl: string = "https://api.placid.app";
 const templatesPath = "/api/rest/templates";
 const imagesPath = "/api/rest/images";
 

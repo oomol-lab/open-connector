@@ -12,7 +12,7 @@ import {
   uploadProviderUrlToTransitFile,
 } from "../provider-runtime.ts";
 
-const pdfApiIoApiBaseUrl = "https://pdf-api.io";
+export const pdfApiIoApiBaseUrl = "https://pdf-api.io";
 const pdfApiIoTemplatesPath = "/api/templates";
 
 type PdfApiIoRequestPhase = "validate" | "execute";

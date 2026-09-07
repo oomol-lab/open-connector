@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const parsehubApiBaseUrl = "https://www.parsehub.com/api/v2";
+export const parsehubApiBaseUrl = "https://www.parsehub.com/api/v2";
 const parsehubProjectsPath = "/projects";
 const parsehubValidationLimit = 1;
 

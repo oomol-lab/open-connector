@@ -1,8 +1,20 @@
-import type { CredentialValidators } from "../../core/types.ts";
+import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { executors, validatePipedreamCredential } from "./runtime.ts";
+import { defineProviderProxy } from "../provider-runtime.ts";
+import { executors, pipedreamApiBaseUrl, validatePipedreamCredential } from "./runtime.ts";
 
 export { executors };
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service: "pipedream",
+  baseUrl: pipedreamApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+    headers.set("content-type", "application/json");
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher }) {
