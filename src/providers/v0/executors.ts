@@ -1,9 +1,9 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import type { V0ActionInput } from "./runtime-client.ts";
 
-import { defineApiKeyProviderExecutors, mapProviderActionSources } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy, mapProviderActionSources } from "../provider-runtime.ts";
 import {
   v0FindRateLimit,
   v0GetBilling,
@@ -30,6 +30,7 @@ import {
   v0UpdateChat,
   v0UpdateVersion,
 } from "./runtime-chats.ts";
+import { v0ApiBaseUrl } from "./runtime-client.ts";
 import {
   v0CreateDeployment,
   v0FindDeploymentErrors,
@@ -61,6 +62,8 @@ import {
 
 type V0ActionHandler = (input: V0ActionInput, fetcher: typeof fetch) => Promise<unknown>;
 type V0ExecutorHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
+
+const service = "v0";
 
 export const v0ActionHandlers: ProviderActionHandlers<"v0", V0ActionHandler> = {
   get_user(input, fetcher) {
@@ -210,7 +213,14 @@ const v0ExecutorHandlers: ProviderActionHandlers<"v0", V0ExecutorHandler> = mapP
   (actionName, handler) => (input, context) => handler({ apiKey: context.apiKey, actionName, input }, context.fetcher),
 );
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors("v0", v0ExecutorHandlers);
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, v0ExecutorHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: v0ApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  skipDnsValidation: true,
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher }) {

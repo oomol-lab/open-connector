@@ -11,7 +11,7 @@ import {
   providerUserAgent,
 } from "../provider-runtime.ts";
 
-const webvizioApiBaseUrl = "https://app.webvizio.com/api/v1";
+export const webvizioApiBaseUrl = "https://app.webvizio.com/api/v1";
 const webvizioWebhookPath = "/webhook";
 const webvizioDefaultRequestTimeoutMs = 30_000;
 

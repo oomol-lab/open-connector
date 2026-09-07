@@ -1,7 +1,7 @@
-import type { ProviderExecutors } from "../../core/types.ts";
+import type { ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineProviderExecutors } from "../provider-runtime.ts";
-import { executeWhoGhoAction } from "./runtime.ts";
+import { defineProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { executeWhoGhoAction, whoGhoApiBaseUrl } from "./runtime.ts";
 const service = "who_gho";
 const handlers: Record<
   string,
@@ -14,4 +14,14 @@ export const executors: ProviderExecutors = defineProviderExecutors({
   handlers,
   createContext: (_context, fetcher) => ({ fetcher }),
   skipDnsValidation: true,
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: whoGhoApiBaseUrl,
+  auth: { type: "none" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
 });

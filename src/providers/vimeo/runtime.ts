@@ -20,7 +20,7 @@ import {
   requiredResponseRecord,
 } from "../provider-runtime.ts";
 
-const vimeoApiBaseUrl = "https://api.vimeo.com";
+export const vimeoApiBaseUrl = "https://api.vimeo.com";
 
 type VimeoActionContext = OAuthProviderContext;
 type VimeoActionHandler = ProviderRuntimeHandler<VimeoActionContext>;

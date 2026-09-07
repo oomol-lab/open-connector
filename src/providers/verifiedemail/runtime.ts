@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.t
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
 
-const verifiedemailApiBaseUrl = "https://api.verified.email";
+export const verifiedemailApiBaseUrl = "https://api.verified.email";
 
 type VerifiedemailRequestPhase = "validate" | "execute";
 type VerifiedemailQueryValue = string | number | undefined;

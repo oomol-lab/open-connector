@@ -18,7 +18,7 @@ import {
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import { mapProviderActionSources, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const vapiApiBaseUrl = "https://api.vapi.ai";
+export const vapiApiBaseUrl = "https://api.vapi.ai";
 
 type VapiActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 

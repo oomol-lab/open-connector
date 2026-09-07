@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 
-const what3wordsApiBaseUrl = "https://api.what3words.com/v3";
+export const what3wordsApiBaseUrl: string = "https://api.what3words.com/v3";
 const validationWords = "filled.count.soap";
 
 type What3wordsPhase = "validate" | "execute";

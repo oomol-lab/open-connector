@@ -8,7 +8,7 @@ import {
 } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const v0ApiBaseUrl = "https://api.v0.dev";
+export const v0ApiBaseUrl = "https://api.v0.dev";
 
 interface V0RequestOptions {
   apiKey: string;

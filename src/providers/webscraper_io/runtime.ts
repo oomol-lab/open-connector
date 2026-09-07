@@ -18,7 +18,7 @@ import {
   providerUserAgent,
 } from "../provider-runtime.ts";
 
-const webscraperIoApiBaseUrl = "https://api.webscraper.io/api/v1";
+export const webscraperIoApiBaseUrl = "https://api.webscraper.io/api/v1";
 
 type WebscraperIoPhase = "validate" | "execute";
 type WebscraperIoActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;

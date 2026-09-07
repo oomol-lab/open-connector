@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.t
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, requiredResponseRecord } from "../provider-runtime.ts";
 
-const vectorshiftApiBaseUrl = "https://api.vectorshift.ai/v1";
+export const vectorshiftApiBaseUrl = "https://api.vectorshift.ai/v1";
 const listPipelinesPath = "/pipelines";
 const fetchPipelinePath = "/pipeline";
 

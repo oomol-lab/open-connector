@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } fro
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const veriphoneApiBaseUrl = "https://api.veriphone.io";
+export const veriphoneApiBaseUrl = "https://api.veriphone.io";
 
 type VeriphoneRequestPhase = "validate" | "execute";
 type VeriphoneActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;

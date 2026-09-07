@@ -12,7 +12,7 @@ import {
 import { jsonObject, queryFlag, queryParams } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent, requiredResponseRecord } from "../provider-runtime.ts";
 
-const vercelApiBaseUrl = "https://api.vercel.com";
+export const vercelApiBaseUrl = "https://api.vercel.com";
 
 interface VercelUser {
   id: string;

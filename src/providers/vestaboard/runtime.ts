@@ -6,7 +6,7 @@ import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const vestaboardCloudApiBaseUrl = "https://cloud.vestaboard.com";
+export const vestaboardCloudApiBaseUrl = "https://cloud.vestaboard.com";
 const vestaboardTransitionPath = "/transition";
 
 type VestaboardRequestPhase = "validate" | "execute";
