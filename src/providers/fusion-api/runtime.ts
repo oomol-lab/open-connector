@@ -12,7 +12,7 @@ import {
 } from "../provider-runtime.ts";
 import { fusionApiOperations } from "./operations.ts";
 
-const fusionApiDefaultBaseUrl = "https://fusion-api.oomol.com";
+export const fusionApiDefaultBaseUrl = "https://fusion-api.oomol.com";
 const fusionApiDefaultRequestTimeoutMs = 30_000;
 const fusionApiValidationPath = "/openapi/qwen-image?hideTaskStateAPI=true";
 
