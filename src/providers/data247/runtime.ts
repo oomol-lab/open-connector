@@ -11,7 +11,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const data247ApiBaseUrl = "https://api.data247.com/v3.0";
+export const data247ApiBaseUrl = "https://api.data247.com/v3.0";
 
 type Data247ApiCode = "B" | "CT" | "VP" | "DC" | "AG";
 type Data247Phase = "validate" | "execute";

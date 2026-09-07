@@ -6,7 +6,7 @@ import { compactObject, optionalBoolean, optionalNumber, optionalString, recordO
 import { encodePathSegment } from "../../core/request.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const databarAiApiBaseUrl = "https://api.databar.ai";
+export const databarAiApiBaseUrl = "https://api.databar.ai";
 
 type DatabarAiHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 

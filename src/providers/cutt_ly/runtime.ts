@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const cuttlyApiBaseUrl = "https://cutt.ly";
+export const cuttlyApiBaseUrl = "https://cutt.ly";
 const cuttlyApiPath = "/api/api.php";
 const cuttlyValidationProbeUrl = "not-a-valid-url";
 

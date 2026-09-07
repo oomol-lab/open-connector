@@ -11,7 +11,7 @@ import {
 } from "../../core/cast.ts";
 import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const datascopeApiBaseUrl = "https://www.mydatascope.com/api/external/";
+export const datascopeApiBaseUrl = "https://www.mydatascope.com/api/external/";
 
 type DatascopeRequestPhase = "validate" | "execute";
 type DatascopeQueryValue = string | number | boolean | undefined;

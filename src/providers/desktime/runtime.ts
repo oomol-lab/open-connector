@@ -11,7 +11,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 
-const desktimeApiBaseUrl = "https://desktime.com/api/v2/json";
+export const desktimeApiBaseUrl = "https://desktime.com/api/v2/json";
 
 type DeskTimePhase = "validate" | "execute";
 type DeskTimeHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;

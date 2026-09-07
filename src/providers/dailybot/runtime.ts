@@ -14,7 +14,7 @@ import {
 import { encodePathSegment } from "../../core/request.ts";
 import { providerInputError, ProviderRequestError } from "../provider-runtime.ts";
 
-const dailybotApiBaseUrl = "https://api.dailybot.com";
+export const dailybotApiBaseUrl = "https://api.dailybot.com";
 
 type DailybotPhase = "validate" | "execute";
 type DailybotHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;

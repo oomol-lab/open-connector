@@ -1,4 +1,9 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { DocsumoActionName } from "./actions.ts";
 
 import {
@@ -13,6 +18,7 @@ import {
 import { assertPublicHttpUrl, encodePathSegment } from "../../core/request.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   providerInputError,
   providerResponseError,
   providerUserAgent,
@@ -59,6 +65,16 @@ export const executors: ProviderExecutors = defineProviderExecutors<DocsumoConte
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<DocsumoContext> {
     const credential = await requireApiKeyCredential(context, service);
     return { apiKey: credential.apiKey, fetcher, signal: context.signal };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: apiBaseUrl,
+  auth: { type: "api_key_header", name: "apikey" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
   },
 });
 

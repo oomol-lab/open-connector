@@ -1,4 +1,9 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { DocsautomatorActionName } from "./actions.ts";
 
 import { createHash } from "node:crypto";
@@ -11,6 +16,7 @@ import {
 } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   providerResponseError,
   providerUserAgent,
   ProviderRequestError,
@@ -60,6 +66,16 @@ export const executors: ProviderExecutors = defineProviderExecutors<Docsautomato
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<DocsautomatorContext> {
     const credential = await requireApiKeyCredential(context, service);
     return { apiKey: credential.apiKey, fetcher, signal: context.signal };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: apiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
   },
 });
 

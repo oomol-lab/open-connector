@@ -1,4 +1,9 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { Document360ActionName } from "./actions.ts";
 
 import {
@@ -15,6 +20,7 @@ import {
 import { encodePathSegment } from "../../core/request.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
@@ -116,6 +122,17 @@ export const executors: ProviderExecutors = defineProviderExecutors<Document360C
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<Document360Context> {
     const credential = await requireApiKeyCredential(context, service);
     return { apiKey: credential.apiKey, fetcher, signal: context.signal };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: apiBaseUrl,
+  auth: { type: "api_key_header", name: "api_token" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+    headers.set("content-type", "application/json");
   },
 });
 

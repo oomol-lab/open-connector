@@ -6,7 +6,7 @@ import { compactObject, optionalInteger, optionalRecord, optionalString, require
 import { encodePathSegment, queryParams } from "../../core/request.ts";
 import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const daffyApiBaseUrl = "https://public.daffy.org/v1";
+export const daffyApiBaseUrl = "https://public.daffy.org/v1";
 
 type DaffyPhase = "validate" | "execute";
 type DaffyHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
