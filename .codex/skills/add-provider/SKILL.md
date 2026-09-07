@@ -42,6 +42,7 @@ Before writing code, pick the closest current provider and follow its current im
 - `src/providers/avoma` or `src/providers/attention`: API key provider with `executors.ts` as credential wiring and provider logic in `runtime.ts`.
 - `src/providers/github`: provider supporting both OAuth and API key through one bearer-token runtime context.
 - `src/providers/gmail`: OAuth-only provider with credential validation and resource-specific runtime helpers.
+- `src/providers/sunsama_mcp` or `src/providers/clickup_mcp`: remote MCP providers using a manually registered public OAuth client and PKCE.
 - `src/providers/benchmark_email`, `src/providers/clickhouse`, or `src/providers/dataforseo`: custom credentials or user-configured API base URLs.
 - `src/providers/baselinker`, `src/providers/iqair_airvisual`, or `src/providers/autotask`: provider proxy support and endpoint guards.
 - `src/providers/http-json-runtime.ts`: shared helper for simple JSON HTTP providers when the provider does not need a richer local protocol.
@@ -102,6 +103,10 @@ Map provider auth to this repository's public credential types:
 - `oauth2`: configure public authorization URL, token URL, scopes, redirect path behavior if required by current types, token auth method, and static authorization params.
 
 Open-source users bring their own credentials and OAuth applications. Provider code should validate and use those credentials through the shared runtime interfaces instead of assuming an external credential service.
+
+Dynamic client registration endpoints do not authorize the runtime to register OAuth clients automatically. Treat registration as developer setup: describe the registration request in `clientSetup`, let the developer register the runtime's displayed callback URL, and accept the returned `client_id` through the existing OAuth client configuration. For a public client, use `tokenEndpointAuthMethod: "none"`, enable PKCE when required, and tell the developer to leave Client Secret empty. See `src/providers/clickup_mcp/definition.ts` and `src/providers/sunsama_mcp/definition.ts`.
+
+Verify RFC 8707 resource indicators independently at the authorization and token endpoints. Discovery metadata saying resource indicators are supported does not prove the token request requires one. Use `authorizationParams` for an authorization URL parameter; do not extend the shared token flow unless a real code exchange shows the token endpoint needs additional fields.
 
 Add `credentialValidators` in `executors.ts` when the provider can cheaply verify credentials and return a useful `CredentialProfile`. Use a stable account id and readable display name when the provider exposes them.
 
