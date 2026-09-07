@@ -142,7 +142,7 @@ export const clickupMcpActions: ActionDefinition[] = [
     writeScope,
     {
       entity_id: s.nonEmptyString("The target task ID."),
-      comment_text: s.string("The comment text, with Markdown supported unless it contains a mention.", {
+      comment_text: s.string("The plain-text comment body.", {
         minLength: 1,
         maxLength: 40_000,
       }),
