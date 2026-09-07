@@ -732,6 +732,22 @@ describe("provider egress SSRF guard", () => {
     expect(calls[0]?.init?.body).toBe('{"value":2}');
   });
 
+  it("passes a deliberate native redirect policy to the guarded fetch", async () => {
+    const calls = stubFetchSequence([new Response(JSON.stringify({ ok: true }), { status: 200 })]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: { type: "none" },
+      redirect: "error",
+      timeoutMs: 60_000,
+    });
+
+    const result = await proxy({ method: "GET", endpoint: "/items" }, executionContext);
+
+    expect(result.ok).toBe(true);
+    expect(calls[0]?.init?.redirect).toBe("error");
+  });
+
   it.each(["text", [], 1])("rejects a non-object JSON auth body: %j", async (body) => {
     const calls = stubFetchSequence([]);
     const proxy = defineProviderProxy({

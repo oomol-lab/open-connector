@@ -374,6 +374,10 @@ export interface ProviderProxyDefinition {
   allowPrivateNetwork?: () => boolean;
   /** Skip the redundant DNS resolved-address check; only for hardcoded-base-URL proxies. */
   skipDnsValidation?: boolean;
+  /** Deliberate provider-specific timeout override; defaults to the shared 30-second budget. */
+  timeoutMs?: number;
+  /** Native redirect policy override; guarded manual following remains the default. */
+  redirect?: RequestRedirect;
 }
 
 const blockedProxyRequestHeaders = new Set([
@@ -626,11 +630,12 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
         throw new ProviderRequestError(400, "endpoint must stay on the provider origin");
       }
 
-      const timeout = createProviderTimeout(context.signal);
+      const timeout = createProviderTimeout(context.signal, input.timeoutMs);
       try {
         const init: RequestInit = {
           method: proxyInput.method,
           headers,
+          redirect: input.redirect,
           signal: timeout.signal,
         };
         if (requestBody !== undefined) {
