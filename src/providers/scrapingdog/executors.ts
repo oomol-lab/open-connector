@@ -1,4 +1,9 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
@@ -12,6 +17,7 @@ import {
 } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
@@ -150,6 +156,13 @@ export const scrapingdogActionHandlers: ProviderActionHandlers<"scrapingdog", Sc
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, scrapingdogActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: scrapingdogBaseUrl,
+  auth: { type: "api_key_query", name: "api_key" },
+  skipDnsValidation: true,
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }): Promise<CredentialValidationResult> {

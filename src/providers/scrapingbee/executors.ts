@@ -1,9 +1,14 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { booleanString, compactObject, optionalRecord, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "scrapingbee";
 const scrapingbeeApiOrigin = "https://app.scrapingbee.com";
@@ -70,6 +75,13 @@ export const scrapingbeeActionHandlers: ProviderActionHandlers<"scrapingbee", Sc
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, scrapingbeeActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: scrapingbeeApiBaseUrl,
+  auth: { type: "api_key_query", name: "api_key" },
+  skipDnsValidation: true,
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }): Promise<CredentialValidationResult> {

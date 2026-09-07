@@ -9,7 +9,7 @@ import {
   requiredResponseRecord,
 } from "../provider-runtime.ts";
 
-const screenshotbaseApiBaseUrl = "https://api.screenshotbase.com";
+export const screenshotbaseApiBaseUrl = "https://api.screenshotbase.com";
 
 const screenshotbaseStatusPath = "/v1/status";
 const screenshotbaseTakePath = "/v1/take";

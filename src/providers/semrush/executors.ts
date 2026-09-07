@@ -1,9 +1,15 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalIntegerLike, optionalRawString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   mapProviderActionSources,
   providerUserAgent,
   ProviderRequestError,
@@ -89,6 +95,16 @@ export const executors: ProviderExecutors = defineProviderExecutors<SemrushActio
       fetcher,
       signal: context.signal,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service: "semrush",
+  baseUrl: semrushApiBaseUrl,
+  auth: { type: "api_key_query", name: "key" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "text/csv, text/plain, */*");
   },
 });
 

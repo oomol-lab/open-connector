@@ -6,7 +6,7 @@ import { compactObject, optionalRecord, optionalString } from "../../core/cast.t
 import { readBoundedResponseBytes } from "../../core/request.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const screenshotoneApiBaseUrl = "https://api.screenshotone.com";
+export const screenshotoneApiBaseUrl = "https://api.screenshotone.com";
 const screenshotoneUsagePath = "/usage";
 const screenshotoneDevicesPath = "/devices";
 const screenshotoneBulkPath = "/bulk";

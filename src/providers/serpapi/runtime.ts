@@ -11,7 +11,7 @@ import {
 } from "../provider-runtime.ts";
 
 const service = "serpapi";
-const serpapiBaseUrl = "https://serpapi.com";
+export const serpapiBaseUrl: string = "https://serpapi.com";
 
 type SerpapiPhase = "validate" | "execute";
 type SerpapiQueryValue = string | number | boolean | undefined;

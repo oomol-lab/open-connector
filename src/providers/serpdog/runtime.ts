@@ -6,7 +6,7 @@ import { compactObject, optionalNumber, optionalRecord, optionalString, required
 import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "serpdog";
-const serpdogBaseUrl = "https://api.serpdog.io";
+export const serpdogBaseUrl: string = "https://api.serpdog.io";
 
 type SerpdogPhase = "validate" | "execute";
 type SerpdogQueryValue = string | number | boolean | undefined;
