@@ -1,9 +1,15 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalNumber, optionalRecord, optionalString, objectArray } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   providerResponseError,
   providerUserAgent,
   ProviderRequestError,
@@ -164,6 +170,13 @@ export const executors: ProviderExecutors = defineProviderExecutors<ApiNinjasAct
       signal: context.signal,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: apiNinjasApiBaseUrl,
+  auth: { type: "api_key_header", name: "X-Api-Key" },
+  skipDnsValidation: true,
 });
 
 export const credentialValidators: CredentialValidators = {

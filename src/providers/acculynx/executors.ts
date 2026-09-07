@@ -1,9 +1,15 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
@@ -13,6 +19,7 @@ import {
 
 const service = "acculynx";
 const acculynxApiBaseUrl = "https://api.acculynx.com";
+const acculynxApiRootUrl = `${acculynxApiBaseUrl}/api/v2`;
 const companySettingsPath = "/company-settings";
 const contactTypesPath = "/contacts/contact-types";
 const leadSourcesPath = "/company-settings/leads/lead-sources";
@@ -219,6 +226,16 @@ export const executors: ProviderExecutors = defineProviderExecutors<AcculynxActi
       fetcher,
       signal: context.signal,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: acculynxApiRootUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
   },
 });
 

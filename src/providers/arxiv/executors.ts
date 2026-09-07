@@ -1,8 +1,13 @@
-import type { ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type { ExecutionContext, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalNumber } from "../../core/cast.ts";
-import { defineProviderExecutors, providerFetch, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineProviderExecutors,
+  defineProviderProxy,
+  providerFetch,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 const service = "arxiv";
 const arxivApiBaseUrl = "https://export.arxiv.org/api";
@@ -88,6 +93,16 @@ export const executors: ProviderExecutors = defineProviderExecutors<ArxivActionC
   handlers: arxivActionHandlers,
   createContext(_context: ExecutionContext, fetcher: typeof fetch): ArxivActionContext {
     return { fetcher };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: arxivApiBaseUrl,
+  auth: { type: "none" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/atom+xml, application/xml, text/xml");
   },
 });
 

@@ -1,10 +1,16 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { isIP } from "node:net";
 import { nullableString, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
@@ -53,6 +59,13 @@ export const executors: ProviderExecutors = defineProviderExecutors<AbuseipdbAct
       signal: context.signal,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: abuseipdbApiBaseUrl,
+  auth: { type: "api_key_header", name: "Key" },
+  skipDnsValidation: true,
 });
 
 export const credentialValidators: CredentialValidators = {

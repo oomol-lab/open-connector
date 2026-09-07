@@ -1,4 +1,9 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
@@ -12,6 +17,7 @@ import {
 } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
@@ -99,6 +105,13 @@ export const executors: ProviderExecutors = defineProviderExecutors<ApiSportsAct
       signal: context.signal,
     };
   },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: apiSportsApiBaseUrl,
+  auth: { type: "api_key_header", name: "x-apisports-key" },
+  skipDnsValidation: true,
 });
 
 export const credentialValidators: CredentialValidators = {

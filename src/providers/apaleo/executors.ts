@@ -1,8 +1,8 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import { defineOAuthProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
-import { apaleoActionHandlers, apaleoJsonRequest } from "./runtime.ts";
+import { defineOAuthProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
+import { apaleoActionHandlers, apaleoApiBaseUrl, apaleoJsonRequest } from "./runtime.ts";
 
 interface ApaleoCurrentAccountPayload {
   code?: string;
@@ -17,6 +17,16 @@ interface ApaleoCurrentAccountPayload {
 const service = "apaleo";
 
 export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, apaleoActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: apaleoApiBaseUrl,
+  auth: { type: "oauth_bearer" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("accept", "application/json");
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher, signal }) {
