@@ -1,11 +1,16 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, requiredRecord } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
-import { defineOAuthProviderExecutors, ProviderRequestError, readTransitFileInput } from "../provider-runtime.ts";
+import {
+  defineOAuthProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  readTransitFileInput,
+} from "../provider-runtime.ts";
 
 const graphBaseUrl = "https://graph.microsoft.com/v1.0";
 const graphOrigin = new URL(graphBaseUrl).origin;
@@ -108,6 +113,13 @@ export const oneDriveActionHandlers: ProviderActionHandlers<"one_drive", OneDriv
 };
 
 export const executors: ProviderExecutors = defineOAuthProviderExecutors("one_drive", oneDriveActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service: "one_drive",
+  baseUrl: graphBaseUrl,
+  auth: { type: "oauth_bearer" },
+  skipDnsValidation: true,
+});
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher }) {
