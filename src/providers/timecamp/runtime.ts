@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-
 import { booleanString, compactObject, optionalRecord, optionalRawString, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
-const timecampApiBaseUrl = "https://app.timecamp.com/third_party/api";
+export const timecampApiBaseUrl: string = "https://app.timecamp.com/third_party/api";
 
 type TimecampPhase = "validate" | "execute";
 type TimecampQueryValue = string | number | boolean | readonly (string | number)[] | undefined;

@@ -188,7 +188,7 @@ async function executeUpstashCommand(
   }
 }
 
-function normalizeUpstashRestUrl(value: string | undefined): URL {
+export function normalizeUpstashRestUrl(value: string | undefined): URL {
   const restUrl = assertPublicHttpUrl(requiredString(value, "restUrl", providerInputError), {
     fieldName: "restUrl",
     createError: providerInputError,

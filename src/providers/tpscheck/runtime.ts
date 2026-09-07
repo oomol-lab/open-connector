@@ -18,7 +18,7 @@ import {
   providerUserAgent,
 } from "../provider-runtime.ts";
 
-const tpscheckApiBaseUrl = "https://api.tpscheck.uk";
+export const tpscheckApiBaseUrl: string = "https://api.tpscheck.uk";
 
 type TpscheckRequestPhase = "validate" | "execute";
 type TpscheckActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;

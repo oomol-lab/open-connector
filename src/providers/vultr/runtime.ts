@@ -23,7 +23,7 @@ import {
   readProviderJsonBody,
 } from "../provider-runtime.ts";
 
-const vultrApiBaseUrl = "https://api.vultr.com/v2";
+export const vultrApiBaseUrl = "https://api.vultr.com/v2";
 
 type VultrRequestPhase = "validate" | "execute";
 

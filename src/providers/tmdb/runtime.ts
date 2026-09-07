@@ -15,7 +15,7 @@ import { encodePathSegment } from "../../core/request.ts";
 import { objectPayload, requestJson } from "../http-json-runtime.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 
-const tmdbApiBaseUrl = "https://api.themoviedb.org";
+export const tmdbApiBaseUrl: string = "https://api.themoviedb.org";
 const tmdbValidationPath = "/3/authentication";
 
 type TmdbActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;

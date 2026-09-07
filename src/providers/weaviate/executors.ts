@@ -3,21 +3,25 @@ import type {
   CredentialValidators,
   ExecutionContext,
   ProviderExecutors,
+  ProviderProxyExecutor,
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { compactObject } from "../../core/cast.ts";
-import { assertPublicHttpUrl } from "../../core/request.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
+  createProviderFetch,
   defineProviderExecutors,
+  defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
 } from "../provider-runtime.ts";
 
 const service = "weaviate";
+const weaviateDefaultBaseUrl = "https://api.weaviate.io";
 
 interface WeaviateActionContext {
   apiKey: string;
@@ -144,16 +148,33 @@ export const executors: ProviderExecutors = defineProviderExecutors<WeaviateActi
       signal: context.signal,
     };
   },
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  async baseUrl(context) {
+    const credential = await requireApiKeyCredential(context, service);
+    return normalizeWeaviateBaseUrl(
+      optionalString(credential.metadata.baseUrl) ?? credential.values.baseUrl ?? weaviateDefaultBaseUrl,
+    );
+  },
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
+  },
 });
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }): Promise<CredentialValidationResult> {
     const baseUrl = normalizeWeaviateBaseUrl(input.values.baseUrl);
+    const guardedFetcher = createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
     const payload = await requestWeaviateJson({
       baseUrl,
       path: "/v1/meta",
       apiKey: input.apiKey,
-      fetcher,
+      fetcher: guardedFetcher,
       signal,
       phase: "validate",
     });
@@ -296,10 +317,8 @@ function normalizeWeaviateBaseUrl(rawBaseUrl: unknown): string {
   const url = assertPublicHttpUrl(text, {
     fieldName: "baseUrl",
     createError: (message) => new ProviderRequestError(400, message),
+    allowPrivateNetwork: isPrivateNetworkAccessAllowed(),
   });
-  if (url.protocol !== "https:") {
-    throw new ProviderRequestError(400, "baseUrl must use https");
-  }
   if (url.username || url.password) {
     throw new ProviderRequestError(400, "baseUrl must not include credentials");
   }

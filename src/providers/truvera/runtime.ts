@@ -221,7 +221,7 @@ export async function createTruveraContext(
   };
 }
 
-function resolveTruveraApiBaseUrl(value: unknown) {
+export function resolveTruveraApiBaseUrl(value: unknown): string {
   const candidate = optionalString(value)?.trim();
   if (!candidate) {
     return truveraTestnetApiBaseUrl;

@@ -5,7 +5,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const webshareApiBaseUrl = "https://proxy.webshare.io";
+export const webshareApiBaseUrl = "https://proxy.webshare.io";
 
 type WebshareRequestPhase = "validate" | "execute";
 type WebshareQueryValue = string | number | boolean | undefined;
