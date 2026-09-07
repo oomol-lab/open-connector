@@ -96,6 +96,34 @@ describe("SF Express freight install-service handlers", () => {
         context(noFetch),
       ),
     ).rejects.toMatchObject({ status: 400 });
+
+    // A complete standard pair plus one stray customer field is also rejected.
+    await expect(
+      sfExpressFreightInstallHandlers.freight_append_install_service!(
+        {
+          waybill_no: "SF12345678910",
+          install_type: "1",
+          cargo_list: [
+            { count: 1, stand_service_name: "儿童学习桌", stand_service_code: "8893536", cus_service_name: "格子柜" },
+          ],
+        },
+        context(noFetch),
+      ),
+    ).rejects.toMatchObject({ status: 400 });
+
+    // And vice versa: a complete customer pair plus a stray standard field.
+    await expect(
+      sfExpressFreightInstallHandlers.freight_append_install_service!(
+        {
+          waybill_no: "SF12345678910",
+          install_type: "1",
+          cargo_list: [
+            { count: 1, cus_service_name: "格子柜", cus_service_code: "C1", stand_service_name: "儿童学习桌" },
+          ],
+        },
+        context(noFetch),
+      ),
+    ).rejects.toMatchObject({ status: 400 });
     expect(noFetch).not.toHaveBeenCalled();
   });
 

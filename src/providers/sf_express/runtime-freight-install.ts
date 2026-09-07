@@ -543,9 +543,10 @@ function readAppendCargoes(value: unknown): Array<Record<string, unknown>> {
     const standServiceCode = optionalString(item.stand_service_code);
     const cusServiceName = optionalString(item.cus_service_name);
     const cusServiceCode = optionalString(item.cus_service_code);
-    const hasStandardPair = standServiceName !== undefined && standServiceCode !== undefined;
-    const hasCustomerPair = cusServiceName !== undefined && cusServiceCode !== undefined;
-    if (hasStandardPair === hasCustomerPair) {
+    const standardFields = [standServiceName, standServiceCode].filter((field) => field !== undefined).length;
+    const customerFields = [cusServiceName, cusServiceCode].filter((field) => field !== undefined).length;
+    // The contract's 二选一: exactly one pair fully present, the other fully absent.
+    if (!((standardFields === 2 && customerFields === 0) || (standardFields === 0 && customerFields === 2))) {
       throw providerInputError(
         `cargo_list[${index}] requires exactly one complete category pair: stand_service_name + stand_service_code, or cus_service_name + cus_service_code.`,
       );
@@ -568,9 +569,10 @@ function readInstallCargoes(value: unknown): Array<Record<string, unknown>> {
     const productSku = optionalString(item.product_sku);
     const customerProductSku = optionalString(item.customer_product_sku);
     const customerProductName = optionalString(item.customer_product_name);
-    const hasStandardPair = productName !== undefined && productSku !== undefined;
-    const hasCustomerPair = customerProductSku !== undefined && customerProductName !== undefined;
-    if (hasStandardPair === hasCustomerPair) {
+    const standardFields = [productName, productSku].filter((field) => field !== undefined).length;
+    const customerFields = [customerProductSku, customerProductName].filter((field) => field !== undefined).length;
+    // The contract's 二选一: exactly one pair fully present, the other fully absent.
+    if (!((standardFields === 2 && customerFields === 0) || (standardFields === 0 && customerFields === 2))) {
       throw providerInputError(
         `cargoes[${index}] requires exactly one complete category pair: product_name + product_sku, or customer_product_name + customer_product_sku.`,
       );
