@@ -489,6 +489,32 @@ describe("provider egress SSRF guard", () => {
     expect(new Headers(calls[1]?.init?.headers).has("x-provider-credential")).toBe(false);
   });
 
+  it("overwrites a caller query parameter with the OAuth access token", async () => {
+    const calls = stubFetchSequence([new Response(JSON.stringify({ ok: true }), { status: 200 })]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: { type: "oauth_query", name: "access_token" },
+    });
+    const context: ExecutionContext = {
+      getCredential: async () => ({
+        authType: "oauth2",
+        accessToken: "oauth-token",
+        refreshToken: undefined,
+        tokenType: "Bearer",
+        expiresAt: undefined,
+        values: {},
+        profile: { accountId: "acct", displayName: "Test", grantedScopes: [] },
+        metadata: {},
+      }),
+    };
+
+    const result = await proxy({ method: "GET", endpoint: "/items", query: { access_token: "caller-token" } }, context);
+
+    expect(result.ok).toBe(true);
+    expect(calls[0]?.url).toBe("https://api.example.com/items?access_token=oauth-token");
+  });
+
   it("injects a custom credential field and strips its header from cross-origin redirects", async () => {
     const calls = stubFetchSequence([
       new Response(null, { status: 302, headers: { location: "https://cdn.example.net/items" } }),

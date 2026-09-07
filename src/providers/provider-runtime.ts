@@ -317,6 +317,7 @@ export type ProviderProxyAuth =
   | { type: "none" }
   | { type: "bearer" }
   | { type: "oauth_bearer" }
+  | { type: "oauth_query"; name: string }
   | { type: "api_key_header"; name: string }
   | { type: "api_key_query"; name: string }
   | { type: "api_key_basic"; suffix?: string }
@@ -673,6 +674,11 @@ async function applyProviderProxyAuth(
     case "oauth_bearer": {
       const credential = await requireOAuthCredential(context, input.service);
       headers.set("authorization", `${credential.tokenType} ${credential.accessToken}`);
+      return credential;
+    }
+    case "oauth_query": {
+      const credential = await requireOAuthCredential(context, input.service);
+      url.searchParams.set(input.auth.name, credential.accessToken);
       return credential;
     }
     case "api_key_header": {
