@@ -363,6 +363,8 @@ export interface ProviderProxyDefinition {
   auth: ProviderProxyAuth;
   allowedEndpoint?: (endpoint: string) => boolean;
   customizeRequest?: (input: ProviderProxyRequestCustomizationInput) => Promise<void> | void;
+  /** Provider-specific credential/signature headers that redirects must not forward cross-origin. */
+  sensitiveHeaders?: readonly string[];
   /** Exact code-controlled origins that `customizeRequest` may select in addition to the resolved base origin. */
   allowedOrigins?: readonly string[];
   /** Deployment-gated private-network opt-in applied to this proxy's egress fetch (currently Dokploy). */
@@ -559,7 +561,7 @@ export function toProviderProxyError(error: unknown, fallbackMessage: string): P
 
 export function defineProviderProxy(input: ProviderProxyDefinition): ProviderProxyExecutor {
   const allowedOrigins = new Set(input.allowedOrigins?.map((value) => new URL(value).origin));
-  const additionalSensitiveHeaders =
+  const authSensitiveHeaders =
     input.auth.type === "credential_headers"
       ? [...new Set(input.auth.headers.map((header) => header.name.toLowerCase()))]
       : input.auth.type === "api_key_header" ||
@@ -567,10 +569,11 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
           input.auth.type === "custom_credential_header"
         ? [input.auth.name]
         : undefined;
+  const additionalSensitiveHeaders = [...(authSensitiveHeaders ?? []), ...(input.sensitiveHeaders ?? [])];
   const egressFetch = createProviderFetch({
     allowPrivateNetwork: input.allowPrivateNetwork,
     skipDnsValidation: input.skipDnsValidation,
-    additionalSensitiveHeaders,
+    additionalSensitiveHeaders: additionalSensitiveHeaders.length > 0 ? additionalSensitiveHeaders : undefined,
   });
   return async (proxyInput: ProxyRequestInput, context: ExecutionContext): Promise<ProxyExecutionResult> => {
     try {

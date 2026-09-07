@@ -489,6 +489,28 @@ describe("provider egress SSRF guard", () => {
     expect(new Headers(calls[1]?.init?.headers).has("x-provider-credential")).toBe(false);
   });
 
+  it("strips explicitly declared signature headers from cross-origin redirects", async () => {
+    const calls = stubFetchSequence([
+      new Response(null, { status: 302, headers: { location: "https://cdn.example.net/items" } }),
+      new Response(JSON.stringify({ ok: true }), { status: 200 }),
+    ]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: { type: "none" },
+      sensitiveHeaders: ["X-Request-Signature"],
+      customizeRequest({ headers }) {
+        headers.set("X-Request-Signature", "signed-secret");
+      },
+    });
+
+    const result = await proxy({ method: "GET", endpoint: "/items" }, executionContext);
+
+    expect(result.ok).toBe(true);
+    expect(new Headers(calls[0]?.init?.headers).get("x-request-signature")).toBe("signed-secret");
+    expect(new Headers(calls[1]?.init?.headers).has("x-request-signature")).toBe(false);
+  });
+
   it("injects credential headers, overwrites caller values, and strips every declared header on redirect", async () => {
     const calls = stubFetchSequence([
       new Response(null, { status: 302, headers: { location: "https://cdn.example.net/items" } }),
