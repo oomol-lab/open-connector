@@ -748,6 +748,22 @@ describe("provider egress SSRF guard", () => {
     expect(calls[0]?.init?.redirect).toBe("error");
   });
 
+  it("enforces a provider-specific proxy response byte cap", async () => {
+    stubFetchSequence([new Response("large", { status: 200 })]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: { type: "none" },
+      maxResponseBytes: 2,
+    });
+
+    const result = await proxy({ method: "GET", endpoint: "/items" }, executionContext);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failure");
+    expect(result.error).toMatchObject({ code: "invalid_input", details: { status: 413 } });
+  });
+
   it.each(["text", [], 1])("rejects a non-object JSON auth body: %j", async (body) => {
     const calls = stubFetchSequence([]);
     const proxy = defineProviderProxy({

@@ -378,6 +378,8 @@ export interface ProviderProxyDefinition {
   timeoutMs?: number;
   /** Native redirect policy override; guarded manual following remains the default. */
   redirect?: RequestRedirect;
+  /** Deliberate provider-specific response byte cap; defaults to the shared 20 MiB limit. */
+  maxResponseBytes?: number;
 }
 
 const blockedProxyRequestHeaders = new Set([
@@ -655,7 +657,7 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
 
         return {
           ok: true,
-          response: await readProviderProxyResponse(response),
+          response: await readProviderProxyResponse(response, { maxBytes: input.maxResponseBytes }),
         };
       } catch (error) {
         // Only the local budget becomes the shared 504 timeout; a caller abort stays an abort.
