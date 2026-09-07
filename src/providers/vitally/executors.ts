@@ -1,4 +1,9 @@
-import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -6,6 +11,7 @@ import { compactObject, optionalRecord, optionalString, requiredString } from ".
 import {
   createProviderTimeout,
   defineProviderExecutors,
+  defineProviderProxy,
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
@@ -66,6 +72,24 @@ export const executors: ProviderExecutors = defineProviderExecutors<VitallyActio
       fetcher,
       signal: context.signal,
     };
+  },
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  async baseUrl(context) {
+    const credential = await requireApiKeyCredential(context, service);
+    const baseUrl = optionalString(credential.metadata.baseUrl);
+    if (!baseUrl) {
+      throw new ProviderRequestError(500, "vitally connection is missing baseUrl metadata");
+    }
+    return baseUrl;
+  },
+  auth: { type: "api_key_basic", suffix: ":" },
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) {
+      headers.set("accept", "application/json");
+    }
   },
 });
 

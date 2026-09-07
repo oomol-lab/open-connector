@@ -1,10 +1,20 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
-import { defineApiKeyProviderExecutors, mapProviderActionSources } from "../provider-runtime.ts";
-import { executeReadMeAction, readmeActionHandlers, validateReadMeCredential } from "./runtime.ts";
+import { defineApiKeyProviderExecutors, defineProviderProxy, mapProviderActionSources } from "../provider-runtime.ts";
+import { executeReadMeAction, readmeActionHandlers, readmeApiBaseUrl, validateReadMeCredential } from "./runtime.ts";
 
 const service = "readme";
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: readmeApiBaseUrl,
+  auth: { type: "api_key_basic", suffix: ":" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
+  },
+});
 
 const readmeExecutorHandlers = mapProviderActionSources(
   service,

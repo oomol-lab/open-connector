@@ -4,7 +4,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
-const u301ApiBaseUrl = "https://api.u301.com";
+export const u301ApiBaseUrl = "https://api.u301.com";
 const u301DomainsPath = "/v3/shorten/domains";
 const u301ShortenBulkPath = "/v3/shorten/bulk";
 

@@ -1,4 +1,9 @@
-import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  CredentialValidators,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
@@ -6,6 +11,7 @@ import { Buffer } from "node:buffer";
 import { compactObject, optionalString } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
   runProviderRequest,
@@ -165,6 +171,18 @@ export const worksnapsActionHandlers: ProviderActionHandlers<"worksnaps", Worksn
 };
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, worksnapsActionHandlers);
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service,
+  baseUrl: worksnapsApiBaseUrl,
+  auth: { type: "api_key_basic", suffix: ":ignored" },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) {
+      headers.set("accept", "application/xml");
+    }
+  },
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }): Promise<CredentialValidationResult> {

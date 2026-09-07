@@ -13,7 +13,7 @@ import {
 } from "../../core/cast.ts";
 import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
-const ticktickApiBaseUrl = "https://api.ticktick.com";
+export const ticktickApiBaseUrl = "https://api.ticktick.com";
 const ticktickProviderScopes = ["ticktick.read", "ticktick.write"] as const;
 
 type TicktickPayload = Record<string, unknown>;

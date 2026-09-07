@@ -286,7 +286,7 @@ export async function validateSurveyMonkeyCredential(
   };
 }
 
-function normalizeSurveyMonkeyApiBaseUrl(value: unknown) {
+export function normalizeSurveyMonkeyApiBaseUrl(value: unknown): string {
   if (typeof value !== "string" || !value.trim()) {
     throw new ProviderRequestError(400, "SurveyMonkey apiBaseUrl is required");
   }

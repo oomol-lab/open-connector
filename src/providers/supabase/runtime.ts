@@ -24,7 +24,7 @@ import {
 } from "../provider-runtime.ts";
 import { supabaseProviderScopes } from "./scopes.ts";
 
-const supabaseApiBaseUrl = "https://api.supabase.com/v1";
+export const supabaseApiBaseUrl: string = "https://api.supabase.com/v1";
 const supabaseProjectHostSuffix = ".supabase.co";
 const supabaseStorageAuthenticatedObjectPath = "/storage/v1/object/authenticated";
 const projectStatuses = new Set([

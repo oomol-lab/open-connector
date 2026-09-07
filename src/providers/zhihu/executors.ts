@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { createWriteStream, openAsBlob } from "node:fs";
 import { mkdtemp, rm, stat } from "node:fs/promises";
@@ -11,6 +11,7 @@ import {
   createProviderFetch,
   createProviderTimeout,
   defineApiKeyProviderExecutors,
+  defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -503,6 +504,19 @@ function zhihuUploadTooLargeError() {
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors("zhihu", zhihuActionHandlers, {
   skipDnsValidation: true,
+});
+
+export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  service: "zhihu",
+  baseUrl: zhihuApiBaseUrl,
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
+  skipDnsValidation: true,
+  customizeRequest({ headers }) {
+    headers.set("x-request-timestamp", String(Math.floor(Date.now() / 1000)));
+    if (!headers.has("content-type")) {
+      headers.set("content-type", "application/json");
+    }
+  },
 });
 
 export const credentialValidators: CredentialValidators = {

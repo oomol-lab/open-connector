@@ -10,7 +10,7 @@ import {
 } from "../provider-runtime.ts";
 import { todoistOAuthScopes } from "./scopes.ts";
 
-const todoistApiBaseUrl = "https://api.todoist.com/api/v1";
+export const todoistApiBaseUrl = "https://api.todoist.com/api/v1";
 const todoistUserPath = "/user";
 
 type TodoistRequestPhase = "validate" | "execute";
