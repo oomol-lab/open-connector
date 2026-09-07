@@ -313,6 +313,19 @@ export interface ProviderTimeout {
   cleanup(): void;
 }
 
+export type ProviderProxyCredentialHeaderSource =
+  | { type: "api_key" }
+  | { type: "credential_value"; name: string }
+  | { type: "credential_metadata"; name: string };
+
+export interface ProviderProxyCredentialHeader {
+  name: string;
+  source: ProviderProxyCredentialHeaderSource;
+  prefix?: string;
+  suffix?: string;
+  optional?: boolean;
+}
+
 export type ProviderProxyAuth =
   | { type: "none" }
   | { type: "bearer" }
@@ -320,9 +333,13 @@ export type ProviderProxyAuth =
   | { type: "oauth_query"; name: string }
   | { type: "api_key_header"; name: string }
   | { type: "api_key_query"; name: string }
+  | { type: "api_key_json_body"; name: string }
+  | { type: "api_key_query_or_json_body"; name: string; bodyMethods?: readonly string[] }
+  | { type: "api_key_query_or_form_body"; name: string; bodyMethods?: readonly string[] }
   | { type: "api_key_basic"; suffix?: string }
   | { type: "api_key_authorization"; prefix: string; suffix?: string }
-  | { type: "custom_credential_header"; field: string; name: string; prefix?: string };
+  | { type: "custom_credential_header"; field: string; name: string; prefix?: string }
+  | { type: "credential_headers"; headers: readonly ProviderProxyCredentialHeader[] };
 
 export type ProviderProxyBaseUrlResolver = (context: ExecutionContext, service: string) => Promise<string> | string;
 export type ProviderProxyBaseUrl = string | ProviderProxyBaseUrlResolver;
@@ -541,9 +558,11 @@ export function toProviderProxyError(error: unknown, fallbackMessage: string): P
 export function defineProviderProxy(input: ProviderProxyDefinition): ProviderProxyExecutor {
   const allowedOrigins = new Set(input.allowedOrigins?.map((value) => new URL(value).origin));
   const additionalSensitiveHeaders =
-    input.auth.type === "api_key_header" || input.auth.type === "custom_credential_header"
-      ? [input.auth.name]
-      : undefined;
+    input.auth.type === "credential_headers"
+      ? [...new Set(input.auth.headers.map((header) => header.name.toLowerCase()))]
+      : input.auth.type === "api_key_header" || input.auth.type === "custom_credential_header"
+        ? [input.auth.name]
+        : undefined;
   const egressFetch = createProviderFetch({
     allowPrivateNetwork: input.allowPrivateNetwork,
     skipDnsValidation: input.skipDnsValidation,
@@ -564,14 +583,14 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
       const providerOrigin = url.origin;
       const headers = normalizeProviderProxyHeaders(proxyInput.headers);
       headers.set("user-agent", providerUserAgent);
-      const credential = await applyProviderProxyAuth(input, context, url, headers);
+      const authResult = await applyProviderProxyAuth(input, context, url, headers, proxyInput.method, proxyInput.body);
       await input.customizeRequest?.({
         context,
         service: input.service,
         endpoint,
         url,
         headers,
-        credential,
+        credential: authResult.credential,
         fetcher: egressFetch,
       });
       if (url.origin !== providerOrigin && !allowedOrigins.has(url.origin)) {
@@ -585,9 +604,9 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
           headers,
           signal: timeout.signal,
         };
-        if (proxyInput.body !== undefined) {
-          init.body = typeof proxyInput.body === "string" ? proxyInput.body : JSON.stringify(proxyInput.body);
-          if (!headers.has("content-type") && typeof proxyInput.body !== "string") {
+        if (authResult.body !== undefined) {
+          init.body = typeof authResult.body === "string" ? authResult.body : JSON.stringify(authResult.body);
+          if (!headers.has("content-type") && typeof authResult.body !== "string") {
             headers.set("content-type", "application/json");
           }
         }
@@ -662,44 +681,69 @@ async function applyProviderProxyAuth(
   context: ExecutionContext,
   url: URL,
   headers: Headers,
-): Promise<ResolvedCredential | undefined> {
+  method: string,
+  body: unknown,
+): Promise<ProviderProxyAuthResult> {
   switch (input.auth.type) {
     case "none":
-      return undefined;
+      return { credential: undefined, body };
     case "bearer": {
       const credential = await requireBearerCredential(context, input.service);
       headers.set("authorization", `${credential.tokenType} ${credential.accessToken}`);
-      return undefined;
+      return { credential: undefined, body };
     }
     case "oauth_bearer": {
       const credential = await requireOAuthCredential(context, input.service);
       headers.set("authorization", `${credential.tokenType} ${credential.accessToken}`);
-      return credential;
+      return { credential, body };
     }
     case "oauth_query": {
       const credential = await requireOAuthCredential(context, input.service);
       url.searchParams.set(input.auth.name, credential.accessToken);
-      return credential;
+      return { credential, body };
     }
     case "api_key_header": {
       const credential = await requireApiKeyCredential(context, input.service);
       headers.set(input.auth.name, credential.apiKey);
-      return credential;
+      return { credential, body };
     }
     case "api_key_query": {
       const credential = await requireApiKeyCredential(context, input.service);
       url.searchParams.set(input.auth.name, credential.apiKey);
-      return credential;
+      return { credential, body };
+    }
+    case "api_key_json_body": {
+      const credential = await requireApiKeyCredential(context, input.service);
+      return { credential, body: injectProviderProxyJsonBodyField(body, input.auth.name, credential.apiKey) };
+    }
+    case "api_key_query_or_json_body": {
+      const credential = await requireApiKeyCredential(context, input.service);
+      if (providerProxyBodyMethods(input.auth.bodyMethods).has(method.toUpperCase())) {
+        url.searchParams.delete(input.auth.name);
+        return { credential, body: injectProviderProxyJsonBodyField(body, input.auth.name, credential.apiKey) };
+      }
+      url.searchParams.set(input.auth.name, credential.apiKey);
+      return { credential, body };
+    }
+    case "api_key_query_or_form_body": {
+      const credential = await requireApiKeyCredential(context, input.service);
+      if (providerProxyBodyMethods(input.auth.bodyMethods).has(method.toUpperCase())) {
+        url.searchParams.delete(input.auth.name);
+        headers.set("content-type", "application/x-www-form-urlencoded;charset=UTF-8");
+        return { credential, body: injectProviderProxyFormBodyField(body, input.auth.name, credential.apiKey) };
+      }
+      url.searchParams.set(input.auth.name, credential.apiKey);
+      return { credential, body };
     }
     case "api_key_basic": {
       const credential = await requireApiKeyCredential(context, input.service);
       headers.set("authorization", basicAuthorizationHeader(`${credential.apiKey}${input.auth.suffix ?? ""}`));
-      return credential;
+      return { credential, body };
     }
     case "api_key_authorization": {
       const credential = await requireApiKeyCredential(context, input.service);
       headers.set("authorization", `${input.auth.prefix}${credential.apiKey}${input.auth.suffix ?? ""}`);
-      return credential;
+      return { credential, body };
     }
     case "custom_credential_header": {
       const credential = await requireCustomCredential(context, input.service);
@@ -711,9 +755,87 @@ async function applyProviderProxyAuth(
         );
       }
       headers.set(input.auth.name, `${input.auth.prefix ?? ""}${value}`);
-      return credential;
+      return { credential, body };
+    }
+    case "credential_headers": {
+      const credential = await context.getCredential(input.service);
+      if (!credential || credential.authType === "no_auth") {
+        throw new ProviderRequestError(401, `Configure ${input.service} credentials first.`);
+      }
+      for (const header of input.auth.headers) {
+        const value = readProviderProxyCredentialHeaderValue(credential, header.source, input.service);
+        if (!value) {
+          if (header.optional) {
+            headers.delete(header.name);
+            continue;
+          }
+          throw new ProviderRequestError(
+            401,
+            `Configure ${input.service} credential field ${providerProxyCredentialHeaderSourceName(header.source)} first.`,
+          );
+        }
+        headers.set(header.name, `${header.prefix ?? ""}${value}${header.suffix ?? ""}`);
+      }
+      return { credential, body };
     }
   }
+}
+
+interface ProviderProxyAuthResult {
+  credential: ResolvedCredential | undefined;
+  body: unknown;
+}
+
+function providerProxyBodyMethods(methods: readonly string[] | undefined): Set<string> {
+  return new Set((methods ?? ["POST", "PUT", "PATCH"]).map((method) => method.toUpperCase()));
+}
+
+function injectProviderProxyJsonBodyField(body: unknown, name: string, value: string): Record<string, unknown> {
+  if (body == null) return { [name]: value };
+  if (typeof body !== "object" || Array.isArray(body)) {
+    throw new ProviderRequestError(400, `${name} proxy auth requires a JSON object body`);
+  }
+  return { ...body, [name]: value };
+}
+
+function injectProviderProxyFormBodyField(body: unknown, name: string, value: string): string {
+  const form = new URLSearchParams();
+  if (typeof body === "string") {
+    for (const [field, fieldValue] of new URLSearchParams(body)) form.set(field, fieldValue);
+  } else if (body != null && typeof body === "object" && !Array.isArray(body)) {
+    for (const [field, fieldValue] of Object.entries(body)) {
+      if (fieldValue != null) form.set(field, String(fieldValue));
+    }
+  } else if (body != null) {
+    throw new ProviderRequestError(400, `${name} proxy auth requires a form-compatible body`);
+  }
+  form.set(name, value);
+  return form.toString();
+}
+
+function readProviderProxyCredentialHeaderValue(
+  credential: Exclude<ResolvedCredential, { authType: "no_auth" }>,
+  source: ProviderProxyCredentialHeaderSource,
+  service: string,
+): string | undefined {
+  switch (source.type) {
+    case "api_key":
+      if (credential.authType !== "api_key") {
+        throw new ProviderRequestError(401, `${service} proxy requires an API key credential.`);
+      }
+      return credential.apiKey;
+    case "credential_value":
+      if (credential.authType !== "api_key" && credential.authType !== "custom_credential") {
+        throw new ProviderRequestError(401, `${service} proxy requires an API key or custom credential.`);
+      }
+      return credential.values[source.name];
+    case "credential_metadata":
+      return optionalString(credential.metadata[source.name])?.trim();
+  }
+}
+
+function providerProxyCredentialHeaderSourceName(source: ProviderProxyCredentialHeaderSource): string {
+  return source.type === "api_key" ? "apiKey" : source.name;
 }
 
 /**

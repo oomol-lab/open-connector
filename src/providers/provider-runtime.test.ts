@@ -489,6 +489,108 @@ describe("provider egress SSRF guard", () => {
     expect(new Headers(calls[1]?.init?.headers).has("x-provider-credential")).toBe(false);
   });
 
+  it("injects credential headers, overwrites caller values, and strips every declared header on redirect", async () => {
+    const calls = stubFetchSequence([
+      new Response(null, { status: 302, headers: { location: "https://cdn.example.net/items" } }),
+      new Response(JSON.stringify({ ok: true }), { status: 200 }),
+    ]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: {
+        type: "credential_headers",
+        headers: [
+          { name: "Authorization", source: { type: "api_key" }, prefix: "Bearer " },
+          { name: "X-Workspace-ID", source: { type: "credential_value", name: "workspaceId" } },
+          {
+            name: "X-Parent-Login",
+            source: { type: "credential_metadata", name: "parentLogin" },
+            suffix: ":suffix",
+          },
+          { name: "X-Optional", source: { type: "credential_value", name: "optional" }, optional: true },
+        ],
+      },
+    });
+    const context: ExecutionContext = {
+      getCredential: async () => ({
+        ...apiKeyCredential,
+        values: { workspaceId: "workspace-1" },
+        metadata: { parentLogin: "parent@example.com" },
+      }),
+    };
+
+    const result = await proxy(
+      {
+        method: "GET",
+        endpoint: "/items",
+        headers: {
+          authorization: "caller-token",
+          "x-workspace-id": "caller-workspace",
+          "x-parent-login": "caller-parent",
+          "x-optional": "caller-optional",
+        },
+      },
+      context,
+    );
+
+    expect(result.ok).toBe(true);
+    const firstHeaders = new Headers(calls[0]?.init?.headers);
+    expect(firstHeaders.get("authorization")).toBe("Bearer test-key");
+    expect(firstHeaders.get("x-workspace-id")).toBe("workspace-1");
+    expect(firstHeaders.get("x-parent-login")).toBe("parent@example.com:suffix");
+    expect(firstHeaders.has("x-optional")).toBe(false);
+    const redirectedHeaders = new Headers(calls[1]?.init?.headers);
+    expect(redirectedHeaders.has("authorization")).toBe(false);
+    expect(redirectedHeaders.has("x-workspace-id")).toBe(false);
+    expect(redirectedHeaders.has("x-parent-login")).toBe(false);
+  });
+
+  it("reports a stable error when a required credential header field is missing", async () => {
+    const calls = stubFetchSequence([]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: {
+        type: "credential_headers",
+        headers: [{ name: "X-Workspace-ID", source: { type: "credential_value", name: "workspaceId" } }],
+      },
+    });
+
+    const result = await proxy({ method: "GET", endpoint: "/items" }, executionContext);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failure");
+    expect(result.error.message).toBe("Configure test_service credential field workspaceId first.");
+    expect(calls).toHaveLength(0);
+  });
+
+  it("rejects an incompatible credential type for an API key header source", async () => {
+    const calls = stubFetchSequence([]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: {
+        type: "credential_headers",
+        headers: [{ name: "Authorization", source: { type: "api_key" } }],
+      },
+    });
+    const context: ExecutionContext = {
+      getCredential: async () => ({
+        authType: "custom_credential",
+        values: { token: "secret" },
+        profile: { accountId: "acct", displayName: "Test", grantedScopes: [] },
+        metadata: {},
+      }),
+    };
+
+    const result = await proxy({ method: "GET", endpoint: "/items" }, context);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failure");
+    expect(result.error.message).toBe("test_service proxy requires an API key credential.");
+    expect(calls).toHaveLength(0);
+  });
+
   it("overwrites a caller query parameter with the OAuth access token", async () => {
     const calls = stubFetchSequence([new Response(JSON.stringify({ ok: true }), { status: 200 })]);
     const proxy = defineProviderProxy({
@@ -513,6 +615,144 @@ describe("provider egress SSRF guard", () => {
 
     expect(result.ok).toBe(true);
     expect(calls[0]?.url).toBe("https://api.example.com/items?access_token=oauth-token");
+  });
+
+  it("injects an API key into a JSON object body and overwrites the caller field", async () => {
+    const calls = stubFetchSequence([new Response(JSON.stringify({ ok: true }), { status: 200 })]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: { type: "api_key_json_body", name: "api_key" },
+    });
+
+    const result = await proxy(
+      {
+        method: "POST",
+        endpoint: "/items",
+        body: { api_key: "caller-key", payload: '{"nested":true}' },
+      },
+      executionContext,
+    );
+
+    expect(result.ok).toBe(true);
+    expect(calls[0]?.init?.body).toBe('{"api_key":"test-key","payload":"{\\"nested\\":true}"}');
+    expect(new Headers(calls[0]?.init?.headers).get("content-type")).toBe("application/json");
+  });
+
+  it.each(["text", [], 1])("rejects a non-object JSON auth body: %j", async (body) => {
+    const calls = stubFetchSequence([]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: { type: "api_key_json_body", name: "api_key" },
+    });
+
+    const result = await proxy({ method: "POST", endpoint: "/items", body }, executionContext);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected failure");
+    expect(result.error.message).toBe("api_key proxy auth requires a JSON object body");
+    expect(calls).toHaveLength(0);
+  });
+
+  it("selects query or JSON body auth by method and removes a caller query credential on body requests", async () => {
+    const calls = stubFetchSequence([
+      new Response(JSON.stringify({ ok: true }), { status: 200 }),
+      new Response(JSON.stringify({ ok: true }), { status: 200 }),
+    ]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: { type: "api_key_query_or_json_body", name: "api_key" },
+    });
+
+    await proxy({ method: "GET", endpoint: "/items", query: { api_key: "caller-key" } }, executionContext);
+    await proxy(
+      {
+        method: "patch",
+        endpoint: "/items",
+        query: { api_key: "caller-key" },
+        body: { api_key: "caller-key", item: 1 },
+      },
+      executionContext,
+    );
+
+    expect(calls[0]?.url).toBe("https://api.example.com/items?api_key=test-key");
+    expect(calls[0]?.init?.body).toBeUndefined();
+    expect(calls[1]?.url).toBe("https://api.example.com/items");
+    expect(calls[1]?.init?.body).toBe('{"api_key":"test-key","item":1}');
+  });
+
+  it("serializes form-compatible bodies and forces the form content type", async () => {
+    const calls = stubFetchSequence([new Response(JSON.stringify({ ok: true }), { status: 200 })]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: { type: "api_key_query_or_form_body", name: "token" },
+    });
+
+    const result = await proxy(
+      {
+        method: "PUT",
+        endpoint: "/items",
+        query: { token: "caller-token" },
+        headers: { "content-type": "application/json" },
+        body: { token: "caller-token", enabled: false, count: 2, omitted: null },
+      },
+      executionContext,
+    );
+
+    expect(result.ok).toBe(true);
+    expect(calls[0]?.url).toBe("https://api.example.com/items");
+    expect(calls[0]?.init?.body).toBe("token=test-key&enabled=false&count=2");
+    expect(new Headers(calls[0]?.init?.headers).get("content-type")).toBe(
+      "application/x-www-form-urlencoded;charset=UTF-8",
+    );
+  });
+
+  it("injects into empty JSON and string form bodies", async () => {
+    const calls = stubFetchSequence([
+      new Response(JSON.stringify({ ok: true }), { status: 200 }),
+      new Response(JSON.stringify({ ok: true }), { status: 200 }),
+    ]);
+    const jsonProxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: { type: "api_key_json_body", name: "api_key" },
+    });
+    const formProxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: { type: "api_key_query_or_form_body", name: "api_key" },
+    });
+
+    await jsonProxy({ method: "POST", endpoint: "/json", body: null }, executionContext);
+    await formProxy(
+      { method: "POST", endpoint: "/form", body: "api_key=caller-key&value=hello+world" },
+      executionContext,
+    );
+
+    expect(calls[0]?.init?.body).toBe('{"api_key":"test-key"}');
+    expect(calls[1]?.init?.body).toBe("api_key=test-key&value=hello+world");
+  });
+
+  it("supports a restricted form body method set and rejects incompatible form bodies", async () => {
+    const calls = stubFetchSequence([new Response(JSON.stringify({ ok: true }), { status: 200 })]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: { type: "api_key_query_or_form_body", name: "api_key", bodyMethods: ["POST"] },
+    });
+
+    await proxy({ method: "PUT", endpoint: "/items", body: ["untouched"] }, executionContext);
+    const invalid = await proxy({ method: "POST", endpoint: "/items", body: ["invalid"] }, executionContext);
+
+    expect(calls[0]?.url).toBe("https://api.example.com/items?api_key=test-key");
+    expect(calls[0]?.init?.body).toBe('["untouched"]');
+    expect(invalid.ok).toBe(false);
+    if (invalid.ok) throw new Error("expected failure");
+    expect(invalid.error.message).toBe("api_key proxy auth requires a form-compatible body");
+    expect(calls).toHaveLength(1);
   });
 
   it("injects a custom credential field and strips its header from cross-origin redirects", async () => {
