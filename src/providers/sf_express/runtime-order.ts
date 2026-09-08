@@ -12,6 +12,7 @@ import {
   optionalNumberLike,
   optionalRecord,
   optionalString,
+  recordOrEmpty,
   positiveInteger,
   requiredRecord,
   requiredString,
@@ -382,7 +383,7 @@ function readCargoDetails(value: unknown): Array<Record<string, unknown>> {
       height: optionalNumber(cargo.height),
       volume: optionalNumber(cargo.volume),
       cargoDeclaredValue: optionalNumber(cargo.cargo_declared_value),
-      declaredValueCurrency: optionalString(cargo.declared_value_currency),
+      declaredValueDeclaredCurrency: optionalString(cargo.declared_value_currency),
     }),
   );
 }
@@ -501,7 +502,8 @@ function normalizeOrderResult(payload: unknown): Record<string, unknown> {
 }
 
 function normalizeInterceptResult(payload: unknown): Record<string, unknown> {
-  const record = requiredResponseRecord(payload, "SF Express intercept response");
+  // A successful interception answers with msgData: null; only the fee variants carry a body.
+  const record = recordOrEmpty(payload);
   const feeInfo = optionalRecord(record.freightAdditionInfoResp);
   return compactObject({
     cusId: optionalString(record.cusId),

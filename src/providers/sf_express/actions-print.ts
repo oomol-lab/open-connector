@@ -96,6 +96,17 @@ const printFileSchema = s.object(
   { optional: ["pageCount"] },
 );
 
+/** The citywide response documents only these four members per file; it never sends areaNo/pageNo/pageCount. */
+const citywidePrintFileSchema = s.requiredObject(
+  "One generated print file; download with a GET request carrying the token in the X-Auth-token header (valid 24h).",
+  {
+    url: s.string("The download URL of the generated file on SF OSS."),
+    token: s.string("The X-Auth-token header value required to download the file."),
+    waybillNo: s.string("The waybill number the file belongs to."),
+    seqNo: s.integer("The print sequence number (the document index)."),
+  },
+);
+
 const printResultSchema = (fileType: string): JsonSchema =>
   s.object(
     "The generated print files. Empty when the print ran asynchronously.",
@@ -314,7 +325,7 @@ export const sfExpressPrintActions: ActionDefinition[] = [
     outputSchema: s.object(
       "The print job result.",
       {
-        files: s.array("The generated PDF files (sync mode only); unordered, sort by seqNo.", printFileSchema),
+        files: s.array("The generated PDF files (sync mode only); unordered, sort by seqNo.", citywidePrintFileSchema),
         printBatchNo: s.string("The print batch number for polling the status (async mode only, valid 24h)."),
       },
       { optional: ["files", "printBatchNo"] },
@@ -333,7 +344,7 @@ export const sfExpressPrintActions: ActionDefinition[] = [
       {
         status: s.string("The print status: -1 = failed, 0 = printing, 1 = done."),
         errorReason: s.string("The failure reason when status is -1."),
-        files: s.array("The generated PDF files; unordered, sort by seqNo.", printFileSchema),
+        files: s.array("The generated PDF files; unordered, sort by seqNo.", citywidePrintFileSchema),
       },
       { optional: ["errorReason", "files"] },
     ),

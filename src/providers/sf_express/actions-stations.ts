@@ -46,9 +46,10 @@ const headerInputSchema = s.object(
   {
     operatorId: s.nonEmptyString("The operator employee number (操作人工号)."),
     deptCode: s.nonEmptyString("The city/department code (城市编码), e.g. 755."),
+    netCode: s.nonEmptyString("The district code (区代码), sent as sgs_netcode."),
     accessCode: s.nonEmptyString("The system access code (系统接入编码) allocated by SF Express."),
   },
-  { optional: ["deptCode", "accessCode"] },
+  { optional: ["deptCode", "netCode", "accessCode"] },
 );
 
 const storeAddressFields = {
@@ -445,7 +446,10 @@ export const sfExpressStationActions: ActionDefinition[] = [
     inputSchema: s.object(
       "The delivery operation to check.",
       {
-        sgs_net_code: s.nonEmptyString("The network code sent in the request header (sgs_netcode)."),
+        sgs_net_code: s.nonEmptyString("The district code sent in the request header (sgs_netcode)."),
+        access_code: s.nonEmptyString(
+          "The system access code (系统接入编码) sent in the request header, allocated by SF Express.",
+        ),
         store_code: s.nonEmptyString("The convenience store code (便利店编码)."),
         dept_code: s.nonEmptyString("The city code (城市编码)."),
         opr_time: dateTimeSchema("The operation time in yyyy-MM-dd HH:mm:ss format."),
@@ -458,7 +462,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
           "The store type: 1 SF store, 2 individual store, 3 sub-department, 4 chain, 5 SF station, 6 customer touchpoint, 7 嘿客店, 8 business station, 9 汪勇项目.",
         ),
       },
-      { optional: ["sgs_net_code", "ehead", "store_type"] },
+      { optional: ["sgs_net_code", "access_code", "ehead", "store_type"] },
     ),
     outputSchema: s.object("The operation control verdict.", {
       operationControl: s.string("1 = controlled (管控), 0 = not controlled."),

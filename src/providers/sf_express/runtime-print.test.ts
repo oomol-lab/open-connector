@@ -23,6 +23,14 @@ const printFile = {
   pageNo: 1,
 };
 
+/** The citywide response documents only these four members per file. */
+const citywidePrintFile = {
+  url: "https://eos-scp-core-shenzhen-futian1-oss.sf-express.com/print-file/a.pdf",
+  token: "AUTH_token",
+  waybillNo: "SF1234567890999",
+  seqNo: 1,
+};
+
 describe("SF Express waybill-printing handlers", () => {
   it("builds a PDF print request with fixed version and merge extJson, then normalizes the file list", async () => {
     const fetcher = vi.fn<typeof fetch>(async (_url, init) => {
@@ -222,7 +230,7 @@ describe("SF Express waybill-printing handlers", () => {
   it("queries a citywide print batch status on the sfapi host", async () => {
     const fetcher = vi.fn<typeof fetch>(async (url) => {
       expect(String(url)).toBe("https://sfapi.sf-express.com/std/service");
-      return Response.json({ obj: { files: [printFile], status: "1" }, requestId: "req-1", success: true });
+      return Response.json({ obj: { files: [citywidePrintFile], status: "1" }, requestId: "req-1", success: true });
     });
 
     const output = await sfExpressPrintHandlers.query_citywide_print_status!(
@@ -230,7 +238,7 @@ describe("SF Express waybill-printing handlers", () => {
       context(fetcher),
     );
 
-    expect(output).toEqual({ status: "1", errorReason: undefined, files: [{ ...printFile, pageCount: undefined }] });
+    expect(output).toEqual({ status: "1", errorReason: undefined, files: [citywidePrintFile] });
   });
 
   it("maps a bare-envelope errorMessage failure to an input error", async () => {

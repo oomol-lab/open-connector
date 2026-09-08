@@ -83,12 +83,18 @@ describe("SF Express push-registration handlers", () => {
         waybillNo: "SF6026001285825",
         imgType: "122",
         customerAcctCode: "7551234567",
+        phone: "18633995322",
       });
       return okEnvelope(null);
     });
 
     const output = await sfExpressPushHandlers.register_waybill_picture_push!(
-      { waybill_no: "SF6026001285825", img_type: "122", customer_acct_code: "7551234567" },
+      {
+        waybill_no: "SF6026001285825",
+        img_type: "122",
+        customer_acct_code: "7551234567",
+        phone: "18633995322",
+      },
       context(fetcher),
     );
 

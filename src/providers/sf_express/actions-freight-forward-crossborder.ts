@@ -437,6 +437,9 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
     inputSchema: s.requiredObject("The waybill to pay.", {
       waybill_no: waybillNoSchema,
       supplier_code: s.nonEmptyString("The forwarding supplier code (供应商编码)."),
+      client_code: s.nonEmptyString(
+        "The supplier access code (对接供应商的接入编码) SF issues; sent beside msgData as clientCode.",
+      ),
     }),
     outputSchema: s.object("The payment start result.", {
       result: s.unknown(
@@ -455,6 +458,9 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
         {
           waybill_no: waybillNoSchema,
           supplier_code: s.nonEmptyString("The forwarding supplier code (供应商编码)."),
+          client_code: s.nonEmptyString(
+            "The supplier access code (对接供应商的接入编码) SF issues; sent beside msgData as clientCode.",
+          ),
           operator: s.nonEmptyString("The operator name or code."),
           mon_code: s.string("The monthly settlement card number (月结卡号)."),
           mon_code_id: s.string("The monthly settlement card id; one of mon_code or mon_code_id is required."),
@@ -603,8 +609,8 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
         total_declared_value: s.number("The total declared value."),
         declared_value_code: s.stringEnum("The declared value currency.", ["CNY", "USD", "HKD", "EUR"]),
         product_type: s.stringEnum(
-          "The product type: A100 FBA跨境特快, A101 FBA跨境普快, A102 FBA跨境经济, S100 跨境海派, S101 跨境海卡(不预付关税), S102 跨境海卡(关税预付), S103 跨境整柜, L100 跨境卡航, L101 跨境中欧班列.",
-          ["A100", "A101", "A102", "S100", "S101", "S102", "S103", "L100", "L101"],
+          "The product type: A100 FBA跨境特快, A101 FBA跨境标快, S100 FBA跨境快船, S101 FBA跨境普船, S103 跨境整柜, L100 跨境卡航, L101 跨境中欧班列, T100 海运标快, S108 跨境超大件-快船, S109 跨境超大件-普船.",
+          ["A100", "A101", "S100", "S101", "S103", "L100", "L101", "T100", "S108", "S109"],
         ),
         customs_type: s.stringEnum(
           "The customs declaration mode: agent_declear 非报关件, customer_declear 出口正式报关.",
@@ -682,9 +688,21 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
         domestic_courier_code: s.string("The self-delivery carrier code for pickup_mode 1."),
         remark: s.string("A remark."),
         exclusive_emp_no: s.string("The designated pickup courier employee code."),
-        terminal_carrier_code: s.string("The last-mile carrier code, for example DHL."),
-        depart_code: s.string("The departure code; required for product types A100/A101."),
-        shipping_code: s.string("The trunk transport code; required for product types S100/S101/S108/S109."),
+        terminal_carrier_code: s.stringEnum("The last-mile carrier: 快递 or 卡车, or the carrier that runs it.", [
+          "UPS",
+          "FEDEX",
+          "DHL",
+          "express",
+          "Trucking",
+          "NULL",
+        ]),
+        depart_code: s.stringEnum("The departure point: 86 大陆飞, 852 香港飞; required for product types A100/A101.", [
+          "86",
+          "852",
+        ]),
+        shipping_code: s.string(
+          "The trunk transport code; required for product types S100/S101/S108/S109. One of carrier_mason 美森正班快船, carrier_mason_ad_hoc 美森统配快船, carrier_mason_timing 美森定时达, carrier_zim 以星快船, carrier_evergreen 长荣快船, carrier_general 海运普船, carrier_fixed_pick_up 普船定提, carrier_general_express 普船快线, air_line 空运专线, air_express_line 空运快线, air_distribution_line 空运统配.",
+        ),
         user_app_key: s.string("The order source system code."),
         send_time: dateTimeSchema("The requested delivery time in YYYY-MM-DD HH:mm:ss format."),
       },

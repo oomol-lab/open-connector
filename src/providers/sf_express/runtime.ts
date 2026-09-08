@@ -24,34 +24,20 @@ import {
 
 export const sfExpressApiBaseUrl = "https://bspgw.sf-express.com/std/service";
 
-/** The sandbox gateway most endpoints share. */
+/** The sandbox gateway; every documented 沙箱环境 row names this host. */
 const sfExpressSandboxBaseUrl = "https://sfapi-sbox.sf-express.com/std/service";
-
-/** Endpoints whose documented test environment is the SIT host rather than the shared sandbox gateway. */
-const sfExpressSandboxBaseUrlByServiceCode: Record<string, string> = {
-  COM_RECE_BRAND_INSP_ADD_IMAGES: "https://sfapi.sit.sf-express.com:45273/std/service",
-  COM_RECE_EOS_ADD_FC_IMG: "https://sfapi.sit.sf-express.com:45273/std/service",
-  COM_RECE_EOS_ADD_STORE_IMG: "https://sfapi.sit.sf-express.com:45273/std/service",
-  COM_RECE_EOS_ADD_VILLAGE_STORE_IMG: "https://sfapi.sit.sf-express.com:45273/std/service",
-  COM_RECE_EOS_ADD_XGJ_IMG: "https://sfapi.sit.sf-express.com:45273/std/service",
-  COM_RECE_EOS_ADD_XGJ_STORE_INFO: "https://sfapi.sit.sf-express.com:45273/std/service",
-  COM_RECE_EOS_FC_WBSTORE_ADD_OR_UPDATE: "https://sfapi.sit.sf-express.com:45273/std/service",
-  COM_RECE_EOS_GET_OSS_TOKEN: "https://sfapi.sit.sf-express.com:45273/std/service",
-  COM_RECE_EOS_QUERY_WAYBILL_INFO: "https://sfapi.sit.sf-express.com:45273/std/service",
-  COM_RECE_EOS_RECEIPT_WAYBILL_INFO: "https://sfapi.sit.sf-express.com:45273/std/service",
-  COM_RECE_EOS_UPLOAD_PICTURE: "https://sfapi.sit.sf-express.com:45273/std/service",
-  COM_RECE_EOS_XGJ_UPDATE_SAFE_FEE: "https://sfapi.sit.sf-express.com:45273/std/service",
-  COM_RECE_EOS_XGJ_WAYBILL_INFO: "https://sfapi.sit.sf-express.com:45273/std/service",
-  COM_RECE_EOS_YSF_WBSTORE_ADD_OR_UPDATE: "https://sfapi.sit.sf-express.com:45273/std/service",
-};
 
 /** Endpoints whose production URL differs from the default gateway, per their documented common-parameters sections. */
 const sfExpressBaseUrlByServiceCode: Record<string, string> = {
+  COM_RECE_BRAND_INSP_ADD_IMAGES: "https://sfapi.sf-express.com/std/service",
   COM_RECE_CITYWIDE_PRINT_STATUS: "https://sfapi.sf-express.com/std/service",
   COM_RECE_CITYWIDE_PRINT_SUBMIT: "https://sfapi.sf-express.com/std/service",
   COM_RECE_DELIVERY_OPERATION_VERIFY: "https://sfapi.sf-express.com/std/service",
   COM_RECE_EOS_ADD_STORE_INFO: "https://sfapi.sf-express.com/std/service",
+  COM_RECE_EOS_ADD_VILLAGE_STORE_IMG: "https://sfapi.sf-express.com/std/service",
   COM_RECE_EOS_ADD_VILLAGE_STORE_INFO: "https://sfapi.sf-express.com/std/service",
+  COM_RECE_EOS_FC_WBSTORE_ADD_OR_UPDATE: "https://sfapi.sf-express.com/std/service",
+  COM_RECE_EOS_YSF_WBSTORE_ADD_OR_UPDATE: "https://sfapi.sf-express.com/std/service",
   COM_RECE_FC_SETTLE_VERIFY: "https://sfapi.sf-express.com/std/service",
   COM_RECE_KB_CUST_REC_PACK: "https://sfapi.sf-express.com/std/service",
   COM_RECE_KB_HANDOVER_PACK: "https://sfapi.sf-express.com/std/service",
@@ -206,13 +192,16 @@ function signSfExpressPayload(msgData: string, timestamp: string, checkWord: str
  * Call one SF Express Open Platform service: POST form-urlencoded with the
  * business JSON in msgData, signed by {@link signSfExpressPayload}. msgData is
  * usually an object; a few services (e.g. EXP_RECE_FILTER_ORDER_BSP) take a JSON
- * array instead.
+ * array instead. `extraForm` carries the form-level fields a handful of forwarding
+ * services document beside msgData; the signature covers msgData only, so they
+ * never take part in it.
  */
 export async function requestSfExpress(
   serviceCode: string,
   msgData: unknown,
   context: SfExpressActionContext,
   phase: SfExpressPhase,
+  extraForm?: Record<string, string>,
 ): Promise<unknown> {
   return runProviderRequest({ signal: context.signal, label: "SF Express" }, async (signal) => {
     const body = JSON.stringify(msgData);
@@ -225,8 +214,12 @@ export async function requestSfExpress(
       msgDigest: signSfExpressPayload(body, timestamp, context.checkWord),
       msgData: body,
     });
+    // A few forwarding services document a field beside msgData rather than inside it.
+    for (const [name, value] of Object.entries(extraForm ?? {})) {
+      form.set(name, value);
+    }
     const baseUrl = context.sandbox
-      ? (sfExpressSandboxBaseUrlByServiceCode[serviceCode] ?? sfExpressSandboxBaseUrl)
+      ? sfExpressSandboxBaseUrl
       : (sfExpressBaseUrlByServiceCode[serviceCode] ?? sfExpressApiBaseUrl);
     const response = await context.fetcher(baseUrl, {
       method: "POST",

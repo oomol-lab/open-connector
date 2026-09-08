@@ -261,6 +261,7 @@ export const sfExpressFreightForwardCrossborderHandlers: ProviderActionHandlerSu
       },
       context,
       "execute",
+      { clientCode: requiredInputString(input.client_code, "client_code") },
     );
     return { result: payload ?? null };
   },
@@ -277,6 +278,7 @@ export const sfExpressFreightForwardCrossborderHandlers: ProviderActionHandlerSu
       }),
       context,
       "execute",
+      { clientCode: requiredInputString(input.client_code, "client_code") },
     );
     return { accepted: true, waybillNo };
   },

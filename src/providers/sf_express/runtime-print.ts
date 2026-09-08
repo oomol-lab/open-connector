@@ -108,7 +108,7 @@ export const sfExpressPrintHandlers: ProviderActionHandlerSubset<"sf_express", S
     );
     const obj = optionalRecord(payload) ?? {};
     return {
-      files: Array.isArray(obj.files) ? obj.files.map(normalizePrintFile) : undefined,
+      files: Array.isArray(obj.files) ? obj.files.map(normalizeCitywidePrintFile) : undefined,
       printBatchNo: optionalString(obj.printBatchNo),
     };
   },
@@ -123,7 +123,7 @@ export const sfExpressPrintHandlers: ProviderActionHandlerSubset<"sf_express", S
     return {
       status: requiredString(obj.status, "status", providerResponseError),
       errorReason: optionalString(obj.errorReason),
-      files: Array.isArray(obj.files) ? obj.files.map(normalizePrintFile) : undefined,
+      files: Array.isArray(obj.files) ? obj.files.map(normalizeCitywidePrintFile) : undefined,
     };
   },
   async list_print_templates(input, context) {
@@ -262,6 +262,17 @@ function normalizePrintFile(value: unknown, index: number): Record<string, unkno
     areaNo: integer(file.areaNo, `files[${index}].areaNo`, providerResponseError),
     pageNo: integer(file.pageNo, `files[${index}].pageNo`, providerResponseError),
     pageCount: optionalInteger(file.pageCount),
+  };
+}
+
+/** The citywide print response carries only url/token/waybillNo/seqNo per file. */
+function normalizeCitywidePrintFile(value: unknown, index: number): Record<string, unknown> {
+  const file = requiredRecord(value, `files[${index}]`, providerResponseError);
+  return {
+    url: requiredString(file.url, `files[${index}].url`, providerResponseError),
+    token: requiredString(file.token, `files[${index}].token`, providerResponseError),
+    waybillNo: requiredString(file.waybillNo, `files[${index}].waybillNo`, providerResponseError),
+    seqNo: integer(file.seqNo, `files[${index}].seqNo`, providerResponseError),
   };
 }
 

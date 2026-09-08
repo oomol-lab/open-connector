@@ -154,9 +154,9 @@ describe("SF Express provider core runtime", () => {
     expect(output).toEqual({ waybillNo: "SF1040275268927", valid: true });
   });
 
-  it("routes sandbox calls for EOS station endpoints to the SIT host", async () => {
+  it("routes sandbox calls for EOS station endpoints to the documented sandbox gateway", async () => {
     const fetcher = vi.fn<typeof fetch>(async (url) => {
-      expect(String(url)).toBe("https://sfapi.sit.sf-express.com:45273/std/service");
+      expect(String(url)).toBe("https://sfapi-sbox.sf-express.com/std/service");
       return okEnvelope({});
     });
 

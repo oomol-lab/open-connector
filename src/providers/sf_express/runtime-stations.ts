@@ -316,6 +316,7 @@ export const sfExpressStationHandlers: ProviderActionHandlerSubset<"sf_express",
           deptCode: requiredInputString(input.dept_code, "dept_code"),
           oprId: requiredInputString(input.opr_id, "opr_id"),
           sgs_netcode: optionalString(input.sgs_net_code),
+          accessCode: optionalString(input.access_code),
         }),
         content: compactObject({
           storeCode: requiredInputString(input.store_code, "store_code"),
@@ -1100,6 +1101,7 @@ function readStationHeader(value: unknown): Record<string, unknown> {
   return compactObject({
     oprId: requiredInputString(header.operatorId, "header.operatorId"),
     deptCode: optionalString(header.deptCode),
+    sgs_netcode: optionalString(header.netCode),
     accessCode: optionalString(header.accessCode),
   });
 }
