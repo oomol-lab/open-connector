@@ -41,16 +41,6 @@ APP_STORE_CONNECT_PRIVATE_KEY_PATH=~/.appstoreconnect/private_keys/AuthKey_2X9R4
 node examples/local-http/app_store_connect.ts
 ```
 
-Discover native MCP tools using an existing Metabase API-key connection. This only reads tool
-metadata; it does not execute queries or modify content. Set `OOMOL_CONNECT_RUNTIME_TOKEN` to a
-runtime token permitted to execute `metabase.list_mcp_tools`:
-
-```bash
-node examples/local-http/metabase.ts
-```
-
-See [Metabase native MCP actions](../../docs/metabase-mcp.md) for setup and supported capabilities.
-
 Prepare Gmail OAuth with your own Google OAuth app:
 
 ```bash
