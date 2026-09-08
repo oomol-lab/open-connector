@@ -10,6 +10,7 @@ import {
   optionalRecord,
   optionalString,
 } from "../../core/cast.ts";
+import { sm3Hex } from "../../core/sm3.ts";
 import {
   parseProviderJsonBodyText,
   ProviderRequestError,
@@ -77,9 +78,18 @@ const sfExpressSystemErrorCodes = new Set(["S0001", "S0003"]);
 
 type SfExpressPhase = "validate" | "execute";
 
+/**
+ * The msgDigest algorithm a partnerID is bound to. SF fixes the choice when the
+ * application is created and cannot change it afterwards, so it belongs to the
+ * credential rather than to a request.
+ */
+export type SfExpressSignatureAlgorithm = "standard_md5" | "simple_md5" | "sm3";
+
 export interface SfExpressActionContext {
   partnerId: string;
   checkWord: string;
+  /** Defaults to 标准MD5, the algorithm every application predating the choice signs with. */
+  signatureAlgorithm?: SfExpressSignatureAlgorithm;
   /** When true, all calls go to the SF sandbox gateway regardless of the service's production host. */
   sandbox?: boolean;
   fetcher: ProviderFetch;
@@ -96,6 +106,7 @@ export function createSfExpressContext(
   return {
     partnerId: requiredInputString(values.partnerId, "partnerId"),
     checkWord: requiredInputString(values.checkWord, "checkWord"),
+    signatureAlgorithm: readSignatureAlgorithm(values.signatureAlgorithm),
     sandbox: readSandboxFlag(values.sandbox),
     fetcher,
     signal,
@@ -116,6 +127,23 @@ function readSandboxFlag(value: unknown): boolean {
     return true;
   }
   throw providerInputError("sandbox must be true or false.");
+}
+
+/**
+ * Read the optional signature-algorithm credential field, leaving it unset when
+ * the connection does not name one so {@link signSfExpressPayload} owns the
+ * default. An unrecognized value is rejected rather than falling back, because
+ * the wrong algorithm fails every call with A1006 数字签名无效.
+ */
+function readSignatureAlgorithm(value: unknown): SfExpressSignatureAlgorithm | undefined {
+  const algorithm = optionalString(value)?.toLowerCase();
+  if (algorithm === undefined) {
+    return undefined;
+  }
+  if (algorithm === "standard_md5" || algorithm === "simple_md5" || algorithm === "sm3") {
+    return algorithm;
+  }
+  throw providerInputError("signatureAlgorithm must be standard_md5, simple_md5 or sm3.");
 }
 
 /** Map an optional boolean action input to the 1/0 flags SF Express expects on the wire. */
@@ -159,6 +187,9 @@ export async function validateSfExpressCredential(
       environment: context.sandbox ? "sandbox" : "production",
       // The default gateway for that environment; a few services document their own host.
       apiBaseUrl: context.sandbox ? sfExpressSandboxBaseUrl : sfExpressApiBaseUrl,
+      // The algorithm this validation signed with, so an A1006 on a later call
+      // can be told apart from a wrong check word.
+      signatureAlgorithm: context.signatureAlgorithm ?? "standard_md5",
       validationEndpoint: "EXP_RECE_VALIDATE_WAYBILLNO",
     },
   };
@@ -177,14 +208,31 @@ function javaFormUrlEncode(value: string): string {
 }
 
 /**
- * Sign one request the way the SF Express Open Platform documents it:
- * Base64(MD5(URLEncoder.encode(msgData + timestamp + checkWord))). Skipping the
- * URL-encoding step fails signature verification for every payload, because JSON
- * always carries characters the encoder rewrites.
+ * Sign one request with the algorithm the application was created against. All
+ * three sign the same `msgData + timestamp + checkWord` string and differ only
+ * in how they turn it into msgDigest:
+ *
+ * - `standard_md5` (标准MD5) runs it through `URLEncoder.encode(text, "UTF-8")`
+ *   first, then Base64(MD5(...)). Skipping that step fails verification for
+ *   every payload, because JSON always carries characters the encoder rewrites.
+ * - `simple_md5` (简易MD5) is the same Base64(MD5(...)) over the raw string.
+ * - `sm3` (SM3) is the lowercase-hex 国密 SM3 digest of the raw string.
+ *
+ * 标准MD5 is the default, because it is what SF signed with before it offered
+ * the choice and what every application created back then still uses.
  */
-function signSfExpressPayload(msgData: string, timestamp: string, checkWord: string): string {
+export function signSfExpressPayload(
+  msgData: string,
+  timestamp: string,
+  checkWord: string,
+  algorithm: SfExpressSignatureAlgorithm = "standard_md5",
+): string {
+  const text = msgData + timestamp + checkWord;
+  if (algorithm === "sm3") {
+    return sm3Hex(text);
+  }
   return createHash("md5")
-    .update(javaFormUrlEncode(msgData + timestamp + checkWord))
+    .update(algorithm === "standard_md5" ? javaFormUrlEncode(text) : text)
     .digest("base64");
 }
 
@@ -211,7 +259,7 @@ export async function requestSfExpress(
       requestID: randomUUID(),
       serviceCode,
       timestamp,
-      msgDigest: signSfExpressPayload(body, timestamp, context.checkWord),
+      msgDigest: signSfExpressPayload(body, timestamp, context.checkWord, context.signatureAlgorithm),
       msgData: body,
     });
     // A few forwarding services document a field beside msgData rather than inside it.

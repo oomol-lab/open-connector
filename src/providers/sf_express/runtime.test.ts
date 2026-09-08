@@ -2,7 +2,12 @@ import { createHash } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import { sfExpressQueryHandlers } from "./runtime-query.ts";
 import { sfExpressStationHandlers } from "./runtime-stations.ts";
-import { sfExpressApiBaseUrl, validateSfExpressCredential } from "./runtime.ts";
+import {
+  createSfExpressContext,
+  sfExpressApiBaseUrl,
+  signSfExpressPayload,
+  validateSfExpressCredential,
+} from "./runtime.ts";
 
 const context = (fetcher: typeof fetch) => ({ partnerId: "TEST_PARTNER", checkWord: "TEST_CHECKWORD", fetcher });
 
@@ -62,6 +67,71 @@ describe("SF Express provider core runtime", () => {
 
     expect(fetcher).toHaveBeenCalledOnce();
     expect(output).toEqual({ waybillNo: "SF1040275268927", valid: true });
+  });
+
+  describe("digital signature algorithms", () => {
+    // The worked example the 数字签名认证说明 page repeats on all three tabs.
+    const msgData = '{"language":"zh-CN","orderId":"QIAO-20200618-004"}';
+    const timestamp = "12312334453453";
+    const checkWord = "fjcg5PGKaNpPSHFAZ4QsCOkV71R3zVci";
+
+    it("reproduces the documented 标准MD5 and SM3 digests", () => {
+      expect(signSfExpressPayload(msgData, timestamp, checkWord, "standard_md5")).toBe("IIKJtuLVzoFTu4kHI8M8vA==");
+      expect(signSfExpressPayload(msgData, timestamp, checkWord, "sm3")).toBe(
+        "b05d21124eb6aedb3c6c99b1a37f9fc9a23a9898cb6a4b5df00d4402bda9081f",
+      );
+    });
+
+    it("hashes the raw string for 简易MD5", () => {
+      // The 简易MD5 page reprints the 标准MD5 digest for this sample, which cannot
+      // be right: the payload is JSON, so URL-encoding rewrites most of it. The
+      // expectation is therefore restated from the algorithm the same page describes.
+      const expected = createHash("md5")
+        .update(msgData + timestamp + checkWord, "utf8")
+        .digest("base64");
+      expect(signSfExpressPayload(msgData, timestamp, checkWord, "simple_md5")).toBe(expected);
+      expect(expected).not.toBe(signSfExpressPayload(msgData, timestamp, checkWord, "standard_md5"));
+    });
+
+    it("defaults to 标准MD5 when the connection names no algorithm", () => {
+      expect(signSfExpressPayload(msgData, timestamp, checkWord)).toBe(
+        signSfExpressPayload(msgData, timestamp, checkWord, "standard_md5"),
+      );
+      expect(
+        createSfExpressContext({ partnerId: "TEST_PARTNER", checkWord: "TEST_CHECKWORD" }, fetch).signatureAlgorithm,
+      ).toBeUndefined();
+    });
+
+    it("signs live requests with the algorithm the credential selects", async () => {
+      for (const algorithm of ["standard_md5", "simple_md5", "sm3"] as const) {
+        const fetcher = vi.fn<typeof fetch>(async (_url, init) => {
+          const form = readForm(init);
+          expect(form.get("msgDigest")).toBe(
+            signSfExpressPayload(form.get("msgData")!, form.get("timestamp")!, "TEST_CHECKWORD", algorithm),
+          );
+          return okEnvelope(true);
+        });
+
+        await sfExpressQueryHandlers.validate_waybill_no!(
+          { waybill_no: "SF1040275268927" },
+          {
+            ...context(fetcher),
+            signatureAlgorithm: algorithm,
+          },
+        );
+
+        expect(fetcher).toHaveBeenCalledOnce();
+      }
+    });
+
+    it("rejects an unrecognized signatureAlgorithm instead of signing with the wrong one", () => {
+      expect(() =>
+        createSfExpressContext(
+          { partnerId: "TEST_PARTNER", checkWord: "TEST_CHECKWORD", signatureAlgorithm: "md5" },
+          fetch,
+        ),
+      ).toThrow(/signatureAlgorithm must be standard_md5, simple_md5 or sm3/);
+    });
   });
 
   it("signs payloads carrying spaces, Chinese, and characters encodeURIComponent leaves alone", async () => {

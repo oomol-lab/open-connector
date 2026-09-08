@@ -34,6 +34,16 @@ export const provider: ProviderDefinition = {
             "The checkWord (校验码) of the same SF Express Open Platform application, used to sign requests. New applications must pass the sandbox tests on https://open.sf-express.com before production calls succeed.",
         },
         {
+          key: "signatureAlgorithm",
+          label: "Signature Algorithm (数字签名方式)",
+          inputType: "text",
+          required: false,
+          secret: false,
+          placeholder: "standard_md5",
+          description:
+            "The msgDigest algorithm chosen when the partnerID was created, which cannot be changed afterwards: standard_md5 (标准MD5, the default) URL-encodes before hashing, simple_md5 (简易MD5) hashes the raw string, and sm3 (SM3) returns the 国密 SM3 hex digest. Check it under 数字签名方式 on the application's page.",
+        },
+        {
           key: "sandbox",
           label: "Sandbox Mode (沙箱联调)",
           inputType: "text",
