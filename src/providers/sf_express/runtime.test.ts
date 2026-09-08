@@ -70,22 +70,22 @@ describe("SF Express provider core runtime", () => {
   });
 
   describe("digital signature algorithms", () => {
-    // The worked example the 数字签名认证说明 page repeats on all three tabs.
+    // The worked example SF repeats on all three tabs of its signing guide.
     const msgData = '{"language":"zh-CN","orderId":"QIAO-20200618-004"}';
     const timestamp = "12312334453453";
     const checkWord = "fjcg5PGKaNpPSHFAZ4QsCOkV71R3zVci";
 
-    it("reproduces the documented 标准MD5 and SM3 digests", () => {
+    it("reproduces the documented standard_md5 and sm3 digests", () => {
       expect(signSfExpressPayload(msgData, timestamp, checkWord, "standard_md5")).toBe("IIKJtuLVzoFTu4kHI8M8vA==");
       expect(signSfExpressPayload(msgData, timestamp, checkWord, "sm3")).toBe(
         "b05d21124eb6aedb3c6c99b1a37f9fc9a23a9898cb6a4b5df00d4402bda9081f",
       );
     });
 
-    it("hashes the raw string for 简易MD5", () => {
-      // The 简易MD5 page reprints the 标准MD5 digest for this sample, which cannot
-      // be right: the payload is JSON, so URL-encoding rewrites most of it. The
-      // expectation is therefore restated from the algorithm the same page describes.
+    it("hashes the raw string for simple_md5", () => {
+      // SF's simple_md5 page reprints the standard_md5 digest for this sample,
+      // which cannot be right: the payload is JSON, so URL-encoding rewrites most
+      // of it. The expectation is restated from the algorithm that page describes.
       const expected = createHash("md5")
         .update(msgData + timestamp + checkWord, "utf8")
         .digest("base64");
@@ -93,7 +93,7 @@ describe("SF Express provider core runtime", () => {
       expect(expected).not.toBe(signSfExpressPayload(msgData, timestamp, checkWord, "standard_md5"));
     });
 
-    it("defaults to 标准MD5 when the connection names no algorithm", () => {
+    it("defaults to standard_md5 when the connection names no algorithm", () => {
       expect(signSfExpressPayload(msgData, timestamp, checkWord)).toBe(
         signSfExpressPayload(msgData, timestamp, checkWord, "standard_md5"),
       );
