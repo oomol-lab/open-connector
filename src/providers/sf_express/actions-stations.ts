@@ -41,16 +41,21 @@ const kbPackInputSchema = (description: string): ReturnType<typeof s.object> =>
   );
 
 /** EOS-family endpoints wrap the business payload in { header, content }. */
-const headerInputSchema = s.object(
-  "The request header block required by this endpoint.",
-  {
-    operatorId: s.nonEmptyString("The operator employee number (操作人工号)."),
-    deptCode: s.nonEmptyString("The city/department code (城市编码), e.g. 755."),
-    netCode: s.nonEmptyString("The district code (区代码), sent as sgs_netcode."),
-    accessCode: s.nonEmptyString("The system access code (系统接入编码) allocated by SF Express."),
-  },
-  { optional: ["deptCode", "netCode", "accessCode"] },
-);
+const headerFields = {
+  operatorId: s.nonEmptyString("The operator employee number (操作人工号)."),
+  deptCode: s.nonEmptyString("The city/department code (城市编码), e.g. 755."),
+  netCode: s.nonEmptyString("The district code (区代码), sent as sgs_netcode."),
+  accessCode: s.nonEmptyString("The system access code (系统接入编码) allocated by SF Express."),
+};
+
+const headerInputSchema = s.object("The request header block required by this endpoint.", headerFields, {
+  optional: ["deptCode", "netCode"],
+});
+
+/** COM_RECE_EOS_ADD_STORE_INFO is the one EOS endpoint whose header table marks every field 否. */
+const optionalHeaderInputSchema = s.object("The request header block; every field is optional here.", headerFields, {
+  optional: ["operatorId", "deptCode", "netCode", "accessCode"],
+});
 
 const storeAddressFields = {
   provincename: s.nonEmptyString("The province name, e.g. 广东省."),
@@ -145,7 +150,10 @@ export const sfExpressStationActions: ActionDefinition[] = [
     inputSchema: s.requiredObject("The station inventory batch.", {
       store_code: kbPartnerFields.store_code,
       partner_id: kbPartnerFields.partner_id,
-      waybill_nos: s.stringArray("The waybill numbers to check in for inventory.", { minItems: 1 }),
+      waybill_nos: s.stringArray("The waybill numbers to check in for inventory; at most 20 per call.", {
+        minItems: 1,
+        maxItems: 20,
+      }),
     }),
     outputSchema: s.object("The inventory result.", {
       msg: s.string("The message returned by SF Express."),
@@ -257,7 +265,10 @@ export const sfExpressStationActions: ActionDefinition[] = [
       agent_code: kbPartnerFields.agent_code,
       partner_id: kbPartnerFields.partner_id,
       area_code: kbPartnerFields.area_code,
-      waybill_nos: s.stringArray("The waybill numbers to check in for inventory.", { minItems: 1 }),
+      waybill_nos: s.stringArray("The waybill numbers to check in for inventory; at most 20 per call.", {
+        minItems: 1,
+        maxItems: 20,
+      }),
     }),
     outputSchema: s.object("The inventory result.", {
       msg: s.string("The message returned by SF Express."),
@@ -619,25 +630,43 @@ export const sfExpressStationActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "station_verify_fc_settlement",
     description:
-      "Check whether a Hive Box (丰巢) cabinet drop-off, rental or reservation fee settles monthly (丰巢订单结算校验).",
+      "Check whether a Hive Box (丰巢) cabinet drop-off fee settles monthly (丰巢订单结算校验, 订单类型 1 派件投柜). The rental and reservation order types carry different payloads and are not covered.",
     requiredScopes: [],
     inputSchema: s.object(
       "The settlement to verify.",
       {
-        op_type: s.integer("The operation type, e.g. 1 for cabinet drop-off."),
+        op_type: s.integer("The operation type: 1 投柜, 2 放弃投柜.", { minimum: 1, maximum: 2 }),
         order_id: s.nonEmptyString("The order number."),
-        cabinet_code: s.nonEmptyString("The Hive Box cabinet code."),
-        emp_no: s.nonEmptyString("The courier employee number."),
-        phone: s.nonEmptyString("The contact phone."),
-        payment_type: s.nonEmptyString("The payment type, e.g. 网点钱包（公司月结）."),
+        cabinet_code: s.nonEmptyString("The Hive Box cabinet code; required when op_type is 1."),
+        emp_no: s.nonEmptyString("The courier employee number; required when op_type is 1."),
+        phone: s.nonEmptyString("The contact phone; required when op_type is 1."),
+        payment_type: s.integer("The payment type: 1 网点钱包（公司月结）; required when op_type is 1.", {
+          minimum: 1,
+        }),
         waybill_no: kbPartnerFields.waybill_no,
-        grid_type: s.nonEmptyString("The grid size, e.g. 小."),
+        grid_type: s.integer("The grid size: 1 大, 2 中, 3 小; required when op_type is 1.", {
+          minimum: 1,
+          maximum: 3,
+        }),
         discount_type: s.nonEmptyString("The discount type, when any."),
-        discount_fee: s.number("The discount fee, when any."),
-        payed_fee: s.number("The already-paid fee."),
-        deliver_tm: dateTimeSchema("The drop-off time in yyyy-MM-dd HH:mm:ss format."),
+        discount_fee: s.integer("The discount amount in cents (分), when any."),
+        payed_fee: s.integer("The charged amount in cents (分); required when op_type is 1."),
+        deliver_tm: dateTimeSchema("The drop-off time in yyyy-MM-dd HH:mm:ss format; required when op_type is 1."),
       },
-      { optional: ["discount_type", "discount_fee"] },
+      {
+        optional: [
+          "cabinet_code",
+          "emp_no",
+          "phone",
+          "payment_type",
+          "waybill_no",
+          "grid_type",
+          "discount_type",
+          "discount_fee",
+          "payed_fee",
+          "deliver_tm",
+        ],
+      },
     ),
     outputSchema: s.object(
       "The settlement verdict.",
@@ -852,7 +881,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
       s.object(
         "The station info to save.",
         {
-          header: headerInputSchema,
+          header: optionalHeaderInputSchema,
           store_code: s.nonEmptyString("The station's own store code (自有编码)."),
           virtual_addr: s.nonEmptyString(
             "The station id; auto-generated from the phone when creating, required when updating.",

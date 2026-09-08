@@ -34,6 +34,20 @@ const routerInfoSchema = s.object(
   { optional: ["countyName"] },
 );
 
+/** The return-receipt route table marks countyName required, unlike the forward route. */
+const returnRouterInfoSchema = s.requiredObject("One return-receipt route entry; upload incrementally, newest first.", {
+  uniqueId: s.nonEmptyString("The unique id of this route entry, used by SF to deduplicate; a UUID works."),
+  status: s.integer("The waybill status when the route happened; 0 = in transit."),
+  operator: s.nonEmptyString("The operator name or employee code."),
+  operateTime: dateTimeSchema("The time the route event actually happened in YYYY-MM-DD HH:mm:ss format."),
+  context: s.nonEmptyString(
+    "The route description, following the official node wording (装车/出运/卸车/派件出仓/签收).",
+  ),
+  cityName: s.nonEmptyString("The city where the route event happened."),
+  provinceName: s.nonEmptyString("The province where the route event happened."),
+  countyName: s.nonEmptyString("The county where the route event happened."),
+});
+
 const trackPointSchema = s.object(
   "One vehicle track point.",
   {
@@ -70,7 +84,6 @@ const trackPointSchema = s.object(
       "elevation",
       "latLongType",
       "remark",
-      "traceType",
       "sispRouter",
       "sispRouterExtend",
     ],
@@ -325,7 +338,6 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
       },
       {
         optional: [
-          "trace_type",
           "license_plate_number",
           "driver",
           "driver_phone",
@@ -478,7 +490,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
     requiredScopes: [],
     inputSchema: s.requiredObject("The return-receipt route upload.", {
       waybill_no: s.nonEmptyString("The return-receipt master waybill number (回单号)."),
-      router_infos: s.array("The route entries.", routerInfoSchema, { minItems: 1 }),
+      router_infos: s.array("The route entries.", returnRouterInfoSchema, { minItems: 1 }),
     }),
     outputSchema: uploadAckOutputSchema("The return-receipt waybill number, echoed back."),
   }),

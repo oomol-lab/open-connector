@@ -144,15 +144,19 @@ const extraInfoListSchema = s.array(
 
 const waybillNoInfoInputSchema = s.array(
   "Existing waybill numbers and per-package dimensions; required when confirming an order, and used for bringing your own waybill numbers when creating one.",
-  s.object("One waybill number entry with optional package dimensions.", {
-    waybill_type: s.integer("The waybill number type: 1 = mother (母单), 2 = child (子单), 3 = sign-back (签回单)."),
-    waybill_no: s.nonEmptyString("The SF waybill number."),
-    box_no: s.nonEmptyString("The box number; unique per monthly card."),
-    length: s.number("The package length in centimeters."),
-    width: s.number("The package width in centimeters."),
-    height: s.number("The package height in centimeters."),
-    weight: s.number("The package weight in kilograms."),
-  }),
+  s.object(
+    "One waybill number entry with optional package dimensions.",
+    {
+      waybill_type: s.integer("The waybill number type: 1 = mother (母单), 2 = child (子单), 3 = sign-back (签回单)."),
+      waybill_no: s.nonEmptyString("The SF waybill number."),
+      box_no: s.nonEmptyString("The box number; unique per monthly card."),
+      length: s.number("The package length in centimeters."),
+      width: s.number("The package width in centimeters."),
+      height: s.number("The package height in centimeters."),
+      weight: s.number("The package weight in kilograms."),
+    },
+    { optional: ["waybill_no", "box_no", "length", "width", "height", "weight"] },
+  ),
 );
 
 const waybillNoInfoOutputSchema = s.object(
@@ -229,7 +233,7 @@ const newDestAddressSchema = s.object(
     area_code: s.nonEmptyString("The site code, for example 755WQ."),
     location_code: s.nonEmptyString("The city code."),
   },
-  { optional: ["country", "country_code", "company", "area_code", "location_code"] },
+  { optional: ["contact", "phone", "country", "country_code", "company", "area_code", "location_code"] },
 );
 
 const orderResultOutputSchema = s.object(
@@ -255,6 +259,7 @@ const createOrderInputProperties = {
   order_id: s.nonEmptyString("The unique client order number; reusing one returns the waybill first allocated to it.", {
     maxLength: 64,
   }),
+  is_return_qr_code: s.boolean("Whether to return the return-business QR code URL; SF omits it by default."),
   express_type_id: s.integer(
     "The SF product type (快件产品类别) code from the SF product table; only products agreed with your SF sales manager are usable. Defaults to 1. Mutually exclusive with scene_plan_code.",
   ),
@@ -308,6 +313,7 @@ const createOrderInputProperties = {
 
 const createOrderOptionalFields = [
   "express_type_id",
+  "is_return_qr_code",
   "scene_plan_code",
   "cargo_desc",
   "monthly_card",
@@ -361,23 +367,9 @@ export const sfExpressOrderActions: ActionDefinition[] = [
           maxLength: 20,
         }),
         monthly_card: s.nonEmptyString("The SF monthly settlement card (月结卡号)."),
-        pre_order_time: dateTimeSchema(
-          "The pickup time to check availability for (预约取件时间) in YYYY-MM-DD HH:mm:ss format.",
-        ),
-        total_weight: s.number("The total shipment weight in kilograms.", { exclusiveMinimum: 0 }),
-        pay_method: s.integer("The payment method: 1 = 寄方付, 2 = 收方付, 3 = 第三方付.", { minimum: 1, maximum: 3 }),
-        parcel_qty: s.positiveInteger("The number of packages."),
       },
       {
-        optional: [
-          "express_type_id",
-          "cargo_name",
-          "monthly_card",
-          "pre_order_time",
-          "total_weight",
-          "pay_method",
-          "parcel_qty",
-        ],
+        optional: ["cargo_name", "monthly_card"],
       },
     ),
     outputSchema: s.object("The available service time windows for the order.", {
@@ -526,22 +518,26 @@ export const sfExpressOrderActions: ActionDefinition[] = [
       {
         waybill_no: waybillNoSchema,
         action_type: s.stringEnum(
-          "The instruction type: redirect (转寄), return (退回), priority (优派), redeliver (再派), change_to_door (改派送), change_delivery_time (更改派送时间), change_recipient (修改收件人信息), change_pay_method (更改付款方式), change_cod (修改代收货款), void (作废), or partial_return (部分退回).",
+          "The instruction type: redirect (转寄), return (退回), priority (优派), redeliver (再派), change_to_self_pickup (改自取, pair with self_pick_point), change_to_door (改派送), change_delivery_time (更改派送时间), change_recipient (修改收件人信息), change_pay_method (更改付款方式), change_cod (修改代收货款), or void (作废).",
           [
             "redirect",
             "return",
             "priority",
             "redeliver",
+            "change_to_self_pickup",
             "change_to_door",
             "change_delivery_time",
             "change_recipient",
             "change_pay_method",
             "change_cod",
             "void",
-            "partial_return",
           ],
         ),
-        role: s.stringEnum("The initiator: sender (寄方) or recipient (收方).", ["sender", "recipient"]),
+        role: s.stringEnum("The initiator: sender (寄方), recipient (收方), or third_party (第三方).", [
+          "sender",
+          "recipient",
+          "third_party",
+        ]),
         pay_mode: s.stringEnum(
           "The payment mode: sender_cash (寄付现结), recipient_cash (到付现结), sender_to_third_monthly (寄付转第三方月结), or sender_monthly (寄付月结).",
           ["sender_cash", "recipient_cash", "sender_to_third_monthly", "sender_monthly"],

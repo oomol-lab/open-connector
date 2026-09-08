@@ -6,21 +6,6 @@ import { waybillNoSchema } from "./schemas.ts";
 
 const service = "sf_express";
 
-const registerContactInfoSchema = s.object(
-  "The contact used as fallback verification together with check_phone_no.",
-  {
-    contact: s.nonEmptyString("The contact name (联系人)."),
-    province: s.nonEmptyString("The province name."),
-    city: s.nonEmptyString("The city name."),
-    county: s.nonEmptyString("The district or county name."),
-    contact_type: s.stringEnum("Whether this contact is the sender (default) or the recipient.", [
-      "sender",
-      "recipient",
-    ]),
-  },
-  { optional: ["contact_type"] },
-);
-
 /** Actions for the SF Express push-registration endpoints (the customer-callable registrations). */
 export const sfExpressPushActions: ActionDefinition[] = [
   defineProviderAction(service, {
@@ -42,11 +27,10 @@ export const sfExpressPushActions: ActionDefinition[] = [
             pattern: "^\\d{4}$",
           },
         ),
-        contact_info: registerContactInfoSchema,
         language: s.stringEnum("The response language.", ["zh-CN", "zh-TW", "zh-HK", "zh-MO", "en"]),
         country: s.string("The country or region code, for example CN."),
       },
-      { optional: ["check_phone_no", "contact_info", "language", "country"] },
+      { optional: ["check_phone_no", "language", "country"] },
     ),
     outputSchema: s.object("The registration result.", {
       registered: s.boolean("Whether the route push registration succeeded."),

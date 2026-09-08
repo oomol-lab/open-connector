@@ -135,7 +135,10 @@ describe("SF Express service-query handlers", () => {
         { src_address: { district: "南山区" }, dest_address: { code: "755" } },
         context(fetcher),
       ),
-    ).rejects.toMatchObject({ status: 400, message: "src_address requires either code or both province and city." });
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "src_address requires code, both province and city, or a detailed address.",
+    });
 
     expect(fetcher).not.toHaveBeenCalled();
   });

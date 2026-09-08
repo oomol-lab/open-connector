@@ -593,7 +593,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
         remark: s.string("The rejection reason; required when detail_result is 2."),
         add_amt: s.number("The add-fee amount in CNY; must match the original request.", { exclusiveMinimum: 0 }),
       },
-      { optional: ["remark", "add_amt"] },
+      { optional: ["remark"] },
     ),
     outputSchema: acknowledgedOutputSchema("The decision acknowledgement.", {
       orderNo: s.string("The install order number the decision applied to."),
@@ -613,7 +613,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
         remark: s.string("The add-fee reason."),
         img_url: s.string("The add-fee image URLs, comma-separated."),
       },
-      { optional: ["add_amt", "remark", "img_url"] },
+      { optional: ["remark", "img_url"] },
     ),
     outputSchema: s.object("The add-fee application result.", {
       sfAddFeeNo: s.nullableString("The SF add-fee serial number; keep it for reconciliation."),
@@ -648,7 +648,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
         remark: s.string("The rejection reason; required when refund_status is 1."),
         refund_amt: s.number("The refund amount in CNY; must match the original request.", { exclusiveMinimum: 0 }),
       },
-      { optional: ["remark", "refund_amt"] },
+      { optional: ["remark"] },
     ),
     outputSchema: acknowledgedOutputSchema("The decision acknowledgement.", {
       orderNo: s.string("The install order number the decision applied to."),

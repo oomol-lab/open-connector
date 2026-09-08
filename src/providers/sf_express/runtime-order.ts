@@ -20,6 +20,7 @@ import {
 import {
   providerInputError,
   providerResponseError,
+  requiredInputNumber,
   requiredInputString,
   requiredResponseRecord,
 } from "../provider-runtime.ts";
@@ -30,13 +31,19 @@ const interceptActionCodes: Record<string, string> = {
   return: "2",
   priority: "3",
   redeliver: "4",
+  change_to_self_pickup: "5",
   change_to_door: "6",
   change_delivery_time: "7",
   change_recipient: "8",
   change_pay_method: "9",
   change_cod: "10",
   void: "12",
-  partial_return: "38",
+};
+
+const interceptRoleCodes: Record<string, string> = {
+  sender: "1",
+  recipient: "2",
+  third_party: "3",
 };
 
 const interceptPayModeCodes: Record<string, string> = {
@@ -61,6 +68,7 @@ export const sfExpressOrderHandlers: ProviderActionHandlerSubset<"sf_express", S
     if (expressTypeId !== undefined && scenePlanCode !== undefined) {
       throw providerInputError("express_type_id and scene_plan_code are mutually exclusive.");
     }
+
     const temperatureRange = optionalNumber(input.temperature_range);
     if (expressTypeId === 12 && temperatureRange === undefined) {
       throw providerInputError("temperature_range is required when express_type_id is 12 (医药温控件).");
@@ -77,7 +85,9 @@ export const sfExpressOrderHandlers: ProviderActionHandlerSubset<"sf_express", S
       compactObject({
         language: optionalString(input.language) ?? "zh-CN",
         orderId: requiredInputString(input.order_id, "order_id"),
-        expressTypeId,
+        // expressTypeId is documented mandatory with a default of 1, and is the
+        // two-way alternative to scenePlanCode.
+        expressTypeId: expressTypeId ?? (scenePlanCode === undefined ? 1 : undefined),
         scenePlanCode,
         cargoDetails: readCargoDetails(input.cargo_details),
         cargoDesc: optionalString(input.cargo_desc),
@@ -107,6 +117,7 @@ export const sfExpressOrderHandlers: ProviderActionHandlerSubset<"sf_express", S
         // Only a list that actually carries a waybill number means SF must not
         // allocate one; the same list also carries dimensions-only entries.
         isGenWaybillNo: hasWaybillNo(waybillNoInfoList) ? 0 : undefined,
+        isReturnQRCode: optionalFlagNumber(input.is_return_qr_code),
         extraInfoList: readExtraInfoList(input.extra_info_list),
         specialDeliveryTypeCode: optionalString(input.special_delivery_type_code),
         specialDeliveryValue: optionalString(input.special_delivery_value),
@@ -127,11 +138,7 @@ export const sfExpressOrderHandlers: ProviderActionHandlerSubset<"sf_express", S
           readPreOrderContact(input.recipient, "recipient"),
         ],
         monthlyCard: optionalString(input.monthly_card),
-        expressTypeId: optionalNumber(input.express_type_id),
-        preOrderTime: optionalString(input.pre_order_time),
-        totalWeight: optionalNumber(input.total_weight),
-        payMethod: optionalNumber(input.pay_method),
-        parcelQty: optionalNumber(input.parcel_qty),
+        expressTypeId: requiredInputNumber(input.express_type_id, "express_type_id"),
       }),
       context,
       "execute",
@@ -146,6 +153,7 @@ export const sfExpressOrderHandlers: ProviderActionHandlerSubset<"sf_express", S
   },
   async update_order(input, context) {
     const dealType = input.deal_type === "cancel" ? 2 : 1;
+    const destContactInfo = readDestContactInfo(input.dest_contact_info);
     const waybillNoInfoList = readWaybillNoInfoList(input.waybill_no_info_list);
     if (dealType === 1 && !hasWaybillNo(waybillNoInfoList)) {
       throw providerInputError("waybill_no_info_list must carry at least one waybill_no when confirming an order.");
@@ -168,12 +176,14 @@ export const sfExpressOrderHandlers: ProviderActionHandlerSubset<"sf_express", S
         expressTypeId: optionalNumber(input.express_type_id),
         extraInfoList: readExtraInfoList(input.extra_info_list),
         serviceList: readServiceValueList(input.service_list, "service_list"),
-        destContactInfo: readDestContactInfo(input.dest_contact_info),
+        destContactInfo,
+        // The doc gates contact changes on the new-confirm mode; 1 is "支持修改联系人".
+        isConfirmNew: destContactInfo === undefined ? undefined : 1,
         isDocall: optionalFlagNumber(input.is_docall),
         specialDeliveryTypeCode: optionalString(input.special_delivery_type_code),
         specialDeliveryValue: optionalString(input.special_delivery_value),
         sendStartTm: optionalString(input.send_start_time),
-        pickupAppointEndTime: optionalString(input.pickup_appoint_end_time),
+        pickupAppointEndtime: optionalString(input.pickup_appoint_end_time),
         remark: optionalString(input.remark),
       }),
       context,
@@ -261,7 +271,7 @@ export const sfExpressOrderHandlers: ProviderActionHandlerSubset<"sf_express", S
       compactObject({
         waybillNo: requiredInputString(input.waybill_no, "waybill_no"),
         serviceCode,
-        role: input.role === "recipient" ? "2" : "1",
+        role: interceptRoleCodes[requiredInputString(input.role, "role")],
         payMode,
         monthlyCardNo,
         productType: optionalString(input.product_type),
@@ -411,7 +421,7 @@ function readWaybillNoInfoList(value: unknown): Array<Record<string, unknown>> |
   }
   return objectArray(value, "waybill_no_info_list", providerInputError).map((item) =>
     compactObject({
-      waybillType: optionalNumber(item.waybill_type),
+      waybillType: requiredInputNumber(item.waybill_type, "waybill_no_info_list[].waybill_type"),
       waybillNo: optionalString(item.waybill_no),
       boxNo: optionalString(item.box_no),
       length: optionalNumber(item.length),
@@ -465,8 +475,8 @@ function readNewDestAddress(value: unknown): Record<string, unknown> {
     city: requiredInputString(address.city, "new_dest_address.city"),
     county: requiredInputString(address.county, "new_dest_address.county"),
     address: requiredInputString(address.address, "new_dest_address.address"),
-    contact: requiredInputString(address.contact, "new_dest_address.contact"),
-    phone: requiredInputString(address.phone, "new_dest_address.phone"),
+    contact: optionalString(address.contact),
+    phone: optionalString(address.phone),
     country: optionalString(address.country),
     countryCode: optionalString(address.country_code),
     company: optionalString(address.company),

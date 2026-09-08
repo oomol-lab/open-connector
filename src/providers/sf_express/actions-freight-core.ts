@@ -47,6 +47,7 @@ const cargoItemSchema = s.object(
   },
   {
     optional: [
+      "name",
       "unit",
       "category",
       "spec",

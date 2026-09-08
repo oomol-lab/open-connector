@@ -184,6 +184,7 @@ describe("SF Express general-shipping handlers", () => {
         sender: { mobile: "13480155048", province: "广东省", city: "深圳市", address: "软件产业基地11栋" },
         recipient: { tel: "13925211148", province: "广东省", city: "广州市", address: "白云区湖北大厦" },
         cargo_name: "手机",
+        express_type_id: 1,
       },
       context(fetcher),
     );

@@ -134,7 +134,7 @@ export const sfExpressFreightTlCityHandlers: ProviderActionHandlerSubset<"sf_exp
         vehicle: requiredInputString(input.vehicle, "vehicle"),
         carNum: integer(input.car_num, "car_num", providerInputError),
         sendStartTime: requiredInputString(input.send_start_time, "send_start_time"),
-        addressList: readCityAddresses(input.address_list, "address_list"),
+        addressList: readCityAddresses(input.address_list, "address_list", true),
         vasFeeList: readCityVasFees(input.vas_fee_list),
         phone: requiredInputString(input.phone, "phone"),
         nickname: requiredInputString(input.nickname, "nickname"),
@@ -159,7 +159,7 @@ export const sfExpressFreightTlCityHandlers: ProviderActionHandlerSubset<"sf_exp
         vehicle: requiredInputString(input.vehicle, "vehicle"),
         carNum: integer(input.car_num, "car_num", providerInputError),
         sendStartTime: requiredInputString(input.send_start_time, "send_start_time"),
-        orderAddressVOList: readCityAddresses(input.addresses, "addresses"),
+        orderAddressVOList: readCityAddresses(input.addresses, "addresses", false),
         orderVasFeeList: readCityVasFees(input.vas_fee_list),
         city: requiredInputString(input.city, "city"),
         orderSource: requiredInputString(input.order_source, "order_source"),
@@ -428,14 +428,24 @@ function readTlExtraInfos(value: unknown): Array<Record<string, unknown>> | unde
 }
 
 /** The two city-delivery actions spell the address array differently, so the error text follows the caller's field. */
-function readCityAddresses(value: unknown, fieldName: string): Array<Record<string, unknown>> {
+/**
+ * The order's addressList carries a detailed address line the fee quote's
+ * OrderAddressVO does not define, so only the order path emits it.
+ */
+function readCityAddresses(
+  value: unknown,
+  fieldName: string,
+  withAddressDetail: boolean,
+): Array<Record<string, unknown>> {
   return objectArray(value, fieldName, providerInputError).map((address, index) =>
     compactObject({
       coordinate: requiredInputString(address.coordinate, `${fieldName}[${index}].coordinate`),
       contact: requiredInputString(address.contact, `${fieldName}[${index}].contact`),
       tel: requiredInputString(address.tel, `${fieldName}[${index}].tel`),
       address: requiredInputString(address.address, `${fieldName}[${index}].address`),
-      addressDetail: optionalString(address.address_detail),
+      addressDetail: withAddressDetail
+        ? requiredInputString(address.address_detail, `${fieldName}[${index}].address_detail`)
+        : undefined,
       floor: optionalIntegerLike(address.floor, `${fieldName}[${index}].floor`, providerInputError) ?? 0,
       lift: optionalFlagNumber(address.lift) ?? 0,
       replyStatus: optionalBoolean(address.reply_status) === true ? 7 : 0,

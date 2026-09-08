@@ -22,7 +22,7 @@ const businessError = (errorCode: string, errorMsg: string): Response =>
 const readForm = (init?: RequestInit): URLSearchParams => new URLSearchParams(String(init?.body));
 
 describe("SF Express push-registration handlers", () => {
-  it("registers a route push on the sfapi host with the waybill mode and contact fallback", async () => {
+  it("registers a route push on the sfapi host in waybill mode", async () => {
     const fetcher = vi.fn<typeof fetch>(async (url, init) => {
       expect(String(url)).toBe("https://sfapi.sf-express.com/std/service");
       const msgData = JSON.parse(readForm(init).get("msgData")!);
@@ -30,13 +30,6 @@ describe("SF Express push-registration handlers", () => {
         type: "2",
         attributeNo: "SF1040300507426",
         checkPhoneNo: "9784",
-        contactInfo: {
-          contact: "顺小丰",
-          province: "广东省",
-          city: "深圳市",
-          county: "南山区",
-          contactType: 2,
-        },
         language: "zh-CN",
       });
       expect(readForm(init).get("serviceCode")).toBe("EXP_RECE_REGISTER_ROUTE");
@@ -48,13 +41,6 @@ describe("SF Express push-registration handlers", () => {
         register_by: "waybill",
         attribute_no: "SF1040300507426",
         check_phone_no: "9784",
-        contact_info: {
-          contact: "顺小丰",
-          province: "广东省",
-          city: "深圳市",
-          county: "南山区",
-          contact_type: "recipient",
-        },
         language: "zh-CN",
       },
       context(fetcher),

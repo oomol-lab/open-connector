@@ -63,8 +63,8 @@ export const sfExpressQueryHandlers: ProviderActionHandlerSubset<"sf_express", S
         volume: optionalNumber(input.volume),
         consignedTime: optionalString(input.consigned_time),
         searchPrice: readSearchPrice(input.search_price),
-        srcAddress: readAddress(input.src_address, "src_address"),
-        destAddress: readAddress(input.dest_address, "dest_address"),
+        srcAddress: readAddress(input.src_address, "src_address", true),
+        destAddress: readAddress(input.dest_address, "dest_address", false),
       }),
       context,
       "execute",
@@ -292,20 +292,30 @@ function readSearchPrice(value: unknown): string | undefined {
   return flag === undefined ? undefined : flag ? "1" : "0";
 }
 
-function readAddress(value: unknown, fieldName: string): Record<string, unknown> {
+/**
+ * The origin table lets a detailed address stand in for province/city, because it
+ * is documented to carry them; the destination table has no such allowance.
+ */
+function readAddress(value: unknown, fieldName: string, detailedAddressSuffices: boolean): Record<string, unknown> {
   const address = requiredRecord(value, fieldName, providerInputError);
   const code = optionalString(address.code);
   const province = optionalString(address.province);
   const city = optionalString(address.city);
-  if (code === undefined && (province === undefined || city === undefined)) {
-    throw providerInputError(`${fieldName} requires either code or both province and city.`);
+  const detail = optionalString(address.address);
+  const located = code !== undefined || (province !== undefined && city !== undefined);
+  if (!located && !(detailedAddressSuffices && detail !== undefined)) {
+    throw providerInputError(
+      detailedAddressSuffices
+        ? `${fieldName} requires code, both province and city, or a detailed address.`
+        : `${fieldName} requires either code or both province and city.`,
+    );
   }
   return compactObject({
     code,
     province,
     city,
     district: optionalString(address.district),
-    address: optionalString(address.address),
+    address: detail,
   });
 }
 

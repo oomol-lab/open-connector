@@ -285,9 +285,8 @@ export const sfExpressQueryActions: ActionDefinition[] = [
       {
         src_address: addressSchema("origin"),
         dest_address: addressSchema("destination"),
-        business_type: s.stringEnum(
-          "The product to query: 1 = 特快, 2 = 标快, 5 = 顺丰次晨, 6 = 即日件. Omit to list the default products. Querying a specific product requires monthly_card.",
-          ["1", "2", "5", "6"],
+        business_type: s.nonEmptyString(
+          "The product to query, for example 1 = 特快, 2 = 标快, 5 = 顺丰次晨, 6 = 即日件; any other 快件产品类别 code works too. Omit to list the default products. Querying a specific product requires monthly_card.",
         ),
         monthly_card: s.nonEmptyString(
           "The SF monthly settlement card (月结卡号) used for personalized pricing; required when business_type is set.",

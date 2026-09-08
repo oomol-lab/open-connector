@@ -452,23 +452,27 @@ export const sfExpressStationHandlers: ProviderActionHandlerSubset<"sf_express",
     return requiredResponseRecord(payload, "SF Express station response content");
   },
   async station_verify_fc_settlement(input, context) {
+    const opType = integer(input.op_type, "op_type", providerInputError);
+    const dropOff = opType === 1;
     const payload = await requestSfExpress(
       "COM_RECE_FC_SETTLE_VERIFY",
       {
+        // Only 订单类型 1 (派件投柜) is modelled; the rental and reservation types carry other data shapes.
         type: 1,
         data: compactObject({
-          opType: integer(input.op_type, "op_type", providerInputError),
+          opType,
           orderId: requiredInputString(input.order_id, "order_id"),
-          cabinetCode: requiredInputString(input.cabinet_code, "cabinet_code"),
-          empNo: requiredInputString(input.emp_no, "emp_no"),
-          phone: requiredInputString(input.phone, "phone"),
-          paymentType: requiredInputString(input.payment_type, "payment_type"),
-          waybillNo: requiredInputString(input.waybill_no, "waybill_no"),
-          gridType: requiredInputString(input.grid_type, "grid_type"),
+          // The doc marks the rest 是1: they belong to the drop-off, not to giving it up.
+          cabinetCode: dropOff ? requiredInputString(input.cabinet_code, "cabinet_code") : undefined,
+          empNo: dropOff ? requiredInputString(input.emp_no, "emp_no") : undefined,
+          phone: dropOff ? requiredInputString(input.phone, "phone") : undefined,
+          paymentType: dropOff ? requiredInputNumber(input.payment_type, "payment_type") : undefined,
+          waybillNo: dropOff ? requiredInputString(input.waybill_no, "waybill_no") : undefined,
+          gridType: dropOff ? requiredInputNumber(input.grid_type, "grid_type") : undefined,
           discountType: optionalString(input.discount_type) ?? null,
           discountFee: optionalNumber(input.discount_fee) ?? null,
-          payedFee: requiredInputNumber(input.payed_fee, "payed_fee"),
-          deliverTm: requiredInputString(input.deliver_tm, "deliver_tm"),
+          payedFee: dropOff ? requiredInputNumber(input.payed_fee, "payed_fee") : undefined,
+          deliverTm: dropOff ? requiredInputString(input.deliver_tm, "deliver_tm") : undefined,
         }),
       },
       context,
@@ -1099,7 +1103,7 @@ function stationHandoverMessage(
 function readStationHeader(value: unknown): Record<string, unknown> {
   const header = requiredRecord(value, "header", providerInputError);
   return compactObject({
-    oprId: requiredInputString(header.operatorId, "header.operatorId"),
+    oprId: optionalString(header.operatorId),
     deptCode: optionalString(header.deptCode),
     sgs_netcode: optionalString(header.netCode),
     accessCode: optionalString(header.accessCode),

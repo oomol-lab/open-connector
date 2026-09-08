@@ -97,21 +97,31 @@ const tlOrderOutputSchema = s.requiredObject("The truckload order.", {
   signBackWaybillNo: s.nullableString("The sign-back receipt waybill number, when the sign-back service applies."),
 });
 
-const cityAddressSchema = s.object(
-  "One order address (发货/收货地址).",
+/** The order's addressList table marks all eight members 必填=Y. */
+const cityAddressSchema = s.requiredObject("One order address (发货/收货地址).", {
+  coordinate: s.nonEmptyString("The longitude,latitude pair, for example 113.93041,22.53332."),
+  contact: s.nonEmptyString("The contact name."),
+  tel: s.nonEmptyString("The contact phone number."),
+  address: s.nonEmptyString("The address."),
+  address_detail: s.nonEmptyString("The detailed address line."),
+  floor: s.integer("The floor; pass 0 when no upstairs service is needed."),
+  lift: s.boolean("Whether the building has an elevator; no elevator can raise the upstairs fee."),
+  reply_status: s.boolean("Whether a signed receipt is uploaded for this address."),
+});
+
+/** The fee quote's OrderAddressVO has no detailed-address line and leaves the floor optional. */
+const cityFeeAddressSchema = s.object(
+  "One address to quote (发货/收货地址).",
   {
     coordinate: s.nonEmptyString("The longitude,latitude pair, for example 113.93041,22.53332."),
     contact: s.nonEmptyString("The contact name."),
     tel: s.nonEmptyString("The contact phone number."),
     address: s.nonEmptyString("The address."),
-    address_detail: s.nonEmptyString("The detailed address line."),
     floor: s.integer("The floor; pass 0 when no upstairs service is needed. Defaults to 0 when omitted."),
-    lift: s.boolean(
-      "Whether the building has an elevator. Defaults to no elevator when omitted, which can raise the upstairs fee.",
-    ),
+    lift: s.boolean("Whether the building has an elevator; no elevator can raise the upstairs fee."),
     reply_status: s.boolean("Whether a signed receipt is uploaded for this address."),
   },
-  { optional: ["address_detail", "floor", "lift", "reply_status"] },
+  { optional: ["floor"] },
 );
 
 const cityAddressListOutputSchema = s.array(
@@ -297,7 +307,7 @@ export const sfExpressFreightTlCityActions: ActionDefinition[] = [
         vehicle: s.nonEmptyString("The vehicle model, for example 4.2米箱货."),
         car_num: s.integer("The number of vehicles.", { minimum: 1 }),
         send_start_time: dateTimeSchema("The planned pickup time in YYYY-MM-DD HH:mm:ss format."),
-        addresses: s.array("The order addresses.", cityAddressSchema, { minItems: 1 }),
+        addresses: s.array("The order addresses.", cityFeeAddressSchema, { minItems: 1 }),
         city: s.nonEmptyString("The city, for example 深圳市."),
         order_source: s.nonEmptyString("The order source tag."),
         vas_fee_list: s.array("The value-added services to price.", cityVasFeeSchema),

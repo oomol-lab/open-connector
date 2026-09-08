@@ -180,7 +180,7 @@ export const sfExpressFreightForwardCrossborderHandlers: ProviderActionHandlerSu
       latLongType: optionalInteger(input.lat_long_type),
       source: requiredInputString(input.source, "source"),
       remark: optionalString(input.remark),
-      traceType: optionalInteger(input.trace_type),
+      traceType: integer(input.trace_type, "trace_type", providerInputError),
       sispRouter: optionalString(input.sisp_router),
       sispRouterExtend: optionalRecord(input.sisp_router_extend),
     });
@@ -227,8 +227,14 @@ export const sfExpressFreightForwardCrossborderHandlers: ProviderActionHandlerSu
     }
     const weight = optionalString(input.weight);
     const subItems = readSubItems(input.sub_items);
-    if (["HANDOVER_06", "TRANSITING_17"].includes(abnormalCode) && (weight === undefined || !subItems?.length)) {
-      throw providerInputError(`weight and sub_items are required for the reweigh appeal code ${abnormalCode}.`);
+    const supplierCode = optionalString(input.supplier_code);
+    if (
+      ["HANDOVER_06", "TRANSITING_17"].includes(abnormalCode) &&
+      (weight === undefined || !subItems?.length || supplierCode === undefined)
+    ) {
+      throw providerInputError(
+        `weight, sub_items and supplier_code are required for the reweigh appeal code ${abnormalCode}.`,
+      );
     }
     const waybillNo = requiredInputString(input.waybill_no, "waybill_no");
     await requestSfExpress(
@@ -237,7 +243,7 @@ export const sfExpressFreightForwardCrossborderHandlers: ProviderActionHandlerSu
         waybillNo,
         abnormalType: integer(input.abnormal_type, "abnormal_type", providerInputError),
         abnormalCode,
-        supplierCode: optionalString(input.supplier_code),
+        supplierCode,
         uploadTime: optionalString(input.upload_time),
         uploadOperator: optionalString(input.upload_operator),
         remark: optionalString(input.remark),
@@ -554,7 +560,7 @@ function readTrackPoint(track: Record<string, unknown>, fieldName: string): Reco
     latLongType: optionalInteger(track.latLongType),
     source: requiredInputString(track.source, `${fieldName}.source`),
     remark: optionalString(track.remark),
-    traceType: optionalInteger(track.traceType),
+    traceType: integer(track.traceType, `${fieldName}.traceType`, providerInputError),
     sispRouter: optionalString(track.sispRouter),
     sispRouterExtend: optionalRecord(track.sispRouterExtend),
   });

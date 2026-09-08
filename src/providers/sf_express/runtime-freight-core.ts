@@ -347,7 +347,7 @@ function readCargoList(value: unknown): Array<Record<string, unknown>> | undefin
   }
   return objectArray(value, "cargo_list", providerInputError).map((item, index) =>
     compactObject({
-      name: requiredInputString(item.name, `cargo_list[${index}].name`),
+      name: optionalString(item.name),
       unit: optionalString(item.unit),
       category: optionalString(item.category),
       spec: optionalString(item.spec),

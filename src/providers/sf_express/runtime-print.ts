@@ -72,6 +72,7 @@ export const sfExpressPrintHandlers: ProviderActionHandlerSubset<"sf_express", S
         sync: input.sync !== false,
         documents: readCloudPrintDocuments(input.documents, 20),
         customTemplateCode: optionalString(input.custom_template_code),
+        extJson: buildPrintExtJson(input, { ignoreAreas: optionalString(input.ignore_areas) }),
       }),
       context,
       "execute",
@@ -85,7 +86,6 @@ export const sfExpressPrintHandlers: ProviderActionHandlerSubset<"sf_express", S
         templateCode: requiredInputString(input.template_code, "template_code"),
         version: "2.0",
         fileType: "html",
-        sync: input.sync !== false,
         documents: readCloudPrintDocuments(input.documents, 20),
         customTemplateCode: optionalString(input.custom_template_code),
         extJson: buildPrintExtJson(input, {}),
@@ -220,6 +220,7 @@ function readCloudPrintDocuments(value: unknown, maxItems: number): Array<Record
       waybillNoCheckType: optionalString(doc.waybillNoCheckType),
       waybillNoCheckValue: optionalString(doc.waybillNoCheckValue),
       customData: optionalRecord(doc.customData),
+      isPrintLogo: optionalString(doc.isPrintLogo),
     });
   });
 }
@@ -306,6 +307,9 @@ function normalizeCommandResult(payload: unknown): Record<string, unknown> {
         url: optionalString(file.url),
         token: optionalString(file.token),
         seqNo: optionalInteger(file.seqNo),
+        areaNo: optionalInteger(file.areaNo),
+        pageNo: optionalInteger(file.pageNo),
+        pageCount: optionalInteger(file.pageCount),
       };
     }),
     clientCode: optionalString(obj.clientCode),
