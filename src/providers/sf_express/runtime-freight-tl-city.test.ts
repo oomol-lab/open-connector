@@ -252,7 +252,10 @@ describe("SF Express freight city-delivery handlers", () => {
         {},
         { partnerId: "TEST_PARTNER", checkWord: "TEST_CHECKWORD", fetcher },
       ),
-    ).rejects.toMatchObject({ status: 400, message: "cityClientCode is required." });
+    ).rejects.toMatchObject({
+      status: 400,
+      message: /^cityClientCode is required for the SF Express city-delivery actions\./,
+    });
     expect(fetcher).not.toHaveBeenCalled();
   });
 

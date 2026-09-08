@@ -1,5 +1,5 @@
 import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
-import type { SfExpressActionHandler } from "./runtime.ts";
+import type { SfExpressActionContext, SfExpressActionHandler } from "./runtime.ts";
 
 import {
   compactObject,
@@ -130,7 +130,7 @@ export const sfExpressFreightTlCityHandlers: ProviderActionHandlerSubset<"sf_exp
     const payload = await requestSfExpress(
       "FOP_RECE_UFTL_OF_CONFIRM_ORDER",
       compactObject({
-        clientCode: requiredInputString(context.cityClientCode, "cityClientCode"),
+        clientCode: readCityClientCode(context),
         vehicle: requiredInputString(input.vehicle, "vehicle"),
         carNum: integer(input.car_num, "car_num", providerInputError),
         sendStartTime: requiredInputString(input.send_start_time, "send_start_time"),
@@ -155,7 +155,7 @@ export const sfExpressFreightTlCityHandlers: ProviderActionHandlerSubset<"sf_exp
     const payload = await requestSfExpress(
       "FOP_RECE_UFTL_OF_CALC_FEE",
       compactObject({
-        clientCode: requiredInputString(context.cityClientCode, "cityClientCode"),
+        clientCode: readCityClientCode(context),
         vehicle: requiredInputString(input.vehicle, "vehicle"),
         carNum: integer(input.car_num, "car_num", providerInputError),
         sendStartTime: requiredInputString(input.send_start_time, "send_start_time"),
@@ -189,7 +189,7 @@ export const sfExpressFreightTlCityHandlers: ProviderActionHandlerSubset<"sf_exp
     const payload = await requestSfExpress(
       "FOP_RECE_UFTL_OF_ORDER_LIST",
       compactObject({
-        clientCode: requiredInputString(context.cityClientCode, "cityClientCode"),
+        clientCode: readCityClientCode(context),
         phone: requiredInputString(input.phone, "phone"),
         createTimeStart: optionalString(input.create_time_start),
         createTimeEnd: optionalString(input.create_time_end),
@@ -222,7 +222,7 @@ export const sfExpressFreightTlCityHandlers: ProviderActionHandlerSubset<"sf_exp
     const payload = await requestSfExpress(
       "FOP_RECE_UFTL_OF_ORDER_DETAIL",
       compactObject({
-        clientCode: requiredInputString(context.cityClientCode, "cityClientCode"),
+        clientCode: readCityClientCode(context),
         orderNo,
         customerOrderNo,
       }),
@@ -273,7 +273,7 @@ export const sfExpressFreightTlCityHandlers: ProviderActionHandlerSubset<"sf_exp
     await requestSfExpress(
       "FOP_RECE_UFTL_OF_CANCEL_ORDER",
       compactObject({
-        clientCode: requiredInputString(context.cityClientCode, "cityClientCode"),
+        clientCode: readCityClientCode(context),
         orderNo,
         customerOrderNo,
         cancelMessage: requiredInputString(input.cancel_message, "cancel_message"),
@@ -287,7 +287,7 @@ export const sfExpressFreightTlCityHandlers: ProviderActionHandlerSubset<"sf_exp
     const payload = await requestSfExpress(
       "FOP_RECE_UFTL_OF_CITY_AVAILABLE_VAS_LIST",
       {
-        clientCode: requiredInputString(context.cityClientCode, "cityClientCode"),
+        clientCode: readCityClientCode(context),
         place: requiredInputString(input.place, "place"),
         vehicle: requiredInputString(input.vehicle, "vehicle"),
       },
@@ -309,7 +309,7 @@ export const sfExpressFreightTlCityHandlers: ProviderActionHandlerSubset<"sf_exp
     const payload = await requestSfExpress(
       "FOP_RECE_UFTL_OF_CITY_VEHICLES",
       {
-        clientCode: requiredInputString(context.cityClientCode, "cityClientCode"),
+        clientCode: readCityClientCode(context),
         city: requiredInputString(input.city, "city"),
         orderCategory: integer(input.order_category, "order_category", providerInputError),
       },
@@ -349,7 +349,7 @@ export const sfExpressFreightTlCityHandlers: ProviderActionHandlerSubset<"sf_exp
   async freight_city_list_cities(_input, context) {
     const payload = await requestSfExpress(
       "FOP_RECE_UFTL_OF_CITY_LIST",
-      { clientCode: requiredInputString(context.cityClientCode, "cityClientCode") },
+      { clientCode: readCityClientCode(context) },
       context,
       "execute",
     );
@@ -359,7 +359,7 @@ export const sfExpressFreightTlCityHandlers: ProviderActionHandlerSubset<"sf_exp
     const payload = await requestSfExpress(
       "FOP_RECE_UFTL_OF_SEND_START_TIME_LIST",
       {
-        clientCode: requiredInputString(context.cityClientCode, "cityClientCode"),
+        clientCode: readCityClientCode(context),
         city: requiredInputString(input.city, "city"),
       },
       context,
@@ -434,7 +434,22 @@ function readTlExtraInfos(value: unknown): Array<Record<string, unknown>> | unde
   );
 }
 
-/** The two city-delivery actions spell the address array differently, so the error text follows the caller's field. */
+/**
+ * Read the clientCode the city-delivery endpoints authorize against. SF assigns
+ * it per city-delivery contract, so it is neither the Open Platform partnerID
+ * nor something the caller can pass per request, and every UFTL service rejects
+ * a request without it.
+ */
+function readCityClientCode(context: SfExpressActionContext): string {
+  const clientCode = optionalString(context.cityClientCode);
+  if (clientCode === undefined) {
+    throw providerInputError(
+      "cityClientCode is required for the SF Express city-delivery actions. Add the 同城客户编码 SF assigned you to the connection.",
+    );
+  }
+  return clientCode;
+}
+
 /**
  * The order's addressList carries a detailed address line the fee quote's
  * OrderAddressVO does not define, so only the order path emits it.

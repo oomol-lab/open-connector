@@ -184,6 +184,22 @@ describe("SF Express provider core runtime", () => {
     expect(output).toEqual({ waybillNo: "SF1040275268927", valid: true });
   });
 
+  it("does not read a non-city service's status field as a UFTL envelope", async () => {
+    // Only the FOP_RECE_UFTL_ services speak the { status, msg, data } dialect,
+    // so a business envelope that happens to carry status and msg stays a
+    // business envelope rather than turning into a UFTL gateway failure.
+    const fetcher = vi.fn<typeof fetch>(async () =>
+      Response.json({ success: true, status: 1, msg: "ok", msgData: true }),
+    );
+
+    const output = await sfExpressQueryHandlers.validate_waybill_no!(
+      { waybill_no: "SF1040275268927" },
+      context(fetcher),
+    );
+
+    expect(output).toEqual({ waybillNo: "SF1040275268927", valid: true });
+  });
+
   it("reads errorMessage on bare business envelope failures", async () => {
     const fetcher = vi.fn<typeof fetch>(async () =>
       Response.json({ success: false, errorCode: "S0003", errorMessage: "模板不存在" }),

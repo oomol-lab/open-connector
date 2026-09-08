@@ -76,6 +76,9 @@ const sfExpressBusinessSuccessCode = "S0000";
 /** Inner error codes that mean the failure is ours or the platform's, never the caller's input. */
 const sfExpressSystemErrorCodes = new Set(["S0001", "S0003"]);
 
+/** The city-delivery services, and only they, answer with the UFTL { status, msg, data } envelope. */
+const sfExpressUftlServicePrefix = "FOP_RECE_UFTL_";
+
 type SfExpressPhase = "validate" | "execute";
 
 /**
@@ -286,7 +289,7 @@ export async function requestSfExpress(
       await readProviderJson<unknown>(response, "SF Express"),
       "SF Express response",
     );
-    return unwrapSfExpressEnvelope(outer, phase);
+    return unwrapSfExpressEnvelope(outer, serviceCode, phase);
   });
 }
 
@@ -299,7 +302,7 @@ export async function requestSfExpress(
  * text in errorMsg, errorMessage, or message, the error code in errorCode or
  * code, and the payload in msgData, obj, or (SCS cold-chain) data.
  */
-function unwrapSfExpressEnvelope(outer: Record<string, unknown>, phase: SfExpressPhase): unknown {
+function unwrapSfExpressEnvelope(outer: Record<string, unknown>, serviceCode: string, phase: SfExpressPhase): unknown {
   const code = optionalString(outer.apiResultCode);
   if (code !== undefined && code !== sfExpressPlatformSuccessCode) {
     throw createSfExpressPlatformError(code, optionalString(outer.apiErrorMsg), phase);
@@ -319,10 +322,13 @@ function unwrapSfExpressEnvelope(outer: Record<string, unknown>, phase: SfExpres
 
   const record = requiredResponseRecord(inner, "SF Express apiResultData");
 
-  // UFTL (city-delivery) envelope: { status, msg, data, success? } — 200 marks success.
-  const uftlStatus = optionalNumberLike(record.status);
-  if (uftlStatus !== undefined && ("msg" in record || "data" in record)) {
-    if (uftlStatus !== 200) {
+  // UFTL (city-delivery) envelope: { status, msg, data }, where 200 marks success
+  // and the live gateway adds an undocumented success flag on failures. Keyed on
+  // the service code, because a numeric status field also occurs inside ordinary
+  // business payloads and cannot tell the two envelopes apart on its own.
+  const uftlStatus = serviceCode.startsWith(sfExpressUftlServicePrefix) ? optionalNumberLike(record.status) : undefined;
+  if (uftlStatus !== undefined) {
+    if (uftlStatus !== 200 || record.success === false || record.success === "false") {
       throw createSfExpressUftlError(uftlStatus, optionalString(record.msg), phase);
     }
     return record.data;

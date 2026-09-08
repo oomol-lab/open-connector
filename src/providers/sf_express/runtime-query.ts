@@ -111,13 +111,16 @@ export const sfExpressQueryHandlers: ProviderActionHandlerSubset<"sf_express", S
       }),
     );
     const payload = await requestSfExpress("EXP_RECE_FILTER_ORDER_BSP", orders, context, "execute");
-    const results = Array.isArray(payload)
-      ? payload
-      : requiredResponseRecord(payload, "SF Express filter response").resDtos;
+    // The response-parameter table lists the verdict fields directly under
+    // msgData, which is the bare array the gateway returns; the doc's own
+    // example wraps them in resDtos instead, so both shapes are read.
+    const bare = Array.isArray(payload);
+    const results = bare ? payload : requiredResponseRecord(payload, "SF Express filter response").resDtos;
+    const field = bare ? "msgData" : "resDtos";
     return {
-      results: objectArray(results, "resDtos", providerResponseError).map((result, index) => ({
+      results: objectArray(results, field, providerResponseError).map((result, index) => ({
         orderId: optionalString(result.orderId),
-        filterResult: integer(result.filterResult, `resDtos[${index}].filterResult`, providerResponseError),
+        filterResult: integer(result.filterResult, `${field}[${index}].filterResult`, providerResponseError),
         originCode: optionalString(result.originCode),
         destCode: optionalString(result.destCode),
         remark: optionalString(result.remark),
