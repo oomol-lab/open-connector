@@ -351,8 +351,9 @@ const videoGenerationV2InputSchema = s.object(
       default: "adaptive",
     }),
     callback_url: videoCallbackUrlSchema,
+    aigc_watermark: s.boolean("Whether to add an AIGC watermark to the generated video."),
   },
-  { optional: ["ratio", "callback_url"] },
+  { optional: ["ratio", "callback_url", "aigc_watermark"] },
 );
 
 const textToVideoInputSchema = s.object(
