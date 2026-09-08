@@ -36,6 +36,15 @@ export const sfExpressFreightCoreHandlers: ProviderActionHandlerSubset<"sf_expre
         "cargo_total_weight is required when addition_services includes the HIN (安装服务) service.",
       );
     }
+    // 包装服务 (PKFEE) and 安装服务 (HIN) carry their materiel / service-item detail JSON in value5.
+    const serviceMissingValue5 = additionServices?.find(
+      (service) => (service.name === "PKFEE" || service.name === "HIN") && service.value5 === undefined,
+    );
+    if (serviceMissingValue5 !== undefined) {
+      throw providerInputError(
+        `addition_services value5 is required for the ${String(serviceMissingValue5.name)} service and must be a JSON string, for example {"materielDetailList":[{"wlCode":"BZFA00000020","num":"2"}]} for PKFEE.`,
+      );
+    }
     const payload = await requestSfExpress(
       "FOP_RECE_LTL_CREATE_ORDER",
       compactObject({
@@ -345,7 +354,7 @@ function readCargoList(value: unknown): Array<Record<string, unknown>> | undefin
   if (value === undefined) {
     return undefined;
   }
-  return objectArray(value, "cargo_list", providerInputError).map((item, index) =>
+  return objectArray(value, "cargo_list", providerInputError).map((item) =>
     compactObject({
       name: optionalString(item.name),
       unit: optionalString(item.unit),
@@ -436,6 +445,7 @@ function normalizeLtlOrderResult(payload: unknown): Record<string, unknown> {
     mappingMark: optionalString(record.mappingMark),
     paymentLink: optionalString(record.paymentLink),
     rlsInfo: optionalRecord(record.rlsInfo),
+    signBackRlsInfo: optionalRecord(record.signBackRlsInfo),
   });
 }
 
@@ -457,7 +467,8 @@ function normalizeCrossborderRoute(payload: unknown): Record<string, unknown> {
     cargoWeight: optionalNumberLike(record.cargoWeight),
     cargoAmount: optionalIntegerLike(record.cargoAmount, "cargoAmount", providerResponseError),
     expectDeliveryTime: optionalIntegerLike(record.expectDeliveryTime, "expectDeliveryTime", providerResponseError),
-    orderStatus: optionalIntegerLike(record.orderStatus, "orderStatus", providerResponseError),
+    // The waybill-query table types this String; the transfer-number list types it Integer.
+    orderStatus: optionalString(record.orderStatus),
     payMethod: optionalString(record.payMethod),
     senderCity: optionalString(record.senderCity),
     receiverCity: optionalString(record.receiverCity),

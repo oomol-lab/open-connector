@@ -86,10 +86,14 @@ const tlAdditionServiceSchema = s.object(
   { optional: ["value", "value1", "value2", "value3", "value4"] },
 );
 
-const tlExtraInfoSchema = s.requiredObject("One extension attribute.", {
-  attr_name: s.nonEmptyString("The extension attribute key."),
-  attr_val: s.nonEmptyString("The extension attribute value."),
-});
+const tlExtraInfoSchema = s.object(
+  "One extension attribute.",
+  {
+    attr_name: s.nonEmptyString("The extension attribute key."),
+    attr_val: s.nonEmptyString("The extension attribute value."),
+  },
+  { optional: ["attr_name", "attr_val"] },
+);
 
 const tlOrderOutputSchema = s.requiredObject("The truckload order.", {
   orderId: s.string("The client order number, echoed back."),

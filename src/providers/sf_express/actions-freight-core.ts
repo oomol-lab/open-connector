@@ -129,6 +129,9 @@ const ltlOrderResultSchema = s.object(
     rlsInfo: s.unknownObject(
       "The route label information used for waybill printing; carries invokeResult plus the printable route-label fields.",
     ),
+    signBackRlsInfo: s.unknownObject(
+      "The route label information for the sign-back receipt waybill, returned when a sign-back was requested.",
+    ),
   },
   {
     optional: [
@@ -141,6 +144,7 @@ const ltlOrderResultSchema = s.object(
       "mappingMark",
       "paymentLink",
       "rlsInfo",
+      "signBackRlsInfo",
     ],
   },
 );
@@ -420,7 +424,7 @@ export const sfExpressFreightCoreActions: ActionDefinition[] = [
         cargoWeight: s.number("The cargo weight in kilograms."),
         cargoAmount: s.integer("The cargo item count."),
         expectDeliveryTime: s.integer("The delivery or expected delivery time as epoch milliseconds; see timeTag."),
-        orderStatus: s.integer("The shipment status: 10 = 已揽收, 20 = 运输中, 50 = 已签收."),
+        orderStatus: s.string("The shipment status: 10 = 已揽收, 20 = 运输中, 50 = 已签收."),
         payMethod: s.string("The payment method."),
         senderCity: s.string("The sender city."),
         receiverCity: s.string("The recipient city."),

@@ -545,6 +545,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
           },
           {
             optional: [
+              "serviceType",
               "transferNo",
               "shipNo",
               "flightNo",

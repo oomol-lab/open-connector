@@ -268,12 +268,7 @@ export const sfExpressColdchainActions: ActionDefinition[] = [
         car_type: s.string(
           "The vehicle type (required for 专车 orders), e.g. 4.2米-食品-冷运-冷藏; see the official vehicle list.",
         ),
-        freight_fee: s.number(
-          "The fixed price (一口价) for a chartered vehicle order; must be greater than 0 when set.",
-          {
-            exclusiveMinimum: 0,
-          },
-        ),
+        freight_fee: s.number("The fixed price (一口价) for a chartered vehicle order.", { minimum: 0 }),
         source_code: s.string("The order source code (订单来源)."),
         order_items: s.array("The goods lines.", orderItemSchema(true), { minItems: 1 }),
         order_services: s.array("The value-added services.", orderServiceSchema),

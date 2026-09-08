@@ -8,6 +8,9 @@ const service = "sf_express";
 
 const languageSchema = s.stringEnum("The response language.", ["zh-CN", "zh-TW", "zh-HK", "zh-MO", "en"]);
 
+/** The delivery-notice table spells the English member US rather than en. */
+const deliveryNoticeLanguageSchema = s.stringEnum("The response language.", ["zh-CN", "zh-TW", "zh-HK", "zh-MO", "US"]);
+
 const orderContactSchema = (role: string): ReturnType<typeof s.object> =>
   s.object(
     `The ${role} contact and address. At least one of tel or mobile is required.`,
@@ -260,6 +263,7 @@ const createOrderInputProperties = {
     maxLength: 64,
   }),
   is_return_qr_code: s.boolean("Whether to return the return-business QR code URL; SF omits it by default."),
+  is_return_route_label: s.boolean("Whether to return the route label (路由标签); SF returns it by default."),
   express_type_id: s.integer(
     "The SF product type (快件产品类别) code from the SF product table; only products agreed with your SF sales manager are usable. Defaults to 1. Mutually exclusive with scene_plan_code.",
   ),
@@ -314,6 +318,7 @@ const createOrderInputProperties = {
 const createOrderOptionalFields = [
   "express_type_id",
   "is_return_qr_code",
+  "is_return_route_label",
   "scene_plan_code",
   "cargo_desc",
   "monthly_card",
@@ -393,7 +398,10 @@ export const sfExpressOrderActions: ActionDefinition[] = [
       "The order update to apply.",
       {
         order_id: s.nonEmptyString("The client order number.", { maxLength: 64 }),
-        deal_type: s.stringEnum("The operation: confirm (确认) or cancel (取消).", ["confirm", "cancel"]),
+        deal_type: s.stringEnum("The operation: confirm (确认) or cancel (取消). Defaults to confirm.", [
+          "confirm",
+          "cancel",
+        ]),
         waybill_no_info_list: waybillNoInfoInputSchema,
         total_weight: s.number("The updated total weight in kilograms.", { exclusiveMinimum: 0 }),
         total_volume: s.number("The updated total volume in cubic centimeters."),
@@ -421,6 +429,7 @@ export const sfExpressOrderActions: ActionDefinition[] = [
       },
       {
         optional: [
+          "deal_type",
           "waybill_no_info_list",
           "total_weight",
           "total_volume",
@@ -612,7 +621,7 @@ export const sfExpressOrderActions: ActionDefinition[] = [
           "delivery",
           "return",
         ]),
-        language: languageSchema,
+        language: deliveryNoticeLanguageSchema,
       },
       { optional: ["language"] },
     ),
@@ -648,6 +657,8 @@ export const sfExpressOrderActions: ActionDefinition[] = [
           customerAcctCode: s.string("The monthly settlement account."),
           meterageWeightQty: s.nullableNumber("The billable weight in kilograms."),
           realWeightQty: s.nullableNumber("The actual weight in kilograms."),
+          consigneeEmpCode: s.string("The pickup courier employee number."),
+          deliverEmpCode: s.string("The delivery courier employee number."),
           cargoTypeCode: s.string("The cargo content code."),
           cargoTypeName: s.string("The cargo content name."),
           limitTypeCode: s.string("The time-limit type code."),
@@ -660,8 +671,16 @@ export const sfExpressOrderActions: ActionDefinition[] = [
           consValueCurrencyCode: s.string("The declared value currency."),
           jProvince: s.string("The sender province."),
           jCity: s.string("The sender city."),
+          consignorAddr: s.string("The sender detailed address."),
+          consignorContName: s.string("The sender contact name."),
+          consignorPhone: s.string("The sender phone number."),
+          consignorMobile: s.string("The sender mobile number."),
           dProvince: s.string("The recipient province."),
           dCity: s.string("The recipient city."),
+          addresseeAddr: s.string("The recipient detailed address."),
+          addresseeContName: s.string("The recipient contact name."),
+          addresseePhone: s.string("The recipient phone number."),
+          addresseeMobile: s.string("The recipient mobile number."),
         },
         {
           optional: [
@@ -671,6 +690,8 @@ export const sfExpressOrderActions: ActionDefinition[] = [
             "customerAcctCode",
             "meterageWeightQty",
             "realWeightQty",
+            "consigneeEmpCode",
+            "deliverEmpCode",
             "cargoTypeCode",
             "cargoTypeName",
             "limitTypeCode",
@@ -683,8 +704,16 @@ export const sfExpressOrderActions: ActionDefinition[] = [
             "consValueCurrencyCode",
             "jProvince",
             "jCity",
+            "consignorAddr",
+            "consignorContName",
+            "consignorPhone",
+            "consignorMobile",
             "dProvince",
             "dCity",
+            "addresseeAddr",
+            "addresseeContName",
+            "addresseePhone",
+            "addresseeMobile",
           ],
         },
       ),

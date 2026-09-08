@@ -42,6 +42,8 @@ export const sfExpressQueryHandlers: ProviderActionHandlerSubset<"sf_express", S
         trackingNumber: trackingNumbers,
         checkPhoneNo: checkPhoneNos?.join(",") || undefined,
         language: optionalString(input.language),
+        methodType: input.route_query_type === "custom" ? 2 : undefined,
+        referenceNumber: optionalString(input.reference_number),
       }),
       context,
       "execute",
@@ -337,8 +339,9 @@ function normalizeRouteResults(payload: unknown): Record<string, unknown> {
             `routeResps[${index}].routes[${routeIndex}].remark`,
             providerResponseError,
           ),
+          // The Chinese page spells this opCode and the English page opcode.
           opCode: requiredString(
-            route.opCode,
+            route.opCode ?? route.opcode,
             `routeResps[${index}].routes[${routeIndex}].opCode`,
             providerResponseError,
           ),
@@ -469,12 +472,22 @@ function normalizeProductRecommendations(payload: unknown): Record<string, unkno
         deliverySfbox: optionalString(product.deliverySfbox),
         overtimeRefund: optionalString(product.overtimeRefund),
         specialCommodityMsg: optionalString(product.specialCommodityMsg),
+        reachTimeType: optionalString(product.reachTimeType),
+        expressContent: optionalString(product.expressContent),
+        clearanceOfGoods: optionalString(product.clearanceOfGoods),
+        productLayered: optionalString(product.productLayered),
+        priceDetail: optionalString(product.priceDetail),
         serviceFeeList: Array.isArray(product.serviceFeeList)
           ? objectArray(product.serviceFeeList, "serviceFeeList", providerResponseError).map((fee) =>
               compactObject({
                 serviceCode: optionalString(fee.serviceCode),
                 serviceName: optionalString(fee.serviceName),
                 serviceFee: optionalNumberLike(fee.serviceFee),
+                stdServiceFee: optionalNumberLike(fee.stdServiceFee),
+                weight: optionalNumberLike(fee.weight),
+                isGuide: optionalBoolean(fee.isGuide),
+                collectionAmount: optionalNumberLike(fee.collectionAmount),
+                codExchangeRate: optionalNumberLike(fee.codExchangeRate),
               }),
             )
           : undefined,

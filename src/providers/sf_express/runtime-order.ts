@@ -78,6 +78,9 @@ export const sfExpressOrderHandlers: ProviderActionHandlerSubset<"sf_express", S
     if (parcelQty !== undefined && parcelQty > 1 && totalWeight === undefined) {
       throw providerInputError("total_weight is required for multi-package (子母件) shipments.");
     }
+    if (parcelQty !== undefined && parcelQty > 1 && totalWeight !== undefined && totalWeight <= 6) {
+      throw providerInputError("total_weight must exceed 6 kg for multi-package (子母件) shipments.");
+    }
     const waybillNoInfoList = readWaybillNoInfoList(input.waybill_no_info_list);
 
     const payload = await requestSfExpress(
@@ -118,6 +121,7 @@ export const sfExpressOrderHandlers: ProviderActionHandlerSubset<"sf_express", S
         // allocate one; the same list also carries dimensions-only entries.
         isGenWaybillNo: hasWaybillNo(waybillNoInfoList) ? 0 : undefined,
         isReturnQRCode: optionalFlagNumber(input.is_return_qr_code),
+        isReturnRoutelabel: optionalFlagNumber(input.is_return_route_label),
         extraInfoList: readExtraInfoList(input.extra_info_list),
         specialDeliveryTypeCode: optionalString(input.special_delivery_type_code),
         specialDeliveryValue: optionalString(input.special_delivery_value),
@@ -212,8 +216,8 @@ export const sfExpressOrderHandlers: ProviderActionHandlerSubset<"sf_express", S
     const record = requiredResponseRecord(payload, "SF Express order result response");
     return compactObject({
       orderId: requiredString(record.orderId, "orderId", providerResponseError),
-      origincode: optionalString(record.origincode),
-      destcode: optionalString(record.destcode),
+      origincode: optionalString(record.origincode) ?? optionalString(record.originCode),
+      destcode: optionalString(record.destcode) ?? optionalString(record.destCode),
       filterResult: nullableString(record.filterResult) ?? null,
       remark: optionalString(record.remark),
       waybillNoInfoList: normalizeWaybillNoInfoList(record.waybillNoInfoList),
@@ -538,6 +542,8 @@ function normalizeWaybillFee(payload: unknown): Record<string, unknown> {
       customerAcctCode: optionalString(info.customerAcctCode),
       meterageWeightQty: optionalNumberLike(info.meterageWeightQty) ?? null,
       realWeightQty: optionalNumberLike(info.realWeightQty) ?? null,
+      consigneeEmpCode: optionalString(info.consigneeEmpCode),
+      deliverEmpCode: optionalString(info.deliverEmpCode),
       cargoTypeCode: optionalString(info.cargoTypeCode),
       cargoTypeName: optionalString(info.cargoTypeName),
       limitTypeCode: optionalString(info.limitTypeCode),
@@ -550,8 +556,16 @@ function normalizeWaybillFee(payload: unknown): Record<string, unknown> {
       consValueCurrencyCode: optionalString(info.consValueCurrencyCode),
       jProvince: optionalString(info.jProvince),
       jCity: optionalString(info.jCity),
+      consignorAddr: optionalString(info.consignorAddr),
+      consignorContName: optionalString(info.consignorContName),
+      consignorPhone: optionalString(info.consignorPhone),
+      consignorMobile: optionalString(info.consignorMobile),
       dProvince: optionalString(info.dProvince),
       dCity: optionalString(info.dCity),
+      addresseeAddr: optionalString(info.addresseeAddr),
+      addresseeContName: optionalString(info.addresseeContName),
+      addresseePhone: optionalString(info.addresseePhone),
+      addresseeMobile: optionalString(info.addresseeMobile),
     }),
     waybillFeeList: objectArray(record.waybillFeeList ?? [], "waybillFeeList", providerResponseError).map(
       (fee, index) =>

@@ -85,6 +85,10 @@ export const sfExpressFreightForwardCrossborderHandlers: ProviderActionHandlerSu
     if (tracks.length === 0) {
       throw providerInputError("tracks must contain at least one track point.");
     }
+    // The batch endpoint only accepts track points that all belong to one waybill number.
+    if (new Set(tracks.map((track) => track.waybillNo)).size > 1) {
+      throw providerInputError("tracks must all carry the same waybillNo; upload one batch per waybill number.");
+    }
     await requestSfExpress("FOP_RECE_FORWARD_UPLOAD_TRACK_BATCH", tracks, context, "execute");
     return { accepted: true, count: tracks.length };
   },
@@ -118,12 +122,21 @@ export const sfExpressFreightForwardCrossborderHandlers: ProviderActionHandlerSu
   },
   async freight_forward_update_order_status(input, context) {
     const waybillNo = requiredInputString(input.waybill_no, "waybill_no");
+    const status = integer(input.status, "status", providerInputError);
+    const isCheck = optionalInteger(input.is_check);
+    const abnormal = optionalString(input.abnormal);
+    if (status === 45 && isCheck === undefined) {
+      throw providerInputError("is_check is required when status is 45 (提货交接).");
+    }
+    if (isCheck === 1 && abnormal === undefined) {
+      throw providerInputError("abnormal is required when is_check is 1 (运单信息有误).");
+    }
     await requestSfExpress(
       "FOP_RECE_FORWARD_UPDATE_ORDER_STATUS",
       compactObject({
         forwardOrderId: integer(input.forward_order_id, "forward_order_id", providerInputError),
         waybillNo,
-        status: integer(input.status, "status", providerInputError),
+        status,
         remark: optionalString(input.remark),
         operateTime: optionalString(input.operate_time),
         operator: optionalString(input.operator),
@@ -132,8 +145,8 @@ export const sfExpressFreightForwardCrossborderHandlers: ProviderActionHandlerSu
         picUrls: optionalStringArray(input.pic_urls),
         number: optionalInteger(input.number),
         boxNo: optionalStringArray(input.box_nos),
-        isCheck: optionalInteger(input.is_check),
-        abnormal: optionalString(input.abnormal),
+        isCheck,
+        abnormal,
         volumn: optionalNumber(input.volume),
         weight: optionalNumber(input.weight),
         latitude: optionalNumber(input.latitude),
@@ -326,6 +339,20 @@ export const sfExpressFreightForwardCrossborderHandlers: ProviderActionHandlerSu
     if (receiverType === "1" && optionalString(input.warehouse_code) === undefined) {
       throw providerInputError("warehouse_code is required when receiver_type is 1 (FBA仓库).");
     }
+    const receiverAddress = readCrossborderContact(input.recipient, "recipient");
+    if (receiverType === "2") {
+      // A 非FBA地址 destination is a street address, so SF requires the full delivery block.
+      for (const [field, key] of [
+        ["address", "address"],
+        ["contact", "contact"],
+        ["mobile", "mobile"],
+        ["post_code", "postCode"],
+      ] as const) {
+        if (receiverAddress[key] === undefined) {
+          throw providerInputError(`recipient.${field} is required when receiver_type is 2 (非FBA地址).`);
+        }
+      }
+    }
     const payload = await requestSfExpress(
       "FOP_RECE_IFOS_PLACE_ORDER",
       compactObject({
@@ -335,7 +362,7 @@ export const sfExpressFreightForwardCrossborderHandlers: ProviderActionHandlerSu
         customerAccount: monthlyCard,
         receiverType,
         warehouseCode: optionalString(input.warehouse_code),
-        receiverAddressDTO: readCrossborderContact(input.recipient, "recipient"),
+        receiverAddressDTO: receiverAddress,
         senderAddressDTO: readCrossborderContact(input.sender, "sender"),
         cargo: compactObject({
           cargoType: requiredInputString(input.cargo_type, "cargo_type"),

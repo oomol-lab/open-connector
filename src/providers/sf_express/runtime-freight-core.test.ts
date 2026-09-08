@@ -293,7 +293,7 @@ describe("SF Express freight core handlers", () => {
 
     expect(output).toMatchObject({
       waybillNo: "SF1020128167572",
-      orderStatus: 50,
+      orderStatus: "50",
       expectDeliveryTime: 1671622140000,
       routeInfos: [{ info: "货物已签收", status: 50, statusDesc: "已签收", time: 1671622140000, opCode: "980" }],
       subWaybillNos: ["1Z7709XW0394043193", "1Z8174V40300279941"],

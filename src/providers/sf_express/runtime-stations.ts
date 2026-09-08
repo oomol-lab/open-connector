@@ -630,7 +630,7 @@ export const sfExpressStationHandlers: ProviderActionHandlerSubset<"sf_express",
         header: readStationHeader(input.header),
         content: compactObject({
           virtualAddr: optionalString(input.virtual_addr),
-          serviceContentType: requiredInputString(input.service_content_type, "service_content_type"),
+          serviceContentType: optionalString(input.service_content_type),
           storeCode,
           name: requiredInputString(input.name, "name"),
           partnerId: requiredInputString(input.partner_id, "partner_id"),
@@ -986,7 +986,7 @@ export const sfExpressStationHandlers: ProviderActionHandlerSubset<"sf_express",
   },
   async station_send_sms(input, context) {
     const waybillNo = requiredInputString(input.waybill_no, "waybill_no");
-    await requestSfExpress(
+    const payload = await requestSfExpress(
       "COM_RECE_KB_SEND_SMS",
       compactObject({
         partner_id: requiredInputString(input.partner_id, "partner_id"),
@@ -999,7 +999,12 @@ export const sfExpressStationHandlers: ProviderActionHandlerSubset<"sf_express",
       context,
       "execute",
     );
-    return { waybillNo };
+    const sms = recordOrEmpty(payload);
+    return compactObject({
+      waybillNo,
+      smsId: optionalString(sms.sms_id),
+      msg: optionalString(sms.msg),
+    });
   },
   async station_check_waybill(input, context) {
     const waybillNo = requiredInputString(input.waybill_no, "waybill_no");
@@ -1013,10 +1018,12 @@ export const sfExpressStationHandlers: ProviderActionHandlerSubset<"sf_express",
       context,
       "execute",
     );
-    return {
+    const check = recordOrEmpty(payload);
+    return compactObject({
       waybillNo,
-      msg: optionalString(recordOrEmpty(payload).msg),
-    };
+      msg: optionalString(check.msg),
+      phone: optionalString(check.phone),
+    });
   },
   async station_temp_store(input, context) {
     const waybillNo = requiredInputString(input.waybill_no, "waybill_no");
@@ -1101,6 +1108,11 @@ function stationHandoverMessage(
 
 /** Read the EOS request header from the action's header input object. */
 function readStationHeader(value: unknown): Record<string, unknown> {
+  // COM_RECE_EOS_ADD_STORE_INFO marks the whole header optional; the other EOS
+  // endpoints require it through their input schema before this runs.
+  if (value === undefined) {
+    return {};
+  }
   const header = requiredRecord(value, "header", providerInputError);
   return compactObject({
     oprId: optionalString(header.operatorId),

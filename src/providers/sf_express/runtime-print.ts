@@ -195,7 +195,11 @@ function buildPrintExtJson(
   input: Record<string, unknown>,
   extra: Record<string, unknown>,
 ): Record<string, unknown> | undefined {
-  const extJson = compactObject({ encryptFlag: optionalString(input.encrypt_flag), ...extra });
+  const extJson = compactObject({
+    encryptFlag: optionalString(input.encrypt_flag),
+    channel: optionalString(input.channel),
+    ...extra,
+  });
   return Object.keys(extJson).length > 0 ? extJson : undefined;
 }
 
@@ -221,6 +225,10 @@ function readCloudPrintDocuments(value: unknown, maxItems: number): Array<Record
       waybillNoCheckValue: optionalString(doc.waybillNoCheckValue),
       customData: optionalRecord(doc.customData),
       isPrintLogo: optionalString(doc.isPrintLogo),
+      printPageNum: optionalString(doc.printPageNum),
+      isPrintStub: optionalString(doc.isPrintStub),
+      flowIcon: optionalString(doc.flowIcon),
+      flowText: optionalString(doc.flowText),
     });
   });
 }

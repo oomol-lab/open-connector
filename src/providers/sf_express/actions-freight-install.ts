@@ -162,6 +162,8 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
         added_services: s.array("The value-added services.", addedServiceSchema),
         customer_source_order_id: s.string("The source order number."),
         order_channel: s.string("The source platform."),
+        order_contact: s.string("The ordering party contact name, when it differs from the customer."),
+        order_contact_phone: s.string("The ordering party contact phone number."),
       },
       {
         optional: [
@@ -182,6 +184,8 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
           "added_services",
           "customer_source_order_id",
           "order_channel",
+          "order_contact",
+          "order_contact_phone",
         ],
       },
     ),

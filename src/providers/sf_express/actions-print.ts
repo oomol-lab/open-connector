@@ -45,6 +45,26 @@ const printDocumentSchema = s.requireAnyProperty(
       isPrintLogo: s.string(
         "Pass true when the thermal paper has no pre-printed SF logo and service phone number, so the template prints them.",
       ),
+      printPageNum: s.nonEmptyString('The page counter printed on the waybill, for example "第 10/20 票".'),
+      isPrintStub: s.string("Pass true to print the stub copy (存根联); omit or pass false to skip it."),
+      flowIcon: s.stringEnum("The flow-direction icon (流向标识) to print, 1 through 15.", [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+      ]),
+      flowText: s.nonEmptyString("The flow-direction Chinese label, at most 2 characters.", { maxLength: 2 }),
     },
     {
       optional: [
@@ -58,6 +78,10 @@ const printDocumentSchema = s.requireAnyProperty(
         "waybillNoCheckValue",
         "customData",
         "isPrintLogo",
+        "printPageNum",
+        "isPrintStub",
+        "flowIcon",
+        "flowText",
       ],
     },
   ),
@@ -82,8 +106,8 @@ const citywideDocumentSchema = s.object(
 );
 
 const encryptFlagSchema = s.string(
-  "The 6-digit masking flag (0 = print, 1 = mask, 2 = hide) for recipient name, sender name, recipient address, sender address, recipient company, sender company.",
-  { pattern: "^[012]{6}$" },
+  "The 6-digit masking flag for recipient name, sender name, recipient address, sender address, recipient company, sender company. The first four positions accept 0 = print or 1 = mask; the last two accept 0 = print or 2 = hide.",
+  { pattern: "^[01]{4}[02]{2}$" },
 );
 
 const printFileSchema = s.object(
@@ -171,13 +195,16 @@ export const sfExpressPrintActions: ActionDefinition[] = [
         sync: cloudPrintSyncSchema,
         custom_template_code: customTemplateCodeSchema,
         encrypt_flag: encryptFlagSchema,
+        channel: s.nonEmptyString(
+          'The order channel the waybills belong to, for example "medicine" (医药渠道) or "cx" (CX预约单).',
+        ),
         merge_pdf: s.boolean("Whether to merge the batch into one PDF file."),
         merge_type: s.stringEnum(
           "How to merge when merge_pdf is set: all = one PDF for all documents, single = one PDF per document.",
           ["all", "single"],
         ),
       },
-      { optional: ["sync", "custom_template_code", "encrypt_flag", "merge_pdf", "merge_type"] },
+      { optional: ["sync", "custom_template_code", "encrypt_flag", "channel", "merge_pdf", "merge_type"] },
     ),
     outputSchema: printResultSchema("pdf"),
   }),
@@ -201,8 +228,11 @@ export const sfExpressPrintActions: ActionDefinition[] = [
         command_file_type: s.stringEnum("Set to url to receive command files instead of inline command text.", ["url"]),
         custom_template_code: customTemplateCodeSchema,
         encrypt_flag: encryptFlagSchema,
+        channel: s.nonEmptyString(
+          'The order channel the waybills belong to, for example "medicine" (医药渠道) or "cx" (CX预约单).',
+        ),
       },
-      { optional: ["command_type", "command_file_type", "custom_template_code", "encrypt_flag"] },
+      { optional: ["command_type", "command_file_type", "custom_template_code", "encrypt_flag", "channel"] },
     ),
     outputSchema: s.object(
       "The generated printer commands.",
@@ -255,12 +285,15 @@ export const sfExpressPrintActions: ActionDefinition[] = [
         sync: cloudPrintSyncSchema,
         custom_template_code: customTemplateCodeSchema,
         encrypt_flag: encryptFlagSchema,
+        channel: s.nonEmptyString(
+          'The order channel the waybills belong to, for example "medicine" (医药渠道) or "cx" (CX预约单).',
+        ),
         ignore_areas: s.stringEnum(
           "Pass CUSTOM_AREA to leave the custom area unrendered so you can draw it yourself; SF then appends a placeholder layout element. Only fm_*_standard_ templates with a custom_template_code support it.",
           ["CUSTOM_AREA"],
         ),
       },
-      { optional: ["sync", "custom_template_code", "encrypt_flag", "ignore_areas"] },
+      { optional: ["sync", "custom_template_code", "encrypt_flag", "channel", "ignore_areas"] },
     ),
     outputSchema: s.object(
       "The generated Cainiao templates.",
@@ -306,8 +339,11 @@ export const sfExpressPrintActions: ActionDefinition[] = [
         }),
         custom_template_code: customTemplateCodeSchema,
         encrypt_flag: encryptFlagSchema,
+        channel: s.nonEmptyString(
+          'The order channel the waybills belong to, for example "medicine" (医药渠道) or "cx" (CX预约单).',
+        ),
       },
-      { optional: ["custom_template_code", "encrypt_flag"] },
+      { optional: ["custom_template_code", "encrypt_flag", "channel"] },
     ),
     outputSchema: printResultSchema("html"),
   }),

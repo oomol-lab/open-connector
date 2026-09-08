@@ -54,6 +54,8 @@ export const sfExpressFreightInstallHandlers: ProviderActionHandlerSubset<"sf_ex
         receiverContact: requiredInputString(input.receiver_contact, "receiver_contact"),
         receiverMobile: requiredInputString(input.receiver_mobile, "receiver_mobile"),
         receiverAddress: requiredInputString(input.receiver_address, "receiver_address"),
+        orderContact: optionalString(input.order_contact),
+        orderContactPhone: optionalString(input.order_contact_phone),
         pickupZone: optionalString(input.pickup_zone),
         pickupContact: optionalString(input.pickup_contact),
         pickupMobile: optionalString(input.pickup_mobile),
@@ -112,6 +114,12 @@ export const sfExpressFreightInstallHandlers: ProviderActionHandlerSubset<"sf_ex
     return normalizeInstallOrderResult(payload);
   },
   async freight_create_recovery_order(input, context) {
+    const expectStartTime = requiredInputString(input.expect_start_time, "expect_start_time");
+    const expectEndTime = requiredInputString(input.expect_end_time, "expect_end_time");
+    // The doc fixes the pickup window at whole hours with a 1-hour span ending no later than 21:00.
+    if (Number(expectEndTime.slice(0, 2)) - Number(expectStartTime.slice(0, 2)) !== 1) {
+      throw providerInputError("expect_end_time must be exactly one hour after expect_start_time.");
+    }
     const payload = await requestSfExpress(
       "FOP_RECE_FIS_RECOVERY_ORDER",
       {
@@ -120,8 +128,8 @@ export const sfExpressFreightInstallHandlers: ProviderActionHandlerSubset<"sf_ex
         senderMobile: requiredInputString(input.sender_mobile, "sender_mobile"),
         senderAddress: requiredInputString(input.sender_address, "sender_address"),
         expectDate: readRecoveryDate(input.expect_date),
-        expectStartTime: requiredInputString(input.expect_start_time, "expect_start_time"),
-        expectEndTime: requiredInputString(input.expect_end_time, "expect_end_time"),
+        expectStartTime,
+        expectEndTime,
         productList: objectArray(input.product_list, "product_list", providerInputError).map((item, index) => ({
           productSku: requiredInputString(item.product_sku, `product_list[${index}].product_sku`),
           count: 1,

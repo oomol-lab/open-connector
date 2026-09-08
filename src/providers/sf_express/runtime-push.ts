@@ -1,7 +1,7 @@
 import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 import type { SfExpressActionHandler } from "./runtime.ts";
 
-import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalString } from "../../core/cast.ts";
 import { requiredInputString } from "../provider-runtime.ts";
 import { requestSfExpress } from "./runtime.ts";
 
