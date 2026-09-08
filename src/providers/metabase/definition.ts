@@ -1,6 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { metabaseActions } from "./actions.ts";
+import { metabaseMcpActions } from "./mcp-actions.ts";
 
 const service = "metabase";
 
@@ -30,5 +31,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://www.metabase.com",
-  actions: metabaseActions,
+  actions: [...metabaseActions, ...metabaseMcpActions],
 };
