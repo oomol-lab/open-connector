@@ -1,7 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import { sfExpressFreightTlCityHandlers } from "./runtime-freight-tl-city.ts";
 
-const context = (fetcher: typeof fetch) => ({ partnerId: "TEST_PARTNER", checkWord: "TEST_CHECKWORD", fetcher });
+const context = (fetcher: typeof fetch) => ({
+  partnerId: "TEST_PARTNER",
+  checkWord: "TEST_CHECKWORD",
+  cityClientCode: "TEST_CITY_CLIENT",
+  fetcher,
+});
 
 const readForm = (init?: RequestInit): URLSearchParams => new URLSearchParams(String(init?.body));
 
@@ -159,11 +164,11 @@ describe("SF Express freight truckload handlers", () => {
 });
 
 describe("SF Express freight city-delivery handlers", () => {
-  it("auto-fills clientCode from the credential and maps city order fields", async () => {
+  it("reads clientCode from the city-delivery credential and maps city order fields", async () => {
     const fetcher = vi.fn<typeof fetch>(async (_url, init) => {
       expect(readForm(init).get("serviceCode")).toBe("FOP_RECE_UFTL_OF_CONFIRM_ORDER");
       expect(readMsgData(init)).toEqual({
-        clientCode: "TEST_PARTNER",
+        clientCode: "TEST_CITY_CLIENT",
         vehicle: "中面",
         carNum: 1,
         sendStartTime: "2026-09-06 10:00:00",
@@ -228,6 +233,29 @@ describe("SF Express freight city-delivery handlers", () => {
     ).rejects.toMatchObject({ status: 400, message: "车型不能为空" });
   });
 
+  it("maps UFTL envelopes that explicitly carry success false", async () => {
+    const fetcher = vi.fn<typeof fetch>(async () =>
+      Response.json({ status: 400, msg: "clientCode 不合法", success: false }),
+    );
+
+    await expect(sfExpressFreightTlCityHandlers.freight_city_list_cities!({}, context(fetcher))).rejects.toMatchObject({
+      status: 400,
+      message: "clientCode 不合法",
+    });
+  });
+
+  it("requires the separately assigned city-delivery client code", async () => {
+    const fetcher = vi.fn<typeof fetch>();
+
+    await expect(
+      sfExpressFreightTlCityHandlers.freight_city_list_cities!(
+        {},
+        { partnerId: "TEST_PARTNER", checkWord: "TEST_CHECKWORD", fetcher },
+      ),
+    ).rejects.toMatchObject({ status: 400, message: "cityClientCode is required." });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it("maps a UFTL gateway status to the matching execution error", async () => {
     const cases = [
       [500, 502],
@@ -249,7 +277,7 @@ describe("SF Express freight city-delivery handlers", () => {
   it("normalizes the fee breakdown", async () => {
     const fetcher = vi.fn<typeof fetch>(async (_url, init) => {
       const msgData = readMsgData(init) as Record<string, unknown>;
-      expect(msgData.clientCode).toBe("TEST_PARTNER");
+      expect(msgData.clientCode).toBe("TEST_CITY_CLIENT");
       expect(msgData.orderAddressVOList).toEqual([
         {
           contact: "张三",
@@ -305,7 +333,12 @@ describe("SF Express freight city-delivery handlers", () => {
 
   it("normalizes the order list", async () => {
     const fetcher = vi.fn<typeof fetch>(async (_url, init) => {
-      expect(readMsgData(init)).toEqual({ clientCode: "TEST_PARTNER", phone: "13112345678", index: 1, size: 10 });
+      expect(readMsgData(init)).toEqual({
+        clientCode: "TEST_CITY_CLIENT",
+        phone: "13112345678",
+        index: 1,
+        size: 10,
+      });
       return uftlEnvelope(200, [
         {
           orderNo: "U20200227000026",
@@ -384,7 +417,7 @@ describe("SF Express freight city-delivery handlers", () => {
   it("cancels a city order with an empty data payload", async () => {
     const fetcher = vi.fn<typeof fetch>(async (_url, init) => {
       expect(readMsgData(init)).toEqual({
-        clientCode: "TEST_PARTNER",
+        clientCode: "TEST_CITY_CLIENT",
         customerOrderNo: "MALL-1",
         cancelMessage: "订单地址填写错误",
       });
@@ -429,7 +462,7 @@ describe("SF Express freight city-delivery handlers", () => {
 
   it("normalizes the vehicle models", async () => {
     const fetcher = vi.fn<typeof fetch>(async (_url, init) => {
-      expect(readMsgData(init)).toEqual({ clientCode: "TEST_PARTNER", city: "深圳市", orderCategory: 2 });
+      expect(readMsgData(init)).toEqual({ clientCode: "TEST_CITY_CLIENT", city: "深圳市", orderCategory: 2 });
       return uftlEnvelope(200, {
         carModels: [
           {

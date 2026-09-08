@@ -90,6 +90,8 @@ export interface SfExpressActionContext {
   checkWord: string;
   /** Defaults to 标准MD5, the algorithm every application predating the choice signs with. */
   signatureAlgorithm?: SfExpressSignatureAlgorithm;
+  /** Business client code assigned separately for the UFTL city-delivery APIs. */
+  cityClientCode?: string;
   /** When true, all calls go to the SF sandbox gateway regardless of the service's production host. */
   sandbox?: boolean;
   fetcher: ProviderFetch;
@@ -107,6 +109,7 @@ export function createSfExpressContext(
     partnerId: requiredInputString(values.partnerId, "partnerId"),
     checkWord: requiredInputString(values.checkWord, "checkWord"),
     signatureAlgorithm: readSignatureAlgorithm(values.signatureAlgorithm),
+    cityClientCode: optionalString(values.cityClientCode),
     sandbox: readSandboxFlag(values.sandbox),
     fetcher,
     signal,
@@ -316,9 +319,9 @@ function unwrapSfExpressEnvelope(outer: Record<string, unknown>, phase: SfExpres
 
   const record = requiredResponseRecord(inner, "SF Express apiResultData");
 
-  // UFTL (city-delivery) envelope: { status, msg, data } — 200 marks success.
+  // UFTL (city-delivery) envelope: { status, msg, data, success? } — 200 marks success.
   const uftlStatus = optionalNumberLike(record.status);
-  if (record.success === undefined && uftlStatus !== undefined) {
+  if (uftlStatus !== undefined && ("msg" in record || "data" in record)) {
     if (uftlStatus !== 200) {
       throw createSfExpressUftlError(uftlStatus, optionalString(record.msg), phase);
     }
@@ -344,7 +347,10 @@ function unwrapSfExpressEnvelope(outer: Record<string, unknown>, phase: SfExpres
   if (record.success !== true && record.success !== "true") {
     throw createSfExpressBusinessError(
       optionalString(record.errorCode) ?? optionalString(record.code),
-      optionalString(record.errorMsg) ?? optionalString(record.errorMessage) ?? optionalString(record.message),
+      optionalString(record.errorMsg) ??
+        optionalString(record.errorMessage) ??
+        optionalString(record.message) ??
+        optionalString(record.msg),
     );
   }
   return readEnvelopePayload(record);

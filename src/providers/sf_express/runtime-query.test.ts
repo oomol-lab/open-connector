@@ -265,6 +265,29 @@ describe("SF Express service-query handlers", () => {
     });
   });
 
+  it("normalizes the live filter_order array response", async () => {
+    const fetcher = vi.fn<typeof fetch>(async () =>
+      okEnvelope([{ orderId: "TE201407020016", filterResult: 3, originCode: "755", destCode: "020" }]),
+    );
+
+    const output = await sfExpressQueryHandlers.filter_order!(
+      {
+        orders: [
+          {
+            order_id: "TE201407020016",
+            sender: { province: "四川省", city: "成都市", address: "测试地址A" },
+            recipient: { province: "天津市", city: "天津市", address: "测试地址B" },
+          },
+        ],
+      },
+      context(fetcher),
+    );
+
+    expect(output).toEqual({
+      results: [{ orderId: "TE201407020016", filterResult: 3, originCode: "755", destCode: "020", remark: undefined }],
+    });
+  });
+
   it("parses the stringified msgData of the service points response", async () => {
     const fetcher = vi.fn<typeof fetch>(async (_url, init) => {
       const msgData = JSON.parse(readForm(init).get("msgData")!);

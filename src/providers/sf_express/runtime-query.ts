@@ -111,9 +111,11 @@ export const sfExpressQueryHandlers: ProviderActionHandlerSubset<"sf_express", S
       }),
     );
     const payload = await requestSfExpress("EXP_RECE_FILTER_ORDER_BSP", orders, context, "execute");
-    const record = requiredResponseRecord(payload, "SF Express filter response");
+    const results = Array.isArray(payload)
+      ? payload
+      : requiredResponseRecord(payload, "SF Express filter response").resDtos;
     return {
-      results: objectArray(record.resDtos, "resDtos", providerResponseError).map((result, index) => ({
+      results: objectArray(results, "resDtos", providerResponseError).map((result, index) => ({
         orderId: optionalString(result.orderId),
         filterResult: integer(result.filterResult, `resDtos[${index}].filterResult`, providerResponseError),
         originCode: optionalString(result.originCode),

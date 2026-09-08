@@ -571,7 +571,7 @@ function normalizeWaybillFee(payload: unknown): Record<string, unknown> {
       (fee, index) =>
         compactObject({
           type: requiredString(fee.type, `waybillFeeList[${index}].type`, providerResponseError),
-          name: requiredString(fee.name, `waybillFeeList[${index}].name`, providerResponseError),
+          name: optionalString(fee.name),
           value: optionalNumberLike(fee.value) ?? null,
           paymentTypeCode: optionalString(fee.paymentTypeCode),
           settlementTypeCode: optionalString(fee.settlementTypeCode),

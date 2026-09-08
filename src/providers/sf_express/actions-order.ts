@@ -732,7 +732,14 @@ export const sfExpressOrderActions: ActionDefinition[] = [
             customerAcctCode: s.string("The monthly settlement account."),
           },
           {
-            optional: ["paymentTypeCode", "settlementTypeCode", "serviceProdCode", "insuredValue", "customerAcctCode"],
+            optional: [
+              "name",
+              "paymentTypeCode",
+              "settlementTypeCode",
+              "serviceProdCode",
+              "insuredValue",
+              "customerAcctCode",
+            ],
           },
         ),
       ),

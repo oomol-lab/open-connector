@@ -389,7 +389,7 @@ describe("SF Express general-shipping handlers", () => {
         },
         waybillFeeList: [
           { type: "1", name: "运费", value: 15.0 },
-          { type: "3", name: "基础保", value: 6.0 },
+          { type: "3", value: 6.0 },
         ],
       });
     });
@@ -403,7 +403,7 @@ describe("SF Express general-shipping handlers", () => {
       waybillInfo: { waybillNo: "SF1040460455098", meterageWeightQty: 1.0, expressTypeName: "顺丰标快" },
       waybillFeeList: [
         { type: "1", name: "运费", value: 15.0 },
-        { type: "3", name: "基础保", value: 6.0 },
+        { type: "3", value: 6.0 },
       ],
     });
   });

@@ -44,6 +44,16 @@ export const provider: ProviderDefinition = {
             "The msgDigest algorithm chosen when the partnerID was created, which cannot be changed afterwards: standard_md5 (标准MD5, the default) URL-encodes before hashing, simple_md5 (简易MD5) hashes the raw string, and sm3 (SM3) returns the 国密 SM3 hex digest. Check it under 数字签名方式 on the application's page.",
         },
         {
+          key: "cityClientCode",
+          label: "City Delivery Client Code (同城客户编码)",
+          inputType: "text",
+          required: false,
+          secret: false,
+          placeholder: "SF_EXPRESS_CITY_CLIENT_CODE",
+          description:
+            "The clientCode assigned separately for SF city-delivery APIs. Required only when using the freight_city_* actions; it is not the Open Platform partnerID.",
+        },
+        {
           key: "sandbox",
           label: "Sandbox Mode (沙箱联调)",
           inputType: "text",
