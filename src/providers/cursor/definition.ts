@@ -7,6 +7,7 @@ const service = "cursor";
 export const provider: ProviderDefinition = {
   service,
   displayName: "Cursor",
+  description: "Run coding agents, continue conversations, and track team usage and spending.",
   categories: ["Developer Tools", "AI"],
   authTypes: ["api_key"],
   auth: [
@@ -15,7 +16,7 @@ export const provider: ProviderDefinition = {
       label: "API Key",
       placeholder: "crsr_...",
       description:
-        "Cursor API key sent with Basic authentication. Create or copy a key from Cursor Dashboard > API Keys: https://cursor.com/dashboard/api",
+        "Create a user API key at https://cursor.com/dashboard/api, or use a service account or admin API key from your team settings.",
     },
   ],
   homepageUrl: "https://cursor.com",
