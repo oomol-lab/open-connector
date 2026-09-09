@@ -148,7 +148,7 @@ export async function validateCursorCredential(
   try {
     const payload = await requestCursor("/teams/members", context);
     arrayPayload(payload.teamMembers, "Cursor teamMembers");
-    return { profile: { accountId: "cursor:team", grantedScopes: ["admin:*"] } };
+    return { profile: { accountId: "cursor:team" }, grantedScopes: ["admin:*"] };
   } catch (error) {
     if (error instanceof ProviderRequestError && (error.status === 401 || error.status === 403)) {
       throw providerInputError(error.message);

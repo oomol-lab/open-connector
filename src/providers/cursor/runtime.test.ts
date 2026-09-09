@@ -127,7 +127,8 @@ describe("Cursor credentials", () => {
       .mockResolvedValueOnce(Response.json({ error: "Forbidden" }, { status: 403 }))
       .mockResolvedValueOnce(Response.json({ teamMembers: [{ id: "user_1", email: "someone@example.com" }] }));
     await expect(credentialValidators.apiKey!({ apiKey: "key", values: {} }, { fetcher })).resolves.toEqual({
-      profile: { accountId: "cursor:team", grantedScopes: ["admin:*"] },
+      profile: { accountId: "cursor:team" },
+      grantedScopes: ["admin:*"],
     });
     expect(fetcher.mock.calls.map(([url]) => new URL(String(url)).pathname)).toEqual(["/v1/me", "/teams/members"]);
   });
