@@ -88,6 +88,7 @@ async function getQrCode(): Promise<QrCodeResponse> {
     method: "POST",
     headers: qrPostHeaders(),
     body: JSON.stringify({ local_token_list: [] }),
+    signal: AbortSignal.timeout(35_000),
   });
   return readJsonResponse<QrCodeResponse>(response, "get bot QR code");
 }

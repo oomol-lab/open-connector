@@ -11,6 +11,7 @@ import {
   readTransitFileInput,
   requiredInputString,
   requiredResponseRecord,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 type WeixinRequest = (options: WeixinRequestOptions) => Promise<Record<string, unknown>>;
@@ -48,12 +49,14 @@ export async function sendWeixinMedia(
     },
   });
   const uploadUrl = resolveCdnUrl(upload.upload_full_url, upload.upload_param, "upload", filekey);
-  const uploadResponse = await providerFetch(uploadUrl, {
-    method: "POST",
-    headers: { "content-type": "application/octet-stream" },
-    body: Uint8Array.from(ciphertext),
-    signal: context.signal,
-  });
+  const uploadResponse = await runProviderRequest({ signal: context.signal, label: "Weixin CDN upload" }, (signal) =>
+    providerFetch(uploadUrl, {
+      method: "POST",
+      headers: { "content-type": "application/octet-stream" },
+      body: Uint8Array.from(ciphertext),
+      signal,
+    }),
+  );
   const encryptedParam = uploadResponse.headers.get("x-encrypted-param");
   if (uploadResponse.status !== 200 || !encryptedParam) {
     throw new ProviderRequestError(502, `Weixin CDN upload failed with HTTP ${uploadResponse.status}`);
@@ -80,23 +83,28 @@ export async function downloadWeixinMedia(
   input: Record<string, unknown>,
   context: WeixinBotContext,
 ): Promise<Record<string, unknown>> {
-  if (!context.transitFiles) throw new ProviderRequestError(400, "Transit file storage is not enabled.");
+  const transitFiles = context.transitFiles;
+  if (!transitFiles) throw new ProviderRequestError(400, "Transit file storage is not enabled.");
   const item = requiredResponseRecord(input.item, "Weixin media item");
   const details = readMediaDetails(item);
   const url = resolveCdnUrl(details.fullUrl, details.encryptedParam, "download");
-  const response = await providerFetch(url, { signal: context.signal });
-  if (!response.ok) throw new ProviderRequestError(502, `Weixin CDN download failed with HTTP ${response.status}`);
-  const encrypted = await readBoundedResponseBytes(response, {
-    maxBytes: context.transitFiles.maxBytes + 16,
-    fieldName: "Weixin media",
-    createError: (message) => new ProviderRequestError(413, message),
-  });
+  const encrypted = await runProviderRequest(
+    { signal: context.signal, label: "Weixin CDN download" },
+    async (signal) => {
+      const response = await providerFetch(url, { signal });
+      if (!response.ok) throw new ProviderRequestError(502, `Weixin CDN download failed with HTTP ${response.status}`);
+      return readBoundedResponseBytes(response, {
+        maxBytes: transitFiles.maxBytes + 16,
+        fieldName: "Weixin media",
+        createError: (message) => new ProviderRequestError(413, message),
+      });
+    },
+  );
   const bytes = details.key ? decrypt(Buffer.from(encrypted), details.key) : Buffer.from(encrypted);
-  if (bytes.byteLength > context.transitFiles.maxBytes)
-    throw new ProviderRequestError(413, "Weixin media is too large");
+  if (bytes.byteLength > transitFiles.maxBytes) throw new ProviderRequestError(413, "Weixin media is too large");
   const mimeType = detectImageMimeType(bytes) ?? details.mimeType;
   const name = optionalString(input.name) ?? mediaNameForMimeType(details.name, mimeType);
-  const stored = await context.transitFiles.create(new File([Uint8Array.from(bytes)], name, { type: mimeType }));
+  const stored = await transitFiles.create(new File([Uint8Array.from(bytes)], name, { type: mimeType }));
   return { file: { ...stored, name, mimeType } };
 }
 
