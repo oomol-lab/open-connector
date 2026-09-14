@@ -180,16 +180,6 @@ export class ConnectServer {
     app.use("*", createLocalAuthMiddleware(auth));
     if (this.options.marketplace) {
       app.get("/api/marketplace", (context) => context.json(this.options.marketplace!.getState()));
-      app.get("/api/marketplace/official-catalog", async (context) => {
-        try {
-          return context.json(await this.options.marketplace!.getOfficialCatalog());
-        } catch (error) {
-          if (error instanceof MarketplaceError) {
-            return jsonError(context, error.status === 504 ? 504 : 502, error.code, error.message);
-          }
-          throw error;
-        }
-      });
       app.put("/api/marketplace", (context) => this.configureMarketplace(context));
       app.patch("/api/marketplace", (context) => this.configureMarketplace(context));
       app.delete("/api/marketplace", (context) => this.deleteMarketplace(context));

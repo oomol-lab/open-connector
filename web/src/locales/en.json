@@ -110,7 +110,7 @@
     "noRecentCallsDescription": "Run an action to see provider call counts."
   },
   "marketplace": {
-    "official": {
+    "default": {
       "browseDescription": "Browse available features",
       "reconnect": "This source is not ready. Check the configuration above and validate again.",
       "title": "Official apps",
@@ -152,7 +152,7 @@
       "discoveryUrl": "Discovery URL",
       "discoveryHelp": "Connect fetches and validates this document when you save.",
       "apiKey": "API key",
-      "getOfficialKey": "Get OOMOL official API key",
+      "getDefaultKey": "Get OOMOL official API key",
       "apiKeyPlaceholder": "Enter a Marketplace API key",
       "keepCurrentKey": "Leave blank to keep the current key",
       "apiKeyHelp": "Stored with runtime encryption when an encryption key is configured.",

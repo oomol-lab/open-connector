@@ -27,64 +27,6 @@ const provider: ProviderDefinition = {
 };
 
 describe("MarketplaceService", () => {
-  it("browses and caches the public official catalog without authenticating or activating services", async () => {
-    const store = new MemoryMarketplaceStore();
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
-      jsonResponse({
-        version: 1,
-        id: "oomol",
-        name: "OOMOL Marketplace",
-        pricing: "metered",
-        validate: "/validate",
-        endpoint: "/actions",
-        actions: ["example.run", "remote.only"],
-      }),
-    );
-    const service = new MarketplaceService({
-      catalog: createCatalogStore([provider]),
-      store,
-      secretCodec: reversibleCodec,
-      fetcher,
-    });
-    const catalogs = await Promise.all([service.getOfficialCatalog(), service.getOfficialCatalog()]);
-    expect(catalogs).toEqual([
-      { name: "OOMOL Marketplace", services: ["example"] },
-      { name: "OOMOL Marketplace", services: ["example"] },
-    ]);
-    await service.getOfficialCatalog();
-    expect(fetcher).toHaveBeenCalledTimes(1);
-    expect(fetcher.mock.calls[0]?.[1]?.headers).toEqual({ accept: "application/json" });
-    expect(service.getSnapshot()).toBeUndefined();
-    expect(service.getState().configured).toBe(false);
-    expect(await store.getConfig()).toBeUndefined();
-    expect(await store.listProviderPreferences()).toEqual([]);
-  });
-
-  it("retries official discovery after a failed request", async () => {
-    const fetcher = vi
-      .fn<typeof fetch>()
-      .mockRejectedValueOnce(new Error("offline"))
-      .mockResolvedValueOnce(
-        jsonResponse({
-          version: 1,
-          id: "oomol",
-          name: "OOMOL Marketplace",
-          pricing: "metered",
-          validate: "/validate",
-          endpoint: "/actions",
-          actions: ["example.run"],
-        }),
-      );
-    const service = new MarketplaceService({
-      catalog: createCatalogStore([provider]),
-      store: new MemoryMarketplaceStore(),
-      secretCodec: reversibleCodec,
-      fetcher,
-    });
-    await expect(service.getOfficialCatalog()).rejects.toThrow("offline");
-    await expect(service.getOfficialCatalog()).resolves.toMatchObject({ services: ["example"] });
-  });
-
   it("keeps the current source on failed replacement and hides old preferences after a successful switch", async () => {
     const fetcher = vi.fn<typeof fetch>().mockImplementation(async (input) => {
       const url = new URL(String(input));

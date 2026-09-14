@@ -110,7 +110,7 @@
     "noRecentCallsDescription": "Запустите действие, чтобы увидеть вызовы по провайдерам."
   },
   "marketplace": {
-    "official": {
+    "default": {
       "browseDescription": "Посмотреть доступные функции",
       "reconnect": "Источник пока недоступен. Проверьте настройки выше и повторите проверку.",
       "title": "Официальные приложения",
@@ -152,7 +152,7 @@
       "discoveryUrl": "URL обнаружения",
       "discoveryHelp": "Connect загрузит и проверит документ при сохранении.",
       "apiKey": "API-ключ",
-      "getOfficialKey": "Получить официальный API-ключ OOMOL",
+      "getDefaultKey": "Получить официальный API-ключ OOMOL",
       "apiKeyPlaceholder": "Введите API-ключ Marketplace",
       "keepCurrentKey": "Оставьте пустым, чтобы сохранить текущий ключ",
       "apiKeyHelp": "Шифруется при наличии ключа шифрования среды.",

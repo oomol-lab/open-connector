@@ -1,3 +1,4 @@
+import type { DefaultMarketplaceDiscovery } from "./default-marketplace-discovery";
 import type { ProviderDefinition } from "./model";
 import type { ReactNode } from "react";
 
@@ -5,20 +6,16 @@ import { useTranslate } from "@embra/i18n/react";
 import { Loader2, Store } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import { apiGet } from "./api";
 import { Button } from "./components/ui/button";
+import { loadDefaultMarketplaceCatalog } from "./default-marketplace-discovery";
 import { Badge, EmptyState, ProviderIcon } from "./shared-ui";
 
-interface OfficialCatalog {
-  name: string;
-  services: string[];
-}
-
-interface OfficialMarketplaceCatalogProps {
+interface DefaultMarketplaceCatalogProps {
   providers: ProviderDefinition[];
+  discoveryUrl: string;
 }
 
-// Official promotions apply only to the named models, never to custom marketplaces.
+// Default promotions apply only to the named models, never to custom marketplaces.
 const promotedModels: Record<string, string[]> = {
   kling: ["Kling 3.0"],
   minimax: ["MiniMax H3"],
@@ -26,16 +23,17 @@ const promotedModels: Record<string, string[]> = {
 };
 const promotedServices = Object.keys(promotedModels);
 
-export function OfficialMarketplaceCatalog({ providers }: OfficialMarketplaceCatalogProps): ReactNode {
+export function DefaultMarketplaceCatalog({ providers, discoveryUrl }: DefaultMarketplaceCatalogProps): ReactNode {
   const t = useTranslate();
-  const [catalog, setCatalog] = useState<OfficialCatalog>();
+  const [catalog, setCatalog] = useState<DefaultMarketplaceDiscovery>();
   const [failure, setFailure] = useState<Error>();
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
     setFailure(undefined);
-    void apiGet<OfficialCatalog>("/api/marketplace/official-catalog").then(
+    const controller = new AbortController();
+    void loadDefaultMarketplaceCatalog(discoveryUrl, controller.signal).then(
       (value) => {
         if (active) setCatalog(value);
       },
@@ -47,12 +45,13 @@ export function OfficialMarketplaceCatalog({ providers }: OfficialMarketplaceCat
     );
     return () => {
       active = false;
+      controller.abort();
     };
-  }, [attempt]);
+  }, [attempt, discoveryUrl]);
 
-  const available = new Set(catalog?.services);
+  const available = new Set(catalog?.actions);
   const rows = providers
-    .filter((provider) => available.has(provider.service))
+    .filter((provider) => provider.actions.some((action) => available.has(action.id)))
     .sort((a, b) => {
       const aRank = promotedServices.indexOf(a.service);
       const bRank = promotedServices.indexOf(b.service);
@@ -66,29 +65,29 @@ export function OfficialMarketplaceCatalog({ providers }: OfficialMarketplaceCat
     <section className="marketplace-panel">
       <header className="marketplace-panel-header">
         <div>
-          <h2>{t("marketplace.official.title")}</h2>
-          <p>{t("marketplace.official.description")}</p>
+          <h2>{t("marketplace.default.title")}</h2>
+          <p>{t("marketplace.default.description")}</p>
         </div>
         {catalog ? <Badge>{t("marketplace.providers.count", { count: rows.length })}</Badge> : null}
       </header>
       {failure ? (
         <div className="marketplace-catalog-feedback" role="status">
-          <p>{t("marketplace.official.failed")}</p>
+          <p>{t("marketplace.default.failed")}</p>
           {failure.message ? <p className="marketplace-catalog-error">{failure.message}</p> : null}
           <Button variant="outline" size="sm" onClick={() => setAttempt((value) => value + 1)}>
-            {t("marketplace.official.retry")}
+            {t("marketplace.default.retry")}
           </Button>
         </div>
       ) : !catalog ? (
         <div className="marketplace-catalog-feedback" role="status">
           <Loader2 className="spin" size={16} aria-hidden="true" />
-          {t("marketplace.official.loading")}
+          {t("marketplace.default.loading")}
         </div>
       ) : rows.length === 0 ? (
         <EmptyState
           icon={<Store size={20} />}
-          title={t("marketplace.official.empty")}
-          description={t("marketplace.official.description")}
+          title={t("marketplace.default.empty")}
+          description={t("marketplace.default.description")}
           density="compact"
         />
       ) : (
@@ -97,30 +96,30 @@ export function OfficialMarketplaceCatalog({ providers }: OfficialMarketplaceCat
             const promoted = promotedServices.includes(provider.service);
             const path = `/providers/${encodeURIComponent(provider.service)}`;
             return (
-              <div className="marketplace-provider-row marketplace-official-row" key={provider.service}>
+              <div className="marketplace-provider-row marketplace-default-row" key={provider.service}>
                 <ProviderIcon provider={provider} />
-                <div className="marketplace-official-copy">
+                <div className="marketplace-default-copy">
                   <Link className="marketplace-provider-copy" to={path}>
                     <strong>{provider.displayName}</strong>
                     <span>
                       {promoted
-                        ? t(`marketplace.official.descriptions.${provider.service}`)
-                        : provider.description || t("marketplace.official.browseDescription")}
+                        ? t(`marketplace.default.descriptions.${provider.service}`)
+                        : provider.description || t("marketplace.default.browseDescription")}
                     </span>
                   </Link>
                   {promoted ? (
-                    <div className="marketplace-official-tags">
+                    <div className="marketplace-default-tags">
                       {promotedModels[provider.service].map((model) => (
                         <span className="marketplace-model-tag" key={model}>
                           {model}
                         </span>
                       ))}
-                      <Badge tone="success">{t(`marketplace.official.offers.${provider.service}`)}</Badge>
+                      <Badge tone="success">{t(`marketplace.default.offers.${provider.service}`)}</Badge>
                     </div>
                   ) : null}
                 </div>
                 <Button asChild variant="outline" size="sm">
-                  <Link to={path}>{t("marketplace.official.view")}</Link>
+                  <Link to={path}>{t("marketplace.default.view")}</Link>
                 </Button>
               </div>
             );
@@ -129,7 +128,7 @@ export function OfficialMarketplaceCatalog({ providers }: OfficialMarketplaceCat
       )}
       {catalog ? (
         <footer className="marketplace-catalog-footer">
-          {catalog.name} · {t("marketplace.official.disconnected")}
+          {catalog.name} · {t("marketplace.default.disconnected")}
         </footer>
       ) : null}
     </section>

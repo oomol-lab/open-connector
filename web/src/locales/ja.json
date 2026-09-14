@@ -110,7 +110,7 @@
     "noRecentCallsDescription": "アクションを実行するとプロバイダー別の呼び出し数が表示されます。"
   },
   "marketplace": {
-    "official": {
+    "default": {
       "browseDescription": "利用可能な機能を見る",
       "reconnect": "この接続先は利用できません。上の設定を確認し、再検証してください。",
       "title": "公式アプリ",
@@ -147,7 +147,7 @@
       "discoveryUrl": "Discovery URL",
       "discoveryHelp": "保存時に discovery ドキュメントを取得して検証します。",
       "apiKey": "API キー",
-      "getOfficialKey": "OOMOL 公式 API キーを取得",
+      "getDefaultKey": "OOMOL 公式 API キーを取得",
       "apiKeyPlaceholder": "Marketplace API キーを入力",
       "keepCurrentKey": "現在のキーを維持する場合は空欄",
       "apiKeyHelp": "暗号化キーが設定されている場合は暗号化して保存されます。",

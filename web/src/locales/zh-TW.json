@@ -110,7 +110,7 @@
     "noRecentCallsDescription": "執行一個動作以查看服務提供者的呼叫次數。"
   },
   "marketplace": {
-    "official": {
+    "default": {
       "browseDescription": "瀏覽可用功能",
       "reconnect": "目前來源尚未就緒，請在上方檢查設定並重新驗證。",
       "title": "官方應用",
@@ -147,7 +147,7 @@
       "discoveryUrl": "Discovery URL",
       "discoveryHelp": "儲存時會取得並驗證該 discovery 文件。",
       "apiKey": "API Key",
-      "getOfficialKey": "取得 OOMOL 官方 API Key",
+      "getDefaultKey": "取得 OOMOL 官方 API Key",
       "apiKeyPlaceholder": "輸入 Marketplace API Key",
       "keepCurrentKey": "留空以保留目前的 Key",
       "apiKeyHelp": "設定執行環境加密金鑰後，此值會加密儲存。",

@@ -6,7 +6,7 @@ import { ArrowUpRight, CheckCircle2, Eye, EyeOff, Loader2, Store, Trash2, Triang
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { apiDelete, apiPatch, apiPut } from "./api";
-import { OfficialMarketplaceCatalog } from "./official-marketplace-catalog";
+import { DefaultMarketplaceCatalog } from "./default-marketplace-catalog";
 import { Badge, EmptyState, FormStatus, ProviderIcon } from "./shared-ui";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -103,7 +103,7 @@ export function MarketplacePage(props: MarketplacePageProps): ReactNode {
               <Label htmlFor="marketplace-api-key">{t("marketplace.configuration.apiKey")}</Label>
               <Button asChild variant="outline" size="sm">
                 <a href="https://console.oomol.com/api-key" target="_blank" rel="noopener noreferrer">
-                  {t("marketplace.configuration.getOfficialKey")}
+                  {t("marketplace.configuration.getDefaultKey")}
                   <ArrowUpRight size={15} aria-hidden="true" />
                 </a>
               </Button>
@@ -177,7 +177,7 @@ export function MarketplacePage(props: MarketplacePageProps): ReactNode {
       </section>
 
       {!marketplace?.configured ? (
-        <OfficialMarketplaceCatalog providers={props.data.providers} />
+        <DefaultMarketplaceCatalog providers={props.data.providers} discoveryUrl={marketplace?.discoveryUrl ?? ""} />
       ) : (
         <section className="marketplace-panel">
           <header className="marketplace-panel-header">
@@ -200,7 +200,7 @@ export function MarketplacePage(props: MarketplacePageProps): ReactNode {
               description={t(
                 marketplace.status === "available"
                   ? "marketplace.providers.emptyDescription"
-                  : "marketplace.official.reconnect",
+                  : "marketplace.default.reconnect",
               )}
               density="compact"
             />

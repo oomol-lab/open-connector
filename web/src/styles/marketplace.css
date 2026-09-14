@@ -145,23 +145,23 @@
   border-top: 1px solid var(--border);
 }
 
-.marketplace-official-row .marketplace-provider-copy span {
+.marketplace-default-row .marketplace-provider-copy span {
   white-space: normal;
   overflow: visible;
   text-overflow: clip;
   text-wrap: pretty;
 }
 
-.marketplace-provider-row.marketplace-official-row {
+.marketplace-provider-row.marketplace-default-row {
   grid-template-columns: auto minmax(0, 1fr) auto;
   padding-block: 14px;
 }
 
-.marketplace-official-copy {
+.marketplace-default-copy {
   min-width: 0;
 }
 
-.marketplace-official-tags {
+.marketplace-default-tags {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -180,7 +180,7 @@
   white-space: nowrap;
 }
 
-.marketplace-official-tags .badge.success {
+.marketplace-default-tags .badge.success {
   background: color-mix(in oklab, var(--success) 10%, var(--background));
 }
 

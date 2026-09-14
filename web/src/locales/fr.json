@@ -110,7 +110,7 @@
     "noRecentCallsDescription": "Exécutez une action pour voir les appels par fournisseur."
   },
   "marketplace": {
-    "official": {
+    "default": {
       "browseDescription": "Parcourir les fonctions disponibles",
       "reconnect": "Cette source n’est pas prête. Vérifiez la configuration ci-dessus et relancez la validation.",
       "title": "Applications officielles",
@@ -152,7 +152,7 @@
       "discoveryUrl": "URL de découverte",
       "discoveryHelp": "Connect récupère et valide ce document lors de l’enregistrement.",
       "apiKey": "Clé API",
-      "getOfficialKey": "Obtenir une clé API officielle OOMOL",
+      "getDefaultKey": "Obtenir une clé API officielle OOMOL",
       "apiKeyPlaceholder": "Saisissez une clé API Marketplace",
       "keepCurrentKey": "Laisser vide pour conserver la clé actuelle",
       "apiKeyHelp": "Chiffrée au repos lorsqu’une clé de chiffrement est configurée.",
