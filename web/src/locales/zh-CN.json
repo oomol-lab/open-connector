@@ -112,7 +112,6 @@
   "marketplace": {
     "default": {
       "browseDescription": "浏览可用功能",
-      "reconnect": "当前来源尚未就绪，请在上方检查配置并重新验证。",
       "title": "官方应用",
       "description": "由 OOMOL Marketplace 提供，连接官方 API Key 后可用。",
       "failed": "官方目录暂时无法加载，请稍后重试。",
@@ -141,6 +140,7 @@
     "status": { "disabled": "未启用", "available": "可用", "unavailable": "不可用", "auth_error": "鉴权失败" },
     "pricing": { "free": "免费", "metered": "按量计费" },
     "configuration": {
+      "reconnect": "当前来源尚未就绪，请在上方检查配置并重新验证。",
       "title": "连接配置",
       "description": "将当前运行时连接到一个 Marketplace discovery endpoint。",
       "configured": "已配置",

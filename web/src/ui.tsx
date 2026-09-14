@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Navigate, NavLink, Route, Routes, useLocation } from "react-router";
+import { defaultMarketplaceDiscoveryUrl, isDefaultMarketplace } from "../../src/marketplace/default-marketplace";
 import { AccessPage } from "./access-page";
 import { ActionsPage } from "./actions-page";
 import { ApiError, apiGet, apiPost } from "./api";
@@ -377,7 +378,9 @@ function AppShell(props: {
               );
             })}
           </nav>
-          <HostedServicePromo />
+          {isDefaultMarketplace(props.data.marketplace?.discoveryUrl ?? defaultMarketplaceDiscoveryUrl) ? (
+            <HostedServicePromo />
+          ) : null}
         </div>
 
         <div className="sidebar-footer">

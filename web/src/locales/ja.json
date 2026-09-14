@@ -112,7 +112,6 @@
   "marketplace": {
     "default": {
       "browseDescription": "利用可能な機能を見る",
-      "reconnect": "この接続先は利用できません。上の設定を確認し、再検証してください。",
       "title": "公式アプリ",
       "description": "OOMOL Marketplace が提供するサービスです。公式 API キーを接続すると利用できます。",
       "failed": "公式カタログを読み込めませんでした。再試行してください。",
@@ -141,6 +140,7 @@
     "status": { "disabled": "無効", "available": "利用可能", "unavailable": "利用不可", "auth_error": "認証エラー" },
     "pricing": { "free": "無料", "metered": "従量課金" },
     "configuration": {
+      "reconnect": "この接続先は利用できません。上の設定を確認し、再検証してください。",
       "title": "接続設定",
       "description": "このランタイムを Marketplace discovery endpoint に接続します。",
       "configured": "設定済み",

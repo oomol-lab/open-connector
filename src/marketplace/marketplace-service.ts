@@ -4,8 +4,7 @@ import type { ISecretCodec } from "../server/secrets/secret-codec-core.ts";
 
 import { assertPublicHttpUrl } from "../core/request.ts";
 import { providerFetch } from "../providers/provider-runtime.ts";
-
-export const defaultMarketplaceDiscoveryUrl = "https://connector.oomol.com/.well-known/oomol-connector-marketplace";
+import { defaultMarketplaceDiscoveryUrl } from "./default-marketplace.ts";
 const maximumDiscoveryBytes = 4 * 1024 * 1024;
 
 export type MarketplacePricing = "free" | "metered";

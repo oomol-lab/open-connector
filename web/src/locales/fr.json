@@ -112,7 +112,6 @@
   "marketplace": {
     "default": {
       "browseDescription": "Parcourir les fonctions disponibles",
-      "reconnect": "Cette source n’est pas prête. Vérifiez la configuration ci-dessus et relancez la validation.",
       "title": "Applications officielles",
       "description": "Proposées par OOMOL Marketplace. Connectez une clé API officielle pour les utiliser.",
       "failed": "Le catalogue officiel est indisponible. Réessayez plus tard.",
@@ -146,6 +145,7 @@
     },
     "pricing": { "free": "Gratuit", "metered": "Usage mesuré" },
     "configuration": {
+      "reconnect": "Cette source n’est pas prête. Vérifiez la configuration ci-dessus et relancez la validation.",
       "title": "Configuration",
       "description": "Connectez cette instance à un endpoint de découverte Marketplace.",
       "configured": "Configuré",

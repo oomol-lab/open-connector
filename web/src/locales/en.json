@@ -112,7 +112,6 @@
   "marketplace": {
     "default": {
       "browseDescription": "Browse available features",
-      "reconnect": "This source is not ready. Check the configuration above and validate again.",
       "title": "Official apps",
       "description": "Provided by OOMOL Marketplace. Connect an official API key to use these services.",
       "failed": "The official catalog could not be loaded. Please try again.",
@@ -146,6 +145,7 @@
     },
     "pricing": { "free": "Free", "metered": "Metered usage" },
     "configuration": {
+      "reconnect": "This source is not ready. Check the configuration above and validate again.",
       "title": "Configuration",
       "description": "Connect this runtime to one Marketplace discovery endpoint.",
       "configured": "Configured",

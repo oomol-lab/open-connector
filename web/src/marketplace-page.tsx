@@ -5,6 +5,7 @@ import { useTranslate } from "@embra/i18n/react";
 import { ArrowUpRight, CheckCircle2, Eye, EyeOff, Loader2, Store, Trash2, TriangleAlert } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
+import { defaultMarketplaceDiscoveryUrl, isDefaultMarketplace } from "../../src/marketplace/default-marketplace";
 import { apiDelete, apiPatch, apiPut } from "./api";
 import { DefaultMarketplaceCatalog } from "./default-marketplace-catalog";
 import { Badge, EmptyState, FormStatus, ProviderIcon } from "./shared-ui";
@@ -21,7 +22,7 @@ interface MarketplacePageProps {
 export function MarketplacePage(props: MarketplacePageProps): ReactNode {
   const t = useTranslate();
   const marketplace = props.data.marketplace;
-  const [discoveryUrl, setDiscoveryUrl] = useState(marketplace?.discoveryUrl ?? "");
+  const [discoveryUrl, setDiscoveryUrl] = useState(marketplace?.discoveryUrl ?? defaultMarketplaceDiscoveryUrl);
   const [apiKey, setApiKey] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [message, setMessage] = useState<string>();
@@ -101,12 +102,14 @@ export function MarketplacePage(props: MarketplacePageProps): ReactNode {
           <div className="marketplace-field">
             <div className="marketplace-field-heading">
               <Label htmlFor="marketplace-api-key">{t("marketplace.configuration.apiKey")}</Label>
-              <Button asChild variant="outline" size="sm">
-                <a href="https://console.oomol.com/api-key" target="_blank" rel="noopener noreferrer">
-                  {t("marketplace.configuration.getDefaultKey")}
-                  <ArrowUpRight size={15} aria-hidden="true" />
-                </a>
-              </Button>
+              {isDefaultMarketplace(discoveryUrl) ? (
+                <Button asChild variant="outline" size="sm">
+                  <a href="https://console.oomol.com/api-key" target="_blank" rel="noopener noreferrer">
+                    {t("marketplace.configuration.getDefaultKey")}
+                    <ArrowUpRight size={15} aria-hidden="true" />
+                  </a>
+                </Button>
+              ) : null}
             </div>
             <div className="marketplace-secret-input">
               <Input
@@ -177,7 +180,9 @@ export function MarketplacePage(props: MarketplacePageProps): ReactNode {
       </section>
 
       {!marketplace?.configured ? (
-        <DefaultMarketplaceCatalog providers={props.data.providers} discoveryUrl={marketplace?.discoveryUrl ?? ""} />
+        isDefaultMarketplace(marketplace?.discoveryUrl ?? defaultMarketplaceDiscoveryUrl) ? (
+          <DefaultMarketplaceCatalog providers={props.data.providers} discoveryUrl={defaultMarketplaceDiscoveryUrl} />
+        ) : null
       ) : (
         <section className="marketplace-panel">
           <header className="marketplace-panel-header">
@@ -200,7 +205,7 @@ export function MarketplacePage(props: MarketplacePageProps): ReactNode {
               description={t(
                 marketplace.status === "available"
                   ? "marketplace.providers.emptyDescription"
-                  : "marketplace.default.reconnect",
+                  : "marketplace.configuration.reconnect",
               )}
               density="compact"
             />
