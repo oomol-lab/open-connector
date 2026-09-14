@@ -180,6 +180,13 @@ const runtimeConnectionProperties: Record<string, JsonSchema> = {
   scopes: jsonSchema.array(jsonSchema.string(), {
     description: "Granted scopes. Same fact as MCP profile.grantedScopes.",
   }),
+  marketplace: jsonSchema.object(
+    {
+      id: jsonSchema.string({ description: "Marketplace identifier." }),
+      pricing: { type: "string", enum: ["free", "metered"] },
+    },
+    { required: ["id", "pricing"], description: "Marketplace source for a virtual connection." },
+  ),
 };
 
 /**

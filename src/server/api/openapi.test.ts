@@ -109,7 +109,7 @@ describe("action execution OpenAPI", () => {
     };
     const connectedApp = document.components.schemas.RuntimeConnectedApp as {
       required: string[];
-      properties: { alias?: { description?: string } };
+      properties: { alias?: { description?: string }; marketplace?: { required?: string[] } };
     };
 
     const health = document.paths["/v1/health"] as {
@@ -148,6 +148,8 @@ describe("action execution OpenAPI", () => {
     );
     expect(search.get.responses["404"]).toBeUndefined();
     expect(connectedApp.required).toEqual(expect.arrayContaining(["alias", "isDefault"]));
+    expect(connectedApp.required).not.toContain("marketplace");
+    expect(connectedApp.properties.marketplace?.required).toEqual(["id", "pricing"]);
     expect(connectedApp.properties.alias?.description).toContain("connectionName");
     expect(connectedApp.properties.alias?.description).toContain("x-oo-connector-alias");
     expect(authenticatedApps.get.summary).toBe(

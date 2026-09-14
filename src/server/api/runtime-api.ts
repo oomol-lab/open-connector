@@ -71,6 +71,7 @@ export interface RuntimeConnectedApp {
   accountLabel: string;
   isDefault: boolean;
   scopes: string[];
+  marketplace?: ConnectionSummary["marketplace"];
 }
 
 export interface RuntimeFailureInput {
@@ -141,6 +142,7 @@ export function serializeRuntimeConnectedApp(connection: ConnectionSummary): Run
     accountLabel: connection.profile.displayName,
     isDefault: connection.default,
     scopes: connection.profile.grantedScopes,
+    marketplace: connection.marketplace,
   };
 }
 

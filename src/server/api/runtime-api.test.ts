@@ -1,3 +1,4 @@
+import type { ConnectionSummary } from "../../connection-service.ts";
 import type { RuntimeActionHttpResult } from "./runtime-api.ts";
 
 import { Hono } from "hono";
@@ -7,6 +8,7 @@ import {
   providerErrorCodes,
   serializeRuntimeAction,
   serializeRuntimeActionResult,
+  serializeRuntimeConnectedApp,
   serializeRuntimeFailure,
   unknownActionFailure,
   writeRuntimeActionHttpResult,
@@ -67,6 +69,30 @@ describe("runtime action metadata", () => {
         noAuthRunnable: false,
         needsCredential: true,
       },
+    });
+  });
+});
+
+describe("runtime connected apps", () => {
+  const connection: ConnectionSummary = {
+    id: "marketplace:oomol:example",
+    service: "example",
+    connectionName: "marketplace_oomol",
+    authType: "marketplace",
+    configured: true,
+    virtual: true,
+    default: true,
+    profile: {
+      accountId: "marketplace:oomol:example",
+      displayName: "OOMOL",
+      grantedScopes: [],
+    },
+    marketplace: { id: "oomol", pricing: "metered" },
+  };
+
+  it("preserves Marketplace metadata", () => {
+    expect(serializeRuntimeConnectedApp(connection)).toMatchObject({
+      marketplace: { id: "oomol", pricing: "metered" },
     });
   });
 });
