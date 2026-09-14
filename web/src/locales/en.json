@@ -152,7 +152,7 @@
       "discoveryUrl": "Discovery URL",
       "discoveryHelp": "Connect fetches and validates this document when you save.",
       "apiKey": "API key",
-      "getDefaultKey": "Get OOMOL official API key",
+      "getDefaultKey": "Get OOMOL API key",
       "apiKeyPlaceholder": "Enter a Marketplace API key",
       "keepCurrentKey": "Leave blank to keep the current key",
       "apiKeyHelp": "Stored with runtime encryption when an encryption key is configured.",
