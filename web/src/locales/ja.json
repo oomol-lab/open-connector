@@ -110,6 +110,28 @@
     "noRecentCallsDescription": "アクションを実行するとプロバイダー別の呼び出し数が表示されます。"
   },
   "marketplace": {
+    "official": {
+      "browseDescription": "利用可能な機能を見る",
+      "reconnect": "この接続先は利用できません。上の設定を確認し、再検証してください。",
+      "title": "公式アプリ",
+      "description": "OOMOL Marketplace が提供するサービスです。公式 API キーを接続すると利用できます。",
+      "failed": "公式カタログを読み込めませんでした。再試行してください。",
+      "retry": "再試行",
+      "loading": "公式アプリを読み込み中…",
+      "empty": "このバージョンに対応する公式アプリはありません",
+      "view": "機能を見る",
+      "disconnected": "未接続",
+      "descriptions": {
+        "kling": "動画生成",
+        "minimax": "AI 創作サービス",
+        "seedance": "動画生成"
+      },
+      "offers": {
+        "kling": "30%オフ",
+        "minimax": "20%オフ",
+        "seedance": "10%オフ"
+      }
+    },
     "summary": {
       "title": "Connector Marketplace",
       "description": "この Connector ランタイム向けのマネージドプロバイダーアクセスです。",
@@ -125,6 +147,7 @@
       "discoveryUrl": "Discovery URL",
       "discoveryHelp": "保存時に discovery ドキュメントを取得して検証します。",
       "apiKey": "API キー",
+      "getOfficialKey": "OOMOL 公式 API キーを取得",
       "apiKeyPlaceholder": "Marketplace API キーを入力",
       "keepCurrentKey": "現在のキーを維持する場合は空欄",
       "apiKeyHelp": "暗号化キーが設定されている場合は暗号化して保存されます。",
@@ -584,5 +607,13 @@
       "title": "OpenAPI JSON",
       "description": "生成された spec を script や tool importer で使用します。"
     }
+  },
+  "hostedPromo": {
+    "title": "Open Connect へようこそ",
+    "headline": "1つのキーで、AI 創作を始めよう",
+    "description": "Kling、Seedance、MiniMax などのモデルで画像・動画を生成。",
+    "offer": "一部モデルは最大30%オフ",
+    "cta": "API キーを取得",
+    "dismiss": "閉じて今後表示しない"
   }
 }

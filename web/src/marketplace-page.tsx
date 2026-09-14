@@ -2,10 +2,11 @@ import type { AppData, MarketplaceState, ProviderPreference } from "./model";
 import type { ReactNode, SubmitEvent } from "react";
 
 import { useTranslate } from "@embra/i18n/react";
-import { CheckCircle2, Eye, EyeOff, Loader2, Store, Trash2, TriangleAlert } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, Eye, EyeOff, Loader2, Store, Trash2, TriangleAlert } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { apiDelete, apiPatch, apiPut } from "./api";
+import { OfficialMarketplaceCatalog } from "./official-marketplace-catalog";
 import { Badge, EmptyState, FormStatus, ProviderIcon } from "./shared-ui";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -97,10 +98,19 @@ export function MarketplacePage(props: MarketplacePageProps): ReactNode {
             <Input value={discoveryUrl} onChange={(event) => setDiscoveryUrl(event.target.value)} required />
             <small>{t("marketplace.configuration.discoveryHelp")}</small>
           </Label>
-          <Label className="marketplace-field">
-            <span>{t("marketplace.configuration.apiKey")}</span>
+          <div className="marketplace-field">
+            <div className="marketplace-field-heading">
+              <Label htmlFor="marketplace-api-key">{t("marketplace.configuration.apiKey")}</Label>
+              <Button asChild variant="outline" size="sm">
+                <a href="https://console.oomol.com/api-key" target="_blank" rel="noopener noreferrer">
+                  {t("marketplace.configuration.getOfficialKey")}
+                  <ArrowUpRight size={15} aria-hidden="true" />
+                </a>
+              </Button>
+            </div>
             <div className="marketplace-secret-input">
               <Input
+                id="marketplace-api-key"
                 type={showApiKey ? "text" : "password"}
                 value={apiKey}
                 onChange={(event) => setApiKey(event.target.value)}
@@ -123,7 +133,7 @@ export function MarketplacePage(props: MarketplacePageProps): ReactNode {
               </Button>
             </div>
             <small>{t("marketplace.configuration.apiKeyHelp")}</small>
-          </Label>
+          </div>
           {message ? <FormStatus message={message} /> : null}
           {marketplace?.error ? (
             <Alert variant="destructive">
@@ -166,41 +176,55 @@ export function MarketplacePage(props: MarketplacePageProps): ReactNode {
         </form>
       </section>
 
-      <section className="marketplace-panel">
-        <header className="marketplace-panel-header">
-          <div>
-            <h2>{t("marketplace.providers.title")}</h2>
-            <p>{t("marketplace.providers.description")}</p>
-          </div>
-          {providers.length > 0 ? <Badge>{t("marketplace.providers.count", { count: providers.length })}</Badge> : null}
-        </header>
-        {providers.length === 0 ? (
-          <EmptyState
-            icon={<Store size={20} />}
-            title={t("marketplace.providers.emptyTitle")}
-            description={t("marketplace.providers.emptyDescription")}
-            density="compact"
-          />
-        ) : (
-          <div className="marketplace-provider-list">
-            {providers.map(({ preference, provider }) => (
-              <div className="marketplace-provider-row" key={preference.service}>
-                <ProviderIcon provider={provider} />
-                <Link className="marketplace-provider-copy" to={`/providers/${encodeURIComponent(provider.service)}`}>
-                  <strong>{provider.displayName}</strong>
-                  <span>{t("marketplace.providers.actionCount", { count: provider.actions.length })}</span>
-                </Link>
-                <Badge tone={preference.enabled ? "success" : undefined}>
-                  {t(preference.enabled ? "marketplace.providers.enabled" : "marketplace.providers.disabled")}
-                </Badge>
-                <Button type="button" variant="outline" size="sm" onClick={() => void toggleProvider(preference)}>
-                  {t(preference.enabled ? "marketplace.providers.disable" : "marketplace.providers.enable")}
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+      {!marketplace?.configured ? (
+        <OfficialMarketplaceCatalog providers={props.data.providers} />
+      ) : (
+        <section className="marketplace-panel">
+          <header className="marketplace-panel-header">
+            <div>
+              <h2>{t("marketplace.providers.title")}</h2>
+              <p>{t("marketplace.providers.description")}</p>
+            </div>
+            {providers.length > 0 ? (
+              <Badge>{t("marketplace.providers.count", { count: providers.length })}</Badge>
+            ) : null}
+          </header>
+          {providers.length === 0 ? (
+            <EmptyState
+              icon={<Store size={20} />}
+              title={t(
+                marketplace.status === "available"
+                  ? "marketplace.providers.emptyTitle"
+                  : `marketplace.status.${marketplace.status}`,
+              )}
+              description={t(
+                marketplace.status === "available"
+                  ? "marketplace.providers.emptyDescription"
+                  : "marketplace.official.reconnect",
+              )}
+              density="compact"
+            />
+          ) : (
+            <div className="marketplace-provider-list">
+              {providers.map(({ preference, provider }) => (
+                <div className="marketplace-provider-row" key={preference.service}>
+                  <ProviderIcon provider={provider} />
+                  <Link className="marketplace-provider-copy" to={`/providers/${encodeURIComponent(provider.service)}`}>
+                    <strong>{provider.displayName}</strong>
+                    <span>{t("marketplace.providers.actionCount", { count: provider.actions.length })}</span>
+                  </Link>
+                  <Badge tone={preference.enabled ? "success" : undefined}>
+                    {t(preference.enabled ? "marketplace.providers.enabled" : "marketplace.providers.disabled")}
+                  </Badge>
+                  <Button type="button" variant="outline" size="sm" onClick={() => void toggleProvider(preference)}>
+                    {t(preference.enabled ? "marketplace.providers.disable" : "marketplace.providers.enable")}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }

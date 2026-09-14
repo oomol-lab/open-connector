@@ -110,6 +110,28 @@
     "noRecentCallsDescription": "Запустите действие, чтобы увидеть вызовы по провайдерам."
   },
   "marketplace": {
+    "official": {
+      "browseDescription": "Посмотреть доступные функции",
+      "reconnect": "Источник пока недоступен. Проверьте настройки выше и повторите проверку.",
+      "title": "Официальные приложения",
+      "description": "Сервисы OOMOL Marketplace. Подключите официальный API-ключ для их использования.",
+      "failed": "Не удалось загрузить официальный каталог. Повторите попытку.",
+      "retry": "Повторить",
+      "loading": "Загрузка приложений…",
+      "empty": "Нет официальных приложений, совместимых с этой версией",
+      "view": "Функции",
+      "disconnected": "Не подключено",
+      "descriptions": {
+        "kling": "Генерация видео",
+        "minimax": "Творчество с ИИ",
+        "seedance": "Генерация видео"
+      },
+      "offers": {
+        "kling": "−30%",
+        "minimax": "−20%",
+        "seedance": "−10%"
+      }
+    },
     "summary": {
       "title": "Connector Marketplace",
       "description": "Управляемый доступ к провайдерам для этого Connector.",
@@ -130,6 +152,7 @@
       "discoveryUrl": "URL обнаружения",
       "discoveryHelp": "Connect загрузит и проверит документ при сохранении.",
       "apiKey": "API-ключ",
+      "getOfficialKey": "Получить официальный API-ключ OOMOL",
       "apiKeyPlaceholder": "Введите API-ключ Marketplace",
       "keepCurrentKey": "Оставьте пустым, чтобы сохранить текущий ключ",
       "apiKeyHelp": "Шифруется при наличии ключа шифрования среды.",
@@ -592,5 +615,13 @@
       "title": "OpenAPI JSON",
       "description": "Используйте сгенерированную spec в scripts или импортерах инструментов."
     }
+  },
+  "hostedPromo": {
+    "title": "Добро пожаловать в Open Connect",
+    "headline": "Один ключ для творчества с ИИ",
+    "description": "Создавайте изображения и видео с Kling, Seedance, MiniMax и другими моделями.",
+    "offer": "Скидка до 30% на отдельные модели",
+    "cta": "Получить API-ключ",
+    "dismiss": "Закрыть и больше не показывать"
   }
 }

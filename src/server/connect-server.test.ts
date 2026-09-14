@@ -36,6 +36,7 @@ import { createCatalogStore } from "../catalog-store.ts";
 import { ConnectionService } from "../connection-service.ts";
 import { ActionPolicyService as LocalActionPolicyService } from "../core/action-policy.ts";
 import { buildActionSearchIndex } from "../core/action-search.ts";
+import { MarketplaceService } from "../marketplace/marketplace-service.ts";
 import { OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
 import { actionInputMaxDepth, hashActionRequest, hashIdempotencyKey } from "./actions/action-idempotency.ts";
@@ -140,6 +141,22 @@ afterEach(() => {
 });
 
 describe("ConnectServer", () => {
+  it.each([
+    { failure: new Error("Official host DNS blocked"), status: 502 },
+    { failure: new DOMException("Timed out", "TimeoutError"), status: 504 },
+  ])("reports official catalog failure as $status instead of an opaque 500", async ({ failure, status }) => {
+    const app = createTestServer([apiKeyProvider], {
+      marketplaceFetcher: async () => {
+        throw failure;
+      },
+    }).createApp();
+    const response = await app.request("/api/marketplace/official-catalog");
+    expect(response.status).toBe(status);
+    expect(await response.json()).toMatchObject({
+      error: { code: "marketplace_unavailable", message: expect.stringContaining("Official Marketplace") },
+    });
+  });
+
   it("rejects connections for providers unavailable in the current runtime", async () => {
     const app = createTestServer([catalogOnlyProvider]).createApp();
 
@@ -3671,6 +3688,7 @@ interface TestAuthOptions {
 }
 
 interface CreateTestServerOptions {
+  marketplaceFetcher?: typeof fetch;
   auth?: TestAuthOptions;
   publicOrigin?: string;
   actionPolicy?: ActionPolicyService;
@@ -3733,6 +3751,22 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
   const staticRoot = typeof options.staticRoot === "string" ? options.staticRoot : undefined;
 
   return new ConnectServer({
+    marketplace: options.marketplaceFetcher
+      ? new MarketplaceService({
+          catalog,
+          store: requestDatabase.marketplaceStore,
+          secretCodec: {
+            encrypted: false,
+            async encode(value) {
+              return value;
+            },
+            async decode(value) {
+              return value;
+            },
+          },
+          fetcher: options.marketplaceFetcher,
+        })
+      : undefined,
     catalog,
     publicOrigin: options.publicOrigin ?? "http://localhost:3000",
     providerLoader,

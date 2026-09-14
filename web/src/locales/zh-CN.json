@@ -110,6 +110,28 @@
     "noRecentCallsDescription": "运行一个操作后会显示提供商调用次数。"
   },
   "marketplace": {
+    "official": {
+      "browseDescription": "浏览可用功能",
+      "reconnect": "当前来源尚未就绪，请在上方检查配置并重新验证。",
+      "title": "官方应用",
+      "description": "由 OOMOL Marketplace 提供，连接官方 API Key 后可用。",
+      "failed": "官方目录暂时无法加载，请稍后重试。",
+      "retry": "重试",
+      "loading": "正在加载官方应用…",
+      "empty": "暂无与当前版本兼容的官方应用",
+      "view": "查看功能",
+      "disconnected": "尚未连接",
+      "descriptions": {
+        "kling": "视频生成",
+        "minimax": "AI 创作服务",
+        "seedance": "视频生成"
+      },
+      "offers": {
+        "kling": "7 折",
+        "minimax": "8 折",
+        "seedance": "9 折"
+      }
+    },
     "summary": {
       "title": "Connector Marketplace",
       "description": "为当前 Connector 运行时提供托管的服务访问能力。",
@@ -125,6 +147,7 @@
       "discoveryUrl": "Discovery URL",
       "discoveryHelp": "保存时会获取并验证该 discovery 文档。",
       "apiKey": "API Key",
+      "getOfficialKey": "获取 OOMOL 官方 API Key",
       "apiKeyPlaceholder": "输入 Marketplace API Key",
       "keepCurrentKey": "留空以保留当前 Key",
       "apiKeyHelp": "配置运行时加密密钥后，该值会加密存储。",
@@ -581,5 +604,13 @@
       "title": "OpenAPI JSON",
       "description": "在脚本或工具导入器中使用生成的规格。"
     }
+  },
+  "hostedPromo": {
+    "title": "欢迎使用 Open Connect",
+    "headline": "一个 Key，开始 AI 创作",
+    "description": "使用 Kling、Seedance、MiniMax 等模型生成图像与视频",
+    "offer": "部分模型低至 7 折",
+    "cta": "获取 API Key",
+    "dismiss": "关闭，不再显示"
   }
 }

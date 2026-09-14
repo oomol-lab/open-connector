@@ -10,6 +10,8 @@ When `OOMOL_CONNECT_ENCRYPTION_KEY` is configured, Connect encrypts the Marketpl
 
 At startup, Connect fetches discovery once, validates the API key once, intersects the remote action allowlist with its local catalog, and keeps that snapshot for action execution. Discovery or authentication failures do not prevent the rest of the server from starting.
 
+Before connecting, you can browse official OOMOL applications without an API key. After a successful connection, the console shows the selected Marketplace's compatible services and enable/disable controls. Changing the discovery URL requires a new API key; removing the connection returns to the official directory. Official discounts do not apply to custom Marketplaces.
+
 ## Public API contract
 
 Marketplace v1 consists of three HTTP endpoints:
@@ -69,6 +71,7 @@ The local admin API provides:
 
 ```text
 GET    /api/marketplace
+GET    /api/marketplace/official-catalog
 PUT    /api/marketplace
 PATCH  /api/marketplace
 DELETE /api/marketplace

@@ -3,7 +3,7 @@ import type { ExecutionResult } from "../core/types.ts";
 import type { ISecretCodec } from "../server/secrets/secret-codec-core.ts";
 
 import { assertPublicHttpUrl } from "../core/request.ts";
-import { providerFetch } from "../providers/provider-runtime.ts";
+import { isAbortLikeError, providerFetch } from "../providers/provider-runtime.ts";
 
 export const defaultMarketplaceDiscoveryUrl = "https://connector.oomol.com/.well-known/oomol-connector-marketplace";
 const maximumDiscoveryBytes = 4 * 1024 * 1024;
@@ -33,6 +33,12 @@ export interface MarketplaceConfigInput {
   discoveryUrl?: string;
   apiKey?: string;
   enabled?: boolean;
+}
+
+/** Public, locally compatible official catalog; browsing does not activate connections. */
+export interface OfficialMarketplaceCatalog {
+  name: string;
+  services: string[];
 }
 
 export interface ProviderPreference {
@@ -91,6 +97,8 @@ export class MarketplaceError extends Error {
 export class MarketplaceService {
   private readonly options: MarketplaceServiceOptions;
   private snapshot?: MarketplaceSnapshot;
+  private officialCatalog?: { value: OfficialMarketplaceCatalog; expiresAt: number };
+  private officialCatalogRequest?: Promise<OfficialMarketplaceCatalog>;
   private state: MarketplaceState = {
     configured: false,
     enabled: false,
@@ -139,6 +147,37 @@ export class MarketplaceService {
     return this.snapshot;
   }
 
+  async getOfficialCatalog(): Promise<OfficialMarketplaceCatalog> {
+    if (this.officialCatalog && this.officialCatalog.expiresAt > Date.now()) return this.officialCatalog.value;
+    this.officialCatalogRequest ??= this.loadOfficialCatalog();
+    try {
+      return await this.officialCatalogRequest;
+    } catch (error) {
+      const timedOut = isAbortLikeError(error);
+      throw new MarketplaceError(
+        "marketplace_unavailable",
+        timedOut
+          ? "Official Marketplace request timed out."
+          : `Official Marketplace catalog could not be loaded${error instanceof Error ? `: ${error.message}` : "."}`,
+        timedOut ? 504 : 502,
+      );
+    } finally {
+      this.officialCatalogRequest = undefined;
+    }
+  }
+
+  private async loadOfficialCatalog(): Promise<OfficialMarketplaceCatalog> {
+    const discovery = await this.discover(defaultMarketplaceDiscoveryUrl);
+    const services = new Set<string>();
+    for (const actionId of discovery.actions) {
+      const action = this.options.catalog.actionsById.get(actionId);
+      if (action) services.add(action.service);
+    }
+    const value = { name: discovery.name, services: [...services] };
+    this.officialCatalog = { value, expiresAt: Date.now() + 5 * 60_000 };
+    return value;
+  }
+
   supportsAction(actionId: string): boolean {
     return this.snapshot?.compatibleActions.has(actionId) ?? false;
   }
@@ -146,6 +185,9 @@ export class MarketplaceService {
   async configure(input: MarketplaceConfigInput): Promise<MarketplaceState> {
     const previous = await this.options.store.getConfig();
     const discoveryUrl = input.discoveryUrl?.trim() || previous?.discoveryUrl || defaultMarketplaceDiscoveryUrl;
+    if (previous && discoveryUrl !== previous.discoveryUrl && !input.apiKey?.trim()) {
+      throw new MarketplaceError("invalid_input", "A new apiKey is required when changing the discovery URL.");
+    }
     const apiKey =
       input.apiKey?.trim() || (previous ? await this.options.secretCodec.decode(previous.apiKeyEncrypted) : "");
     if (!apiKey) throw new MarketplaceError("invalid_input", "apiKey is required.");
@@ -180,7 +222,8 @@ export class MarketplaceService {
   }
 
   async listProviderPreferences(): Promise<ProviderPreference[]> {
-    return await this.options.store.listProviderPreferences();
+    const preferences = await this.options.store.listProviderPreferences();
+    return preferences.filter((preference) => this.snapshot?.actionsByService.has(preference.service));
   }
 
   async setProviderEnabled(service: string, enabled: boolean): Promise<ProviderPreference> {
@@ -282,7 +325,11 @@ export class MarketplaceService {
       fieldName: "discoveryUrl",
       createError: (message) => new MarketplaceError("invalid_marketplace_discovery", message),
     });
-    const response = await this.fetch(url, { headers: { accept: "application/json" }, redirect: "manual" });
+    const response = await this.fetch(url, {
+      headers: { accept: "application/json" },
+      redirect: "manual",
+      signal: AbortSignal.timeout(15_000),
+    });
     if (300 <= response.status && response.status < 400) {
       throw new MarketplaceError("invalid_marketplace_discovery", "Marketplace discovery redirects are not allowed.");
     }

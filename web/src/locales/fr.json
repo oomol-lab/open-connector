@@ -110,6 +110,28 @@
     "noRecentCallsDescription": "Exécutez une action pour voir les appels par fournisseur."
   },
   "marketplace": {
+    "official": {
+      "browseDescription": "Parcourir les fonctions disponibles",
+      "reconnect": "Cette source n’est pas prête. Vérifiez la configuration ci-dessus et relancez la validation.",
+      "title": "Applications officielles",
+      "description": "Proposées par OOMOL Marketplace. Connectez une clé API officielle pour les utiliser.",
+      "failed": "Le catalogue officiel est indisponible. Réessayez plus tard.",
+      "retry": "Réessayer",
+      "loading": "Chargement des applications…",
+      "empty": "Aucune application officielle compatible avec cette version",
+      "view": "Voir les fonctions",
+      "disconnected": "Non connecté",
+      "descriptions": {
+        "kling": "Génération de vidéos",
+        "minimax": "Création avec l’IA",
+        "seedance": "Génération de vidéos"
+      },
+      "offers": {
+        "kling": "−30 %",
+        "minimax": "−20 %",
+        "seedance": "−10 %"
+      }
+    },
     "summary": {
       "title": "Connector Marketplace",
       "description": "Accès géré aux fournisseurs pour cette instance Connector.",
@@ -130,6 +152,7 @@
       "discoveryUrl": "URL de découverte",
       "discoveryHelp": "Connect récupère et valide ce document lors de l’enregistrement.",
       "apiKey": "Clé API",
+      "getOfficialKey": "Obtenir une clé API officielle OOMOL",
       "apiKeyPlaceholder": "Saisissez une clé API Marketplace",
       "keepCurrentKey": "Laisser vide pour conserver la clé actuelle",
       "apiKeyHelp": "Chiffrée au repos lorsqu’une clé de chiffrement est configurée.",
@@ -604,5 +627,13 @@
       "title": "JSON OpenAPI",
       "description": "Utilisez la spec générée depuis des scripts ou des importateurs d’outils."
     }
+  },
+  "hostedPromo": {
+    "title": "Bienvenue sur Open Connect",
+    "headline": "Une clé pour créer avec l’IA",
+    "description": "Générez des images et des vidéos avec Kling, Seedance, MiniMax et d’autres modèles.",
+    "offer": "Jusqu’à −30 % sur certains modèles",
+    "cta": "Obtenir une clé API",
+    "dismiss": "Fermer et ne plus afficher"
   }
 }

@@ -110,6 +110,28 @@
     "noRecentCallsDescription": "Run an action to see provider call counts."
   },
   "marketplace": {
+    "official": {
+      "browseDescription": "Browse available features",
+      "reconnect": "This source is not ready. Check the configuration above and validate again.",
+      "title": "Official apps",
+      "description": "Provided by OOMOL Marketplace. Connect an official API key to use these services.",
+      "failed": "The official catalog could not be loaded. Please try again.",
+      "retry": "Retry",
+      "loading": "Loading official apps…",
+      "empty": "No official apps are compatible with this version",
+      "view": "View features",
+      "disconnected": "Not connected",
+      "descriptions": {
+        "kling": "Video generation",
+        "minimax": "AI creation services",
+        "seedance": "Video generation"
+      },
+      "offers": {
+        "kling": "30% off",
+        "minimax": "20% off",
+        "seedance": "10% off"
+      }
+    },
     "summary": {
       "title": "Connector Marketplace",
       "description": "Managed provider access for this Connector runtime.",
@@ -130,6 +152,7 @@
       "discoveryUrl": "Discovery URL",
       "discoveryHelp": "Connect fetches and validates this document when you save.",
       "apiKey": "API key",
+      "getOfficialKey": "Get OOMOL official API key",
       "apiKeyPlaceholder": "Enter a Marketplace API key",
       "keepCurrentKey": "Leave blank to keep the current key",
       "apiKeyHelp": "Stored with runtime encryption when an encryption key is configured.",
@@ -598,5 +621,13 @@
       "title": "OpenAPI JSON",
       "description": "Use the generated spec from scripts or tool importers."
     }
+  },
+  "hostedPromo": {
+    "title": "Welcome to Open Connect",
+    "headline": "One key. Start creating with AI.",
+    "description": "Generate images and videos with Kling, Seedance, MiniMax, and more.",
+    "offer": "Up to 30% off selected models",
+    "cta": "Get API key",
+    "dismiss": "Dismiss and don’t show again"
   }
 }
