@@ -3,6 +3,7 @@ import type { OAuth2AuthDefinition, OAuthClientConfigFieldDefinition } from "../
 
 import { optionalRecord, optionalString, optionalStringArray } from "../core/cast.ts";
 import { normalizeCredentialValues } from "../core/credential-fields.ts";
+import { oauthClientFields } from "../core/provider-setup.ts";
 import { assertPublicHttpUrl } from "../core/request.ts";
 
 /**
@@ -36,6 +37,8 @@ export interface OAuthClientConfigSummary {
   customClientAvailable: boolean;
   clientId: string | null;
   expectedRedirectUri: string;
+  /** Required client inputs absent from the stored configuration; never contains values. */
+  missingFields: string[];
   auth: OAuth2AuthDefinition;
   requestedScopes: string[] | null;
   effectiveScopes: string[];
@@ -85,6 +88,10 @@ export class OAuthClientConfigService {
     return this.listOAuthProviders()
       .map((provider) => this.toSummary(provider.service, provider.auth, configured.get(provider.service)))
       .sort((left, right) => Number(right.configured) - Number(left.configured));
+  }
+
+  async getSummary(service: string): Promise<OAuthClientConfigSummary> {
+    return this.toSummary(service, this.getOAuthDefinition(service), await this.store.get(service));
   }
 
   async getConfig(service: string): Promise<OAuthClientConfig | undefined> {
@@ -195,6 +202,17 @@ export class OAuthClientConfigService {
       customClientAvailable: this.isCustomClientConfigAvailable(service),
       clientId: config?.clientId ?? null,
       expectedRedirectUri: this.expectedRedirectUri(service),
+      missingFields: oauthClientFields(auth)
+        .filter((field) => {
+          if (!field.required) return false;
+          const value = field.location
+            ? (config?.[field.location][field.key] ?? field.defaultValue)
+            : field.key === "clientId"
+              ? config?.clientId
+              : config?.clientSecret;
+          return !value?.trim();
+        })
+        .map((field) => field.key),
       auth,
       requestedScopes: config?.requestedScopes ?? null,
       effectiveScopes: filterDeclaredScopes(config?.requestedScopes, auth.scopes) ?? [...auth.scopes],

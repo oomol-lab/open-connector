@@ -307,6 +307,9 @@ function readBearerCredential(context: Context): string {
 
 function isConnectionManagementPath(path: string): boolean {
   return (
-    path === "/v1/connections" || path.startsWith("/v1/connections/") || path.startsWith("/v1/connection-requests/")
+    /^\/v1\/providers\/[^/]+\/setup$/.test(path) ||
+    path === "/v1/connections" ||
+    path.startsWith("/v1/connections/") ||
+    path.startsWith("/v1/connection-requests/")
   );
 }

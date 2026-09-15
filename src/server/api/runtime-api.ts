@@ -1,9 +1,12 @@
 import type { RuntimeActionDefinition, RuntimeProviderDefinition } from "../../catalog-store.ts";
 import type { ConnectionError, ConnectionSummary, ManagedConnectionSummary } from "../../connection-service.ts";
+import type { ProviderAuthSetup } from "../../core/provider-setup.ts";
 import type { ExecutionResult, ProviderScenario } from "../../core/types.ts";
+import type { OAuthClientConfigSummary } from "../../oauth/oauth-client-config-service.ts";
 import type { Context } from "hono";
 
 import { optionalInteger, optionalRecord, requiredRecord } from "../../core/cast.ts";
+import { describeProviderAuth } from "../../core/provider-setup.ts";
 
 type RuntimeStatus = 400 | 401 | 402 | 403 | 404 | 409 | 413 | 429 | 500 | 501;
 
@@ -334,5 +337,37 @@ export function connectionManagementFailure(error: { code: string; message: stri
     status: errorCode === "app_not_found" ? 404 : errorCode === "request_key_conflict" ? 409 : 400,
     errorCode,
     message: error.message,
+  };
+}
+
+/** Setup requirements and installation state, without provider protocol details or saved credentials. */
+export interface RuntimeProviderSetup {
+  service: string;
+  auth: ProviderAuthSetup[];
+  oauthClient?: RuntimeOAuthClientSetup;
+}
+
+interface RuntimeOAuthClientSetup {
+  configured: boolean;
+  customClientAvailable: boolean;
+  expectedRedirectUri: string;
+  missingFields: string[];
+}
+
+export function serializeRuntimeProviderSetup(
+  provider: RuntimeProviderDefinition,
+  oauth?: OAuthClientConfigSummary,
+): RuntimeProviderSetup {
+  return {
+    service: provider.service,
+    auth: provider.auth.map(describeProviderAuth),
+    oauthClient: oauth
+      ? {
+          configured: oauth.configured,
+          customClientAvailable: oauth.customClientAvailable,
+          expectedRedirectUri: oauth.expectedRedirectUri,
+          missingFields: oauth.missingFields,
+        }
+      : undefined,
   };
 }

@@ -122,7 +122,7 @@ export function OAuthAppForm(props: OAuthAppFormProps): ReactNode {
         <span>{t("providers.oauthClientSettings.clientId")}</span>
         <Input value={clientId} onChange={(event) => setClientId(event.target.value)} required />
       </Label>
-      {props.auth.tokenEndpointAuthMethod !== "none" ? (
+      {props.auth.clientFields?.some((field) => field.key === "clientSecret" && field.required) ? (
         <Label className="field">
           <span>{t("providers.oauthClientSettings.clientSecret")}</span>
           <Input
@@ -185,7 +185,7 @@ function OAuthClientSetupSteps(props: { setup: OAuthClientSetup; providerName: s
 }
 
 export function clientConfigFieldsFor(auth: AuthDefinition): CredentialField[] {
-  return auth.type === "oauth2" ? (auth.clientConfigFields ?? []) : [];
+  return auth.type === "oauth2" ? (auth.clientFields ?? []).filter((field) => field.location !== undefined) : [];
 }
 
 export function initialClientConfigFieldValues(

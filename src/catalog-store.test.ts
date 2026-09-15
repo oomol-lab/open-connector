@@ -104,11 +104,13 @@ describe("catalog store", () => {
     const json = new TextDecoder().decode(catalog.providerSummariesJson);
 
     expect(catalog.providerSummariesJson).toBeInstanceOf(Uint8Array);
-    expect(json).toBe(JSON.stringify(catalog.providers));
+    expect(json).toBe(
+      JSON.stringify(catalog.providers.map((provider) => ({ ...provider, setup: [{ type: "no_auth" }] }))),
+    );
     // The non-Latin1 display name takes more UTF-8 bytes than UTF-16 code units, so the length
     // field below can only match if the ETag still describes the string.
     expect(catalog.providerSummariesJson.byteLength).toBeGreaterThan(json.length);
-    expect(catalog.providerSummariesEtag).toBe(`W/"${json.length.toString(16)}-a56a243b"`);
+    expect(catalog.providerSummariesEtag).toBe(`W/"${json.length.toString(16)}-8947cfda"`);
   });
 
   it("resolves every action from executable services alongside explicit action ids", () => {

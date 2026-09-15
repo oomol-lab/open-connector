@@ -15,6 +15,7 @@ export interface ServerAssets {
   /** Schema-free startup index of `catalogDir`, or undefined when the generator did not write one. */
   catalogIndexFile: string | undefined;
   migrations: MigrationSource;
+  migrationDirectory: string;
   /** Built web console directory, or undefined when the console is not built (index.html missing). */
   staticRoot: string | undefined;
   /**
@@ -42,6 +43,7 @@ export async function resolveServerAssets(): Promise<ServerAssets> {
       catalogDir: join(root, "apps"),
       catalogIndexFile: await resolveExistingFile(join(root, catalogIndexFileName)),
       migrations: createDirectoryMigrationSource(join(root, "migrations")),
+      migrationDirectory: join(root, "migrations"),
       staticRoot: await resolveStaticRoot(join(root, "web")),
       embedded: true,
     };
@@ -52,6 +54,7 @@ export async function resolveServerAssets(): Promise<ServerAssets> {
     catalogDir: join(cwd, "catalog/apps"),
     catalogIndexFile: await resolveExistingFile(join(cwd, "catalog", catalogIndexFileName)),
     migrations: defaultMigrationSource,
+    migrationDirectory: join(import.meta.dirname, "../../migrations"),
     staticRoot: await resolveStaticRoot(join(cwd, "dist/web")),
     embedded: false,
   };

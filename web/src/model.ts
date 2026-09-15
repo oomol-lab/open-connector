@@ -1,19 +1,13 @@
+/** The setup projection supplied by Open Connector, without OAuth protocol configuration. */
 export type AuthDefinition =
   | { type: "no_auth" }
-  | {
-      type: "api_key";
-      label?: string;
-      placeholder?: string;
-      description?: string;
-      extraFields?: CredentialField[];
-    }
+  | { type: "api_key"; fields?: CredentialField[] }
   | { type: "custom_credential"; fields: CredentialField[] }
   | {
       type: "oauth2";
       scopes: string[];
       authorizationOptions?: OAuthAuthorizationOption[];
-      tokenEndpointAuthMethod?: "client_secret_basic" | "client_secret_post" | "none";
-      clientConfigFields?: CredentialField[];
+      clientFields?: CredentialField[];
       clientSetup?: OAuthClientSetup;
     };
 
@@ -135,7 +129,6 @@ export interface OAuthConfig {
   customClientAvailable?: boolean;
   clientId: string | null;
   expectedRedirectUri?: string;
-  auth?: Extract<AuthDefinition, { type: "oauth2" }>;
   requestedScopes?: string[] | null;
   effectiveScopes?: string[];
   extra?: Record<string, string>;
@@ -400,22 +393,7 @@ function oauthClientConfigured(service: string, oauthConfigs: OAuthConfig[]): bo
 }
 
 export function credentialFieldsFor(auth: AuthDefinition): CredentialField[] {
-  if (auth.type === "api_key") {
-    return [
-      {
-        key: "apiKey",
-        label: auth.label ?? "API key",
-        inputType: "password",
-        required: true,
-        secret: true,
-        placeholder: auth.placeholder,
-        description: auth.description,
-      },
-      ...(auth.extraFields ?? []),
-    ];
-  }
-  if (auth.type === "custom_credential") return auth.fields;
-  return [];
+  return auth.type === "api_key" || auth.type === "custom_credential" ? (auth.fields ?? []) : [];
 }
 
 export function filterProviders(providers: ProviderDefinition[], query: string): ProviderDefinition[] {

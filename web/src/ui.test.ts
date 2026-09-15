@@ -250,7 +250,21 @@ describe("loadRuntimeData", () => {
           return Response.json({ adminAuthConfigured: true, authenticated: sessionAuthenticated });
         }
         if (path === "/api/providers") {
-          return Response.json([{ service: "example", displayName: "Example" }]);
+          return Response.json([
+            {
+              service: "example",
+              displayName: "Example",
+              auth: [{ type: "api_key", label: "Raw metadata" }],
+              setup: [
+                {
+                  type: "api_key",
+                  fields: [
+                    { key: "apiKey", label: "Provider token", inputType: "password", required: true, secret: true },
+                  ],
+                },
+              ],
+            },
+          ]);
         }
         if (path === "/api/runs") {
           return Response.json({ items: [], nextCursor: null });
@@ -284,7 +298,19 @@ describe("loadRuntimeData", () => {
     }
 
     expect(calls).toContain("/api/providers");
-    expect(unlockResult.data.providers).toEqual([{ service: "example", displayName: "Example" }]);
-    expect(cachedProviders).toEqual([{ service: "example", displayName: "Example" }]);
+    expect(unlockResult.data.providers).toMatchObject([
+      {
+        service: "example",
+        displayName: "Example",
+        auth: [{ type: "api_key", fields: [{ key: "apiKey", label: "Provider token" }] }],
+      },
+    ]);
+    expect(cachedProviders).toMatchObject([
+      {
+        service: "example",
+        displayName: "Example",
+        auth: [{ type: "api_key", fields: [{ key: "apiKey", label: "Provider token" }] }],
+      },
+    ]);
   });
 });

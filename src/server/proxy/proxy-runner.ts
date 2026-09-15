@@ -1,9 +1,8 @@
 import type { CatalogStore } from "../../catalog-store.ts";
 import type { ConnectionService } from "../../connection-service.ts";
 import type { ActionPolicySnapshot } from "../../core/action-policy.ts";
-import type { ProviderProxyExecutor, ProxyRequestInput, ProxyResponse } from "../../core/types.ts";
+import type { RuntimeLogger, ProviderProxyExecutor, ProxyRequestInput, ProxyResponse } from "../../core/types.ts";
 import type { IProviderLoader } from "../../providers/provider-loader.ts";
-import type { Logger } from "../logger.ts";
 
 import { ConnectionError } from "../../connection-service.ts";
 import { optionalInteger, optionalRecord, requiredRecord, requiredString } from "../../core/cast.ts";
@@ -15,7 +14,7 @@ export interface ProxyRunnerOptions {
   catalog: CatalogStore;
   providerLoader: IProviderLoader;
   connections: ConnectionService;
-  logger?: Logger;
+  logger?: RuntimeLogger;
 }
 
 export interface RunProxyInput {

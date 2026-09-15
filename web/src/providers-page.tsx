@@ -1099,7 +1099,10 @@ export function shouldEnableConnectionSubmit(
   if (!manualValues.clientId.trim()) {
     return false;
   }
-  if (auth.tokenEndpointAuthMethod !== "none" && !manualValues.clientSecret.trim()) {
+  if (
+    auth.clientFields?.some((field) => field.key === "clientSecret" && field.required) &&
+    !manualValues.clientSecret.trim()
+  ) {
     return false;
   }
   return clientConfigFieldsFor(auth).every(
@@ -1585,7 +1588,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
               type="password"
               value={manualClientSecret}
               onChange={(event) => setManualClientSecret(event.target.value)}
-              required={props.auth.tokenEndpointAuthMethod !== "none"}
+              required={props.auth.clientFields?.some((field) => field.key === "clientSecret" && field.required)}
             />
           </Label>
           {manualClientConfigFields.map((field) => (

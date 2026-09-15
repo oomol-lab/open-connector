@@ -1,3 +1,4 @@
+import type { ProviderAuthSetup } from "./core/provider-setup.ts";
 import type { ActionDefinition, AuthType, ProviderDefinition, ProviderScenario } from "./core/types.ts";
 
 import { readdir, readFile } from "node:fs/promises";
@@ -6,6 +7,7 @@ import { readCatalogIndex } from "./catalog-index.ts";
 import { indexedProvidersWithLazySchemas, readProvidersWithLazySchemas } from "./catalog-lazy-schemas.ts";
 import { sortProviders } from "./core/catalog.ts";
 import { resolveProviderScenario } from "./core/provider-scenarios.ts";
+import { describeProviderAuth } from "./core/provider-setup.ts";
 
 export type ActionExecutionStatus = {
   locallyExecutable: boolean;
@@ -42,6 +44,8 @@ type ActionSummaryDefinition = Omit<RuntimeActionDefinition, "inputSchema" | "ou
 /** One provider as `/api/providers` serves it to list views: metadata plus schema-free actions. */
 export type ProviderSummaryDefinition = Omit<RuntimeProviderDefinition, "actions"> & {
   actions: ActionSummaryDefinition[];
+  /** Host form metadata derived from the same provider definitions. */
+  setup: ProviderAuthSetup[];
 };
 
 /**
@@ -168,6 +172,7 @@ function toProviderSummary(provider: RuntimeProviderDefinition): ProviderSummary
   return {
     ...provider,
     actions: provider.actions.map(toActionSummary),
+    setup: provider.auth.map(describeProviderAuth),
   };
 }
 

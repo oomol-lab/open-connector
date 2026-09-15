@@ -152,7 +152,11 @@ export async function loadRuntimeData(
   }
 
   const catalogRequest =
-    cachedProviders !== undefined ? Promise.resolve(cachedProviders) : apiGet<ProviderDefinition[]>("/api/providers");
+    cachedProviders !== undefined
+      ? Promise.resolve(cachedProviders)
+      : apiGet<(ProviderDefinition & { setup: ProviderDefinition["auth"] })[]>("/api/providers").then((providers) =>
+          providers.map(({ setup, ...provider }) => ({ ...provider, auth: setup })),
+        );
 
   const [
     providers,

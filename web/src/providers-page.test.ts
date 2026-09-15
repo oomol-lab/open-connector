@@ -83,10 +83,11 @@ describe("shouldEnableConnectionSubmit", () => {
     const auth: AuthDefinition = {
       type: "oauth2",
       scopes: [],
-      tokenEndpointAuthMethod: "client_secret_post",
-      clientConfigFields: [
+      clientFields: [
+        { key: "clientSecret", label: "Client secret", inputType: "password", secret: true, required: true },
         {
           key: "tenant",
+          location: "extra",
           label: "Tenant",
           inputType: "text",
           required: true,
@@ -113,11 +114,21 @@ describe("shouldEnableConnectionSubmit", () => {
 
   it("allows public OAuth clients without a secret", () => {
     expect(
-      shouldEnableConnectionSubmit({ type: "oauth2", scopes: [], tokenEndpointAuthMethod: "none" }, undefined, {
-        clientId: "public-client",
-        clientSecret: "",
-        extraValues: {},
-      }),
+      shouldEnableConnectionSubmit(
+        {
+          type: "oauth2",
+          scopes: [],
+          clientFields: [
+            { key: "clientSecret", label: "Client secret", inputType: "password", secret: true, required: false },
+          ],
+        },
+        undefined,
+        {
+          clientId: "public-client",
+          clientSecret: "",
+          extraValues: {},
+        },
+      ),
     ).toBe(true);
   });
 });
@@ -125,6 +136,7 @@ describe("shouldEnableConnectionSubmit", () => {
 describe("clientConfigFieldsFor", () => {
   const tenantField: CredentialField = {
     key: "tenant",
+    location: "extra",
     label: "Tenant",
     inputType: "text",
     required: true,
@@ -132,8 +144,8 @@ describe("clientConfigFieldsFor", () => {
     defaultValue: "common",
   };
 
-  it("returns the oauth2 auth definition's clientConfigFields", () => {
-    const auth: AuthDefinition = { type: "oauth2", scopes: [], clientConfigFields: [tenantField] };
+  it("uses the connector's extra client fields", () => {
+    const auth: AuthDefinition = { type: "oauth2", scopes: [], clientFields: [tenantField] };
 
     expect(clientConfigFieldsFor(auth)).toEqual([tenantField]);
   });
@@ -144,7 +156,7 @@ describe("clientConfigFieldsFor", () => {
     expect(clientConfigFieldsFor(auth)).toEqual([]);
   });
 
-  it("returns an empty array when oauth2 auth declares no clientConfigFields", () => {
+  it("returns an empty array when the setup description has no client fields", () => {
     const auth: AuthDefinition = { type: "oauth2", scopes: [] };
 
     expect(clientConfigFieldsFor(auth)).toEqual([]);
@@ -154,6 +166,7 @@ describe("clientConfigFieldsFor", () => {
 describe("initialClientConfigFieldValues", () => {
   const tenantField: CredentialField = {
     key: "tenant",
+    location: "extra",
     label: "Tenant",
     inputType: "text",
     required: true,
@@ -186,6 +199,7 @@ describe("initialClientConfigFieldValues", () => {
 describe("splitClientConfigFieldValues", () => {
   const tenantField: CredentialField = {
     key: "tenant",
+    location: "extra",
     label: "Tenant",
     inputType: "text",
     required: true,
@@ -444,7 +458,12 @@ describe("ProvidersPage route shell", () => {
       authTypes: ["oauth2", "api_key"],
       auth: [
         { type: "oauth2", scopes: [] },
-        { type: "api_key", label: "Personal access token" },
+        {
+          type: "api_key",
+          fields: [
+            { key: "apiKey", label: "Personal access token", inputType: "password", required: true, secret: true },
+          ],
+        },
       ],
     };
     const markup = renderProvidersPage(
@@ -594,9 +613,10 @@ describe("named provider connections", () => {
         auth: {
           type: "oauth2",
           scopes: [],
-          clientConfigFields: [
+          clientFields: [
             {
               key: "tenant",
+              location: "extra",
               label: "Tenant",
               inputType: "text",
               required: true,

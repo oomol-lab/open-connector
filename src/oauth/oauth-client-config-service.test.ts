@@ -27,6 +27,44 @@ describe("OAuthClientConfigService", () => {
     ]);
   });
 
+  it("reports missing client inputs consistently with validation and hides saved secrets", async () => {
+    const provider = oauthProvider("public-client");
+    const auth = provider.auth[0]!;
+    if (auth.type !== "oauth2") throw new Error("Expected OAuth fixture");
+    auth.tokenEndpointAuthMethod = "none";
+    auth.clientConfigFields = [
+      { key: "tenant", label: "Tenant", inputType: "text", required: true, secret: false, defaultValue: "common" },
+      {
+        key: "appToken",
+        label: "App token",
+        inputType: "password",
+        required: true,
+        secret: true,
+        location: "secretExtra",
+      },
+    ];
+    const service = new OAuthClientConfigService({
+      catalog: createCatalogStore([provider]),
+      origin: "https://host.example/connector",
+      store: new MemoryOAuthClientConfigStore(),
+    });
+    const initial = await service.getSummary(provider.service);
+    expect(initial.missingFields).toEqual(["clientId", "appToken"]);
+    expect(initial.expectedRedirectUri).toBe("https://host.example/connector/oauth/callback");
+    await expect(
+      service.upsertConfig({ service: provider.service, clientId: "client", clientSecret: "" }),
+    ).rejects.toThrow("appToken is required");
+    const saved = await service.upsertConfig({
+      service: provider.service,
+      clientId: "client",
+      clientSecret: "",
+      secretExtra: { appToken: "saved-secret" },
+    });
+    expect(saved.missingFields).toEqual([]);
+    expect(saved.extra).toEqual({ tenant: "common" });
+    expect(JSON.stringify(saved)).not.toContain("saved-secret");
+  });
+
   it("normalizes a requested scope subset and rejects provider-undeclared scopes", () => {
     const service = new OAuthClientConfigService({
       catalog: createCatalogStore([oauthProvider("example")]),
