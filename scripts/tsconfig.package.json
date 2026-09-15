@@ -1,0 +1,10 @@
+{
+  "extends": "../src/tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": "../src",
+    "outDir": "../dist/package/src",
+    "rewriteRelativeImportExtensions": true
+  },
+  "include": ["../src/server/connector-runtime.ts"]
+}

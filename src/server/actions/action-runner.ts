@@ -1,10 +1,9 @@
 import type { CatalogStore } from "../../catalog-store.ts";
 import type { ConnectionService, ConnectionSummary, ExecutionConnection } from "../../connection-service.ts";
 import type { ActionPolicyDecision, ActionPolicySnapshot } from "../../core/action-policy.ts";
-import type { ExecutionContext, ExecutionResult, TransitFileWriter } from "../../core/types.ts";
+import type { RuntimeLogger, ExecutionContext, ExecutionResult, TransitFileWriter } from "../../core/types.ts";
 import type { MarketplaceService } from "../../marketplace/marketplace-service.ts";
 import type { IProviderLoader } from "../../providers/provider-loader.ts";
-import type { Logger } from "../logger.ts";
 import type { IRunLogStore, RunLog, RunLogCaller, RunLogListInput, RunLogPage } from "../storage/runtime-store.ts";
 
 import { ConnectionError } from "../../connection-service.ts";
@@ -17,7 +16,7 @@ export interface ActionRunnerOptions {
   connections: ConnectionService;
   runs: IRunLogStore;
   transitFiles?: TransitFileWriter;
-  logger?: Logger;
+  logger?: RuntimeLogger;
   marketplace?: MarketplaceService;
 }
 

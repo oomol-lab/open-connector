@@ -1,10 +1,9 @@
 import type { CatalogStore } from "../catalog-store.ts";
 import type { ActionPolicyService } from "../core/action-policy.ts";
-import type { TransitFileUpload } from "../core/types.ts";
+import type { RuntimeLogger, TransitFileUpload } from "../core/types.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { RuntimeJwtVerifier } from "./api/runtime-jwt.ts";
 import type { ITransitFileService } from "./files/transit-file-store.ts";
-import type { Logger } from "./logger.ts";
 import type { ISecretCodec } from "./secrets/secret-codec-core.ts";
 import type { RuntimeDatabase } from "./storage/runtime-database.ts";
 import type { Hono } from "hono";
@@ -32,9 +31,10 @@ export interface ConnectAppOptions {
   verifyRuntimeJwt?: RuntimeJwtVerifier;
   actionPolicy?: ActionPolicyService;
   registerStaticRoutes?: (app: Hono) => void;
-  logger?: Logger;
+  logger?: RuntimeLogger;
   computeRuntimeAuthConfigured?: boolean;
   compressApiResponses?: boolean;
+  serveDocumentation?: boolean;
 }
 
 export interface ConnectApp {
@@ -112,6 +112,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
       logger: options.logger,
       marketplace,
       compressApiResponses: options.compressApiResponses,
+      serveDocumentation: options.serveDocumentation,
     }).createApp(),
     runtimeAuthConfigured:
       Boolean(options.runtimeToken) ||

@@ -1,0 +1,184 @@
+import type { ConnectorRuntime, ConnectorRuntimeOptions } from "./connector-runtime.ts";
+
+import { cp, mkdtemp, mkdir, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { createConnectorRuntime } from "./connector-runtime.ts";
+
+let runtime: ConnectorRuntime | undefined;
+const directories: string[] = [];
+const publicOrigin = "https://host.example/connector";
+
+afterEach(async () => {
+  await runtime?.close();
+  runtime = undefined;
+  vi.unstubAllGlobals();
+  await Promise.all(directories.splice(0).map((path) => rm(path, { recursive: true, force: true })));
+});
+
+describe("headless runtime", () => {
+  it("serves the existing connection and action contracts under a host mount without a dashboard", async () => {
+    const options = await fixture();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ id: 1, login: "fixture-account", name: "Fixture Account" })),
+    );
+    runtime = await createConnectorRuntime(options);
+    expect((await request("/v1/health", undefined, "runtime-token")).status).toBe(200);
+    expect((await request("/")).status).toBe(404);
+    expect((await request("/docs")).status).toBe(404);
+    expect((await runtime.fetch(new Request("https://host.example/unrelated"))).status).toBe(404);
+    expect((await request("/v1/connections", undefined, "runtime-token")).status).toBe(401);
+
+    const saved = await request("/v1/connections/github/connect/api-key", { apiKey: "fixture-provider-secret" });
+    expect(saved.status).toBe(200);
+    const connection = (await saved.json()).data;
+    expect(JSON.stringify(connection)).not.toContain("fixture-provider-secret");
+    const accounts = await (await request("/v1/apps", undefined, "runtime-token")).json();
+    const alias = accounts.data[0].alias;
+    const executed = await runtime.fetch(
+      new Request(`${publicOrigin}/v1/actions/github.get_current_user`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer runtime-token",
+          "content-type": "application/json",
+          "x-oo-connector-alias": alias,
+        },
+        body: JSON.stringify({ input: {} }),
+      }),
+    );
+    expect(executed.status).toBe(200);
+    expect((await executed.json()).data).toMatchObject({ login: "fixture-account" });
+    await runtime.close();
+    expect(
+      (await readFile(join(options.dataDir, "connect.sqlite"))).includes(Buffer.from("fixture-provider-secret")),
+    ).toBe(false);
+
+    runtime = await createConnectorRuntime({ ...options, apiReference: true });
+    expect((await (await request("/v1/connections")).json()).data[0].id).toBe(connection.id);
+    const docs = await request("/docs");
+    expect(docs.status).toBe(200);
+    expect(await docs.text()).toContain(`${publicOrigin}/openapi.json`);
+  });
+
+  it("derives the provider callback from the host URL and honors the host return URI", async () => {
+    runtime = await createConnectorRuntime(await fixture());
+    const configured = await request(
+      "/api/oauth/configs/github",
+      { clientId: "fixture-client", clientSecret: "fixture-secret" },
+      "admin-token",
+      "PUT",
+    );
+    expect(configured.status).toBe(200);
+    expect((await configured.json()).expectedRedirectUri).toBe(`${publicOrigin}/oauth/callback`);
+    const started = await request("/v1/connections/github/connect", {
+      returnUri: "https://host.example/settings/connections",
+    });
+    expect(started.status).toBe(200);
+    const attempt = (await started.json()).data;
+    const authorization = new URL(attempt.authorizationUrl);
+    expect(authorization.searchParams.get("redirect_uri")).toBe(`${publicOrigin}/oauth/callback`);
+    const callback = await request(
+      `/oauth/callback?state=${encodeURIComponent(authorization.searchParams.get("state")!)}&error=access_denied`,
+    );
+    expect(callback.status).toBe(302);
+    const returned = new URL(callback.headers.get("location")!);
+    expect(`${returned.origin}${returned.pathname}`).toBe("https://host.example/settings/connections");
+    expect((await (await request(`/v1/connection-requests/${attempt.connectionRequestId}`)).json()).data.status).toBe(
+      "failed",
+    );
+  });
+
+  it("aborts active provider calls before closing storage and rejects requests after close", async () => {
+    runtime = await createConnectorRuntime(await fixture());
+    vi.stubGlobal("fetch", async () => Response.json({ id: 1, login: "fixture-account" }));
+    expect((await request("/v1/connections/github/connect/api-key", { apiKey: "fixture-secret" })).status).toBe(200);
+    let started!: () => void;
+    const ready = new Promise<void>((done) => {
+      started = done;
+    });
+    let aborted = false;
+    vi.stubGlobal(
+      "fetch",
+      (input: RequestInfo | URL, init?: RequestInit) =>
+        new Promise((_done, fail) => {
+          new Request(input, init).signal.addEventListener(
+            "abort",
+            () => {
+              aborted = true;
+              fail(new DOMException("Cancelled", "AbortError"));
+            },
+            { once: true },
+          );
+          started();
+        }),
+    );
+    const accounts = (await (await request("/v1/apps", undefined, "runtime-token")).json()).data;
+    const running = runtime.fetch(
+      new Request(`${publicOrigin}/v1/proxy/github`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer runtime-token",
+          "content-type": "application/json",
+          "x-oo-connector-alias": accounts[0].alias,
+        },
+        body: JSON.stringify({ method: "GET", endpoint: "/user" }),
+      }),
+    );
+    await Promise.race([
+      ready,
+      running.then(async (response) => {
+        throw new Error(await response.text());
+      }),
+    ]);
+    const firstClose = runtime.close();
+    expect(runtime.close()).toBe(firstClose);
+    await firstClose;
+    expect(aborted).toBe(true);
+    expect((await running).ok).toBe(false);
+    expect((await request("/v1/health", undefined, "runtime-token")).status).toBe(503);
+  });
+
+  it("allows one active runtime and releases the slot on initialization failure or close", async () => {
+    const options = await fixture();
+    await expect(createConnectorRuntime({ ...options, publicOrigin: "file:///bad" })).rejects.toThrow("publicOrigin");
+    runtime = await createConnectorRuntime(options);
+    await expect(createConnectorRuntime(options)).rejects.toThrow("Only one");
+    await runtime.close();
+    runtime = await createConnectorRuntime(options);
+    expect((await request("/v1/health", undefined, "runtime-token")).status).toBe(200);
+  });
+});
+
+async function fixture(): Promise<ConnectorRuntimeOptions> {
+  const root = await mkdtemp(join(tmpdir(), "open-connector-runtime-"));
+  directories.push(root);
+  const catalogDir = join(root, "catalog");
+  await mkdir(catalogDir);
+  for (const service of ["github"])
+    await cp(resolve(import.meta.dirname, `../../catalog/apps/${service}.json`), join(catalogDir, `${service}.json`));
+  return {
+    dataDir: join(root, "state"),
+    publicOrigin,
+    encryptionKey: "fixture-encryption-key",
+    adminToken: "admin-token",
+    runtimeToken: "runtime-token",
+    assets: { catalogDir, migrationDirectory: resolve(import.meta.dirname, "../../migrations") },
+  };
+}
+
+function request(
+  path: string,
+  body?: unknown,
+  token = "admin-token",
+  method = body ? "POST" : "GET",
+): Promise<Response> {
+  return runtime!.fetch(
+    new Request(`${publicOrigin}${path}`, {
+      method,
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    }),
+  );
+}

@@ -1,33 +1,18 @@
-import type { IStagedTransitFileService } from "./files/transit-file-store.ts";
+import type { ConnectorRuntime, ConnectorTransitFileOptions } from "./connector-runtime.ts";
 import type { ServerType } from "@hono/node-server";
 
 import { serve } from "@hono/node-server";
-import { mkdir } from "node:fs/promises";
+import { Hono } from "hono";
 import { join } from "node:path";
 import { defaultLazySchemaCacheFiles } from "../catalog-lazy-schemas.ts";
-import { loadCatalog } from "../catalog-store.ts";
-import { ActionPolicyService, parseActionPolicyList } from "../core/action-policy.ts";
-import {
-  parseEgressTrustedHosts,
-  parsePrivateNetworkAccessFlag,
-  setEgressTrustedHosts,
-  setPrivateNetworkAccessAllowed,
-} from "../core/request.ts";
-import { ProviderLoader } from "../providers/provider-loader.ts";
-import { executorModules } from "../providers/registry.generated.ts";
-import { createRuntimeJwtVerifier } from "./api/runtime-jwt.ts";
+import { parseActionPolicyList } from "../core/action-policy.ts";
+import { parseEgressTrustedHosts, parsePrivateNetworkAccessFlag } from "../core/request.ts";
+import { isConsoleShellRequest } from "./api/console-paths.ts";
 import { registerStaticRoutes } from "./api/static-routes.ts";
-import { createConnectApp } from "./connect-app.ts";
-import { cleanupStagedTransitFiles, createNodeTransitFileUpload } from "./files/node-transit-file-upload.ts";
-import { TransitFileService } from "./files/transit-files.ts";
+import { createConnectorRuntime } from "./connector-runtime.ts";
 import { logger } from "./logger.ts";
-import { createSecretCodec } from "./secrets/secret-codec.ts";
 import { resolveServerAssets } from "./server-assets.ts";
-import {
-  createNodeRuntimeDatabase,
-  migratePostgresRuntimeDatabase,
-  sqliteMigrationsNotice,
-} from "./storage/node-runtime-database.ts";
+import { migratePostgresRuntimeDatabase, sqliteMigrationsNotice } from "./storage/node-runtime-database.ts";
 import { DEFAULT_RUN_LIMIT } from "./storage/runtime-store.ts";
 
 const port = Number(process.env.PORT ?? 3000);
@@ -73,93 +58,58 @@ try {
  * about 85 MB of them resident on Linux, and under Bun also turns a listen error into a hang instead of an exit.
  */
 async function main(): Promise<void> {
-  setPrivateNetworkAccessAllowed(parsePrivateNetworkAccessFlag(process.env.OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK));
-  setEgressTrustedHosts(parseEgressTrustedHosts(process.env.OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS));
-
-  const secretCodec = createSecretCodec(process.env.OOMOL_CONNECT_ENCRYPTION_KEY);
-  const adminToken = process.env.OOMOL_CONNECT_ADMIN_TOKEN;
-  const runtimeToken = process.env.OOMOL_CONNECT_RUNTIME_TOKEN;
-  const verifyRuntimeJwt = await createRuntimeJwtVerifier({
-    jwksUri: process.env.OOMOL_CONNECT_JWKS_URI,
-    issuer: process.env.OOMOL_CONNECT_JWT_ISSUER,
-    audience: process.env.OOMOL_CONNECT_JWT_AUDIENCE,
-  });
-  const actionPolicy = new ActionPolicyService({
-    allowedActions: parseActionPolicyList(process.env.OOMOL_CONNECT_ALLOWED_ACTIONS),
-    blockedActions: parseActionPolicyList(process.env.OOMOL_CONNECT_BLOCKED_ACTIONS),
-    allowedProxies: parseActionPolicyList(process.env.OOMOL_CONNECT_ALLOWED_PROXIES),
-    blockedProxies: parseActionPolicyList(process.env.OOMOL_CONNECT_BLOCKED_PROXIES),
-  });
-  const allowedCustomOAuth = parseActionPolicyList(process.env.OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH);
-
-  await mkdir(dataDir, { recursive: true });
   const assets = await resolveServerAssets();
-  const lazySchemas = parseBooleanEnv("OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS");
-  if (lazySchemas && !assets.catalogIndexFile) {
-    logger.warn(
-      { catalogDir: assets.catalogDir },
-      "catalog index is missing; reading every provider file at startup. Run npm run generate:catalog to write catalog/apps-index.json",
-    );
-  }
-  const catalog = await loadCatalog(assets.catalogDir, {
-    executableServices: Object.keys(executorModules),
-    lazySchemas,
-    lazySchemaCacheFiles: readPositiveIntegerEnv(
-      "OOMOL_CONNECT_CATALOG_SCHEMA_CACHE_FILES",
-      defaultLazySchemaCacheFiles,
-    ),
-    lazySchemaIndexFile: assets.catalogIndexFile,
-  });
-  logger.info(
-    {
-      providers: catalog.providers.length,
-      actions: catalog.actions.length,
-      catalogIndex: lazySchemas && assets.catalogIndexFile !== undefined,
+  const runtime = await createConnectorRuntime({
+    dataDir,
+    publicOrigin,
+    assets,
+    encryptionKey: process.env.OOMOL_CONNECT_ENCRYPTION_KEY,
+    adminToken: process.env.OOMOL_CONNECT_ADMIN_TOKEN,
+    runtimeToken: process.env.OOMOL_CONNECT_RUNTIME_TOKEN,
+    jwt: {
+      jwksUri: process.env.OOMOL_CONNECT_JWKS_URI,
+      issuer: process.env.OOMOL_CONNECT_JWT_ISSUER,
+      audience: process.env.OOMOL_CONNECT_JWT_AUDIENCE,
     },
-    "catalog loaded",
-  );
-  const runtimeDatabase = databaseUrl
-    ? await createNodeRuntimeDatabase({
-        backend: "postgresql",
-        connectionString: databaseUrl,
-        logger,
-        secretCodec,
-        runLimit,
-        poolMax: databasePoolMax,
-        connectionTimeoutMs: databaseConnectTimeoutMs,
-        migrations: assets.migrations,
-      })
-    : await createNodeRuntimeDatabase({
-        backend: "sqlite",
-        path: join(dataDir, "connect.sqlite"),
-        logger,
-        secretCodec,
-        runLimit,
-        migrations: assets.migrations,
-      });
+    network: {
+      allowPrivateNetwork: parsePrivateNetworkAccessFlag(process.env.OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK),
+      trustedHosts: parseEgressTrustedHosts(process.env.OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS),
+    },
+    actionPolicy: {
+      allowedActions: parseActionPolicyList(process.env.OOMOL_CONNECT_ALLOWED_ACTIONS),
+      blockedActions: parseActionPolicyList(process.env.OOMOL_CONNECT_BLOCKED_ACTIONS),
+      allowedProxies: parseActionPolicyList(process.env.OOMOL_CONNECT_ALLOWED_PROXIES),
+      blockedProxies: parseActionPolicyList(process.env.OOMOL_CONNECT_BLOCKED_PROXIES),
+    },
+    allowedCustomOAuth: parseActionPolicyList(process.env.OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH),
+    postgres: databaseUrl
+      ? {
+          connectionString: databaseUrl,
+          poolMax: databasePoolMax,
+          connectionTimeoutMs: databaseConnectTimeoutMs,
+        }
+      : undefined,
+    transitFiles: readTransitFileOptions(),
+    runLimit,
+    lazySchemas: parseBooleanEnv("OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS"),
+    schemaCacheFiles: readPositiveIntegerEnv("OOMOL_CONNECT_CATALOG_SCHEMA_CACHE_FILES", defaultLazySchemaCacheFiles),
+    apiReference: true,
+    logger,
+  });
 
   try {
-    const transitFiles = await createTransitFileService();
-    const transitFileTempDir = join(dataDir, "tmp", "transit-files");
-    await transitFiles.cleanupExpired();
-    await cleanupStagedTransitFiles(transitFileTempDir, transitFileTtlSeconds * 1000);
-
-    const { app, runtimeAuthConfigured } = await createConnectApp({
-      catalog,
-      providerLoader: new ProviderLoader(executorModules),
-      runtimeDatabase,
-      transitFiles,
-      uploadTransitFile: createNodeTransitFileUpload({ transitFiles, tempDir: transitFileTempDir }),
-      publicOrigin,
-      secretCodec,
-      adminToken,
-      runtimeToken,
-      verifyRuntimeJwt,
-      actionPolicy,
-      allowedCustomOAuth,
-      registerStaticRoutes: (app) => registerStaticRoutes(app, { root: assets.staticRoot, embedded: assets.embedded }),
-      logger,
+    // The console is a host of the same request handler that embedded applications consume.
+    const app = new Hono();
+    app.use("*", async (context, next) => {
+      const response = await runtime.fetch(context.req.raw);
+      if (response.status === 404 && isConsoleShellRequest(context.req.path, context.req.method)) {
+        await response.body?.cancel();
+        await next();
+      } else {
+        context.res = response;
+      }
     });
+    registerStaticRoutes(app, { root: assets.staticRoot, embedded: assets.embedded });
 
     const server = serve(
       {
@@ -171,15 +121,15 @@ async function main(): Promise<void> {
         logger.info({ url: `http://${hostname}:${info.port}` }, "connect server listening");
         logger.info({ dataDir }, "runtime data directory");
         logger.info({ backend: databaseUrl ? "postgresql" : "sqlite" }, "runtime database ready");
-        if (!adminToken) {
+        if (!process.env.OOMOL_CONNECT_ADMIN_TOKEN) {
           logger.warn("local admin authentication is disabled; set OOMOL_CONNECT_ADMIN_TOKEN to require bearer tokens");
         }
-        if (!runtimeAuthConfigured) {
+        if (!runtime.runtimeAuthConfigured) {
           logger.warn(
             "runtime API authentication is disabled; create a runtime token in the web console, set OOMOL_CONNECT_RUNTIME_TOKEN, or configure JWT authentication",
           );
         }
-        if (!secretCodec.encrypted) {
+        if (!process.env.OOMOL_CONNECT_ENCRYPTION_KEY) {
           logger.warn(
             "runtime data encryption is disabled; set OOMOL_CONNECT_ENCRYPTION_KEY to encrypt stored credentials, Marketplace API keys, OAuth client configuration, pending OAuth state, and completed idempotent action responses",
           );
@@ -192,11 +142,11 @@ async function main(): Promise<void> {
 
     // A startup failure above closes the database in the catch. From here this chain owns it; a bind failure never
     // reaches it and ends the process through the server's unhandled 'error' event instead.
-    waitForShutdown(server)
-      .finally(() => runtimeDatabase.close())
+    waitForShutdown(server, runtime)
+      .finally(() => runtime.close())
       .catch(reportFailure);
   } catch (error) {
-    await runtimeDatabase.close();
+    await runtime.close();
     throw error;
   }
 }
@@ -222,7 +172,7 @@ async function runMigrateCommand(): Promise<void> {
   });
 }
 
-function waitForShutdown(server: ServerType): Promise<void> {
+function waitForShutdown(server: ServerType, runtime: ConnectorRuntime): Promise<void> {
   return new Promise((resolve, reject) => {
     let closing = false;
     const shutdown = (): void => {
@@ -230,7 +180,13 @@ function waitForShutdown(server: ServerType): Promise<void> {
         return;
       }
       closing = true;
-      server.close((error) => {
+      // Stop accepting requests and abort connector work together so an active provider call cannot hold shutdown open.
+      const closed = new Promise<void>((done, fail) => server.close((error) => (error ? fail(error) : done())));
+      void Promise.all([closed, runtime.close()]).then(
+        () => finish(),
+        (error) => finish(error),
+      );
+      function finish(error?: unknown): void {
         process.removeListener("SIGINT", shutdown);
         process.removeListener("SIGTERM", shutdown);
         if (error) {
@@ -238,7 +194,7 @@ function waitForShutdown(server: ServerType): Promise<void> {
         } else {
           resolve();
         }
-      });
+      }
     };
 
     process.once("SIGINT", shutdown);
@@ -256,50 +212,33 @@ function readPositiveIntegerEnv(name: string, fallback: number): number {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-async function createTransitFileService(): Promise<IStagedTransitFileService> {
+function readTransitFileOptions(): ConnectorTransitFileOptions {
   const backend = process.env.OOMOL_CONNECT_TRANSIT_FILE_BACKEND ?? "local";
-  switch (backend) {
-    case "local":
-      return new TransitFileService({
-        rootDir: join(dataDir, "files"),
-        publicOrigin,
-        ttlSeconds: transitFileTtlSeconds,
-        maxBytes: transitFileMaxBytes,
-      });
-    case "s3": {
-      const accessKeyId = optionalEnv("OOMOL_CONNECT_S3_ACCESS_KEY_ID");
-      const secretAccessKey = optionalEnv("OOMOL_CONNECT_S3_SECRET_ACCESS_KEY");
-      if (Boolean(accessKeyId) !== Boolean(secretAccessKey)) {
-        throw new Error(
-          "OOMOL_CONNECT_S3_ACCESS_KEY_ID and OOMOL_CONNECT_S3_SECRET_ACCESS_KEY must be configured together.",
-        );
-      }
-
-      // @aws-sdk/client-s3 is loaded only for this backend; the default local backend never pays for it.
-      const { createS3TransitClient, S3TransitFileService } = await import("./files/s3-transit-files.ts");
-      return new S3TransitFileService({
-        client: createS3TransitClient({
-          region: optionalEnv("OOMOL_CONNECT_S3_REGION") ?? "us-east-1",
-          endpoint: optionalEnv("OOMOL_CONNECT_S3_ENDPOINT"),
-          forcePathStyle: parseBooleanEnv("OOMOL_CONNECT_S3_FORCE_PATH_STYLE"),
-          credentials:
-            accessKeyId && secretAccessKey
-              ? {
-                  accessKeyId,
-                  secretAccessKey,
-                  sessionToken: optionalEnv("OOMOL_CONNECT_S3_SESSION_TOKEN"),
-                }
-              : undefined,
-        }),
-        bucket: requiredEnv("OOMOL_CONNECT_S3_BUCKET"),
-        publicOrigin,
-        ttlSeconds: transitFileTtlSeconds,
-        maxBytes: transitFileMaxBytes,
-      });
-    }
-    default:
-      throw new Error(`Unsupported OOMOL_CONNECT_TRANSIT_FILE_BACKEND: ${backend}`);
+  const options: ConnectorTransitFileOptions = { ttlSeconds: transitFileTtlSeconds, maxBytes: transitFileMaxBytes };
+  if (backend === "local") return options;
+  if (backend !== "s3") throw new Error(`Unsupported OOMOL_CONNECT_TRANSIT_FILE_BACKEND: ${backend}`);
+  const accessKeyId = optionalEnv("OOMOL_CONNECT_S3_ACCESS_KEY_ID");
+  const secretAccessKey = optionalEnv("OOMOL_CONNECT_S3_SECRET_ACCESS_KEY");
+  if (Boolean(accessKeyId) !== Boolean(secretAccessKey)) {
+    throw new Error(
+      "OOMOL_CONNECT_S3_ACCESS_KEY_ID and OOMOL_CONNECT_S3_SECRET_ACCESS_KEY must be configured together.",
+    );
   }
+  options.s3 = {
+    region: optionalEnv("OOMOL_CONNECT_S3_REGION") ?? "us-east-1",
+    endpoint: optionalEnv("OOMOL_CONNECT_S3_ENDPOINT"),
+    forcePathStyle: parseBooleanEnv("OOMOL_CONNECT_S3_FORCE_PATH_STYLE"),
+    credentials:
+      accessKeyId && secretAccessKey
+        ? {
+            accessKeyId,
+            secretAccessKey,
+            sessionToken: optionalEnv("OOMOL_CONNECT_S3_SESSION_TOKEN"),
+          }
+        : undefined,
+    bucket: requiredEnv("OOMOL_CONNECT_S3_BUCKET"),
+  };
+  return options;
 }
 
 function optionalEnv(name: string): string | undefined {

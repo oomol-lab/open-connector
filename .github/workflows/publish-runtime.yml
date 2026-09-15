@@ -1,0 +1,88 @@
+name: Publish headless package
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Build and verify the package without publishing to npm
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-runtime-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    name: Build and verify package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - run: npm ci
+      - run: npm run build:runtime
+      - name: Set package repository for npm provenance
+        run: npm pkg set --prefix dist/package repository.type=git "repository.url=git+https://github.com/${GITHUB_REPOSITORY}.git"
+      - name: Pack
+        run: |
+          mkdir -p dist/release
+          npm pack ./dist/package --pack-destination dist/release
+      - name: Verify installation and startup
+        run: |
+          CONNECTOR_PACKAGE_NAME=$(node -p 'require("./dist/package/package.json").name')
+          export CONNECTOR_PACKAGE_NAME
+          npm install --prefix "$RUNNER_TEMP/consumer" --no-audit --no-fund "$PWD"/dist/release/*.tgz
+          cd "$RUNNER_TEMP/consumer"
+          node --input-type=module <<'JS'
+          import assert from "node:assert/strict";
+          const { createConnectorRuntime } = await import(process.env.CONNECTOR_PACKAGE_NAME);
+          const connector = await createConnectorRuntime({
+            dataDir: "./data",
+            publicOrigin: "https://host.example",
+          });
+          const request = (path) => connector.fetch(new Request("https://host.example" + path));
+          try {
+            assert.equal((await request("/v1/health")).status, 200);
+            assert.match(await (await request("/v1/providers")).text(), /"github"/);
+            assert.equal((await request("/")).status, 404);
+          } finally {
+            await connector.close();
+          }
+          JS
+      - uses: actions/upload-artifact@v7
+        with:
+          name: headless-package
+          path: dist/release/*.tgz
+          if-no-files-found: error
+
+  publish:
+    name: Publish to npm
+    needs: package
+    if: github.event_name == 'workflow_dispatch' && !inputs.dry_run
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - run: npm install --global npm@11
+      - uses: actions/download-artifact@v8
+        with:
+          name: headless-package
+          path: package
+      - run: npm publish ./package/*.tgz --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
