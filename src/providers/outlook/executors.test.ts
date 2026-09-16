@@ -57,4 +57,16 @@ describe("outlook nextLink path allowlist", () => {
     });
     expect(calls).toHaveLength(1);
   });
+
+  it("preserves the Outlook-specific guidance for inefficient filters", async () => {
+    const fetcher = (async () =>
+      Response.json(
+        { error: { code: "InefficientFilter", message: "The restriction is invalid." } },
+        { status: 400 },
+      )) as typeof fetch;
+
+    await expect(outlookJsonRequest("me/messages", { accessToken: "test-token", fetcher })).rejects.toThrow(
+      "include every orderby property in filter",
+    );
+  });
 });

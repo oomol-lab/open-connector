@@ -4,9 +4,9 @@ import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, requiredRecord } from "../../core/cast.ts";
 import { defineOAuthProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
+import { microsoftGraphJson, microsoftGraphRequest } from "./microsoft-graph.ts";
 
 const outlookGraphBaseUrl = "https://graph.microsoft.com/v1.0";
-const graphHost = "graph.microsoft.com";
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "outlook",
@@ -19,26 +19,18 @@ type OutlookRuntimeDeps = OAuthProviderContext;
 
 type OutlookActionHandler = (input: Record<string, unknown>, deps: OutlookRuntimeDeps) => Promise<unknown>;
 
-type OutlookRequestInput = {
+interface OutlookRequestInput {
   accessToken: string;
   fetcher: typeof fetch;
+  signal?: AbortSignal;
   method?: string;
   query?: Record<string, string | undefined>;
   absoluteUrlPolicy?: "mailFolders" | "messages";
   headers?: Record<string, string>;
   body?: unknown;
-};
+}
 
-type OutlookErrorPayload = {
-  error?: {
-    code?: unknown;
-    message?: unknown;
-    innerError?: unknown;
-  };
-  message?: unknown;
-};
-
-export const outlookActionHandlers: ProviderActionHandlers<"outlook", OutlookActionHandler> = {
+const outlookActionHandlers: ProviderActionHandlers<"outlook", OutlookActionHandler> = {
   get_profile(_input, deps) {
     return getProfile(deps);
   },
@@ -107,79 +99,29 @@ export const credentialValidators: CredentialValidators = {
 };
 
 export async function outlookJsonRequest<T>(pathOrUrl: string, input: OutlookRequestInput): Promise<T> {
-  const response = await outlookRequest(pathOrUrl, input);
-  return (await response.json()) as T;
+  return microsoftGraphJson(pathOrUrl, graphRequestOptions(input));
 }
 
-async function outlookRequest(pathOrUrl: string, input: OutlookRequestInput) {
-  const target = buildOutlookUrl(pathOrUrl, input.query, input.absoluteUrlPolicy);
-  const hasJsonBody = input.body !== undefined;
-  const method = (input.method ?? (hasJsonBody ? "POST" : "GET")).toUpperCase();
-  const headers = {
-    authorization: `Bearer ${input.accessToken}`,
-    ...(input.headers ?? {}),
+async function outlookRequest(pathOrUrl: string, input: OutlookRequestInput): Promise<Response> {
+  return microsoftGraphRequest(pathOrUrl, graphRequestOptions(input));
+}
+
+function graphRequestOptions(input: OutlookRequestInput) {
+  return {
+    accessToken: input.accessToken,
+    fetcher: input.fetcher,
+    signal: input.signal,
+    method: input.method,
+    query: input.query,
+    headers: input.headers,
+    body: input.body,
+    allowNextLink:
+      input.absoluteUrlPolicy === "mailFolders"
+        ? isAllowedOutlookMailFolderNextLinkPath
+        : isAllowedOutlookMessageNextLinkPath,
+    refineErrorMessage: refineOutlookErrorMessage,
+    label: "Outlook",
   };
-
-  if ((method === "GET" || method === "HEAD") && hasJsonBody) {
-    throw new ProviderRequestError(400, `outlook ${method} request must not include a body`);
-  }
-
-  const response = await input.fetcher(target.toString(), {
-    method,
-    headers:
-      hasJsonBody && !hasContentTypeHeader(headers)
-        ? {
-            ...headers,
-            "content-type": "application/json",
-          }
-        : headers,
-    ...(hasJsonBody ? { body: JSON.stringify(input.body) } : {}),
-  });
-
-  await assertOutlookResponse(response);
-  return response;
-}
-
-function buildOutlookUrl(
-  pathOrUrl: string,
-  query?: Record<string, string | undefined>,
-  absoluteUrlPolicy: "mailFolders" | "messages" = "messages",
-) {
-  const isAbsolutePath = isAbsoluteUrl(pathOrUrl);
-  const target = isAbsolutePath ? new URL(pathOrUrl) : new URL(pathOrUrl, `${outlookGraphBaseUrl}/`);
-
-  if (target.hostname !== graphHost) {
-    throw new ProviderRequestError(400, "nextLink must target graph.microsoft.com");
-  }
-  if (isAbsolutePath) {
-    assertAllowedOutlookNextLink(target, absoluteUrlPolicy);
-  }
-
-  for (const [key, value] of Object.entries(query ?? {})) {
-    if (typeof value !== "string" || value.length === 0) {
-      continue;
-    }
-
-    target.searchParams.set(key, value);
-  }
-
-  return target;
-}
-
-function isAbsoluteUrl(value: string) {
-  return value.startsWith("https://") || value.startsWith("http://");
-}
-
-function assertAllowedOutlookNextLink(target: URL, absoluteUrlPolicy: "mailFolders" | "messages") {
-  if (target.protocol !== "https:") {
-    throw new ProviderRequestError(400, "nextLink must use https");
-  }
-  if (absoluteUrlPolicy === "messages" && !isAllowedOutlookMessageNextLinkPath(target.pathname)) {
-    throw new ProviderRequestError(400, "nextLink must target Outlook message pagination endpoints");
-  }
-  if (absoluteUrlPolicy === "mailFolders" && !isAllowedOutlookMailFolderNextLinkPath(target.pathname)) {
-    throw new ProviderRequestError(400, "nextLink must target Outlook mail folder pagination endpoints");
-  }
 }
 
 function isAllowedOutlookMessageNextLinkPath(pathname: string) {
@@ -225,76 +167,10 @@ function trimTrailingSlash(value: string) {
   return normalizedValue;
 }
 
-function hasContentTypeHeader(headers: Record<string, string>) {
-  return Object.keys(headers).some((key) => key.toLowerCase() === "content-type");
-}
-
-export async function assertOutlookResponse(response: Response): Promise<void> {
-  if (response.ok) {
-    return;
-  }
-
-  const { code, message } = await extractOutlookError(response);
-
-  if (response.status === 400) {
-    const invalidInputMessage =
-      code === "InefficientFilter"
-        ? `${message} When filter and orderby are combined, include every orderby property in filter, in the same order and before other filter properties.`
-        : message;
-    throw new ProviderRequestError(400, invalidInputMessage);
-  }
-  if (response.status === 401) {
-    throw new ProviderRequestError(401, message);
-  }
-  if (response.status === 403 && isScopeError(code, message)) {
-    throw new ProviderRequestError(403, message);
-  }
-  if (response.status === 403) {
-    throw new ProviderRequestError(403, message);
-  }
-  if (response.status === 429) {
-    throw new ProviderRequestError(429, message);
-  }
-
-  throw new ProviderRequestError(response.status, message);
-}
-
-async function extractOutlookError(response: Response) {
-  const text = await response.text().catch(() => "");
-  if (!text) {
-    return {
-      code: "",
-      message: `outlook request failed with status ${response.status}`,
-    };
-  }
-
-  try {
-    const parsed = JSON.parse(text) as OutlookErrorPayload;
-    const code = typeof parsed.error?.code === "string" ? parsed.error.code : "";
-    const message =
-      (typeof parsed.error?.message === "string" && parsed.error.message) ||
-      (typeof parsed.message === "string" && parsed.message) ||
-      text;
-
-    return { code, message };
-  } catch {
-    return {
-      code: "",
-      message: text,
-    };
-  }
-}
-
-function isScopeError(code: string, message: string) {
-  const loweredCode = code.toLowerCase();
-  const loweredMessage = message.toLowerCase();
-  return (
-    loweredCode.includes("accessdenied") ||
-    loweredMessage.includes("insufficient privileges") ||
-    loweredMessage.includes("required scopes") ||
-    loweredMessage.includes("does not have permission") ||
-    loweredMessage.includes("access is denied")
-  );
+function refineOutlookErrorMessage(code: string, message: string): string {
+  return code === "InefficientFilter"
+    ? `${message} When filter and orderby are combined, include every orderby property in filter, in the same order and before other filter properties.`
+    : message;
 }
 
 async function getProfile({ accessToken, fetcher }: OutlookRuntimeDeps) {

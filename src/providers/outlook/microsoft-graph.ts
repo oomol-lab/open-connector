@@ -12,7 +12,7 @@ import {
 const graphBaseUrl = "https://graph.microsoft.com/v1.0/";
 const graphOrigin = "https://graph.microsoft.com";
 
-export interface MicrosoftGraphRequestOptions {
+interface MicrosoftGraphRequestOptions {
   accessToken: string;
   fetcher: ProviderFetch;
   signal?: AbortSignal;
@@ -21,6 +21,7 @@ export interface MicrosoftGraphRequestOptions {
   headers?: Record<string, string>;
   body?: unknown;
   allowNextLink?: (pathname: string) => boolean;
+  refineErrorMessage?: (code: string, message: string) => string;
   label: string;
 }
 
@@ -32,7 +33,10 @@ export async function microsoftGraphRequest(
   options: MicrosoftGraphRequestOptions,
 ): Promise<Response> {
   const url = buildMicrosoftGraphUrl(pathOrUrl, options.query, options.allowNextLink);
-  const method = options.method ?? (options.body === undefined ? "GET" : "POST");
+  const method = (options.method ?? (options.body === undefined ? "GET" : "POST")).toUpperCase();
+  if ((method === "GET" || method === "HEAD") && options.body !== undefined) {
+    throw new ProviderRequestError(400, `${options.label} ${method} request must not include a body`);
+  }
   const headers = new Headers(options.headers);
   headers.set("authorization", `Bearer ${options.accessToken}`);
   if (options.body !== undefined && !headers.has("content-type")) {
@@ -47,7 +51,7 @@ export async function microsoftGraphRequest(
       signal,
     });
     if (!response.ok) {
-      throw await microsoftGraphResponseError(response, options.label);
+      throw await microsoftGraphResponseError(response, options);
     }
     return response;
   });
@@ -82,18 +86,22 @@ function buildMicrosoftGraphUrl(
   return url;
 }
 
-async function microsoftGraphResponseError(response: Response, label: string): Promise<ProviderRequestError> {
-  const text = await readProviderErrorTextBody(response, `${label} error response`);
-  let message = text || `${label} request failed with status ${response.status}`;
+async function microsoftGraphResponseError(
+  response: Response,
+  options: MicrosoftGraphRequestOptions,
+): Promise<ProviderRequestError> {
+  const text = await readProviderErrorTextBody(response, `${options.label} error response`);
+  let code = "";
+  let message = text || `${options.label} request failed with status ${response.status}`;
   if (text) {
     try {
       const payload = optionalRecord(JSON.parse(text));
       const error = optionalRecord(payload?.error);
+      code = optionalString(error?.code) ?? "";
       message = optionalString(error?.message) ?? optionalString(payload?.message) ?? message;
     } catch {
       // Keep the upstream text when it is not JSON.
     }
   }
-  const status = response.status === 404 ? 400 : response.status;
-  return new ProviderRequestError(status, message);
+  return new ProviderRequestError(response.status, options.refineErrorMessage?.(code, message) ?? message);
 }
