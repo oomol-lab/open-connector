@@ -73,6 +73,17 @@ jobs:
           node-version: "24"
           package-manager-cache: false
 
+      # Releases are cut from main only. workflow_dispatch lets any branch or
+      # tag be selected, and every later job builds and publishes whatever
+      # `github.sha` that selection resolved to.
+      - name: Require main
+        if: github.ref != 'refs/heads/main'
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          echo "::error::Release must be dispatched on main, not ${REF}."
+          exit 1
+
       - name: Compute version
         id: compute
         env:
@@ -102,9 +113,11 @@ jobs:
       release_tag: ${{ needs.version.outputs.tag_name }}
       ref: ${{ github.sha }}
 
+  # npm and docker publish outside GitHub, so they wait for the draft as
+  # well: nothing leaves the repository unless the release was initialised.
   npm:
     name: npm package
-    needs: version
+    needs: [version, draft-release]
     permissions:
       contents: read
       id-token: write
@@ -114,7 +127,7 @@ jobs:
 
   docker:
     name: Docker image
-    needs: version
+    needs: [version, draft-release]
     permissions:
       contents: read
       packages: write

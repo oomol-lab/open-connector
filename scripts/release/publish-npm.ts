@@ -62,17 +62,23 @@ function readPackageMetadata(tarball: string): PackageMetadata {
   return { name: manifest.name, version: manifest.version };
 }
 
-function versionExists(spec: string): boolean {
-  const result = run("npm", ["view", spec, "version", "--json"]);
-  // A missing version of an existing package prints nothing and exits 0; a
-  // missing package exits with E404.
-  if (result.status === 0) return result.output.trim() !== "" && result.output.trim() !== "[]";
-  if (result.output.includes("E404")) return false;
-  throw new Error(`npm view ${spec} failed:\n${result.output}`);
-}
-
 function isTransient(output: string): boolean {
   return transientErrorFragments.some((fragment) => output.includes(fragment));
+}
+
+async function versionExists(spec: string): Promise<boolean> {
+  for (let attempt = 1; ; attempt += 1) {
+    const result = run("npm", ["view", spec, "version", "--json"]);
+    // A missing version of an existing package prints nothing and exits 0; a
+    // missing package exits with E404.
+    if (result.status === 0) return result.output.trim() !== "" && result.output.trim() !== "[]";
+    if (result.output.includes("E404")) return false;
+    if (attempt >= publishAttempts || !isTransient(result.output)) {
+      throw new Error(`npm view ${spec} failed:\n${result.output}`);
+    }
+    console.log(`Transient npm error; retrying npm view ${spec} in ${(retryDelayMs * attempt) / 1000}s.`);
+    await sleep(retryDelayMs * attempt);
+  }
 }
 
 const tarball = process.argv[2];
@@ -81,7 +87,7 @@ if (tarball === undefined || tarball === "") throw new Error("Usage: publish-npm
 const metadata = readPackageMetadata(tarball);
 const spec = `${metadata.name}@${metadata.version}`;
 
-if (versionExists(spec)) {
+if (await versionExists(spec)) {
   console.log(`Skipping ${spec}: already on the registry.`);
 } else {
   for (let attempt = 1; ; attempt += 1) {
@@ -91,7 +97,7 @@ if (versionExists(spec)) {
       console.log(`Published ${spec}.`);
       break;
     }
-    if (versionExists(spec)) {
+    if (await versionExists(spec)) {
       console.log(`npm publish failed but ${spec} is now on the registry; treating it as published.`);
       break;
     }

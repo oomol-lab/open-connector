@@ -89,8 +89,19 @@ function ensureDraft(): void {
 
 function publish(): void {
   const tag = requiredEnv("RELEASE_TAG");
+  const target = requiredEnv("TARGET_SHA");
   const existing = findRelease(tag);
   if (existing === undefined) throw new Error(`Release ${tag} does not exist; run ensure-draft first.`);
+
+  // The assets were built from TARGET_SHA. Re-check the release still points
+  // there: the draft could have been edited while the artifact jobs ran, and
+  // publishing it would tag a commit the assets do not belong to.
+  const commit = existing.isDraft ? existing.targetCommitish : tagCommit(tag);
+  if (commit !== target) {
+    throw new Error(
+      `Release ${tag} ${existing.isDraft ? "targets" : "is published from"} ${commit}, not ${target}; refusing to publish.`,
+    );
+  }
   if (!existing.isDraft) {
     console.log(`Release ${tag} is already published.`);
   }
