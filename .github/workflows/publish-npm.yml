@@ -1,25 +1,46 @@
-name: Publish headless package
+name: Publish npm package
 
+# Builds the headless package (`npm run build:runtime`), installs the packed
+# tarball into a scratch project and boots the runtime from it, then publishes
+# it to npm.
+#
+#   pull_request                -> build and verify only
+#   workflow_call (release.yml) -> build, verify and publish `version`
+#
+# The publish step is idempotent: a version that is already on the registry is
+# skipped, so a failed release run can be re-run without changes. The
+# package.json version is 0.0.0-development in git; the release version is
+# written into it just before the build.
+#
+# Publishing authenticates with npm trusted publishing (OIDC), not a token:
+# the package's npm settings trust `oomol-lab/open-connector` and the workflow
+# file `release.yml`. npm matches the *calling* workflow's filename, so this
+# reusable workflow is not what is configured on npmjs.com, and `id-token:
+# write` is needed on both the caller job and the publish job here. npm
+# records provenance automatically for this public repository. Trusted
+# publishing is not offered to self-hosted runners, so the publish job stays
+# on a GitHub-hosted runner.
 on:
   pull_request:
-  workflow_dispatch:
+  workflow_call:
     inputs:
-      dry_run:
-        description: Build and verify the package without publishing to npm
-        type: boolean
-        default: true
+      version:
+        description: "Version to publish, e.g. 1.7.0"
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: publish-runtime-${{ github.ref }}
-  cancel-in-progress: false
+  group: publish-npm-${{ inputs.version || github.ref }}
+  cancel-in-progress: ${{ inputs.version == '' }}
 
 jobs:
   package:
     name: Build and verify package
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -29,6 +50,11 @@ jobs:
           node-version: "24"
           package-manager-cache: false
       - run: npm ci
+      - name: Set release version
+        if: inputs.version != ''
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: npm pkg set "version=${RELEASE_VERSION}"
       - run: npm run build:runtime
       - name: Set package repository for npm provenance
         run: npm pkg set --prefix dist/package repository.type=git "repository.url=git+https://github.com/${GITHUB_REPOSITORY}.git"
@@ -67,23 +93,38 @@ jobs:
   publish:
     name: Publish to npm
     needs: package
-    if: github.event_name == 'workflow_dispatch' && !inputs.dry_run
+    if: inputs.version != ''
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
       id-token: write
     steps:
+      # The publish script only needs node builtins, so no `npm ci`: lifecycle
+      # scripts must not run in the job that holds the OIDC token.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "24"
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
-      # Lifecycle scripts must not run in the job that holds the OIDC token.
       - run: npm install --global --ignore-scripts npm@11
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: headless-package
-          path: package
-      - run: npm publish ./package/*.tgz --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          path: dist/release
+      # setup-node's `registry-url` writes `_authToken=${NODE_AUTH_TOKEN}` into
+      # .npmrc and exports a placeholder NODE_AUTH_TOKEN. npm 11 still runs the
+      # OIDC exchange and overrides that token on success, but if the exchange
+      # fails it silently falls back to the placeholder and the error reads
+      # like a missing token. Drop the line so a failure is reported as what it
+      # is.
+      - name: Use OIDC only
+        run: |
+          set -euo pipefail
+          npmrc="${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"
+          if [ -f "$npmrc" ]; then sed -i '/_authToken/d' "$npmrc"; fi
+      - name: Publish
+        run: node scripts/release/publish-npm.ts dist/release/*.tgz

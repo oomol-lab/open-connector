@@ -4,7 +4,15 @@ Use the headless package in Node.js 22.18+ or Bun 1.4+. It owns providers, autho
 credentials, and storage. Your application owns its HTTP server, configuration, and shutdown.
 The default dashboard host uses the same `createConnectorRuntime()` factory.
 
-## Build and install
+## Install
+
+```sh
+npm install @oomol-lab/open-connector
+```
+
+The package includes JavaScript, types, catalog, and migrations; no dashboard assets or install
+scripts. Every [release](https://github.com/oomol-lab/open-connector/releases) publishes the
+matching version to npm. To build it from a checkout instead:
 
 ```sh
 npm ci
@@ -12,8 +20,7 @@ npm run build:runtime
 npm pack ./dist/package --pack-destination dist
 ```
 
-Install the resulting tarball in your application with `npm install /path/to/package.tgz`.
-It includes JavaScript, types, catalog, and migrations; no dashboard assets or install scripts.
+Then install the resulting tarball with `npm install /path/to/package.tgz`.
 
 ## Use
 

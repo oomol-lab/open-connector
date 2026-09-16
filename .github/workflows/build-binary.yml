@@ -42,23 +42,33 @@ name: Build Binaries
 # writes a wrong page hash, which macOS 27 rejects), so the macOS smoke jobs
 # re-sign the binary with `codesign` and verify the signature before running it.
 #
-# On a published release the same build and smoke jobs run against the release
-# tag, and a final `release` job uploads the six smoke-tested binaries (the
-# darwin ones re-signed by the macOS smoke jobs) as they are, plus a
-# `SHA256SUMS` file, as release assets. The files keep their build names, so
+# When release.yml calls this workflow, the same build and smoke jobs run
+# against the release commit, and a final `release` job uploads the six
+# smoke-tested binaries (the darwin ones re-signed by the macOS smoke jobs) as
+# they are, plus a `SHA256SUMS` file, to the draft release that release.yml
+# created for `release_tag`. The files keep their build names, so
 # `releases/latest/download/open-connector-<target>` always resolves and a
 # `curl | chmod +x` install needs no archive tool. The upload only runs after
 # every smoke job passed, so a release never ships a binary that failed on its
-# own platform. To backfill an existing release, dispatch the workflow on its
-# tag with `release_tag` set.
+# own platform, and it uses `--clobber`, so re-running a failed release replaces
+# whatever was already attached. To backfill an existing release, dispatch the
+# workflow on its tag with `release_tag` set.
 #
 # A `runs-on` label that no runner serves queues forever instead of failing, so
 # `workflow_dispatch` is here to verify the labels before relying on them.
 on:
   push:
     branches: [main]
-  release:
-    types: [published]
+  workflow_call:
+    inputs:
+      release_tag:
+        description: "Release (published or draft) to upload the binaries to"
+        required: true
+        type: string
+      ref:
+        description: "Commit to build; the tag does not exist yet while the release is a draft"
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       release_tag:
@@ -69,8 +79,8 @@ on:
 # Cancel superseded runs for the same ref (e.g. a newer push to main).
 # Release runs use their own per-tag group and are never cancelled.
 concurrency:
-  group: build-binary-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name != 'release' }}
+  group: build-binary-${{ inputs.release_tag || github.ref }}
+  cancel-in-progress: ${{ inputs.release_tag == '' }}
 
 # Least privilege: the build and smoke jobs only read the repository; only the
 # `release` job gets `contents: write`, to upload the release assets.
@@ -83,10 +93,15 @@ env:
   # on by default only on Node >= 22.18 / >= 23.6, so pin an LTS that supports it.
   # Do NOT downgrade below 22.18 — `npm ci` (postinstall codegen) and typecheck fail.
   NODE_VERSION: "24"
-  # The release the binaries are uploaded to: the published release, or the
-  # `release_tag` input of a manual dispatch. Empty on push runs, which build
+  # The release the binaries are uploaded to: the `release_tag` input of a
+  # release.yml call or of a manual dispatch. Empty on push runs, which build
   # and smoke-test only.
-  RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
+  RELEASE_TAG: ${{ inputs.release_tag }}
+  # What to check out. release.yml passes the release commit (`ref`) because
+  # the tag is only created when the draft release is published; a manual
+  # backfill has no `ref` and builds the release tag itself; a push builds the
+  # pushed commit.
+  CHECKOUT_REF: ${{ inputs.ref || inputs.release_tag }}
 
 jobs:
   build:
@@ -111,12 +126,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
         with:
-          # Build the release tag itself, never the ref the run was dispatched
-          # from: a manual backfill started on main with `release_tag` set
-          # would otherwise --clobber that release's assets with binaries built
-          # from main. An empty value (push) falls back to the action's
-          # default ref.
-          ref: ${{ env.RELEASE_TAG }}
+          # Build the release commit or tag itself, never the ref the run was
+          # dispatched from: a manual backfill started on main with
+          # `release_tag` set would otherwise --clobber that release's assets
+          # with binaries built from main. An empty value (push) falls back to
+          # the action's default ref.
+          ref: ${{ env.CHECKOUT_REF }}
           # No step needs the persisted GITHUB_TOKEN in git config; dropping it
           # keeps `npm ci` postinstall scripts from reading it (zizmor hardening).
           persist-credentials: false
@@ -260,7 +275,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           # Same ref as the build job, so the smoke script matches the binaries.
-          ref: ${{ env.RELEASE_TAG }}
+          ref: ${{ env.CHECKOUT_REF }}
           persist-credentials: false
 
       # The smoke script uses only node: builtins, so no `npm ci` is needed.
@@ -311,7 +326,7 @@ jobs:
   release:
     name: Upload release assets
     needs: [build, smoke]
-    if: github.event_name == 'release' || inputs.release_tag != ''
+    if: inputs.release_tag != ''
     runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 15
     permissions:
@@ -339,7 +354,8 @@ jobs:
           cat SHA256SUMS
 
       # --clobber lets a re-run (or a manual backfill) replace assets that are
-      # already attached instead of failing on the name conflict.
+      # already attached instead of failing on the name conflict. `gh` finds
+      # the release by tag even while it is still a draft.
       - name: Upload to release ${{ env.RELEASE_TAG }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

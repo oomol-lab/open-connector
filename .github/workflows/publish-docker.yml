@@ -5,26 +5,32 @@ name: Publish Docker Image
 #
 # Triggers and tags:
 #   - push to main (this includes merged PRs): `tip` + the short commit hash
-#   - published release:                       `latest` + the release version (e.g. v1.0.0)
+#   - workflow_call from release.yml:          `latest` + the release tag (e.g. v1.7.0),
+#                                              built from the calling run's commit
 #
 # The image is multi-arch (linux/amd64 + linux/arm64). Each architecture is
 # built NATIVELY on its own Blacksmith runner (no QEMU emulation), pushed by
 # digest, and the two are then merged into a single multi-arch manifest per tag.
 #
-# main-branch pushes and releases never overlap: `push` ignores tag refs and
-# publishing a release does not fire a branch `push`. See docs/docker-ghcr.md.
+# Releases are published by release.yml with GITHUB_TOKEN, which fires no
+# `release:` event, so the release path is a reusable-workflow call rather than
+# a trigger. See docs/docker-ghcr.md.
 on:
   push:
     branches: [main]
-  release:
-    types: [published]
+  workflow_call:
+    inputs:
+      release_tag:
+        description: "Release tag to publish the image as (also tagged `latest`)"
+        required: true
+        type: string
 
 # One in-flight publish per ref. main pushes share a group so a newer commit
 # cancels an older, still-running build — this keeps `tip` pointing at the most
 # recent commit. Releases use their own per-tag group and are never cancelled.
 concurrency:
-  group: publish-docker-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'push' }}
+  group: publish-docker-${{ inputs.release_tag || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' && inputs.release_tag == '' }}
 
 # Least privilege: read the repo, and write packages to push the image to GHCR.
 permissions:
@@ -123,7 +129,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Same tag scheme as before: tip + short-sha on push, latest + version on release.
+      # tip + short-sha on push, latest + release tag when called from release.yml
+      # (release.yml only produces stable X.Y.Z versions, so `latest` always moves).
       - name: Compute tags
         id: meta
         uses: docker/metadata-action@v6
@@ -131,10 +138,10 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           flavor: latest=false
           tags: |
-            type=raw,value=tip,enable=${{ github.event_name == 'push' }}
-            type=sha,prefix=,format=short,enable=${{ github.event_name == 'push' }}
-            type=raw,value=latest,enable=${{ github.event_name == 'release' && github.event.release.prerelease == false }}
-            type=raw,value=${{ github.event.release.tag_name }},enable=${{ github.event_name == 'release' }}
+            type=raw,value=tip,enable=${{ inputs.release_tag == '' }}
+            type=sha,prefix=,format=short,enable=${{ inputs.release_tag == '' }}
+            type=raw,value=latest,enable=${{ inputs.release_tag != '' }}
+            type=raw,value=${{ inputs.release_tag }},enable=${{ inputs.release_tag != '' }}
 
       - name: Create and push multi-arch manifest
         working-directory: ${{ runner.temp }}/digests

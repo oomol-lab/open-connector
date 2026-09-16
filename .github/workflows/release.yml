@@ -1,0 +1,135 @@
+name: Release
+
+# The one entry point for cutting a release. Dispatch it manually on `main`;
+# it computes the version from the latest `vX.Y.Z` tag (or takes an explicit
+# one), then drives the per-artifact workflows and finally publishes the
+# GitHub release:
+#
+#   version ──> draft release ──┬──> binaries (build, smoke, attach to draft) ──┐
+#                               ├──> npm package (build, verify, publish)      ├──> publish release
+#                               └──> docker image (latest + vX.Y.Z)            ┘
+#
+# `package.json` stays at 0.0.0-development; git tags are the only owner of
+# released versions. The tag is created by GitHub when the draft is published,
+# after every asset is attached, so `releases/latest/download/...` never points
+# at a half-built release.
+#
+# Every step is idempotent, so a failed run is retried with "Re-run failed
+# jobs" (the computed version is kept) or by dispatching again on the same
+# commit (the version is recomputed to the same value: an existing draft is
+# reused, an existing tag at this commit is resumed, published npm versions
+# and uploaded assets are skipped or overwritten in place).
+#
+# Releases published with GITHUB_TOKEN do not fire `release:` events, which is
+# why docker and binaries are called from here instead of listening for one.
+#
+# Setup: the npm package trusts this repository's `release.yml` via trusted
+# publishing (OIDC); no npm token is stored in the repository.
+on:
+  workflow_dispatch:
+    inputs:
+      expected_version:
+        description: "Version to release, e.g. 1.7.0. Leave empty to bump the latest tag."
+        required: false
+        type: string
+        default: ""
+      version_bump:
+        description: "Segment to bump when expected_version is empty."
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
+
+# Only one release at a time; a second dispatch queues behind the first.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    name: Compute version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.compute.outputs.version }}
+      tag_name: ${{ steps.compute.outputs.tag_name }}
+      previous_tag: ${{ steps.compute.outputs.previous_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Compute version
+        id: compute
+        env:
+          EXPECTED_VERSION: ${{ inputs.expected_version }}
+          VERSION_BUMP: ${{ inputs.version_bump }}
+        run: node scripts/release/compute-release-version.ts
+
+  draft-release:
+    name: Draft GitHub release
+    needs: version
+    permissions:
+      contents: write
+    uses: ./.github/workflows/publish-github-release.yml
+    with:
+      release_tag: ${{ needs.version.outputs.tag_name }}
+      target_sha: ${{ github.sha }}
+      previous_tag: ${{ needs.version.outputs.previous_tag }}
+      publish: false
+
+  binaries:
+    name: Binaries
+    needs: [version, draft-release]
+    permissions:
+      contents: write
+    uses: ./.github/workflows/build-binary.yml
+    with:
+      release_tag: ${{ needs.version.outputs.tag_name }}
+      ref: ${{ github.sha }}
+
+  npm:
+    name: npm package
+    needs: version
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/publish-npm.yml
+    with:
+      version: ${{ needs.version.outputs.version }}
+
+  docker:
+    name: Docker image
+    needs: version
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/publish-docker.yml
+    with:
+      release_tag: ${{ needs.version.outputs.tag_name }}
+
+  publish-release:
+    name: Publish GitHub release
+    needs: [version, binaries, npm, docker]
+    permissions:
+      contents: write
+    uses: ./.github/workflows/publish-github-release.yml
+    with:
+      release_tag: ${{ needs.version.outputs.tag_name }}
+      target_sha: ${{ github.sha }}
+      previous_tag: ${{ needs.version.outputs.previous_tag }}
+      publish: true

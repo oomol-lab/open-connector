@@ -1,0 +1,68 @@
+name: Publish GitHub release
+
+# Creates or publishes the GitHub release for one tag. Called twice by
+# release.yml: first with `publish: false` to make sure a draft targeting the
+# release commit exists (assets are attached to the draft), then with
+# `publish: true` once every artifact is in place, which creates the tag and
+# marks the release as latest.
+#
+# Both modes are idempotent: an existing draft for the same commit is reused,
+# a draft for another commit is replaced, an already published release is
+# accepted when its tag points at the release commit, and publishing a
+# published release is a no-op.
+on:
+  workflow_call:
+    inputs:
+      release_tag:
+        description: "Tag of the release, e.g. v1.7.0"
+        required: true
+        type: string
+      target_sha:
+        description: "Commit the tag is created at when the release is published"
+        required: true
+        type: string
+      previous_tag:
+        description: "Previous release tag; the generated notes start after it"
+        required: false
+        type: string
+        default: ""
+      publish:
+        description: "false: ensure a draft exists; true: publish the draft"
+        required: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-github-release-${{ inputs.release_tag }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: ${{ inputs.publish && 'Publish' || 'Ensure draft' }} ${{ inputs.release_tag }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: ${{ inputs.publish && 'Publish release' || 'Ensure draft release' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          TARGET_SHA: ${{ inputs.target_sha }}
+          PREVIOUS_TAG: ${{ inputs.previous_tag }}
+          MODE: ${{ inputs.publish && 'publish' || 'ensure-draft' }}
+        run: node scripts/release/github-release.ts "$MODE"
