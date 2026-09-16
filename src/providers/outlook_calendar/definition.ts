@@ -38,7 +38,7 @@ export const provider: ProviderDefinition = {
         docsUrl: "https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app",
         steps: [
           "Register a web application in Microsoft Entra ID and add the callback URL shown by this runtime.",
-          "Add the Microsoft Graph delegated permissions User.Read, Calendars.ReadWrite, Calendars.ReadWrite.Shared, and offline_access.",
+          "Add the Microsoft Graph delegated permissions User.Read, Calendars.ReadWrite, Calendars.ReadWrite.Shared, and offline_access; the Shared permission enables delegated and shared calendars, and tenant policy may require administrator consent.",
           "Create a client secret and save its value with the application client ID in this runtime.",
         ],
       },

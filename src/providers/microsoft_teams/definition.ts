@@ -9,7 +9,7 @@ import { microsoftTeamsOAuthScopes } from "./scopes.ts";
 export const provider: ProviderDefinition = {
   service: "microsoft_teams",
   displayName: "Microsoft Teams",
-  description: "Read Microsoft Teams collaboration data and send channel or chat messages.",
+  description: "Read collaboration data and send channel or chat messages for Microsoft work or school accounts.",
   categories: ["Communication", "Productivity"],
   authTypes: ["oauth2"],
   auth: [

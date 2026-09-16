@@ -74,7 +74,7 @@ function buildMicrosoftGraphUrl(
   query: Record<string, string | undefined> | undefined,
   allowNextLink: ((pathname: string) => boolean) | undefined,
 ): URL {
-  const absolute = /^https?:\/\//u.test(pathOrUrl);
+  const absolute = /^https?:\/\//iu.test(pathOrUrl);
   const url = absolute ? new URL(pathOrUrl) : new URL(pathOrUrl, graphBaseUrl);
   if (url.origin !== graphOrigin || url.protocol !== "https:") {
     throw new ProviderRequestError(400, "Microsoft Graph URL must target https://graph.microsoft.com");

@@ -58,6 +58,18 @@ describe("Outlook Calendar execution", () => {
     expect(result).toMatchObject({ ok: false, error: { code: "invalid_input" } });
     expect(fetch).not.toHaveBeenCalled();
   });
+
+  it("applies the pagination allowlist to uppercase URL schemes", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+
+    const result = await execute("list_events", {
+      nextLink: "HTTPS://graph.microsoft.com/v1.0/me/messages?$top=1",
+    });
+
+    expect(result).toMatchObject({ ok: false, error: { code: "invalid_input" } });
+    expect(fetch).not.toHaveBeenCalled();
+  });
 });
 
 async function execute(actionName: string, input: Record<string, unknown>) {
