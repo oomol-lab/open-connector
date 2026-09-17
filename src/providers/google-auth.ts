@@ -7,7 +7,7 @@ import type {
 } from "./provider-runtime.ts";
 
 import { importPKCS8, SignJWT } from "jose";
-import { optionalRecord, optionalString } from "../core/cast.ts";
+import { optionalNumberLike, optionalRecord, optionalString } from "../core/cast.ts";
 import {
   defineProviderExecutors,
   providerInputError,
@@ -27,7 +27,7 @@ const tokenRefreshSkewMs = 5 * 60_000;
 /**
  * A Google service account identity read from a stored custom credential.
  */
-export interface GoogleServiceAccountCredential {
+interface GoogleServiceAccountCredential {
   /** Service account email, e.g. `bot@project.iam.gserviceaccount.com`. */
   clientEmail: string;
   /** RSA private key in PEM format from the same key file. */
@@ -140,9 +140,8 @@ async function mintGoogleServiceAccountToken(
 }
 
 function tokenLifetimeSeconds(payload: Record<string, unknown>): number {
-  const raw = payload.expires_in;
-  const seconds = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : Number.NaN;
-  return Number.isFinite(seconds) && seconds > 0 ? seconds : googleTokenLifetimeSeconds;
+  const seconds = optionalNumberLike(payload.expires_in);
+  return seconds !== undefined && seconds > 0 ? seconds : googleTokenLifetimeSeconds;
 }
 
 async function signServiceAccountAssertion(
@@ -166,7 +165,7 @@ async function signServiceAccountAssertion(
   return serviceAccount.subject ? assertion.setSubject(serviceAccount.subject).sign(key) : assertion.sign(key);
 }
 
-export interface GoogleAccessTokenInput {
+interface GoogleAccessTokenInput {
   /** Provider slug used in errors, e.g. `googledrive`. */
   service: string;
   /** Provider-native scopes the minted token must carry. */
@@ -181,7 +180,7 @@ export interface GoogleAccessTokenInput {
  * The bearer identity Google API calls should use, from either stored OAuth
  * credentials or a minted service account token.
  */
-export interface GoogleAccessToken {
+interface GoogleAccessToken {
   accessToken: string;
   tokenType: string;
   accountId: string;
@@ -219,7 +218,7 @@ export async function resolveGoogleAccessToken(input: GoogleAccessTokenInput): P
   throw new ProviderRequestError(401, `Connect ${input.service} with OAuth or service account credentials first.`);
 }
 
-export interface GoogleProviderExecutorsOptions {
+interface GoogleProviderExecutorsOptions {
   /** Provider-native scopes a minted service account token carries; see the provider `scopes.ts`. */
   scopes: readonly string[];
 }

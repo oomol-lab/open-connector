@@ -1598,6 +1598,12 @@ function connectionManagementPaths(): Record<string, unknown> {
     auth: jsonSchema.array(
       jsonSchema.object("One supported credential type with its form metadata.", {
         type: jsonSchema.stringEnum("Credential type.", ["no_auth", "api_key", "custom_credential", "oauth2"]),
+        label: jsonSchema.optional(
+          jsonSchema.string("Provider-declared display name for this auth mode, e.g. Service Account."),
+        ),
+        description: jsonSchema.optional(
+          jsonSchema.string("Provider-declared help text describing when to use this auth mode."),
+        ),
         fields: jsonSchema.optional(jsonSchema.array(field)),
         clientFields: jsonSchema.optional(jsonSchema.array(field)),
         clientSetup: jsonSchema.optional(

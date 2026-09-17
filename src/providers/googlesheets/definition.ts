@@ -41,7 +41,7 @@ export const provider: ProviderDefinition = {
           secret: true,
           placeholder: '{"type": "service_account", "project_id": "...", ...}',
           description:
-            "The complete service account key JSON from Google Cloud Console (IAM & Admin > Service Accounts > Keys). Enable the Sheets API for its project and share spreadsheets with the service account email, or use domain-wide delegation below.",
+            "The complete service account key JSON from Google Cloud Console (IAM & Admin > Service Accounts > Keys). Enable the Sheets and Drive APIs for its project and share spreadsheets with the service account email, or use domain-wide delegation below.",
         },
         {
           key: "subject",
