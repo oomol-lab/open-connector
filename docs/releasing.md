@@ -10,6 +10,15 @@ A release is cut by running the **Release** workflow by hand on `main`
 | `ghcr.io/oomol-lab/open-connector` image       | `latest` + `vX.Y.Z` tags |
 | GitHub release with generated notes            | tag `vX.Y.Z`             |
 
+The npm package README is `docs/headless.md`. To pack it locally without
+publishing:
+
+```sh
+npm ci
+npm run build:runtime
+npm pack ./dist/package --pack-destination dist
+```
+
 ## Choosing the version
 
 `package.json` stays at `0.0.0-development`; git tags are the only record of released
