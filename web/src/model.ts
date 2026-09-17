@@ -2,7 +2,7 @@
 export type AuthDefinition =
   | { type: "no_auth" }
   | { type: "api_key"; fields?: CredentialField[] }
-  | { type: "custom_credential"; fields: CredentialField[] }
+  | { type: "custom_credential"; label?: string; description?: string; fields: CredentialField[] }
   | {
       type: "oauth2";
       scopes: string[];

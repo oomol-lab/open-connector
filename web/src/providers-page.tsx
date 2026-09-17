@@ -1163,12 +1163,16 @@ function initialAuthType(
 }
 
 function authLabel(auth: AuthDefinition, t: (key: string) => string): string {
+  if (auth.type === "custom_credential" && auth.label?.trim()) return auth.label.trim();
   return authTypeLabel(auth.type, t);
 }
 
 function providerAuthTypeLabels(provider: ProviderDefinition, t: (key: string) => string): string[] {
   const authTypes = provider.authTypes.length > 0 ? provider.authTypes : provider.auth.map((auth) => auth.type);
-  return [...new Set(authTypes)].map((authType) => authTypeLabel(authType, t));
+  return [...new Set(authTypes)].map((authType) => {
+    const auth = provider.auth.find((auth) => auth.type === authType);
+    return auth ? authLabel(auth, t) : authTypeLabel(authType, t);
+  });
 }
 
 function authTypeLabel(authType: string, t: (key: string) => string): string {
@@ -1394,6 +1398,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
   );
   const [status, setStatus] = useState<string | null>(null);
   const stopOAuthRefreshPolling = useRef<(() => void) | undefined>(undefined);
+  const authDescription = props.auth.type === "custom_credential" ? props.auth.description : undefined;
   const fields = credentialFieldsFor(props.auth);
   const showActions = shouldShowConnectionActions(props.auth);
   const connected = props.connection != null;
@@ -1630,6 +1635,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
           })}
         </div>
       ) : null}
+      {authDescription ? <small className="block text-muted-foreground">{authDescription}</small> : null}
       {fields.map((field) => (
         <CredentialInput
           key={field.key}
