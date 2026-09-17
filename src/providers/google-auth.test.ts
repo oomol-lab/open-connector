@@ -14,6 +14,8 @@ import { ProviderRequestError } from "./provider-runtime.ts";
 
 const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
 const privateKeyPem = privateKey.export({ type: "pkcs8", format: "pem" }).toString();
+const { privateKey: secondPrivateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+const secondPrivateKeyPem = secondPrivateKey.export({ type: "pkcs8", format: "pem" }).toString();
 
 const tokenUrl = "https://oauth2.googleapis.com/token";
 const driveScopes = ["https://www.googleapis.com/auth/drive.readonly", "https://www.googleapis.com/auth/drive"];
@@ -25,8 +27,12 @@ function uniqueEmail(): string {
   return `bot-${++emailCounter}@test-project.iam.gserviceaccount.com`;
 }
 
-function serviceAccountJson(email: string = uniqueEmail(), options: { escapedNewlines?: boolean } = {}): string {
-  const pem = options.escapedNewlines ? privateKeyPem.replaceAll("\n", "\\n") : privateKeyPem;
+function serviceAccountJson(
+  email: string = uniqueEmail(),
+  options: { escapedNewlines?: boolean; privateKey?: string } = {},
+): string {
+  const key = options.privateKey ?? privateKeyPem;
+  const pem = options.escapedNewlines ? key.replaceAll("\n", "\\n") : key;
   return JSON.stringify({
     type: "service_account",
     client_email: email,
@@ -236,6 +242,26 @@ describe("createGoogleServiceAccountToken", () => {
     await tokenRequest(fetcher, { scopes: ["https://www.googleapis.com/auth/spreadsheets"] });
 
     expect(requests).toHaveLength(2);
+  });
+
+  it("does not serve one key's cached token to a different key of the same identity", async () => {
+    const email = uniqueEmail();
+    const first = fetchRecorder(200, { access_token: "ya29.first-key", expires_in: 3600 });
+    const second = fetchRecorder(200, { access_token: "ya29.second-key", expires_in: 3600 });
+
+    const firstToken = await tokenRequest(first.fetcher, {
+      serviceAccount: readGoogleServiceAccountCredential({ serviceAccountJson: serviceAccountJson(email) }),
+    });
+    const secondToken = await tokenRequest(second.fetcher, {
+      serviceAccount: readGoogleServiceAccountCredential({
+        serviceAccountJson: serviceAccountJson(email, { privateKey: secondPrivateKeyPem }),
+      }),
+    });
+
+    expect(firstToken.accessToken).toBe("ya29.first-key");
+    expect(secondToken.accessToken).toBe("ya29.second-key");
+    expect(first.requests).toHaveLength(1);
+    expect(second.requests).toHaveLength(1);
   });
 });
 

@@ -7,6 +7,7 @@ import type {
 } from "./provider-runtime.ts";
 
 import { importPKCS8, SignJWT } from "jose";
+import { sha256Hex } from "../core/aws-sigv4.ts";
 import { optionalNumberLike, optionalRecord, optionalString } from "../core/cast.ts";
 import {
   defineProviderExecutors,
@@ -89,12 +90,19 @@ const serviceAccountTokenCache = new Map<string, GoogleServiceAccountToken>();
 /**
  * Return an access token for the service account, minting one through the
  * Google JWT bearer grant when no cached token is still usable. Tokens are
- * cached per (service account, subject, scope) key until shortly before expiry.
+ * cached per (service account key, subject, scope) key until shortly before
+ * expiry; the private-key fingerprint keeps a rotated or mismatched key from
+ * reusing a token minted for a different key of the same identity.
  */
 export async function createGoogleServiceAccountToken(
   input: GoogleServiceAccountTokenRequest,
 ): Promise<GoogleServiceAccountToken> {
-  const cacheKey = [input.serviceAccount.clientEmail, input.serviceAccount.subject ?? "", ...input.scopes].join("\n");
+  const cacheKey = [
+    sha256Hex(input.serviceAccount.privateKey),
+    input.serviceAccount.clientEmail,
+    input.serviceAccount.subject ?? "",
+    ...input.scopes,
+  ].join("\n");
   const cached = serviceAccountTokenCache.get(cacheKey);
   if (cached && cached.expiresAtMs - tokenRefreshSkewMs > Date.now()) {
     return cached;
@@ -268,12 +276,13 @@ export function defineGoogleProviderExecutors(
 export function googleBearerProxyAuth(scopes: readonly string[]): ProviderProxyAuth {
   return {
     type: "bearer_resolver",
-    async resolve({ context, service, fetcher }) {
+    async resolve({ context, service, fetcher, signal }) {
       const resolved = await resolveGoogleAccessToken({
         service,
         scopes,
         credential: await context.getCredential(service),
         fetcher,
+        signal,
       });
       return { accessToken: resolved.accessToken, tokenType: resolved.tokenType };
     },

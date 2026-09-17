@@ -341,6 +341,8 @@ export interface ProviderProxyBearerResolverInput {
   service: string;
   /** Guarded fetch used for provider-owned auxiliary requests such as token minting. */
   fetcher: typeof fetch;
+  /** Caller signal from the proxy request context; aborts in-flight token minting. */
+  signal?: AbortSignal;
 }
 
 export interface ProviderProxyBearerResolution {
@@ -770,7 +772,12 @@ async function applyProviderProxyAuth(
       return { credential, body };
     }
     case "bearer_resolver": {
-      const resolved = await input.auth.resolve({ context, service: input.service, fetcher: egressFetch });
+      const resolved = await input.auth.resolve({
+        context,
+        service: input.service,
+        fetcher: egressFetch,
+        signal: context.signal,
+      });
       headers.set("authorization", `${resolved.tokenType ?? "Bearer"} ${resolved.accessToken}`);
       return { credential: undefined, body };
     }
