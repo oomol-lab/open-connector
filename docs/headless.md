@@ -20,7 +20,7 @@ or a
 ## Install
 
 ```sh
-npm install @oomol-lab/open-connector
+npm install @oomol-lab/open-connector @hono/node-server
 ```
 
 ## Quick start
@@ -50,8 +50,9 @@ process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 ```
 
-`@hono/node-server` is already a dependency of this package. On Bun, pass the
-same `fetch` handler to `Bun.serve()`.
+Install `@hono/node-server` in the host application. Isolated package-manager
+layouts do not expose this package's own copy for a direct host import. On Bun,
+pass the same `fetch` handler to `Bun.serve()` and skip `@hono/node-server`.
 
 Importing the package starts nothing. Configuration is explicit; the library
 does not read environment variables. One runtime may be active per process
@@ -115,10 +116,12 @@ back after authorization.
 
 ## Provider setup
 
-`GET /v1/providers/:service/setup` uses administrator authentication and
-returns the required input fields, provider registration help, configured
-callback URL, and missing OAuth client values. It never returns saved secrets.
-Submit values through the connection and OAuth configuration APIs.
+`GET /v1/providers/:service/setup` requires the administrator bearer token when
+`adminToken` is set. With neither `adminToken` nor runtime authentication it is
+open; runtime-only authentication without `adminToken` returns 403. It returns
+the required input fields, provider registration help, configured callback URL,
+and missing OAuth client values. It never returns saved secrets. Submit values
+through the connection and OAuth configuration APIs.
 
 ## Bun compile
 
