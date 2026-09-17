@@ -263,6 +263,27 @@ describe("createGoogleServiceAccountToken", () => {
     expect(first.requests).toHaveLength(1);
     expect(second.requests).toHaveLength(1);
   });
+
+  it("aborts an in-flight token mint when the caller signal aborts", async () => {
+    const controller = new AbortController();
+    let fetchSignal: AbortSignal | undefined;
+    const fetcher = (async (_url: unknown, init?: RequestInit) => {
+      fetchSignal = init?.signal ?? undefined;
+      return await new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
+      });
+    }) as ProviderFetch;
+
+    const mint = tokenRequest(fetcher, { signal: controller.signal });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    controller.abort();
+    const failure = await messageOf(mint);
+
+    // The mint fetch observes the caller abort through the derived timeout signal, not by identity.
+    expect(fetchSignal?.aborted).toBe(true);
+    expect(failure.status).toBe(504);
+    expect(failure.message).toBe("googledrive service account token request timed out");
+  });
 });
 
 describe("resolveGoogleAccessToken", () => {
