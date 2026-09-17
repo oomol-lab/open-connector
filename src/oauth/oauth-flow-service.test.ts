@@ -364,6 +364,56 @@ describe("OAuthFlowService", () => {
     });
   });
 
+  it("rejects failed profile validation and allows retrying with the same custom client input", async () => {
+    const validate = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("profile unavailable"))
+      .mockResolvedValue({
+        profile: { accountId: "account-1", displayName: "Example user" },
+      });
+    const services = createServices([customOAuthProvider], {
+      allowedCustomOAuth: ["custom_oauth"],
+      secretCodec: new AesGcmSecretCodec("oauth-test-key"),
+      validators: { oauth2: validate },
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ code: 0, data: { access_token: "access-token", token_type: "Bearer" } })),
+    );
+    const input = {
+      service: "custom_oauth",
+      connectionName: "tenant-a",
+      clientConfig: {
+        clientId: "custom-client-id",
+        clientSecret: "custom-client-secret",
+        requestedScopes: ["read"],
+        extra: { tenant: "tenant-a" },
+      },
+    };
+
+    const first = await services.flow.startAuthorization(input);
+    await expect(services.flow.completeAuthorization({ state: first.state, code: "first-code" })).rejects.toMatchObject(
+      {
+        code: "credential_verification_failed",
+        message: "profile unavailable",
+      },
+    );
+    await expect(services.connections.listConnections()).resolves.toEqual([]);
+    await expect(services.states.take(first.state)).resolves.toBeUndefined();
+
+    const retry = await services.flow.startAuthorization(input);
+    expect(retry.state).not.toBe(first.state);
+    await expect(
+      services.flow.completeAuthorization({ state: retry.state, code: "retry-code" }),
+    ).resolves.toMatchObject({
+      connected: true,
+    });
+    await expect(services.connections.getCredential("custom_oauth", "tenant-a")).resolves.toMatchObject({
+      profile: { accountId: "account-1" },
+      metadata: { oauthClientConfig: input.clientConfig },
+    });
+  });
+
   it("rejects connection-scoped OAuth clients outside the deployment allowlist", async () => {
     const services = createServices([customOAuthProvider], {
       allowedCustomOAuth: ["github"],
@@ -886,6 +936,7 @@ describe("OAuthFlowService", () => {
 });
 
 interface CreateServicesOptions {
+  validators?: CredentialValidators;
   stateMaxAgeMs?: number;
   allowedCustomOAuth?: string[];
   secretCodec?: ISecretCodec;
@@ -904,7 +955,7 @@ function createServices(
   const requestDatabase = new SqliteRuntimeDatabase(":memory:");
   requestDatabases.push(requestDatabase);
   const catalog = createCatalogStore(providers);
-  const providerLoader = new EmptyProviderLoader(options.oauthRuntime);
+  const providerLoader = new EmptyProviderLoader(options.oauthRuntime, options.validators);
   const connections = new ConnectionService({
     catalog,
     providerLoader,
@@ -937,9 +988,11 @@ function createServices(
 
 class EmptyProviderLoader implements IProviderLoader {
   private readonly oauthRuntime?: ProviderOAuthRuntime;
+  private readonly validators?: CredentialValidators;
 
-  constructor(oauthRuntime?: ProviderOAuthRuntime) {
+  constructor(oauthRuntime?: ProviderOAuthRuntime, validators?: CredentialValidators) {
     this.oauthRuntime = oauthRuntime;
+    this.validators = validators;
   }
 
   async loadActionExecutor(_service: string, _actionId: string): Promise<ActionExecutor | undefined> {
@@ -951,7 +1004,7 @@ class EmptyProviderLoader implements IProviderLoader {
   }
 
   async loadCredentialValidators(_service: string): Promise<CredentialValidators | undefined> {
-    return undefined;
+    return this.validators;
   }
 
   async loadProviderOAuthRuntime(_service: string): Promise<ProviderOAuthRuntime | undefined> {

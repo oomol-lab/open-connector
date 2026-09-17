@@ -90,6 +90,39 @@ async function setup(
   return { app, database, call, start };
 }
 
+it("reports console OAuth validation failure without saving a connection or losing client configuration", async () => {
+  const { call, database } = await setup(undefined, {}, provider, {
+    async oauth2() {
+      throw new Error("profile unavailable");
+    },
+  });
+  const config = await database.oauthClientConfigStore.get("example");
+  const authorization = await call("/api/oauth/authorizations", { service: "example" });
+  const { state } = await authorization.json();
+  const callback = await call(`/oauth/callback?state=${state}&code=code`);
+
+  expect(callback.status).toBe(400);
+  await expect(callback.json()).resolves.toMatchObject({
+    error: { code: "credential_verification_failed", message: "profile unavailable" },
+  });
+  await expect((await call("/api/connections")).json()).resolves.toEqual([]);
+  await expect(database.oauthClientConfigStore.get("example")).resolves.toEqual(config);
+});
+
+it("marks a managed OAuth request failed when credential validation fails", async () => {
+  const { call, start } = await setup(undefined, {}, provider, {
+    async oauth2() {
+      throw new Error("profile unavailable");
+    },
+  });
+  const request = await start();
+  expect((await call(`/oauth/callback?state=${request.stateHandle}&code=code`)).status).toBe(400);
+  await expect((await call(`/v1/connection-requests/${request.connectionRequestId}`)).json()).resolves.toMatchObject({
+    data: { status: "failed" },
+  });
+  await expect((await call("/api/connections")).json()).resolves.toEqual([]);
+});
+
 describe("shared personal connection API", () => {
   it("returns an independent request ID and persists the exact connected app after callback consumption", async () => {
     const { call, start, database } = await setup();

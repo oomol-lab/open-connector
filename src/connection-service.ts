@@ -379,17 +379,7 @@ export class ConnectionService {
     connectionNameInput?: string,
     signal?: AbortSignal,
   ): Promise<ConnectionSummary> {
-    let storedCredential: OAuthCredential;
-    try {
-      storedCredential = await this.prepareOAuthCredential(service, credential, signal);
-    } catch (error) {
-      if (!(error instanceof ConnectionError && error.code === "credential_verification_failed")) throw error;
-      // The legacy console flow keeps exchanged tokens when optional profile verification fails.
-      storedCredential = {
-        ...credential,
-        ...this.mergeCredentialRuntimeData(this.getAvailableProvider(service), "oauth2", credential, {}),
-      };
-    }
+    const storedCredential = await this.prepareOAuthCredential(service, credential, signal);
     const connectionName = normalizeConnectionName(connectionNameInput);
     const stored = await this.store.set(service, connectionName, storedCredential);
     return this.createStoredConnectionSummary(

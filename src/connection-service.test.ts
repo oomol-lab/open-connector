@@ -567,7 +567,7 @@ describe("ConnectionService", () => {
     ]);
   });
 
-  it("stores OAuth credentials when profile validation fails", async () => {
+  it("does not store OAuth credentials when profile validation fails", async () => {
     const service = createService([oauthProvider], {
       providerLoader: new FakeProviderLoader({
         async oauth2() {
@@ -584,16 +584,34 @@ describe("ConnectionService", () => {
         profile: testProfile,
         metadata: {},
       }),
-    ).resolves.toMatchObject({
-      service: "example",
+    ).rejects.toMatchObject({
+      code: "credential_verification_failed",
+      message: "gmail request failed with 403",
+    });
+    await expect(service.getCredential("example")).resolves.toBeUndefined();
+    await expect(service.listConnections()).resolves.toEqual([]);
+  });
+
+  it("preserves the existing OAuth connection when reconnect validation fails", async () => {
+    const validate = vi.fn().mockResolvedValue({ profile: testProfile });
+    const service = createService([oauthProvider], {
+      providerLoader: new FakeProviderLoader({ oauth2: validate }),
+    });
+    const credential: ResolvedCredential = {
       authType: "oauth2",
-      configured: true,
+      accessToken: "original-token",
+      tokenType: "Bearer",
       profile: testProfile,
-    });
-    await expect(service.getCredential("example")).resolves.toMatchObject({
-      authType: "oauth2",
-      accessToken: "access-token",
-    });
+      metadata: {},
+    };
+    const original = await service.setOAuthCredential("example", credential, "work");
+    validate.mockRejectedValue(new Error("profile unavailable"));
+
+    await expect(
+      service.setOAuthCredential("example", { ...credential, accessToken: "replacement-token" }, "work"),
+    ).rejects.toMatchObject({ code: "credential_verification_failed" });
+    await expect(service.getCredential("example", "work")).resolves.toEqual(credential);
+    await expect(service.listConnections()).resolves.toEqual([original]);
   });
 
   it("does not store OAuth credentials when validation is cancelled", async () => {
