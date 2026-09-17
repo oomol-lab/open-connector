@@ -9,7 +9,15 @@ import type {
 /** Form metadata only. OAuth endpoints, request signing and token handling remain inside the connector. */
 export type ProviderAuthSetup =
   | { type: "no_auth" }
-  | { type: "api_key" | "custom_credential"; fields: CredentialDefinition[] }
+  | { type: "api_key"; fields: CredentialDefinition[] }
+  | {
+      type: "custom_credential";
+      /** Provider-provided display name for this auth mode, e.g. "Service Account". */
+      label?: string;
+      /** Provider-provided help text describing when to use this auth mode. */
+      description?: string;
+      fields: CredentialDefinition[];
+    }
   | {
       type: "oauth2";
       /** clientId and clientSecret carry no location; every other field names the request object it belongs to. */
@@ -27,7 +35,7 @@ export function describeProviderAuth(auth: ProviderAuthDefinition): ProviderAuth
     case "api_key":
       return { type: "api_key", fields: apiKeyCredentialFields(auth) };
     case "custom_credential":
-      return { type: "custom_credential", fields: auth.fields };
+      return { type: "custom_credential", label: auth.label, description: auth.description, fields: auth.fields };
     case "oauth2":
       return {
         type: "oauth2",

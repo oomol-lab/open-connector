@@ -42,4 +42,20 @@ describe("provider setup descriptions", () => {
     ).toEqual({ type: "custom_credential", fields: [tenant] });
     expect(describeProviderAuth({ type: "no_auth" })).toEqual({ type: "no_auth" });
   });
+
+  it("carries the custom credential label and description for console display", () => {
+    expect(
+      describeProviderAuth({
+        type: "custom_credential",
+        label: "Service Account",
+        description: "Connect with a Google Cloud service account key.",
+        fields: [],
+      }),
+    ).toEqual({
+      type: "custom_credential",
+      label: "Service Account",
+      description: "Connect with a Google Cloud service account key.",
+      fields: [],
+    });
+  });
 });

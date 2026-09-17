@@ -102,6 +102,10 @@ export type ApiKeyAuthDefinition = {
 export type CustomCredentialAuthDefinition = {
   /** Auth discriminator used by catalog clients and connection routes. */
   type: "custom_credential";
+  /** Optional display name for this auth mode in consoles, e.g. "Service Account". */
+  label?: string;
+  /** Optional help text describing when to use this auth mode. */
+  description?: string;
   /** Complete user-editable credential field list for this provider. */
   fields: CredentialDefinition[];
   /** Optional action used by future UI/CLI flows to verify credentials. */
