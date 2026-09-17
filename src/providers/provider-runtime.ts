@@ -336,6 +336,18 @@ export interface ProviderProxyCredentialHeader {
   optional?: boolean;
 }
 
+export interface ProviderProxyBearerResolverInput {
+  context: ExecutionContext;
+  service: string;
+  /** Guarded fetch used for provider-owned auxiliary requests such as token minting. */
+  fetcher: typeof fetch;
+}
+
+export interface ProviderProxyBearerResolution {
+  accessToken: string;
+  tokenType?: string;
+}
+
 export type ProviderProxyAuth =
   | { type: "none" }
   | { type: "bearer" }
@@ -351,7 +363,12 @@ export type ProviderProxyAuth =
   | { type: "api_key_basic"; suffix?: string }
   | { type: "api_key_authorization"; prefix: string; suffix?: string }
   | { type: "custom_credential_header"; field: string; name: string; prefix?: string }
-  | { type: "credential_headers"; headers: readonly ProviderProxyCredentialHeader[] };
+  | { type: "credential_headers"; headers: readonly ProviderProxyCredentialHeader[] }
+  | {
+      /** Resolve a bearer token for providers that mint one from a stored credential at request time. */
+      type: "bearer_resolver";
+      resolve(input: ProviderProxyBearerResolverInput): Promise<ProviderProxyBearerResolution>;
+    };
 
 export type ProviderProxyBaseUrlResolver = (context: ExecutionContext, service: string) => Promise<string> | string;
 export type ProviderProxyBaseUrl = string | ProviderProxyBaseUrlResolver;
@@ -622,7 +639,15 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
       const providerOrigin = url.origin;
       const headers = normalizeProviderProxyHeaders(proxyInput.headers);
       headers.set("user-agent", providerUserAgent);
-      const authResult = await applyProviderProxyAuth(input, context, url, headers, proxyInput.method, proxyInput.body);
+      const authResult = await applyProviderProxyAuth(
+        input,
+        context,
+        url,
+        headers,
+        proxyInput.method,
+        proxyInput.body,
+        egressFetch,
+      );
       let requestBody = authResult.body;
       await input.customizeRequest?.({
         context,
@@ -729,6 +754,7 @@ async function applyProviderProxyAuth(
   headers: Headers,
   method: string,
   body: unknown,
+  egressFetch: typeof fetch,
 ): Promise<ProviderProxyAuthResult> {
   switch (input.auth.type) {
     case "none":
@@ -742,6 +768,11 @@ async function applyProviderProxyAuth(
       const credential = await requireOAuthCredential(context, input.service);
       headers.set("authorization", `${credential.tokenType} ${credential.accessToken}`);
       return { credential, body };
+    }
+    case "bearer_resolver": {
+      const resolved = await input.auth.resolve({ context, service: input.service, fetcher: egressFetch });
+      headers.set("authorization", `${resolved.tokenType ?? "Bearer"} ${resolved.accessToken}`);
+      return { credential: undefined, body };
     }
     case "oauth_query": {
       const credential = await requireOAuthCredential(context, input.service);

@@ -5,9 +5,14 @@ import type { OAuthProviderContext } from "../provider-runtime.ts";
 import { randomUUID } from "node:crypto";
 import { requiredRawString, requiredString } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
+import {
+  createGoogleServiceAccountToken,
+  defineGoogleProviderExecutors,
+  googleBearerProxyAuth,
+  readGoogleServiceAccountCredential,
+} from "../google-auth.ts";
 import { googleJsonRequest, googleRequest } from "../google-runtime.ts";
 import {
-  defineOAuthProviderExecutors,
   defineProviderProxy,
   providerProxyEndpointPrefixes,
   ProviderRequestError,
@@ -57,6 +62,7 @@ import {
   resolveRequiredString,
   resolveSupportsAllDrives,
 } from "./runtime-shared.ts";
+import { googledriveOAuthScopes } from "./scopes.ts";
 
 const service = "googledrive";
 
@@ -229,7 +235,9 @@ const googledriveActionHandlers: ProviderActionHandlers<"googledrive", ActionHan
   },
 };
 
-export const executors: ProviderExecutors = defineOAuthProviderExecutors(service, googledriveActionHandlers);
+export const executors: ProviderExecutors = defineGoogleProviderExecutors(service, googledriveActionHandlers, {
+  scopes: googledriveOAuthScopes,
+});
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher, signal }) {
@@ -251,6 +259,25 @@ export const credentialValidators: CredentialValidators = {
       },
       metadata: {
         currentAccount: profile,
+      },
+    };
+  },
+  async customCredential(input, { fetcher, signal }) {
+    const serviceAccount = readGoogleServiceAccountCredential(input.values);
+    const token = await createGoogleServiceAccountToken({
+      service,
+      serviceAccount,
+      scopes: googledriveOAuthScopes,
+      fetcher,
+      signal,
+    });
+    return {
+      profile: {
+        accountId: serviceAccount.subject ?? serviceAccount.clientEmail,
+        displayName: serviceAccount.subject
+          ? `${serviceAccount.subject} (impersonated by ${serviceAccount.clientEmail})`
+          : serviceAccount.clientEmail,
+        grantedScopes: token.grantedScopes,
       },
     };
   },
@@ -1040,6 +1067,6 @@ function normalizeApproval(payload: Record<string, unknown>) {
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: "https://www.googleapis.com",
-  auth: { type: "oauth_bearer" },
+  auth: googleBearerProxyAuth(googledriveOAuthScopes),
   allowedEndpoint: providerProxyEndpointPrefixes("/drive/v3", "/upload/drive/v3"),
 });

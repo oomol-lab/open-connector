@@ -6,13 +6,15 @@ import { googledriveOAuthScopes } from "./scopes.ts";
 const service = "googledrive";
 
 /**
- * Google Drive provider backed by the Google Drive API and user-provided Google OAuth app.
+ * Google Drive provider backed by the Google Drive API. Connections use either
+ * a user-provided Google OAuth app or a service account key, optionally with
+ * Workspace domain-wide delegation.
  */
 export const provider: ProviderDefinition = {
   service,
   displayName: "Google Drive",
   categories: ["Storage", "Productivity"],
-  authTypes: ["oauth2"],
+  authTypes: ["oauth2", "custom_credential"],
   auth: [
     {
       type: "oauth2",
@@ -24,6 +26,34 @@ export const provider: ProviderDefinition = {
         access_type: "offline",
         prompt: "consent",
       },
+    },
+    {
+      type: "custom_credential",
+      label: "Service Account",
+      description:
+        "Connect with a Google Cloud service account key instead of a user account, optionally impersonating a Workspace user through domain-wide delegation.",
+      fields: [
+        {
+          key: "serviceAccountJson",
+          label: "Service Account JSON",
+          inputType: "textarea",
+          required: true,
+          secret: true,
+          placeholder: '{"type": "service_account", "project_id": "...", ...}',
+          description:
+            "The complete service account key JSON from Google Cloud Console (IAM & Admin > Service Accounts > Keys). Enable the Drive API for its project and share Drive files with the service account email, or use domain-wide delegation below.",
+        },
+        {
+          key: "subject",
+          label: "Subject Email (optional)",
+          inputType: "text",
+          required: false,
+          secret: false,
+          placeholder: "user@your-domain.com",
+          description:
+            "Optional Workspace user to impersonate through domain-wide delegation. In the Workspace Admin console (Security > Access and data control > API Controls > Domain-wide Delegation), grant the service account client ID the Drive scopes this provider requests. This acts as the user across the domain when sharing files with the service account directly is not practical.",
+        },
+      ],
     },
   ],
   homepageUrl: "https://workspace.google.com/products/drive/",
