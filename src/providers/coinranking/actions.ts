@@ -70,6 +70,7 @@ const referenceCurrencySchema = s.looseObject("One reference currency returned b
 export const coinrankingActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_suggestions",
+    operationType: "read",
     description: "Search Coinranking suggestions by keyword and return grouped entity matches.",
     inputSchema: s.object(
       "Input parameters for searching Coinranking suggestions.",
@@ -84,6 +85,7 @@ export const coinrankingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_coins",
+    operationType: "read",
     description: "List coins from Coinranking with optional filtering, sorting, and pagination.",
     inputSchema: s.object(
       "Input parameters for listing coins from Coinranking.",
@@ -107,6 +109,7 @@ export const coinrankingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_coin_details",
+    operationType: "read",
     description: "Get detailed information for a single coin from Coinranking.",
     inputSchema: s.object(
       "Input parameters for retrieving coin details from Coinranking.",
@@ -123,6 +126,7 @@ export const coinrankingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_coin_price_history",
+    operationType: "read",
     description: "Get historical price points for a single coin from Coinranking.",
     inputSchema: s.object(
       "Input parameters for retrieving historical prices from Coinranking.",
@@ -140,6 +144,7 @@ export const coinrankingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_reference_currencies",
+    operationType: "read",
     description: "List reference currencies supported by Coinranking.",
     inputSchema: s.object({}, { description: "Input parameters for listing Coinranking reference currencies." }),
     outputSchema: s.object("Reference currency list returned by Coinranking.", {
@@ -148,6 +153,7 @@ export const coinrankingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_global_stats",
+    operationType: "read",
     description: "Get global cryptocurrency market statistics from Coinranking.",
     inputSchema: s.object({}, { description: "Input parameters for retrieving Coinranking global stats." }),
     outputSchema: s.object("Global market statistics returned by Coinranking.", {

@@ -31,6 +31,7 @@ const feedCardLinkSchema = s.requiredObject("One feedCard link item.", {
 export const dingtalkBotActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_text_message",
+    operationType: "write",
     description: "Send a text message through the DingTalk custom bot webhook.",
     inputSchema: s.object(
       "Input for sending a DingTalk text message.",
@@ -45,6 +46,7 @@ export const dingtalkBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_link_message",
+    operationType: "write",
     description: "Send a link message through the DingTalk custom bot webhook.",
     inputSchema: s.object(
       "Input for sending a DingTalk link message.",
@@ -61,6 +63,7 @@ export const dingtalkBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_markdown_message",
+    operationType: "write",
     description: "Send a markdown message through the DingTalk custom bot webhook.",
     inputSchema: s.object(
       "Input for sending a DingTalk markdown message.",
@@ -76,6 +79,7 @@ export const dingtalkBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_action_card_message",
+    operationType: "write",
     description: "Send an actionCard message through the DingTalk custom bot webhook.",
     inputSchema: s.oneOf(
       [
@@ -114,6 +118,7 @@ export const dingtalkBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_feed_card_message",
+    operationType: "write",
     description: "Send a feedCard message through the DingTalk custom bot webhook.",
     inputSchema: s.object(
       "Input for sending a DingTalk feedCard message.",

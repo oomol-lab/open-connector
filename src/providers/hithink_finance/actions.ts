@@ -232,6 +232,7 @@ const auctionItemSchema = s.looseObject("One auction result returned by Tonghuas
 const hithinkFinanceCoreActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_tickers",
+    operationType: "read",
     description: "Search Tonghuashun instruments by code or Chinese or English name.",
     requiredScopes: [],
     inputSchema: s.object("Input for searching Tonghuashun financial instruments.", {
@@ -250,6 +251,7 @@ const hithinkFinanceCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tickers",
+    operationType: "read",
     description: "List a bounded page of Tonghuashun instruments by exchange and asset category.",
     requiredScopes: [],
     inputSchema: s.object("Input for listing a bounded page of financial instruments.", {
@@ -274,6 +276,7 @@ const hithinkFinanceCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_stock_snapshot",
+    operationType: "read",
     description: "Get selected-security or paginated all-market A-share snapshots.",
     requiredScopes: [],
     inputSchema: stockSnapshotInputSchema,
@@ -281,6 +284,7 @@ const hithinkFinanceCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_stock_history",
+    operationType: "read",
     description: "Get daily historical prices for one A-share security over a specified window.",
     requiredScopes: [],
     inputSchema: stockHistoryInputSchema,
@@ -288,6 +292,7 @@ const hithinkFinanceCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_adjustment_factors",
+    operationType: "read",
     description: "Get dividend and bonus-share adjustment events for one A-share security.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving A-share corporate-action events.", {
@@ -299,6 +304,7 @@ const hithinkFinanceCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_income_statements",
+    operationType: "read",
     description: "Get recent consolidated income statements for one A-share company.",
     requiredScopes: [],
     inputSchema: statementInputSchema,
@@ -306,6 +312,7 @@ const hithinkFinanceCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_balance_sheets",
+    operationType: "read",
     description: "Get recent consolidated balance sheets for one A-share company.",
     requiredScopes: [],
     inputSchema: statementInputSchema,
@@ -313,6 +320,7 @@ const hithinkFinanceCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_cash_flow_statements",
+    operationType: "read",
     description: "Get recent consolidated cash-flow statements for one A-share company.",
     requiredScopes: [],
     inputSchema: statementInputSchema,
@@ -320,6 +328,7 @@ const hithinkFinanceCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_financial_indicators",
+    operationType: "read",
     description: "Get growth, profitability, solvency, operation, and cash-flow indicators for one report.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving A-share financial indicators.", {
@@ -330,6 +339,7 @@ const hithinkFinanceCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_valuation_snapshot",
+    operationType: "read",
     description: "Get the latest fixed set of valuation ratios for up to 100 A-share securities.",
     requiredScopes: [],
     inputSchema: valuationSecurityCodesInputSchema,
@@ -337,6 +347,7 @@ const hithinkFinanceCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_trading_days",
+    operationType: "read",
     description: "List A-share trading days in the service's latest one-year window.",
     requiredScopes: [],
     inputSchema: s.object("This action does not require input parameters.", {}),
@@ -344,6 +355,7 @@ const hithinkFinanceCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_ths_indexes",
+    operationType: "read",
     description: "List Tonghuashun concepts, regions, special indexes, or industry sectors.",
     requiredScopes: [],
     inputSchema: s.object("Input for listing Tonghuashun index and sector categories.", {
@@ -353,6 +365,7 @@ const hithinkFinanceCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_index_constituents",
+    operationType: "read",
     description: "Get the current constituents of one Tonghuashun sector or standard index.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving current index constituents.", {
@@ -362,6 +375,7 @@ const hithinkFinanceCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_index_snapshot",
+    operationType: "read",
     description: "Get the latest market snapshot for a limited set of indexes or sectors.",
     requiredScopes: [],
     inputSchema: securityCodesInputSchema,
@@ -369,6 +383,7 @@ const hithinkFinanceCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_index_history",
+    operationType: "read",
     description: "Get daily historical prices for one index or sector over a specified window.",
     requiredScopes: [],
     inputSchema: indexHistoryInputSchema,
@@ -376,6 +391,7 @@ const hithinkFinanceCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_auction_snapshot",
+    operationType: "read",
     description: "Get live or final opening-auction snapshots for selected A-share securities.",
     requiredScopes: [],
     inputSchema: s.object("Input for querying A-share opening-auction snapshots.", {
@@ -396,6 +412,7 @@ const hithinkFinanceCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_auction_short_term_benchmark",
+    operationType: "read",
     description: "Get the Tonghuashun short-term opening-auction benchmark for one date.",
     requiredScopes: [],
     inputSchema: s.object("Input for querying the opening-auction short-term benchmark.", {
@@ -432,6 +449,7 @@ function fundAction(
 ) {
   return defineProviderAction(service, {
     name,
+    operationType: "read",
     description,
     requiredScopes: [],
     inputSchema,
@@ -691,6 +709,7 @@ function poolInputSchema(description: string, sortFields: readonly string[]) {
 const hithinkFinanceSpecialActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_limit_up_stocks",
+    operationType: "read",
     description: "List stocks in the Tonghuashun limit-up and consecutive-limit-up pool.",
     requiredScopes: [],
     inputSchema: poolInputSchema("Input for listing the A-share limit-up pool.", [
@@ -703,6 +722,7 @@ const hithinkFinanceSpecialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_limit_up_ladder",
+    operationType: "read",
     description: "Get the fixed 30-trading-day Tonghuashun consecutive-limit-up ladder.",
     requiredScopes: [],
     inputSchema: s.object("This action does not require input parameters.", {}),
@@ -714,6 +734,7 @@ const hithinkFinanceSpecialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_stock_anomalies",
+    operationType: "read",
     description: "List today's A-share anomaly explanations with optional anomaly-tag filters.",
     requiredScopes: [],
     inputSchema: s.object("Input for listing today's market anomalies.", {
@@ -736,6 +757,7 @@ const hithinkFinanceSpecialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_stock_anomalies",
+    operationType: "read",
     description: "Get today's anomaly explanations for up to 50 selected A-share securities.",
     requiredScopes: [],
     inputSchema: s.object("Input for querying anomalies for selected stocks.", {
@@ -749,6 +771,7 @@ const hithinkFinanceSpecialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_skyrocketing_stocks",
+    operationType: "read",
     description: "List the current Tonghuashun skyrocketing-stock ranking.",
     requiredScopes: [],
     inputSchema: periodInputSchema,
@@ -756,6 +779,7 @@ const hithinkFinanceSpecialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_hot_stocks",
+    operationType: "read",
     description: "List the current Tonghuashun hot-stock ranking.",
     requiredScopes: [],
     inputSchema: periodInputSchema,
@@ -763,6 +787,7 @@ const hithinkFinanceSpecialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_hot_stock_history",
+    operationType: "read",
     description: "Get the Tonghuashun hot-stock ranking for one date in the latest year.",
     requiredScopes: [],
     inputSchema: s.object("Input for querying one historical hot-stock ranking.", {
@@ -776,6 +801,7 @@ const hithinkFinanceSpecialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_hot_stock_rank_trend",
+    operationType: "read",
     description: "Get one A-share security's hot-stock rank trend over a date range.",
     requiredScopes: [],
     inputSchema: s.object("Input for querying a hot-stock rank trend.", {
@@ -787,6 +813,7 @@ const hithinkFinanceSpecialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dragon_tiger_list",
+    operationType: "read",
     description: "Get the Tonghuashun Dragon-Tiger list for all, institutional, or hot-money activity.",
     requiredScopes: [],
     inputSchema: s.object("Input for querying the Dragon-Tiger list.", {
@@ -805,6 +832,7 @@ const hithinkFinanceSpecialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_limit_down_stocks",
+    operationType: "read",
     description: "List stocks in the Tonghuashun A-share limit-down pool.",
     requiredScopes: [],
     inputSchema: poolInputSchema("Input for listing the A-share limit-down pool.", [
@@ -818,6 +846,7 @@ const hithinkFinanceSpecialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_limit_break_stocks",
+    operationType: "read",
     description: "List stocks that touched their limit-up price and subsequently reopened.",
     requiredScopes: [],
     inputSchema: poolInputSchema("Input for listing the A-share limit-break pool.", [
@@ -849,6 +878,7 @@ const fileOutputSchema = s.object("A Tonghuashun Parquet dataset uploaded to tra
 function dumpAction(name: string, description: string): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType: "read",
     description,
     requiredScopes: [],
     inputSchema: s.object("This export action does not require input parameters.", {}),

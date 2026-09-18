@@ -8,6 +8,7 @@ const rawObjectSchema = s.looseObject("The raw Coupontools API object.");
 
 const listCouponsAction = defineProviderAction(service, {
   name: "list_coupons",
+  operationType: "read",
   description: "List coupon campaigns available to the authenticated Coupontools account.",
   inputSchema: s.object(
     "Optional filters for listing Coupontools coupon campaigns.",
@@ -27,6 +28,7 @@ const listCouponsAction = defineProviderAction(service, {
 
 const getCouponAction = defineProviderAction(service, {
   name: "get_coupon",
+  operationType: "read",
   description: "Get a Coupontools coupon campaign by ID.",
   inputSchema: s.object(
     "The Coupontools coupon lookup input.",
@@ -44,6 +46,7 @@ const getCouponAction = defineProviderAction(service, {
 
 const createSingleUseUrlAction = defineProviderAction(service, {
   name: "create_single_use_url",
+  operationType: "write",
   description: "Create a single-use URL for a Coupontools coupon campaign.",
   inputSchema: s.object(
     "The recipient data and settings for a single-use coupon URL.",

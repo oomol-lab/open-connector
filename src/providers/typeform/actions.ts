@@ -186,6 +186,7 @@ const listOutputSchema = (description: string, itemDescription: string, itemSche
 export const typeformActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current Typeform user associated with the authenticated personal access token.",
     requiredScopes: accountsReadScope,
     inputSchema: noInputSchema,
@@ -195,6 +196,7 @@ export const typeformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_forms",
+    operationType: "read",
     description: "List forms available to the authenticated Typeform account.",
     requiredScopes: formsReadScope,
     inputSchema: listFormsInputSchema,
@@ -206,6 +208,7 @@ export const typeformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form",
+    operationType: "read",
     description: "Get one Typeform form by form ID.",
     requiredScopes: formsReadScope,
     inputSchema: getFormInputSchema,
@@ -215,6 +218,7 @@ export const typeformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_form_responses",
+    operationType: "read",
     description: "List responses submitted to one Typeform form.",
     requiredScopes: responsesReadScope,
     inputSchema: listFormResponsesInputSchema,
@@ -226,6 +230,7 @@ export const typeformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workspaces",
+    operationType: "read",
     description: "List workspaces available to the authenticated Typeform account.",
     requiredScopes: workspacesReadScope,
     inputSchema: listWorkspacesInputSchema,
@@ -237,6 +242,7 @@ export const typeformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workspace",
+    operationType: "read",
     description: "Get one Typeform workspace by workspace ID.",
     requiredScopes: workspacesReadScope,
     inputSchema: getWorkspaceInputSchema,

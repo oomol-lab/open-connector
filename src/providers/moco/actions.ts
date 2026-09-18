@@ -113,6 +113,7 @@ const contactListInputSchema = s.object("Query parameters for listing MOCO conta
 export const mocoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_profile",
+    operationType: "read",
     description: "Retrieve the current MOCO user's profile.",
     requiredScopes: [],
     inputSchema: s.object("No input is required for retrieving the current MOCO profile.", {}),
@@ -122,6 +123,7 @@ export const mocoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_companies",
+    operationType: "read",
     description: "List MOCO companies with official filters and response-header pagination.",
     requiredScopes: [],
     inputSchema: companyListInputSchema,
@@ -132,6 +134,7 @@ export const mocoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description: "Retrieve one MOCO company by ID.",
     requiredScopes: [],
     inputSchema: s.object("Path parameters for retrieving a MOCO company.", {
@@ -143,6 +146,7 @@ export const mocoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List MOCO contact people with official filters and response-header pagination.",
     requiredScopes: [],
     inputSchema: contactListInputSchema,
@@ -153,6 +157,7 @@ export const mocoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Retrieve one MOCO contact person by ID.",
     requiredScopes: [],
     inputSchema: s.object("Path parameters for retrieving a MOCO contact person.", {

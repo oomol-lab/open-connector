@@ -386,6 +386,7 @@ const detachedObjectWarning =
 export const paperlessNgxWorkflowActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_workflows",
+    operationType: "read",
     description:
       "List workflows with their nested triggers and actions, ordered by order. The endpoint supports only pagination; it has no filters or ordering options. Requires the view_workflow permission.",
     requiredScopes: [],
@@ -396,6 +397,7 @@ export const paperlessNgxWorkflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workflow",
+    operationType: "read",
     description: "Get one workflow by id, including its triggers and actions. Requires the view_workflow permission.",
     requiredScopes: [],
     inputSchema: s.object("The workflow to read.", { id: workflowIdField }),
@@ -403,6 +405,7 @@ export const paperlessNgxWorkflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_workflow",
+    operationType: "write",
     description:
       "Create a workflow with its triggers and actions in one call. Nested triggers and actions without an id are created; entries with an id update that existing trigger or action in place. Remote OCR actions need a consumption started trigger and apply AI suggestions actions need a trigger of another type. Requires the add_workflow permission.",
     requiredScopes: [],
@@ -421,6 +424,7 @@ export const paperlessNgxWorkflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_workflow",
+    operationType: "destructive",
     description:
       "Partially update a workflow. Only the provided fields are sent. When triggers or actions is provided it replaces the whole set: entries with an id are updated in place, entries without an id are created, and triggers or actions left out are detached and deleted. Requires the change_workflow permission.",
     requiredScopes: [],
@@ -440,6 +444,7 @@ export const paperlessNgxWorkflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_workflow",
+    operationType: "destructive",
     description:
       "Delete a workflow. Its triggers and actions are removed the next time any workflow is updated. Requires the delete_workflow permission.",
     requiredScopes: [],
@@ -449,6 +454,7 @@ export const paperlessNgxWorkflowActions: ProviderActionDefinition[] = [
 
   defineProviderAction(service, {
     name: "list_workflow_triggers",
+    operationType: "read",
     description:
       "List workflow triggers across all workflows. The endpoint supports only pagination; it has no filters or ordering options. Requires the view_workflowtrigger permission.",
     requiredScopes: [],
@@ -459,6 +465,7 @@ export const paperlessNgxWorkflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workflow_trigger",
+    operationType: "read",
     description: "Get one workflow trigger by id. Requires the view_workflowtrigger permission.",
     requiredScopes: [],
     inputSchema: s.object("The trigger to read.", { id: triggerIdField }),
@@ -466,6 +473,7 @@ export const paperlessNgxWorkflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_workflow_trigger",
+    operationType: "write",
     description: `Create a standalone workflow trigger. Consumption started (type 1) triggers need filter_filename, filter_path or filter_mailrule. ${detachedObjectWarning} Requires the add_workflowtrigger permission.`,
     requiredScopes: [],
     followUpActions: ["paperless_ngx.update_workflow"],
@@ -476,6 +484,7 @@ export const paperlessNgxWorkflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_workflow_trigger",
+    operationType: "write",
     description:
       "Partially update a workflow trigger. Only the provided fields are sent. When the trigger is (or becomes) a consumption started trigger, Paperless-ngx requires filter_filename, filter_path or filter_mailrule in the same request even if unchanged. Requires the change_workflowtrigger permission.",
     requiredScopes: [],
@@ -488,6 +497,7 @@ export const paperlessNgxWorkflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_workflow_trigger",
+    operationType: "destructive",
     description:
       "Delete a workflow trigger, detaching it from any workflow that used it. Requires the delete_workflowtrigger permission.",
     requiredScopes: [],
@@ -497,6 +507,7 @@ export const paperlessNgxWorkflowActions: ProviderActionDefinition[] = [
 
   defineProviderAction(service, {
     name: "list_workflow_actions",
+    operationType: "read",
     description:
       "List workflow actions across all workflows. The endpoint supports only pagination; it has no filters or ordering options. Requires the view_workflowaction permission.",
     requiredScopes: [],
@@ -507,6 +518,7 @@ export const paperlessNgxWorkflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workflow_action",
+    operationType: "read",
     description: "Get one workflow action by id. Requires the view_workflowaction permission.",
     requiredScopes: [],
     inputSchema: s.object("The action to read.", { id: actionIdField }),
@@ -514,6 +526,7 @@ export const paperlessNgxWorkflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_workflow_action",
+    operationType: "write",
     description: `Create a standalone workflow action. Email (3), webhook (4), password removal (5) and apply AI suggestions (8) actions require their email, webhook, passwords or ai_suggestion_fields data. ${detachedObjectWarning} Requires the add_workflowaction permission.`,
     requiredScopes: [],
     followUpActions: ["paperless_ngx.update_workflow"],
@@ -524,6 +537,7 @@ export const paperlessNgxWorkflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_workflow_action",
+    operationType: "write",
     description:
       "Partially update a workflow action. Only the provided fields are sent; nested email and webhook objects replace the stored settings. Requires the change_workflowaction permission.",
     requiredScopes: [],
@@ -536,6 +550,7 @@ export const paperlessNgxWorkflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_workflow_action",
+    operationType: "destructive",
     description:
       "Delete a workflow action, detaching it from any workflow that used it. Requires the delete_workflowaction permission.",
     requiredScopes: [],

@@ -91,6 +91,7 @@ const indexArray = (description: string): JsonSchema =>
 export const mapboxActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "forward_geocode",
+    operationType: "read",
     description: "Convert free-form text into geographic features with Mapbox Geocoding v6.",
     inputSchema: s.object(
       "Input payload for Mapbox forward geocoding.",
@@ -114,6 +115,7 @@ export const mapboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reverse_geocode",
+    operationType: "read",
     description: "Convert a coordinate pair into place features with Mapbox Geocoding v6.",
     inputSchema: s.object(
       "Input payload for Mapbox reverse geocoding.",
@@ -131,6 +133,7 @@ export const mapboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "batch_geocode",
+    operationType: "read",
     description: "Submit multiple forward or reverse geocoding queries in one Mapbox batch request.",
     inputSchema: s.object("Input payload for Mapbox batch geocoding.", {
       queries: s.array(
@@ -177,6 +180,7 @@ export const mapboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_directions",
+    operationType: "read",
     description: "Compute a route between multiple coordinates with the Mapbox Directions API.",
     inputSchema: s.object(
       "Input payload for the Mapbox Directions API.",
@@ -225,6 +229,7 @@ export const mapboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_matrix",
+    operationType: "read",
     description: "Compute a travel time or distance matrix with the Mapbox Matrix API.",
     inputSchema: s.object(
       "Input payload for the Mapbox Matrix API.",

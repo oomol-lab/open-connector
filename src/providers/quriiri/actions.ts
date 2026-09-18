@@ -127,6 +127,7 @@ const listSenderIdsOutputSchema = s.requiredObject("The authorized and registere
 
 interface QuriiriActionOptions {
   readonly name: string;
+  readonly operationType: ActionDefinition["operationType"];
   readonly description: string;
   readonly inputSchema: JsonSchema;
   readonly outputSchema: JsonSchema;
@@ -135,6 +136,7 @@ interface QuriiriActionOptions {
 function defineQuriiriAction(options: QuriiriActionOptions): ActionDefinition {
   return defineProviderAction(service, {
     name: options.name,
+    operationType: options.operationType,
     description: options.description,
     inputSchema: options.inputSchema,
     outputSchema: options.outputSchema,
@@ -144,24 +146,28 @@ function defineQuriiriAction(options: QuriiriActionOptions): ActionDefinition {
 export const quriiriActions: ActionDefinition[] = [
   defineQuriiriAction({
     name: "send_sms",
+    operationType: "write",
     description: "Send an SMS message with Quriiri using the HTTP JSON API.",
     inputSchema: sendSmsInputSchema,
     outputSchema: sendSmsOutputSchema,
   }),
   defineQuriiriAction({
     name: "get_sms_status",
+    operationType: "read",
     description: "Get one Quriiri SMS delivery status by delivery report ID.",
     inputSchema: getSmsStatusInputSchema,
     outputSchema: getSmsStatusOutputSchema,
   }),
   defineQuriiriAction({
     name: "list_sms_statuses",
+    operationType: "read",
     description: "List Quriiri SMS delivery statuses within an optional time range.",
     inputSchema: listSmsStatusesInputSchema,
     outputSchema: listSmsStatusesOutputSchema,
   }),
   defineQuriiriAction({
     name: "list_sender_ids",
+    operationType: "read",
     description: "List authorized and registered sender IDs for the Quriiri customer.",
     inputSchema: s.object("The input payload for listing Quriiri sender IDs.", {}),
     outputSchema: listSenderIdsOutputSchema,

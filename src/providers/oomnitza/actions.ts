@@ -9,6 +9,7 @@ export type OomnitzaActionName = "identify" | "list_assets" | "get_asset" | "lis
 
 interface OomnitzaActionSpec {
   name: OomnitzaActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
@@ -62,6 +63,7 @@ const oomnitzaRecordSchema = s.looseObject("Oomnitza record with tenant-defined 
 const actionSpecs: OomnitzaActionSpec[] = [
   {
     name: "identify",
+    operationType: "read",
     description: "Validate the Oomnitza connection and return the configured instance metadata.",
     inputSchema: s.object("This action does not require any input fields.", {}, { required: [] }),
     outputSchema: s.actionOutput(
@@ -75,6 +77,7 @@ const actionSpecs: OomnitzaActionSpec[] = [
   },
   {
     name: "list_assets",
+    operationType: "read",
     description: "List Oomnitza assets using the v3 assets endpoint.",
     inputSchema: listInputSchema,
     outputSchema: s.actionOutput(
@@ -87,6 +90,7 @@ const actionSpecs: OomnitzaActionSpec[] = [
   },
   {
     name: "get_asset",
+    operationType: "read",
     description: "Retrieve one Oomnitza asset by ID.",
     inputSchema: assetInputSchema,
     outputSchema: s.actionOutput(
@@ -99,6 +103,7 @@ const actionSpecs: OomnitzaActionSpec[] = [
   },
   {
     name: "list_users",
+    operationType: "read",
     description: "List Oomnitza users using the v3 users endpoint.",
     inputSchema: listInputSchema,
     outputSchema: s.actionOutput(
@@ -111,6 +116,7 @@ const actionSpecs: OomnitzaActionSpec[] = [
   },
   {
     name: "get_user",
+    operationType: "read",
     description: "Retrieve one Oomnitza user by username.",
     inputSchema: userInputSchema,
     outputSchema: s.actionOutput(

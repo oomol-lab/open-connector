@@ -47,6 +47,7 @@ const fileIdInputSchema = s.actionInput(
 export const imagekitActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_assets",
+    operationType: "read",
     description: "List or search assets in the ImageKit media library.",
     inputSchema: listAssetsInputSchema,
     outputSchema: s.actionOutput(
@@ -58,6 +59,7 @@ export const imagekitActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_file_details",
+    operationType: "read",
     description: "Get details for the current version of an ImageKit file.",
     inputSchema: fileIdInputSchema,
     outputSchema: s.actionOutput(
@@ -69,6 +71,7 @@ export const imagekitActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_uploaded_file_metadata",
+    operationType: "read",
     description: "Get image or video metadata for an uploaded ImageKit file.",
     inputSchema: fileIdInputSchema,
     outputSchema: s.actionOutput(
@@ -80,6 +83,7 @@ export const imagekitActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_remote_file_metadata",
+    operationType: "read",
     description: "Get image or video metadata from a remote URL through ImageKit.",
     inputSchema: s.actionInput(
       {
@@ -97,6 +101,7 @@ export const imagekitActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_file",
+    operationType: "destructive",
     description: "Delete one ImageKit file and all of its versions permanently.",
     inputSchema: fileIdInputSchema,
     outputSchema: s.actionOutput(
@@ -108,6 +113,7 @@ export const imagekitActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "purge_cache",
+    operationType: "destructive",
     description: "Submit a cache purge request for an ImageKit file URL.",
     followUpActions: ["imagekit.get_purge_status"],
     asyncLifecycle: {
@@ -130,6 +136,7 @@ export const imagekitActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_purge_status",
+    operationType: "read",
     description: "Get the status of an ImageKit cache purge request.",
     asyncLifecycle: {
       startActionId: "imagekit.purge_cache",

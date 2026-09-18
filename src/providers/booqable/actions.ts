@@ -76,24 +76,28 @@ function singleOutput(key: string, description: string) {
 export const booqableActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_company",
+    operationType: "read",
     description: "Fetch the current Booqable company connected to the access token.",
     inputSchema: companyInputSchema,
     outputSchema: singleOutput("company", "The current Booqable company response."),
   }),
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List Booqable customers with optional fields, filters, includes, and paging.",
     inputSchema: s.object("List Booqable customers.", listInputFields, { optional: listInputOptionalKeys }),
     outputSchema: collectionOutput("customers", "The Booqable customers list response."),
   }),
   defineProviderAction(service, {
     name: "search_customers",
+    operationType: "read",
     description: "Run a Booqable advanced search over customers.",
     inputSchema: searchInputSchema,
     outputSchema: collectionOutput("customers", "The Booqable customers search response."),
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Fetch one Booqable customer by id.",
     inputSchema: s.object(
       "Fetch one Booqable customer.",
@@ -107,18 +111,21 @@ export const booqableActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description: "List Booqable orders with optional fields, filters, includes, and paging.",
     inputSchema: s.object("List Booqable orders.", listInputFields, { optional: listInputOptionalKeys }),
     outputSchema: collectionOutput("orders", "The Booqable orders list response."),
   }),
   defineProviderAction(service, {
     name: "search_orders",
+    operationType: "read",
     description: "Run a Booqable advanced search over orders.",
     inputSchema: searchInputSchema,
     outputSchema: collectionOutput("orders", "The Booqable orders search response."),
   }),
   defineProviderAction(service, {
     name: "get_order",
+    operationType: "read",
     description: "Fetch one Booqable order by id.",
     inputSchema: s.object(
       "Fetch one Booqable order.",
@@ -132,18 +139,21 @@ export const booqableActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_product_groups",
+    operationType: "read",
     description: "List Booqable product groups with optional fields, filters, includes, and paging.",
     inputSchema: s.object("List Booqable product groups.", listInputFields, { optional: listInputOptionalKeys }),
     outputSchema: collectionOutput("productGroups", "The Booqable product groups list response."),
   }),
   defineProviderAction(service, {
     name: "search_product_groups",
+    operationType: "read",
     description: "Run a Booqable advanced search over product groups.",
     inputSchema: searchInputSchema,
     outputSchema: collectionOutput("productGroups", "The Booqable product groups search response."),
   }),
   defineProviderAction(service, {
     name: "get_product_group",
+    operationType: "read",
     description: "Fetch one Booqable product group by id.",
     inputSchema: s.object(
       "Fetch one Booqable product group.",

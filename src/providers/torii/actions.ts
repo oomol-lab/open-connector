@@ -100,6 +100,7 @@ const listOutputSchema = (description: string, itemName: string, itemSchema: Jso
 export const toriiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_organization",
+    operationType: "read",
     description: "Retrieve the Torii organization profile for the current API key.",
     inputSchema: s.object("The input payload for retrieving the current Torii organization.", {}),
     outputSchema: s.object("The response returned when retrieving the current Torii organization.", {
@@ -109,6 +110,7 @@ export const toriiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_apps",
+    operationType: "read",
     description: "List Torii apps with optional search, filters, and cursor pagination.",
     inputSchema: s.object(
       "The input payload for listing Torii apps.",
@@ -124,6 +126,7 @@ export const toriiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_app",
+    operationType: "read",
     description: "Retrieve one Torii app by app identifier.",
     inputSchema: s.object(
       "The input payload for retrieving one Torii app.",
@@ -141,6 +144,7 @@ export const toriiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Torii users with optional filters, search, and cursor pagination.",
     inputSchema: s.object(
       "The input payload for listing Torii users.",
@@ -194,6 +198,7 @@ export const toriiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Retrieve one Torii user by user identifier.",
     inputSchema: s.object("The input payload for retrieving one Torii user.", {
       userId: positiveIntegerSchema("The Torii user identifier."),
@@ -205,6 +210,7 @@ export const toriiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contracts",
+    operationType: "read",
     description: "List Torii contracts with optional API version, filters, and pagination.",
     inputSchema: s.object(
       "The input payload for listing Torii contracts.",
@@ -223,6 +229,7 @@ export const toriiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contract",
+    operationType: "read",
     description: "Retrieve one Torii contract by contract identifier.",
     inputSchema: s.object(
       "The input payload for retrieving one Torii contract.",
@@ -240,6 +247,7 @@ export const toriiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_transactions",
+    operationType: "read",
     description: "List recognized Torii expense transactions with optional filters and pagination.",
     inputSchema: s.object(
       "The input payload for listing Torii transactions.",
@@ -265,6 +273,7 @@ export const toriiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workflows",
+    operationType: "read",
     description: "List Torii regular workflows for the organization.",
     inputSchema: s.object(
       "The input payload for listing Torii workflows.",

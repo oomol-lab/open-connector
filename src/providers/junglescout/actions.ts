@@ -320,6 +320,7 @@ const salesEstimatesInputSchema = s.object(
 
 const getKeywordsByAsinAction = defineProviderAction(service, {
   name: "get_keywords_by_asin",
+  operationType: "read",
   description:
     "Retrieve keywords that rank for up to 10 Amazon ASINs, including volume, trend, bid, relevance, and rank data.",
   requiredScopes: [],
@@ -332,6 +333,7 @@ const getKeywordsByAsinAction = defineProviderAction(service, {
 
 const getKeywordsByKeywordAction = defineProviderAction(service, {
   name: "get_keywords_by_keyword",
+  operationType: "read",
   description:
     "Retrieve related Amazon keywords from a search term with volume, trend, bid, relevance, and competition data.",
   requiredScopes: [],
@@ -344,6 +346,7 @@ const getKeywordsByKeywordAction = defineProviderAction(service, {
 
 const getHistoricalSearchVolumeAction = defineProviderAction(service, {
   name: "get_historical_search_volume",
+  operationType: "read",
   description: "Retrieve weekly historical exact-search-volume estimates for one Amazon keyword.",
   requiredScopes: [],
   inputSchema: historicalSearchVolumeInputSchema,
@@ -355,6 +358,7 @@ const getHistoricalSearchVolumeAction = defineProviderAction(service, {
 
 const searchProductsAction = defineProviderAction(service, {
   name: "search_products",
+  operationType: "read",
   description:
     "Search the Jungle Scout Amazon product database by category, keywords, price, demand, revenue, rating, seller, and listing-quality filters.",
   requiredScopes: [],
@@ -367,6 +371,7 @@ const searchProductsAction = defineProviderAction(service, {
 
 const getSalesEstimatesAction = defineProviderAction(service, {
   name: "get_sales_estimates",
+  operationType: "read",
   description: "Retrieve daily estimated Amazon unit sales for one ASIN over a date range.",
   requiredScopes: [],
   inputSchema: salesEstimatesInputSchema,
@@ -378,6 +383,7 @@ const getSalesEstimatesAction = defineProviderAction(service, {
 
 const getShareOfVoiceAction = defineProviderAction(service, {
   name: "get_share_of_voice",
+  operationType: "read",
   description:
     "Retrieve Amazon keyword share of voice by brand, including organic, sponsored, and top-ASIN conversion data.",
   requiredScopes: [],

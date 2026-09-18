@@ -95,24 +95,28 @@ const sendMessageStatusSchema = s.actionOutput(
 export const chatApiForWhatsappActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "test_api_key",
+    operationType: "read",
     description: "Validate the connected Chat API token and instance ID, returning the current instance status.",
     inputSchema: s.actionInput({}, [], "No input is required to validate Chat API credentials."),
     outputSchema: instanceStatusSchema,
   }),
   defineProviderAction(service, {
     name: "get_status",
+    operationType: "read",
     description: "Get the current Chat API WhatsApp instance status and QR code payload when authorization is pending.",
     inputSchema: s.actionInput({}, [], "No input is required to retrieve Chat API status."),
     outputSchema: instanceStatusSchema,
   }),
   defineProviderAction(service, {
     name: "get_settings",
+    operationType: "read",
     description: "Get the current webhook, notification, video upload, and proxy settings.",
     inputSchema: s.actionInput({}, [], "No input is required to retrieve Chat API settings."),
     outputSchema: settingsSchema,
   }),
   defineProviderAction(service, {
     name: "list_chats",
+    operationType: "read",
     description: "List chats known to the connected Chat API WhatsApp instance.",
     inputSchema: s.actionInput({}, [], "No input is required to list Chat API chats."),
     outputSchema: s.actionOutput(
@@ -124,6 +128,7 @@ export const chatApiForWhatsappActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_messages",
+    operationType: "read",
     description:
       "List incoming and outgoing messages, optionally filtered by chat ID or paged from a previous response.",
     inputSchema: s.actionInput(
@@ -146,6 +151,7 @@ export const chatApiForWhatsappActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_text_message",
+    operationType: "write",
     description: "Send a text message to an existing Chat API chat ID or to a phone number.",
     inputSchema: destinationInput(
       {
@@ -159,6 +165,7 @@ export const chatApiForWhatsappActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_file_by_url",
+    operationType: "write",
     description: "Send a file using a public URL to an existing Chat API chat ID or to a phone number.",
     inputSchema: destinationInput(
       {
@@ -174,6 +181,7 @@ export const chatApiForWhatsappActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_messages_queue",
+    operationType: "read",
     description: "List outbound messages currently waiting in the Chat API send queue.",
     inputSchema: s.actionInput({}, [], "No input is required to list the Chat API message queue."),
     outputSchema: s.actionOutput(

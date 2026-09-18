@@ -74,6 +74,7 @@ const researchFileSchema = s.object(
 export const tavilyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search",
+    operationType: "read",
     description: "Execute a Tavily Search query and return ranked source results.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -143,6 +144,7 @@ export const tavilyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "extract",
+    operationType: "read",
     description: "Extract structured page content from one or more URLs with Tavily.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -176,6 +178,7 @@ export const tavilyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "map",
+    operationType: "read",
     description: "Discover URLs from a website with Tavily Map.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -212,6 +215,7 @@ export const tavilyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "crawl",
+    operationType: "read",
     description: "Crawl a website and extract content from discovered pages with Tavily.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -255,6 +259,7 @@ export const tavilyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_research",
+    operationType: "write",
     description: "Start an asynchronous Tavily Research task and return a request ID for polling.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -292,6 +297,7 @@ export const tavilyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_research",
+    operationType: "read",
     description: "Get the current status and result for a Tavily Research task.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -307,6 +313,7 @@ export const tavilyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_usage",
+    operationType: "read",
     description: "Get API key and account usage details from Tavily.",
     requiredScopes: [],
     inputSchema: s.actionInput({}, [], "The input payload for a Tavily usage request."),

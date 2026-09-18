@@ -152,6 +152,7 @@ const termOutputSchema = s.actionOutput(
 export const quentnActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Quentn users visible to the current API key.",
     inputSchema: s.actionInput(
       {
@@ -180,6 +181,7 @@ export const quentnActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get one Quentn user by ID.",
     inputSchema: s.actionInput(
       {
@@ -197,12 +199,14 @@ export const quentnActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact_by_id",
+    operationType: "read",
     description: "Get one Quentn contact by contact ID.",
     inputSchema: contactLookupInputSchema,
     outputSchema: contactOutputSchema,
   }),
   defineProviderAction(service, {
     name: "find_contacts_by_email",
+    operationType: "read",
     description: "Find Quentn contacts by email address.",
     inputSchema: s.actionInput(
       {
@@ -216,6 +220,7 @@ export const quentnActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create one Quentn contact with optional duplicate handling.",
     inputSchema: s.actionInput(
       {
@@ -240,6 +245,7 @@ export const quentnActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update one Quentn contact by contact ID.",
     inputSchema: s.actionInput(
       {
@@ -261,12 +267,14 @@ export const quentnActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete one Quentn contact by contact ID.",
     inputSchema: contactIdInputSchema,
     outputSchema: successOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_terms",
+    operationType: "read",
     description: "List Quentn terms.",
     inputSchema: s.actionInput(
       {
@@ -286,12 +294,14 @@ export const quentnActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_term",
+    operationType: "read",
     description: "Get one Quentn term by ID.",
     inputSchema: termIdInputSchema,
     outputSchema: termOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_term",
+    operationType: "write",
     description: "Create one Quentn term.",
     inputSchema: s.actionInput(
       {
@@ -305,6 +315,7 @@ export const quentnActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_term",
+    operationType: "write",
     description: "Update one Quentn term by ID.",
     inputSchema: s.actionInput(
       {
@@ -319,12 +330,14 @@ export const quentnActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_term",
+    operationType: "destructive",
     description: "Delete one Quentn term by ID.",
     inputSchema: termIdInputSchema,
     outputSchema: successOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_contact_terms",
+    operationType: "read",
     description: "List all Quentn terms assigned to one contact.",
     inputSchema: s.actionInput(
       {
@@ -343,6 +356,7 @@ export const quentnActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_contact_terms",
+    operationType: "write",
     description: "Set the complete Quentn term ID list assigned to one contact.",
     inputSchema: s.actionInput(
       {
@@ -358,6 +372,7 @@ export const quentnActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_contact_terms",
+    operationType: "destructive",
     description: "Remove selected Quentn terms from one contact.",
     inputSchema: s.actionInput(
       {

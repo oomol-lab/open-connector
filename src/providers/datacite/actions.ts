@@ -86,6 +86,7 @@ const sortSchema = s.stringEnum("The ordering applied to matching DOI records.",
 export const dataciteActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_doi",
+    operationType: "read",
     description:
       "Retrieve one DataCite DOI metadata record, including non-public states when the connected API key permits access.",
     inputSchema: s.object(
@@ -103,6 +104,7 @@ export const dataciteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_dois",
+    operationType: "read",
     description:
       "Search, filter, sort, and page through DataCite DOI metadata records with public or authenticated access.",
     inputSchema: s.object(

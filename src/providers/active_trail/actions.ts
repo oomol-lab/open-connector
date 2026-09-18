@@ -247,6 +247,7 @@ const deleteOutputSchema = s.object("The response returned after deleting an Act
 export const activeTrailActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_balance",
+    operationType: "read",
     description: "Fetch the current ActiveTrail email, SMS, and coupon account balances.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -254,6 +255,7 @@ export const activeTrailActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List ActiveTrail contacts with optional state, search, date, and pagination filters.",
     requiredScopes: [],
     inputSchema: listContactsInputSchema,
@@ -261,6 +263,7 @@ export const activeTrailActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Fetch one ActiveTrail contact by ID.",
     requiredScopes: [],
     inputSchema: idInputSchema("Input parameters for fetching an ActiveTrail contact.", "The ActiveTrail contact ID."),
@@ -268,6 +271,7 @@ export const activeTrailActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create an ActiveTrail contact.",
     requiredScopes: [],
     inputSchema: createContactInputSchema,
@@ -275,6 +279,7 @@ export const activeTrailActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update an ActiveTrail contact.",
     requiredScopes: [],
     inputSchema: updateContactInputSchema,
@@ -282,6 +287,7 @@ export const activeTrailActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete one ActiveTrail contact by ID.",
     requiredScopes: [],
     inputSchema: idInputSchema("Input parameters for deleting an ActiveTrail contact.", "The ActiveTrail contact ID."),
@@ -289,6 +295,7 @@ export const activeTrailActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List ActiveTrail groups with optional search and pagination filters.",
     requiredScopes: [],
     inputSchema: listGroupsInputSchema,
@@ -296,6 +303,7 @@ export const activeTrailActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_group",
+    operationType: "read",
     description: "Fetch one ActiveTrail group by ID.",
     requiredScopes: [],
     inputSchema: idInputSchema("Input parameters for fetching an ActiveTrail group.", "The ActiveTrail group ID."),
@@ -303,6 +311,7 @@ export const activeTrailActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_group",
+    operationType: "write",
     description: "Create an ActiveTrail group.",
     requiredScopes: [],
     inputSchema: groupPayloadSchema,
@@ -310,6 +319,7 @@ export const activeTrailActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_group",
+    operationType: "write",
     description: "Update an ActiveTrail group name.",
     requiredScopes: [],
     inputSchema: updateGroupInputSchema,
@@ -317,6 +327,7 @@ export const activeTrailActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_group",
+    operationType: "destructive",
     description: "Delete one ActiveTrail group by ID.",
     requiredScopes: [],
     inputSchema: idInputSchema("Input parameters for deleting an ActiveTrail group.", "The ActiveTrail group ID."),
@@ -324,6 +335,7 @@ export const activeTrailActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_group_members",
+    operationType: "read",
     description: "List members in an ActiveTrail group with optional filters.",
     requiredScopes: [],
     inputSchema: listGroupMembersInputSchema,
@@ -331,6 +343,7 @@ export const activeTrailActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_group_member",
+    operationType: "write",
     description: "Add or update a contact inside an ActiveTrail group.",
     requiredScopes: [],
     inputSchema: addGroupMemberInputSchema,
@@ -338,6 +351,7 @@ export const activeTrailActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_group_member",
+    operationType: "destructive",
     description: "Remove one contact from an ActiveTrail group.",
     requiredScopes: [],
     inputSchema: removeGroupMemberInputSchema,

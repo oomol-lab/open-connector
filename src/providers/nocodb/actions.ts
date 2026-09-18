@@ -84,6 +84,7 @@ const v3QueryOptions = {
 export const nocodbActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the NocoDB user associated with the connected API token.",
     inputSchema: s.object({}, { description: "The input payload for reading the current NocoDB user." }),
     outputSchema: s.requiredObject("The current NocoDB user response.", {
@@ -92,6 +93,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_bases",
+    operationType: "read",
     description: "List bases visible to the connected NocoDB API token.",
     inputSchema: s.object({}, { description: "The input payload for listing NocoDB bases." }),
     outputSchema: s.requiredObject("The NocoDB base list response.", {
@@ -100,6 +102,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_base_schema",
+    operationType: "read",
     description: "Get schema metadata for one NocoDB base.",
     inputSchema: s.requiredObject("The input payload for reading one NocoDB base schema.", {
       baseId: baseIdSchema,
@@ -110,6 +113,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tables",
+    operationType: "read",
     description: "List tables in a NocoDB base or in a specific base source.",
     inputSchema: s.object(
       "The input payload for listing NocoDB tables.",
@@ -125,6 +129,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_table",
+    operationType: "write",
     description: "Create a table in a NocoDB base using the v3 metadata API.",
     inputSchema: s.object(
       "The input payload for creating a NocoDB table.",
@@ -144,6 +149,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_table_metadata",
+    operationType: "read",
     description: "Get metadata for one NocoDB table, including columns and views when available.",
     inputSchema: s.requiredObject("The input payload for reading NocoDB table metadata.", {
       tableId: tableIdSchema,
@@ -155,6 +161,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_table",
+    operationType: "write",
     description: "Update a NocoDB table title, description, display field, or metadata using the v3 metadata API.",
     inputSchema: s.object(
       "The input payload for updating a NocoDB table.",
@@ -174,6 +181,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_table",
+    operationType: "destructive",
     description: "Delete a NocoDB table using the v3 metadata API.",
     inputSchema: s.requiredObject("The input payload for deleting a NocoDB table.", {
       baseId: baseIdSchema,
@@ -185,6 +193,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_table_views",
+    operationType: "read",
     description: "List views for a NocoDB table using the v3 metadata API.",
     inputSchema: s.requiredObject("The input payload for listing NocoDB table views.", {
       baseId: baseIdSchema,
@@ -196,6 +205,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_table_view",
+    operationType: "write",
     description: "Create a view for a NocoDB table using the v3 metadata API.",
     inputSchema: s.requiredObject("The input payload for creating a NocoDB table view.", {
       baseId: baseIdSchema,
@@ -208,6 +218,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_table_field",
+    operationType: "write",
     description: "Create a field in a NocoDB table using the v3 metadata API.",
     inputSchema: s.requiredObject("The input payload for creating a NocoDB table field.", {
       baseId: baseIdSchema,
@@ -220,6 +231,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_records",
+    operationType: "read",
     description: "List records from one NocoDB table with optional where, sort, field, limit, and offset parameters.",
     inputSchema: s.object(
       "The input payload for listing records in one NocoDB table.",
@@ -237,6 +249,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "count_records",
+    operationType: "read",
     description: "Count records in one NocoDB table, optionally filtered by a where expression.",
     inputSchema: s.object(
       "The input payload for counting records in one NocoDB table.",
@@ -253,6 +266,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "read_record",
+    operationType: "read",
     description: "Read one record from a NocoDB table by record ID.",
     inputSchema: s.object(
       "The input payload for reading one NocoDB record.",
@@ -269,6 +283,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_records",
+    operationType: "write",
     description: "Create one or more records in a NocoDB table.",
     inputSchema: s.requiredObject("The input payload for creating NocoDB records.", {
       tableId: tableIdSchema,
@@ -280,6 +295,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_records",
+    operationType: "write",
     description: "Update one or more records in a NocoDB table.",
     inputSchema: s.requiredObject("The input payload for updating NocoDB records.", {
       tableId: tableIdSchema,
@@ -293,6 +309,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_records",
+    operationType: "destructive",
     description: "Delete one or more records from a NocoDB table.",
     inputSchema: s.requiredObject("The input payload for deleting NocoDB records.", {
       tableId: tableIdSchema,
@@ -307,6 +324,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_table_records",
+    operationType: "read",
     description: "List records from one NocoDB table using the v3 data API.",
     inputSchema: s.object(
       "The input payload for listing records through the NocoDB v3 data API.",
@@ -330,6 +348,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "count_table_records",
+    operationType: "read",
     description: "Count records in one NocoDB table using the v3 data API.",
     inputSchema: s.object(
       "The input payload for counting records through the NocoDB v3 data API.",
@@ -347,6 +366,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "read_table_record",
+    operationType: "read",
     description: "Read one record from a NocoDB table using the v3 data API.",
     inputSchema: s.object(
       "The input payload for reading one record through the NocoDB v3 data API.",
@@ -365,6 +385,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_table_records",
+    operationType: "write",
     description: "Create one or more records in a NocoDB table using the v3 data API.",
     inputSchema: s.requiredObject("The input payload for creating records through the NocoDB v3 data API.", {
       baseId: baseIdSchema,
@@ -377,6 +398,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_table_records",
+    operationType: "write",
     description: "Update one or more records in a NocoDB table using the v3 data API.",
     inputSchema: s.requiredObject("The input payload for updating records through the NocoDB v3 data API.", {
       baseId: baseIdSchema,
@@ -389,6 +411,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_table_records",
+    operationType: "destructive",
     description: "Delete one or more records from a NocoDB table using the v3 data API.",
     inputSchema: s.requiredObject("The input payload for deleting records through the NocoDB v3 data API.", {
       baseId: baseIdSchema,
@@ -401,6 +424,7 @@ export const nocodbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_table_records",
+    operationType: "write",
     description: "Create or update records in a NocoDB table by matching up to three fields using the v3 data API.",
     inputSchema: s.requiredObject("The input payload for upserting records through the NocoDB v3 data API.", {
       baseId: baseIdSchema,

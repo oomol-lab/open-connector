@@ -87,6 +87,7 @@ const messageListOutputSchema = s.object("The response returned for Mailosaur me
 export const mailosaurActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_servers",
+    operationType: "read",
     description: "List Mailosaur inbox servers in the current account.",
     inputSchema: s.object("The input payload for listing Mailosaur servers.", {}),
     outputSchema: s.object("The response returned when listing Mailosaur servers.", {
@@ -95,6 +96,7 @@ export const mailosaurActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_server",
+    operationType: "read",
     description: "Retrieve one Mailosaur inbox server by ID.",
     inputSchema: s.object("The input payload for retrieving a Mailosaur server.", {
       id: serverId,
@@ -105,6 +107,7 @@ export const mailosaurActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_server",
+    operationType: "write",
     description: "Create a new Mailosaur inbox server.",
     inputSchema: s.object("The input payload for creating a Mailosaur server.", {
       name: s.nonEmptyString("The name of the server."),
@@ -115,6 +118,7 @@ export const mailosaurActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_server",
+    operationType: "write",
     description: "Update the name of one Mailosaur inbox server.",
     inputSchema: s.object("The input payload for updating a Mailosaur server.", {
       id: serverId,
@@ -126,6 +130,7 @@ export const mailosaurActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_server",
+    operationType: "destructive",
     description: "Delete one Mailosaur inbox server and its stored messages.",
     inputSchema: s.object("The input payload for deleting a Mailosaur server.", {
       id: serverId,
@@ -137,6 +142,7 @@ export const mailosaurActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_messages",
+    operationType: "read",
     description: "List Mailosaur message summaries from one server.",
     inputSchema: s.object(
       "The input payload for listing Mailosaur messages.",
@@ -150,6 +156,7 @@ export const mailosaurActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_messages",
+    operationType: "read",
     description: "Search Mailosaur message summaries in one server.",
     inputSchema: s.object(
       "The input payload for searching Mailosaur messages.",
@@ -170,6 +177,7 @@ export const mailosaurActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_message",
+    operationType: "read",
     description: "Retrieve one Mailosaur message by ID, including parsed body content.",
     inputSchema: s.object("The input payload for retrieving a Mailosaur message.", {
       id: messageId,
@@ -180,6 +188,7 @@ export const mailosaurActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_message",
+    operationType: "destructive",
     description: "Delete one Mailosaur message and its attachments.",
     inputSchema: s.object("The input payload for deleting a Mailosaur message.", {
       id: messageId,
@@ -191,6 +200,7 @@ export const mailosaurActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_all_messages",
+    operationType: "destructive",
     description: "Delete all Mailosaur messages stored in one server.",
     inputSchema: s.object("The input payload for deleting all messages in a Mailosaur server.", {
       server: serverId,
@@ -202,6 +212,7 @@ export const mailosaurActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_usage_limits",
+    operationType: "read",
     description: "Retrieve Mailosaur account usage limits.",
     inputSchema: s.object("The input payload for retrieving Mailosaur usage limits.", {}),
     outputSchema: s.object("The response returned when retrieving Mailosaur usage limits.", {
@@ -217,6 +228,7 @@ export const mailosaurActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_usage_transactions",
+    operationType: "read",
     description: "List the last 31 days of Mailosaur usage transactions.",
     inputSchema: s.object("The input payload for listing Mailosaur usage transactions.", {}),
     outputSchema: s.object("The response returned when listing Mailosaur usage transactions.", {

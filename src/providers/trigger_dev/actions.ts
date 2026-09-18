@@ -125,6 +125,7 @@ const runIdOutputSchema = s.object("A Trigger.dev run identifier response.", {
 export const triggerDevActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_runs",
+    operationType: "read",
     description: "List Trigger.dev runs with optional status, task, version, and time filters.",
     inputSchema: listRunsInputSchema,
     outputSchema: s.object("A page of Trigger.dev runs.", {
@@ -134,30 +135,35 @@ export const triggerDevActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_run",
+    operationType: "read",
     description: "Retrieve a Trigger.dev run by ID.",
     inputSchema: getRunInputSchema,
     outputSchema: looseObjectSchema,
   }),
   defineProviderAction(service, {
     name: "get_run_result",
+    operationType: "read",
     description: "Retrieve the execution result for a completed Trigger.dev run.",
     inputSchema: getRunInputSchema,
     outputSchema: looseObjectSchema,
   }),
   defineProviderAction(service, {
     name: "trigger_task",
+    operationType: "write",
     description: "Trigger a Trigger.dev task by task identifier.",
     inputSchema: triggerTaskInputSchema,
     outputSchema: runIdOutputSchema,
   }),
   defineProviderAction(service, {
     name: "cancel_run",
+    operationType: "destructive",
     description: "Cancel an in-progress Trigger.dev run.",
     inputSchema: getRunInputSchema,
     outputSchema: runIdOutputSchema,
   }),
   defineProviderAction(service, {
     name: "replay_run",
+    operationType: "write",
     description: "Replay a Trigger.dev run with the same payload and options.",
     inputSchema: getRunInputSchema,
     outputSchema: runIdOutputSchema,

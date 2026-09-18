@@ -25,6 +25,7 @@ const companyAlgorithmSchema = s.stringEnum(
 export const interzoidActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_company_match_key",
+    operationType: "read",
     description: "Generate an Interzoid similarity key for a company or organization name.",
     inputSchema: s.object("The input payload for generating a company similarity key.", {
       company: s.nonEmptyString("The company or organization name to generate a similarity key for."),
@@ -37,6 +38,7 @@ export const interzoidActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_full_name_match_key",
+    operationType: "read",
     description: "Generate an Interzoid similarity key for a person's full name.",
     inputSchema: s.object("The input payload for generating a full-name similarity key.", {
       fullName: s.nonEmptyString("The full name to generate a similarity key for."),
@@ -48,6 +50,7 @@ export const interzoidActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_full_name_match_score",
+    operationType: "read",
     description: "Score how closely two full names match according to Interzoid.",
     inputSchema: s.object("The input payload for scoring two full names.", {
       fullName1: s.nonEmptyString("The first full name to compare."),
@@ -60,6 +63,7 @@ export const interzoidActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "standardize_organization_name",
+    operationType: "read",
     description: "Standardize an organization name using Interzoid.",
     inputSchema: s.object("The input payload for standardizing an organization name.", {
       organization: s.nonEmptyString("The organization name to standardize."),
@@ -71,6 +75,7 @@ export const interzoidActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_email_info",
+    operationType: "read",
     description: "Validate and enrich an email address with Interzoid.",
     inputSchema: s.object("The input payload for retrieving Interzoid email information.", {
       email: s.email("The email address to validate and enrich."),
@@ -90,6 +95,7 @@ export const interzoidActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ip_profile",
+    operationType: "read",
     description: "Retrieve Interzoid profile and reputation information for an IP address.",
     inputSchema: s.object("The input payload for retrieving an Interzoid IP profile.", {
       ip: s.nonEmptyString("The IPv4 or IPv6 address to profile with Interzoid."),
@@ -108,6 +114,7 @@ export const interzoidActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_remaining_credits",
+    operationType: "read",
     description: "Return the remaining credits for the connected Interzoid API license key.",
     inputSchema: s.object("The input payload for retrieving Interzoid remaining credits.", {}),
     outputSchema: s.object("The normalized Interzoid remaining credits response.", {

@@ -73,18 +73,21 @@ const twochatWebhookSchema = s.object("One normalized 2Chat webhook subscription
 export const twochatActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "test_api_key",
+    operationType: "read",
     description: "Validate the connected 2Chat API key and return normalized account, limit, and usage information.",
     inputSchema: s.object("No input is required to validate the 2Chat API key.", {}),
     outputSchema: twochatInfoOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_api_usage_info",
+    operationType: "read",
     description: "Fetch the current 2Chat account, rate limit, and usage counters for the connected API key.",
     inputSchema: s.object("No input is required to retrieve the current 2Chat usage information.", {}),
     outputSchema: twochatInfoOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_webhooks",
+    operationType: "read",
     description: "List the webhook subscriptions currently configured in the connected 2Chat account.",
     inputSchema: s.object("No input is required to list the configured 2Chat webhooks.", {}),
     outputSchema: s.object("2Chat webhook listing response.", {
@@ -93,6 +96,7 @@ export const twochatActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List contacts from the connected 2Chat account, with optional pagination and channel filtering.",
     inputSchema: s.object(
       "Parameters for listing contacts from 2Chat.",
@@ -114,6 +118,7 @@ export const twochatActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description:
       "Create a contact in 2Chat with one or more contact details and optional channel and profile picture metadata.",
     inputSchema: s.object(

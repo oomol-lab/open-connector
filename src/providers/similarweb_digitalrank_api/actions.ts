@@ -42,6 +42,7 @@ const campaignSchema = s.object(
 export const similarwebDigitalRankApiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_subscription_status",
+    operationType: "read",
     description: "Get the remaining Similarweb usage allowance for the connected API key.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The subscription usage returned by Similarweb.", {
@@ -51,6 +52,7 @@ export const similarwebDigitalRankApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_rank_tracker_describe",
+    operationType: "read",
     description:
       "List Similarweb rank-tracker campaigns and their scraping configurations for follow-up reporting APIs.",
     inputSchema: emptyInputSchema,
@@ -60,6 +62,7 @@ export const similarwebDigitalRankApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_similar_rank_top_sites",
+    operationType: "read",
     description:
       "List Similarweb top-ranked websites for a country and category, defaulting to the global $All ranking when filters are omitted.",
     inputSchema: s.object(

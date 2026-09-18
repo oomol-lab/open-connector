@@ -136,6 +136,7 @@ const listAllocationsOptionalFields = [
 export const floatActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_accounts",
+    operationType: "read",
     description: "List Float accounts that can access the team.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -154,6 +155,7 @@ export const floatActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_people",
+    operationType: "read",
     description: "List Float people on the schedule with optional filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -181,6 +183,7 @@ export const floatActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_clients",
+    operationType: "read",
     description: "List Float clients.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -198,6 +201,7 @@ export const floatActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Float projects with optional filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -221,6 +225,7 @@ export const floatActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_allocations",
+    operationType: "read",
     description: "List Float allocations as tasks with optional schedule filters.",
     requiredScopes: [],
     inputSchema: s.object(

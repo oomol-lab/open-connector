@@ -51,6 +51,7 @@ const bookingSchema = s.object("A normalized Lodgify booking wrapper.", {
 export const lodgifyActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_properties",
+    operationType: "read",
     description: "List Lodgify properties with optional pagination and total count.",
     inputSchema: s.object(
       "Input for listing Lodgify properties.",
@@ -69,6 +70,7 @@ export const lodgifyActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_property",
+    operationType: "read",
     description: "Get one Lodgify property by identifier.",
     inputSchema: s.object("Input for retrieving a Lodgify property.", {
       propertyId: propertyIdSchema,
@@ -80,6 +82,7 @@ export const lodgifyActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_property_rooms",
+    operationType: "read",
     description: "List room types configured for a Lodgify property.",
     inputSchema: s.object("Input for listing Lodgify property room types.", {
       propertyId: propertyIdSchema,
@@ -91,6 +94,7 @@ export const lodgifyActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_property_availability",
+    operationType: "read",
     description: "Get Lodgify availability periods for a property over a date range.",
     inputSchema: s.object("Input for retrieving Lodgify property availability.", {
       propertyId: propertyIdSchema,
@@ -104,6 +108,7 @@ export const lodgifyActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_quote",
+    operationType: "read",
     description: "Calculate a Lodgify quote for a property, room type, stay dates, and adults.",
     inputSchema: s.object("Input for calculating a Lodgify quote.", {
       propertyId: propertyIdSchema,
@@ -119,6 +124,7 @@ export const lodgifyActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_bookings",
+    operationType: "read",
     description: "List Lodgify bookings with pagination and optional stay filter.",
     inputSchema: s.object(
       "Input for listing Lodgify bookings.",
@@ -142,6 +148,7 @@ export const lodgifyActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_booking",
+    operationType: "read",
     description: "Get one Lodgify booking by identifier.",
     inputSchema: s.object("Input for retrieving a Lodgify booking.", {
       bookingId: bookingIdSchema,

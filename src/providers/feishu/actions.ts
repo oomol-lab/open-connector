@@ -78,12 +78,14 @@ const baseTableIdField = s.nonEmptyString("The Bitable table id (starts with tbl
 export const feishuActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the profile of the Feishu user who authorized this connection, using their user_access_token.",
     inputSchema: s.object("No input is required.", {}),
     outputSchema: feishuUserSchema,
   }),
   defineProviderAction(service, {
     name: "get_document",
+    operationType: "read",
     description: "Get a Feishu docx document's basic metadata (title and revision) that the authorized user can read.",
     requiredScopes: [feishuProviderScopes.docxReadonly],
     providerPermissions: [feishuProviderScopes.docxReadonly],
@@ -92,6 +94,7 @@ export const feishuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document_content",
+    operationType: "read",
     description: "Read the full plain-text content of a Feishu docx document the authorized user can access.",
     requiredScopes: [feishuProviderScopes.docxReadonly],
     providerPermissions: [feishuProviderScopes.docxReadonly],
@@ -110,6 +113,7 @@ export const feishuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_document_blocks",
+    operationType: "read",
     description:
       "List a Feishu docx document's structured blocks (one page), for reading document structure and rich content.",
     requiredScopes: [feishuProviderScopes.docxReadonly],
@@ -131,6 +135,7 @@ export const feishuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_bitable_tables",
+    operationType: "read",
     description: "List the data tables in a Feishu Bitable (多维表格) the authorized user can access.",
     requiredScopes: [feishuProviderScopes.bitableAppReadonly],
     providerPermissions: [feishuProviderScopes.bitableAppReadonly],
@@ -147,6 +152,7 @@ export const feishuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_bitable_fields",
+    operationType: "read",
     description: "List the fields (columns) of a Feishu Bitable table, to understand its schema before reading rows.",
     requiredScopes: [feishuProviderScopes.bitableAppReadonly],
     providerPermissions: [feishuProviderScopes.bitableAppReadonly],
@@ -168,6 +174,7 @@ export const feishuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_bitable_records",
+    operationType: "read",
     description: "Read rows (records) from a Feishu Bitable table, with optional field selection, filter, and sort.",
     requiredScopes: [feishuProviderScopes.bitableAppReadonly],
     providerPermissions: [feishuProviderScopes.bitableAppReadonly],

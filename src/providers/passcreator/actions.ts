@@ -127,6 +127,7 @@ const listPassesInputSchema = s.object(
 
 const listPassTemplatesAction = defineProviderAction(service, {
   name: "list_pass_templates",
+  operationType: "read",
   description: "List all pass templates available to the connected Passcreator account.",
   requiredScopes: [],
   inputSchema: s.requiredObject("The input payload for listing pass templates.", {}),
@@ -135,6 +136,7 @@ const listPassTemplatesAction = defineProviderAction(service, {
 
 const getPassTemplateFieldsAction = defineProviderAction(service, {
   name: "get_pass_template_fields",
+  operationType: "read",
   description: "Inspect the dynamic fields configured on a Passcreator pass template.",
   requiredScopes: [],
   inputSchema: s.requiredObject("The input payload for inspecting pass template fields.", {
@@ -145,6 +147,7 @@ const getPassTemplateFieldsAction = defineProviderAction(service, {
 
 const createPassAction = defineProviderAction(service, {
   name: "create_pass",
+  operationType: "write",
   description: "Create one Passcreator wallet pass synchronously from template-specific JSON data.",
   requiredScopes: [],
   inputSchema: s.requiredObject("The input payload for creating a pass.", {
@@ -155,6 +158,7 @@ const createPassAction = defineProviderAction(service, {
 
 const listPassesAction = defineProviderAction(service, {
   name: "list_passes",
+  operationType: "read",
   description: "List or search Passcreator wallet passes and continue through documented next-page links.",
   requiredScopes: [],
   inputSchema: listPassesInputSchema,

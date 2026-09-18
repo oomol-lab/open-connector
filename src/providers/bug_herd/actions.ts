@@ -109,6 +109,7 @@ const taskOutputSchema = s.actionOutput(
 export const bugHerdActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "show_organization",
+    operationType: "read",
     description: "Retrieve top-level details about the authenticated BugHerd organization.",
     inputSchema: s.actionInput({}, [], "The input payload for retrieving the BugHerd organization."),
     outputSchema: s.actionOutput(
@@ -120,18 +121,21 @@ export const bugHerdActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List all BugHerd projects in the organization.",
     inputSchema: listProjectsInputSchema,
     outputSchema: listProjectsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_active_projects",
+    operationType: "read",
     description: "List active BugHerd projects in the organization.",
     inputSchema: listProjectsInputSchema,
     outputSchema: listProjectsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Retrieve full details for a BugHerd project.",
     inputSchema: s.actionInput(
       {
@@ -144,12 +148,14 @@ export const bugHerdActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create a BugHerd project with the required project name and website URL.",
     inputSchema: s.actionInput(projectFields, ["name", "devurl"], "The input payload for creating a BugHerd project."),
     outputSchema: projectOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_project",
+    operationType: "write",
     description: "Update settings for an existing BugHerd project.",
     inputSchema: s.actionInput(
       {
@@ -164,6 +170,7 @@ export const bugHerdActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_project_tasks",
+    operationType: "read",
     description: "List BugHerd tasks for a project with optional server-side filters.",
     inputSchema: s.actionInput(
       {
@@ -190,6 +197,7 @@ export const bugHerdActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task",
+    operationType: "read",
     description: "Retrieve a BugHerd task by project ID and global task ID.",
     inputSchema: s.actionInput(
       {
@@ -203,6 +211,7 @@ export const bugHerdActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_task",
+    operationType: "write",
     description: "Create a BugHerd task in a project.",
     inputSchema: s.actionInput(
       {
@@ -216,6 +225,7 @@ export const bugHerdActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_task",
+    operationType: "write",
     description: "Update mutable fields on a BugHerd task.",
     inputSchema: s.actionInput(
       {
@@ -230,6 +240,7 @@ export const bugHerdActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_comments",
+    operationType: "read",
     description: "List comments on a BugHerd task.",
     inputSchema: s.actionInput(
       {
@@ -249,6 +260,7 @@ export const bugHerdActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_comment",
+    operationType: "write",
     description: "Create a comment on a BugHerd task.",
     inputSchema: s.actionInput(
       {
@@ -271,6 +283,7 @@ export const bugHerdActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_attachments",
+    operationType: "read",
     description: "List file attachments on a BugHerd task.",
     inputSchema: s.actionInput(
       {
@@ -290,6 +303,7 @@ export const bugHerdActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_attachment_from_url",
+    operationType: "write",
     description: "Create a BugHerd task attachment from a publicly accessible file URL.",
     inputSchema: s.actionInput(
       {

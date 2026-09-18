@@ -101,6 +101,7 @@ const getGroupOutputSchema = s.object("Single Keeper SCIM group response.", {
 export const keeperScimActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_service_provider_config",
+    operationType: "read",
     description: "Get the Keeper SCIM service provider configuration for the connected node.",
     requiredScopes: [],
     inputSchema: s.object("No input is required for this Keeper SCIM request.", {}),
@@ -108,6 +109,7 @@ export const keeperScimActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Keeper SCIM users with optional SCIM filter and pagination.",
     requiredScopes: [],
     inputSchema: listUsersInputSchema,
@@ -115,6 +117,7 @@ export const keeperScimActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get one Keeper SCIM user by ID.",
     requiredScopes: [],
     inputSchema: getUserInputSchema,
@@ -122,6 +125,7 @@ export const keeperScimActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List Keeper SCIM groups with optional pagination and excluded member attributes.",
     requiredScopes: [],
     inputSchema: listGroupsInputSchema,
@@ -129,6 +133,7 @@ export const keeperScimActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_group",
+    operationType: "read",
     description: "Get one Keeper SCIM group by ID.",
     requiredScopes: [],
     inputSchema: getGroupInputSchema,

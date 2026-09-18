@@ -280,6 +280,7 @@ function itemOutputSchema(description: string, key: string): JsonSchema {
 export const itGlueActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_organizations",
+    operationType: "read",
     description: "List organizations in an IT Glue account with optional filters and pagination.",
     requiredScopes: [],
     inputSchema: listOrganizationsInputSchema,
@@ -287,6 +288,7 @@ export const itGlueActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_organization",
+    operationType: "read",
     description: "Retrieve one IT Glue organization by ID.",
     requiredScopes: [],
     inputSchema: getOrganizationInputSchema,
@@ -294,6 +296,7 @@ export const itGlueActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List users in an IT Glue account with optional filters and pagination.",
     requiredScopes: [],
     inputSchema: listUsersInputSchema,
@@ -301,6 +304,7 @@ export const itGlueActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Retrieve one IT Glue user by ID.",
     requiredScopes: [],
     inputSchema: getUserInputSchema,
@@ -308,6 +312,7 @@ export const itGlueActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_configurations",
+    operationType: "read",
     description: "List IT Glue configurations, optionally scoped to one organization, with filters and pagination.",
     requiredScopes: [],
     inputSchema: listConfigurationsInputSchema,
@@ -315,6 +320,7 @@ export const itGlueActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_configuration",
+    operationType: "read",
     description: "Retrieve one IT Glue configuration by ID, optionally scoped to one organization.",
     requiredScopes: [],
     inputSchema: getConfigurationInputSchema,
@@ -322,6 +328,7 @@ export const itGlueActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List IT Glue contacts, optionally scoped to one organization, with filters and pagination.",
     requiredScopes: [],
     inputSchema: listContactsInputSchema,
@@ -329,6 +336,7 @@ export const itGlueActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Retrieve one IT Glue contact by ID, optionally scoped to one organization.",
     requiredScopes: [],
     inputSchema: getContactInputSchema,

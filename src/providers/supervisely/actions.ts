@@ -14,9 +14,14 @@ export type SuperviselyActionName =
   | "list_datasets"
   | "get_dataset";
 
-function action(name: SuperviselyActionName, description: string): ActionDefinition {
+function action(
+  name: SuperviselyActionName,
+  operationType: ActionDefinition["operationType"],
+  description: string,
+): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     inputSchema: s.looseObject(`Input parameters for ${name}.`),
     outputSchema: s.looseObject(`Supervisely response for ${name}.`),
@@ -24,11 +29,11 @@ function action(name: SuperviselyActionName, description: string): ActionDefinit
 }
 
 export const superviselyActions: ActionDefinition[] = [
-  action("get_current_user", "Get the Supervisely user associated with the configured API token."),
-  action("list_teams", "List Supervisely teams accessible to the configured API token."),
-  action("list_workspaces", "List Supervisely workspaces for a team."),
-  action("list_projects", "List Supervisely projects for a workspace."),
-  action("get_project", "Get a Supervisely project by ID."),
-  action("list_datasets", "List Supervisely datasets for a project."),
-  action("get_dataset", "Get a Supervisely dataset by ID."),
+  action("get_current_user", "read", "Get the Supervisely user associated with the configured API token."),
+  action("list_teams", "read", "List Supervisely teams accessible to the configured API token."),
+  action("list_workspaces", "read", "List Supervisely workspaces for a team."),
+  action("list_projects", "read", "List Supervisely projects for a workspace."),
+  action("get_project", "read", "Get a Supervisely project by ID."),
+  action("list_datasets", "read", "List Supervisely datasets for a project."),
+  action("get_dataset", "read", "Get a Supervisely dataset by ID."),
 ];

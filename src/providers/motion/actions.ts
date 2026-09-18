@@ -87,6 +87,7 @@ updateTaskInputSchema.anyOf = taskMutationFieldNames.map((fieldName) => ({ requi
 export const motionActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_workspaces",
+    operationType: "read",
     description: "List Motion workspaces available to the API key.",
     inputSchema: s.actionInput({}, [], "The input payload for listing Motion workspaces."),
     outputSchema: s.actionOutput(
@@ -98,6 +99,7 @@ export const motionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Motion users visible to the API key.",
     inputSchema: s.actionInput(
       {
@@ -115,6 +117,7 @@ export const motionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_my_user",
+    operationType: "read",
     description: "Get the Motion user associated with the current API key.",
     inputSchema: s.actionInput({}, [], "The input payload for getting the current Motion user."),
     outputSchema: s.actionOutput(
@@ -126,6 +129,7 @@ export const motionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Motion projects for a workspace.",
     inputSchema: s.actionInput(
       {
@@ -145,6 +149,7 @@ export const motionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get a Motion project by ID.",
     inputSchema: s.actionInput(
       {
@@ -162,6 +167,7 @@ export const motionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create a Motion project in a workspace.",
     inputSchema: s.actionInput(
       createProjectFields,
@@ -177,6 +183,7 @@ export const motionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "List Motion tasks with optional workspace, project, assignee, status, and cursor filters.",
     inputSchema: listTasksInputSchema,
     outputSchema: s.actionOutput(
@@ -189,6 +196,7 @@ export const motionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task",
+    operationType: "read",
     description: "Get a Motion task by ID.",
     inputSchema: s.actionInput(
       {
@@ -206,6 +214,7 @@ export const motionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_task",
+    operationType: "write",
     description: "Create a Motion task in a workspace.",
     inputSchema: s.actionInput(
       taskMutationFields,
@@ -221,6 +230,7 @@ export const motionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_task",
+    operationType: "write",
     description: "Update a Motion task by ID.",
     inputSchema: updateTaskInputSchema,
     outputSchema: s.actionOutput(
@@ -232,6 +242,7 @@ export const motionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_task",
+    operationType: "destructive",
     description: "Delete a Motion task by ID.",
     inputSchema: s.actionInput(
       {
@@ -249,6 +260,7 @@ export const motionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_statuses",
+    operationType: "read",
     description: "List Motion statuses for a workspace.",
     inputSchema: s.actionInput(
       {
@@ -266,6 +278,7 @@ export const motionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_schedules",
+    operationType: "read",
     description: "List Motion schedules for a workspace.",
     inputSchema: s.actionInput(
       {

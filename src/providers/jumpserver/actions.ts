@@ -79,6 +79,7 @@ function listOutputSchema(resource: string): JsonSchema {
 export const jumpServerActions: ActionDefinition[] = jumpServerMcpToolNames.map((name) =>
   defineProviderAction(service, {
     name,
+    operationType: "read",
     description: actionMetadata[name].description,
     inputSchema: listInputSchema,
     outputSchema: listOutputSchema(actionMetadata[name].resource),

@@ -150,6 +150,7 @@ function luckinResponse(description: string, data: JsonSchema): JsonSchema {
 export const luckinCoffeeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "queryShopList",
+    operationType: "read",
     description: "Find nearby Luckin Coffee stores using a location and optional store name.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -166,6 +167,7 @@ export const luckinCoffeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "searchProductForMcp",
+    operationType: "read",
     description: "Search and recommend Luckin Coffee products at a specific store from the user's original request.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Input for searching Luckin Coffee products.", {
@@ -177,6 +179,7 @@ export const luckinCoffeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "switchProduct",
+    operationType: "read",
     description: "Change a selectable attribute on a Luckin Coffee product and return the updated SKU and price.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Input for changing one product attribute.", {
@@ -197,6 +200,7 @@ export const luckinCoffeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "queryProductDetailInfo",
+    operationType: "read",
     description: "Get the current details, attributes, SKU, and price for one Luckin Coffee product at a store.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Input for reading product details.", {
@@ -208,6 +212,7 @@ export const luckinCoffeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "previewOrder",
+    operationType: "read",
     description: "Preview a Luckin Coffee order, including prices and available coupons, without creating it.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Input for previewing an order.", {
@@ -219,6 +224,7 @@ export const luckinCoffeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "createOrder",
+    operationType: "write",
     description:
       "Create a real Luckin Coffee order that may require payment. Preview the order first and obtain the user's confirmation before calling this action.",
     requiredScopes: [],
@@ -239,6 +245,7 @@ export const luckinCoffeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "queryOrderDetailInfo",
+    operationType: "read",
     description: "Get the current status, pickup details, products, payment, and delivery information for an order.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Input for reading Luckin Coffee order details.", {
@@ -249,6 +256,7 @@ export const luckinCoffeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "cancelOrder",
+    operationType: "destructive",
     description:
       "Cancel a Luckin Coffee order. This changes a real order and may be irreversible; confirm the exact order with the user first.",
     requiredScopes: [],

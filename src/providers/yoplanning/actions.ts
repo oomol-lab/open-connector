@@ -49,6 +49,7 @@ function paginatedOutput(description: string, itemDescription: string, itemSchem
 export const yoplanningActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_teams",
+    operationType: "read",
     description: "List the YoPlanning teams accessible to the authenticated API token.",
     followUpActions: ["yoplanning.get_team"],
     inputSchema: s.actionInput(pagination, [], "Input payload for listing accessible YoPlanning teams."),
@@ -60,6 +61,7 @@ export const yoplanningActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_team",
+    operationType: "read",
     description: "Get one YoPlanning team by its ID.",
     followUpActions: ["yoplanning.list_online_products"],
     inputSchema: s.actionInput({ teamId: s.uuid("The YoPlanning team ID.") }, ["teamId"]),
@@ -67,6 +69,7 @@ export const yoplanningActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_online_products",
+    operationType: "read",
     description: "List products that a YoPlanning team currently offers for online sale.",
     followUpActions: ["yoplanning.get_online_product", "yoplanning.list_product_availabilities"],
     inputSchema: s.actionInput(
@@ -89,6 +92,7 @@ export const yoplanningActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_online_product",
+    operationType: "read",
     description: "Get one online product offered by a YoPlanning team.",
     followUpActions: ["yoplanning.list_product_availabilities"],
     inputSchema: s.actionInput(
@@ -101,6 +105,7 @@ export const yoplanningActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_product_availabilities",
+    operationType: "read",
     description: "List bookable availability slots for one YoPlanning online product.",
     followUpActions: ["yoplanning.get_availability_details"],
     inputSchema: s.actionInput(
@@ -122,6 +127,7 @@ export const yoplanningActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_availability_details",
+    operationType: "read",
     description: "Get the currently bookable options and resources for a YoPlanning availability.",
     inputSchema: s.actionInput(
       {

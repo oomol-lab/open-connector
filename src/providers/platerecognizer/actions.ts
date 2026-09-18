@@ -67,6 +67,7 @@ const resultSchema = s.object(
 export const platerecognizerActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "read_number_plates",
+    operationType: "read",
     description:
       "Read number plates from one image by calling Plate Recognizer Snapshot Cloud and returning normalized detections.",
     inputSchema: s.object(
@@ -95,6 +96,7 @@ export const platerecognizerActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_statistics",
+    operationType: "read",
     description: "Retrieve current-month Plate Recognizer Snapshot Cloud usage and reset information.",
     inputSchema: s.actionInput({}),
     outputSchema: s.actionOutput({

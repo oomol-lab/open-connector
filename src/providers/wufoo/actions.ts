@@ -38,6 +38,7 @@ const filtersSchema = s.array("Entry filters applied in their listed order.", fi
 export const wufooActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_forms",
+    operationType: "read",
     description: "List Wufoo forms available to the connected API key.",
     inputSchema: s.object(
       "Pagination and optional daily-count controls for listing forms.",
@@ -54,6 +55,7 @@ export const wufooActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form",
+    operationType: "read",
     description: "Retrieve one Wufoo form by its permanent hash or title slug.",
     inputSchema: s.object(
       "The form identifier and optional daily-count control.",
@@ -67,6 +69,7 @@ export const wufooActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_form_fields",
+    operationType: "read",
     description: "List the field definitions for a Wufoo form.",
     inputSchema: s.object(
       "The form identifier and field metadata controls.",
@@ -82,6 +85,7 @@ export const wufooActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_entries",
+    operationType: "read",
     description: "List, filter, sort, and page entries for a Wufoo form.",
     inputSchema: s.object(
       "The form identifier and documented Wufoo entry query controls.",
@@ -105,6 +109,7 @@ export const wufooActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "count_entries",
+    operationType: "read",
     description: "Count entries for a Wufoo form, optionally using entry filters.",
     inputSchema: s.object(
       "The form identifier and optional Wufoo entry filters.",
@@ -121,6 +126,7 @@ export const wufooActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_entry",
+    operationType: "write",
     description: "Submit JSON field values as a new entry for a Wufoo form.",
     inputSchema: s.object("The target form and its dynamic Wufoo field values.", {
       formIdentifier: formIdentifierSchema,

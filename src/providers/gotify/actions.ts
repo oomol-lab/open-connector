@@ -35,6 +35,7 @@ const versionSchema = s.requiredObject("Gotify instance version information.", {
 export const gotifyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send a message through the connected Gotify application token and return the created message.",
     inputSchema: s.object(
       "Input parameters for creating one Gotify message.",
@@ -50,12 +51,14 @@ export const gotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_health",
+    operationType: "read",
     description: "Fetch health information from the connected Gotify instance.",
     inputSchema: s.object({}, { description: "This action does not require any input parameters." }),
     outputSchema: healthSchema,
   }),
   defineProviderAction(service, {
     name: "get_version",
+    operationType: "read",
     description: "Fetch version information from the connected Gotify instance.",
     inputSchema: s.object({}, { description: "This action does not require any input parameters." }),
     outputSchema: versionSchema,

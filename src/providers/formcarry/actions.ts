@@ -101,6 +101,7 @@ const listSubmissionsOutputSchema = s.looseRequiredObject("Submission list respo
 export const formcarryActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_form",
+    operationType: "write",
     description: "Create a new Formcarry form with basic notification, redirect, and storage settings.",
     requiredScopes: [],
     inputSchema: createFormInputSchema,
@@ -108,6 +109,7 @@ export const formcarryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_form",
+    operationType: "destructive",
     description: "Delete an existing Formcarry form by ID.",
     requiredScopes: [],
     inputSchema: deleteFormInputSchema,
@@ -115,6 +117,7 @@ export const formcarryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_submissions",
+    operationType: "read",
     description:
       "List submissions for a Formcarry form with the documented pagination, sorting, and filtering query parameters.",
     requiredScopes: [],

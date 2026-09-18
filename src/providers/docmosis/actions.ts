@@ -73,6 +73,7 @@ const renderHeadersSchema = s.object("The selected Docmosis response headers.", 
 export const docmosisActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_environment_summary",
+    operationType: "read",
     description:
       "Get Docmosis environment plan, quota, and readiness information for the selected processing location.",
     inputSchema: noInputSchema,
@@ -85,6 +86,7 @@ export const docmosisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_environment_ready",
+    operationType: "read",
     description: "Check whether the selected Docmosis environment is currently ready to service render requests.",
     inputSchema: noInputSchema,
     outputSchema: s.object("The Docmosis environment ready response.", {
@@ -96,6 +98,7 @@ export const docmosisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description:
       "List Docmosis templates available in the selected processing location with optional folder and paging controls.",
     inputSchema: s.object(
@@ -119,6 +122,7 @@ export const docmosisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_template_details",
+    operationType: "read",
     description: "Get the stored metadata for one uploaded Docmosis template without downloading the template file.",
     inputSchema: s.object("Input parameters for retrieving Docmosis template details.", {
       templateName: s.nonEmptyString("The template path to inspect."),
@@ -132,6 +136,7 @@ export const docmosisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_template_structure",
+    operationType: "read",
     description:
       "Get the Docmosis template structure tree that describes fields, repeats, conditions, and other data references.",
     inputSchema: s.object("Input parameters for retrieving Docmosis template structure.", {
@@ -148,6 +153,7 @@ export const docmosisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "render_document",
+    operationType: "read",
     description:
       "Render one Docmosis template with JSON data and return JSON-safe delivery metadata or an explicit base64 result file.",
     inputSchema: s.object(

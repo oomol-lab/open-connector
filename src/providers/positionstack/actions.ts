@@ -109,12 +109,14 @@ const geocodeResponseSchema = s.looseRequiredObject(
 export const positionstackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "forward_geocode",
+    operationType: "read",
     description: "Convert an address or place query into Positionstack geocoding results.",
     inputSchema: forwardGeocodeInputSchema,
     outputSchema: geocodeResponseSchema,
   }),
   defineProviderAction(service, {
     name: "reverse_geocode",
+    operationType: "read",
     description: "Convert coordinates or an IP address into Positionstack reverse geocoding results.",
     inputSchema: reverseGeocodeInputSchema,
     outputSchema: geocodeResponseSchema,

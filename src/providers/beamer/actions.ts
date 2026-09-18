@@ -242,6 +242,7 @@ const createPostInputSchema = s.object(
 export const beamerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_feed_url",
+    operationType: "read",
     description: "Retrieve the standalone Beamer feed URL with optional language and segmentation filters.",
     inputSchema: feedInputSchema,
     outputSchema: s.object(
@@ -254,6 +255,7 @@ export const beamerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "count_unread_posts",
+    operationType: "read",
     description: "Count unread Beamer posts for one end-user context.",
     inputSchema: countUnreadInputSchema,
     outputSchema: s.object(
@@ -266,6 +268,7 @@ export const beamerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_posts",
+    operationType: "read",
     description: "List existing Beamer posts with optional changelog, audience, and analytics filters.",
     inputSchema: listPostsInputSchema,
     outputSchema: s.object(
@@ -278,6 +281,7 @@ export const beamerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_post",
+    operationType: "write",
     description: "Create a new Beamer changelog post with one or more translations.",
     inputSchema: createPostInputSchema,
     outputSchema: s.object(

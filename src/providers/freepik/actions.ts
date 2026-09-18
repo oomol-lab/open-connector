@@ -182,6 +182,7 @@ const downloadResourceOutputSchema = s.object("A Magnific resource download resp
 export const freepikActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_resources",
+    operationType: "read",
     description: "Search Magnific stock images and templates through the resources API.",
     inputSchema: s.object(
       "Input parameters for searching Magnific stock resources.",
@@ -202,6 +203,7 @@ export const freepikActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_resource",
+    operationType: "read",
     description: "Get detailed metadata for a Magnific stock resource by ID.",
     inputSchema: s.object(
       "Input parameters for retrieving a Magnific resource.",
@@ -215,6 +217,7 @@ export const freepikActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "download_resource",
+    operationType: "read",
     description: "Create a Magnific stock resource download URL through the resources API.",
     inputSchema: s.object(
       "Input parameters for downloading a Magnific resource. format and imageSize cannot be used together.",

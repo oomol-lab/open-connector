@@ -110,6 +110,7 @@ const attachmentListFilterFields = {
 
 const getCurrentUser = defineProviderAction(service, {
   name: "get_current_user",
+  operationType: "read",
   description: "Get the user associated with the connected FNS API token.",
   requiredScopes: [],
   inputSchema: emptyInputSchema,
@@ -124,6 +125,7 @@ const getCurrentUser = defineProviderAction(service, {
 
 const listVaults = defineProviderAction(service, {
   name: "list_vaults",
+  operationType: "read",
   description: "List every note vault owned by the authenticated FNS user.",
   requiredScopes: [],
   inputSchema: emptyInputSchema,
@@ -138,6 +140,7 @@ const listVaults = defineProviderAction(service, {
 
 const getVault = defineProviderAction(service, {
   name: "get_vault",
+  operationType: "read",
   description: "Get one FNS vault by its numeric id.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -158,6 +161,7 @@ const getVault = defineProviderAction(service, {
 
 const upsertVault = defineProviderAction(service, {
   name: "upsert_vault",
+  operationType: "write",
   description: "Create an FNS vault or update an existing vault when its id is provided.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -179,6 +183,7 @@ const upsertVault = defineProviderAction(service, {
 
 const deleteVault = defineProviderAction(service, {
   name: "delete_vault",
+  operationType: "destructive",
   description: "Permanently delete an FNS vault and all notes and attachments it contains.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -199,6 +204,7 @@ const deleteVault = defineProviderAction(service, {
 
 const listNotes = defineProviderAction(service, {
   name: "list_notes",
+  operationType: "read",
   description: "List note metadata in an FNS vault with pagination and sorting.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -222,6 +228,7 @@ const listNotes = defineProviderAction(service, {
 
 const searchNotes = defineProviderAction(service, {
   name: "search_notes",
+  operationType: "read",
   description: "Search note paths or note content in an FNS vault.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -249,6 +256,7 @@ const searchNotes = defineProviderAction(service, {
 
 const getNote = defineProviderAction(service, {
   name: "get_note",
+  operationType: "read",
   description: "Get one FNS note's Markdown content and metadata by path.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -271,6 +279,7 @@ const getNote = defineProviderAction(service, {
 
 const upsertNote = defineProviderAction(service, {
   name: "upsert_note",
+  operationType: "destructive",
   description: "Create an FNS note or replace the content of an existing note at the same path.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -296,6 +305,7 @@ const upsertNote = defineProviderAction(service, {
 
 const deleteNote = defineProviderAction(service, {
   name: "delete_note",
+  operationType: "destructive",
   description: "Move one FNS note to the recycle bin.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -318,6 +328,7 @@ const deleteNote = defineProviderAction(service, {
 
 const listAttachments = defineProviderAction(service, {
   name: "list_attachments",
+  operationType: "read",
   description: "List attachment metadata in an FNS vault with search, pagination, and sorting.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -343,6 +354,7 @@ const listAttachments = defineProviderAction(service, {
 
 const uploadAttachment = defineProviderAction(service, {
   name: "upload_attachment",
+  operationType: "write",
   description: "Download a public file URL and upload it as an attachment to an FNS vault.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -368,6 +380,7 @@ const uploadAttachment = defineProviderAction(service, {
 
 const downloadAttachment = defineProviderAction(service, {
   name: "download_attachment",
+  operationType: "read",
   description: "Download an FNS attachment into connector file transit and return its transit URL.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -400,6 +413,7 @@ const downloadAttachment = defineProviderAction(service, {
 
 const deleteAttachment = defineProviderAction(service, {
   name: "delete_attachment",
+  operationType: "destructive",
   description: "Permanently delete one FNS attachment by path and path hash.",
   requiredScopes: [],
   inputSchema: s.object(

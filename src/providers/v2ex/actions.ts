@@ -178,6 +178,7 @@ const emptyOutputSchema = s.actionOutput(
 export const v2exActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_notifications",
+    operationType: "read",
     description: "Fetch the latest V2EX notifications for the authenticated member.",
     inputSchema: s.actionInput({ p: pageInputSchema }, [], "Input parameters for fetching V2EX notifications."),
     outputSchema: s.actionOutput(
@@ -190,6 +191,7 @@ export const v2exActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_notification",
+    operationType: "destructive",
     description: "Delete one V2EX notification by its numeric identifier.",
     inputSchema: s.actionInput(
       { notification_id: idInputSchema },
@@ -200,30 +202,35 @@ export const v2exActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_hot_topics",
+    operationType: "read",
     description: "Fetch public hot topics from the V2EX legacy JSON API.",
     inputSchema: s.actionInput({}, [], "Input parameters for fetching V2EX legacy hot topics."),
     outputSchema: legacyTopicListOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_latest_topics",
+    operationType: "read",
     description: "Fetch public latest topics from the V2EX legacy JSON API.",
     inputSchema: s.actionInput({}, [], "Input parameters for fetching V2EX legacy latest topics."),
     outputSchema: legacyTopicListOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_current_member",
+    operationType: "read",
     description: "Fetch the authenticated V2EX member profile.",
     inputSchema: s.actionInput({}, [], "Input parameters for fetching the authenticated V2EX member."),
     outputSchema: s.actionOutput({ member: v2exProfileSchema }, "The V2EX member profile response."),
   }),
   defineProviderAction(service, {
     name: "get_current_token",
+    operationType: "read",
     description: "Fetch metadata for the V2EX Personal Access Token used by this connection.",
     inputSchema: s.actionInput({}, [], "Input parameters for fetching current V2EX token metadata."),
     outputSchema: s.actionOutput({ token: v2exTokenMetadataSchema }, "The V2EX token metadata response."),
   }),
   defineProviderAction(service, {
     name: "create_token",
+    operationType: "write",
     description: "Create a new V2EX Personal Access Token from an existing token.",
     inputSchema: s.actionInput(
       {
@@ -245,6 +252,7 @@ export const v2exActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_node",
+    operationType: "read",
     description: "Fetch a V2EX node by node name.",
     inputSchema: s.actionInput(
       { node_name: nodeNameInputSchema },
@@ -255,6 +263,7 @@ export const v2exActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_node_topics",
+    operationType: "read",
     description: "Fetch topics from a V2EX node.",
     inputSchema: s.actionInput(
       { node_name: nodeNameInputSchema, p: pageInputSchema },
@@ -268,6 +277,7 @@ export const v2exActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_topic",
+    operationType: "read",
     description: "Fetch a V2EX topic by numeric identifier.",
     inputSchema: s.actionInput(
       { topic_id: idInputSchema },
@@ -278,6 +288,7 @@ export const v2exActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_topic_replies",
+    operationType: "read",
     description: "Fetch replies for a V2EX topic.",
     inputSchema: s.actionInput(
       { topic_id: idInputSchema, p: pageInputSchema },
@@ -291,6 +302,7 @@ export const v2exActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_topic_sticky",
+    operationType: "write",
     description: "Set one of the authenticated member's V2EX topics as sticky.",
     inputSchema: s.actionInput(
       {
@@ -304,6 +316,7 @@ export const v2exActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "boost_topic",
+    operationType: "write",
     description: "Boost one of the authenticated member's V2EX topics to the homepage.",
     inputSchema: s.actionInput(
       { topic_id: idInputSchema },

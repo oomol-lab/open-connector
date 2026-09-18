@@ -1,9 +1,17 @@
-import type { ActionDefinition } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "flomo";
+
+interface FlomoMcpToolDefinition {
+  name: string;
+  operationType: ActionDefinition["operationType"];
+  description: string;
+  inputSchema: JsonSchema;
+  outputSchema: JsonSchema;
+}
 
 const memoTagSchema = s.string("One flomo tag.");
 const mcpMemoFileSchema = s.object("A file attached to a flomo memo.", {
@@ -98,9 +106,10 @@ const createMemoMcpOutputSchema = s.object(
   { optional: ["content"] },
 );
 
-const flomoMcpToolDefinitions = [
+const flomoMcpToolDefinitions: FlomoMcpToolDefinition[] = [
   {
     name: "memo_update",
+    operationType: "destructive",
     description:
       "Update an existing flomo memo through the flomo Max MCP server. The exact arguments are validated by flomo MCP.",
     inputSchema: s.object(
@@ -117,6 +126,7 @@ const flomoMcpToolDefinitions = [
   },
   {
     name: "memo_search",
+    operationType: "read",
     description:
       "Search flomo memos through the flomo Max MCP server by keywords, tags, time range, or semantic search options.",
     inputSchema: s.object(
@@ -138,6 +148,7 @@ const flomoMcpToolDefinitions = [
   },
   {
     name: "memo_batch_get",
+    operationType: "read",
     description: "Fetch multiple flomo memos through the flomo Max MCP server in a single tool call.",
     inputSchema: s.object(
       "Input for fetching flomo memos by ID through flomo MCP.",
@@ -153,6 +164,7 @@ const flomoMcpToolDefinitions = [
   },
   {
     name: "memo_recommended",
+    operationType: "read",
     description: "Find flomo memos related to a target memo through the flomo Max MCP server.",
     inputSchema: s.object(
       "Input for finding memos related to a target flomo memo.",
@@ -167,6 +179,7 @@ const flomoMcpToolDefinitions = [
   },
   {
     name: "tag_tree",
+    operationType: "read",
     description: "Fetch the flomo tag tree through the flomo Max MCP server.",
     inputSchema: s.object(
       "Input for fetching a flomo tag tree.",
@@ -180,6 +193,7 @@ const flomoMcpToolDefinitions = [
   },
   {
     name: "tag_search",
+    operationType: "read",
     description: "Search flomo tags through the flomo Max MCP server.",
     inputSchema: s.object(
       "Input for searching flomo tags.",
@@ -203,6 +217,7 @@ const flomoMcpToolDefinitions = [
   },
   {
     name: "tag_rename",
+    operationType: "write",
     description: "Rename flomo tags through the flomo Max MCP server and update associated memos.",
     inputSchema: s.object(
       "Input for renaming a flomo tag.",
@@ -229,30 +244,35 @@ const flomoMcpToolDefinitions = [
   },
   {
     name: "memory_user",
+    operationType: "read",
     description: "Read the generated flomo memory user profile through the flomo Max MCP server.",
     inputSchema: s.object("Input for reading the flomo memory user profile.", {}),
     outputSchema: contentOutputSchema,
   },
   {
     name: "memory_context",
+    operationType: "read",
     description: "Read the generated flomo memory context through the flomo Max MCP server.",
     inputSchema: s.object("Input for reading the flomo memory context.", {}),
     outputSchema: contentOutputSchema,
   },
   {
     name: "get_daily_review",
+    operationType: "read",
     description: "Fetch flomo daily review content through the flomo Max MCP server.",
     inputSchema: s.object("Input for fetching the flomo daily review.", {}),
     outputSchema: mcpMemoListOutputSchema,
   },
   {
     name: "get_format_guide",
+    operationType: "read",
     description: "Fetch flomo memo formatting guidance through the flomo Max MCP server.",
     inputSchema: s.object("Input for fetching the flomo memo format guide.", {}),
     outputSchema: contentOutputSchema,
   },
   {
     name: "get_tag_guide",
+    operationType: "read",
     description: "Fetch flomo tag usage guidance through the flomo Max MCP server.",
     inputSchema: s.object("Input for fetching the flomo tag guide.", {}),
     outputSchema: contentOutputSchema,
@@ -262,6 +282,7 @@ const flomoMcpToolDefinitions = [
 export const flomoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_memo",
+    operationType: "write",
     description: "Create a flomo memo by sending markdown or plain text to the incoming webhook.",
     requiredScopes: [],
     inputSchema: createMemoInputSchema,
@@ -273,6 +294,7 @@ export const flomoActions: ActionDefinition[] = [
   ...flomoMcpToolDefinitions.map((tool) =>
     defineProviderAction(service, {
       name: tool.name,
+      operationType: tool.operationType,
       description: tool.description,
       requiredScopes: [],
       inputSchema: tool.inputSchema,

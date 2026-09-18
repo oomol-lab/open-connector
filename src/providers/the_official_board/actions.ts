@@ -19,6 +19,7 @@ const resultObjectSchema = s.requiredObject("An object response returned by The 
 export const theOfficialBoardActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_companies",
+    operationType: "read",
     description: "Find company organizational chart identifiers by company name.",
     inputSchema: s.object(
       "Parameters for searching companies.",
@@ -35,6 +36,7 @@ export const theOfficialBoardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company_org_chart",
+    operationType: "read",
     description: "Retrieve a company organizational chart and its executives in structured JSON.",
     inputSchema: s.requiredObject("Parameters for retrieving a company organizational chart.", {
       id: nonEmptyString("The company unique identifier returned by search_companies."),
@@ -43,6 +45,7 @@ export const theOfficialBoardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_executives",
+    operationType: "read",
     description: "Search executives by first name, last name, or full name.",
     inputSchema: s.object(
       "Parameters for searching executives.",
@@ -59,6 +62,7 @@ export const theOfficialBoardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_executive",
+    operationType: "read",
     description: "Find executives by an exact email address or LinkedIn profile URL.",
     inputSchema: s.object(
       "Parameters for finding an executive by an exact identifier.",
@@ -72,6 +76,7 @@ export const theOfficialBoardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_executive_biography",
+    operationType: "read",
     description: "Retrieve detailed biography information for an executive.",
     inputSchema: s.requiredObject("Parameters for retrieving an executive biography.", {
       bioId: nonEmptyString("The executive biography identifier returned by an executive search."),
@@ -80,6 +85,7 @@ export const theOfficialBoardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_direct_colleagues",
+    operationType: "read",
     description: "List the direct colleagues in an executive's organizational environment.",
     inputSchema: s.requiredObject("Parameters for listing an executive's direct colleagues.", {
       bioId: nonEmptyString("The executive biography identifier returned by an executive search."),
@@ -88,6 +94,7 @@ export const theOfficialBoardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_recent_org_chart_news",
+    operationType: "read",
     description: "List the main organizational chart changes for a company from the past 12 months.",
     inputSchema: s.requiredObject("Parameters for listing recent organizational chart news.", {
       id: nonEmptyString("The company unique identifier returned by search_companies."),
@@ -96,6 +103,7 @@ export const theOfficialBoardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_watchlist_changes",
+    operationType: "read",
     description: "List recently modified organizational charts from the connected user's watchlist.",
     inputSchema: s.object(
       "Pagination parameters for watchlist changes.",

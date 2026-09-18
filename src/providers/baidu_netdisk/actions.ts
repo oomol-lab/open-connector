@@ -135,6 +135,7 @@ const relocateInputSchema = (operation: string) =>
 export const baiduNetdiskActions: ProviderActionDefinition[] = [
   defineProviderAction("baidu_netdisk", {
     name: "get_current_account",
+    operationType: "read",
     description: "Get the current Baidu Netdisk account and membership summary.",
     requiredScopes: [baiduNetdiskConnectorScopes.accountRead],
     providerPermissions: [baiduNetdiskProviderScopes.basic, baiduNetdiskProviderScopes.netdisk],
@@ -148,6 +149,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("baidu_netdisk", {
     name: "get_quota",
+    operationType: "read",
     description: "Get total, used, remaining, free, and expiring Baidu Netdisk capacity.",
     requiredScopes: [baiduNetdiskConnectorScopes.accountRead],
     providerPermissions: [baiduNetdiskProviderScopes.basic, baiduNetdiskProviderScopes.netdisk],
@@ -162,6 +164,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("baidu_netdisk", {
     name: "list_files",
+    operationType: "read",
     description:
       "List all files and folders, or only documents, images, or videos, from the user's Baidu Netdisk root.",
     requiredScopes: [baiduNetdiskConnectorScopes.rootFilesRead],
@@ -187,6 +190,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("baidu_netdisk", {
     name: "search_files",
+    operationType: "read",
     description: "Search files and folders below an absolute Baidu Netdisk directory.",
     requiredScopes: [baiduNetdiskConnectorScopes.rootFilesRead],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
@@ -217,6 +221,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("baidu_netdisk", {
     name: "semantic_search_files",
+    operationType: "read",
     description: "Search Baidu Netdisk using a natural-language description.",
     requiredScopes: [baiduNetdiskConnectorScopes.rootFilesRead],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
@@ -238,6 +243,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("baidu_netdisk", {
     name: "download_file",
+    operationType: "read",
     description: "Download one Baidu Netdisk file by fs_id into local transit file storage.",
     requiredScopes: [baiduNetdiskConnectorScopes.rootFilesRead],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
@@ -252,6 +258,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("baidu_netdisk", {
     name: "upload_file_from_url",
+    operationType: "write",
     description: "Ask Baidu Netdisk to fetch one public URL into an absolute destination path.",
     requiredScopes: [baiduNetdiskConnectorScopes.rootFilesWrite],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
@@ -263,6 +270,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("baidu_netdisk", {
     name: "create_text_file",
+    operationType: "write",
     description: "Create one UTF-8 text file through Baidu MCP.",
     requiredScopes: [baiduNetdiskConnectorScopes.rootFilesWrite],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
@@ -274,6 +282,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("baidu_netdisk", {
     name: "create_folder",
+    operationType: "write",
     description: "Create one folder at an absolute path below the user's Baidu Netdisk root.",
     requiredScopes: [baiduNetdiskConnectorScopes.rootFilesWrite],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
@@ -289,6 +298,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("baidu_netdisk", {
     name: "create_share_link",
+    operationType: "write",
     description: "Create one Baidu Netdisk share link for one or more files or folders.",
     requiredScopes: [baiduNetdiskConnectorScopes.rootFilesWrite],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
@@ -314,6 +324,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("baidu_netdisk", {
     name: "copy",
+    operationType: "write",
     description: "Synchronously copy one Baidu Netdisk file or folder.",
     requiredScopes: [baiduNetdiskConnectorScopes.rootFilesWrite],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
@@ -322,6 +333,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("baidu_netdisk", {
     name: "move",
+    operationType: "destructive",
     description: "Synchronously move one Baidu Netdisk file or folder.",
     requiredScopes: [baiduNetdiskConnectorScopes.rootFilesWrite],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
@@ -330,6 +342,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("baidu_netdisk", {
     name: "rename",
+    operationType: "write",
     description: "Synchronously rename one Baidu Netdisk file or folder.",
     requiredScopes: [baiduNetdiskConnectorScopes.rootFilesWrite],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],

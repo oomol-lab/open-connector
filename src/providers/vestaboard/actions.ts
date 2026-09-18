@@ -60,6 +60,7 @@ const transitionStateSchema = s.object("The Vestaboard transition settings.", {
 export const vestaboardActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_message",
+    operationType: "read",
     description: "Read the current message displayed by Vestaboard Cloud API.",
     inputSchema: s.object("Input for reading the current Vestaboard message.", {}),
     outputSchema: s.object("The current message response returned by Vestaboard.", {
@@ -71,6 +72,7 @@ export const vestaboardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send a new Vestaboard message as plain text or as a two-dimensional character-code grid.",
     inputSchema: s.oneOf([textMessageInputSchema, charactersMessageInputSchema], {
       description: "Input for sending a Vestaboard message.",
@@ -79,12 +81,14 @@ export const vestaboardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_transition",
+    operationType: "read",
     description: "Read the current Vestaboard transition settings.",
     inputSchema: s.object("Input for reading Vestaboard transition settings.", {}),
     outputSchema: transitionStateSchema,
   }),
   defineProviderAction(service, {
     name: "set_transition",
+    operationType: "write",
     description: "Update the Vestaboard transition style and transition speed.",
     inputSchema: {
       ...transitionStateSchema,

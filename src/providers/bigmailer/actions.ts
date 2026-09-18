@@ -154,6 +154,7 @@ const idResultSchema = s.object(
 export const bigmailerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_brands",
+    operationType: "read",
     description: "List brands in the BigMailer account.",
     inputSchema: s.object(
       { limit: limitSchema, cursor: cursorSchema },
@@ -169,6 +170,7 @@ export const bigmailerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_brand",
+    operationType: "read",
     description: "Get one BigMailer brand by ID.",
     inputSchema: s.object(
       { brandId: brandIdSchema },
@@ -178,6 +180,7 @@ export const bigmailerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_lists",
+    operationType: "read",
     description: "List contact lists in a BigMailer brand.",
     inputSchema: s.object(
       { brandId: brandIdSchema, limit: limitSchema, cursor: cursorSchema },
@@ -193,6 +196,7 @@ export const bigmailerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_list",
+    operationType: "write",
     description: "Create a contact list in a BigMailer brand.",
     inputSchema: s.object(
       {
@@ -205,6 +209,7 @@ export const bigmailerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_list",
+    operationType: "read",
     description: "Get one BigMailer contact list by ID.",
     inputSchema: s.object(
       { brandId: brandIdSchema, listId: listIdSchema },
@@ -214,6 +219,7 @@ export const bigmailerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_list",
+    operationType: "write",
     description: "Update a BigMailer contact list name.",
     inputSchema: s.object(
       {
@@ -227,6 +233,7 @@ export const bigmailerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_list",
+    operationType: "destructive",
     description: "Delete a BigMailer contact list without deleting its contacts.",
     inputSchema: s.object(
       { brandId: brandIdSchema, listId: listIdSchema },
@@ -236,6 +243,7 @@ export const bigmailerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List contacts in a BigMailer brand, optionally filtered by list.",
     inputSchema: s.object(
       { brandId: brandIdSchema, limit: limitSchema, cursor: cursorSchema, listId: listIdSchema },
@@ -251,12 +259,14 @@ export const bigmailerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a contact in a BigMailer brand.",
     inputSchema: createContactInputSchema,
     outputSchema: idResultSchema,
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get one BigMailer contact by ID or email address.",
     inputSchema: s.object(
       { brandId: brandIdSchema, contactId: contactIdSchema },
@@ -269,18 +279,21 @@ export const bigmailerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update a BigMailer contact by ID or email address.",
     inputSchema: updateContactInputSchema,
     outputSchema: idResultSchema,
   }),
   defineProviderAction(service, {
     name: "upsert_contact",
+    operationType: "write",
     description: "Create or update a BigMailer contact by email address.",
     inputSchema: createContactInputSchema,
     outputSchema: idResultSchema,
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete a BigMailer contact by ID or email address.",
     inputSchema: s.object(
       { brandId: brandIdSchema, contactId: contactIdSchema },

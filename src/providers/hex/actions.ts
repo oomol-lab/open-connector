@@ -182,18 +182,21 @@ const cancelRunOutputSchema = s.actionOutput(
 export const hexActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Hex projects visible to the connected token, with pagination and common project filters.",
     inputSchema: listProjectsInputSchema,
     outputSchema: listProjectsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get metadata for a single Hex project by project ID.",
     inputSchema: getProjectInputSchema,
     outputSchema: getProjectOutputSchema,
   }),
   defineProviderAction(service, {
     name: "run_project",
+    operationType: "write",
     description: "Trigger a run of the latest published version of a Hex project.",
     followUpActions: ["hex.get_run_status"],
     asyncLifecycle: {
@@ -206,12 +209,14 @@ export const hexActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_project_runs",
+    operationType: "read",
     description: "List API-triggered runs for a Hex project, optionally filtered by status.",
     inputSchema: listProjectRunsInputSchema,
     outputSchema: listProjectRunsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_run_status",
+    operationType: "read",
     description: "Get the status and metadata for a specific Hex project run.",
     asyncLifecycle: {
       startActionId: "hex.run_project",
@@ -223,6 +228,7 @@ export const hexActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "cancel_run",
+    operationType: "destructive",
     description: "Cancel an in-progress Hex project run.",
     inputSchema: cancelRunInputSchema,
     outputSchema: cancelRunOutputSchema,

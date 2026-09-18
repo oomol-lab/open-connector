@@ -40,6 +40,7 @@ const enrichmentContactSchema = s.actionInput(
 export const dropcontactActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "submit_enrichment",
+    operationType: "write",
     description: "Submit up to 250 contacts to Dropcontact for asynchronous email verification and enrichment.",
     asyncLifecycle: lifecycle,
     followUpActions: ["dropcontact.get_enrichment_result"],
@@ -70,6 +71,7 @@ export const dropcontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_enrichment_result",
+    operationType: "read",
     description: "Retrieve the pending or completed contacts for a Dropcontact enrichment request.",
     asyncLifecycle: lifecycle,
     inputSchema: s.actionInput(

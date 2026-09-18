@@ -118,6 +118,7 @@ const userLookupInputSchema = s.object(
 export const hotjarActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_surveys",
+    operationType: "read",
     description: "List surveys for a Hotjar site with cursor pagination.",
     inputSchema: listSurveysInputSchema,
     outputSchema: s.requiredObject("A page of Hotjar surveys.", {
@@ -128,6 +129,7 @@ export const hotjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_survey",
+    operationType: "read",
     description: "Get one Hotjar survey with its question definitions.",
     inputSchema: s.requiredObject("The site and survey identifiers to retrieve.", {
       siteId: s.nonEmptyString("The Hotjar site identifier."),
@@ -140,6 +142,7 @@ export const hotjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_survey_responses",
+    operationType: "read",
     description: "List responses submitted to one Hotjar survey with cursor pagination.",
     inputSchema: s.object(
       "The survey identifiers and pagination controls for listing responses.",
@@ -158,6 +161,7 @@ export const hotjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_user_lookup",
+    operationType: "destructive",
     description:
       "Submit a Hotjar organization user lookup request, optionally deleting all matching data when deleteAllHits is true.",
     inputSchema: userLookupInputSchema,

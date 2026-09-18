@@ -125,6 +125,7 @@ const tagSchema = s.object("A CompanyCam tag.", {
 export const companycamActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description: "Retrieve the CompanyCam company associated with the API token.",
     inputSchema: s.object("The input payload for retrieving the CompanyCam company.", {}),
     outputSchema: s.object("The response returned when retrieving the CompanyCam company.", {
@@ -134,6 +135,7 @@ export const companycamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Retrieve the current CompanyCam user associated with the API token.",
     inputSchema: s.object("The input payload for retrieving the current CompanyCam user.", {}),
     outputSchema: s.object("The response returned when retrieving the current CompanyCam user.", {
@@ -143,6 +145,7 @@ export const companycamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List CompanyCam projects with optional name, address, and modified-since filters.",
     inputSchema: s.object(
       "The input payload for listing CompanyCam projects.",
@@ -160,6 +163,7 @@ export const companycamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Retrieve one CompanyCam project by ID.",
     inputSchema: s.object("The input payload for retrieving one CompanyCam project.", { projectId: projectIdSchema }),
     outputSchema: s.object("The response returned when retrieving one CompanyCam project.", {
@@ -169,6 +173,7 @@ export const companycamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create a CompanyCam project with optional address, coordinates, and contact data.",
     inputSchema: s.object(
       "The input payload for creating a CompanyCam project.",
@@ -189,6 +194,7 @@ export const companycamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_project",
+    operationType: "write",
     description: "Update a CompanyCam project's name, address, coordinates, or geofence.",
     inputSchema: s.object(
       "The input payload for updating a CompanyCam project.",
@@ -208,6 +214,7 @@ export const companycamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "archive_project",
+    operationType: "destructive",
     description: "Archive a CompanyCam project by ID.",
     inputSchema: s.object("The input payload for archiving a CompanyCam project.", { projectId: projectIdSchema }),
     outputSchema: s.object("The response returned when archiving a CompanyCam project.", {
@@ -217,6 +224,7 @@ export const companycamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "restore_project",
+    operationType: "write",
     description: "Restore an archived CompanyCam project by ID.",
     inputSchema: s.object("The input payload for restoring a CompanyCam project.", { projectId: projectIdSchema }),
     outputSchema: s.object("The response returned when restoring a CompanyCam project.", {
@@ -226,6 +234,7 @@ export const companycamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List CompanyCam users visible to the API token.",
     inputSchema: s.object("The input payload for listing CompanyCam users.", paginationInputFields, {
       optional: ["page", "perPage"],
@@ -237,6 +246,7 @@ export const companycamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Retrieve one CompanyCam user by ID.",
     inputSchema: s.object("The input payload for retrieving one CompanyCam user.", { userId: userIdSchema }),
     outputSchema: s.object("The response returned when retrieving one CompanyCam user.", {
@@ -246,6 +256,7 @@ export const companycamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List CompanyCam tags visible to the API token.",
     inputSchema: s.object("The input payload for listing CompanyCam tags.", paginationInputFields, {
       optional: ["page", "perPage"],
@@ -257,6 +268,7 @@ export const companycamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tag",
+    operationType: "read",
     description: "Retrieve one CompanyCam tag by ID.",
     inputSchema: s.object("The input payload for retrieving one CompanyCam tag.", { tagId: tagIdSchema }),
     outputSchema: s.object("The response returned when retrieving one CompanyCam tag.", {
@@ -266,6 +278,7 @@ export const companycamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_tag",
+    operationType: "write",
     description: "Create a CompanyCam tag.",
     inputSchema: s.object("The input payload for creating a CompanyCam tag.", {
       displayValue: s.nonEmptyString("The user-facing tag label."),
@@ -277,6 +290,7 @@ export const companycamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_tag",
+    operationType: "write",
     description: "Update a CompanyCam tag label.",
     inputSchema: s.object("The input payload for updating a CompanyCam tag.", {
       tagId: tagIdSchema,
@@ -289,6 +303,7 @@ export const companycamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_tag",
+    operationType: "destructive",
     description: "Delete a CompanyCam tag by ID.",
     inputSchema: s.object("The input payload for deleting a CompanyCam tag.", { tagId: tagIdSchema }),
     outputSchema: s.object("The response returned when deleting a CompanyCam tag.", {

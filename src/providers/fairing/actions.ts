@@ -28,6 +28,7 @@ const fairingResponseSchema = s.looseObject("A Fairing response object.", {
 export const fairingActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_responses",
+    operationType: "read",
     description: "List paginated Fairing survey responses with optional time, cursor, and question filters.",
     inputSchema: s.object(
       "The query filters for listing Fairing responses. starting_after and ending_before are mutually exclusive.",

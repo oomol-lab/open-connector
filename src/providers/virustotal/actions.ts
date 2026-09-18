@@ -208,6 +208,7 @@ const descriptorResponseSchema = singleResponseSchema(
 export const virustotalActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search",
+    operationType: "read",
     description: "Search files, URLs, domains, IPs, and other objects in VirusTotal.",
     inputSchema: searchInputSchema,
     outputSchema: collectionResponseSchema(
@@ -217,12 +218,14 @@ export const virustotalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_metadata",
+    operationType: "read",
     description: "Retrieve VirusTotal metadata, including available privileges, engines, and relationship names.",
     inputSchema: s.object("Input parameters for retrieving VirusTotal metadata.", {}),
     outputSchema: singleResponseSchema(metadataPayloadSchema, "Response returned by the VirusTotal metadata endpoint."),
   }),
   defineProviderAction(service, {
     name: "get_analysis",
+    operationType: "read",
     description: "Retrieve a VirusTotal analysis object by analysis ID.",
     inputSchema: s.object("Input parameters for retrieving an analysis object.", {
       analysisId: s.nonEmptyString("Identifier of the analysis to retrieve."),
@@ -231,6 +234,7 @@ export const virustotalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_file_report",
+    operationType: "read",
     description: "Retrieve the latest VirusTotal report for a file identifier.",
     inputSchema: s.object("Input parameters for retrieving a file report.", {
       fileId: s.nonEmptyString("File identifier such as a SHA-256, SHA-1, or MD5 hash."),
@@ -239,6 +243,7 @@ export const virustotalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upload_file",
+    operationType: "write",
     description: "Upload a file to VirusTotal for analysis, automatically using the large-file upload URL when needed.",
     inputSchema: s.object(
       "Input parameters for uploading a file to VirusTotal.",
@@ -253,6 +258,7 @@ export const virustotalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "rescan_file",
+    operationType: "write",
     description: "Request a fresh VirusTotal analysis for a previously submitted file.",
     inputSchema: s.object("Input parameters for re-analyzing a previously submitted file.", {
       fileId: s.nonEmptyString("Identifier of the file to re-analyze."),
@@ -261,6 +267,7 @@ export const virustotalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "scan_url",
+    operationType: "write",
     description: "Submit a URL to VirusTotal for analysis.",
     inputSchema: s.object("Input parameters for submitting a URL to VirusTotal.", {
       url: s.nonEmptyString("Raw URL to submit for analysis."),
@@ -269,6 +276,7 @@ export const virustotalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_url_report",
+    operationType: "read",
     description:
       "Retrieve the latest VirusTotal report for a URL using either a raw URL or a VirusTotal URL identifier.",
     inputSchema: getUrlReportInputSchema,
@@ -276,6 +284,7 @@ export const virustotalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_domain_report",
+    operationType: "read",
     description: "Retrieve the latest VirusTotal report for a domain.",
     inputSchema: s.object("Input parameters for retrieving a domain report.", {
       domain: s.nonEmptyString("Domain name to retrieve."),
@@ -287,6 +296,7 @@ export const virustotalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_domain_relationships",
+    operationType: "read",
     description: "Retrieve related VirusTotal objects for a domain, with an option to request descriptors only.",
     inputSchema: relationshipInputSchema("domain"),
     outputSchema: collectionResponseSchema(
@@ -296,6 +306,7 @@ export const virustotalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ip_address_report",
+    operationType: "read",
     description: "Retrieve the latest VirusTotal report for an IP address.",
     inputSchema: s.object("Input parameters for retrieving an IP address report.", {
       ipAddress: s.nonEmptyString("IPv4 or IPv6 address to retrieve."),
@@ -307,6 +318,7 @@ export const virustotalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ip_address_relationships",
+    operationType: "read",
     description: "Retrieve related VirusTotal objects for an IP address, with an option to request descriptors only.",
     inputSchema: relationshipInputSchema("ipAddress"),
     outputSchema: collectionResponseSchema(
@@ -316,24 +328,28 @@ export const virustotalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_comments",
+    operationType: "read",
     description: "Retrieve community comments for a file, URL, domain, or IP address in VirusTotal.",
     inputSchema: getCommentsInputSchema,
     outputSchema: collectionResponseSchema(commentObjectSchema, "Response returned by a VirusTotal comments endpoint."),
   }),
   defineProviderAction(service, {
     name: "add_comment",
+    operationType: "write",
     description: "Add a community comment to a file, URL, domain, or IP address in VirusTotal.",
     inputSchema: addCommentInputSchema,
     outputSchema: singleResponseSchema(commentObjectSchema, "Response returned after creating a VirusTotal comment."),
   }),
   defineProviderAction(service, {
     name: "get_votes",
+    operationType: "read",
     description: "Retrieve community votes for a file, URL, domain, or IP address in VirusTotal.",
     inputSchema: getVotesInputSchema,
     outputSchema: collectionResponseSchema(voteObjectSchema, "Response returned by a VirusTotal votes endpoint."),
   }),
   defineProviderAction(service, {
     name: "add_vote",
+    operationType: "write",
     description: "Submit a harmless or malicious vote for a VirusTotal file, URL, domain, or IP.",
     inputSchema: addVoteInputSchema,
     outputSchema: singleResponseSchema(voteObjectSchema, "Response returned after creating a VirusTotal vote."),

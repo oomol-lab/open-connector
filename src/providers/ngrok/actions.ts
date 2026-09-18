@@ -154,6 +154,7 @@ function paginatedOutput(description: string, collectionKey: string, itemSchema:
 export const ngrokActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_endpoints",
+    operationType: "read",
     description: "List active ngrok endpoints for the current account, with optional pagination and CEL filtering.",
     inputSchema: s.object(
       {
@@ -170,6 +171,7 @@ export const ngrokActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_endpoint",
+    operationType: "read",
     description: "Fetch one ngrok endpoint by ID and return the upstream endpoint object.",
     inputSchema: s.object(
       {
@@ -184,6 +186,7 @@ export const ngrokActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tunnels",
+    operationType: "read",
     description: "List online ngrok tunnels for the current account with pagination support.",
     inputSchema: s.object(
       {
@@ -199,6 +202,7 @@ export const ngrokActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tunnel_sessions",
+    operationType: "read",
     description: "List online ngrok tunnel sessions for the current account with pagination and CEL filtering.",
     inputSchema: s.object(
       {
@@ -215,6 +219,7 @@ export const ngrokActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_reserved_domains",
+    operationType: "read",
     description: "List reserved ngrok domains for the current account with pagination and CEL filtering.",
     inputSchema: s.object(
       {
@@ -235,6 +240,7 @@ export const ngrokActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_reserved_domain",
+    operationType: "read",
     description: "Fetch one ngrok reserved domain by ID and return the upstream domain object.",
     inputSchema: s.object(
       {

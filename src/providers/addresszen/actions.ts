@@ -170,6 +170,7 @@ const retrieveAddressUsaOutputSchema = s.object(
 export const addresszenActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_key_availability",
+    operationType: "read",
     description: "Retrieve the current AddressZen key availability and context list.",
     inputSchema: s.object(
       {},
@@ -179,12 +180,14 @@ export const addresszenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_address",
+    operationType: "read",
     description: "Autocomplete addresses from a partial query and return the official AddressZen suggestions.",
     inputSchema: findAddressInputSchema,
     outputSchema: findAddressOutputSchema,
   }),
   defineProviderAction(service, {
     name: "retrieve_address_usa",
+    operationType: "read",
     description:
       "Retrieve a USA-formatted address from an AddressZen suggestion identifier and return the official response wrapper.",
     inputSchema: retrieveAddressUsaInputSchema,

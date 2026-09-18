@@ -20,6 +20,7 @@ const binOutputSchema = s.object("The normalized JSONBin bin response.", {
 export const jsonbinActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_bin",
+    operationType: "write",
     description: "Create a JSONBin bin from a JSON object and return the stored record plus bin metadata.",
     inputSchema: s.object(
       "Input parameters for creating a JSONBin bin.",
@@ -37,6 +38,7 @@ export const jsonbinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "read_bin",
+    operationType: "read",
     description: "Read the latest or a specific version of a JSONBin bin.",
     inputSchema: s.object(
       "Input parameters for reading a JSONBin bin.",
@@ -50,6 +52,7 @@ export const jsonbinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_bin",
+    operationType: "destructive",
     description: "Replace the JSON object stored in a JSONBin bin and return the updated record plus bin metadata.",
     inputSchema: s.object(
       "Input parameters for updating a JSONBin bin.",
@@ -64,6 +67,7 @@ export const jsonbinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_bin",
+    operationType: "destructive",
     description: "Delete a JSONBin bin and return the deletion metadata returned by JSONBin.",
     inputSchema: s.object("Input parameters for deleting a JSONBin bin.", {
       binId: binIdSchema,

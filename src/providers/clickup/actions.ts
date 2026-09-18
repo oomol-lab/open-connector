@@ -995,6 +995,7 @@ const updateTaskInputSchema = inputPayload(
 export const clickupActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the authenticated ClickUp user profile.",
     requiredScopes: readScope,
     inputSchema: emptyInputSchema,
@@ -1002,6 +1003,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workspaces",
+    operationType: "read",
     description: "List the ClickUp workspaces available to the authenticated user.",
     requiredScopes: readScope,
     inputSchema: emptyInputSchema,
@@ -1011,6 +1013,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workspace_users",
+    operationType: "read",
     description: "List the members visible on a ClickUp workspace.",
     requiredScopes: readScope,
     inputSchema: listWorkspaceUsersInputSchema,
@@ -1020,6 +1023,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get a ClickUp workspace user by user ID.",
     requiredScopes: readScope,
     inputSchema: getUserInputSchema,
@@ -1029,6 +1033,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_spaces",
+    operationType: "read",
     description: "List the ClickUp spaces available in a workspace.",
     requiredScopes: readScope,
     inputSchema: listSpacesInputSchema,
@@ -1038,6 +1043,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_space",
+    operationType: "read",
     description: "Get a ClickUp space by space ID.",
     requiredScopes: readScope,
     inputSchema: getSpaceInputSchema,
@@ -1045,6 +1051,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_space",
+    operationType: "write",
     description: "Create a ClickUp space in a workspace.",
     requiredScopes: writeScope,
     inputSchema: createSpaceInputSchema,
@@ -1054,6 +1061,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_space",
+    operationType: "write",
     description: "Update a ClickUp space by space ID.",
     requiredScopes: writeScope,
     inputSchema: updateSpaceInputSchema,
@@ -1063,6 +1071,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_space",
+    operationType: "destructive",
     description: "Delete a ClickUp space by space ID.",
     requiredScopes: writeScope,
     inputSchema: deleteSpaceInputSchema,
@@ -1072,6 +1081,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_folders",
+    operationType: "read",
     description: "List the ClickUp folders available in a space.",
     requiredScopes: readScope,
     inputSchema: listFoldersInputSchema,
@@ -1081,6 +1091,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_folder",
+    operationType: "read",
     description: "Get a ClickUp folder by folder ID.",
     requiredScopes: readScope,
     inputSchema: getFolderInputSchema,
@@ -1090,6 +1101,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_folder",
+    operationType: "write",
     description: "Create a ClickUp folder in a space.",
     requiredScopes: writeScope,
     inputSchema: createFolderInputSchema,
@@ -1099,6 +1111,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_folder",
+    operationType: "write",
     description: "Update a ClickUp folder by folder ID.",
     requiredScopes: writeScope,
     inputSchema: updateFolderInputSchema,
@@ -1108,6 +1121,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_folder",
+    operationType: "destructive",
     description: "Delete a ClickUp folder by folder ID.",
     requiredScopes: writeScope,
     inputSchema: deleteFolderInputSchema,
@@ -1117,6 +1131,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_lists",
+    operationType: "read",
     description: "List the ClickUp lists available in a folder.",
     requiredScopes: readScope,
     inputSchema: listListsInputSchema,
@@ -1126,6 +1141,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_folderless_lists",
+    operationType: "read",
     description: "List the ClickUp folderless lists available in a space.",
     requiredScopes: readScope,
     inputSchema: listFolderlessListsInputSchema,
@@ -1135,6 +1151,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_list",
+    operationType: "read",
     description: "Get a ClickUp list by list ID.",
     requiredScopes: readScope,
     inputSchema: getListInputSchema,
@@ -1142,6 +1159,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workspace_custom_fields",
+    operationType: "read",
     description: "Get the ClickUp custom fields available on a workspace.",
     requiredScopes: readScope,
     inputSchema: getWorkspaceCustomFieldsInputSchema,
@@ -1151,6 +1169,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_space_custom_fields",
+    operationType: "read",
     description: "Get the ClickUp custom fields available on a space.",
     requiredScopes: readScope,
     inputSchema: getSpaceCustomFieldsInputSchema,
@@ -1160,6 +1179,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_folder_custom_fields",
+    operationType: "read",
     description: "Get the ClickUp custom fields available on a folder.",
     requiredScopes: readScope,
     inputSchema: getFolderCustomFieldsInputSchema,
@@ -1169,6 +1189,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_list_custom_fields",
+    operationType: "read",
     description: "Get the ClickUp custom fields available on a list.",
     requiredScopes: readScope,
     inputSchema: getListCustomFieldsInputSchema,
@@ -1178,6 +1199,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_custom_field_value",
+    operationType: "write",
     description: "Set a ClickUp custom field value on a task.",
     requiredScopes: writeScope,
     inputSchema: setCustomFieldValueInputSchema,
@@ -1187,6 +1209,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_custom_field_value",
+    operationType: "destructive",
     description: "Remove a ClickUp custom field value from a task.",
     requiredScopes: writeScope,
     inputSchema: removeCustomFieldValueInputSchema,
@@ -1196,6 +1219,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_checklist",
+    operationType: "write",
     description: "Create a checklist on a ClickUp task.",
     requiredScopes: writeScope,
     inputSchema: createChecklistInputSchema,
@@ -1205,6 +1229,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_checklist",
+    operationType: "write",
     description: "Update a ClickUp checklist by checklist ID.",
     requiredScopes: writeScope,
     inputSchema: updateChecklistInputSchema,
@@ -1214,6 +1239,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_checklist",
+    operationType: "destructive",
     description: "Delete a ClickUp checklist by checklist ID.",
     requiredScopes: writeScope,
     inputSchema: deleteChecklistInputSchema,
@@ -1223,6 +1249,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_checklist_item",
+    operationType: "write",
     description: "Create a checklist item on a ClickUp checklist.",
     requiredScopes: writeScope,
     inputSchema: createChecklistItemInputSchema,
@@ -1232,6 +1259,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_checklist_item",
+    operationType: "write",
     description: "Update a ClickUp checklist item by checklist item ID.",
     requiredScopes: writeScope,
     inputSchema: updateChecklistItemInputSchema,
@@ -1241,6 +1269,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_checklist_item",
+    operationType: "destructive",
     description: "Delete a ClickUp checklist item by checklist item ID.",
     requiredScopes: writeScope,
     inputSchema: deleteChecklistItemInputSchema,
@@ -1250,6 +1279,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_space_tags",
+    operationType: "read",
     description: "Get the ClickUp tags available on a space.",
     requiredScopes: readScope,
     inputSchema: getSpaceTagsInputSchema,
@@ -1259,6 +1289,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_tag_to_task",
+    operationType: "write",
     description: "Add a ClickUp tag to a task.",
     requiredScopes: writeScope,
     inputSchema: taskTagMutationInputSchema,
@@ -1268,6 +1299,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_tag_from_task",
+    operationType: "destructive",
     description: "Remove a ClickUp tag from a task.",
     requiredScopes: writeScope,
     inputSchema: taskTagMutationInputSchema,
@@ -1277,6 +1309,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_dependency",
+    operationType: "write",
     description: "Add a ClickUp dependency relationship to a task.",
     requiredScopes: writeScope,
     inputSchema: dependencyMutationInputSchema,
@@ -1286,6 +1319,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_dependency",
+    operationType: "destructive",
     description: "Delete a ClickUp dependency relationship from a task.",
     requiredScopes: writeScope,
     inputSchema: dependencyMutationInputSchema,
@@ -1295,6 +1329,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_task_link",
+    operationType: "write",
     description: "Add a ClickUp task link to a task.",
     requiredScopes: writeScope,
     inputSchema: taskLinkInputSchema,
@@ -1304,6 +1339,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_task_link",
+    operationType: "destructive",
     description: "Delete a ClickUp task link from a task.",
     requiredScopes: writeScope,
     inputSchema: taskLinkInputSchema,
@@ -1313,6 +1349,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_custom_task_types",
+    operationType: "read",
     description: "Get the ClickUp custom task types available on a workspace.",
     requiredScopes: readScope,
     inputSchema: getCustomTaskTypesInputSchema,
@@ -1322,6 +1359,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_view",
+    operationType: "read",
     description: "Get a ClickUp view by view ID.",
     requiredScopes: readScope,
     inputSchema: getViewInputSchema,
@@ -1329,6 +1367,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_view_tasks",
+    operationType: "read",
     description: "Get the visible ClickUp tasks in a view.",
     requiredScopes: readScope,
     inputSchema: getViewTasksInputSchema,
@@ -1342,6 +1381,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_space_views",
+    operationType: "read",
     description: "Get the ClickUp views available on a space.",
     requiredScopes: readScope,
     inputSchema: getSpaceViewsInputSchema,
@@ -1351,6 +1391,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_folder_views",
+    operationType: "read",
     description: "Get the ClickUp views available on a folder.",
     requiredScopes: readScope,
     inputSchema: getFolderViewsInputSchema,
@@ -1360,6 +1401,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_list_views",
+    operationType: "read",
     description: "Get the ClickUp views available on a list.",
     requiredScopes: readScope,
     inputSchema: getListViewsInputSchema,
@@ -1369,6 +1411,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workspace_everything_level_views",
+    operationType: "read",
     description: "Get the ClickUp everything-level views available on a workspace.",
     requiredScopes: readScope,
     inputSchema: getWorkspaceEverythingLevelViewsInputSchema,
@@ -1378,6 +1421,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_task_to_list",
+    operationType: "write",
     description: "Add a ClickUp task to an additional list.",
     requiredScopes: writeScope,
     inputSchema: taskListMembershipInputSchema,
@@ -1387,6 +1431,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_task_from_list",
+    operationType: "destructive",
     description: "Remove a ClickUp task from an additional list.",
     requiredScopes: writeScope,
     inputSchema: taskListMembershipInputSchema,
@@ -1396,6 +1441,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "move_task_to_home_list",
+    operationType: "write",
     description: "Move a ClickUp task to a new home list.",
     requiredScopes: writeScope,
     inputSchema: moveTaskToHomeListInputSchema,
@@ -1405,6 +1451,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_task_attachment",
+    operationType: "write",
     description: "Upload an attachment file to a ClickUp task.",
     requiredScopes: writeScope,
     inputSchema: createTaskAttachmentInputSchema,
@@ -1414,6 +1461,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_list",
+    operationType: "write",
     description: "Create a ClickUp list in a folder.",
     requiredScopes: writeScope,
     inputSchema: createListInputSchema,
@@ -1423,6 +1471,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_folderless_list",
+    operationType: "write",
     description: "Create a ClickUp folderless list in a space.",
     requiredScopes: writeScope,
     inputSchema: createFolderlessListInputSchema,
@@ -1432,6 +1481,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_list",
+    operationType: "write",
     description: "Update a ClickUp list by list ID.",
     requiredScopes: writeScope,
     inputSchema: updateListInputSchema,
@@ -1441,6 +1491,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_list",
+    operationType: "destructive",
     description: "Delete a ClickUp list by list ID.",
     requiredScopes: writeScope,
     inputSchema: deleteListInputSchema,
@@ -1450,6 +1501,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task_templates",
+    operationType: "read",
     description: "Get the ClickUp task templates available in a workspace.",
     requiredScopes: readScope,
     inputSchema: getTaskTemplatesInputSchema,
@@ -1459,6 +1511,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_task_from_template",
+    operationType: "write",
     description: "Create a ClickUp task from a task template.",
     requiredScopes: writeScope,
     inputSchema: createTaskFromTemplateInputSchema,
@@ -1472,6 +1525,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_list_from_template",
+    operationType: "write",
     description: "Create a ClickUp list from a folder list template.",
     requiredScopes: writeScope,
     inputSchema: createListFromTemplateInputSchema,
@@ -1481,6 +1535,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_list_members",
+    operationType: "read",
     description: "Get the ClickUp members with explicit access to a list.",
     requiredScopes: readScope,
     inputSchema: getListMembersInputSchema,
@@ -1490,6 +1545,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_list_tasks",
+    operationType: "read",
     description: "List the ClickUp tasks in a list with optional filters.",
     requiredScopes: readScope,
     inputSchema: listListTasksInputSchema,
@@ -1503,6 +1559,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workspace_tasks",
+    operationType: "read",
     description: "List the ClickUp tasks in a workspace with official filter parameters.",
     requiredScopes: readScope,
     inputSchema: listWorkspaceTasksInputSchema,
@@ -1516,6 +1573,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task",
+    operationType: "read",
     description: "Get a ClickUp task by task ID.",
     requiredScopes: readScope,
     inputSchema: getTaskInputSchema,
@@ -1523,6 +1581,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task_members",
+    operationType: "read",
     description: "Get the ClickUp members with explicit access to a task.",
     requiredScopes: readScope,
     inputSchema: getTaskMembersInputSchema,
@@ -1532,6 +1591,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_task",
+    operationType: "destructive",
     description: "Delete a ClickUp task by task ID.",
     requiredScopes: writeScope,
     inputSchema: deleteTaskInputSchema,
@@ -1541,6 +1601,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task_comments",
+    operationType: "read",
     description: "Get the comments on a ClickUp task.",
     requiredScopes: readScope,
     inputSchema: getTaskCommentsInputSchema,
@@ -1550,6 +1611,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_task_comment",
+    operationType: "write",
     description: "Create a comment on a ClickUp task.",
     requiredScopes: writeScope,
     inputSchema: createTaskCommentInputSchema,
@@ -1559,6 +1621,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_threaded_comment",
+    operationType: "write",
     description: "Create a threaded reply on a ClickUp comment.",
     requiredScopes: writeScope,
     inputSchema: createThreadedCommentInputSchema,
@@ -1568,6 +1631,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_threaded_comments",
+    operationType: "read",
     description: "Get the threaded replies on a ClickUp comment.",
     requiredScopes: readScope,
     inputSchema: getThreadedCommentsInputSchema,
@@ -1577,6 +1641,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_comment",
+    operationType: "write",
     description: "Update a ClickUp comment by comment ID.",
     requiredScopes: writeScope,
     inputSchema: updateCommentInputSchema,
@@ -1586,6 +1651,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_comment",
+    operationType: "destructive",
     description: "Delete a ClickUp comment by comment ID.",
     requiredScopes: writeScope,
     inputSchema: deleteCommentInputSchema,
@@ -1595,6 +1661,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_task",
+    operationType: "write",
     description: "Create a ClickUp task in a list with optional scheduling and assignee fields.",
     requiredScopes: writeScope,
     inputSchema: createTaskInputSchema,
@@ -1604,6 +1671,7 @@ export const clickupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_task",
+    operationType: "write",
     description: "Update a ClickUp task by task ID.",
     requiredScopes: writeScope,
     inputSchema: updateTaskInputSchema,

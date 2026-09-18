@@ -17,6 +17,7 @@ const successSchema = s.optional(s.boolean("Whether Vida reports that the reques
 
 const getAccountAction = defineProviderAction(service, {
   name: "get_account",
+  operationType: "read",
   description: "Get details for the Vida account authenticated by the current API token.",
   inputSchema: s.object(
     "The input payload for getting Vida account details.",
@@ -34,6 +35,7 @@ const getAccountAction = defineProviderAction(service, {
 
 const listTasksAction = defineProviderAction(service, {
   name: "list_tasks",
+  operationType: "read",
   description: "List Vida tasks with optional pagination, time, sorting, and correlation filters.",
   inputSchema: s.object(
     "The input payload for listing Vida tasks.",
@@ -60,6 +62,7 @@ const listTasksAction = defineProviderAction(service, {
 
 const getTaskAction = defineProviderAction(service, {
   name: "get_task",
+  operationType: "read",
   description: "Get one Vida task by its identifier.",
   inputSchema: s.object(
     "The input payload for getting one Vida task.",
@@ -77,6 +80,7 @@ const getTaskAction = defineProviderAction(service, {
 
 const getTaskStatisticsAction = defineProviderAction(service, {
   name: "get_task_statistics",
+  operationType: "read",
   description: "Get Vida task counts grouped by state.",
   inputSchema: s.object(
     "The input payload for getting Vida task statistics.",
@@ -96,6 +100,7 @@ const getTaskStatisticsAction = defineProviderAction(service, {
 
 const getDailyCountsAction = defineProviderAction(service, {
   name: "get_daily_counts",
+  operationType: "read",
   description: "Get current daily Vida call, text, and task usage counts.",
   inputSchema: s.object(
     "The input payload for getting Vida daily usage counts.",

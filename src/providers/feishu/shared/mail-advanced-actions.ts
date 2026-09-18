@@ -82,6 +82,7 @@ export function createFeishuMailAdvancedActions(service: string): readonly Actio
   return [
     defineProviderAction(service, {
       name: "send_mail_read_receipt",
+      operationType: "write",
       description: "Send a system-generated RFC 3798-style read receipt for a message that requested one.",
       requiredScopes: [
         ...messageReadPermissions,
@@ -121,6 +122,7 @@ export function createFeishuMailAdvancedActions(service: string): readonly Actio
     }),
     defineProviderAction(service, {
       name: "decline_mail_read_receipt",
+      operationType: "destructive",
       description:
         "Dismiss a message's read-receipt request without sending mail, safely doing nothing when already cleared.",
       requiredScopes: [...messageReadPermissions, feishuMailAdvancedProviderPermissions.messageModify],
@@ -149,6 +151,7 @@ export function createFeishuMailAdvancedActions(service: string): readonly Actio
     }),
     defineProviderAction(service, {
       name: "get_mail_signature_detail",
+      operationType: "read",
       description: "Fetch one complete mail signature and annotate whether it is the send or reply default.",
       requiredScopes: [feishuMailAdvancedProviderPermissions.mailboxRead],
       providerPermissions: [feishuMailAdvancedProviderPermissions.mailboxRead],
@@ -178,6 +181,7 @@ export function createFeishuMailAdvancedActions(service: string): readonly Actio
     }),
     defineProviderAction(service, {
       name: "share_mail_to_chat",
+      operationType: "write",
       description: "Create a Feishu mail share card for one message or thread and send it to an IM recipient.",
       requiredScopes: [
         feishuMailAdvancedProviderPermissions.messageRead,
@@ -222,6 +226,7 @@ export function createFeishuMailAdvancedActions(service: string): readonly Actio
     }),
     defineProviderAction(service, {
       name: "create_mail_template",
+      operationType: "write",
       description: "Create a personal Feishu mail template from JSON content and existing Drive-backed attachments.",
       requiredScopes: [
         feishuMailAdvancedProviderPermissions.messageModify,
@@ -253,6 +258,7 @@ export function createFeishuMailAdvancedActions(service: string): readonly Actio
     }),
     defineProviderAction(service, {
       name: "update_mail_template",
+      operationType: "destructive",
       description:
         "Fetch and fully replace a mail template after merging provided JSON fields; concurrent writes are last-write-wins.",
       requiredScopes: [
@@ -302,6 +308,7 @@ export function createFeishuMailAdvancedActions(service: string): readonly Actio
     }),
     defineProviderAction(service, {
       name: "triage_mail_messages",
+      operationType: "read",
       description:
         "Auto-paginate compact mailbox summaries through list or search APIs with a stable continuation token.",
       requiredScopes: messageReadPermissions,
@@ -382,6 +389,7 @@ export function createFeishuMailAdvancedActions(service: string): readonly Actio
     }),
     defineProviderAction(service, {
       name: "subscribe_mail_events",
+      operationType: "write",
       description:
         "Subscribe a user mailbox to Feishu message-received events before consuming the corresponding push event.",
       requiredScopes: [
@@ -416,6 +424,7 @@ export function createFeishuMailAdvancedActions(service: string): readonly Actio
     }),
     defineProviderAction(service, {
       name: "unsubscribe_mail_events",
+      operationType: "destructive",
       description: "Unsubscribe a user mailbox from Feishu message-received events.",
       requiredScopes: [
         feishuMailAdvancedProviderPermissions.event,

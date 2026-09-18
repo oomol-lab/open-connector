@@ -277,6 +277,7 @@ const getCoinHistoryInput = s.object(
 export const coingeckoMarketActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_asset_platforms",
+    operationType: "read",
     description:
       "List CoinGecko asset platform IDs for contract-address lookups. These differ from onchain network IDs.",
     requiredScopes: [],
@@ -285,6 +286,7 @@ export const coingeckoMarketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_token_prices",
+    operationType: "read",
     description:
       "Get global average prices and optional metrics for CoinGecko-listed tokens by asset platform and contract addresses. Supports up to 515 addresses per request.",
     requiredScopes: [],
@@ -293,6 +295,7 @@ export const coingeckoMarketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_coin_by_contract",
+    operationType: "read",
     description: "Resolve CoinGecko coin details and coin ID from an asset platform ID and token contract address.",
     requiredScopes: [],
     inputSchema: getCoinByContractInput,
@@ -300,6 +303,7 @@ export const coingeckoMarketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_category_markets",
+    operationType: "read",
     description:
       "List CoinGecko category market capitalization, 24-hour changes and volume. Use returned category IDs with list_coin_markets.",
     requiredScopes: [],
@@ -308,6 +312,7 @@ export const coingeckoMarketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_coin_tickers",
+    operationType: "read",
     description:
       "List a page of up to 100 CEX and DEX tickers for a coin, with exchange filters and optional 2-percent orderbook depth. Quotes are market observations, not execution guarantees.",
     requiredScopes: [],
@@ -316,6 +321,7 @@ export const coingeckoMarketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_coin_ohlc",
+    operationType: "read",
     description:
       "Get coin OHLC candles without volume. Timestamps are candle close times in UNIX milliseconds. Demo supports up to 365 days with automatic granularity; max and explicit hourly/daily intervals require paid access.",
     requiredScopes: [],
@@ -336,6 +342,7 @@ export const coingeckoMarketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_coin_history",
+    operationType: "read",
     description:
       "Get a coin market snapshot at 00:00 UTC on a specified date, not that day's closing price. Demo history is limited to 365 days; paid historical access depends on plan.",
     requiredScopes: [],

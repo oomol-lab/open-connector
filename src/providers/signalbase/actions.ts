@@ -406,6 +406,7 @@ const listOutputSchema = (description: string, itemDescription: string) =>
 export const signalbaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_companies",
+    operationType: "read",
     description: "Browse and search Signalbase company profiles with pagination, filters, and sorting.",
     requiredScopes: [],
     inputSchema: companyQueryInputSchema,
@@ -413,6 +414,7 @@ export const signalbaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_funding_signals",
+    operationType: "read",
     description: "Fetch Signalbase funding signals with date, company, investor, amount, and sorting filters.",
     requiredScopes: [],
     inputSchema: fundingQueryInputSchema,
@@ -423,6 +425,7 @@ export const signalbaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_acquisition_signals",
+    operationType: "read",
     description: "Fetch Signalbase acquisition signals with date, company, acquirer, amount, and sorting filters.",
     requiredScopes: [],
     inputSchema: acquisitionQueryInputSchema,
@@ -433,6 +436,7 @@ export const signalbaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_hiring_signals",
+    operationType: "read",
     description: "Fetch Signalbase hiring signals with role, department, seniority, location, and sorting filters.",
     requiredScopes: [],
     inputSchema: hiringQueryInputSchema,
@@ -443,6 +447,7 @@ export const signalbaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_job_change_signals",
+    operationType: "read",
     description: "Fetch Signalbase job-change signals with person, role, company, LinkedIn, and sorting filters.",
     requiredScopes: [],
     inputSchema: jobChangeQueryInputSchema,
@@ -453,6 +458,7 @@ export const signalbaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_investors",
+    operationType: "read",
     description: "Fetch Signalbase investor data with type, location, ticket-size, and sorting filters.",
     requiredScopes: [],
     inputSchema: investorQueryInputSchema,

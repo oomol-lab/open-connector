@@ -68,6 +68,7 @@ const lookupOutputSchema = s.actionOutput(
 export const iplocateActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "lookup_ip",
+    operationType: "read",
     description: "Look up IPLocate geolocation, ASN, privacy, hosting, company, and abuse data for one IP address.",
     inputSchema: s.actionInput(
       {
@@ -81,6 +82,7 @@ export const iplocateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "lookup_self",
+    operationType: "read",
     description:
       "Look up IPLocate geolocation and threat intelligence data for the connector server's outgoing IP address.",
     inputSchema: s.actionInput(
@@ -94,6 +96,7 @@ export const iplocateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "batch_lookup",
+    operationType: "read",
     description:
       "Look up IPLocate data for multiple IP addresses in one JSON request and preserve per-IP inline errors.",
     inputSchema: s.actionInput(

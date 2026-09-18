@@ -165,6 +165,7 @@ const currentUserOutputSchema = s.requiredObject("The normalized Octopus Deploy 
 export const octopusDeployActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Fetch the current Octopus Deploy user for the connected API key.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for fetching the current Octopus Deploy user.", {}),
@@ -172,6 +173,7 @@ export const octopusDeployActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_spaces",
+    operationType: "read",
     description: "List Octopus Deploy spaces visible to the connected API key.",
     requiredScopes: [],
     inputSchema: listSpacesInputSchema,
@@ -179,6 +181,7 @@ export const octopusDeployActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List projects inside an Octopus Deploy space.",
     requiredScopes: [],
     inputSchema: spaceCollectionInputSchema,
@@ -186,6 +189,7 @@ export const octopusDeployActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Fetch one project inside an Octopus Deploy space by ID.",
     requiredScopes: [],
     inputSchema: getSpaceResourceInputSchema,
@@ -193,6 +197,7 @@ export const octopusDeployActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_environments",
+    operationType: "read",
     description: "List environments inside an Octopus Deploy space.",
     requiredScopes: [],
     inputSchema: spaceCollectionInputSchema,
@@ -200,6 +205,7 @@ export const octopusDeployActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_environment",
+    operationType: "read",
     description: "Fetch one environment inside an Octopus Deploy space by ID.",
     requiredScopes: [],
     inputSchema: getSpaceResourceInputSchema,
@@ -207,6 +213,7 @@ export const octopusDeployActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_releases",
+    operationType: "read",
     description: "List releases inside an Octopus Deploy space.",
     requiredScopes: [],
     inputSchema: listReleasesInputSchema,
@@ -214,6 +221,7 @@ export const octopusDeployActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_release",
+    operationType: "read",
     description: "Fetch one release inside an Octopus Deploy space by ID.",
     requiredScopes: [],
     inputSchema: getSpaceResourceInputSchema,
@@ -221,6 +229,7 @@ export const octopusDeployActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_deployments",
+    operationType: "read",
     description: "List deployments inside an Octopus Deploy space with optional filters.",
     requiredScopes: [],
     inputSchema: listDeploymentsInputSchema,
@@ -228,6 +237,7 @@ export const octopusDeployActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_deployment",
+    operationType: "read",
     description: "Fetch one deployment inside an Octopus Deploy space by ID.",
     requiredScopes: [],
     inputSchema: getSpaceResourceInputSchema,
@@ -235,6 +245,7 @@ export const octopusDeployActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "List Octopus Deploy server tasks inside a space with optional filters.",
     requiredScopes: [],
     inputSchema: listTasksInputSchema,
@@ -242,6 +253,7 @@ export const octopusDeployActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task",
+    operationType: "read",
     description: "Fetch one Octopus Deploy server task inside a space by ID.",
     requiredScopes: [],
     inputSchema: getSpaceResourceInputSchema,

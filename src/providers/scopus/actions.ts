@@ -105,6 +105,7 @@ searchDocumentsInputSchema.allOf = [
 
 const searchDocumentsAction = defineProviderAction(service, {
   name: "search_documents",
+  operationType: "read",
   description: "Search Scopus documents with the official Boolean query syntax and return one normalized result page.",
   inputSchema: searchDocumentsInputSchema,
   outputSchema: searchOutputSchema,
@@ -112,6 +113,7 @@ const searchDocumentsAction = defineProviderAction(service, {
 
 const getAbstractAction = defineProviderAction(service, {
   name: "get_abstract",
+  operationType: "read",
   description: "Get one Scopus abstract record by a documented document identifier.",
   inputSchema: s.actionInput(
     {
@@ -148,6 +150,7 @@ const getAbstractAction = defineProviderAction(service, {
 
 const searchAuthorsAction = defineProviderAction(service, {
   name: "search_authors",
+  operationType: "read",
   description:
     "Search Scopus author profiles with the official Boolean query syntax and return one normalized result page.",
   inputSchema: s.actionInput(
@@ -174,6 +177,7 @@ const searchAuthorsAction = defineProviderAction(service, {
 
 const getAuthorAction = defineProviderAction(service, {
   name: "get_author",
+  operationType: "read",
   description: "Get Scopus author profile data by author ID, EID, or ORCID.",
   inputSchema: s.actionInput(
     {
@@ -220,6 +224,7 @@ const getAuthorAction = defineProviderAction(service, {
 
 const searchAffiliationsAction = defineProviderAction(service, {
   name: "search_affiliations",
+  operationType: "read",
   description:
     "Search Scopus affiliation profiles with the official Boolean query syntax and return one normalized result page.",
   inputSchema: s.actionInput(
@@ -243,6 +248,7 @@ const searchAffiliationsAction = defineProviderAction(service, {
 
 const getAffiliationAction = defineProviderAction(service, {
   name: "get_affiliation",
+  operationType: "read",
   description: "Get Scopus affiliation profile data by affiliation ID or EID.",
   inputSchema: s.actionInput(
     {
@@ -278,6 +284,7 @@ const getAffiliationAction = defineProviderAction(service, {
 
 const searchSourcesAction = defineProviderAction(service, {
   name: "search_sources",
+  operationType: "read",
   description: "Search Scopus serial sources by title, ISSN, publisher, subject, content type, or open-access status.",
   inputSchema: s.actionInput(
     {

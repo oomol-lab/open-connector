@@ -104,6 +104,7 @@ const deleteContactOutputSchema = s.object("The Sendmator delete contact respons
 export const sendmatorActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Sendmator contacts with cursor pagination and optional filters.",
     requiredScopes: [],
     inputSchema: listContactsInputSchema,
@@ -111,6 +112,7 @@ export const sendmatorActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a Sendmator contact with optional external ID, tags, custom fields, and metadata.",
     requiredScopes: [],
     inputSchema: createContactInputSchema,
@@ -118,6 +120,7 @@ export const sendmatorActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get a Sendmator contact by ID.",
     requiredScopes: [],
     inputSchema: contactIdInputSchema,
@@ -125,6 +128,7 @@ export const sendmatorActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update a Sendmator contact's profile fields, active status, tags, custom fields, or metadata.",
     requiredScopes: [],
     inputSchema: updateContactInputSchema,
@@ -132,6 +136,7 @@ export const sendmatorActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Permanently delete a Sendmator contact by ID.",
     requiredScopes: [],
     inputSchema: contactIdInputSchema,

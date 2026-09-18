@@ -24,6 +24,7 @@ const responseSchema = (description: string) =>
 export const mailWizzActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_lists",
+    operationType: "read",
     description: "List mailing lists available to the connected MailWizz customer.",
     requiredScopes: [],
     inputSchema: s.object("The input for listing MailWizz mailing lists.", paginationInput, {
@@ -33,6 +34,7 @@ export const mailWizzActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_list",
+    operationType: "read",
     description: "Retrieve one MailWizz mailing list by its unique ID.",
     requiredScopes: [],
     inputSchema: s.object("The input for retrieving one MailWizz mailing list.", {
@@ -42,6 +44,7 @@ export const mailWizzActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subscribers",
+    operationType: "read",
     description: "List subscribers in one MailWizz mailing list.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -53,6 +56,7 @@ export const mailWizzActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_subscriber",
+    operationType: "read",
     description: "Retrieve one subscriber from a MailWizz mailing list by unique ID.",
     requiredScopes: [],
     inputSchema: s.object("The input for retrieving one MailWizz subscriber.", {
@@ -63,6 +67,7 @@ export const mailWizzActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_or_update_subscriber",
+    operationType: "write",
     description:
       "Create a subscriber in a MailWizz list, or update the existing subscriber with the same email address.",
     requiredScopes: [],
@@ -86,6 +91,7 @@ export const mailWizzActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "unsubscribe_subscriber",
+    operationType: "destructive",
     description: "Silently unsubscribe one subscriber from a MailWizz mailing list.",
     requiredScopes: [],
     inputSchema: s.object("The input for unsubscribing one MailWizz subscriber.", {

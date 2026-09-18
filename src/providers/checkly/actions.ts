@@ -60,12 +60,14 @@ const resultSchema = s.looseObject("Checkly check result returned by the Public 
 export const checklyActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_account",
+    operationType: "read",
     description: "Retrieve details for the Checkly account attached to the API key.",
     inputSchema: s.actionInput({}, [], "Input parameters for retrieving the current Checkly account."),
     outputSchema: s.actionOutput({ account: accountSchema }),
   }),
   defineProviderAction(service, {
     name: "list_checks",
+    operationType: "read",
     description: "List Checkly checks with optional type, tag, status, and search filters.",
     inputSchema: s.object(
       "Input parameters for listing Checkly checks.",
@@ -96,6 +98,7 @@ export const checklyActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_check",
+    operationType: "read",
     description: "Retrieve one Checkly check by ID.",
     inputSchema: s.object(
       "Input parameters for retrieving one Checkly check.",
@@ -110,18 +113,21 @@ export const checklyActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_check_statuses",
+    operationType: "read",
     description: "List current statuses for Checkly checks.",
     inputSchema: s.actionInput({}, [], "Input parameters for listing Checkly check statuses."),
     outputSchema: s.actionOutput({ statuses: s.array("Current statuses returned by Checkly.", checkStatusSchema) }),
   }),
   defineProviderAction(service, {
     name: "get_check_status",
+    operationType: "read",
     description: "Retrieve current status details for one Checkly check.",
     inputSchema: s.actionInput({ checkId: nonEmptyString("Checkly check identifier.") }, ["checkId"]),
     outputSchema: s.actionOutput({ status: checkStatusSchema }),
   }),
   defineProviderAction(service, {
     name: "list_check_results",
+    operationType: "read",
     description: "List recent Checkly results for one check.",
     inputSchema: s.object(
       "Input parameters for listing Checkly check results.",
@@ -142,6 +148,7 @@ export const checklyActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_check_result",
+    operationType: "read",
     description: "Retrieve one Checkly check result by ID.",
     inputSchema: s.actionInput(
       {

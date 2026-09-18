@@ -127,6 +127,7 @@ const licenseUsageInputSchema = (action: string, valueName: string, valueDescrip
 export const keygenActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "whoami",
+    operationType: "read",
     description: "Fetch the Keygen profile associated with the connected API token.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for fetching the current Keygen profile.", {}),
@@ -134,6 +135,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List products in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: listInputSchema("product"),
@@ -141,6 +143,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "retrieve_product",
+    operationType: "read",
     description: "Retrieve one product from the connected Keygen account.",
     requiredScopes: [],
     inputSchema: idInputSchema("product"),
@@ -148,6 +151,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_product",
+    operationType: "write",
     description: "Create a product in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: createInputSchema("product"),
@@ -155,6 +159,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_product",
+    operationType: "write",
     description: "Update a product in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: updateInputSchema("product"),
@@ -162,6 +167,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_product",
+    operationType: "destructive",
     description: "Delete a product from the connected Keygen account.",
     requiredScopes: [],
     inputSchema: deleteInputSchema("product"),
@@ -169,6 +175,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_entitlements",
+    operationType: "read",
     description: "List entitlements in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: listInputSchema("entitlement"),
@@ -176,6 +183,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "retrieve_entitlement",
+    operationType: "read",
     description: "Retrieve one entitlement from the connected Keygen account.",
     requiredScopes: [],
     inputSchema: idInputSchema("entitlement"),
@@ -183,6 +191,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_entitlement",
+    operationType: "write",
     description: "Create an entitlement in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: createInputSchema("entitlement"),
@@ -190,6 +199,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_entitlement",
+    operationType: "write",
     description: "Update an entitlement in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: updateInputSchema("entitlement"),
@@ -197,6 +207,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_entitlement",
+    operationType: "destructive",
     description: "Delete an entitlement from the connected Keygen account.",
     requiredScopes: [],
     inputSchema: deleteInputSchema("entitlement"),
@@ -204,6 +215,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List groups in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: listInputSchema("group"),
@@ -211,6 +223,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "retrieve_group",
+    operationType: "read",
     description: "Retrieve one group from the connected Keygen account.",
     requiredScopes: [],
     inputSchema: idInputSchema("group"),
@@ -218,6 +231,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_group",
+    operationType: "write",
     description: "Create a group in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: createInputSchema("group"),
@@ -225,6 +239,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_group",
+    operationType: "write",
     description: "Update a group in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: updateInputSchema("group"),
@@ -232,6 +247,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_group",
+    operationType: "destructive",
     description: "Delete a group from the connected Keygen account.",
     requiredScopes: [],
     inputSchema: deleteInputSchema("group"),
@@ -239,6 +255,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_policies",
+    operationType: "read",
     description: "List license policies in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: listInputSchema("policy"),
@@ -246,6 +263,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "retrieve_policy",
+    operationType: "read",
     description: "Retrieve one license policy from the connected Keygen account.",
     requiredScopes: [],
     inputSchema: idInputSchema("policy"),
@@ -253,6 +271,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_policy",
+    operationType: "write",
     description: "Create a license policy in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: createInputSchema("policy"),
@@ -260,6 +279,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_policy",
+    operationType: "write",
     description: "Update a license policy in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: updateInputSchema("policy"),
@@ -267,6 +287,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_policy",
+    operationType: "destructive",
     description: "Delete a license policy from the connected Keygen account.",
     requiredScopes: [],
     inputSchema: deleteInputSchema("policy"),
@@ -274,6 +295,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_policy_entitlements",
+    operationType: "read",
     description: "List entitlements attached to a Keygen policy.",
     requiredScopes: [],
     inputSchema: listRelationshipInputSchema("policy entitlements"),
@@ -281,6 +303,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "attach_policy_entitlements",
+    operationType: "write",
     description: "Attach entitlements to a Keygen policy.",
     requiredScopes: [],
     inputSchema: relationshipIdsInputSchema(
@@ -292,6 +315,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "detach_policy_entitlements",
+    operationType: "destructive",
     description: "Detach entitlements from a Keygen policy.",
     requiredScopes: [],
     inputSchema: relationshipIdsInputSchema(
@@ -303,6 +327,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List users in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: listInputSchema("user"),
@@ -310,6 +335,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "retrieve_user",
+    operationType: "read",
     description: "Retrieve one user from the connected Keygen account.",
     requiredScopes: [],
     inputSchema: idInputSchema("user"),
@@ -317,6 +343,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_user",
+    operationType: "write",
     description: "Create a user in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: createInputSchema("user"),
@@ -324,6 +351,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_user",
+    operationType: "write",
     description: "Update a user in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: updateInputSchema("user"),
@@ -331,6 +359,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_user",
+    operationType: "destructive",
     description: "Delete a user from the connected Keygen account.",
     requiredScopes: [],
     inputSchema: deleteInputSchema("user"),
@@ -338,6 +367,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "ban_user",
+    operationType: "destructive",
     description: "Ban a Keygen user from authenticating.",
     requiredScopes: [],
     inputSchema: idInputSchema("user"),
@@ -345,6 +375,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "unban_user",
+    operationType: "write",
     description: "Unban a Keygen user so they can authenticate again.",
     requiredScopes: [],
     inputSchema: idInputSchema("user"),
@@ -352,6 +383,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "change_user_group",
+    operationType: "destructive",
     description: "Move a Keygen user to another group.",
     requiredScopes: [],
     inputSchema: changeRelationshipInputSchema("user group", "groupId", "The Keygen group ID to assign to the user."),
@@ -359,6 +391,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_licenses",
+    operationType: "read",
     description: "List licenses in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: listInputSchema("license"),
@@ -366,6 +399,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "retrieve_license",
+    operationType: "read",
     description: "Retrieve one license from the connected Keygen account.",
     requiredScopes: [],
     inputSchema: idInputSchema("license"),
@@ -373,6 +407,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_license",
+    operationType: "write",
     description: "Create a license in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: createInputSchema("license"),
@@ -380,6 +415,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_license",
+    operationType: "write",
     description: "Update a license in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: updateInputSchema("license"),
@@ -387,6 +423,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_license",
+    operationType: "destructive",
     description: "Delete a license from the connected Keygen account.",
     requiredScopes: [],
     inputSchema: deleteInputSchema("license"),
@@ -394,6 +431,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "suspend_license",
+    operationType: "destructive",
     description: "Suspend a Keygen license so it can no longer authenticate with the API.",
     requiredScopes: [],
     inputSchema: idInputSchema("license"),
@@ -401,6 +439,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reinstate_license",
+    operationType: "write",
     description: "Reinstate a suspended Keygen license.",
     requiredScopes: [],
     inputSchema: idInputSchema("license"),
@@ -408,6 +447,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "renew_license",
+    operationType: "write",
     description: "Renew a Keygen license according to its policy.",
     requiredScopes: [],
     inputSchema: idInputSchema("license"),
@@ -415,6 +455,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "revoke_license",
+    operationType: "destructive",
     description: "Revoke a Keygen license through the official revoke action.",
     requiredScopes: [],
     inputSchema: idInputSchema("license"),
@@ -422,6 +463,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_in_license",
+    operationType: "read",
     description: "Check in a Keygen license for policies that require periodic license check-ins.",
     requiredScopes: [],
     inputSchema: idInputSchema("license"),
@@ -429,6 +471,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "increment_license_usage",
+    operationType: "write",
     description: "Increment metered usage for a Keygen license.",
     requiredScopes: [],
     inputSchema: licenseUsageInputSchema(
@@ -440,6 +483,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "decrement_license_usage",
+    operationType: "destructive",
     description: "Decrement metered usage for a Keygen license.",
     requiredScopes: [],
     inputSchema: licenseUsageInputSchema(
@@ -451,6 +495,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reset_license_usage",
+    operationType: "destructive",
     description: "Reset metered usage for a Keygen license.",
     requiredScopes: [],
     inputSchema: idInputSchema("license"),
@@ -458,6 +503,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "validate_license_by_id",
+    operationType: "read",
     description: "Validate a Keygen license by its resource ID and optional validation scope.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -472,6 +518,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "validate_license_key",
+    operationType: "read",
     description: "Validate a Keygen license key and optional validation scope.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -486,6 +533,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_license_users",
+    operationType: "read",
     description: "List users attached to a Keygen license.",
     requiredScopes: [],
     inputSchema: listRelationshipInputSchema("license users"),
@@ -493,6 +541,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "attach_license_users",
+    operationType: "write",
     description: "Attach users to a Keygen license.",
     requiredScopes: [],
     inputSchema: relationshipIdsInputSchema(
@@ -504,6 +553,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "detach_license_users",
+    operationType: "destructive",
     description: "Detach users from a Keygen license.",
     requiredScopes: [],
     inputSchema: relationshipIdsInputSchema(
@@ -515,6 +565,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_license_entitlements",
+    operationType: "read",
     description: "List entitlements attached to a Keygen license.",
     requiredScopes: [],
     inputSchema: listRelationshipInputSchema("license entitlements"),
@@ -522,6 +573,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "attach_license_entitlements",
+    operationType: "write",
     description: "Attach entitlements to a Keygen license.",
     requiredScopes: [],
     inputSchema: relationshipIdsInputSchema(
@@ -533,6 +585,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "detach_license_entitlements",
+    operationType: "destructive",
     description: "Detach entitlements from a Keygen license.",
     requiredScopes: [],
     inputSchema: relationshipIdsInputSchema(
@@ -544,6 +597,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "change_license_policy",
+    operationType: "destructive",
     description: "Move a Keygen license to another policy.",
     requiredScopes: [],
     inputSchema: changeRelationshipInputSchema(
@@ -555,6 +609,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "change_license_owner",
+    operationType: "destructive",
     description: "Change the owner user for a Keygen license.",
     requiredScopes: [],
     inputSchema: changeRelationshipInputSchema(
@@ -566,6 +621,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "change_license_group",
+    operationType: "destructive",
     description: "Change the group assigned to a Keygen license.",
     requiredScopes: [],
     inputSchema: changeRelationshipInputSchema(
@@ -577,6 +633,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_machines",
+    operationType: "read",
     description: "List activated machines in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: listInputSchema("machine"),
@@ -584,6 +641,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "retrieve_machine",
+    operationType: "read",
     description: "Retrieve one activated machine from the connected Keygen account.",
     requiredScopes: [],
     inputSchema: idInputSchema("machine"),
@@ -591,6 +649,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "activate_machine",
+    operationType: "write",
     description: "Activate a machine in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: createInputSchema("machine"),
@@ -598,6 +657,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_machine",
+    operationType: "write",
     description: "Update an activated machine in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: updateInputSchema("machine"),
@@ -605,6 +665,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "deactivate_machine",
+    operationType: "destructive",
     description: "Deactivate a machine from the connected Keygen account.",
     requiredScopes: [],
     inputSchema: deleteInputSchema("machine"),
@@ -612,6 +673,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "ping_machine",
+    operationType: "read",
     description: "Ping a Keygen machine heartbeat.",
     requiredScopes: [],
     inputSchema: idInputSchema("machine"),
@@ -619,6 +681,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reset_machine_heartbeat",
+    operationType: "destructive",
     description: "Reset a Keygen machine heartbeat.",
     requiredScopes: [],
     inputSchema: idInputSchema("machine"),
@@ -626,6 +689,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "change_machine_owner",
+    operationType: "destructive",
     description: "Change the owner user for a Keygen machine.",
     requiredScopes: [],
     inputSchema: changeRelationshipInputSchema(
@@ -637,6 +701,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "change_machine_group",
+    operationType: "destructive",
     description: "Change the group assigned to a Keygen machine.",
     requiredScopes: [],
     inputSchema: changeRelationshipInputSchema(
@@ -648,6 +713,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_components",
+    operationType: "read",
     description: "List machine components in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: listInputSchema("component"),
@@ -655,6 +721,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "retrieve_component",
+    operationType: "read",
     description: "Retrieve one machine component from the connected Keygen account.",
     requiredScopes: [],
     inputSchema: idInputSchema("component"),
@@ -662,6 +729,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_component",
+    operationType: "write",
     description: "Create a machine component in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: createInputSchema("component"),
@@ -669,6 +737,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_component",
+    operationType: "write",
     description: "Update a machine component in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: updateInputSchema("component"),
@@ -676,6 +745,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_component",
+    operationType: "destructive",
     description: "Delete a machine component from the connected Keygen account.",
     requiredScopes: [],
     inputSchema: deleteInputSchema("component"),
@@ -683,6 +753,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_processes",
+    operationType: "read",
     description: "List tracked processes in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: listInputSchema("process"),
@@ -690,6 +761,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "retrieve_process",
+    operationType: "read",
     description: "Retrieve one tracked process from the connected Keygen account.",
     requiredScopes: [],
     inputSchema: idInputSchema("process"),
@@ -697,6 +769,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_process",
+    operationType: "write",
     description: "Create a tracked process in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: createInputSchema("process"),
@@ -704,6 +777,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_process",
+    operationType: "write",
     description: "Update a tracked process in the connected Keygen account.",
     requiredScopes: [],
     inputSchema: updateInputSchema("process"),
@@ -711,6 +785,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_process",
+    operationType: "destructive",
     description: "Delete a tracked process from the connected Keygen account.",
     requiredScopes: [],
     inputSchema: deleteInputSchema("process"),
@@ -718,6 +793,7 @@ export const keygenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "ping_process",
+    operationType: "read",
     description: "Ping a Keygen process heartbeat.",
     requiredScopes: [],
     inputSchema: idInputSchema("process"),

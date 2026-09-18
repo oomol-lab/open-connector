@@ -118,6 +118,7 @@ const cityDataOutputSchema = s.object("City data returned by IQAir AirVisual.", 
 export const iqairAirvisualActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_supported_countries",
+    operationType: "read",
     description: "List countries that currently have active IQAir AirVisual stations.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -125,6 +126,7 @@ export const iqairAirvisualActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_supported_states",
+    operationType: "read",
     description: "List supported states for a country that has active IQAir AirVisual stations.",
     requiredScopes: [],
     inputSchema: statesInputSchema,
@@ -132,6 +134,7 @@ export const iqairAirvisualActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_supported_cities",
+    operationType: "read",
     description: "List supported cities for a country and state with active IQAir AirVisual stations.",
     requiredScopes: [],
     inputSchema: citiesInputSchema,
@@ -139,6 +142,7 @@ export const iqairAirvisualActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_nearest_city",
+    operationType: "read",
     description: "Get current air quality and weather data for the nearest supported city by IP or coordinates.",
     requiredScopes: [],
     inputSchema: nearestCityInputSchema,
@@ -146,6 +150,7 @@ export const iqairAirvisualActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_city_data",
+    operationType: "read",
     description: "Get current air quality and weather data for a specified supported city.",
     requiredScopes: [],
     inputSchema: cityDataInputSchema,

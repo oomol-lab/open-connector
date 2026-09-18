@@ -157,6 +157,7 @@ const verifyActivityOutputSchema = s.requiredObject("The normalized FullContact 
 export const fullContactActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "enrich_person",
+    operationType: "read",
     description: "Enrich a person profile with FullContact by sending one or more known identifiers.",
     inputSchema: s.object("Input parameters for FullContact person enrichment.", {
       ...multiFieldProperties,
@@ -171,6 +172,7 @@ export const fullContactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "enrich_company",
+    operationType: "read",
     description: "Enrich a company profile with FullContact by domain.",
     inputSchema: s.requiredObject("Input parameters for FullContact company enrichment.", {
       domain: s.nonEmptyString("The company domain to enrich, such as fullcontact.com."),
@@ -179,18 +181,21 @@ export const fullContactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "verify_match",
+    operationType: "read",
     description: "Compare person identifiers with FullContact and return field-level match flags.",
     inputSchema: multiFieldInputSchema,
     outputSchema: verifyMatchOutputSchema,
   }),
   defineProviderAction(service, {
     name: "verify_signals",
+    operationType: "read",
     description: "Resolve person identifiers with FullContact and return identity signal details.",
     inputSchema: multiFieldInputSchema,
     outputSchema: verifySignalsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "verify_activity",
+    operationType: "read",
     description: "Return FullContact activity scores for matched person identifiers.",
     inputSchema: multiFieldInputSchema,
     outputSchema: verifyActivityOutputSchema,

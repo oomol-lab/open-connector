@@ -242,6 +242,7 @@ function pageOutputSchema(description: string, key: string, itemSchema: Record<s
 export const captainBiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_stores",
+    operationType: "read",
     description: "List Amazon stores authorized for the connected CaptainBI API credential.",
     requiredScopes: [],
     inputSchema: storesInputSchema,
@@ -250,6 +251,7 @@ export const captainBiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List CaptainBI product records modified during a controlled time window.",
     requiredScopes: [],
     inputSchema: productRangeInputSchema,
@@ -258,6 +260,7 @@ export const captainBiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_product_details",
+    operationType: "read",
     description: "List extended CaptainBI product cost, price, operator, group, and tag data.",
     requiredScopes: [],
     inputSchema: productRangeInputSchema,
@@ -265,6 +268,7 @@ export const captainBiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_inventory",
+    operationType: "read",
     description: "List CaptainBI FBA inventory, recent sales, and replenishment indicators.",
     requiredScopes: [],
     inputSchema: inventoryInputSchema,
@@ -272,6 +276,7 @@ export const captainBiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_business_report",
+    operationType: "read",
     description: "Get CaptainBI product traffic, order, conversion, and sales metrics.",
     requiredScopes: [],
     inputSchema: businessReportInputSchema,
@@ -279,6 +284,7 @@ export const captainBiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_store_profit_report",
+    operationType: "read",
     description: "Get a CaptainBI store profit report by day or month and by order or financial accounting basis.",
     requiredScopes: [],
     inputSchema: profitReportInputSchema,
@@ -286,6 +292,7 @@ export const captainBiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product_profit_report",
+    operationType: "read",
     description: "Get a CaptainBI product profit report by day or month and by order or financial accounting basis.",
     requiredScopes: [],
     inputSchema: profitReportInputSchema,
@@ -293,6 +300,7 @@ export const captainBiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_returns",
+    operationType: "read",
     description: "List CaptainBI return records without exposing customer comments or buyer contacts.",
     requiredScopes: [],
     inputSchema: afterSalesInputSchema,
@@ -300,6 +308,7 @@ export const captainBiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_refunds",
+    operationType: "read",
     description: "List CaptainBI refund status, quantity, reason, and fee records without buyer PII.",
     requiredScopes: [],
     inputSchema: afterSalesInputSchema,

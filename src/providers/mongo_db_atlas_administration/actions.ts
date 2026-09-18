@@ -49,6 +49,7 @@ const clusterSchema = s.object("A normalized MongoDB Atlas cluster.", {
 export const mongoDbAtlasAdministrationActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List MongoDB Atlas projects visible to the connected API key.",
     inputSchema: s.actionInput(paginationInputSchema, [], "Input parameters for listing MongoDB Atlas projects."),
     outputSchema: s.actionOutput(
@@ -61,6 +62,7 @@ export const mongoDbAtlasAdministrationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Return one MongoDB Atlas project by project ID.",
     inputSchema: s.actionInput(
       {
@@ -78,6 +80,7 @@ export const mongoDbAtlasAdministrationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_clusters",
+    operationType: "read",
     description: "List MongoDB Atlas clusters in one project.",
     inputSchema: s.actionInput(
       {
@@ -97,6 +100,7 @@ export const mongoDbAtlasAdministrationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_cluster",
+    operationType: "read",
     description: "Return one MongoDB Atlas cluster by project ID and cluster name.",
     inputSchema: s.actionInput(
       {

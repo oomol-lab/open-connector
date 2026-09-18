@@ -174,6 +174,7 @@ const listConversationsInputSchema = s.object(
 export const missiveActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List users visible to the authenticated Missive API token.",
     requiredScopes: [],
     inputSchema: noInputSchema,
@@ -183,6 +184,7 @@ export const missiveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_organizations",
+    operationType: "read",
     description: "List organizations the authenticated Missive API token owner belongs to.",
     requiredScopes: [],
     inputSchema: pagination200InputSchema,
@@ -192,6 +194,7 @@ export const missiveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_teams",
+    operationType: "read",
     description: "List teams visible to the authenticated Missive API token.",
     requiredScopes: [],
     inputSchema: noInputSchema,
@@ -201,6 +204,7 @@ export const missiveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contact_books",
+    operationType: "read",
     description: "List Missive contact books the authenticated user can access.",
     requiredScopes: [],
     inputSchema: pagination200InputSchema,
@@ -210,6 +214,7 @@ export const missiveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List contacts from one Missive contact book with documented filters.",
     requiredScopes: [],
     inputSchema: listContactsInputSchema,
@@ -219,6 +224,7 @@ export const missiveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get one Missive contact by ID.",
     requiredScopes: [],
     inputSchema: idInputSchema("contact"),
@@ -228,6 +234,7 @@ export const missiveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_conversations",
+    operationType: "read",
     description: "List Missive conversations using a required mailbox, team, or shared-label filter.",
     requiredScopes: [],
     inputSchema: listConversationsInputSchema,
@@ -237,6 +244,7 @@ export const missiveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_conversation",
+    operationType: "read",
     description: "Get one Missive conversation by ID.",
     requiredScopes: [],
     inputSchema: idInputSchema("conversation"),

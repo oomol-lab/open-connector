@@ -120,6 +120,7 @@ const validateAddressInputSchema = s.object(
 export const stannpActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_balance",
+    operationType: "read",
     description: "Retrieve the Stannp account balance for the connected regional account.",
     inputSchema: s.actionInput({}, [], "No input is required for this Stannp action."),
     outputSchema: s.actionOutput(
@@ -132,6 +133,7 @@ export const stannpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_recipients",
+    operationType: "read",
     description: "List Stannp recipients, optionally filtered by group and paginated.",
     inputSchema: s.actionInput(
       {
@@ -151,6 +153,7 @@ export const stannpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_recipient",
+    operationType: "read",
     description: "Retrieve a single Stannp recipient by ID.",
     inputSchema: s.actionInput(
       {
@@ -169,6 +172,7 @@ export const stannpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_recipient",
+    operationType: "write",
     description: "Create a Stannp recipient and optionally add it to a group.",
     inputSchema: s.actionInput(recipientWriteFields, [], "Input for creating a Stannp recipient."),
     outputSchema: s.actionOutput(
@@ -183,6 +187,7 @@ export const stannpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_recipient",
+    operationType: "destructive",
     description: "Permanently delete a Stannp recipient by ID.",
     inputSchema: s.actionInput(
       {
@@ -201,6 +206,7 @@ export const stannpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List Stannp recipient groups with optional offset and limit pagination.",
     inputSchema: s.actionInput(paginationInputSchema, [], "Input for listing Stannp recipient groups."),
     outputSchema: s.actionOutput(
@@ -213,6 +219,7 @@ export const stannpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_group",
+    operationType: "write",
     description: "Create an empty Stannp recipient group.",
     inputSchema: s.actionInput(
       {
@@ -231,6 +238,7 @@ export const stannpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_recipients_to_group",
+    operationType: "write",
     description: "Add one or more existing Stannp recipients to a recipient group.",
     inputSchema: s.actionInput(
       {
@@ -256,6 +264,7 @@ export const stannpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_recipients_from_group",
+    operationType: "destructive",
     description: "Remove one or more existing Stannp recipients from a recipient group.",
     inputSchema: s.actionInput(
       {
@@ -281,6 +290,7 @@ export const stannpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_group",
+    operationType: "destructive",
     description: "Delete a Stannp recipient group, optionally deleting its recipients.",
     inputSchema: s.actionInput(
       {
@@ -300,6 +310,7 @@ export const stannpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "validate_address",
+    operationType: "read",
     description: "Validate and normalize a UK, US, or Canadian postal address with Stannp.",
     inputSchema: validateAddressInputSchema,
     outputSchema: s.actionOutput(

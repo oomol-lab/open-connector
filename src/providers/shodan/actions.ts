@@ -15,6 +15,7 @@ const nonEmptyStringArray = (itemDescription: string, description: string) =>
 export const shodanActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_api_info",
+    operationType: "read",
     description: "Get API account information and remaining credits from Shodan.",
     inputSchema: s.object("Input parameters for retrieving Shodan API account information.", {}),
     outputSchema: s.object(
@@ -35,6 +36,7 @@ export const shodanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_hosts",
+    operationType: "read",
     description: "Search Shodan hosts with a query string and optional facet aggregation.",
     inputSchema: s.object(
       "Input parameters for searching hosts in Shodan.",
@@ -58,6 +60,7 @@ export const shodanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "count_search_results",
+    operationType: "read",
     description: "Count Shodan hosts matching a query and optionally return facet aggregations.",
     inputSchema: s.object(
       "Input parameters for counting Shodan host search results.",
@@ -78,6 +81,7 @@ export const shodanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_host",
+    operationType: "read",
     description: "Get Shodan host details for one IP address.",
     inputSchema: s.object(
       "Input parameters for retrieving Shodan host details.",
@@ -94,6 +98,7 @@ export const shodanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_domain_info",
+    operationType: "read",
     description: "Get DNS domain information and known subdomains from Shodan.",
     inputSchema: s.object("Input parameters for retrieving Shodan domain information.", {
       domain: nonEmptyString("Domain name to inspect in the Shodan DNS endpoint."),
@@ -114,6 +119,7 @@ export const shodanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "resolve_hostnames",
+    operationType: "read",
     description: "Resolve hostnames to IP addresses with the Shodan DNS resolve endpoint.",
     inputSchema: s.object("Input parameters for resolving hostnames with Shodan.", {
       hostnames: nonEmptyStringArray("One hostname to resolve in Shodan.", "Hostnames to resolve with Shodan."),
@@ -127,6 +133,7 @@ export const shodanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reverse_dns_lookup",
+    operationType: "read",
     description: "Reverse-resolve IP addresses to hostnames with the Shodan DNS reverse endpoint.",
     inputSchema: s.object("Input parameters for reverse-resolving IP addresses with Shodan.", {
       ips: nonEmptyStringArray(

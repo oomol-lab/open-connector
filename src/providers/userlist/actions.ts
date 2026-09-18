@@ -205,12 +205,14 @@ const sendMessageInputSchema = withAllOf(
 export const userlistActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "push_user",
+    operationType: "write",
     description: "Create or update a Userlist user through the Push API.",
     inputSchema: pushUserInputSchema,
     outputSchema: acceptedOutputSchema,
   }),
   defineProviderAction(service, {
     name: "push_company",
+    operationType: "write",
     description: "Create or update a Userlist company through the Push API.",
     inputSchema: s.object(
       "Input for creating or updating a Userlist company.",
@@ -233,18 +235,21 @@ export const userlistActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "push_relationship",
+    operationType: "write",
     description: "Create or update a Userlist relationship between a user and a company.",
     inputSchema: relationshipSchema,
     outputSchema: acceptedOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_event",
+    operationType: "write",
     description: "Create a Userlist event for a user, company, or both.",
     inputSchema: createEventInputSchema,
     outputSchema: acceptedOutputSchema,
   }),
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send a Userlist transactional message to a user or email address.",
     inputSchema: sendMessageInputSchema,
     outputSchema: acceptedOutputSchema,

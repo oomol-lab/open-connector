@@ -50,6 +50,7 @@ const billedUsageSchema = s.object("A normalized Grafana Cloud billed usage item
 export const grafanaCloudActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_regions",
+    operationType: "read",
     description: "List Grafana Cloud stack regions that can host Grafana Cloud stacks.",
     requiredScopes: [],
     inputSchema: s.object("Input for listing Grafana Cloud stack regions.", {}),
@@ -60,6 +61,7 @@ export const grafanaCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_stacks",
+    operationType: "read",
     description: "List Grafana Cloud stacks in the connected organization.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -81,6 +83,7 @@ export const grafanaCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_stack_connectivity",
+    operationType: "read",
     description: "Get private connectivity information for a Grafana Cloud stack.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving Grafana Cloud stack connectivity.", {
@@ -92,6 +95,7 @@ export const grafanaCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_billed_usage",
+    operationType: "read",
     description: "Get Grafana Cloud billed usage for the connected organization by month.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving Grafana Cloud billed usage.", {

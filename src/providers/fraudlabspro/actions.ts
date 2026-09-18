@@ -91,6 +91,7 @@ const feedbackOrderOutputSchema = s.looseObject("FraudLabs Pro feedback response
 export const fraudlabsproActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "screen_order",
+    operationType: "read",
     description: "Screen an order transaction for fraud risk with FraudLabs Pro.",
     requiredScopes: [],
     inputSchema: orderScreenInputSchema,
@@ -98,6 +99,7 @@ export const fraudlabsproActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_order_result",
+    operationType: "read",
     description: "Retrieve a FraudLabs Pro order screening result by transaction id.",
     requiredScopes: [],
     inputSchema: getOrderResultInputSchema,
@@ -105,6 +107,7 @@ export const fraudlabsproActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "feedback_order",
+    operationType: "write",
     description: "Send approve or reject feedback for a FraudLabs Pro order transaction.",
     requiredScopes: [],
     inputSchema: feedbackOrderInputSchema,

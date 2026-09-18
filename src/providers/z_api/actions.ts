@@ -25,6 +25,7 @@ const sentMessageOutputSchema = s.object("Identifiers for the message accepted b
 
 const getInstanceStatusAction = defineProviderAction(service, {
   name: "get_instance_status",
+  operationType: "read",
   description: "Check whether the Z-API instance and its connected smartphone are online.",
   requiredScopes: [],
   inputSchema: s.object("No input is required to check the configured instance status.", {}),
@@ -37,6 +38,7 @@ const getInstanceStatusAction = defineProviderAction(service, {
 
 const sendTextAction = defineProviderAction(service, {
   name: "send_text",
+  operationType: "write",
   description: "Send a plain-text message to a WhatsApp contact or group through Z-API.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -58,6 +60,7 @@ const sendTextAction = defineProviderAction(service, {
 
 const sendImageAction = defineProviderAction(service, {
   name: "send_image",
+  operationType: "write",
   description: "Send an image from a public URL to a WhatsApp contact or group through Z-API.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -80,6 +83,7 @@ const sendImageAction = defineProviderAction(service, {
 
 const sendLocationAction = defineProviderAction(service, {
   name: "send_location",
+  operationType: "write",
   description: "Send a fixed location to a WhatsApp contact or group through Z-API.",
   requiredScopes: [],
   inputSchema: s.object(

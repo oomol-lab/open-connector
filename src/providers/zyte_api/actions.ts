@@ -82,24 +82,28 @@ const pageContentOutputSchema = s.object(
 export const zyteApiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "fetch_browser_html",
+    operationType: "read",
     description: "Fetch browser-rendered HTML for one public URL with Zyte API.",
     inputSchema: fetchBrowserHtmlInputSchema,
     outputSchema: fetchBrowserHtmlOutputSchema,
   }),
   defineProviderAction(service, {
     name: "extract_product",
+    operationType: "read",
     description: "Extract product data from one public URL with Zyte API.",
     inputSchema: structuredInputSchema("The input payload for extracting product data with Zyte API."),
     outputSchema: productOutputSchema,
   }),
   defineProviderAction(service, {
     name: "extract_article",
+    operationType: "read",
     description: "Extract article data from one public URL with Zyte API.",
     inputSchema: structuredInputSchema("The input payload for extracting article data with Zyte API."),
     outputSchema: articleOutputSchema,
   }),
   defineProviderAction(service, {
     name: "extract_page_content",
+    operationType: "read",
     description: "Extract generic page content data from one public URL with Zyte API.",
     inputSchema: structuredInputSchema("The input payload for extracting page content data with Zyte API."),
     outputSchema: pageContentOutputSchema,

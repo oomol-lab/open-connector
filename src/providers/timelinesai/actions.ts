@@ -101,6 +101,7 @@ const messageStatusFollowUp = ["timelinesai.get_message_status"];
 export const timelinesAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_workspace",
+    operationType: "read",
     description: "Get the connected TimelinesAI workspace identity, plan, and quota usage.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to get the TimelinesAI workspace.", {}),
@@ -110,6 +111,7 @@ export const timelinesAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_whatsapp_accounts",
+    operationType: "read",
     description: "List WhatsApp accounts connected to the TimelinesAI workspace.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list connected WhatsApp accounts.", {}),
@@ -119,6 +121,7 @@ export const timelinesAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_chats",
+    operationType: "read",
     description: "List and filter chats in the TimelinesAI workspace, 50 records per page.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -177,6 +180,7 @@ export const timelinesAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_chat",
+    operationType: "read",
     description: "Get one TimelinesAI chat by its numeric chat ID.",
     requiredScopes: [],
     inputSchema: s.object("The TimelinesAI chat to retrieve.", { chatId: chatIdField }),
@@ -186,6 +190,7 @@ export const timelinesAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_chat_messages",
+    operationType: "read",
     description: "List and filter messages in one TimelinesAI chat, 50 records per page.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -210,6 +215,7 @@ export const timelinesAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_message",
+    operationType: "read",
     description: "Get one TimelinesAI message by its workspace-unique UID.",
     requiredScopes: [],
     inputSchema: s.object("The TimelinesAI message to retrieve.", {
@@ -221,6 +227,7 @@ export const timelinesAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_message_status",
+    operationType: "read",
     description: "Get the documented delivery status history for one TimelinesAI message.",
     requiredScopes: [],
     inputSchema: s.object("The TimelinesAI message whose status history should be read.", {
@@ -238,6 +245,7 @@ export const timelinesAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_message_to_chat",
+    operationType: "write",
     description: "Send a plain-text WhatsApp message to an existing TimelinesAI chat or group.",
     requiredScopes: [],
     followUpActions: messageStatusFollowUp,
@@ -254,6 +262,7 @@ export const timelinesAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_message_to_phone",
+    operationType: "write",
     description: "Send a plain-text WhatsApp message directly to an international phone number.",
     requiredScopes: [],
     followUpActions: messageStatusFollowUp,

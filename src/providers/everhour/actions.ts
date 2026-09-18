@@ -44,12 +44,14 @@ const timerSchema = s.looseObject("An Everhour timer record.", {
 export const everhourActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current Everhour user profile associated with the API key.",
     inputSchema: s.object("Input parameters for reading the current Everhour user.", {}),
     outputSchema: s.object("Everhour current user response wrapper.", { user: userSchema }),
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List the users in the Everhour team that the API key can access.",
     inputSchema: s.object("Input parameters for listing Everhour users.", {}),
     outputSchema: s.object("Everhour users list response wrapper.", {
@@ -58,6 +60,7 @@ export const everhourActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Everhour projects with optional text, platform, and limit filters.",
     inputSchema: s.object(
       "Input parameters for listing Everhour projects.",
@@ -74,12 +77,14 @@ export const everhourActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get one Everhour project by its project ID.",
     inputSchema: s.object("Input parameters for reading one Everhour project.", { projectId: projectIdSchema }),
     outputSchema: s.object("Everhour single project response wrapper.", { project: projectSchema }),
   }),
   defineProviderAction(service, {
     name: "list_project_tasks",
+    operationType: "read",
     description: "List the tasks in one Everhour project with optional paging and search filters.",
     inputSchema: s.object(
       "Input parameters for listing tasks in one Everhour project.",
@@ -98,12 +103,14 @@ export const everhourActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task",
+    operationType: "read",
     description: "Get one Everhour task by its task ID.",
     inputSchema: s.object("Input parameters for reading one Everhour task.", { taskId: taskIdSchema }),
     outputSchema: s.object("Everhour single task response wrapper.", { task: taskSchema }),
   }),
   defineProviderAction(service, {
     name: "search_tasks",
+    operationType: "read",
     description: "Search Everhour tasks across accessible projects.",
     inputSchema: s.object(
       "Input parameters for searching Everhour tasks across projects.",
@@ -120,6 +127,7 @@ export const everhourActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_time_records",
+    operationType: "read",
     description: "List Everhour team time records with optional date range and paging filters.",
     inputSchema: s.object(
       "Input parameters for listing Everhour team time records.",
@@ -137,6 +145,7 @@ export const everhourActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_time_record",
+    operationType: "write",
     description: "Create one Everhour time record with a duration, date, and optional task or user assignment.",
     inputSchema: s.object(
       "Input parameters for creating one Everhour time record.",
@@ -153,6 +162,7 @@ export const everhourActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_timer",
+    operationType: "write",
     description: "Start an Everhour timer for a task with an optional user date and comment.",
     inputSchema: s.object(
       "Input parameters for starting an Everhour timer.",
@@ -167,12 +177,14 @@ export const everhourActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_current_timer",
+    operationType: "read",
     description: "Get the current running Everhour timer.",
     inputSchema: s.object("Input parameters for reading the current Everhour timer.", {}),
     outputSchema: s.object("Everhour timer response wrapper.", { timer: timerSchema }),
   }),
   defineProviderAction(service, {
     name: "stop_timer",
+    operationType: "destructive",
     description: "Stop the current Everhour timer and return the final timer snapshot.",
     inputSchema: s.object("Input parameters for stopping the current Everhour timer.", {}),
     outputSchema: s.object("Everhour timer response wrapper.", { timer: timerSchema }),

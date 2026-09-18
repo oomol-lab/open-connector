@@ -8,6 +8,7 @@ const action: ActionDefinition = {
   service: "github",
   name: "delete_repository",
   description: "Delete a repository.",
+  operationType: "destructive",
   requiredScopes: [],
   providerPermissions: [],
   inputSchema: { type: "object", properties: { repo: { type: "string" } }, required: ["repo"] },

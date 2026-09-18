@@ -68,6 +68,7 @@ const translateImageOutputSchema = s.object(
 export const imagetranslateAiActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "translate_image",
+    operationType: "read",
     description:
       "Translate text in a public image with ImageTranslate.AI, preserve the selected layout style, and return a rendered PNG up to 50 MB through transit storage. ImageTranslate.AI may charge before Connector can reject an oversized rendered result.",
     requiredScopes: [],

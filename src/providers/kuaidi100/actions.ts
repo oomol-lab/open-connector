@@ -163,6 +163,7 @@ const estimateTimeInputProperties = {
 export const kuaidi100Actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_trace",
+    operationType: "read",
     description:
       "Query the real-time logistics trajectory for an express tracking number. The carrier is detected automatically.",
     requiredScopes: [],
@@ -181,6 +182,7 @@ export const kuaidi100Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "auto_number",
+    operationType: "read",
     description: "Detect the likely express carriers for a tracking number from its format.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The tracking number to identify.", {
@@ -191,6 +193,7 @@ export const kuaidi100Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "estimate_time",
+    operationType: "read",
     description:
       "Estimate the delivery time for a shipment before it is sent, from the carrier, origin, destination, and optional order time and product type.",
     requiredScopes: [],
@@ -201,6 +204,7 @@ export const kuaidi100Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "estimate_time_with_logistic",
+    operationType: "read",
     description:
       "Estimate the remaining delivery time for an in-transit shipment from its existing logistics trajectory, usually the data returned by kuaidi100.query_trace.",
     requiredScopes: [],
@@ -225,6 +229,7 @@ export const kuaidi100Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "estimate_price",
+    operationType: "read",
     description: "Estimate the shipping price for a carrier, sender and recipient addresses, and parcel weight.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The shipment whose price should be estimated.", {
@@ -237,6 +242,7 @@ export const kuaidi100Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "order_price",
+    operationType: "read",
     description:
       "Quote a pickup order before creating it. This uses the pickup-order pricing service, not the general estimate_price calculation.",
     requiredScopes: [],
@@ -255,6 +261,7 @@ export const kuaidi100Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_order",
+    operationType: "write",
     description: "Create a pay-offline pickup order after obtaining an order_price quote.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -278,6 +285,7 @@ export const kuaidi100Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_order",
+    operationType: "read",
     description: "Get a pickup order and optionally include its logistics trajectory.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -294,6 +302,7 @@ export const kuaidi100Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "cancel_order",
+    operationType: "destructive",
     description: "Cancel a pickup order that is no longer needed.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The pickup order cancellation.", {

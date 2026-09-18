@@ -18,6 +18,7 @@ const provider: ProviderDefinition = {
       service: "example",
       name: "run",
       description: "Run an example.",
+      operationType: "write",
       requiredScopes: [],
       providerPermissions: [],
       inputSchema: { type: "object" },

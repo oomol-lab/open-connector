@@ -94,6 +94,7 @@ const elementsSchema = s.looseObject(
 export const abyssaleActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_designs",
+    operationType: "read",
     description: "List Abyssale designs available to the API key.",
     inputSchema: s.object({}, { description: "No input is required to list Abyssale designs." }),
     outputSchema: s.object(
@@ -106,6 +107,7 @@ export const abyssaleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_design",
+    operationType: "read",
     description: "Retrieve Abyssale design details including formats, elements, and variables.",
     inputSchema: s.object(
       {
@@ -129,6 +131,7 @@ export const abyssaleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_design_format",
+    operationType: "read",
     description: "Retrieve detailed information for one Abyssale design format.",
     inputSchema: s.object(
       {
@@ -152,6 +155,7 @@ export const abyssaleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_fonts",
+    operationType: "read",
     description: "List custom and Google fonts available in Abyssale.",
     inputSchema: s.object({}, { description: "No input is required to list Abyssale fonts." }),
     outputSchema: s.object(
@@ -164,6 +168,7 @@ export const abyssaleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Abyssale projects available to the API key.",
     inputSchema: s.object({}, { description: "No input is required to list Abyssale projects." }),
     outputSchema: s.object(
@@ -176,6 +181,7 @@ export const abyssaleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create an Abyssale project to organize templates and generated images.",
     inputSchema: s.object(
       {
@@ -193,6 +199,7 @@ export const abyssaleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "generate_banner",
+    operationType: "write",
     description:
       "Generate one Abyssale image from a design using JSON element overrides and return the generated file metadata.",
     inputSchema: s.object(
@@ -218,6 +225,7 @@ export const abyssaleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_banner",
+    operationType: "read",
     description: "Retrieve metadata for an Abyssale generated file.",
     inputSchema: s.object(
       {
@@ -235,6 +243,7 @@ export const abyssaleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_dynamic_image_url",
+    operationType: "write",
     description: "Create or retrieve the dynamic image URL for an Abyssale design.",
     inputSchema: s.object(
       {

@@ -23,6 +23,7 @@ const listInputSchema = s.object(
 
 const accountStatusAction = defineProviderAction(service, {
   name: "get_account_status",
+  operationType: "read",
   description: "Get general status and usage information for the connected GageList account.",
   inputSchema: s.object("This action does not require input fields.", {}),
   outputSchema: s.requiredObject("The connected GageList account status.", {
@@ -38,6 +39,7 @@ const accountStatusAction = defineProviderAction(service, {
 
 const accountSettingsAction = defineProviderAction(service, {
   name: "get_account_settings",
+  operationType: "read",
   description: "Get configurable account settings for the connected GageList account.",
   inputSchema: s.object("This action does not require input fields.", {}),
   outputSchema: s.requiredObject("The connected GageList account settings.", {
@@ -70,6 +72,7 @@ const manufacturerFieldsSchema = {
 
 const listManufacturersAction = defineProviderAction(service, {
   name: "list_manufacturers",
+  operationType: "read",
   description: "List manufacturers configured in the connected GageList account.",
   inputSchema: s.object("This action does not require input fields.", {}),
   outputSchema: s.requiredObject("The GageList manufacturer list response.", {
@@ -84,6 +87,7 @@ const listManufacturersAction = defineProviderAction(service, {
 
 const createManufacturerAction = defineProviderAction(service, {
   name: "create_manufacturer",
+  operationType: "write",
   description: "Create a manufacturer record in the connected GageList account.",
   inputSchema: s.object("The manufacturer fields sent to GageList.", manufacturerFieldsSchema, {
     optional: ["address", "phone", "fax", "website"],
@@ -98,6 +102,7 @@ const createManufacturerAction = defineProviderAction(service, {
 
 const updateManufacturerAction = defineProviderAction(service, {
   name: "update_manufacturer",
+  operationType: "write",
   description: "Update a manufacturer record in the connected GageList account.",
   inputSchema: s.object(
     "The manufacturer update fields sent to GageList.",
@@ -117,6 +122,7 @@ const updateManufacturerAction = defineProviderAction(service, {
 
 const deleteManufacturerAction = defineProviderAction(service, {
   name: "delete_manufacturer",
+  operationType: "destructive",
   description: "Delete a manufacturer record from the connected GageList account.",
   inputSchema: s.requiredObject("The manufacturer delete input.", {
     id: positiveIdSchema,
@@ -142,6 +148,7 @@ const gageRecordSchema = s.requiredObject("A normalized GageList gage record.", 
 
 const listGageRecordsAction = defineProviderAction(service, {
   name: "list_gage_records",
+  operationType: "read",
   description: "List gage records in the connected GageList account.",
   inputSchema: listInputSchema,
   outputSchema: s.requiredObject("The GageList gage record list response.", {
@@ -156,6 +163,7 @@ const listGageRecordsAction = defineProviderAction(service, {
 
 const getGageRecordAction = defineProviderAction(service, {
   name: "get_gage_record",
+  operationType: "read",
   description: "Get one gage record by identifier from the connected GageList account.",
   inputSchema: s.requiredObject("The gage record lookup input.", {
     id: positiveIdSchema,
@@ -181,6 +189,7 @@ const calibrationRecordSchema = s.requiredObject("A normalized GageList calibrat
 
 const listCalibrationRecordsAction = defineProviderAction(service, {
   name: "list_calibration_records",
+  operationType: "read",
   description: "List calibration records in the connected GageList account.",
   inputSchema: listInputSchema,
   outputSchema: s.requiredObject("The GageList calibration record list response.", {
@@ -195,6 +204,7 @@ const listCalibrationRecordsAction = defineProviderAction(service, {
 
 const getCalibrationRecordAction = defineProviderAction(service, {
   name: "get_calibration_record",
+  operationType: "read",
   description: "Get one calibration record by identifier from the connected GageList account.",
   inputSchema: s.requiredObject("The calibration record lookup input.", {
     id: positiveIdSchema,

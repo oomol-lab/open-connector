@@ -10,6 +10,7 @@ const service = "sf_express";
 export const sfExpressPushActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "register_route_push",
+    operationType: "write",
     description:
       "Register an SF Express order or waybill for route (tracking) push. Prerequisite: the route push callback must already be configured in the SF console (控制台 → 开发者对接 → 查看API → 路由注册接口 → 配置信息); after registration, SF pushes route updates to that address.",
     requiredScopes: [],
@@ -39,6 +40,7 @@ export const sfExpressPushActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "register_waybill_picture_push",
+    operationType: "write",
     description:
       "Register a waybill for waybill picture push (回单 receipt, 清单 manifest, 拍照回传 photo proof, etc.). SF pushes the AES-encrypted picture to the configured callback once generated; register after the shipment is signed for, because pictures are produced late. The decryption key comes from the SF console (控制台 → 开发者对接 → 查看API → 图片注册及推送接口).",
     requiredScopes: [],

@@ -96,12 +96,14 @@ const entityInformationOutputSchema = s.object("Autotask entity metadata respons
 export const autotaskActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_zone_information",
+    operationType: "read",
     description: "Return the Autotask REST API zone URL for the connected API user.",
     inputSchema: s.object("Input parameters for reading Autotask zone information.", {}),
     outputSchema: zoneInformationSchema,
   }),
   defineProviderAction(service, {
     name: "query_records",
+    operationType: "read",
     description:
       "Query Autotask Companies, Contacts, or Tickets with optional filter, IncludeFields, and MaxRecords parameters.",
     inputSchema: queryRecordsInputSchema,
@@ -109,12 +111,14 @@ export const autotaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_record",
+    operationType: "read",
     description: "Get one Autotask Company, Contact, or Ticket by numeric ID.",
     inputSchema: getRecordInputSchema,
     outputSchema: getRecordOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_entity_information",
+    operationType: "read",
     description: "Get Autotask entityInformation metadata for Companies, Contacts, or Tickets.",
     inputSchema: getEntityInformationInputSchema,
     outputSchema: entityInformationOutputSchema,

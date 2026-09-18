@@ -90,6 +90,7 @@ const getSummariesInputSchema: JsonSchema = {
 export const wakatimeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the currently authenticated WakaTime user.",
     followUpActions: ["wakatime.get_all_time_since_today", "wakatime.list_projects", "wakatime.get_stats"],
     inputSchema: s.actionInput({}),
@@ -99,6 +100,7 @@ export const wakatimeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_all_time_since_today",
+    operationType: "read",
     description: "Get the total WakaTime coding time logged since the account was created.",
     inputSchema: s.actionInput({
       project: s.nonEmptyString("The WakaTime project name."),
@@ -119,6 +121,7 @@ export const wakatimeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List WakaTime projects for the authenticated user.",
     inputSchema: s.actionInput({
       q: s.nonEmptyString("A search term used to filter project names."),
@@ -130,6 +133,7 @@ export const wakatimeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_stats",
+    operationType: "read",
     description: "Get WakaTime coding stats for the authenticated user.",
     inputSchema: s.actionInput({
       range: s.nonEmptyString(
@@ -152,6 +156,7 @@ export const wakatimeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_summaries",
+    operationType: "read",
     description: "Get WakaTime daily summaries for the authenticated user.",
     inputSchema: getSummariesInputSchema,
     outputSchema: s.object(
@@ -176,6 +181,7 @@ export const wakatimeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_status_bar_today",
+    operationType: "read",
     description: "Get today's cached WakaTime status bar summary for the authenticated user.",
     inputSchema: s.actionInput({
       project: s.nonEmptyString("The WakaTime project name."),

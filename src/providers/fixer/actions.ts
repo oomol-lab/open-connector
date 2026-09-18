@@ -69,18 +69,21 @@ const historicalRatesOutputSchema = s.looseRequiredObject("Fixer historical rate
 export const fixerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_supported_symbols",
+    operationType: "read",
     description: "Retrieve all supported Fixer currency symbols and their full names.",
     inputSchema: noInputSchema,
     outputSchema: currencySymbolsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_latest_rates",
+    operationType: "read",
     description: "Retrieve the latest Fixer exchange rates for all or selected currencies.",
     inputSchema: latestRatesInputSchema,
     outputSchema: ratesOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_historical_rates",
+    operationType: "read",
     description: "Retrieve historical Fixer exchange rates for a specific date.",
     inputSchema: historicalRatesInputSchema,
     outputSchema: historicalRatesOutputSchema,

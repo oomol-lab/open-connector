@@ -90,6 +90,7 @@ const searchAssetTypeSchema = s.stringEnum("OpenSea asset type filter for search
 export const openseaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search",
+    operationType: "read",
     description: "Search OpenSea collections, tokens, NFTs, and accounts by relevance.",
     inputSchema: s.object(
       "Input parameters for searching OpenSea.",
@@ -114,6 +115,7 @@ export const openseaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_collection",
+    operationType: "read",
     description: "Get one OpenSea collection including details, links, fees, and traits.",
     inputSchema: s.object(
       "Input parameters for retrieving one OpenSea collection.",
@@ -128,6 +130,7 @@ export const openseaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_collection_stats",
+    operationType: "read",
     description: "Get comprehensive OpenSea statistics for one collection.",
     inputSchema: s.object(
       "Input parameters for retrieving OpenSea collection statistics.",
@@ -142,6 +145,7 @@ export const openseaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_collection_nfts",
+    operationType: "read",
     description: "List NFTs in one OpenSea collection with optional trait filtering.",
     inputSchema: s.object(
       "Input parameters for listing NFTs in an OpenSea collection.",
@@ -162,6 +166,7 @@ export const openseaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_collection_traits",
+    operationType: "read",
     description: "List all available traits for an OpenSea collection.",
     inputSchema: s.object(
       "Input parameters for listing OpenSea collection traits.",
@@ -176,6 +181,7 @@ export const openseaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_collection_offers",
+    operationType: "read",
     description: "List collection-level offers for an OpenSea collection.",
     inputSchema: s.object(
       "Input parameters for listing OpenSea collection offers.",
@@ -194,6 +200,7 @@ export const openseaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_best_nft_listing",
+    operationType: "read",
     description: "Get the best current OpenSea listing for a single NFT.",
     inputSchema: s.object(
       "Input parameters for retrieving the best listing for an NFT.",
@@ -210,6 +217,7 @@ export const openseaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_best_nft_offer",
+    operationType: "read",
     description: "Get the best current OpenSea offer for a single NFT.",
     inputSchema: s.object(
       "Input parameters for retrieving the best offer for an NFT.",
@@ -225,6 +233,7 @@ export const openseaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_nft",
+    operationType: "read",
     description: "Get metadata, traits, ownership, and rarity for a single OpenSea NFT.",
     inputSchema: s.object(
       "Input parameters for retrieving a single OpenSea NFT.",

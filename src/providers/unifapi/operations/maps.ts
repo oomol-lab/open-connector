@@ -3,6 +3,7 @@ import type { UnifapiOperationDefinition } from "../operations.ts";
 export const mapsOperations: readonly UnifapiOperationDefinition[] = [
   {
     name: "search_maps",
+    operationType: "read",
     operationId: "postMapsSearch",
     description: "Search Maps.",
     method: "POST",

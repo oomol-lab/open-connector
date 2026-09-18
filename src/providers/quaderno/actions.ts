@@ -102,6 +102,7 @@ const taxRateSchema = s.object("A normalized Quaderno tax rate calculation.", {
 export const quadernoActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve the Quaderno account identity and API endpoint for the API key.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving the Quaderno account identity.", {}),
@@ -111,6 +112,7 @@ export const quadernoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Quaderno contacts with optional search or processor ID filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -128,6 +130,7 @@ export const quadernoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Retrieve one Quaderno contact by ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a Quaderno contact.", {
@@ -139,6 +142,7 @@ export const quadernoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a Quaderno contact.",
     requiredScopes: [],
     inputSchema: s.object("Input for creating a Quaderno contact.", {
@@ -150,6 +154,7 @@ export const quadernoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update a Quaderno contact. Fields not provided are left unchanged.",
     requiredScopes: [],
     inputSchema: s.object("Input for updating a Quaderno contact.", {
@@ -162,6 +167,7 @@ export const quadernoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete a Quaderno contact permanently.",
     requiredScopes: [],
     inputSchema: s.object("Input for deleting a Quaderno contact.", {
@@ -173,6 +179,7 @@ export const quadernoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List Quaderno products with an optional search query.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -189,6 +196,7 @@ export const quadernoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Retrieve one Quaderno product by ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a Quaderno product.", {
@@ -200,6 +208,7 @@ export const quadernoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_product",
+    operationType: "write",
     description: "Create a Quaderno product.",
     requiredScopes: [],
     inputSchema: s.object("Input for creating a Quaderno product.", {
@@ -211,6 +220,7 @@ export const quadernoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_product",
+    operationType: "write",
     description: "Update a Quaderno product. Fields not provided are left unchanged.",
     requiredScopes: [],
     inputSchema: s.object("Input for updating a Quaderno product.", {
@@ -223,6 +233,7 @@ export const quadernoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_product",
+    operationType: "destructive",
     description: "Delete a Quaderno product permanently.",
     requiredScopes: [],
     inputSchema: s.object("Input for deleting a Quaderno product.", {
@@ -234,6 +245,7 @@ export const quadernoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "calculate_tax_rate",
+    operationType: "read",
     description: "Calculate the Quaderno tax rate for an address and transaction details.",
     requiredScopes: [],
     inputSchema: s.object(

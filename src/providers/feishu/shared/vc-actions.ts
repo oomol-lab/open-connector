@@ -13,6 +13,7 @@ export function createFeishuVcActions(options: FeishuVcActionOptions): readonly 
   return [
     defineProviderAction(options.service, {
       name: "join_vc_meeting",
+      operationType: "write",
       description: "Join a Feishu video meeting with the app's meeting bot.",
       requiredScopes: ["vc:meeting.bot.join:write"],
       providerPermissions: ["vc:meeting.bot.join:write"],
@@ -44,6 +45,7 @@ export function createFeishuVcActions(options: FeishuVcActionOptions): readonly 
     }),
     defineProviderAction(options.service, {
       name: "leave_vc_meeting",
+      operationType: "destructive",
       description: "Leave a Feishu video meeting previously joined by the app's meeting bot.",
       requiredScopes: ["vc:meeting.bot.join:write"],
       providerPermissions: ["vc:meeting.bot.join:write"],
@@ -64,6 +66,7 @@ export function createFeishuVcActions(options: FeishuVcActionOptions): readonly 
     }),
     defineProviderAction(options.service, {
       name: "list_active_vc_meetings",
+      operationType: "read",
       description: "List active Feishu video meetings for the current user or a tenant user.",
       requiredScopes: [queryPermission],
       providerPermissions: [queryPermission],
@@ -88,6 +91,7 @@ export function createFeishuVcActions(options: FeishuVcActionOptions): readonly 
     }),
     defineProviderAction(options.service, {
       name: "list_vc_meeting_events",
+      operationType: "read",
       description: "List participant and lifecycle events from one Feishu video meeting.",
       requiredScopes: [queryPermission],
       providerPermissions: [queryPermission],
@@ -124,6 +128,7 @@ export function createFeishuVcActions(options: FeishuVcActionOptions): readonly 
     }),
     defineProviderAction(options.service, {
       name: "send_vc_meeting_message",
+      operationType: "write",
       description: "Send a text message or reaction through the app's in-meeting bot.",
       requiredScopes: ["vc:meeting.message:write"],
       providerPermissions: ["vc:meeting.message:write"],

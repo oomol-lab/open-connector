@@ -1479,6 +1479,7 @@ const localEvaluationSchema = s.object("PostHog feature flag local evaluation re
 export const posthogActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current user associated with the PostHog personal API key.",
     requiredScopes: [],
     providerPermissions: ["user:read"],
@@ -1488,6 +1489,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List PostHog projects for the current or specified organization.",
     requiredScopes: [],
     providerPermissions: ["organization:read", "project:read"],
@@ -1505,6 +1507,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get a PostHog project from the current or specified organization.",
     requiredScopes: [],
     providerPermissions: ["organization:read", "project:read"],
@@ -1520,6 +1523,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_event_definitions",
+    operationType: "read",
     description: "List event definitions for a PostHog project.",
     requiredScopes: [],
     providerPermissions: ["event_definition:read"],
@@ -1536,6 +1540,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_event_definition",
+    operationType: "read",
     description: "Get a PostHog event definition by ID.",
     requiredScopes: [],
     providerPermissions: ["event_definition:read"],
@@ -1544,6 +1549,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_event_definition",
+    operationType: "write",
     description: "Create an event definition for a PostHog project.",
     requiredScopes: [],
     providerPermissions: ["event_definition:write"],
@@ -1552,6 +1558,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_event_definition",
+    operationType: "write",
     description: "Partially update a PostHog event definition by ID.",
     requiredScopes: [],
     providerPermissions: ["event_definition:write"],
@@ -1560,6 +1567,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_event_definition",
+    operationType: "destructive",
     description: "Delete a PostHog event definition by ID.",
     requiredScopes: [],
     providerPermissions: ["event_definition:write"],
@@ -1568,6 +1576,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_event_definition_by_name",
+    operationType: "read",
     description: "Get a PostHog event definition by exact event name.",
     requiredScopes: [],
     providerPermissions: ["event_definition:read"],
@@ -1576,6 +1585,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_event_definition_primary_properties",
+    operationType: "read",
     description: "Get primary properties configured for PostHog event definitions.",
     requiredScopes: [],
     providerPermissions: ["event_definition:read"],
@@ -1584,6 +1594,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "bulk_update_event_definition_tags",
+    operationType: "destructive",
     description: "Bulk add, remove, or set tags on PostHog event definitions.",
     requiredScopes: [],
     providerPermissions: ["event_definition:write"],
@@ -1592,6 +1603,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_property_definitions",
+    operationType: "read",
     description: "List property definitions for a PostHog project.",
     requiredScopes: [],
     providerPermissions: ["property_definition:read"],
@@ -1600,6 +1612,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_property_definition",
+    operationType: "read",
     description: "Get a PostHog property definition by ID.",
     requiredScopes: [],
     providerPermissions: ["property_definition:read"],
@@ -1608,6 +1621,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_property_definition",
+    operationType: "write",
     description: "Partially update a PostHog property definition by ID.",
     requiredScopes: [],
     providerPermissions: ["property_definition:write"],
@@ -1616,6 +1630,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_property_definition",
+    operationType: "destructive",
     description: "Delete a PostHog property definition by ID.",
     requiredScopes: [],
     providerPermissions: ["property_definition:write"],
@@ -1624,6 +1639,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "bulk_update_property_definition_tags",
+    operationType: "destructive",
     description: "Bulk add, remove, or set tags on PostHog property definitions.",
     requiredScopes: [],
     providerPermissions: ["property_definition:write"],
@@ -1632,6 +1648,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_annotations",
+    operationType: "read",
     description: "List annotations for a PostHog project.",
     requiredScopes: [],
     providerPermissions: ["annotation:read"],
@@ -1640,6 +1657,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_annotation",
+    operationType: "read",
     description: "Get a PostHog annotation by ID.",
     requiredScopes: [],
     providerPermissions: ["annotation:read"],
@@ -1648,6 +1666,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_annotation",
+    operationType: "write",
     description: "Create an annotation in a PostHog project.",
     requiredScopes: [],
     providerPermissions: ["annotation:write"],
@@ -1656,6 +1675,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_annotation",
+    operationType: "write",
     description: "Partially update a PostHog annotation by ID.",
     requiredScopes: [],
     providerPermissions: ["annotation:write"],
@@ -1664,6 +1684,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_annotation",
+    operationType: "destructive",
     description: "Mark a PostHog annotation as deleted using the official soft-delete contract.",
     requiredScopes: [],
     providerPermissions: ["annotation:write"],
@@ -1672,6 +1693,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_cohorts",
+    operationType: "read",
     description: "List cohorts for a PostHog project.",
     requiredScopes: [],
     providerPermissions: ["cohort:read"],
@@ -1688,6 +1710,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_cohort",
+    operationType: "read",
     description: "Get a PostHog cohort by ID.",
     requiredScopes: [],
     providerPermissions: ["cohort:read"],
@@ -1699,6 +1722,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_cohort",
+    operationType: "write",
     description: "Create a cohort in a PostHog project.",
     requiredScopes: [],
     providerPermissions: ["cohort:write"],
@@ -1707,6 +1731,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_cohort",
+    operationType: "write",
     description: "Partially update a PostHog cohort by ID.",
     requiredScopes: [],
     providerPermissions: ["cohort:write"],
@@ -1715,6 +1740,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_cohort",
+    operationType: "destructive",
     description: "Mark a PostHog cohort as deleted using the official soft-delete contract.",
     requiredScopes: [],
     providerPermissions: ["cohort:write"],
@@ -1723,6 +1749,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_persons_to_static_cohort",
+    operationType: "write",
     description: "Add person UUIDs to a static PostHog cohort.",
     requiredScopes: [],
     providerPermissions: ["cohort:write"],
@@ -1731,6 +1758,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_cohort_persons",
+    operationType: "read",
     description: "List persons that belong to a PostHog cohort.",
     requiredScopes: [],
     providerPermissions: ["cohort:read", "person:read"],
@@ -1739,6 +1767,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_cohort_calculation_history",
+    operationType: "read",
     description: "Get the raw calculation history payload for a PostHog cohort.",
     requiredScopes: [],
     providerPermissions: ["cohort:read"],
@@ -1750,6 +1779,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_insights",
+    operationType: "read",
     description: "List insights for a PostHog project.",
     requiredScopes: [],
     providerPermissions: ["insight:read"],
@@ -1758,6 +1788,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_insight",
+    operationType: "read",
     description: "Get a PostHog insight by ID with a stable top-level connector shape.",
     requiredScopes: [],
     providerPermissions: ["insight:read"],
@@ -1766,6 +1797,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_query",
+    operationType: "read",
     description: "Run a PostHog query and return a stable top-level query result shape.",
     requiredScopes: [],
     providerPermissions: ["query:read"],
@@ -1774,6 +1806,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_async_query_status",
+    operationType: "read",
     description: "Retrieve the status and available result payload for a PostHog async query.",
     requiredScopes: [],
     providerPermissions: ["query:read"],
@@ -1782,6 +1815,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "cancel_query",
+    operationType: "destructive",
     description: "Cancel a PostHog async query by project ID and query ID.",
     requiredScopes: [],
     providerPermissions: ["query:write"],
@@ -1790,6 +1824,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_insight",
+    operationType: "write",
     description: "Create a saved PostHog insight in a project.",
     requiredScopes: [],
     providerPermissions: ["insight:write"],
@@ -1798,6 +1833,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_insight",
+    operationType: "write",
     description: "Update a saved PostHog insight by ID.",
     requiredScopes: [],
     providerPermissions: ["insight:write"],
@@ -1806,6 +1842,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_insight",
+    operationType: "destructive",
     description: "Delete a saved PostHog insight by ID.",
     requiredScopes: [],
     providerPermissions: ["insight:write"],
@@ -1814,6 +1851,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_dashboards",
+    operationType: "read",
     description: "List dashboards for a PostHog project.",
     requiredScopes: [],
     providerPermissions: ["dashboard:read"],
@@ -1822,6 +1860,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dashboard",
+    operationType: "read",
     description: "Get a PostHog dashboard by ID with a stable top-level connector shape.",
     requiredScopes: [],
     providerPermissions: ["dashboard:read"],
@@ -1830,6 +1869,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_dashboard",
+    operationType: "write",
     description: "Create a PostHog dashboard in a project.",
     requiredScopes: [],
     providerPermissions: ["dashboard:write"],
@@ -1838,6 +1878,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_dashboard",
+    operationType: "write",
     description: "Partially update a PostHog dashboard by ID.",
     requiredScopes: [],
     providerPermissions: ["dashboard:write"],
@@ -1846,6 +1887,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_dashboard",
+    operationType: "destructive",
     description: "Mark a PostHog dashboard as deleted using the official soft-delete contract.",
     requiredScopes: [],
     providerPermissions: ["dashboard:write"],
@@ -1854,6 +1896,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_dashboard_insights",
+    operationType: "write",
     description: "Run all insights on a PostHog dashboard and return their results.",
     requiredScopes: [],
     providerPermissions: ["query:read"],
@@ -1862,6 +1905,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "copy_dashboard_tile",
+    operationType: "write",
     description: "Copy an existing PostHog dashboard tile to another dashboard.",
     requiredScopes: [],
     providerPermissions: ["dashboard:write"],
@@ -1870,6 +1914,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "move_dashboard_tile",
+    operationType: "write",
     description: "Move a PostHog dashboard tile to another dashboard.",
     requiredScopes: [],
     providerPermissions: ["dashboard:write"],
@@ -1878,6 +1923,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reorder_dashboard_tiles",
+    operationType: "write",
     description: "Reorder tiles on a PostHog dashboard.",
     requiredScopes: [],
     providerPermissions: ["dashboard:write"],
@@ -1886,6 +1932,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_dashboard_collaborators",
+    operationType: "read",
     description: "List collaborators for a PostHog dashboard.",
     requiredScopes: [],
     providerPermissions: ["dashboard:read"],
@@ -1897,6 +1944,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_dashboard_collaborator",
+    operationType: "write",
     description: "Add a collaborator to a PostHog dashboard.",
     requiredScopes: [],
     providerPermissions: ["dashboard:write"],
@@ -1905,6 +1953,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_dashboard_collaborator",
+    operationType: "destructive",
     description: "Remove a collaborator from a PostHog dashboard.",
     requiredScopes: [],
     providerPermissions: ["dashboard:write"],
@@ -1913,6 +1962,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_feature_flags",
+    operationType: "read",
     description: "List feature flags for a PostHog project.",
     requiredScopes: [],
     providerPermissions: ["feature_flag:read"],
@@ -1921,6 +1971,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_feature_flag",
+    operationType: "read",
     description: "Get a PostHog feature flag by ID.",
     requiredScopes: [],
     providerPermissions: ["feature_flag:read"],
@@ -1932,6 +1983,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_feature_flag",
+    operationType: "write",
     description: "Create a feature flag in a PostHog project.",
     requiredScopes: [],
     providerPermissions: ["feature_flag:write"],
@@ -1940,6 +1992,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_feature_flag",
+    operationType: "write",
     description: "Partially update a PostHog feature flag by ID.",
     requiredScopes: [],
     providerPermissions: ["feature_flag:write"],
@@ -1948,6 +2001,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_feature_flag",
+    operationType: "destructive",
     description: "Soft delete a PostHog feature flag by setting deleted to true.",
     requiredScopes: [],
     providerPermissions: ["feature_flag:write"],
@@ -1956,6 +2010,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_feature_flag_status",
+    operationType: "read",
     description: "Get the computed status for a PostHog feature flag.",
     requiredScopes: [],
     providerPermissions: ["feature_flag:read"],
@@ -1964,6 +2019,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_feature_flag_dependent_flags",
+    operationType: "read",
     description: "List the feature flags that depend on a PostHog feature flag.",
     requiredScopes: [],
     providerPermissions: ["feature_flag:read"],
@@ -1972,6 +2028,7 @@ export const posthogActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_feature_flags_local_evaluation",
+    operationType: "read",
     description: "Get the local evaluation payload for PostHog feature flags.",
     requiredScopes: [],
     providerPermissions: ["feature_flag:read"],

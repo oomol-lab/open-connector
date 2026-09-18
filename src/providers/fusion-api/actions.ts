@@ -44,6 +44,7 @@ const syncActionOutputSchema = s.unknown("The normalized Fusion API action resul
 export const fusionApiActions: ProviderActionDefinition<string>[] = fusionApiOperations.map((operation) =>
   defineProviderAction(service, {
     name: operation.actionName,
+    operationType: operation.operationType,
     description: operation.description,
     inputSchema: buildInputSchema(operation),
     outputSchema: buildOutputSchema(operation),

@@ -173,6 +173,7 @@ const searchHitSchema = s.object("A normalized Document360 search hit.", {
 
 const listWorkspacesAction = defineProviderAction(service, {
   name: "list_workspaces",
+  operationType: "read",
   description: "List Document360 workspaces, also called project versions, for the API token.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for listing Document360 workspaces.", {}),
@@ -185,6 +186,7 @@ const listWorkspacesAction = defineProviderAction(service, {
 
 const listWorkspaceArticlesAction = defineProviderAction(service, {
   name: "list_workspace_articles",
+  operationType: "read",
   description: "List articles in a Document360 workspace with optional language and pagination filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -208,6 +210,7 @@ const listWorkspaceArticlesAction = defineProviderAction(service, {
 
 const getWorkspaceCategoriesAction = defineProviderAction(service, {
   name: "get_workspace_categories",
+  operationType: "read",
   description: "Get the Document360 category hierarchy for a workspace.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -234,6 +237,7 @@ const getWorkspaceCategoriesAction = defineProviderAction(service, {
 
 const searchWorkspaceAction = defineProviderAction(service, {
   name: "search_workspace",
+  operationType: "read",
   description: "Search for a phrase inside a Document360 workspace.",
   requiredScopes: [],
   inputSchema: s.object(

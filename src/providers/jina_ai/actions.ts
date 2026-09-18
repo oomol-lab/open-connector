@@ -39,12 +39,14 @@ const rerankInput = s.object(
 export const jinaAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_embeddings",
+    operationType: "write",
     description: "Create vector embeddings for text or multimodal inputs with Jina AI.",
     inputSchema: embeddingsInput,
     outputSchema: looseObject,
   }),
   defineProviderAction(service, {
     name: "rerank_documents",
+    operationType: "read",
     description: "Rank documents by relevance to a query with Jina AI.",
     inputSchema: rerankInput,
     outputSchema: looseObject,

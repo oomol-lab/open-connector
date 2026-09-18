@@ -102,18 +102,21 @@ const queryAvailabilityOutputSchema = s.object(
 export const bookingmoodActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List Bookingmood products with optional PostgREST select, pagination, ordering, and ID filters.",
     inputSchema: productListInputSchema,
     outputSchema: listProductsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_bookings",
+    operationType: "read",
     description: "List Bookingmood bookings with optional PostgREST select, pagination, ordering, and ID filters.",
     inputSchema: bookingListInputSchema,
     outputSchema: listBookingsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "query_availability",
+    operationType: "read",
     description: "Fetch Bookingmood availability for a product using the official availability endpoint.",
     inputSchema: availabilityInputSchema,
     outputSchema: queryAvailabilityOutputSchema,

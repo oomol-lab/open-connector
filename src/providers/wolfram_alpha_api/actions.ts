@@ -19,6 +19,7 @@ const timeoutFieldSchema = s.positiveInteger("Maximum processing time in seconds
 export const wolframAlphaApiActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "validate_query",
+    operationType: "read",
     description: "Validate whether Wolfram|Alpha can interpret a query.",
     inputSchema: s.actionInput(
       {
@@ -48,6 +49,7 @@ export const wolframAlphaApiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_short_answer",
+    operationType: "read",
     description: "Get a concise short answer from Wolfram|Alpha.",
     inputSchema: s.actionInput(
       {
@@ -68,6 +70,7 @@ export const wolframAlphaApiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_spoken_result",
+    operationType: "read",
     description: "Get a spoken-style single-sentence result from Wolfram|Alpha.",
     inputSchema: s.actionInput(
       {

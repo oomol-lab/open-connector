@@ -72,6 +72,7 @@ const linkedinAdsInputSchema: JsonSchema = {
 
 function adyntelAction<TName extends string>(input: {
   name: TName;
+  operationType: ProviderActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
@@ -82,12 +83,14 @@ function adyntelAction<TName extends string>(input: {
 export const adyntelActions: ProviderActionDefinition[] = [
   adyntelAction({
     name: "search_meta_ads",
+    operationType: "read",
     description: "Search Facebook and Instagram ads for a company using Adyntel's Meta ad library endpoint.",
     inputSchema: metaAdsInputSchema,
     outputSchema: adSearchOutputSchema,
   }),
   adyntelAction({
     name: "search_google_ads",
+    operationType: "read",
     description: "Search Google ads for a company domain using Adyntel's Google ad library endpoint.",
     inputSchema: s.object(
       "Input for searching Google ads by company domain.",
@@ -106,12 +109,14 @@ export const adyntelActions: ProviderActionDefinition[] = [
   }),
   adyntelAction({
     name: "search_linkedin_ads",
+    operationType: "read",
     description: "Search LinkedIn ads for a company domain or LinkedIn page ID using Adyntel.",
     inputSchema: linkedinAdsInputSchema,
     outputSchema: adSearchOutputSchema,
   }),
   adyntelAction({
     name: "search_tiktok_ads",
+    operationType: "read",
     description: "Search TikTok ads by keyword using Adyntel's TikTok ad library endpoint.",
     inputSchema: s.object(
       "Input for searching TikTok ads by keyword.",
@@ -125,6 +130,7 @@ export const adyntelActions: ProviderActionDefinition[] = [
   }),
   adyntelAction({
     name: "get_tiktok_ad_details",
+    operationType: "read",
     description: "Get details for one TikTok ad by ID using Adyntel.",
     inputSchema: s.object("Input for fetching TikTok ad details.", {
       id: s.nonEmptyString("The TikTok ad ID to fetch."),
@@ -133,6 +139,7 @@ export const adyntelActions: ProviderActionDefinition[] = [
   }),
   adyntelAction({
     name: "get_domain_keywords",
+    operationType: "read",
     description: "Get Adyntel paid and organic keyword metrics for a company domain.",
     inputSchema: s.object(
       "Input for fetching paid and organic keyword metrics.",

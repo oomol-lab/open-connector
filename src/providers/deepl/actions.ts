@@ -111,6 +111,7 @@ const translateTextOutputSchema = s.object("The normalized DeepL text translatio
 export const deeplActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_supported_languages",
+    operationType: "read",
     description: "List the DeepL source or target languages currently supported by the translation API.",
     requiredScopes: [],
     inputSchema: listSupportedLanguagesInputSchema,
@@ -118,6 +119,7 @@ export const deeplActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_usage",
+    operationType: "read",
     description: "Fetch the current DeepL API usage and quota counters for the connected API key.",
     requiredScopes: [],
     inputSchema: getUsageInputSchema,
@@ -125,6 +127,7 @@ export const deeplActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "translate_text",
+    operationType: "read",
     description: "Translate one or more text items with DeepL and return the normalized translation results.",
     requiredScopes: [],
     inputSchema: translateTextInputSchema,

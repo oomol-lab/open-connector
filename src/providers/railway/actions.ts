@@ -85,6 +85,7 @@ type RailwayActionDefinitions = readonly [
 export const railwayActions: RailwayActionDefinitions = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Railway projects available to the configured account or workspace token.",
     inputSchema: s.object("Input for listing Railway projects.", {}),
     outputSchema: s.object("Railway projects available to the token.", {
@@ -93,6 +94,7 @@ export const railwayActions: RailwayActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get a Railway project together with its services and environments.",
     inputSchema: s.object("Input for retrieving a Railway project.", {
       projectId: id("Railway project ID."),
@@ -114,6 +116,7 @@ export const railwayActions: RailwayActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "get_service_instance",
+    operationType: "read",
     description: "Get Railway service configuration and its latest deployment in one environment.",
     inputSchema: s.object("Input for retrieving a Railway service instance.", {
       serviceId: id("Railway service ID."),
@@ -153,6 +156,7 @@ export const railwayActions: RailwayActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "list_deployments",
+    operationType: "read",
     description: "List recent Railway deployments for a service and environment.",
     inputSchema: s.object(
       "Filters for Railway deployments.",
@@ -168,6 +172,7 @@ export const railwayActions: RailwayActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "get_deployment",
+    operationType: "read",
     description: "Get one Railway deployment and its redeploy and rollback capabilities.",
     inputSchema: s.object("Input for retrieving a Railway deployment.", {
       deploymentId: id("Railway deployment ID."),
@@ -176,6 +181,7 @@ export const railwayActions: RailwayActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "get_deployment_logs",
+    operationType: "read",
     description: "Read runtime logs for a Railway deployment with optional text and time filters.",
     inputSchema: s.object(
       "Filters for Railway deployment logs.",
@@ -205,6 +211,7 @@ export const railwayActions: RailwayActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "deploy_service",
+    operationType: "write",
     description: "Trigger a Railway deployment for a service, optionally at a specific connected-repository commit.",
     inputSchema: s.object(
       "Input for deploying a Railway service.",
@@ -221,6 +228,7 @@ export const railwayActions: RailwayActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "upsert_variable",
+    operationType: "write",
     description: "Create or update one Railway variable for an environment or service.",
     inputSchema: s.object(
       "Input for creating or updating a Railway variable.",
@@ -243,6 +251,7 @@ export const railwayActions: RailwayActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "rollback_deployment",
+    operationType: "destructive",
     description: "Roll a Railway service back to a deployment that Railway marks as rollback-capable.",
     inputSchema: s.object("Input for rolling back a Railway deployment.", {
       deploymentId: id("Rollback-capable Railway deployment ID."),

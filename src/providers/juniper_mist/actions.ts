@@ -79,6 +79,7 @@ const deviceTypeSchema = s.stringEnum("Juniper Mist device type filter.", ["all"
 export const juniperMistActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_self",
+    operationType: "read",
     description: "Get the authenticated Juniper Mist administrator profile and accessible organizations or sites.",
     inputSchema: s.object("This action does not require input fields.", {}),
     outputSchema: s.object("Juniper Mist self profile response.", {
@@ -87,6 +88,7 @@ export const juniperMistActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_org_sites",
+    operationType: "read",
     description: "List sites in a Juniper Mist organization with optional pagination.",
     inputSchema: s.object(
       "Input parameters for listing Juniper Mist organization sites.",
@@ -102,6 +104,7 @@ export const juniperMistActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_site_devices",
+    operationType: "read",
     description: "List devices in a Juniper Mist site with optional type, name, and pagination filters.",
     inputSchema: s.object(
       "Input parameters for listing Juniper Mist site devices.",

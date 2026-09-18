@@ -152,6 +152,7 @@ const deleteRecordsOutputSchema = s.object("Quickbase delete records response.",
 export const quickbaseActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_app",
+    operationType: "read",
     description: "Retrieve metadata for a Quickbase app.",
     requiredScopes: [],
     inputSchema: getAppInputSchema,
@@ -159,6 +160,7 @@ export const quickbaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_app_tables",
+    operationType: "read",
     description: "List tables in a Quickbase app.",
     requiredScopes: [],
     inputSchema: listAppTablesInputSchema,
@@ -166,6 +168,7 @@ export const quickbaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_table_fields",
+    operationType: "read",
     description: "List fields in a Quickbase table.",
     requiredScopes: [],
     inputSchema: getTableFieldsInputSchema,
@@ -173,6 +176,7 @@ export const quickbaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_records",
+    operationType: "read",
     description: "Query records from a Quickbase table.",
     requiredScopes: [],
     inputSchema: queryRecordsInputSchema,
@@ -180,6 +184,7 @@ export const quickbaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_records",
+    operationType: "write",
     description: "Insert or update records in a Quickbase table.",
     requiredScopes: [],
     inputSchema: upsertRecordsInputSchema,
@@ -187,6 +192,7 @@ export const quickbaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_records",
+    operationType: "destructive",
     description: "Delete records from a Quickbase table by record id.",
     requiredScopes: [],
     inputSchema: deleteRecordsInputSchema,

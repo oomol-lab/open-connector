@@ -76,6 +76,7 @@ const qrUrlOutputSchema = s.object("The generated QuickChart QR code URL.", {
 export const quickchartActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "build_chart_url",
+    operationType: "write",
     description: "Build a QuickChart image URL from a Chart.js configuration without downloading the rendered image.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for building a QuickChart chart image URL.", chartRequestFields, {
@@ -85,6 +86,7 @@ export const quickchartActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_chart_short_url",
+    operationType: "write",
     description:
       "Create a QuickChart short URL for a Chart.js configuration and return the URL plus creation metadata.",
     requiredScopes: [],
@@ -102,6 +104,7 @@ export const quickchartActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "build_qr_url",
+    operationType: "write",
     description: "Build a QuickChart QR code image URL for text, URLs, or other compact QR payloads.",
     requiredScopes: [],
     inputSchema: s.object(

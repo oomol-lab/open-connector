@@ -157,6 +157,7 @@ const partitionLimitFields: Record<string, JsonSchema> = {
 
 function defineRagieAction(input: {
   name: RagieActionName;
+  operationType: ProviderActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
@@ -167,6 +168,7 @@ function defineRagieAction(input: {
 export const ragieActions: ProviderActionDefinition[] = [
   defineRagieAction({
     name: "retrieve",
+    operationType: "read",
     description:
       "Retrieve the most relevant Ragie document chunks for a query, with optional metadata filters, reranking, and partition scoping.",
     inputSchema: s.actionInput(
@@ -187,6 +189,7 @@ export const ragieActions: ProviderActionDefinition[] = [
   }),
   defineRagieAction({
     name: "list_documents",
+    operationType: "read",
     description:
       "List Ragie documents with filter, cursor pagination, and optional partition scoping to inspect ingestion progress.",
     inputSchema: s.actionInput({
@@ -202,6 +205,7 @@ export const ragieActions: ProviderActionDefinition[] = [
   }),
   defineRagieAction({
     name: "get_document",
+    operationType: "read",
     description: "Get a single Ragie document by ID to inspect status, metadata, errors, and counts.",
     inputSchema: s.actionInput(
       {
@@ -214,6 +218,7 @@ export const ragieActions: ProviderActionDefinition[] = [
   }),
   defineRagieAction({
     name: "create_document_raw",
+    operationType: "write",
     description:
       "Create a Ragie document from raw text or JSON data when the content already exists in memory and does not need file upload.",
     inputSchema: s.actionInput(
@@ -232,6 +237,7 @@ export const ragieActions: ProviderActionDefinition[] = [
   }),
   defineRagieAction({
     name: "create_document_from_url",
+    operationType: "write",
     description: "Create a Ragie document from a public URL when the source file is already hosted externally.",
     inputSchema: s.actionInput(
       {
@@ -248,6 +254,7 @@ export const ragieActions: ProviderActionDefinition[] = [
   }),
   defineRagieAction({
     name: "patch_document_metadata",
+    operationType: "write",
     description: "Patch Ragie document metadata in place without replacing the entire metadata object.",
     inputSchema: s.actionInput(
       {
@@ -269,6 +276,7 @@ export const ragieActions: ProviderActionDefinition[] = [
   }),
   defineRagieAction({
     name: "get_document_content",
+    operationType: "read",
     description:
       "Get Ragie document content in the requested media type, with optional byte range and download behavior.",
     inputSchema: s.actionInput(
@@ -285,6 +293,7 @@ export const ragieActions: ProviderActionDefinition[] = [
   }),
   defineRagieAction({
     name: "get_document_summary",
+    operationType: "read",
     description: "Get the Ragie-generated summary for a specific document.",
     inputSchema: s.actionInput(
       {
@@ -300,6 +309,7 @@ export const ragieActions: ProviderActionDefinition[] = [
   }),
   defineRagieAction({
     name: "get_document_chunks",
+    operationType: "read",
     description: "List the chunks of a Ragie document with cursor pagination and optional start/end index filtering.",
     inputSchema: s.actionInput(
       {
@@ -319,6 +329,7 @@ export const ragieActions: ProviderActionDefinition[] = [
   }),
   defineRagieAction({
     name: "delete_document",
+    operationType: "destructive",
     description: "Delete a Ragie document, optionally in asynchronous mode.",
     inputSchema: s.actionInput(
       {
@@ -334,6 +345,7 @@ export const ragieActions: ProviderActionDefinition[] = [
   }),
   defineRagieAction({
     name: "list_partitions",
+    operationType: "read",
     description: "List available Ragie partitions and their current limits with cursor pagination.",
     inputSchema: s.actionInput({
       cursor: s.string("The pagination cursor returned by a previous list call."),
@@ -346,12 +358,14 @@ export const ragieActions: ProviderActionDefinition[] = [
   }),
   defineRagieAction({
     name: "get_partition",
+    operationType: "read",
     description: "Get a specific Ragie partition together with its limits and usage stats.",
     inputSchema: s.actionInput({ partitionId: s.string("The partition identifier.") }, ["partitionId"]),
     outputSchema: partitionSchema,
   }),
   defineRagieAction({
     name: "create_partition",
+    operationType: "write",
     description:
       "Create a Ragie partition to isolate documents, metadata schemas, and resource limits by workspace or tenant.",
     inputSchema: s.actionInput(
@@ -368,6 +382,7 @@ export const ragieActions: ProviderActionDefinition[] = [
   }),
   defineRagieAction({
     name: "update_partition",
+    operationType: "write",
     description:
       "Update a Ragie partition's description, metadata schema, and context-aware setting without recreating it.",
     inputSchema: s.actionInput(
@@ -383,6 +398,7 @@ export const ragieActions: ProviderActionDefinition[] = [
   }),
   defineRagieAction({
     name: "set_partition_limits",
+    operationType: "write",
     description: "Update the page, media, audio, and video limits on an existing Ragie partition.",
     inputSchema: s.actionInput(
       {
@@ -395,6 +411,7 @@ export const ragieActions: ProviderActionDefinition[] = [
   }),
   defineRagieAction({
     name: "delete_partition",
+    operationType: "destructive",
     description: "Delete a Ragie partition, optionally in asynchronous mode.",
     inputSchema: s.actionInput(
       {
@@ -409,6 +426,7 @@ export const ragieActions: ProviderActionDefinition[] = [
   }),
   defineRagieAction({
     name: "list_connection_source_types",
+    operationType: "read",
     description:
       "List the embedded connector source types that Ragie can authorize and sync through its connections API.",
     inputSchema: s.actionInput({}),
@@ -418,6 +436,7 @@ export const ragieActions: ProviderActionDefinition[] = [
   }),
   defineRagieAction({
     name: "list_connections",
+    operationType: "read",
     description: "List Ragie connections with metadata filtering, pagination, and optional partition scoping.",
     inputSchema: s.actionInput({
       cursor: s.string("The pagination cursor returned by a previous list call."),
@@ -432,6 +451,7 @@ export const ragieActions: ProviderActionDefinition[] = [
   }),
   defineRagieAction({
     name: "create_oauth_redirect_url",
+    operationType: "write",
     description:
       "Create the Ragie embedded OAuth redirect URL for a connection source type such as Google Drive or Notion.",
     inputSchema: s.actionInput(

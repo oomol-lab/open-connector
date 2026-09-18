@@ -84,6 +84,7 @@ const engagementSpikesInputSchema = s.object(
 function listTrendingAction(name: string, period: string): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType: "read",
     description: `List repositories in Trendshift's current ${period} trending ranking.`,
     inputSchema: listTrendingInputSchema,
     outputSchema: trendingOutputSchema,
@@ -93,6 +94,7 @@ function listTrendingAction(name: string, period: string): ActionDefinition {
 export const trendshiftActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_engagement_spikes",
+    operationType: "read",
     description: "List repositories whose engagement increased within a requested date window.",
     inputSchema: engagementSpikesInputSchema,
     outputSchema: s.object("A cursor-paginated list of repository engagement spikes.", {
@@ -113,6 +115,7 @@ export const trendshiftActions: ActionDefinition[] = [
   listTrendingAction("list_trending_daily", "daily"),
   defineProviderAction(service, {
     name: "get_trending_daily_by_date",
+    operationType: "read",
     description: "Get Trendshift's daily trending ranking for a specific UTC date.",
     inputSchema: datedTrendingInputSchema,
     outputSchema: trendingOutputSchema,
@@ -120,6 +123,7 @@ export const trendshiftActions: ActionDefinition[] = [
   listTrendingAction("list_trending_weekly", "weekly"),
   defineProviderAction(service, {
     name: "get_trending_weekly_by_period",
+    operationType: "read",
     description: "Get Trendshift's trending ranking for a specific ISO year and week.",
     inputSchema: s.object(
       "The ISO week, filters, and pagination for a historical weekly ranking.",
@@ -131,6 +135,7 @@ export const trendshiftActions: ActionDefinition[] = [
   listTrendingAction("list_trending_monthly", "monthly"),
   defineProviderAction(service, {
     name: "get_trending_monthly_by_period",
+    operationType: "read",
     description: "Get Trendshift's trending ranking for a specific calendar year and month.",
     inputSchema: s.object(
       "The month, filters, and pagination for a historical monthly ranking.",
@@ -142,6 +147,7 @@ export const trendshiftActions: ActionDefinition[] = [
   listTrendingAction("list_trending_yearly", "yearly"),
   defineProviderAction(service, {
     name: "get_trending_yearly_by_period",
+    operationType: "read",
     description: "Get Trendshift's trending ranking for a specific calendar year.",
     inputSchema: s.object(
       "The year, filters, and pagination for a historical yearly ranking.",
@@ -152,6 +158,7 @@ export const trendshiftActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_github_trending",
+    operationType: "read",
     description: "Get Trendshift's latest captured GitHub Trending list.",
     inputSchema: s.object(
       "The optional language for the latest captured GitHub Trending list.",
@@ -162,6 +169,7 @@ export const trendshiftActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_github_trending_by_date",
+    operationType: "read",
     description: "Get Trendshift's captured GitHub Trending list for a specific scrape date.",
     inputSchema: s.object(
       "The scrape date and optional language for a captured GitHub Trending list.",

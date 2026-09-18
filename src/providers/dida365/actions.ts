@@ -81,6 +81,7 @@ const moveOperation = s.object("A single Dida365 task move operation.", {
 export const dida365Actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user_project",
+    operationType: "read",
     description: "List the projects available to the connected Dida365 account.",
     requiredScopes: readScope,
     inputSchema: s.object("The input payload for listing Dida365 projects.", {}),
@@ -88,6 +89,7 @@ export const dida365Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project_by_id",
+    operationType: "read",
     description: "Get a Dida365 project by its project ID.",
     requiredScopes: readScope,
     inputSchema: projectLookup,
@@ -95,6 +97,7 @@ export const dida365Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project_with_data",
+    operationType: "read",
     description: "Get a Dida365 project together with its undone tasks and columns by project ID.",
     requiredScopes: readScope,
     inputSchema: projectLookup,
@@ -106,6 +109,7 @@ export const dida365Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create a Dida365 project with optional color, sort order, view mode, and kind.",
     requiredScopes: writeScope,
     inputSchema: s.object("The input payload for creating a Dida365 project.", projectWriteFields, {
@@ -116,6 +120,7 @@ export const dida365Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_project",
+    operationType: "write",
     description: "Update a Dida365 project by project ID.",
     requiredScopes: writeScope,
     inputSchema: s.object(
@@ -130,6 +135,7 @@ export const dida365Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_project",
+    operationType: "destructive",
     description: "Delete a Dida365 project by project ID. A missing project is treated as already deleted.",
     requiredScopes: writeScope,
     inputSchema: projectLookup,
@@ -137,6 +143,7 @@ export const dida365Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task_by_project_and_id",
+    operationType: "read",
     description: "Get a Dida365 task by project ID and task ID.",
     requiredScopes: readScope,
     inputSchema: taskLookup,
@@ -144,6 +151,7 @@ export const dida365Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_task",
+    operationType: "write",
     description:
       "Create a Dida365 task under a project with optional schedule, reminders, recurrence, and checklist items.",
     requiredScopes: writeScope,
@@ -168,6 +176,7 @@ export const dida365Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_task",
+    operationType: "write",
     description: "Update a Dida365 task by task ID and project ID.",
     requiredScopes: writeScope,
     inputSchema: s.object(
@@ -197,6 +206,7 @@ export const dida365Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "complete_task",
+    operationType: "write",
     description: "Mark a Dida365 task as completed by project ID and task ID.",
     requiredScopes: writeScope,
     inputSchema: taskLookup,
@@ -208,6 +218,7 @@ export const dida365Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_task",
+    operationType: "destructive",
     description: "Delete a Dida365 task by project ID and task ID. A missing task is treated as already deleted.",
     requiredScopes: writeScope,
     inputSchema: taskLookup,
@@ -219,6 +230,7 @@ export const dida365Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_all_tasks",
+    operationType: "read",
     description: "List undone Dida365 tasks across projects.",
     requiredScopes: readScope,
     inputSchema: s.object(
@@ -238,6 +250,7 @@ export const dida365Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_completed_tasks",
+    operationType: "read",
     description: "List completed Dida365 tasks within optional project and date filters.",
     requiredScopes: readScope,
     inputSchema: s.object(
@@ -253,6 +266,7 @@ export const dida365Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "filter_tasks",
+    operationType: "read",
     description: "Filter Dida365 tasks by project, date range, priority, tags, and status.",
     requiredScopes: readScope,
     inputSchema: s.object(
@@ -271,6 +285,7 @@ export const dida365Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "move_tasks",
+    operationType: "destructive",
     description: "Move one or more Dida365 tasks between projects.",
     requiredScopes: writeScope,
     inputSchema: s.object({
@@ -280,6 +295,7 @@ export const dida365Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_habits",
+    operationType: "read",
     description: "List habits available to the connected Dida365 account.",
     requiredScopes: readScope,
     inputSchema: s.object("The input payload for listing Dida365 habits.", {}),
@@ -287,6 +303,7 @@ export const dida365Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_habit",
+    operationType: "read",
     description: "Get a Dida365 habit by its habit ID.",
     requiredScopes: readScope,
     inputSchema: s.object({ habitId }),
@@ -294,6 +311,7 @@ export const dida365Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_or_update_habit_checkin",
+    operationType: "write",
     description: "Create or update a Dida365 habit check-in for a date stamp.",
     requiredScopes: writeScope,
     inputSchema: s.object(
@@ -313,6 +331,7 @@ export const dida365Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_habit_checkins",
+    operationType: "read",
     description: "List Dida365 habit check-ins for one or more habits over a date stamp range.",
     requiredScopes: readScope,
     inputSchema: s.object({

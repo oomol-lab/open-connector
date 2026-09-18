@@ -229,6 +229,7 @@ const candidateSourceCategorySchema = s.looseObject("A Freshteam candidate sourc
 export const freshteamActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_employees",
+    operationType: "read",
     description: "List Freshteam employees with optional directory filters and pagination.",
     inputSchema: listEmployeesInputSchema,
     outputSchema: s.object("Freshteam employee list response wrapper.", {
@@ -238,6 +239,7 @@ export const freshteamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_employee",
+    operationType: "read",
     description: "Get one Freshteam employee by identifier.",
     inputSchema: getEmployeeInputSchema,
     outputSchema: s.object("Freshteam employee response wrapper.", {
@@ -246,6 +248,7 @@ export const freshteamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_employee_fields",
+    operationType: "read",
     description: "List Freshteam employee form fields.",
     inputSchema: listEmployeeFieldsInputSchema,
     outputSchema: s.object("Freshteam employee field list response wrapper.", {
@@ -255,6 +258,7 @@ export const freshteamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_job_postings",
+    operationType: "read",
     description: "List Freshteam job postings with optional recruiting filters.",
     inputSchema: listJobPostingsInputSchema,
     outputSchema: s.object("Freshteam job posting list response wrapper.", {
@@ -264,6 +268,7 @@ export const freshteamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job_posting",
+    operationType: "read",
     description: "Get one Freshteam job posting by identifier.",
     inputSchema: getJobPostingInputSchema,
     outputSchema: s.object("Freshteam job posting response wrapper.", {
@@ -272,6 +277,7 @@ export const freshteamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_job_posting_fields",
+    operationType: "read",
     description: "List Freshteam job posting fields.",
     inputSchema: listJobPostingFieldsInputSchema,
     outputSchema: s.object("Freshteam job posting field list response wrapper.", {
@@ -281,6 +287,7 @@ export const freshteamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_applicant_fields",
+    operationType: "read",
     description: "List Freshteam applicant fields for one job posting.",
     inputSchema: listApplicantFieldsInputSchema,
     outputSchema: s.object("Freshteam applicant field list response wrapper.", {
@@ -290,6 +297,7 @@ export const freshteamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_candidate_sources",
+    operationType: "read",
     description: "List Freshteam candidate sources.",
     inputSchema: listCandidateSourcesInputSchema,
     outputSchema: s.object("Freshteam candidate source list response wrapper.", {
@@ -299,6 +307,7 @@ export const freshteamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_candidate_source_categories",
+    operationType: "read",
     description: "List Freshteam candidate source categories.",
     inputSchema: listCandidateSourceCategoriesInputSchema,
     outputSchema: s.object("Freshteam candidate source category list response wrapper.", {

@@ -3,6 +3,7 @@ import type { UnifapiOperationDefinition } from "../operations.ts";
 export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   {
     name: "get_linkedin_ad",
+    operationType: "read",
     operationId: "getLinkedinAdsById",
     description: "Get a LinkedIn Ad Library entry by ID.",
     method: "GET",
@@ -27,6 +28,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_company_affiliated",
+    operationType: "read",
     operationId: "getLinkedinCompaniesBySlugAffiliated",
     description: "List a LinkedIn company's affiliated pages.",
     method: "GET",
@@ -51,6 +53,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_linkedin_company_job_count",
+    operationType: "read",
     operationId: "getLinkedinCompaniesBySlugJobCount",
     description: "Get the number of active jobs at a LinkedIn company.",
     method: "GET",
@@ -75,6 +78,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_company_jobs",
+    operationType: "read",
     operationId: "getLinkedinCompaniesBySlugJobs",
     description: "List active job postings at a LinkedIn company.",
     method: "GET",
@@ -103,6 +107,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_linkedin_company_member_insights",
+    operationType: "read",
     operationId: "getLinkedinCompaniesBySlugMemberInsights",
     description: "Get a LinkedIn company's aggregated member insights.",
     method: "GET",
@@ -127,6 +132,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_company_people",
+    operationType: "read",
     operationId: "getLinkedinCompaniesBySlugPeople",
     description: "List employees of a LinkedIn company.",
     method: "GET",
@@ -155,6 +161,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_company_posts",
+    operationType: "read",
     operationId: "getLinkedinCompaniesBySlugPosts",
     description: "List posts published by a LinkedIn company page.",
     method: "GET",
@@ -183,6 +190,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_linkedin_company",
+    operationType: "read",
     operationId: "getLinkedinCompaniesBySlug",
     description: "Get a LinkedIn company profile by URL slug.",
     method: "GET",
@@ -207,6 +215,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_group_posts",
+    operationType: "read",
     operationId: "getLinkedinGroupsByIdPosts",
     description: "List posts in a LinkedIn group.",
     method: "GET",
@@ -235,6 +244,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_linkedin_group",
+    operationType: "read",
     operationId: "getLinkedinGroupsById",
     description: "Get a LinkedIn group by ID.",
     method: "GET",
@@ -259,6 +269,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_linkedin_job",
+    operationType: "read",
     operationId: "getLinkedinJobsById",
     description: "Get a LinkedIn job posting by ID.",
     method: "GET",
@@ -288,6 +299,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_post_comment_replies",
+    operationType: "read",
     operationId: "getLinkedinPostsByIdCommentsByCommentIdReplies",
     description: "List replies to a LinkedIn comment.",
     method: "GET",
@@ -321,6 +333,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_post_comments",
+    operationType: "read",
     operationId: "getLinkedinPostsByIdComments",
     description: "List top-level comments on a LinkedIn post.",
     method: "GET",
@@ -349,6 +362,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_post_reactions",
+    operationType: "read",
     operationId: "getLinkedinPostsByIdReactions",
     description: "List users who reacted to a LinkedIn post.",
     method: "GET",
@@ -383,6 +397,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_post_reposts",
+    operationType: "read",
     operationId: "getLinkedinPostsByIdReposts",
     description: "List reposts of a LinkedIn post.",
     method: "GET",
@@ -411,6 +426,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_linkedin_post",
+    operationType: "read",
     operationId: "getLinkedinPostsById",
     description: "Get a LinkedIn post by ID.",
     method: "GET",
@@ -435,6 +451,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_linkedin_ads",
+    operationType: "read",
     operationId: "getLinkedinSearchAds",
     description: "Search the LinkedIn Ad Library.",
     method: "GET",
@@ -473,6 +490,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "resolve_linkedin_industries",
+    operationType: "read",
     operationId: "getLinkedinSearchIndustries",
     description: "Resolve a free-text industry name to LinkedIn industry IDs.",
     method: "GET",
@@ -497,6 +515,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_linkedin_jobs",
+    operationType: "read",
     operationId: "getLinkedinSearchJobs",
     description: "Search LinkedIn jobs by keyword and filters.",
     method: "GET",
@@ -587,6 +606,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "resolve_linkedin_locations",
+    operationType: "read",
     operationId: "getLinkedinSearchLocations",
     description: "Resolve a free-text location into LinkedIn geocode tokens.",
     method: "GET",
@@ -611,6 +631,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_linkedin_people",
+    operationType: "read",
     operationId: "getLinkedinSearchPeople",
     description: "Search LinkedIn people by name, title, company, etc.",
     method: "GET",
@@ -690,6 +711,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_linkedin_posts",
+    operationType: "read",
     operationId: "getLinkedinSearchPosts",
     description: "Search LinkedIn posts by keyword.",
     method: "GET",
@@ -738,6 +760,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_linkedin_schools",
+    operationType: "read",
     operationId: "getLinkedinSearchSchools",
     description: "Search LinkedIn schools by keyword.",
     method: "GET",
@@ -766,6 +789,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_linkedin_user_about",
+    operationType: "read",
     operationId: "getLinkedinUsersByUsernameAbout",
     description: "Get a LinkedIn profile's 'about' metadata.",
     method: "GET",
@@ -790,6 +814,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_user_certifications",
+    operationType: "read",
     operationId: "getLinkedinUsersByUsernameCertifications",
     description: "List a LinkedIn user's certifications.",
     method: "GET",
@@ -818,6 +843,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_user_comments",
+    operationType: "read",
     operationId: "getLinkedinUsersByUsernameComments",
     description: "List comments authored by a LinkedIn user.",
     method: "GET",
@@ -846,6 +872,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_linkedin_user_contact",
+    operationType: "read",
     operationId: "getLinkedinUsersByUsernameContact",
     description: "Get a LinkedIn user's public contact info.",
     method: "GET",
@@ -870,6 +897,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_user_educations",
+    operationType: "read",
     operationId: "getLinkedinUsersByUsernameEducations",
     description: "List a LinkedIn user's education.",
     method: "GET",
@@ -898,6 +926,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_user_experience",
+    operationType: "read",
     operationId: "getLinkedinUsersByUsernameExperience",
     description: "List a LinkedIn user's work experience.",
     method: "GET",
@@ -926,6 +955,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_linkedin_user_follower_count",
+    operationType: "read",
     operationId: "getLinkedinUsersByUsernameFollowerCount",
     description: "Get a LinkedIn user's follower & connection counts.",
     method: "GET",
@@ -950,6 +980,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_user_honors",
+    operationType: "read",
     operationId: "getLinkedinUsersByUsernameHonors",
     description: "List a LinkedIn user's honors and awards.",
     method: "GET",
@@ -978,6 +1009,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_user_images",
+    operationType: "read",
     operationId: "getLinkedinUsersByUsernameImages",
     description: "List image posts authored by a LinkedIn user.",
     method: "GET",
@@ -1006,6 +1038,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_user_interest_companies",
+    operationType: "read",
     operationId: "getLinkedinUsersByUsernameInterestsCompanies",
     description: "List companies a LinkedIn user follows.",
     method: "GET",
@@ -1034,6 +1067,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_user_interest_groups",
+    operationType: "read",
     operationId: "getLinkedinUsersByUsernameInterestsGroups",
     description: "List LinkedIn groups a user follows.",
     method: "GET",
@@ -1062,6 +1096,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_user_posts",
+    operationType: "read",
     operationId: "getLinkedinUsersByUsernamePosts",
     description: "List posts authored by a LinkedIn user.",
     method: "GET",
@@ -1090,6 +1125,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_user_publications",
+    operationType: "read",
     operationId: "getLinkedinUsersByUsernamePublications",
     description: "List a LinkedIn user's publications.",
     method: "GET",
@@ -1118,6 +1154,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_user_reactions",
+    operationType: "read",
     operationId: "getLinkedinUsersByUsernameReactions",
     description: "List reactions a LinkedIn user has placed on posts.",
     method: "GET",
@@ -1146,6 +1183,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_user_recommendations",
+    operationType: "read",
     operationId: "getLinkedinUsersByUsernameRecommendations",
     description: "List recommendations written for a LinkedIn user.",
     method: "GET",
@@ -1174,6 +1212,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_linkedin_user",
+    operationType: "read",
     operationId: "getLinkedinUsersByUsername",
     description: "Get a LinkedIn user profile by URL slug.",
     method: "GET",
@@ -1198,6 +1237,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_user_skills",
+    operationType: "read",
     operationId: "getLinkedinUsersByUsernameSkills",
     description: "List a LinkedIn user's skills.",
     method: "GET",
@@ -1226,6 +1266,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_user_videos",
+    operationType: "read",
     operationId: "getLinkedinUsersByUsernameVideos",
     description: "List video posts authored by a LinkedIn user.",
     method: "GET",
@@ -1254,6 +1295,7 @@ export const linkedinOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_linkedin_user_volunteers",
+    operationType: "read",
     operationId: "getLinkedinUsersByUsernameVolunteers",
     description: "List a LinkedIn user's volunteer experience.",
     method: "GET",

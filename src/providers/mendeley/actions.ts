@@ -43,6 +43,7 @@ const paginationProperties = {
 export const mendeleyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_documents",
+    operationType: "read",
     description: "List document metadata from the authorized user's Mendeley library.",
     requiredScopes: [readScope],
     inputSchema: s.object(
@@ -74,6 +75,7 @@ export const mendeleyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document",
+    operationType: "read",
     description: "Get document metadata from the authorized user's Mendeley library by ID.",
     requiredScopes: [readScope],
     inputSchema: s.object(
@@ -90,6 +92,7 @@ export const mendeleyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_document",
+    operationType: "write",
     description: "Create a document in the authorized user's Mendeley library from JSON metadata.",
     requiredScopes: [writeScope],
     inputSchema: s.object("Metadata for creating a Mendeley document.", documentMetadataProperties, {
@@ -101,6 +104,7 @@ export const mendeleyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_document",
+    operationType: "write",
     description: "Update selected metadata fields on a Mendeley library document.",
     requiredScopes: [writeScope],
     inputSchema: s.object(
@@ -119,6 +123,7 @@ export const mendeleyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_document",
+    operationType: "destructive",
     description: "Permanently delete a document from the authorized user's Mendeley library.",
     requiredScopes: [writeScope],
     inputSchema: s.object("Input parameters for deleting a Mendeley document.", {
@@ -131,6 +136,7 @@ export const mendeleyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_catalog",
+    operationType: "read",
     description: "Search Mendeley's public catalog for document metadata.",
     requiredScopes: [readScope],
     inputSchema: s.object(
@@ -152,6 +158,7 @@ export const mendeleyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_catalog_document",
+    operationType: "read",
     description: "Get a public Mendeley catalog document by its Mendeley ID.",
     requiredScopes: [readScope],
     inputSchema: s.object("Input parameters for getting a catalog document.", {

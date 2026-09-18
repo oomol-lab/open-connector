@@ -234,6 +234,7 @@ const sessionLifecycle = {
 export const browserUseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "run_task",
+    operationType: "write",
     description: "Create or reuse a Browser Use Cloud session and dispatch an agent task.",
     asyncLifecycle: sessionLifecycle,
     inputSchema: runTaskInputSchema,
@@ -241,6 +242,7 @@ export const browserUseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_session",
+    operationType: "read",
     description: "Get a Browser Use Cloud session and poll for task completion.",
     asyncLifecycle: sessionLifecycle,
     inputSchema: getSessionInputSchema,
@@ -248,24 +250,28 @@ export const browserUseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sessions",
+    operationType: "read",
     description: "List Browser Use Cloud sessions for the authenticated project.",
     inputSchema: listSessionsInputSchema,
     outputSchema: listSessionsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_session_messages",
+    operationType: "read",
     description: "List Browser Use Cloud messages for one session.",
     inputSchema: listSessionMessagesInputSchema,
     outputSchema: listSessionMessagesOutputSchema,
   }),
   defineProviderAction(service, {
     name: "stop_session",
+    operationType: "destructive",
     description: "Stop a Browser Use Cloud session or the current task in that session.",
     inputSchema: stopSessionInputSchema,
     outputSchema: stopSessionOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_billing_account",
+    operationType: "read",
     description: "Get Browser Use Cloud account billing and plan information.",
     inputSchema: s.object("Input parameters for retrieving Browser Use account billing information.", {}),
     outputSchema: getBillingAccountOutputSchema,

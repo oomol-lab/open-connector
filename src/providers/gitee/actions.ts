@@ -8,6 +8,7 @@ const service = "gitee";
 
 interface GiteeActionSource {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -67,6 +68,7 @@ function input(properties: Record<string, JsonSchema>, required: string[] = []):
 const actions: GiteeActionSource[] = [
   {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current authenticated Gitee user profile.",
     requiredScopes: giteeUserInfoScopes,
     inputSchema: input({}),
@@ -74,6 +76,7 @@ const actions: GiteeActionSource[] = [
   },
   {
     name: "list_my_repositories",
+    operationType: "read",
     description: "List repositories visible to the authenticated Gitee user.",
     requiredScopes: giteeProjectScopes,
     inputSchema: input({
@@ -97,6 +100,7 @@ const actions: GiteeActionSource[] = [
   },
   {
     name: "get_repository",
+    operationType: "read",
     description: "Get a Gitee repository by namespace owner and repository path.",
     requiredScopes: giteeProjectScopes,
     inputSchema: input(

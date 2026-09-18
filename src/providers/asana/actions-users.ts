@@ -32,6 +32,7 @@ function userUpdateInputSchema(properties: Record<string, JsonSchema>, required:
 export const asanaUserActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List users visible to the connected account, optionally filtered by workspace or team.",
     requiredScopes: ["users:read"],
     inputSchema: s.object(
@@ -48,6 +49,7 @@ export const asanaUserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: 'Get an Asana user by gid, email, or the special identifier "me".',
     requiredScopes: ["users:read"],
     inputSchema: s.object(
@@ -65,6 +67,7 @@ export const asanaUserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_user",
+    operationType: "write",
     description: "Update an Asana user's display name or custom field values.",
     requiredScopes: [],
     inputSchema: userUpdateInputSchema(
@@ -82,6 +85,7 @@ export const asanaUserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_user_favorites",
+    operationType: "read",
     description: "List a user's favorite Asana resources within a workspace.",
     requiredScopes: ["users:read"],
     inputSchema: s.object(
@@ -109,6 +113,7 @@ export const asanaUserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_team_users",
+    operationType: "read",
     description: "List users who belong to an Asana team.",
     requiredScopes: ["users:read"],
     inputSchema: s.object(
@@ -124,6 +129,7 @@ export const asanaUserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workspace_users",
+    operationType: "read",
     description: "List users in an Asana workspace or organization.",
     requiredScopes: ["users:read"],
     inputSchema: s.object(
@@ -139,6 +145,7 @@ export const asanaUserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workspace_user",
+    operationType: "read",
     description: "Get a user record in the context of an Asana workspace or organization.",
     requiredScopes: ["users:read"],
     inputSchema: s.object(
@@ -156,6 +163,7 @@ export const asanaUserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_workspace_user",
+    operationType: "write",
     description: "Update an Asana user in the context of a workspace or organization.",
     requiredScopes: [],
     inputSchema: userUpdateInputSchema(

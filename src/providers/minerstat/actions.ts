@@ -74,6 +74,7 @@ const poolSchema = s.looseObject("One mining pool record returned by Minerstat."
 export const minerstatActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_coins",
+    operationType: "read",
     description:
       "List Minerstat coin profitability and market data, optionally filtered by ticker or mining algorithm.",
     inputSchema: s.object(
@@ -90,6 +91,7 @@ export const minerstatActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_hardware",
+    operationType: "read",
     description: "List Minerstat GPU and ASIC benchmark data, optionally filtered by hardware type or brand.",
     inputSchema: s.object(
       "Input parameters for listing Minerstat hardware data.",
@@ -105,6 +107,7 @@ export const minerstatActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pools",
+    operationType: "read",
     description: "List Minerstat mining pools and supported-coin terms, optionally filtered by coin or pool type.",
     inputSchema: s.object(
       "Input parameters for listing Minerstat pool data.",

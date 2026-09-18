@@ -92,6 +92,7 @@ export const webhookDeliveryResource: JsonSchema = resourceObject(
 export const appStoreConnectWebhookActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_webhooks",
+    operationType: "read",
     description:
       "List the webhooks registered on one app, with the URL, enabled state, and subscribed event types of each.",
     requiredScopes: [],
@@ -112,6 +113,7 @@ export const appStoreConnectWebhookActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_webhook",
+    operationType: "read",
     description: "Read one webhook by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput({ webhookId: webhookIdInput }, ["webhookId"], "Identifies the webhook to read."),
@@ -119,6 +121,7 @@ export const appStoreConnectWebhookActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "create_webhook",
+    operationType: "write",
     description:
       "Register a webhook on an app so App Store Connect posts a signed notification to the URL whenever one of the chosen events happens. Use ping_webhook afterwards to test the endpoint.",
     requiredScopes: [],
@@ -139,6 +142,7 @@ export const appStoreConnectWebhookActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "update_webhook",
+    operationType: "destructive",
     description:
       "Change the name, URL, secret, event types, or enabled state of a webhook. Each given field replaces the current value; eventTypes replaces the whole list.",
     requiredScopes: [],
@@ -159,6 +163,7 @@ export const appStoreConnectWebhookActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "delete_webhook",
+    operationType: "destructive",
     description:
       "Delete a webhook. App Store Connect stops sending notifications to its URL and its delivery history is no longer reachable.",
     requiredScopes: [],
@@ -171,6 +176,7 @@ export const appStoreConnectWebhookActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_webhook_deliveries",
+    operationType: "read",
     description:
       "List the delivery attempts of one webhook, newest first as App Store Connect orders them, with the event each attempt carried and the response the endpoint returned. Filter by delivery state or creation time to find failed deliveries to resend.",
     requiredScopes: [],
@@ -198,6 +204,7 @@ export const appStoreConnectWebhookActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "redeliver_webhook_delivery",
+    operationType: "write",
     description:
       "Send the event of an earlier delivery again, for example after the endpoint was down. App Store Connect creates a new delivery marked as a redelivery; the original delivery record is kept.",
     requiredScopes: [],
@@ -216,6 +223,7 @@ export const appStoreConnectWebhookActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "ping_webhook",
+    operationType: "write",
     description:
       "Send a test ping notification to a webhook so the endpoint and its signature check can be verified. The ping shows up in the webhook deliveries with ping set to true.",
     requiredScopes: [],

@@ -90,6 +90,7 @@ const convertedArticleIdSchema = s.object("The available identifiers for one req
 export const pubmedActions: readonly ProviderActionDefinition<PubmedActionName>[] = [
   defineProviderAction(service, {
     name: "search_articles",
+    operationType: "read",
     description: "Search PubMed with the official query syntax and return normalized article records.",
     inputSchema: s.object(
       "Input parameters for searching PubMed articles.",
@@ -114,6 +115,7 @@ export const pubmedActions: readonly ProviderActionDefinition<PubmedActionName>[
   }),
   defineProviderAction(service, {
     name: "match_citation",
+    operationType: "read",
     description: "Match one raw biomedical citation to PubMed and return normalized candidate articles.",
     inputSchema: s.object("Input parameters for matching one citation.", {
       citation: s.nonEmptyString(
@@ -127,6 +129,7 @@ export const pubmedActions: readonly ProviderActionDefinition<PubmedActionName>[
   }),
   defineProviderAction(service, {
     name: "get_article",
+    operationType: "read",
     description: "Get one normalized PubMed article by PMID.",
     inputSchema: s.object("Input parameters for getting one PubMed article.", {
       pmid: pmidSchema,
@@ -138,6 +141,7 @@ export const pubmedActions: readonly ProviderActionDefinition<PubmedActionName>[
   }),
   defineProviderAction(service, {
     name: "get_articles",
+    operationType: "read",
     description: "Get multiple normalized PubMed articles by PMID in one request.",
     inputSchema: s.object("Input parameters for getting multiple PubMed articles.", {
       pmids: s.array("The PubMed identifiers to retrieve.", pmidSchema, {
@@ -152,6 +156,7 @@ export const pubmedActions: readonly ProviderActionDefinition<PubmedActionName>[
   }),
   defineProviderAction(service, {
     name: "find_related_articles",
+    operationType: "read",
     description: "Find normalized PubMed articles related to one source PMID.",
     inputSchema: s.object(
       "Input parameters for finding related PubMed articles.",
@@ -168,6 +173,7 @@ export const pubmedActions: readonly ProviderActionDefinition<PubmedActionName>[
   }),
   defineProviderAction(service, {
     name: "get_citing_articles",
+    operationType: "read",
     description:
       "Get normalized PubMed articles known to cite one source PMID. PubMed citation coverage depends on data supplied by publishers and NCBI sources and may be incomplete.",
     inputSchema: s.object(
@@ -185,6 +191,7 @@ export const pubmedActions: readonly ProviderActionDefinition<PubmedActionName>[
   }),
   defineProviderAction(service, {
     name: "get_article_references",
+    operationType: "read",
     description:
       "Get normalized PubMed references for one source PMID. References are available only when supplied by publishers or recoverable from PMC data.",
     inputSchema: s.object(
@@ -202,6 +209,7 @@ export const pubmedActions: readonly ProviderActionDefinition<PubmedActionName>[
   }),
   defineProviderAction(service, {
     name: "convert_article_ids",
+    operationType: "read",
     description:
       "Convert PMID, PMCID, DOI, or author manuscript identifiers with the PMC ID Converter. Complete mappings are available only for articles represented in PubMed Central.",
     inputSchema: s.object("Input parameters for converting article identifiers.", {

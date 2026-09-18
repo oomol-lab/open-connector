@@ -52,6 +52,7 @@ const topicSchema = s.looseRequiredObject("A ClickHelp topic.", {
 
 const listProjects = defineProviderAction(service, {
   name: "list_projects",
+  operationType: "read",
   description: "List ClickHelp projects and publications available to the connected user.",
   followUpActions: ["clickhelp.get_project"],
   inputSchema: s.object(
@@ -69,6 +70,7 @@ const listProjects = defineProviderAction(service, {
 
 const getProject = defineProviderAction(service, {
   name: "get_project",
+  operationType: "read",
   description: "Get one ClickHelp project or publication by id.",
   followUpActions: ["clickhelp.list_topics"],
   inputSchema: s.requiredObject("The ClickHelp project lookup.", {
@@ -81,6 +83,7 @@ const getProject = defineProviderAction(service, {
 
 const listTopics = defineProviderAction(service, {
   name: "list_topics",
+  operationType: "read",
   description: "List or search topics within one ClickHelp project or publication.",
   followUpActions: ["clickhelp.get_topic"],
   inputSchema: s.object(
@@ -101,6 +104,7 @@ const listTopics = defineProviderAction(service, {
 
 const getTopic = defineProviderAction(service, {
   name: "get_topic",
+  operationType: "read",
   description: "Get one ClickHelp topic, optionally compiling its content as HTML or Markdown.",
   inputSchema: s.object(
     "The ClickHelp topic lookup.",
@@ -118,6 +122,7 @@ const getTopic = defineProviderAction(service, {
 
 const createTopic = defineProviderAction(service, {
   name: "create_topic",
+  operationType: "write",
   description: "Create a topic in a ClickHelp project using HTML body content and topic metadata.",
   followUpActions: ["clickhelp.get_topic"],
   inputSchema: s.object(
@@ -158,6 +163,7 @@ const createTopic = defineProviderAction(service, {
 
 const updateTopic = defineProviderAction(service, {
   name: "update_topic",
+  operationType: "write",
   description: "Update selected content or metadata fields on a ClickHelp topic.",
   inputSchema: s.object(
     "The ClickHelp topic fields to update.",
@@ -182,6 +188,7 @@ const updateTopic = defineProviderAction(service, {
 
 const searchPortal = defineProviderAction(service, {
   name: "search_portal",
+  operationType: "read",
   description: "Search full text across ClickHelp projects and publications available to the user.",
   followUpActions: ["clickhelp.get_topic"],
   inputSchema: s.object(

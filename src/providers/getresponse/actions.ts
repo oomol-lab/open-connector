@@ -126,6 +126,7 @@ const contactSharedWritableFields = {
 
 const listCampaignsAction = defineProviderAction(service, {
   name: "list_campaigns",
+  operationType: "read",
   description: "List GetResponse campaigns, which represent contact lists.",
   requiredScopes: [],
   inputSchema: requireCompleteSort(
@@ -149,6 +150,7 @@ const listCampaignsAction = defineProviderAction(service, {
 
 const getCampaignAction = defineProviderAction(service, {
   name: "get_campaign",
+  operationType: "read",
   description: "Retrieve one GetResponse campaign by ID.",
   requiredScopes: [],
   inputSchema: s.object("The campaign to retrieve.", {
@@ -161,6 +163,7 @@ const getCampaignAction = defineProviderAction(service, {
 
 const createCampaignAction = defineProviderAction(service, {
   name: "create_campaign",
+  operationType: "write",
   description: "Create a GetResponse campaign for organizing contacts.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -196,6 +199,7 @@ const updateCampaignInputSchema = s.object(
 
 const updateCampaignAction = defineProviderAction(service, {
   name: "update_campaign",
+  operationType: "write",
   description: "Update mutable fields on a GetResponse campaign.",
   requiredScopes: [],
   inputSchema: updateCampaignInputSchema,
@@ -206,6 +210,7 @@ const updateCampaignAction = defineProviderAction(service, {
 
 const listContactsAction = defineProviderAction(service, {
   name: "list_contacts",
+  operationType: "read",
   description: "List and search GetResponse contacts with page-based pagination.",
   requiredScopes: [],
   inputSchema: requireCompleteSort(
@@ -256,6 +261,7 @@ const listContactsAction = defineProviderAction(service, {
 
 const getContactAction = defineProviderAction(service, {
   name: "get_contact",
+  operationType: "read",
   description: "Retrieve one GetResponse contact by ID.",
   requiredScopes: [],
   inputSchema: s.object("The contact to retrieve.", {
@@ -268,6 +274,7 @@ const getContactAction = defineProviderAction(service, {
 
 const createContactAction = defineProviderAction(service, {
   name: "create_contact",
+  operationType: "write",
   description: "Queue a contact for creation in a GetResponse campaign.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -312,6 +319,7 @@ const updateContactInputSchema: JsonSchema = {
 
 const updateContactAction = defineProviderAction(service, {
   name: "update_contact",
+  operationType: "destructive",
   description: "Update a GetResponse contact, replacing tag and custom-field assignments when supplied.",
   requiredScopes: [],
   inputSchema: updateContactInputSchema,
@@ -322,6 +330,7 @@ const updateContactAction = defineProviderAction(service, {
 
 const deleteContactAction = defineProviderAction(service, {
   name: "delete_contact",
+  operationType: "destructive",
   description: "Permanently delete a GetResponse contact by ID.",
   requiredScopes: [],
   inputSchema: s.object("The contact to delete.", {
@@ -335,6 +344,7 @@ const deleteContactAction = defineProviderAction(service, {
 
 const listNewslettersAction = defineProviderAction(service, {
   name: "list_newsletters",
+  operationType: "read",
   description: "List GetResponse newsletters with filters and pagination.",
   requiredScopes: [],
   inputSchema: requireCompleteSort(
@@ -381,6 +391,7 @@ const listNewslettersAction = defineProviderAction(service, {
 
 const getNewsletterAction = defineProviderAction(service, {
   name: "get_newsletter",
+  operationType: "read",
   description: "Retrieve one GetResponse newsletter by ID.",
   requiredScopes: [],
   inputSchema: s.object("The newsletter to retrieve.", {
@@ -393,6 +404,7 @@ const getNewsletterAction = defineProviderAction(service, {
 
 const getNewsletterStatisticsAction = defineProviderAction(service, {
   name: "get_newsletter_statistics",
+  operationType: "read",
   description: "Retrieve delivery and engagement statistics for one GetResponse newsletter.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -414,6 +426,7 @@ const getNewsletterStatisticsAction = defineProviderAction(service, {
 
 const listCustomFieldsAction = defineProviderAction(service, {
   name: "list_custom_fields",
+  operationType: "read",
   description: "List GetResponse custom fields that can be assigned to contacts.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -442,6 +455,7 @@ const listCustomFieldsAction = defineProviderAction(service, {
 
 const listTagsAction = defineProviderAction(service, {
   name: "list_tags",
+  operationType: "read",
   description: "List GetResponse tags that can be assigned to contacts.",
   requiredScopes: [],
   inputSchema: requireCompleteSort(

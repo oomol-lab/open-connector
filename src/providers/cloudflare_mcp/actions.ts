@@ -12,6 +12,7 @@ const codeSchema = s.nonWhitespaceString(
 export const cloudflareMcpActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "docs",
+    operationType: "read",
     description: "Search the official Cloudflare developer documentation for relevant guidance and examples.",
     requiredScopes: [],
     providerPermissions: [],
@@ -33,6 +34,7 @@ export const cloudflareMcpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search",
+    operationType: "read",
     description:
       "Run sandboxed JavaScript against Cloudflare's OpenAPI specification to discover API endpoints and parameters.",
     requiredScopes: [],
@@ -45,6 +47,7 @@ export const cloudflareMcpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "execute",
+    operationType: "write",
     description:
       "Run sandboxed JavaScript on Cloudflare's official MCP server to call Cloudflare API endpoints discovered with `search`.",
     requiredScopes: [],

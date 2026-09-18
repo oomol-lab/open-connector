@@ -46,6 +46,7 @@ const getValueInputSchema = s.object(
 export const erpnextActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_logged_user",
+    operationType: "read",
     description: "Get the currently authenticated ERPNext user for the configured connection.",
     inputSchema: s.object("The input payload for fetching the current ERPNext user.", {}),
     outputSchema: s.object("The authenticated ERPNext user returned by the server.", {
@@ -54,6 +55,7 @@ export const erpnextActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_documents",
+    operationType: "read",
     description:
       "List ERPNext documents for a DocType with optional field selection, filters, sorting, and pagination.",
     inputSchema: s.object(
@@ -77,6 +79,7 @@ export const erpnextActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document",
+    operationType: "read",
     description: "Get one ERPNext document by DocType and name.",
     inputSchema: s.object("The input payload for fetching one ERPNext document.", {
       doctype: doctypeField,
@@ -88,6 +91,7 @@ export const erpnextActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_document",
+    operationType: "write",
     description: "Create one ERPNext document for the specified DocType.",
     inputSchema: s.object("The input payload for creating an ERPNext document.", {
       doctype: doctypeField,
@@ -99,6 +103,7 @@ export const erpnextActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_document",
+    operationType: "write",
     description: "Update selected fields on one ERPNext document.",
     inputSchema: s.object("The input payload for updating an ERPNext document.", {
       doctype: doctypeField,
@@ -111,6 +116,7 @@ export const erpnextActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_document",
+    operationType: "destructive",
     description: "Delete one ERPNext document by DocType and name.",
     inputSchema: s.object("The input payload for deleting one ERPNext document.", {
       doctype: doctypeField,
@@ -122,6 +128,7 @@ export const erpnextActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document_count",
+    operationType: "read",
     description: "Get the count of ERPNext documents that match an optional filter.",
     inputSchema: s.object(
       "The input payload for counting ERPNext documents.",
@@ -137,6 +144,7 @@ export const erpnextActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document_value",
+    operationType: "read",
     description: "Get one ERPNext field value or a group of field values without loading the full document.",
     inputSchema: getValueInputSchema,
     outputSchema: s.object("The ERPNext field value or value object returned by the request.", {
@@ -145,6 +153,7 @@ export const erpnextActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_document_value",
+    operationType: "write",
     description: "Set one field value on an ERPNext document and return the updated document.",
     inputSchema: s.object("The input payload for updating one ERPNext field value.", {
       doctype: doctypeField,

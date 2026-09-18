@@ -83,6 +83,7 @@ const mcpSearchItemSchema = s.object(
 export const anySearchActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search",
+    operationType: "read",
     description: "Search AnySearch's automatically routed data sources and return structured source results.",
     inputSchema: s.object(
       "The input payload for an AnySearch unified REST search request.",
@@ -117,6 +118,7 @@ export const anySearchActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_sub_domains",
+    operationType: "read",
     description:
       "Discover AnySearch vertical sub-domains and their required parameters before running a specialized search.",
     inputSchema: s.oneOf(
@@ -141,6 +143,7 @@ export const anySearchActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "batch_search",
+    operationType: "read",
     description:
       "Run up to five independent general or vertical AnySearch queries in parallel and return agent-ready Markdown.",
     inputSchema: s.object("The parallel AnySearch query batch.", {
@@ -160,6 +163,7 @@ export const anySearchActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "extract",
+    operationType: "read",
     description: "Fetch an HTML page through AnySearch and return its cleaned content as Markdown.",
     inputSchema: s.object("The page to extract through AnySearch.", {
       url: s.url("The HTTP or HTTPS page URL to fetch and convert to Markdown."),

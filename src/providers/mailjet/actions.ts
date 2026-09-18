@@ -80,24 +80,28 @@ const singleContactOutputSchema = s.object("Single Mailjet contact response.", {
 export const mailjetActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Mailjet contacts with pagination and selected public contact filters from the Email API.",
     inputSchema: listContactsInputSchema,
     outputSchema: contactListOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Retrieve one Mailjet contact by contact ID.",
     inputSchema: getContactInputSchema,
     outputSchema: singleContactOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a new Mailjet contact in the global contact list.",
     inputSchema: createContactInputSchema,
     outputSchema: singleContactOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update a Mailjet contact name or campaign exclusion state.",
     inputSchema: updateContactInputSchema,
     outputSchema: singleContactOutputSchema,

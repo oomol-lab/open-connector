@@ -686,12 +686,14 @@ export type ShopifyAdminActionName =
 export const shopifyAdminActions: ActionDefinition[] = [
   action(
     "get_shop",
+    "read",
     "Retrieve basic shop information for the connected Shopify Admin token.",
     s.actionInput({}, [], "No input is required to retrieve the connected Shopify shop."),
     s.actionOutput({ shop }, "The normalized Shopify shop response."),
   ),
   action(
     "list_products",
+    "read",
     "List Shopify products with optional search query and cursor pagination.",
     connectionInput,
     s.actionOutput(
@@ -704,12 +706,14 @@ export const shopifyAdminActions: ActionDefinition[] = [
   ),
   action(
     "get_product",
+    "read",
     "Retrieve one Shopify product by GraphQL global ID.",
     s.actionInput({ id: gid }, ["id"], "The Shopify product lookup input."),
     s.actionOutput({ product: s.nullable(productDetail) }, "The normalized Shopify product response."),
   ),
   action(
     "list_product_variants",
+    "read",
     "List Shopify product variants with optional search query and cursor pagination.",
     connectionInput,
     s.actionOutput(
@@ -722,6 +726,7 @@ export const shopifyAdminActions: ActionDefinition[] = [
   ),
   action(
     "list_order_fulfillment_orders",
+    "read",
     "List fulfillment orders and fulfillable line items for one Shopify order.",
     s.actionInput(
       {
@@ -744,6 +749,7 @@ export const shopifyAdminActions: ActionDefinition[] = [
   ),
   action(
     "get_fulfillment_order",
+    "read",
     "Retrieve one Shopify fulfillment order with independently paginated line items.",
     s.actionInput(
       {
@@ -768,6 +774,7 @@ export const shopifyAdminActions: ActionDefinition[] = [
   ),
   action(
     "list_orders",
+    "read",
     "List Shopify orders with optional search query and cursor pagination.",
     connectionInput,
     s.actionOutput(
@@ -780,12 +787,14 @@ export const shopifyAdminActions: ActionDefinition[] = [
   ),
   action(
     "get_order",
+    "read",
     "Retrieve one Shopify order by GraphQL global ID.",
     s.actionInput({ id: gid }, ["id"], "The Shopify order lookup input."),
     s.actionOutput({ order: s.nullable(orderDetail) }, "The normalized Shopify order response."),
   ),
   action(
     "list_customers",
+    "read",
     "List Shopify customers with optional search query and cursor pagination.",
     connectionInput,
     s.actionOutput(
@@ -798,12 +807,14 @@ export const shopifyAdminActions: ActionDefinition[] = [
   ),
   action(
     "get_customer",
+    "read",
     "Retrieve one Shopify customer by GraphQL global ID.",
     s.actionInput({ id: gid }, ["id"], "The Shopify customer lookup input."),
     s.actionOutput({ customer: s.nullable(customerDetail) }, "The normalized Shopify customer response."),
   ),
   action(
     "list_inventory_items",
+    "read",
     "List Shopify inventory items with optional search query and cursor pagination.",
     connectionInput,
     s.actionOutput(
@@ -816,6 +827,7 @@ export const shopifyAdminActions: ActionDefinition[] = [
   ),
   action(
     "get_inventory_item",
+    "read",
     "Retrieve one Shopify inventory item by GraphQL global ID.",
     s.actionInput({ id: gid }, ["id"], "The Shopify inventory item lookup input."),
     s.actionOutput(
@@ -825,6 +837,7 @@ export const shopifyAdminActions: ActionDefinition[] = [
   ),
   action(
     "get_inventory_quantities",
+    "read",
     "Retrieve selected inventory quantity states for one Shopify inventory item at one location.",
     s.actionInput(
       {
@@ -844,6 +857,7 @@ export const shopifyAdminActions: ActionDefinition[] = [
   ),
   action(
     "list_locations",
+    "read",
     "List Shopify inventory locations with optional filters and cursor pagination.",
     locationConnectionInput,
     s.actionOutput(
@@ -856,12 +870,14 @@ export const shopifyAdminActions: ActionDefinition[] = [
   ),
   action(
     "get_location",
+    "read",
     "Retrieve one Shopify location by GraphQL global ID.",
     s.actionInput({ id: gid }, ["id"], "The Shopify location lookup input."),
     s.actionOutput({ location: s.nullable(locationDetail) }, "The normalized Shopify location response."),
   ),
   action(
     "list_collections",
+    "read",
     "List Shopify collections with optional search query and cursor pagination.",
     connectionInput,
     s.actionOutput(
@@ -874,12 +890,14 @@ export const shopifyAdminActions: ActionDefinition[] = [
   ),
   action(
     "get_collection",
+    "read",
     "Retrieve one Shopify collection by GraphQL global ID.",
     s.actionInput({ id: gid }, ["id"], "The Shopify collection lookup input."),
     s.actionOutput({ collection: s.nullable(collectionDetail) }, "The normalized Shopify collection response."),
   ),
   action(
     "create_product",
+    "write",
     "Create one Shopify product with typed product attributes and optional media sources.",
     s.actionInput(
       {
@@ -894,6 +912,7 @@ export const shopifyAdminActions: ActionDefinition[] = [
   ),
   action(
     "update_product",
+    "write",
     "Update one Shopify product by GraphQL global ID with typed attributes and optional new media.",
     s.actionInput(
       {
@@ -908,6 +927,7 @@ export const shopifyAdminActions: ActionDefinition[] = [
   ),
   action(
     "adjust_inventory_quantities",
+    "write",
     "Apply incremental Shopify inventory quantity changes with required idempotency and explicit compare-and-swap values.",
     inventoryAdjustQuantitiesInput,
     s.actionOutput({ inventoryAdjustmentGroup }, "The normalized Shopify inventory adjustment response."),
@@ -915,6 +935,7 @@ export const shopifyAdminActions: ActionDefinition[] = [
   ),
   action(
     "set_inventory_quantities",
+    "write",
     "Set absolute Shopify inventory quantities with required idempotency and explicit compare-and-swap values.",
     s.actionInput(
       {
@@ -938,6 +959,7 @@ export const shopifyAdminActions: ActionDefinition[] = [
   ),
   action(
     "create_fulfillment",
+    "write",
     "Create a Shopify fulfillment for one or more fulfillment orders with optional tracking and customer notification.",
     s.actionInput(
       {
@@ -971,6 +993,7 @@ export const shopifyAdminActions: ActionDefinition[] = [
   ),
   action(
     "submit_bulk_query",
+    "write",
     "Submit a Shopify Admin GraphQL bulk query and return an operation ID for asynchronous polling.",
     s.actionInput(
       {
@@ -994,6 +1017,7 @@ export const shopifyAdminActions: ActionDefinition[] = [
   ),
   action(
     "get_bulk_operation",
+    "read",
     "Retrieve one Shopify bulk operation by ID for progress polling and result URL discovery.",
     s.actionInput({ id: gid }, ["id"], "The Shopify bulk operation lookup input."),
     s.actionOutput({ operation: s.nullable(bulkOperation) }, "The Shopify bulk operation lookup response."),
@@ -1007,6 +1031,7 @@ export const shopifyAdminActions: ActionDefinition[] = [
   ),
   action(
     "download_bulk_result",
+    "read",
     "Download a completed or partial Shopify bulk JSONL result into local connector transit storage.",
     s.actionInput(
       {
@@ -1020,6 +1045,7 @@ export const shopifyAdminActions: ActionDefinition[] = [
   ),
   action(
     "execute_graphql",
+    "write",
     "Execute a JSON-friendly Shopify Admin GraphQL query or mutation against the connected shop.",
     s.actionInput(
       {
@@ -1044,6 +1070,7 @@ export const shopifyAdminActions: ActionDefinition[] = [
 
 function action(
   name: ShopifyAdminActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
@@ -1051,6 +1078,7 @@ function action(
 ): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     requiredScopes: [],
     inputSchema,

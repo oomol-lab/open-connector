@@ -119,6 +119,7 @@ const runInputSchema = s.actionInput(
 export const gumloopActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_saved_flows",
+    operationType: "read",
     description: "List Gumloop saved flows for a user or team.",
     inputSchema: contextInputSchema,
     outputSchema: s.actionOutput(
@@ -131,6 +132,7 @@ export const gumloopActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workbooks",
+    operationType: "read",
     description: "List Gumloop workbooks and their saved flows for a user or team.",
     inputSchema: contextInputSchema,
     outputSchema: s.actionOutput(
@@ -143,6 +145,7 @@ export const gumloopActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_input_schema",
+    operationType: "read",
     description: "Retrieve the input schema for a Gumloop saved flow.",
     inputSchema: getInputSchemaInputSchema,
     outputSchema: s.actionOutput(
@@ -155,6 +158,7 @@ export const gumloopActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_run_history",
+    operationType: "read",
     description: "Retrieve recent Gumloop run history for a workbook or saved flow.",
     inputSchema: listRunHistoryInputSchema,
     outputSchema: s.actionOutput(
@@ -167,6 +171,7 @@ export const gumloopActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_flow_run",
+    operationType: "write",
     description: "Start a Gumloop saved flow run with small JSON input values.",
     inputSchema: startFlowRunInputSchema,
     outputSchema: s.actionOutput(
@@ -187,6 +192,7 @@ export const gumloopActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_run_details",
+    operationType: "read",
     description: "Poll a Gumloop flow run and retrieve state, logs, and output node values.",
     inputSchema: runInputSchema,
     outputSchema: s.object(
@@ -205,6 +211,7 @@ export const gumloopActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "kill_flow_run",
+    operationType: "destructive",
     description: "Kill a Gumloop flow run and its subflow runs.",
     inputSchema: runInputSchema,
     outputSchema: s.actionOutput(

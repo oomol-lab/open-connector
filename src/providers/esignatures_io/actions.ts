@@ -158,6 +158,7 @@ const customBrandingInputSchema = s.object(
 export const esignaturesIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_template",
+    operationType: "write",
     description: "Create an eSignatures.com template from a title, Markdown document content, and optional labels.",
     inputSchema: s.object(
       "Input for creating an eSignatures.com template.",
@@ -175,6 +176,7 @@ export const esignaturesIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List eSignatures.com templates available to the connected account.",
     inputSchema: s.object("Input for listing eSignatures.com templates.", {}),
     outputSchema: s.object("A list of eSignatures.com templates.", {
@@ -184,6 +186,7 @@ export const esignaturesIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_template",
+    operationType: "read",
     description: "Retrieve one eSignatures.com template by ID.",
     inputSchema: templateIdInputSchema,
     outputSchema: s.object("An eSignatures.com template response.", {
@@ -193,6 +196,7 @@ export const esignaturesIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_template_content",
+    operationType: "read",
     description: "Retrieve the Markdown content for one eSignatures.com template.",
     inputSchema: templateIdInputSchema,
     outputSchema: s.object("The Markdown content of an eSignatures.com template.", {
@@ -203,6 +207,7 @@ export const esignaturesIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contract",
+    operationType: "write",
     description:
       "Create an eSignatures.com contract from an existing template and signer list, sending it unless saved as a draft.",
     inputSchema: s.object(
@@ -253,6 +258,7 @@ export const esignaturesIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contract",
+    operationType: "read",
     description: "Retrieve one eSignatures.com contract by ID.",
     inputSchema: contractIdInputSchema,
     outputSchema: s.object("An eSignatures.com contract response.", {
@@ -262,6 +268,7 @@ export const esignaturesIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contract_content",
+    operationType: "read",
     description: "Retrieve the Markdown content for one eSignatures.com contract.",
     inputSchema: contractIdInputSchema,
     outputSchema: s.object("The Markdown content of an eSignatures.com contract.", {
@@ -272,6 +279,7 @@ export const esignaturesIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "withdraw_contract",
+    operationType: "destructive",
     description: "Withdraw an eSignatures.com contract so it can no longer be signed while preserving query access.",
     inputSchema: contractIdInputSchema,
     outputSchema: s.object("An eSignatures.com withdraw contract response.", {

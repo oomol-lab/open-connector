@@ -61,6 +61,7 @@ const queryOutputSchema = s.actionOutput(
 export const keenIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "add_event",
+    operationType: "write",
     description: "Publish one JSON event to a Keen event collection.",
     inputSchema: s.actionInput(
       {
@@ -80,6 +81,7 @@ export const keenIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_count",
+    operationType: "read",
     description: "Count Keen events that match a required timeframe and optional filters.",
     inputSchema: s.actionInput(
       queryInputFields,
@@ -90,6 +92,7 @@ export const keenIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_sum",
+    operationType: "read",
     description: "Sum a numeric property across Keen events in a required timeframe.",
     inputSchema: s.actionInput(
       {

@@ -52,6 +52,7 @@ const recordingOutputSchema = s.object("The Avoma recording lookup response.", {
 export const avomaActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_meetings",
+    operationType: "read",
     description: "List Avoma meetings within a UTC date range, with optional attendee, CRM, and meeting filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -96,6 +97,7 @@ export const avomaActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_meeting",
+    operationType: "read",
     description: "Get a single Avoma meeting by UUID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -110,6 +112,7 @@ export const avomaActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_meeting_insights",
+    operationType: "read",
     description: "Get AI notes, keywords, speakers, and related insights for a completed Avoma meeting.",
     requiredScopes: [],
     inputSchema: s.object("Input for reading Avoma meeting insights.", {
@@ -123,6 +126,7 @@ export const avomaActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_transcriptions",
+    operationType: "read",
     description:
       "List Avoma transcriptions for meetings within a UTC date range, with optional attendee and CRM filters.",
     requiredScopes: [],
@@ -155,6 +159,7 @@ export const avomaActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_transcription",
+    operationType: "read",
     description: "Get a single Avoma transcription by UUID.",
     requiredScopes: [],
     inputSchema: s.object("Input for reading an Avoma transcription.", {
@@ -168,6 +173,7 @@ export const avomaActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_recording_for_meeting",
+    operationType: "read",
     description: "Get Avoma recording download URLs for a meeting UUID when the recording is ready.",
     requiredScopes: [],
     inputSchema: s.object("Input for reading an Avoma recording by meeting UUID.", {
@@ -177,6 +183,7 @@ export const avomaActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_recording",
+    operationType: "read",
     description: "Get Avoma recording download URLs by recording UUID when the recording is ready.",
     requiredScopes: [],
     inputSchema: s.object("Input for reading an Avoma recording by recording UUID.", {
@@ -186,6 +193,7 @@ export const avomaActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Avoma users visible to the API key.",
     requiredScopes: [],
     inputSchema: s.object("No input is required for listing Avoma users.", {}, { optional: [] }),
@@ -195,6 +203,7 @@ export const avomaActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get a single Avoma user by UUID.",
     requiredScopes: [],
     inputSchema: s.object("Input for reading an Avoma user.", {

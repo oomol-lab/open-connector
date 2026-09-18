@@ -80,6 +80,7 @@ const listOutputSchema = (description: string, itemDescription: string) =>
 export const intelliprintActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_prints",
+    operationType: "read",
     description: "List Intelliprint print jobs with official pagination, sorting, and print-specific filters.",
     inputSchema: s.object(
       "Input parameters for listing Intelliprint print jobs.",
@@ -113,6 +114,7 @@ export const intelliprintActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_print",
+    operationType: "read",
     description: "Retrieve a single Intelliprint print job by ID.",
     inputSchema: s.object("Input parameters for retrieving an Intelliprint print job.", {
       id: idSchema("The Intelliprint print job ID to retrieve."),
@@ -124,6 +126,7 @@ export const intelliprintActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_backgrounds",
+    operationType: "read",
     description:
       "List Intelliprint reusable backgrounds with official pagination, sorting, field selection, and team filtering.",
     inputSchema: s.object(
@@ -142,6 +145,7 @@ export const intelliprintActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_background",
+    operationType: "read",
     description: "Retrieve a single Intelliprint reusable background by ID.",
     inputSchema: s.object("Input parameters for retrieving an Intelliprint background.", {
       id: idSchema("The Intelliprint background ID to retrieve."),
@@ -153,6 +157,7 @@ export const intelliprintActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_mailing_lists",
+    operationType: "read",
     description: "List Intelliprint mailing lists with official pagination and sorting options.",
     inputSchema: s.object(
       "Input parameters for listing Intelliprint mailing lists.",
@@ -169,6 +174,7 @@ export const intelliprintActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_mailing_list",
+    operationType: "read",
     description: "Retrieve a single Intelliprint mailing list by ID.",
     inputSchema: s.object("Input parameters for retrieving an Intelliprint mailing list.", {
       id: idSchema("The Intelliprint mailing list ID to retrieve."),
@@ -180,6 +186,7 @@ export const intelliprintActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_mailing_list_recipients",
+    operationType: "read",
     description:
       "List recipients for one Intelliprint mailing list with official pagination, sorting, and field selection.",
     inputSchema: s.object(
@@ -198,6 +205,7 @@ export const intelliprintActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_mailing_list_recipient",
+    operationType: "read",
     description: "Retrieve one recipient from an Intelliprint mailing list.",
     inputSchema: s.object("Input parameters for retrieving an Intelliprint mailing list recipient.", {
       mailingListId: idSchema("The Intelliprint mailing list ID containing the recipient."),

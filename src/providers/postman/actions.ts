@@ -10,6 +10,7 @@ export type PostmanActionName = (typeof postmanGeneratedActionSchemas)[number]["
 export const postmanActions: ActionDefinition[] = postmanGeneratedActionSchemas.map((actionSchema) =>
   defineProviderAction(service, {
     name: actionSchema.name,
+    operationType: actionSchema.operationType,
     description: actionSchema.description,
     requiredScopes: [],
     providerPermissions: [],

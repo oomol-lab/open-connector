@@ -119,6 +119,7 @@ const looseRowSchema = s.looseObject({}, { description: "A row returned by Finan
 export const financialModelingPrepActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_symbols",
+    operationType: "read",
     description: "Search Financial Modeling Prep stock symbols by ticker fragment or company name.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -136,6 +137,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_names",
+    operationType: "read",
     description: "Search Financial Modeling Prep securities by company or security name.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -153,6 +155,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_company_screener",
+    operationType: "read",
     description: "Search companies with Financial Modeling Prep screener filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -204,6 +207,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_directory",
+    operationType: "read",
     description: "List Financial Modeling Prep directory rows such as stocks, ETFs, and exchanges.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input for listing a Financial Modeling Prep directory.", {
@@ -227,6 +231,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_quote",
+    operationType: "read",
     description: "Retrieve the latest quote for one stock symbol from Financial Modeling Prep.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input for retrieving a stock quote.", {
@@ -238,6 +243,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_quote_short",
+    operationType: "read",
     description: "Retrieve the latest compact quote for one stock symbol.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input for retrieving a compact stock quote.", {
@@ -249,6 +255,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_asset_quote",
+    operationType: "read",
     description: "Retrieve the latest quote for a commodity, cryptocurrency, forex pair, or index.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input for retrieving a non-stock market quote.", {
@@ -261,6 +268,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_historical_prices",
+    operationType: "read",
     description: "Retrieve historical daily OHLCV prices for one stock symbol from Financial Modeling Prep.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -279,6 +287,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_intraday_prices",
+    operationType: "read",
     description: "Retrieve intraday OHLCV prices for one stock symbol.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -304,6 +313,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company_profile",
+    operationType: "read",
     description: "Retrieve the company profile for one stock symbol from Financial Modeling Prep.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input for retrieving a company profile.", {
@@ -315,6 +325,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company_profile_by_cik",
+    operationType: "read",
     description: "Retrieve company profile rows by CIK from Financial Modeling Prep.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input for retrieving a company profile by CIK.", {
@@ -326,6 +337,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company_peers",
+    operationType: "read",
     description: "Retrieve peer companies for one stock symbol.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input for retrieving company peers.", {
@@ -337,6 +349,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company_executives",
+    operationType: "read",
     description: "Retrieve company executive rows for one stock symbol.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input for retrieving company executives.", {
@@ -348,6 +361,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company_notes",
+    operationType: "read",
     description: "Retrieve company note rows for one stock symbol.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input for retrieving company notes.", {
@@ -359,6 +373,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_market_cap",
+    operationType: "read",
     description: "Retrieve latest market capitalization rows for one stock symbol.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input for retrieving market capitalization.", {
@@ -370,6 +385,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_shares_float",
+    operationType: "read",
     description: "Retrieve shares float rows for one stock symbol.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input for retrieving shares float data.", {
@@ -381,6 +397,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_income_statement",
+    operationType: "read",
     description: "Retrieve income statement rows for one stock symbol from Financial Modeling Prep.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -398,6 +415,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_balance_sheet_statement",
+    operationType: "read",
     description: "Retrieve balance sheet statement rows for one stock symbol from Financial Modeling Prep.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -415,6 +433,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_cash_flow_statement",
+    operationType: "read",
     description: "Retrieve cash flow statement rows for one stock symbol from Financial Modeling Prep.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -432,6 +451,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_financial_statement_growth",
+    operationType: "read",
     description:
       "Retrieve financial statement growth rows for income, balance sheet, cash flow, or combined financial statements.",
     requiredScopes: [],
@@ -456,6 +476,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_financial_ratios",
+    operationType: "read",
     description: "Retrieve financial ratios for one stock symbol.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -473,6 +494,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_key_metrics",
+    operationType: "read",
     description: "Retrieve key financial metrics for one stock symbol.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -490,6 +512,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_financial_scores",
+    operationType: "read",
     description: "Retrieve financial score rows for one stock symbol.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input for retrieving financial scores.", {
@@ -501,6 +524,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_enterprise_values",
+    operationType: "read",
     description: "Retrieve enterprise value rows for one stock symbol.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -518,6 +542,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dcf",
+    operationType: "read",
     description: "Retrieve discounted cash flow valuation rows for one stock symbol.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input for retrieving discounted cash flow valuation rows.", {
@@ -529,6 +554,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_market_movers",
+    operationType: "read",
     description: "Retrieve the current biggest gainers, losers, or most active stocks from Financial Modeling Prep.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input for retrieving a market mover list.", {
@@ -540,6 +566,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_market_performance",
+    operationType: "read",
     description: "Retrieve sector or industry market performance snapshot rows.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input for retrieving market performance snapshots.", {
@@ -556,6 +583,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_news",
+    operationType: "read",
     description: "Retrieve latest or symbol-filtered Financial Modeling Prep news.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -574,6 +602,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_calendar",
+    operationType: "read",
     description: "Retrieve Financial Modeling Prep market calendar rows.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -591,6 +620,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_economic_indicators",
+    operationType: "read",
     description: "Retrieve economic indicator rows such as GDP, CPI, or unemployment.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -608,6 +638,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_analyst_estimates",
+    operationType: "read",
     description: "Retrieve analyst estimate rows for one stock symbol.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -626,6 +657,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ratings",
+    operationType: "read",
     description: "Retrieve rating snapshot, historical rating, or historical grade rows.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -650,6 +682,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_insider_trades",
+    operationType: "read",
     description: "Retrieve latest or searched insider trading disclosure rows.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -669,6 +702,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_congressional_trades",
+    operationType: "read",
     description: "Retrieve senate or house trading disclosure rows.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -688,6 +722,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_sec_filings",
+    operationType: "read",
     description: "Search SEC filing rows by symbol, CIK, or form type.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -709,6 +744,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_etf_holdings",
+    operationType: "read",
     description: "Retrieve ETF holding rows for one ETF symbol.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input for retrieving ETF holdings.", {
@@ -720,6 +756,7 @@ export const financialModelingPrepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_technical_indicator",
+    operationType: "read",
     description: "Retrieve technical indicator rows for one symbol.",
     requiredScopes: [],
     inputSchema: s.object(

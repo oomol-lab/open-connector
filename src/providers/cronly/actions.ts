@@ -29,6 +29,7 @@ const deleteResultSchema = s.object("A normalized Cronly delete result.", {
 
 const listProjectsAction = defineProviderAction(service, {
   name: "list_projects",
+  operationType: "read",
   description: "List projects in the connected Cronly company.",
   requiredScopes: [],
   inputSchema: s.object("This Cronly action does not require input.", {}),
@@ -39,6 +40,7 @@ const listProjectsAction = defineProviderAction(service, {
 
 const getProjectAction = defineProviderAction(service, {
   name: "get_project",
+  operationType: "read",
   description: "Get one Cronly project by ID.",
   requiredScopes: [],
   inputSchema: s.object("The Cronly project lookup input.", { id: resourceIdSchema }),
@@ -47,6 +49,7 @@ const getProjectAction = defineProviderAction(service, {
 
 const createProjectAction = defineProviderAction(service, {
   name: "create_project",
+  operationType: "write",
   description: "Create a project in the connected Cronly company.",
   requiredScopes: [],
   inputSchema: s.object("The new Cronly project fields.", {
@@ -57,6 +60,7 @@ const createProjectAction = defineProviderAction(service, {
 
 const deleteProjectAction = defineProviderAction(service, {
   name: "delete_project",
+  operationType: "destructive",
   description: "Delete one Cronly project by ID.",
   requiredScopes: [],
   inputSchema: s.object("The Cronly project delete input.", { id: resourceIdSchema }),
@@ -65,6 +69,7 @@ const deleteProjectAction = defineProviderAction(service, {
 
 const listMonitorsAction = defineProviderAction(service, {
   name: "list_monitors",
+  operationType: "read",
   description: "List job monitors in the connected Cronly company.",
   requiredScopes: [],
   inputSchema: s.object("This Cronly action does not require input.", {}),
@@ -75,6 +80,7 @@ const listMonitorsAction = defineProviderAction(service, {
 
 const getMonitorAction = defineProviderAction(service, {
   name: "get_monitor",
+  operationType: "read",
   description: "Get one Cronly job monitor by ID.",
   requiredScopes: [],
   inputSchema: s.object("The Cronly monitor lookup input.", { id: resourceIdSchema }),
@@ -83,6 +89,7 @@ const getMonitorAction = defineProviderAction(service, {
 
 const createMonitorAction = defineProviderAction(service, {
   name: "create_monitor",
+  operationType: "write",
   description: "Create a job monitor in the connected Cronly company.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -101,6 +108,7 @@ const createMonitorAction = defineProviderAction(service, {
 
 const deleteMonitorAction = defineProviderAction(service, {
   name: "delete_monitor",
+  operationType: "destructive",
   description: "Delete one Cronly job monitor by ID.",
   requiredScopes: [],
   inputSchema: s.object("The Cronly monitor delete input.", { id: resourceIdSchema }),

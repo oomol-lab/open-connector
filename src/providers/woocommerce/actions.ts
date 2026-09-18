@@ -1,5 +1,5 @@
 import type { ProviderActionDefinition } from "../../core/provider-definition.ts";
-import type { JsonSchema } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
@@ -283,6 +283,7 @@ const paginationOutput = {
 export const woocommerceActions: ProviderActionDefinition[] = [
   action(
     "list_products",
+    "read",
     "List WooCommerce products with common catalog filters and pagination metadata.",
     listInput({
       search: s.string("Limit results to products matching this search term."),
@@ -295,9 +296,10 @@ export const woocommerceActions: ProviderActionDefinition[] = [
     }),
     listOutput("products", productSchema),
   ),
-  action("get_product", "Fetch one WooCommerce product by product ID.", idInput("productId"), productSchema),
+  action("get_product", "read", "Fetch one WooCommerce product by product ID.", idInput("productId"), productSchema),
   action(
     "create_product",
+    "write",
     "Create a WooCommerce product with catalog, price, stock, image, and attribute fields.",
     s.object("The input payload for creating a WooCommerce product.", productWriteFields, {
       optional: Object.keys(productWriteFields).filter((key) => key !== "name"),
@@ -306,6 +308,7 @@ export const woocommerceActions: ProviderActionDefinition[] = [
   ),
   action(
     "update_product",
+    "write",
     "Update a WooCommerce product by product ID.",
     s.object(
       "The input payload for updating a WooCommerce product.",
@@ -316,18 +319,21 @@ export const woocommerceActions: ProviderActionDefinition[] = [
   ),
   action(
     "list_product_categories",
+    "read",
     "List WooCommerce product categories with filters and pagination metadata.",
     listInput({ search: s.string("Limit results to categories matching this search term.") }),
     listOutput("categories", termSchema),
   ),
   action(
     "list_product_tags",
+    "read",
     "List WooCommerce product tags with filters and pagination metadata.",
     listInput({ search: s.string("Limit results to tags matching this search term.") }),
     listOutput("tags", termSchema),
   ),
   action(
     "list_product_attributes",
+    "read",
     "List WooCommerce product attributes.",
     s.actionInput({}, [], "The input payload for listing WooCommerce product attributes."),
     s.actionOutput(
@@ -337,6 +343,7 @@ export const woocommerceActions: ProviderActionDefinition[] = [
   ),
   action(
     "list_product_attribute_terms",
+    "read",
     "List terms for one WooCommerce product attribute.",
     s.actionInput(
       {
@@ -355,6 +362,7 @@ export const woocommerceActions: ProviderActionDefinition[] = [
   ),
   action(
     "list_product_variations",
+    "read",
     "List variations for one WooCommerce variable product.",
     s.actionInput(
       {
@@ -373,6 +381,7 @@ export const woocommerceActions: ProviderActionDefinition[] = [
   ),
   action(
     "get_product_variation",
+    "read",
     "Fetch one WooCommerce product variation by product and variation ID.",
     s.actionInput(
       {
@@ -386,6 +395,7 @@ export const woocommerceActions: ProviderActionDefinition[] = [
   ),
   action(
     "create_product_variation",
+    "write",
     "Create a variation for one WooCommerce variable product.",
     s.object(
       "The input payload for creating a WooCommerce product variation.",
@@ -396,6 +406,7 @@ export const woocommerceActions: ProviderActionDefinition[] = [
   ),
   action(
     "update_product_variation",
+    "write",
     "Update one WooCommerce product variation.",
     s.object(
       "The input payload for updating a WooCommerce product variation.",
@@ -410,6 +421,7 @@ export const woocommerceActions: ProviderActionDefinition[] = [
   ),
   action(
     "upload_media",
+    "write",
     "Upload one media file to the WordPress media library used by WooCommerce.",
     s.actionInput(
       {
@@ -428,6 +440,7 @@ export const woocommerceActions: ProviderActionDefinition[] = [
   ),
   action(
     "list_orders",
+    "read",
     "List WooCommerce orders with common status, customer, and date filters.",
     listInput({
       status: orderStatusSchema,
@@ -439,9 +452,10 @@ export const woocommerceActions: ProviderActionDefinition[] = [
     }),
     listOutput("orders", orderSchema),
   ),
-  action("get_order", "Fetch one WooCommerce order by order ID.", idInput("orderId"), orderSchema),
+  action("get_order", "read", "Fetch one WooCommerce order by order ID.", idInput("orderId"), orderSchema),
   action(
     "create_order",
+    "write",
     "Create a WooCommerce order with customer, address, line item, and coupon fields.",
     s.actionInput(
       {
@@ -465,6 +479,7 @@ export const woocommerceActions: ProviderActionDefinition[] = [
   ),
   action(
     "update_order",
+    "write",
     "Update a WooCommerce order by order ID.",
     s.actionInput(
       {
@@ -486,6 +501,7 @@ export const woocommerceActions: ProviderActionDefinition[] = [
   ),
   action(
     "update_order_status",
+    "destructive",
     "Update the status of one WooCommerce order.",
     s.actionInput(
       { orderId: s.positiveInteger("The WooCommerce order ID to update."), status: orderStatusSchema },
@@ -496,6 +512,7 @@ export const woocommerceActions: ProviderActionDefinition[] = [
   ),
   action(
     "list_order_notes",
+    "read",
     "List notes for one WooCommerce order.",
     idInput("orderId"),
     s.actionOutput(
@@ -505,6 +522,7 @@ export const woocommerceActions: ProviderActionDefinition[] = [
   ),
   action(
     "add_order_note",
+    "write",
     "Add an administrator or customer-visible note to one WooCommerce order.",
     s.actionInput(
       {
@@ -519,6 +537,7 @@ export const woocommerceActions: ProviderActionDefinition[] = [
   ),
   action(
     "list_customers",
+    "read",
     "List WooCommerce customers with common filters and pagination metadata.",
     listInput({
       search: s.string("Limit results to customers matching this search term."),
@@ -527,9 +546,16 @@ export const woocommerceActions: ProviderActionDefinition[] = [
     }),
     listOutput("customers", customerSchema),
   ),
-  action("get_customer", "Fetch one WooCommerce customer by customer ID.", idInput("customerId"), customerSchema),
+  action(
+    "get_customer",
+    "read",
+    "Fetch one WooCommerce customer by customer ID.",
+    idInput("customerId"),
+    customerSchema,
+  ),
   action(
     "list_coupons",
+    "read",
     "List WooCommerce coupons with common code search and pagination metadata.",
     listInput({
       search: s.string("Limit results to coupons matching this search term."),
@@ -537,18 +563,19 @@ export const woocommerceActions: ProviderActionDefinition[] = [
     }),
     listOutput("coupons", couponSchema),
   ),
-  action("get_coupon", "Fetch one WooCommerce coupon by coupon ID.", idInput("couponId"), couponSchema),
-  action("create_coupon", "Create a WooCommerce coupon.", couponInput(false), couponSchema),
-  action("update_coupon", "Update a WooCommerce coupon by coupon ID.", couponInput(true), couponSchema),
+  action("get_coupon", "read", "Fetch one WooCommerce coupon by coupon ID.", idInput("couponId"), couponSchema),
+  action("create_coupon", "write", "Create a WooCommerce coupon.", couponInput(false), couponSchema),
+  action("update_coupon", "write", "Update a WooCommerce coupon by coupon ID.", couponInput(true), couponSchema),
 ];
 
 function action(
   name: string,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): ProviderActionDefinition {
-  return defineProviderAction(service, { name, description, inputSchema, outputSchema });
+  return defineProviderAction(service, { name, operationType, description, inputSchema, outputSchema });
 }
 
 function idInput(fieldName: string): JsonSchema {

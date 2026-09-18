@@ -84,6 +84,7 @@ export type OngageActionName =
 export const ongageActions: readonly ProviderActionDefinition<OngageActionName>[] = [
   defineProviderAction(service, {
     name: "list_lists",
+    operationType: "read",
     description: "List Ongage sending or suppression lists with offset pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -105,6 +106,7 @@ export const ongageActions: readonly ProviderActionDefinition<OngageActionName>[
   }),
   defineProviderAction(service, {
     name: "get_list",
+    operationType: "read",
     description: "Get one Ongage list by its numeric ID.",
     requiredScopes: [],
     inputSchema: s.object("The Ongage list to retrieve.", { listId: listIdSchema }),
@@ -112,6 +114,7 @@ export const ongageActions: readonly ProviderActionDefinition<OngageActionName>[
   }),
   defineProviderAction(service, {
     name: "get_contact_by_email",
+    operationType: "read",
     description: "Get one contact from an Ongage list by email address.",
     requiredScopes: [],
     inputSchema: s.object("The list and contact email to retrieve.", {
@@ -124,6 +127,7 @@ export const ongageActions: readonly ProviderActionDefinition<OngageActionName>[
   }),
   defineProviderAction(service, {
     name: "get_contact_by_id",
+    operationType: "read",
     description: "Get one contact from an Ongage list by contact ID.",
     requiredScopes: [],
     inputSchema: s.object("The list and contact ID to retrieve.", {
@@ -136,6 +140,7 @@ export const ongageActions: readonly ProviderActionDefinition<OngageActionName>[
   }),
   defineProviderAction(service, {
     name: "upsert_contacts",
+    operationType: "write",
     description: "Create contacts in an Ongage list and optionally overwrite existing fields.",
     requiredScopes: [],
     inputSchema: s.object("A bounded batch of contacts to create or overwrite.", {
@@ -149,6 +154,7 @@ export const ongageActions: readonly ProviderActionDefinition<OngageActionName>[
   }),
   defineProviderAction(service, {
     name: "update_contacts",
+    operationType: "write",
     description: "Update existing contacts in an Ongage list by email address or contact ID.",
     requiredScopes: [],
     inputSchema: s.object("A bounded batch of existing contacts to update.", {
@@ -162,6 +168,7 @@ export const ongageActions: readonly ProviderActionDefinition<OngageActionName>[
   }),
   defineProviderAction(service, {
     name: "change_contact_status",
+    operationType: "destructive",
     description: "Change non-destructive subscription or delivery status for contacts in an Ongage list.",
     requiredScopes: [],
     inputSchema: s.object(

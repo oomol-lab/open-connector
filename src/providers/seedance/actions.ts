@@ -215,6 +215,7 @@ const lifecycle = {
 export const seedanceActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "submit_video_generation",
+    operationType: "write",
     description: "Submit an asynchronous Seedance video generation task through Seedance.",
     followUpActions: [lifecycle.statusActionId],
     asyncLifecycle: lifecycle,
@@ -223,6 +224,7 @@ export const seedanceActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_video_generation",
+    operationType: "read",
     description: "Retrieve a Seedance task state and its generated video when available.",
     asyncLifecycle: lifecycle,
     inputSchema: s.actionInput({ taskId: taskIdSchema }, ["taskId"], "A Seedance task lookup."),
@@ -230,6 +232,7 @@ export const seedanceActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_video_generations",
+    operationType: "read",
     description: "List Seedance video generation tasks visible to the configured Seedance API key.",
     inputSchema: s.actionInput(
       {
@@ -259,6 +262,7 @@ export const seedanceActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_video_generation",
+    operationType: "destructive",
     description: "Cancel a queued Seedance task or delete a task according to Seedance task-state semantics.",
     inputSchema: s.actionInput({ taskId: taskIdSchema }, ["taskId"], "A Seedance task cancellation or deletion."),
     outputSchema: s.actionOutput(

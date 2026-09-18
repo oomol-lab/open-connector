@@ -27,6 +27,7 @@ const mcpToolSummarySchema = s.object(
 export const wecomMcpActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tools",
+    operationType: "read",
     description:
       "Discover the current tools, behavior annotations, and live input schemas exposed by this WeCom MCP connection.",
     requiredScopes: [],
@@ -38,6 +39,7 @@ export const wecomMcpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "call_tool",
+    operationType: "destructive",
     description:
       "Call a current WeCom MCP tool with JSON arguments. Discover the tool first and confirm the user's intent because the endpoint may expose actions that send, overwrite, cancel, or delete WeCom data.",
     requiredScopes: [],

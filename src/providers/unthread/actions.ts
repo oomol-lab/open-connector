@@ -100,6 +100,7 @@ const cursorSchema = s.object(
 export const unthreadActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_account",
+    operationType: "write",
     description: "Create an external customer account in Unthread.",
     requiredScopes: [],
     inputSchema: s.object("The new Unthread account fields.", accountFieldsSchema, {
@@ -109,6 +110,7 @@ export const unthreadActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve an Unthread account by ID.",
     requiredScopes: [],
     inputSchema: accountIdInputSchema,
@@ -116,6 +118,7 @@ export const unthreadActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_accounts",
+    operationType: "read",
     description: "List and filter external customer accounts in Unthread.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -151,6 +154,7 @@ export const unthreadActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_account",
+    operationType: "write",
     description: "Update an external customer account in Unthread.",
     requiredScopes: [],
     inputSchema: s.requireAnyProperty(
@@ -165,6 +169,7 @@ export const unthreadActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_account",
+    operationType: "destructive",
     description: "Permanently delete an external customer account from Unthread.",
     requiredScopes: [],
     inputSchema: accountIdInputSchema,

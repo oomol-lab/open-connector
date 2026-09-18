@@ -19,16 +19,18 @@ const poi = s.looseObject(
 
 function action(
   name: string,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: ActionDefinition["inputSchema"],
   outputSchema: ActionDefinition["outputSchema"],
 ): ActionDefinition {
-  return defineProviderAction(service, { name, description, inputSchema, outputSchema });
+  return defineProviderAction(service, { name, operationType, description, inputSchema, outputSchema });
 }
 
 export const tencentMapsActions: ActionDefinition[] = [
   action(
     "geocode",
+    "read",
     "Geocode an address with Tencent Maps.",
     s.object(
       "Input parameters for geocoding an address.",
@@ -42,6 +44,7 @@ export const tencentMapsActions: ActionDefinition[] = [
   ),
   action(
     "reverse_geocode",
+    "read",
     "Reverse geocode coordinates with Tencent Maps.",
     s.object(
       "Input parameters for reverse geocoding.",
@@ -67,6 +70,7 @@ export const tencentMapsActions: ActionDefinition[] = [
   ),
   action(
     "search_places",
+    "read",
     "Search Tencent Maps places in a region.",
     s.looseObject(
       {
@@ -87,6 +91,7 @@ export const tencentMapsActions: ActionDefinition[] = [
   ),
   action(
     "search_places_around",
+    "read",
     "Search Tencent Maps places around a coordinate.",
     s.looseObject(
       {
@@ -107,6 +112,7 @@ export const tencentMapsActions: ActionDefinition[] = [
   ),
   action(
     "search_places_polygon",
+    "read",
     "Search Tencent Maps places inside a polygon.",
     s.looseObject(
       {
@@ -127,6 +133,7 @@ export const tencentMapsActions: ActionDefinition[] = [
   ),
   action(
     "get_place_detail",
+    "read",
     "Get details for one Tencent Maps place identifier.",
     s.looseObject(
       { id: s.nonEmptyString("The Tencent Maps place identifier.") },
@@ -136,6 +143,7 @@ export const tencentMapsActions: ActionDefinition[] = [
   ),
   action(
     "input_tips",
+    "read",
     "Fetch Tencent Maps input suggestions.",
     s.looseObject(
       { keywords: s.nonEmptyString("The keyword used to fetch input tips.") },
@@ -152,6 +160,7 @@ export const tencentMapsActions: ActionDefinition[] = [
   ),
   action(
     "ip_locate",
+    "read",
     "Locate an IP address with Tencent Maps.",
     s.object(
       "Input parameters for IP geolocation.",
@@ -170,6 +179,7 @@ export const tencentMapsActions: ActionDefinition[] = [
   ),
   action(
     "district_search",
+    "read",
     "Search Tencent Maps administrative districts.",
     s.looseObject(
       { mode: s.stringEnum("The Tencent Maps district endpoint variant.", ["list", "children", "search"]) },
@@ -186,6 +196,7 @@ export const tencentMapsActions: ActionDefinition[] = [
   ),
   action(
     "weather",
+    "read",
     "Fetch Tencent Maps weather by adcode or coordinate.",
     s.looseObject({}, { description: "Input parameters for weather lookup." }),
     s.object(
@@ -200,30 +211,35 @@ export const tencentMapsActions: ActionDefinition[] = [
   ),
   action(
     "route_driving",
+    "read",
     "Plan a Tencent Maps driving route.",
     s.looseObject({}, { description: "Input parameters for driving routing." }),
     s.looseObject({}, { description: "The route response." }),
   ),
   action(
     "route_walking",
+    "read",
     "Plan a Tencent Maps walking route.",
     s.looseObject({}, { description: "Input parameters for walking routing." }),
     s.looseObject({}, { description: "The route response." }),
   ),
   action(
     "route_bicycling",
+    "read",
     "Plan a Tencent Maps bicycling route.",
     s.looseObject({}, { description: "Input parameters for bicycling routing." }),
     s.looseObject({}, { description: "The route response." }),
   ),
   action(
     "route_transit",
+    "read",
     "Plan a Tencent Maps transit route.",
     s.looseObject({}, { description: "Input parameters for transit routing." }),
     s.looseObject({}, { description: "The route response." }),
   ),
   action(
     "distance_matrix",
+    "read",
     "Calculate a Tencent Maps distance matrix.",
     s.looseObject({}, { description: "Input parameters for distance matrix lookup." }),
     s.looseObject({}, { description: "The distance matrix response." }),

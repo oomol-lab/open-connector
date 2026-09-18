@@ -354,6 +354,7 @@ const travelOutputSchema = s.object(
 export const chengxinActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_flights",
+    operationType: "read",
     description: "Search Tongcheng Chengxin for flights by route, flight number, or low-price preference.",
     requiredScopes: [],
     inputSchema: searchFlightsInputSchema,
@@ -361,6 +362,7 @@ export const chengxinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_trains",
+    operationType: "read",
     description: "Search Tongcheng Chengxin for train services by cities, stations, or train number.",
     requiredScopes: [],
     inputSchema: searchTrainsInputSchema,
@@ -368,6 +370,7 @@ export const chengxinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_hotels",
+    operationType: "read",
     description: "Search Tongcheng Chengxin for hotels using a destination and optional natural-language preferences.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for searching Tongcheng Chengxin hotels.", {
@@ -378,6 +381,7 @@ export const chengxinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_attractions",
+    operationType: "read",
     description: "Search Tongcheng Chengxin for attractions, scenic areas, and admission products.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for searching Tongcheng Chengxin attractions.", {
@@ -388,6 +392,7 @@ export const chengxinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_travel",
+    operationType: "read",
     description:
       "Search Tongcheng Chengxin for vacation products, travel plans, hotels, attractions, and transport recommendations.",
     requiredScopes: [],
@@ -404,6 +409,7 @@ export const chengxinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_transport",
+    operationType: "read",
     description:
       "Search Tongcheng Chengxin for multimodal transport when the traveler has not selected a transport type.",
     requiredScopes: [],
@@ -420,6 +426,7 @@ export const chengxinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_buses",
+    operationType: "read",
     description: "Search Tongcheng Chengxin for long-distance bus services by cities or stations.",
     requiredScopes: [],
     inputSchema: searchBusesInputSchema,

@@ -85,6 +85,7 @@ export type FaktooraActionName =
 export const faktooraActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Faktoora projects with pagination, filtering, and sorting.",
     inputSchema: s.object(
       "Input for listing Faktoora projects.",
@@ -113,6 +114,7 @@ export const faktooraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create a Faktoora project.",
     inputSchema: s.object("Input for creating a Faktoora project.", projectWriteFields, {
       optional: ["description", "place", "eta", "estMinutes", "currency", "status", "customerId"],
@@ -121,6 +123,7 @@ export const faktooraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Retrieve a Faktoora project by UUID.",
     inputSchema: s.requiredObject("Input for retrieving a Faktoora project.", {
       projectId: projectIdSchema,
@@ -129,6 +132,7 @@ export const faktooraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_project",
+    operationType: "write",
     description: "Partially update a Faktoora project.",
     inputSchema: s.object(
       "Input for updating a Faktoora project.",
@@ -144,6 +148,7 @@ export const faktooraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_project",
+    operationType: "destructive",
     description: "Permanently delete a Faktoora project without deleting its attached document.",
     inputSchema: s.requiredObject("Input for deleting a Faktoora project.", {
       projectId: projectIdSchema,
@@ -154,6 +159,7 @@ export const faktooraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "attach_project_document",
+    operationType: "write",
     description: "Attach one Faktoora document to an empty project.",
     inputSchema: s.requiredObject("Input for attaching a document to a Faktoora project.", {
       projectId: projectIdSchema,
@@ -169,6 +175,7 @@ export const faktooraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "detach_project_document",
+    operationType: "destructive",
     description: "Detach one Faktoora document from a project.",
     inputSchema: s.requiredObject("Input for detaching a document from a Faktoora project.", {
       projectId: projectIdSchema,

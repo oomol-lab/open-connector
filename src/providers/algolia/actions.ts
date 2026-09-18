@@ -121,6 +121,7 @@ const bodyWithObjectIdSchema = (description: string): JsonSchema =>
 export const algoliaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_indices",
+    operationType: "read",
     description: "List Algolia indices accessible to the current API key.",
     requiredScopes: ["listIndexes"],
     providerPermissions: ["listIndexes"],
@@ -143,6 +144,7 @@ export const algoliaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_index",
+    operationType: "read",
     description: "Search a single Algolia index with the most common search parameters.",
     requiredScopes: ["search"],
     providerPermissions: ["search"],
@@ -201,6 +203,7 @@ export const algoliaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "browse_index",
+    operationType: "read",
     description: "Browse records from a single Algolia index, optionally continuing with a cursor.",
     requiredScopes: ["browse"],
     providerPermissions: ["browse"],
@@ -234,6 +237,7 @@ export const algoliaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_record",
+    operationType: "read",
     description: "Retrieve a single record from an Algolia index by objectID.",
     requiredScopes: ["search"],
     providerPermissions: ["search"],
@@ -250,6 +254,7 @@ export const algoliaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_or_replace_record",
+    operationType: "destructive",
     description: "Add a new record or replace an existing Algolia record using its objectID.",
     requiredScopes: ["addObject"],
     providerPermissions: ["addObject"],
@@ -266,6 +271,7 @@ export const algoliaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_record_partially",
+    operationType: "write",
     description: "Partially update an existing Algolia record by objectID.",
     requiredScopes: ["addObject"],
     providerPermissions: ["addObject"],
@@ -284,6 +290,7 @@ export const algoliaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_records_by_filter",
+    operationType: "destructive",
     description: "Delete Algolia records that match a filter expression.",
     requiredScopes: ["deleteIndex"],
     providerPermissions: ["deleteIndex"],
@@ -295,6 +302,7 @@ export const algoliaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "save_rule",
+    operationType: "destructive",
     description: "Save a single Algolia rule by objectID.",
     requiredScopes: ["settings"],
     providerPermissions: ["settings"],
@@ -311,6 +319,7 @@ export const algoliaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "save_synonym",
+    operationType: "destructive",
     description: "Save a single Algolia synonym by objectID.",
     requiredScopes: ["settings"],
     providerPermissions: ["settings"],

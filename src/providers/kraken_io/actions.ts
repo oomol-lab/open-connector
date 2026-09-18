@@ -155,6 +155,7 @@ const optimizeImageOutputSchema = s.object(
 export const krakenIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user_status",
+    operationType: "read",
     description: "Fetch the current Kraken.io plan status and monthly optimization quota.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving Kraken.io account status.", {}),
@@ -162,6 +163,7 @@ export const krakenIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "optimize_image",
+    operationType: "write",
     description:
       "Optimize one image with Kraken.io from either a public URL or direct upload, then store the result in local transit storage.",
     requiredScopes: [],

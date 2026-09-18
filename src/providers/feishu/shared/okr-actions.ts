@@ -98,6 +98,7 @@ export function createFeishuOkrActions(
   const actions: ActionDefinition[] = [
     defineProviderAction(service, {
       name: "list_okr_cycles",
+      operationType: "read",
       description: "List Feishu OKR cycles visible to a user.",
       requiredScopes: ["okr:okr.period:readonly"],
       providerPermissions: ["okr:okr.period:readonly"],
@@ -117,6 +118,7 @@ export function createFeishuOkrActions(
     }),
     defineProviderAction(service, {
       name: "get_okr_cycle_detail",
+      operationType: "read",
       description: "List every objective in an OKR cycle and fetch the key results below each objective.",
       requiredScopes: ["okr:okr.content:readonly"],
       providerPermissions: ["okr:okr.content:readonly"],
@@ -143,6 +145,7 @@ export function createFeishuOkrActions(
     }),
     defineProviderAction(service, {
       name: "create_okr",
+      operationType: "write",
       description: "Create one Feishu objective or key result from plain text.",
       requiredScopes: ["okr:okr.content:writeonly"],
       providerPermissions: ["okr:okr.content:writeonly"],
@@ -178,6 +181,7 @@ export function createFeishuOkrActions(
     }),
     defineProviderAction(service, {
       name: "batch_create_okrs",
+      operationType: "write",
       description: "Create objectives and their key results sequentially, with optional rollback on failure.",
       requiredScopes: ["okr:okr.content:writeonly"],
       providerPermissions: ["okr:okr.content:writeonly"],
@@ -233,6 +237,7 @@ export function createFeishuOkrActions(
     }),
     defineProviderAction(service, {
       name: "patch_okr",
+      operationType: "write",
       description: "Update content, notes, score, or deadline on an objective or key result.",
       requiredScopes: ["okr:okr.content:writeonly"],
       providerPermissions: ["okr:okr.content:writeonly"],
@@ -266,6 +271,7 @@ export function createFeishuOkrActions(
     }),
     defineProviderAction(service, {
       name: "list_okr_alignments",
+      operationType: "read",
       description: "List the objectives aligned from or to a Feishu OKR objective.",
       requiredScopes: ["okr:okr.content:readonly"],
       providerPermissions: ["okr:okr.content:readonly"],
@@ -289,6 +295,7 @@ export function createFeishuOkrActions(
     }),
     defineProviderAction(service, {
       name: "create_okr_alignment",
+      operationType: "write",
       description: "Align one Feishu OKR objective to another objective.",
       requiredScopes: ["okr:okr.content:writeonly"],
       providerPermissions: ["okr:okr.content:writeonly"],
@@ -321,6 +328,7 @@ export function createFeishuOkrActions(
     }),
     defineProviderAction(service, {
       name: "delete_okr_alignment",
+      operationType: "destructive",
       description: "Delete a Feishu OKR objective alignment.",
       requiredScopes: ["okr:okr.content:writeonly"],
       providerPermissions: ["okr:okr.content:writeonly"],
@@ -346,6 +354,7 @@ export function createFeishuOkrActions(
     }),
     defineProviderAction(service, {
       name: "list_okr_categories",
+      operationType: "read",
       description: "List enabled and disabled Feishu OKR categories configured by the tenant.",
       requiredScopes: ["okr:okr.setting:read"],
       providerPermissions: ["okr:okr.setting:read"],
@@ -366,6 +375,7 @@ export function createFeishuOkrActions(
     ...commentReadActions(service),
     defineProviderAction(service, {
       name: "reorder_okrs",
+      operationType: "destructive",
       description: "Replace the objective or key-result order with an explicit ID sequence.",
       requiredScopes: ["okr:okr.content:writeonly"],
       providerPermissions: ["okr:okr.content:writeonly"],
@@ -399,6 +409,7 @@ export function createFeishuOkrActions(
     }),
     defineProviderAction(service, {
       name: "update_okr_weights",
+      operationType: "destructive",
       description: "Replace objective or key-result weights with explicit ID and weight pairs.",
       requiredScopes: ["okr:okr.content:writeonly"],
       providerPermissions: ["okr:okr.content:writeonly"],
@@ -441,6 +452,7 @@ export function createFeishuOkrActions(
     }),
     defineProviderAction(service, {
       name: "update_okr_indicator",
+      operationType: "write",
       description: "Find the first indicator for an objective or key result and update its current value.",
       requiredScopes: ["okr:okr.content:writeonly"],
       providerPermissions: ["okr:okr.content:writeonly"],
@@ -474,6 +486,7 @@ function commentReadActions(service: string): readonly ActionDefinition[] {
   return [
     defineProviderAction(service, {
       name: "list_okr_comments",
+      operationType: "read",
       description: "List one page of comments attached to a Feishu OKR entity.",
       requiredScopes: ["okr:okr.comment.readonly"],
       providerPermissions: ["okr:okr.comment.readonly"],
@@ -492,6 +505,7 @@ function commentReadActions(service: string): readonly ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "get_okr_comment",
+      operationType: "read",
       description: "Get one Feishu OKR comment by ID.",
       requiredScopes: ["okr:okr.comment.readonly"],
       providerPermissions: ["okr:okr.comment.readonly"],
@@ -512,6 +526,7 @@ function commentWriteActions(service: string): readonly ActionDefinition[] {
   return [
     defineProviderAction(service, {
       name: "create_okr_comment",
+      operationType: "write",
       description: "Create or reply to a Feishu OKR comment.",
       requiredScopes: ["okr:okr.comment.writeonly"],
       providerPermissions: ["okr:okr.comment.writeonly"],
@@ -538,6 +553,7 @@ function commentWriteActions(service: string): readonly ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "update_okr_comment",
+      operationType: "write",
       description: "Replace the content of a Feishu OKR comment.",
       requiredScopes: ["okr:okr.comment.writeonly"],
       providerPermissions: ["okr:okr.comment.writeonly"],
@@ -550,6 +566,7 @@ function commentWriteActions(service: string): readonly ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "solve_okr_comment",
+      operationType: "write",
       description: "Mark a Feishu OKR comment or its selection thread as solved.",
       requiredScopes: ["okr:okr.comment.writeonly"],
       providerPermissions: ["okr:okr.comment.writeonly"],
@@ -558,6 +575,7 @@ function commentWriteActions(service: string): readonly ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "reopen_okr_comment",
+      operationType: "write",
       description: "Reopen a solved Feishu OKR comment or selection thread.",
       requiredScopes: ["okr:okr.comment.writeonly"],
       providerPermissions: ["okr:okr.comment.writeonly"],
@@ -566,6 +584,7 @@ function commentWriteActions(service: string): readonly ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "delete_okr_comment",
+      operationType: "destructive",
       description: "Permanently delete a Feishu OKR comment.",
       requiredScopes: ["okr:okr.comment.delete"],
       providerPermissions: ["okr:okr.comment.delete"],
@@ -598,6 +617,7 @@ function progressActions(service: string): readonly ActionDefinition[] {
   return [
     defineProviderAction(service, {
       name: "list_okr_progress",
+      operationType: "read",
       description: "List progress records for an objective or key result.",
       requiredScopes: ["okr:okr.progress:readonly"],
       providerPermissions: ["okr:okr.progress:readonly"],
@@ -608,6 +628,7 @@ function progressActions(service: string): readonly ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "get_okr_progress",
+      operationType: "read",
       description: "Get one Feishu OKR progress record.",
       requiredScopes: ["okr:okr.progress:readonly"],
       providerPermissions: ["okr:okr.progress:readonly"],
@@ -631,6 +652,7 @@ function progressActions(service: string): readonly ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "create_okr_progress",
+      operationType: "write",
       description: "Create a progress record for an objective or key result.",
       requiredScopes: ["okr:okr.progress:writeonly"],
       providerPermissions: ["okr:okr.progress:writeonly"],
@@ -658,6 +680,7 @@ function progressActions(service: string): readonly ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "update_okr_progress",
+      operationType: "write",
       description: "Update the content or rate of an OKR progress record.",
       requiredScopes: ["okr:okr.progress:writeonly"],
       providerPermissions: ["okr:okr.progress:writeonly"],
@@ -682,6 +705,7 @@ function progressActions(service: string): readonly ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "delete_okr_progress",
+      operationType: "destructive",
       description: "Delete a Feishu OKR progress record.",
       requiredScopes: ["okr:okr.progress:delete"],
       providerPermissions: ["okr:okr.progress:delete"],

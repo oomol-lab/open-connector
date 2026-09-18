@@ -24,6 +24,7 @@ export interface AgentMailOperation {
 
 interface AgentMailActionDefinition {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
@@ -674,6 +675,7 @@ const createPodInputSchema = s.object(
 const actionDefinitions: AgentMailActionDefinitions = [
   {
     name: "create_inbox",
+    operationType: "write",
     description: "Create a new AgentMail inbox.",
     inputSchema: createInboxInputSchema,
     outputSchema: inboxSchema,
@@ -685,6 +687,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "list_inboxes",
+    operationType: "read",
     description: "List inboxes available to the current AgentMail API key.",
     inputSchema: listInputSchema("Query parameters for listing AgentMail inboxes."),
     outputSchema: looseResponseSchema("Response returned when listing AgentMail inboxes."),
@@ -696,6 +699,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_inbox",
+    operationType: "read",
     description: "Get a single AgentMail inbox.",
     inputSchema: inboxPathInputSchema("Path parameters for fetching a single AgentMail inbox."),
     outputSchema: inboxSchema,
@@ -708,6 +712,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "update_inbox",
+    operationType: "write",
     description: "Update an AgentMail inbox display name or metadata.",
     inputSchema: updateInboxInputSchema("Request payload for updating an AgentMail inbox.", {
       inbox_id: inboxIdField,
@@ -723,6 +728,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "delete_inbox",
+    operationType: "destructive",
     description: "Delete an AgentMail inbox.",
     inputSchema: inboxPathInputSchema("Path parameters for deleting an AgentMail inbox."),
     outputSchema: deleteOutputSchema(["inbox_id"]),
@@ -736,6 +742,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "list_inbox_threads",
+    operationType: "read",
     description: "List threads in a specific AgentMail inbox.",
     inputSchema: listThreadsInputSchema("Query parameters for listing AgentMail inbox threads.", {
       inbox_id: inboxIdField,
@@ -764,6 +771,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "search_inbox_threads",
+    operationType: "read",
     description: "Search threads in a specific AgentMail inbox.",
     inputSchema: searchInputSchema("Query parameters for searching AgentMail inbox threads.", {
       inbox_id: inboxIdField,
@@ -778,6 +786,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_inbox_thread",
+    operationType: "read",
     description: "Get a single thread from a specific AgentMail inbox.",
     inputSchema: threadPathInputSchema("Path parameters for fetching an AgentMail inbox thread."),
     outputSchema: looseResponseSchema("AgentMail thread response."),
@@ -790,6 +799,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "update_inbox_thread",
+    operationType: "write",
     description: "Update labels on a thread in a specific AgentMail inbox.",
     inputSchema: updateLabelsInputSchema("Request payload for updating an AgentMail inbox thread.", {
       inbox_id: inboxIdField,
@@ -806,6 +816,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "delete_inbox_thread",
+    operationType: "destructive",
     description: "Delete a thread from a specific AgentMail inbox.",
     inputSchema: s.object(
       "Path and query parameters for deleting an AgentMail inbox thread.",
@@ -828,6 +839,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_inbox_thread_attachment",
+    operationType: "read",
     description: "Get metadata and download URL for an attachment in an AgentMail inbox thread.",
     inputSchema: s.object("Path parameters for fetching an AgentMail inbox thread attachment.", {
       inbox_id: inboxIdField,
@@ -844,6 +856,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "list_messages",
+    operationType: "read",
     description: "List messages from a specific AgentMail inbox.",
     inputSchema: listMessagesInputSchema("Query parameters for listing AgentMail messages.", {
       inbox_id: inboxIdField,
@@ -872,6 +885,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "search_messages",
+    operationType: "read",
     description: "Search messages in a specific AgentMail inbox.",
     inputSchema: searchInputSchema("Query parameters for searching AgentMail messages.", {
       inbox_id: inboxIdField,
@@ -886,6 +900,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_message",
+    operationType: "read",
     description: "Get a single message from a specific AgentMail inbox.",
     inputSchema: messagePathInputSchema("Path parameters for fetching a single AgentMail message."),
     outputSchema: messageSchema,
@@ -898,6 +913,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "update_message",
+    operationType: "write",
     description: "Update labels on a message in a specific AgentMail inbox.",
     inputSchema: updateLabelsInputSchema("Request payload for updating an AgentMail message.", {
       inbox_id: inboxIdField,
@@ -914,6 +930,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "batch_get_messages",
+    operationType: "read",
     description: "Fetch multiple messages from a specific AgentMail inbox by message ID.",
     inputSchema: s.object("Request payload for fetching multiple AgentMail messages.", {
       inbox_id: inboxIdField,
@@ -929,6 +946,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_message_attachment",
+    operationType: "read",
     description: "Get metadata and download URL for an attachment on a specific AgentMail message.",
     inputSchema: s.object("Path parameters for fetching an AgentMail message attachment.", {
       inbox_id: inboxIdField,
@@ -945,6 +963,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_raw_message",
+    operationType: "read",
     description: "Get a presigned download URL for the raw EML version of an AgentMail message.",
     inputSchema: messagePathInputSchema("Path parameters for fetching a raw AgentMail message download URL."),
     outputSchema: s.object("Raw AgentMail message download response.", {
@@ -962,6 +981,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "send_message",
+    operationType: "write",
     description: "Send a message from a specific AgentMail inbox.",
     inputSchema: sendMessageInputSchema,
     outputSchema: sendMessageOutputSchema,
@@ -974,6 +994,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "reply_to_message",
+    operationType: "write",
     description: "Reply to a specific AgentMail message.",
     inputSchema: replyToMessageInputSchema,
     outputSchema: sendMessageOutputSchema,
@@ -987,6 +1008,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "reply_all_message",
+    operationType: "write",
     description: "Reply to all recipients of a specific AgentMail message.",
     inputSchema: replyAllMessageInputSchema,
     outputSchema: sendMessageOutputSchema,
@@ -1000,6 +1022,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "forward_message",
+    operationType: "write",
     description: "Forward a specific AgentMail message.",
     inputSchema: forwardMessageInputSchema,
     outputSchema: sendMessageOutputSchema,
@@ -1013,6 +1036,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "list_drafts",
+    operationType: "read",
     description: "List drafts from a specific AgentMail inbox.",
     inputSchema: listDraftsInputSchema("Query parameters for listing AgentMail inbox drafts.", {
       inbox_id: inboxIdField,
@@ -1027,6 +1051,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "create_draft",
+    operationType: "write",
     description: "Create a draft in a specific AgentMail inbox.",
     inputSchema: createDraftInputSchema,
     outputSchema: looseResponseSchema("AgentMail draft response."),
@@ -1052,6 +1077,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_draft",
+    operationType: "read",
     description: "Get a draft from a specific AgentMail inbox.",
     inputSchema: draftPathInputSchema("Path parameters for fetching an AgentMail inbox draft."),
     outputSchema: looseResponseSchema("AgentMail draft response."),
@@ -1064,6 +1090,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "update_draft",
+    operationType: "write",
     description: "Update a draft in a specific AgentMail inbox.",
     inputSchema: updateDraftInputSchema,
     outputSchema: looseResponseSchema("AgentMail draft response."),
@@ -1077,6 +1104,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "delete_draft",
+    operationType: "destructive",
     description: "Delete a draft from a specific AgentMail inbox.",
     inputSchema: draftPathInputSchema("Path parameters for deleting an AgentMail inbox draft."),
     outputSchema: deleteOutputSchema(["inbox_id", "draft_id"]),
@@ -1090,6 +1118,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_draft_attachment",
+    operationType: "read",
     description: "Get metadata and download URL for an attachment on a specific AgentMail draft.",
     inputSchema: s.object("Path parameters for fetching an AgentMail draft attachment.", {
       inbox_id: inboxIdField,
@@ -1106,6 +1135,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "send_draft",
+    operationType: "write",
     description: "Send a specific AgentMail draft.",
     inputSchema: sendDraftInputSchema,
     outputSchema: looseResponseSchema("Response returned after sending an AgentMail draft."),
@@ -1119,6 +1149,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "list_inbox_list_entries",
+    operationType: "read",
     description: "List allow or block entries scoped to a specific AgentMail inbox.",
     inputSchema: listEntriesInputSchema("Query parameters for listing AgentMail inbox list entries.", {
       inbox_id: inboxIdField,
@@ -1133,6 +1164,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "create_inbox_list_entry",
+    operationType: "write",
     description: "Create an allow or block list entry scoped to a specific AgentMail inbox.",
     inputSchema: createListEntryInputSchema("Request payload for creating an AgentMail inbox list entry.", {
       inbox_id: inboxIdField,
@@ -1147,6 +1179,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_inbox_list_entry",
+    operationType: "read",
     description: "Get an allow or block list entry scoped to a specific AgentMail inbox.",
     inputSchema: entryPathInputSchema("Path parameters for fetching an AgentMail inbox list entry.", {
       inbox_id: inboxIdField,
@@ -1161,6 +1194,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "delete_inbox_list_entry",
+    operationType: "destructive",
     description: "Delete an allow or block list entry scoped to a specific AgentMail inbox.",
     inputSchema: entryPathInputSchema("Path parameters for deleting an AgentMail inbox list entry.", {
       inbox_id: inboxIdField,
@@ -1176,6 +1210,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "query_inbox_metrics",
+    operationType: "read",
     description: "Query AgentMail metrics scoped to a specific inbox.",
     inputSchema: metricsInputSchema("Query parameters for AgentMail inbox metrics.", {
       inbox_id: inboxIdField,
@@ -1190,6 +1225,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "list_inbox_events",
+    operationType: "read",
     description: "List events scoped to a specific AgentMail inbox.",
     inputSchema: s.object(
       "Query parameters for listing AgentMail inbox events.",
@@ -1211,6 +1247,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "list_inbox_api_keys",
+    operationType: "read",
     description: "List API keys scoped to a specific AgentMail inbox.",
     inputSchema: s.object(
       "Query parameters for listing AgentMail inbox API keys.",
@@ -1231,6 +1268,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "create_inbox_api_key",
+    operationType: "write",
     description: "Create an API key scoped to a specific AgentMail inbox.",
     inputSchema: createApiKeyInputSchema("Request payload for creating an AgentMail inbox API key.", {
       inbox_id: inboxIdField,
@@ -1245,6 +1283,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "delete_inbox_api_key",
+    operationType: "destructive",
     description: "Delete an API key scoped to a specific AgentMail inbox.",
     inputSchema: s.object("Path parameters for deleting an AgentMail inbox API key.", {
       inbox_id: inboxIdField,
@@ -1261,6 +1300,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "list_threads",
+    operationType: "read",
     description: "List AgentMail threads across accessible inboxes.",
     inputSchema: listThreadsInputSchema("Query parameters for listing AgentMail threads.", {}),
     outputSchema: looseResponseSchema("Response returned when listing AgentMail threads."),
@@ -1286,6 +1326,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "search_threads",
+    operationType: "read",
     description: "Search AgentMail threads across accessible inboxes.",
     inputSchema: searchInputSchema("Query parameters for searching AgentMail threads.", {}),
     outputSchema: looseResponseSchema("Response returned when searching AgentMail threads."),
@@ -1297,6 +1338,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_thread",
+    operationType: "read",
     description: "Get a single AgentMail thread.",
     inputSchema: threadPathInputSchema("Path parameters for fetching an AgentMail thread.", false),
     outputSchema: looseResponseSchema("AgentMail thread response."),
@@ -1309,6 +1351,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "update_thread",
+    operationType: "write",
     description: "Update labels on an AgentMail thread.",
     inputSchema: updateLabelsInputSchema("Request payload for updating an AgentMail thread.", {
       thread_id: threadIdField,
@@ -1324,6 +1367,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "delete_thread",
+    operationType: "destructive",
     description: "Delete an AgentMail thread.",
     inputSchema: s.object(
       "Path and query parameters for deleting an AgentMail thread.",
@@ -1345,6 +1389,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_thread_attachment",
+    operationType: "read",
     description: "Get metadata and download URL for an attachment in an AgentMail thread.",
     inputSchema: s.object("Path parameters for fetching an AgentMail thread attachment.", {
       thread_id: threadIdField,
@@ -1360,6 +1405,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "list_global_drafts",
+    operationType: "read",
     description: "List AgentMail drafts across accessible inboxes.",
     inputSchema: listDraftsInputSchema("Query parameters for listing AgentMail drafts.", {}),
     outputSchema: looseResponseSchema("Response returned when listing AgentMail drafts."),
@@ -1371,6 +1417,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_global_draft",
+    operationType: "read",
     description: "Get a single AgentMail draft across accessible inboxes.",
     inputSchema: draftPathInputSchema("Path parameters for fetching an AgentMail draft.", false),
     outputSchema: looseResponseSchema("AgentMail draft response."),
@@ -1383,6 +1430,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_global_draft_attachment",
+    operationType: "read",
     description: "Get metadata and download URL for an attachment on an AgentMail draft.",
     inputSchema: s.object("Path parameters for fetching an AgentMail draft attachment.", {
       draft_id: draftIdField,
@@ -1398,6 +1446,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "list_webhooks",
+    operationType: "read",
     description: "List AgentMail webhooks.",
     inputSchema: listInputSchema("Query parameters for listing AgentMail webhooks."),
     outputSchema: looseResponseSchema("Response returned when listing AgentMail webhooks."),
@@ -1409,6 +1458,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "create_webhook",
+    operationType: "write",
     description: "Create an AgentMail webhook.",
     inputSchema: createWebhookInputSchema,
     outputSchema: looseResponseSchema("AgentMail webhook response."),
@@ -1420,6 +1470,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_webhook",
+    operationType: "read",
     description: "Get a single AgentMail webhook.",
     inputSchema: s.object("Path parameters for fetching an AgentMail webhook.", {
       webhook_id: webhookIdField,
@@ -1434,6 +1485,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "update_webhook",
+    operationType: "write",
     description: "Update an AgentMail webhook.",
     inputSchema: updateWebhookInputSchema,
     outputSchema: looseResponseSchema("AgentMail webhook response."),
@@ -1447,6 +1499,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "delete_webhook",
+    operationType: "destructive",
     description: "Delete an AgentMail webhook.",
     inputSchema: s.object("Path parameters for deleting an AgentMail webhook.", {
       webhook_id: webhookIdField,
@@ -1462,6 +1515,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "list_domains",
+    operationType: "read",
     description: "List AgentMail domains.",
     inputSchema: listInputSchema("Query parameters for listing AgentMail domains."),
     outputSchema: looseResponseSchema("Response returned when listing AgentMail domains."),
@@ -1473,6 +1527,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "create_domain",
+    operationType: "write",
     description: "Create an AgentMail domain.",
     inputSchema: createDomainInputSchema("Request payload for creating an AgentMail domain.", {}),
     outputSchema: looseResponseSchema("AgentMail domain response."),
@@ -1484,6 +1539,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_domain",
+    operationType: "read",
     description: "Get a single AgentMail domain.",
     inputSchema: s.object("Path parameters for fetching an AgentMail domain.", {
       domain_id: domainIdField,
@@ -1498,6 +1554,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "update_domain",
+    operationType: "write",
     description: "Update an AgentMail domain.",
     inputSchema: updateDomainInputSchema("Request payload for updating an AgentMail domain.", {
       domain_id: domainIdField,
@@ -1513,6 +1570,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "delete_domain",
+    operationType: "destructive",
     description: "Delete an AgentMail domain.",
     inputSchema: s.object("Path parameters for deleting an AgentMail domain.", {
       domain_id: domainIdField,
@@ -1528,6 +1586,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_domain_zone_file",
+    operationType: "read",
     description: "Get the DNS zone file records needed for an AgentMail domain.",
     inputSchema: s.object("Path parameters for fetching an AgentMail domain zone file.", {
       domain_id: domainIdField,
@@ -1542,6 +1601,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "verify_domain",
+    operationType: "write",
     description: "Ask AgentMail to verify a domain's DNS records.",
     inputSchema: s.object("Path parameters for verifying an AgentMail domain.", {
       domain_id: domainIdField,
@@ -1556,6 +1616,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "list_list_entries",
+    operationType: "read",
     description: "List global AgentMail allow or block entries.",
     inputSchema: listEntriesInputSchema("Query parameters for listing AgentMail list entries.", {}),
     outputSchema: looseResponseSchema("Response returned when listing AgentMail list entries."),
@@ -1568,6 +1629,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "create_list_entry",
+    operationType: "write",
     description: "Create a global AgentMail allow or block list entry.",
     inputSchema: createListEntryInputSchema("Request payload for creating an AgentMail list entry.", {}),
     outputSchema: looseResponseSchema("AgentMail list entry response."),
@@ -1580,6 +1642,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_list_entry",
+    operationType: "read",
     description: "Get a global AgentMail allow or block list entry.",
     inputSchema: entryPathInputSchema("Path parameters for fetching an AgentMail list entry.", {}),
     outputSchema: looseResponseSchema("AgentMail list entry response."),
@@ -1592,6 +1655,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "delete_list_entry",
+    operationType: "destructive",
     description: "Delete a global AgentMail allow or block list entry.",
     inputSchema: entryPathInputSchema("Path parameters for deleting an AgentMail list entry.", {}),
     outputSchema: deleteOutputSchema(["direction", "type", "entry"]),
@@ -1605,6 +1669,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "query_metrics",
+    operationType: "read",
     description: "Query AgentMail metrics across accessible resources.",
     inputSchema: metricsInputSchema("Query parameters for AgentMail metrics.", {}),
     outputSchema: looseResponseSchema("AgentMail metrics response."),
@@ -1616,6 +1681,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "list_api_keys",
+    operationType: "read",
     description: "List AgentMail API keys.",
     inputSchema: listInputSchema("Query parameters for listing AgentMail API keys."),
     outputSchema: looseResponseSchema("Response returned when listing AgentMail API keys."),
@@ -1627,6 +1693,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "create_api_key",
+    operationType: "write",
     description: "Create an AgentMail API key.",
     inputSchema: createApiKeyInputSchema("Request payload for creating an AgentMail API key.", {}),
     outputSchema: looseResponseSchema("Response returned after creating an AgentMail API key."),
@@ -1638,6 +1705,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "delete_api_key",
+    operationType: "destructive",
     description: "Delete an AgentMail API key.",
     inputSchema: s.object("Path parameters for deleting an AgentMail API key.", {
       api_key_id: apiKeyIdField,
@@ -1653,6 +1721,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "list_pods",
+    operationType: "read",
     description: "List AgentMail pods.",
     inputSchema: listInputSchema("Query parameters for listing AgentMail pods."),
     outputSchema: looseResponseSchema("Response returned when listing AgentMail pods."),
@@ -1664,6 +1733,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "create_pod",
+    operationType: "write",
     description: "Create an AgentMail pod.",
     inputSchema: createPodInputSchema,
     outputSchema: looseResponseSchema("AgentMail pod response."),
@@ -1675,6 +1745,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_pod",
+    operationType: "read",
     description: "Get a single AgentMail pod.",
     inputSchema: podPathInputSchema("Path parameters for fetching an AgentMail pod."),
     outputSchema: looseResponseSchema("AgentMail pod response."),
@@ -1687,6 +1758,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "delete_pod",
+    operationType: "destructive",
     description: "Delete an AgentMail pod.",
     inputSchema: podPathInputSchema("Path parameters for deleting an AgentMail pod."),
     outputSchema: deleteOutputSchema(["pod_id"]),
@@ -1700,6 +1772,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "list_pod_inboxes",
+    operationType: "read",
     description: "List AgentMail inboxes scoped to a pod.",
     inputSchema: s.object(
       "Query parameters for listing AgentMail pod inboxes.",
@@ -1721,6 +1794,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "create_pod_inbox",
+    operationType: "write",
     description: "Create an AgentMail inbox scoped to a pod.",
     inputSchema: s.object(
       "Request payload for creating an AgentMail pod inbox.",
@@ -1748,6 +1822,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_pod_inbox",
+    operationType: "read",
     description: "Get a single AgentMail inbox scoped to a pod.",
     inputSchema: s.object("Path parameters for fetching an AgentMail pod inbox.", {
       pod_id: podIdField,
@@ -1763,6 +1838,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "update_pod_inbox",
+    operationType: "write",
     description: "Update an AgentMail inbox scoped to a pod.",
     inputSchema: updateInboxInputSchema("Request payload for updating an AgentMail pod inbox.", {
       pod_id: podIdField,
@@ -1779,6 +1855,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "delete_pod_inbox",
+    operationType: "destructive",
     description: "Delete an AgentMail inbox scoped to a pod.",
     inputSchema: s.object("Path parameters for deleting an AgentMail pod inbox.", {
       pod_id: podIdField,
@@ -1795,6 +1872,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "list_pod_threads",
+    operationType: "read",
     description: "List AgentMail threads scoped to a pod.",
     inputSchema: listThreadsInputSchema("Query parameters for listing AgentMail pod threads.", {
       pod_id: podIdField,
@@ -1823,6 +1901,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "search_pod_threads",
+    operationType: "read",
     description: "Search AgentMail threads scoped to a pod.",
     inputSchema: searchInputSchema("Query parameters for searching AgentMail pod threads.", {
       pod_id: podIdField,
@@ -1837,6 +1916,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_pod_thread",
+    operationType: "read",
     description: "Get a single AgentMail thread scoped to a pod.",
     inputSchema: s.object("Path parameters for fetching an AgentMail pod thread.", {
       pod_id: podIdField,
@@ -1852,6 +1932,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "update_pod_thread",
+    operationType: "write",
     description: "Update labels on an AgentMail thread scoped to a pod.",
     inputSchema: updateLabelsInputSchema("Request payload for updating an AgentMail pod thread.", {
       pod_id: podIdField,
@@ -1868,6 +1949,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "delete_pod_thread",
+    operationType: "destructive",
     description: "Delete an AgentMail thread scoped to a pod.",
     inputSchema: s.object(
       "Path and query parameters for deleting an AgentMail pod thread.",
@@ -1890,6 +1972,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_pod_thread_attachment",
+    operationType: "read",
     description: "Get metadata and download URL for an attachment in an AgentMail pod thread.",
     inputSchema: s.object("Path parameters for fetching an AgentMail pod thread attachment.", {
       pod_id: podIdField,
@@ -1906,6 +1989,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "list_pod_drafts",
+    operationType: "read",
     description: "List AgentMail drafts scoped to a pod.",
     inputSchema: listDraftsInputSchema("Query parameters for listing AgentMail pod drafts.", {
       pod_id: podIdField,
@@ -1920,6 +2004,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_pod_draft",
+    operationType: "read",
     description: "Get a single AgentMail draft scoped to a pod.",
     inputSchema: s.object("Path parameters for fetching an AgentMail pod draft.", {
       pod_id: podIdField,
@@ -1935,6 +2020,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_pod_draft_attachment",
+    operationType: "read",
     description: "Get metadata and download URL for an attachment on an AgentMail pod draft.",
     inputSchema: s.object("Path parameters for fetching an AgentMail pod draft attachment.", {
       pod_id: podIdField,
@@ -1951,6 +2037,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "list_pod_domains",
+    operationType: "read",
     description: "List AgentMail domains scoped to a pod.",
     inputSchema: s.object(
       "Query parameters for listing AgentMail pod domains.",
@@ -1972,6 +2059,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "create_pod_domain",
+    operationType: "write",
     description: "Create an AgentMail domain scoped to a pod.",
     inputSchema: createDomainInputSchema("Request payload for creating an AgentMail pod domain.", {
       pod_id: podIdField,
@@ -1986,6 +2074,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_pod_domain",
+    operationType: "read",
     description: "Get a single AgentMail domain scoped to a pod.",
     inputSchema: s.object("Path parameters for fetching an AgentMail pod domain.", {
       pod_id: podIdField,
@@ -2001,6 +2090,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "update_pod_domain",
+    operationType: "write",
     description: "Update an AgentMail domain scoped to a pod.",
     inputSchema: updateDomainInputSchema("Request payload for updating an AgentMail pod domain.", {
       pod_id: podIdField,
@@ -2017,6 +2107,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "delete_pod_domain",
+    operationType: "destructive",
     description: "Delete an AgentMail domain scoped to a pod.",
     inputSchema: s.object("Path parameters for deleting an AgentMail pod domain.", {
       pod_id: podIdField,
@@ -2033,6 +2124,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_pod_domain_zone_file",
+    operationType: "read",
     description: "Get the DNS zone file records needed for an AgentMail pod domain.",
     inputSchema: s.object("Path parameters for fetching an AgentMail pod domain zone file.", {
       pod_id: podIdField,
@@ -2048,6 +2140,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "verify_pod_domain",
+    operationType: "write",
     description: "Ask AgentMail to verify a pod domain's DNS records.",
     inputSchema: s.object("Path parameters for verifying an AgentMail pod domain.", {
       pod_id: podIdField,
@@ -2063,6 +2156,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "list_pod_list_entries",
+    operationType: "read",
     description: "List AgentMail allow or block entries scoped to a pod.",
     inputSchema: listEntriesInputSchema("Query parameters for listing AgentMail pod list entries.", {
       pod_id: podIdField,
@@ -2077,6 +2171,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "create_pod_list_entry",
+    operationType: "write",
     description: "Create an AgentMail allow or block list entry scoped to a pod.",
     inputSchema: createListEntryInputSchema("Request payload for creating an AgentMail pod list entry.", {
       pod_id: podIdField,
@@ -2091,6 +2186,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_pod_list_entry",
+    operationType: "read",
     description: "Get an AgentMail allow or block list entry scoped to a pod.",
     inputSchema: entryPathInputSchema("Path parameters for fetching an AgentMail pod list entry.", {
       pod_id: podIdField,
@@ -2105,6 +2201,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "delete_pod_list_entry",
+    operationType: "destructive",
     description: "Delete an AgentMail allow or block list entry scoped to a pod.",
     inputSchema: entryPathInputSchema("Path parameters for deleting an AgentMail pod list entry.", {
       pod_id: podIdField,
@@ -2120,6 +2217,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "query_pod_metrics",
+    operationType: "read",
     description: "Query AgentMail metrics scoped to a pod.",
     inputSchema: metricsInputSchema("Query parameters for AgentMail pod metrics.", {
       pod_id: podIdField,
@@ -2134,6 +2232,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "list_pod_api_keys",
+    operationType: "read",
     description: "List AgentMail API keys scoped to a pod.",
     inputSchema: s.object(
       "Query parameters for listing AgentMail pod API keys.",
@@ -2154,6 +2253,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "create_pod_api_key",
+    operationType: "write",
     description: "Create an API key scoped to a specific AgentMail pod.",
     inputSchema: createApiKeyInputSchema("Request payload for creating an AgentMail pod API key.", {
       pod_id: podIdField,
@@ -2168,6 +2268,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "delete_pod_api_key",
+    operationType: "destructive",
     description: "Delete an API key scoped to a specific AgentMail pod.",
     inputSchema: s.object("Path parameters for deleting an AgentMail pod API key.", {
       pod_id: podIdField,
@@ -2184,6 +2285,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "get_organization",
+    operationType: "read",
     description: "Get the AgentMail organization available to the current API key.",
     inputSchema: emptyInputSchema,
     outputSchema: looseResponseSchema("AgentMail organization response."),
@@ -2194,6 +2296,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
   },
   {
     name: "who_am_i",
+    operationType: "read",
     description: "Get AgentMail identity information for the current API key.",
     inputSchema: emptyInputSchema,
     outputSchema: looseResponseSchema("AgentMail authenticated identity response."),
@@ -2207,6 +2310,7 @@ const actionDefinitions: AgentMailActionDefinitions = [
 export const agentMailActions: ActionDefinition[] = actionDefinitions.map((definition) =>
   defineProviderAction(service, {
     name: definition.name,
+    operationType: definition.operationType,
     description: definition.description,
     requiredScopes: [],
     inputSchema: definition.inputSchema,

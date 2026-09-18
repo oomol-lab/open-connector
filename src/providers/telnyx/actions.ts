@@ -7,11 +7,12 @@ const service = "telnyx";
 
 function action(
   name: TelnyxActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): ActionDefinition {
-  return defineProviderAction(service, { name, description, inputSchema, outputSchema });
+  return defineProviderAction(service, { name, operationType, description, inputSchema, outputSchema });
 }
 
 const nonEmptyStringSchema = (description: string): JsonSchema =>
@@ -41,6 +42,7 @@ const telnyxMetaSchema = s.looseObject("The pagination metadata returned by Teln
 export const telnyxActions: ActionDefinition[] = [
   action(
     "send_message",
+    "write",
     "Send an SMS or MMS message through Telnyx Messaging.",
     s.object(
       "The input payload for sending a Telnyx message.",
@@ -92,6 +94,7 @@ export const telnyxActions: ActionDefinition[] = [
   ),
   action(
     "retrieve_message",
+    "read",
     "Retrieve a Telnyx message by ID.",
     s.object("The input payload for retrieving a Telnyx message.", { id: messageIdSchema }, { required: ["id"] }),
     s.object(
@@ -104,6 +107,7 @@ export const telnyxActions: ActionDefinition[] = [
   ),
   action(
     "list_messaging_profiles",
+    "read",
     "List Telnyx messaging profiles with optional name filters and pagination.",
     s.object(
       "The input payload for listing Telnyx messaging profiles.",
@@ -130,6 +134,7 @@ export const telnyxActions: ActionDefinition[] = [
   ),
   action(
     "retrieve_messaging_profile",
+    "read",
     "Retrieve a Telnyx messaging profile by ID.",
     s.object(
       "The input payload for retrieving a Telnyx messaging profile.",

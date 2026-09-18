@@ -3,6 +3,7 @@ import type { UnifapiOperationDefinition } from "../operations.ts";
 export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   {
     name: "browse_instagram_explore",
+    operationType: "read",
     operationId: "getInstagramExplore",
     description: "Browse Instagram's Explore feed.",
     method: "GET",
@@ -25,6 +26,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_instagram_nearby_locations",
+    operationType: "read",
     operationId: "getInstagramLocationsByIdNearby",
     description: "List Instagram locations geographically near a given location.",
     method: "GET",
@@ -49,6 +51,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_instagram_location_posts",
+    operationType: "read",
     operationId: "getInstagramLocationsByIdPosts",
     description: "List posts tagged with an Instagram location.",
     method: "GET",
@@ -82,6 +85,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_instagram_location",
+    operationType: "read",
     operationId: "getInstagramLocationsById",
     description: "Get an Instagram location by id.",
     method: "GET",
@@ -106,6 +110,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_instagram_post_comment_replies",
+    operationType: "read",
     operationId: "getInstagramPostsByShortcodeCommentsByCommentIdReplies",
     description: "List replies to an Instagram comment.",
     method: "GET",
@@ -139,6 +144,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_instagram_post_comments",
+    operationType: "read",
     operationId: "getInstagramPostsByShortcodeComments",
     description: "List comments on an Instagram post.",
     method: "GET",
@@ -172,6 +178,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_instagram_post",
+    operationType: "read",
     operationId: "getInstagramPostsByShortcode",
     description: "Get an Instagram post (photo / video / carousel / reel) by shortcode.",
     method: "GET",
@@ -196,6 +203,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "browse_instagram_recommended_reels",
+    operationType: "read",
     operationId: "getInstagramReelsRecommended",
     description: "Browse Instagram's recommended Reels feed.",
     method: "GET",
@@ -218,6 +226,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "convert_instagram_media_id",
+    operationType: "read",
     operationId: "getInstagramResolveMediaId",
     description: "Convert an Instagram post shortcode into its numeric media_id.",
     method: "GET",
@@ -242,6 +251,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "convert_instagram_shortcode_from_media",
+    operationType: "read",
     operationId: "getInstagramResolveShortcodeFromMedia",
     description: "Convert an Instagram numeric media_id into its shortcode.",
     method: "GET",
@@ -266,6 +276,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "extract_instagram_shortcode",
+    operationType: "read",
     operationId: "getInstagramResolveShortcode",
     description: "Extract a post shortcode from an Instagram URL.",
     method: "GET",
@@ -290,6 +301,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "convert_instagram_user_id",
+    operationType: "read",
     operationId: "getInstagramResolveUserId",
     description: "Convert an Instagram username into its numeric user_id (pk).",
     method: "GET",
@@ -314,6 +326,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_instagram",
+    operationType: "read",
     operationId: "getInstagramSearch",
     description: "Cross-type Instagram search (posts/reels).",
     method: "GET",
@@ -342,6 +355,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_instagram_user_followers",
+    operationType: "read",
     operationId: "getInstagramUsersByUsernameFollowers",
     description: "List followers of an Instagram user.",
     method: "GET",
@@ -370,6 +384,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_instagram_user_following",
+    operationType: "read",
     operationId: "getInstagramUsersByUsernameFollowing",
     description: "List accounts an Instagram user follows.",
     method: "GET",
@@ -398,6 +413,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_instagram_user_former_usernames",
+    operationType: "read",
     operationId: "getInstagramUsersByUsernameFormerUsernames",
     description: "List former usernames for an Instagram user.",
     method: "GET",
@@ -422,6 +438,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_instagram_user_highlights",
+    operationType: "read",
     operationId: "getInstagramUsersByUsernameHighlights",
     description: "List Instagram highlight reels for a user (metadata only).",
     method: "GET",
@@ -450,6 +467,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_instagram_user_posts",
+    operationType: "read",
     operationId: "getInstagramUsersByUsernamePosts",
     description: "List feed posts authored by an Instagram user.",
     method: "GET",
@@ -478,6 +496,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_instagram_user_reels",
+    operationType: "read",
     operationId: "getInstagramUsersByUsernameReels",
     description: "List reels authored by an Instagram user.",
     method: "GET",
@@ -506,6 +525,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_instagram_user",
+    operationType: "read",
     operationId: "getInstagramUsersByUsername",
     description: "Get an Instagram user profile by username.",
     method: "GET",
@@ -530,6 +550,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_instagram_user_stories",
+    operationType: "read",
     operationId: "getInstagramUsersByUsernameStories",
     description: "List active Instagram stories for a user.",
     method: "GET",
@@ -554,6 +575,7 @@ export const instagramOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_instagram_user_tagged_posts",
+    operationType: "read",
     operationId: "getInstagramUsersByUsernameTaggedPosts",
     description: "List posts an Instagram user is tagged in.",
     method: "GET",

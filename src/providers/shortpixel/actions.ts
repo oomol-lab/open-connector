@@ -40,6 +40,7 @@ const usedCreditEntrySchema = s.object("One normalized ShortPixel credit usage e
 
 const getDomainCdnUsageAction = defineProviderAction(service, {
   name: "get_domain_cdn_usage",
+  operationType: "read",
   description: "Read CDN usage and quota details for one ShortPixel-associated domain.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for reading ShortPixel domain CDN usage.", {
@@ -67,6 +68,7 @@ const getDomainCdnUsageAction = defineProviderAction(service, {
 
 const addDomainAction = defineProviderAction(service, {
   name: "add_domain",
+  operationType: "write",
   description: "Add and associate a domain with the current ShortPixel account.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for adding a ShortPixel domain.", {
@@ -77,6 +79,7 @@ const addDomainAction = defineProviderAction(service, {
 
 const setDomainAction = defineProviderAction(service, {
   name: "set_domain",
+  operationType: "write",
   description: "Associate an existing domain with the current ShortPixel account.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for associating a ShortPixel domain.", {
@@ -87,6 +90,7 @@ const setDomainAction = defineProviderAction(service, {
 
 const revokeDomainAction = defineProviderAction(service, {
   name: "revoke_domain",
+  operationType: "destructive",
   description: "Remove the current ShortPixel account association from a domain.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for revoking a ShortPixel domain.", {
@@ -97,6 +101,7 @@ const revokeDomainAction = defineProviderAction(service, {
 
 const purgeDomainStorageAction = defineProviderAction(service, {
   name: "purge_domain_storage",
+  operationType: "destructive",
   description: "Purge ShortPixel stored optimized variants for one associated domain.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for purging ShortPixel domain storage.", {
@@ -107,6 +112,7 @@ const purgeDomainStorageAction = defineProviderAction(service, {
 
 const purgeDomainCacheAction = defineProviderAction(service, {
   name: "purge_domain_cache",
+  operationType: "destructive",
   description: "Purge the ShortPixel CDN cache for one associated domain.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for purging the ShortPixel domain cache.", {

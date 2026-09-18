@@ -242,6 +242,7 @@ updateTicketInputSchema.anyOf = Object.keys(updateTicketFields).map((field) => (
 export const gleapActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current Gleap user for the connected API key.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -254,6 +255,7 @@ export const gleapActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Gleap contact sessions for the connected project.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -266,6 +268,7 @@ export const gleapActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact_by_user_id",
+    operationType: "read",
     description: "Get a Gleap contact session by external user ID.",
     inputSchema: s.actionInput(
       {
@@ -284,6 +287,7 @@ export const gleapActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a Gleap contact session in the connected project.",
     inputSchema: createContactInputSchema,
     outputSchema: s.actionOutput(
@@ -296,6 +300,7 @@ export const gleapActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update a Gleap contact session by session ID.",
     inputSchema: updateContactInputSchema,
     outputSchema: s.actionOutput(
@@ -308,6 +313,7 @@ export const gleapActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tickets",
+    operationType: "read",
     description: "List Gleap tickets with documented filters, sorting, and pagination.",
     inputSchema: s.object(
       "Query parameters for listing Gleap tickets.",
@@ -356,6 +362,7 @@ export const gleapActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ticket",
+    operationType: "read",
     description: "Get a Gleap ticket by ID.",
     inputSchema: s.actionInput(
       {
@@ -374,6 +381,7 @@ export const gleapActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_ticket",
+    operationType: "write",
     description: "Create a Gleap ticket with native ticket fields.",
     inputSchema: createTicketInputSchema,
     outputSchema: s.actionOutput(
@@ -386,6 +394,7 @@ export const gleapActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_ticket_with_message",
+    operationType: "write",
     description: "Create a Gleap ticket with an optional initial message.",
     inputSchema: createTicketWithMessageInputSchema,
     outputSchema: s.actionOutput(
@@ -398,6 +407,7 @@ export const gleapActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_ticket",
+    operationType: "write",
     description: "Update a Gleap ticket by ID.",
     inputSchema: updateTicketInputSchema,
     outputSchema: s.actionOutput(
@@ -410,6 +420,7 @@ export const gleapActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_ticket",
+    operationType: "destructive",
     description: "Delete a Gleap ticket by ID.",
     inputSchema: s.actionInput(
       {

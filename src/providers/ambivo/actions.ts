@@ -129,6 +129,7 @@ const recordOutputSchema = s.requiredObject("The Ambivo CRM record response.", {
 export const ambivoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_leads",
+    operationType: "read",
     description: "List Ambivo CRM leads with optional filters, sorting, pagination, and date range.",
     inputSchema: listRecordsInputSchema,
     outputSchema: paginatedRecordListSchema(
@@ -139,12 +140,14 @@ export const ambivoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_lead",
+    operationType: "write",
     description: "Create a new Ambivo CRM lead.",
     inputSchema: s.object("Fields for creating an Ambivo lead.", personWriteFields, { required: ["name"] }),
     outputSchema: recordOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_lead",
+    operationType: "write",
     description: "Update an existing Ambivo CRM lead by ID.",
     inputSchema: s.object(
       "Fields for updating an Ambivo lead.",
@@ -158,6 +161,7 @@ export const ambivoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Ambivo CRM contacts with optional filters, sorting, and date range.",
     inputSchema: listContactsInputSchema,
     outputSchema: s.requiredObject("The Ambivo contact list response.", {
@@ -170,12 +174,14 @@ export const ambivoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a new Ambivo CRM contact.",
     inputSchema: s.object("Fields for creating an Ambivo contact.", personWriteFields, { required: ["name"] }),
     outputSchema: recordOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update an existing Ambivo CRM contact by ID.",
     inputSchema: s.object(
       "Fields for updating an Ambivo contact.",
@@ -189,6 +195,7 @@ export const ambivoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "List Ambivo CRM tasks with optional filters, sorting, and pagination.",
     inputSchema: s.object(
       "Query parameters for listing Ambivo CRM tasks.",
@@ -208,12 +215,14 @@ export const ambivoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_task",
+    operationType: "write",
     description: "Create a new Ambivo CRM task.",
     inputSchema: s.object("Fields for creating an Ambivo task.", taskWriteFields, { required: ["name"] }),
     outputSchema: recordOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_task",
+    operationType: "write",
     description: "Update an existing Ambivo CRM task by ID.",
     inputSchema: s.object(
       "Fields for updating an Ambivo task.",
@@ -229,6 +238,7 @@ export const ambivoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_task",
+    operationType: "destructive",
     description: "Delete an Ambivo CRM task by ID.",
     inputSchema: s.requiredObject("Input for deleting an Ambivo task.", {
       taskId: s.nonEmptyString("The Ambivo task record ID."),

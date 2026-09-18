@@ -30,6 +30,7 @@ const tagNameField = s.nonEmptyString(
 export const karakeepTagActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description:
       "Retrieve one page of Karakeep tags. Tags can be filtered by name fragment and by who attached them, and sorted by name, usage count or relevance. Pagination is only active when limit is given: omit limit and Karakeep returns every tag in one response with no cursor.",
     requiredScopes: tagReadScopes,
@@ -59,6 +60,7 @@ export const karakeepTagActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_tag",
+    operationType: "write",
     description:
       "Create a new Karakeep tag. The name is trimmed and normalized into the tag style configured for the account.",
     requiredScopes: tagWriteScopes,
@@ -69,6 +71,7 @@ export const karakeepTagActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tag",
+    operationType: "read",
     description: "Retrieve a single Karakeep tag by its id, including how many bookmarks carry it and who attached it.",
     requiredScopes: tagReadScopes,
     inputSchema: s.requiredObject("Input for retrieving one Karakeep tag.", {
@@ -78,6 +81,7 @@ export const karakeepTagActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_tag",
+    operationType: "write",
     description:
       "Rename a Karakeep tag. The name is the only field this endpoint can change, so it is required. The new name is trimmed and normalized, and every bookmark carrying the tag sees the new name.",
     requiredScopes: tagWriteScopes,
@@ -89,6 +93,7 @@ export const karakeepTagActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_tag",
+    operationType: "destructive",
     description:
       "Delete a Karakeep tag. The tag is detached from every bookmark that carried it; the bookmarks themselves are kept.",
     requiredScopes: tagWriteScopes,
@@ -103,6 +108,7 @@ export const karakeepTagActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tag_bookmarks",
+    operationType: "read",
     description: "Retrieve one page of the bookmarks that carry a given Karakeep tag.",
     requiredScopes: bookmarkReadScopes,
     inputSchema: s.object(

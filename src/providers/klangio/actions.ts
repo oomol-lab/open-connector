@@ -182,6 +182,7 @@ const downloadFileOutputSchema = s.object("The output payload for a downloaded K
 
 function defineKlangioAction(input: {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
@@ -195,54 +196,63 @@ function defineKlangioAction(input: {
 export const klangioActions: ActionDefinition[] = [
   defineKlangioAction({
     name: "create_transcription_job",
+    operationType: "write",
     description: "Create a Klangio transcription job from a URL or Base64 audio file and requested score outputs.",
     inputSchema: createTranscriptionJobInputSchema,
     outputSchema: jobResponseSchema,
   }),
   defineKlangioAction({
     name: "create_chord_recognition_job",
+    operationType: "write",
     description: "Create a Klangio chord recognition job from a URL or Base64 audio file.",
     inputSchema: chordRecognitionInputSchema,
     outputSchema: jobResponseSchema,
   }),
   defineKlangioAction({
     name: "create_chord_recognition_extended_job",
+    operationType: "write",
     description: "Create a Klangio chord recognition job with extended key detection from a URL or Base64 audio file.",
     inputSchema: chordRecognitionInputSchema,
     outputSchema: jobResponseSchema,
   }),
   defineKlangioAction({
     name: "create_beat_tracking_job",
+    operationType: "write",
     description: "Create a Klangio beat and downbeat tracking job from a URL or Base64 audio file.",
     inputSchema: fileAndWebhookInputSchema,
     outputSchema: jobResponseSchema,
   }),
   defineKlangioAction({
     name: "create_strum_recognition_job",
+    operationType: "write",
     description: "Create a Klangio guitar strum recognition job from a URL or Base64 audio file.",
     inputSchema: fileAndWebhookInputSchema,
     outputSchema: jobResponseSchema,
   }),
   defineKlangioAction({
     name: "create_source_separation_job",
+    operationType: "write",
     description: "Create a Klangio source separation job from a URL or Base64 audio file.",
     inputSchema: sourceSeparationInputSchema,
     outputSchema: jobResponseSchema,
   }),
   defineKlangioAction({
     name: "get_job_status",
+    operationType: "read",
     description: "Fetch the current processing status for a Klangio job.",
     inputSchema: getJobStatusInputSchema,
     outputSchema: getJobStatusOutputSchema,
   }),
   defineKlangioAction({
     name: "download_job_result",
+    operationType: "read",
     description: "Download a generated Klangio job result file and upload it to local transit storage.",
     inputSchema: downloadJobResultInputSchema,
     outputSchema: downloadFileOutputSchema,
   }),
   defineKlangioAction({
     name: "download_source_separation_audio",
+    operationType: "read",
     description: "Download a Klangio source separation stem audio file and upload it to local transit storage.",
     inputSchema: downloadSourceSeparationAudioInputSchema,
     outputSchema: downloadFileOutputSchema,

@@ -63,6 +63,7 @@ const fileInput = s.requiredObject("A local transit file to upload to Box.", {
 
 function action(
   name: string,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
@@ -71,6 +72,7 @@ function action(
 ): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     requiredScopes: [scope],
     providerPermissions: [scope],
@@ -83,6 +85,7 @@ function action(
 export const boxActions: ActionDefinition[] = [
   action(
     "get_current_user",
+    "read",
     "Get the Box user represented by the current OAuth connection.",
     emptyInput,
     s.requiredObject("The authenticated Box user.", {
@@ -99,6 +102,7 @@ export const boxActions: ActionDefinition[] = [
   ),
   action(
     "get_file",
+    "read",
     "Get metadata for a Box file.",
     idInput("fileId", "Identify the file to retrieve."),
     itemOutput,
@@ -107,6 +111,7 @@ export const boxActions: ActionDefinition[] = [
   ),
   action(
     "get_folder",
+    "read",
     "Get metadata for a Box folder.",
     idInput("folderId", "Identify the folder to retrieve."),
     itemOutput,
@@ -115,6 +120,7 @@ export const boxActions: ActionDefinition[] = [
   ),
   action(
     "list_folder_items",
+    "read",
     "List files, folders, and web links in a Box folder using marker or offset pagination.",
     s.object(
       {
@@ -134,6 +140,7 @@ export const boxActions: ActionDefinition[] = [
   ),
   action(
     "list_folder_items_continue",
+    "read",
     "Continue a marker-based Box folder listing.",
     s.requiredObject("Continue a folder listing from its next marker.", {
       folderId: s.nonEmptyString("The folder identifier."),
@@ -146,6 +153,7 @@ export const boxActions: ActionDefinition[] = [
   ),
   action(
     "search",
+    "read",
     "Search Box content available to the authenticated user.",
     s.object(
       {
@@ -178,6 +186,7 @@ export const boxActions: ActionDefinition[] = [
   ),
   action(
     "download_file",
+    "read",
     "Download a Box file into local transit storage.",
     s.object(
       {
@@ -200,6 +209,7 @@ export const boxActions: ActionDefinition[] = [
   ),
   action(
     "create_folder",
+    "write",
     "Create a folder in Box.",
     s.requiredObject("Define the new Box folder.", {
       name: s.nonEmptyString("The folder name.", { maxLength: 255 }),
@@ -210,6 +220,7 @@ export const boxActions: ActionDefinition[] = [
   ),
   action(
     "upload_file",
+    "write",
     "Upload a local transit file of up to 50 MB to Box.",
     s.requiredObject("Define the Box upload.", {
       file: fileInput,
@@ -223,6 +234,7 @@ export const boxActions: ActionDefinition[] = [
   ),
   action(
     "update_file",
+    "write",
     "Rename, move, or update the description of a Box file.",
     s.object(
       {
@@ -239,6 +251,7 @@ export const boxActions: ActionDefinition[] = [
   ),
   action(
     "update_folder",
+    "write",
     "Rename, move, or update the description of a Box folder.",
     s.object(
       {
@@ -255,6 +268,7 @@ export const boxActions: ActionDefinition[] = [
   ),
   action(
     "delete_file",
+    "destructive",
     "Move a Box file to the trash.",
     s.object(
       {
@@ -271,6 +285,7 @@ export const boxActions: ActionDefinition[] = [
   ),
   action(
     "delete_folder",
+    "destructive",
     "Move a Box folder to the trash, optionally including its contents.",
     s.object(
       {

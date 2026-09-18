@@ -152,6 +152,7 @@ updateTagInputSchema.anyOf = [{ required: ["name"] }, { required: ["color"] }, {
 export const asanaStoryTagActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_story",
+    operationType: "read",
     description: "Get an Asana story, including a task comment story, by gid.",
     requiredScopes: ["stories:read"],
     inputSchema: resourceInput("storyId", "The Asana story gid."),
@@ -159,6 +160,7 @@ export const asanaStoryTagActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_task_stories",
+    operationType: "read",
     description: "List each story and comment recorded on an Asana task.",
     requiredScopes: ["stories:read"],
     inputSchema: paginatedResourceInput("taskId", "The Asana task gid."),
@@ -166,6 +168,7 @@ export const asanaStoryTagActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_task_story",
+    operationType: "write",
     description: "Create a comment story on an Asana task.",
     requiredScopes: ["stories:write"],
     inputSchema: createStoryInputSchema,
@@ -173,6 +176,7 @@ export const asanaStoryTagActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_story",
+    operationType: "write",
     description: "Update the text, HTML, or pinned state of an Asana comment story.",
     requiredScopes: ["stories:write"],
     inputSchema: updateStoryInputSchema,
@@ -180,6 +184,7 @@ export const asanaStoryTagActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_story",
+    operationType: "destructive",
     description: "Delete an Asana story or task comment created by the authenticated user.",
     requiredScopes: ["stories:delete"],
     inputSchema: resourceIdInput("storyId", "The Asana story gid."),
@@ -187,6 +192,7 @@ export const asanaStoryTagActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List tags in an Asana workspace through the generic tag endpoint.",
     requiredScopes: ["tags:read"],
     inputSchema: s.object("The input payload for this action.", {
@@ -198,6 +204,7 @@ export const asanaStoryTagActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_tag",
+    operationType: "write",
     description: "Create a tag in an Asana workspace through the generic tag endpoint.",
     requiredScopes: ["tags:write"],
     inputSchema: createTagInput(
@@ -208,6 +215,7 @@ export const asanaStoryTagActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tag",
+    operationType: "read",
     description: "Get an Asana tag by gid.",
     requiredScopes: ["tags:read"],
     inputSchema: resourceInput("tagId", "The Asana tag gid."),
@@ -215,6 +223,7 @@ export const asanaStoryTagActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_tag",
+    operationType: "write",
     description: "Update one or more mutable fields on an Asana tag.",
     requiredScopes: ["tags:write"],
     inputSchema: updateTagInputSchema,
@@ -222,6 +231,7 @@ export const asanaStoryTagActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_tag",
+    operationType: "destructive",
     description: "Delete an Asana tag.",
     requiredScopes: [],
     inputSchema: resourceIdInput("tagId", "The Asana tag gid."),
@@ -229,6 +239,7 @@ export const asanaStoryTagActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workspace_tags",
+    operationType: "read",
     description: "List tags in an Asana workspace or organization.",
     requiredScopes: ["tags:read"],
     inputSchema: paginatedResourceInput("workspaceId", "The Asana workspace or organization gid."),
@@ -236,6 +247,7 @@ export const asanaStoryTagActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_workspace_tag",
+    operationType: "write",
     description: "Create a tag in an Asana workspace or organization.",
     requiredScopes: ["tags:write"],
     inputSchema: createTagInput(
@@ -246,6 +258,7 @@ export const asanaStoryTagActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_task_tags",
+    operationType: "read",
     description: "List the Asana tags attached to a task.",
     requiredScopes: ["tags:read"],
     inputSchema: paginatedResourceInput("taskId", "The Asana task gid."),

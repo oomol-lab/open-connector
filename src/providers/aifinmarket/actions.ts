@@ -167,6 +167,7 @@ function defineNamedAction(
     serverType,
     action: defineProviderAction(service, {
       name,
+      operationType: "read",
       description,
       inputSchema,
       outputSchema: toolResultOutputSchema,
@@ -262,6 +263,7 @@ const toolArgumentsSchema = s.looseObject(
 export const aifinMarketActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tools",
+    operationType: "read",
     description:
       "Discover the current Wind financial data tools and their live input schemas for stocks, funds, indices, bonds, documents, economics, or analytics.",
     followUpActions: ["aifinmarket.call_tool"],
@@ -275,6 +277,7 @@ export const aifinMarketActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "call_tool",
+    operationType: "write",
     description:
       "Call a current Wind financial data MCP tool with JSON arguments after checking its live schema with list_tools.",
     followUpActions: ["aifinmarket.list_tools"],

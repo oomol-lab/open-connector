@@ -15,6 +15,7 @@ import {
 export const appStoreServerNotificationActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "request_test_notification",
+    operationType: "write",
     description:
       "Ask the App Store to send a TEST notification to the App Store Server Notifications URL configured for your app, and get back the token that identifies the attempt. Fails when no notification URL is configured for the selected environment.",
     requiredScopes: [],
@@ -35,6 +36,7 @@ export const appStoreServerNotificationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_test_notification_status",
+    operationType: "read",
     description:
       "Read the delivery result of a test notification, with the notification payload decoded from the signed payload Apple returns. Apple answers 404 until it has finished the first delivery attempt.",
     requiredScopes: [],
@@ -55,6 +57,7 @@ export const appStoreServerNotificationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_notification_history",
+    operationType: "read",
     description:
       "List the App Store Server Notifications the App Store tried to deliver to your server in a time span, with each notification payload decoded. History covers the past 180 days in production and the past 30 days in sandbox, and returns up to 20 records per page.",
     requiredScopes: [],

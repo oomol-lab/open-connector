@@ -31,6 +31,7 @@ const transitFileOutput = s.requiredObject("Decrypted media stored in local tran
 export const weixinBotActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_updates",
+    operationType: "read",
     description:
       "Long-poll for inbound Weixin bot messages. Pass the returned cursor to the next call to avoid receiving the same updates again.",
     inputSchema: s.object(
@@ -48,6 +49,7 @@ export const weixinBotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send a text reply from the connected Weixin bot to a user or conversation.",
     inputSchema: s.requiredObject("A text message and its Weixin reply context.", {
       toUserId: s.nonEmptyString("The target user ID from an inbound Weixin message."),
@@ -62,6 +64,7 @@ export const weixinBotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_media",
+    operationType: "write",
     description: "Encrypt, upload, and send an image, video, or file from local transit storage.",
     inputSchema: s.object(
       "A transit file and its Weixin reply context.",
@@ -81,6 +84,7 @@ export const weixinBotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "download_media",
+    operationType: "read",
     description: "Download and decrypt one image, voice, video, or file item returned by get_updates.",
     inputSchema: s.object(
       "A media item returned inside a Weixin message item_list.",
@@ -95,6 +99,7 @@ export const weixinBotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_typing",
+    operationType: "write",
     description: "Start or stop the typing indicator for a Weixin conversation.",
     inputSchema: s.requiredObject("A conversation and typing state.", {
       userId: s.nonEmptyString("The Weixin user ID from an inbound message."),

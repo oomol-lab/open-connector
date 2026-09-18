@@ -393,6 +393,7 @@ const searchCustomersInputSchema = s.object(
 export const kustomerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List Kustomer customers with pagination, sorting, and createdAt or updatedAt timestamp filters.",
     requiredScopes: [],
     inputSchema: listCustomersInputSchema,
@@ -400,6 +401,7 @@ export const kustomerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Retrieve one Kustomer customer by customer ID.",
     requiredScopes: [],
     inputSchema: getCustomerInputSchema,
@@ -407,6 +409,7 @@ export const kustomerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer_by_email",
+    operationType: "read",
     description: "Retrieve one Kustomer customer by email address.",
     requiredScopes: [],
     inputSchema: getCustomerByEmailInputSchema,
@@ -414,6 +417,7 @@ export const kustomerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer_by_external_id",
+    operationType: "read",
     description: "Retrieve one Kustomer customer by external ID.",
     requiredScopes: [],
     inputSchema: getCustomerByExternalIdInputSchema,
@@ -421,6 +425,7 @@ export const kustomerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer_by_phone",
+    operationType: "read",
     description: "Retrieve one Kustomer customer by phone number.",
     requiredScopes: [],
     inputSchema: getCustomerByPhoneInputSchema,
@@ -428,6 +433,7 @@ export const kustomerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_customers",
+    operationType: "read",
     description: "Search Kustomer customers with Kustomer's JSON search criteria DSL.",
     requiredScopes: [],
     inputSchema: searchCustomersInputSchema,
@@ -435,6 +441,7 @@ export const kustomerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_customer",
+    operationType: "write",
     description: "Create a Kustomer customer with common identity, contact, tag, and custom attribute fields.",
     requiredScopes: [],
     inputSchema: createCustomerInputSchema,
@@ -442,6 +449,7 @@ export const kustomerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_customer",
+    operationType: "write",
     description: "Update a Kustomer customer with common identity, contact, tag, and custom attribute fields.",
     requiredScopes: [],
     inputSchema: updateCustomerInputSchema,

@@ -16,6 +16,7 @@ const searchAfterSchema = s.array(
 export const urlscanActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "submit_scan",
+    operationType: "write",
     description: "Submit a URL to urlscan.io for scanning.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -56,6 +57,7 @@ export const urlscanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_result",
+    operationType: "read",
     description: "Retrieve the JSON result for a completed urlscan.io scan.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for retrieving a scan result.", {
@@ -68,6 +70,7 @@ export const urlscanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_scans",
+    operationType: "read",
     description: "Search urlscan.io scans with the documented search query syntax.",
     requiredScopes: [],
     inputSchema: s.object(

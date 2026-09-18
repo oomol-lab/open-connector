@@ -75,12 +75,14 @@ function paginatedOutputSchema(
 export const textmagicActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the Textmagic account associated with the connected API credentials.",
     inputSchema: s.object({}, { description: "Input for getting the current Textmagic account." }),
     outputSchema: userSchema,
   }),
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send a plain-text SMS message to up to 1,000 phone numbers through Textmagic.",
     inputSchema: s.object(
       {
@@ -130,6 +132,7 @@ export const textmagicActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List contacts in the connected Textmagic account.",
     inputSchema: s.object(
       {
@@ -154,6 +157,7 @@ export const textmagicActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get one Textmagic contact by ID.",
     inputSchema: s.object(
       { id: s.positiveInteger("The Textmagic contact ID.") },
@@ -163,6 +167,7 @@ export const textmagicActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_lists",
+    operationType: "read",
     description: "List contact lists in the connected Textmagic account.",
     inputSchema: s.object(
       {
@@ -191,6 +196,7 @@ export const textmagicActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_list",
+    operationType: "write",
     description: "Create a contact list in Textmagic.",
     inputSchema: s.object(
       {
@@ -215,6 +221,7 @@ export const textmagicActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List SMS message templates in the connected Textmagic account.",
     inputSchema: s.object(paginationProperties, {
       optional: ["page", "limit"],

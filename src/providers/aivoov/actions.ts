@@ -29,6 +29,7 @@ const voiceSchema = s.looseRequiredObject("One AiVOOV voice returned by the voic
 export const aivoovActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_voices",
+    operationType: "read",
     description: "List available AiVOOV voices, optionally filtered by language code.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -42,6 +43,7 @@ export const aivoovActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_audio",
+    operationType: "write",
     description: "Generate base64 audio from one or more voice/text segments.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for generating AiVOOV audio.", {

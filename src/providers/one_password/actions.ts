@@ -29,6 +29,7 @@ const activitySchema = s.looseObject("A 1Password Connect activity event object.
 export const onePasswordActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_health",
+    operationType: "read",
     description: "Get health details for the configured 1Password Connect Server.",
     inputSchema: s.object("This action does not require any input parameters.", {}),
     outputSchema: s.requiredObject("The 1Password Connect Server health response.", {
@@ -37,6 +38,7 @@ export const onePasswordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_vaults",
+    operationType: "read",
     description: "List 1Password vaults available to the connected Connect access token.",
     followUpActions: ["one_password.list_items"],
     inputSchema: s.object(
@@ -52,6 +54,7 @@ export const onePasswordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_vault",
+    operationType: "read",
     description: "Get details for one 1Password vault by UUID.",
     followUpActions: ["one_password.list_items"],
     inputSchema: s.requiredObject("The input payload for reading one 1Password vault.", {
@@ -63,6 +66,7 @@ export const onePasswordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_items",
+    operationType: "read",
     description: "List item overviews in one 1Password vault.",
     followUpActions: ["one_password.get_item"],
     inputSchema: s.object(
@@ -79,6 +83,7 @@ export const onePasswordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_item",
+    operationType: "read",
     description: "Get one full 1Password item by vault UUID and item UUID.",
     inputSchema: s.requiredObject("The input payload for reading one 1Password item.", {
       vaultId: vaultIdSchema,
@@ -90,6 +95,7 @@ export const onePasswordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_activity",
+    operationType: "read",
     description: "List 1Password Connect activity events visible to the access token.",
     inputSchema: s.object(
       "The input payload for listing 1Password Connect activity events.",

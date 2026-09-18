@@ -233,6 +233,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
   return [
     defineProviderAction(service, {
       name: "get_base",
+      operationType: "read",
       description: "Get the metadata of a Feishu Base.",
       requiredScopes: [feishuBaseProviderPermissions.appRead],
       providerPermissions: [feishuBaseProviderPermissions.appRead],
@@ -241,6 +242,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "create_base",
+      operationType: "write",
       description: "Create a Feishu Base, optionally replacing its default table with a custom initial schema.",
       requiredScopes: [
         feishuBaseProviderPermissions.appCreate,
@@ -300,6 +302,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "copy_base",
+      operationType: "write",
       description:
         "Copy a Feishu Base, optionally changing its name, destination folder, content inclusion, or time zone.",
       requiredScopes: [feishuBaseProviderPermissions.appCopy],
@@ -332,6 +335,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "query_base_data",
+      operationType: "read",
       description:
         "Run the Base data-query DSL for server-side grouping, aggregation, filtering, sorting, and Top N analysis.",
       requiredScopes: [feishuBaseProviderPermissions.tableRead],
@@ -358,6 +362,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "list_base_tables",
+      operationType: "read",
       description: "List tables in a Feishu Base.",
       requiredScopes: [feishuBaseProviderPermissions.tableRead],
       providerPermissions: [feishuBaseProviderPermissions.tableRead],
@@ -372,6 +377,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "get_base_table",
+      operationType: "read",
       description: "Get one table in a Feishu Base.",
       requiredScopes: [
         feishuBaseProviderPermissions.tableRead,
@@ -398,6 +404,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "create_base_table",
+      operationType: "write",
       description: "Create a table with an optional initial field schema in a Feishu Base.",
       requiredScopes: [
         feishuBaseProviderPermissions.tableCreate,
@@ -430,6 +437,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "update_base_table",
+      operationType: "write",
       description: "Rename a table in a Feishu Base.",
       requiredScopes: [feishuBaseProviderPermissions.tableUpdate],
       providerPermissions: [feishuBaseProviderPermissions.tableUpdate],
@@ -448,6 +456,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "delete_base_table",
+      operationType: "destructive",
       description: "Delete a table from a Feishu Base.",
       requiredScopes: [feishuBaseProviderPermissions.tableDelete],
       providerPermissions: [feishuBaseProviderPermissions.tableDelete],
@@ -465,6 +474,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "list_base_fields",
+      operationType: "read",
       description: "List the fields in a Feishu Base table.",
       requiredScopes: [feishuBaseProviderPermissions.fieldRead],
       providerPermissions: [feishuBaseProviderPermissions.fieldRead],
@@ -479,6 +489,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "get_base_field",
+      operationType: "read",
       description: "Get one field from a Feishu Base table.",
       requiredScopes: [feishuBaseProviderPermissions.fieldRead],
       providerPermissions: [feishuBaseProviderPermissions.fieldRead],
@@ -487,6 +498,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "search_base_field_options",
+      operationType: "read",
       description: "Search the options of a single-select or multi-select field in a Feishu Base.",
       requiredScopes: [feishuBaseProviderPermissions.fieldRead],
       providerPermissions: [feishuBaseProviderPermissions.fieldRead],
@@ -522,6 +534,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "create_base_field",
+      operationType: "write",
       description: "Create one field in a Feishu Base table.",
       requiredScopes: [feishuBaseProviderPermissions.fieldCreate],
       providerPermissions: [feishuBaseProviderPermissions.fieldCreate],
@@ -540,6 +553,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "update_base_field",
+      operationType: "destructive",
       description:
         "Replace one field definition in a Feishu Base table. Read the field first and include all writable configuration to preserve; this is a full PUT replacement, not a partial update.",
       requiredScopes: [feishuBaseProviderPermissions.fieldUpdate],
@@ -560,6 +574,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "delete_base_field",
+      operationType: "destructive",
       description: "Delete one field from a Feishu Base table.",
       requiredScopes: [feishuBaseProviderPermissions.fieldDelete],
       providerPermissions: [feishuBaseProviderPermissions.fieldDelete],
@@ -577,6 +592,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "list_base_views",
+      operationType: "read",
       description: "List the views in a Feishu Base table.",
       requiredScopes: [feishuBaseProviderPermissions.viewRead],
       providerPermissions: [feishuBaseProviderPermissions.viewRead],
@@ -591,6 +607,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "get_base_view",
+      operationType: "read",
       description: "Get one view from a Feishu Base table.",
       requiredScopes: [feishuBaseProviderPermissions.viewRead],
       providerPermissions: [feishuBaseProviderPermissions.viewRead],
@@ -599,6 +616,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "create_base_views",
+      operationType: "write",
       description: "Create one or more views sequentially in a Feishu Base table.",
       requiredScopes: [feishuBaseProviderPermissions.viewWrite],
       providerPermissions: [feishuBaseProviderPermissions.viewWrite],
@@ -628,6 +646,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "delete_base_view",
+      operationType: "destructive",
       description: "Delete one view from a Feishu Base table by ID or accepted view name.",
       requiredScopes: [feishuBaseProviderPermissions.viewWrite],
       providerPermissions: [feishuBaseProviderPermissions.viewWrite],
@@ -645,6 +664,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "list_base_records",
+      operationType: "read",
       description: "List records in a Feishu Base table with optional projection, filter, and sort.",
       requiredScopes: [feishuBaseProviderPermissions.recordRead],
       providerPermissions: [feishuBaseProviderPermissions.recordRead],
@@ -670,6 +690,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "search_base_records",
+      operationType: "read",
       description: "Search records by keyword within selected fields of a Feishu Base table.",
       requiredScopes: [feishuBaseProviderPermissions.recordRead],
       providerPermissions: [feishuBaseProviderPermissions.recordRead],
@@ -701,6 +722,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "get_base_record",
+      operationType: "read",
       description: "Get one record from a Feishu Base table.",
       requiredScopes: [feishuBaseProviderPermissions.recordRead],
       providerPermissions: [feishuBaseProviderPermissions.recordRead],
@@ -723,6 +745,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "create_base_record",
+      operationType: "write",
       description: "Create one record in a Feishu Base table.",
       requiredScopes: [feishuBaseProviderPermissions.recordCreate],
       providerPermissions: [feishuBaseProviderPermissions.recordCreate],
@@ -742,6 +765,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "update_base_record",
+      operationType: "write",
       description: "Update one record in a Feishu Base table.",
       requiredScopes: [feishuBaseProviderPermissions.recordUpdate],
       providerPermissions: [feishuBaseProviderPermissions.recordUpdate],
@@ -762,6 +786,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "upsert_base_record",
+      operationType: "write",
       description: "Create a Base record when recordId is omitted, or update that record when recordId is provided.",
       requiredScopes: [feishuBaseProviderPermissions.recordCreate, feishuBaseProviderPermissions.recordUpdate],
       providerPermissions: [feishuBaseProviderPermissions.recordCreate, feishuBaseProviderPermissions.recordUpdate],
@@ -791,6 +816,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "delete_base_record",
+      operationType: "destructive",
       description: "Delete one record from a Feishu Base table.",
       requiredScopes: [feishuBaseProviderPermissions.recordDelete],
       providerPermissions: [feishuBaseProviderPermissions.recordDelete],
@@ -808,6 +834,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "batch_create_base_records",
+      operationType: "write",
       description: "Create up to 200 records in one Feishu Base request.",
       requiredScopes: [feishuBaseProviderPermissions.recordCreate],
       providerPermissions: [feishuBaseProviderPermissions.recordCreate],
@@ -838,6 +865,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "batch_update_base_records",
+      operationType: "write",
       description: "Update up to 200 records with record-specific fields in one Feishu Base request.",
       requiredScopes: [feishuBaseProviderPermissions.recordUpdate],
       providerPermissions: [feishuBaseProviderPermissions.recordUpdate],
@@ -869,6 +897,7 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "batch_delete_base_records",
+      operationType: "destructive",
       description: "Delete up to 200 records in one Feishu Base request.",
       requiredScopes: [feishuBaseProviderPermissions.recordDelete],
       providerPermissions: [feishuBaseProviderPermissions.recordDelete],

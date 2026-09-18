@@ -430,6 +430,7 @@ const textAnimationLifecycle = {
 export const pixellabActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "start_text_animation",
+    operationType: "write",
     description:
       "Start an asynchronous PixelLab animation from a first frame and a text description of the character motion.",
     followUpActions: ["pixellab.get_background_job"],
@@ -473,6 +474,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_background_job",
+    operationType: "read",
     description:
       "Poll a PixelLab background animation job and store completed image frames in the local transit file service.",
     asyncLifecycle: textAnimationLifecycle,
@@ -498,6 +500,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "estimate_skeleton",
+    operationType: "read",
     description: "Estimate PixelLab skeleton keypoints from a PNG or JPEG character image.",
     followUpActions: ["pixellab.animate_with_skeleton"],
     inputSchema: s.actionInput(
@@ -516,6 +519,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "animate_with_skeleton",
+    operationType: "write",
     description:
       "Generate synchronous PixelLab animation frames from a reference character image and per-frame skeleton keypoints.",
     inputSchema: s.actionInput(
@@ -559,6 +563,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_balance",
+    operationType: "read",
     description: "Retrieve the current PixelLab USD credit and subscription generation balances.",
     inputSchema: s.actionInput({}, [], "No input parameters are required."),
     outputSchema: s.actionOutput(
@@ -575,6 +580,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_generate_image",
+    operationType: "write",
     description: "Start Pro text-to-pixel-art generation with optional subject and style reference images.",
     followUpActions: ["pixellab.get_background_job"],
     asyncLifecycle: {
@@ -601,6 +607,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_generate_with_style",
+    operationType: "write",
     description: "Start Pro pixel-art generation that matches one to four supplied style images.",
     followUpActions: ["pixellab.get_background_job"],
     asyncLifecycle: {
@@ -626,6 +633,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_generate_ui",
+    operationType: "write",
     description: "Start Pro generation of a pixel-art game UI element.",
     followUpActions: ["pixellab.get_background_job"],
     asyncLifecycle: {
@@ -648,6 +656,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_pixflux_image",
+    operationType: "write",
     description: "Generate one pixel-art image synchronously with the PixelLab Pixflux model.",
     inputSchema: s.actionInput(
       {
@@ -682,6 +691,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_pixen_image",
+    operationType: "write",
     description: "Generate one pixel-art image synchronously with the PixelLab Pixen model.",
     inputSchema: s.actionInput(
       {
@@ -712,6 +722,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "convert_to_pixel_art",
+    operationType: "read",
     description: "Convert a PNG or JPEG image to pixel art synchronously.",
     inputSchema: s.actionInput(
       {
@@ -732,6 +743,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_convert_to_pixel_art_pro",
+    operationType: "write",
     description: "Start Pro conversion of a PNG or JPEG image to automatically scaled pixel art.",
     followUpActions: ["pixellab.get_background_job"],
     asyncLifecycle: {
@@ -751,6 +763,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "resize_image",
+    operationType: "write",
     description: "Resize pixel art synchronously while preserving its pixel-art appearance.",
     inputSchema: s.actionInput(
       {
@@ -782,6 +795,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_background",
+    operationType: "destructive",
     description: "Remove a pixel-art image background synchronously and return a transparent PNG.",
     inputSchema: s.actionInput(
       {
@@ -798,6 +812,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_edit_images",
+    operationType: "write",
     description: "Start a consistent Pro edit across one or more pixel-art images.",
     followUpActions: ["pixellab.get_background_job"],
     asyncLifecycle: {
@@ -830,6 +845,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_inpaint",
+    operationType: "write",
     description: "Start Pro mask-guided inpainting of a pixel-art image.",
     followUpActions: ["pixellab.get_background_job"],
     asyncLifecycle: {
@@ -859,6 +875,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_generate_rotations",
+    operationType: "write",
     description: "Start generation of eight directional rotations from one reference character frame.",
     followUpActions: ["pixellab.get_background_job"],
     asyncLifecycle: {
@@ -878,6 +895,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "enhance_pixen_prompt",
+    operationType: "write",
     description: "Expand a short description into a model-ready PixelLab Pixen image prompt.",
     followUpActions: ["pixellab.create_pixen_image"],
     inputSchema: s.actionInput(
@@ -897,6 +915,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "enhance_character_prompt",
+    operationType: "write",
     description: "Expand a short description into a model-ready PixelLab v3 character prompt.",
     inputSchema: s.actionInput(
       {
@@ -916,6 +935,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "enhance_animation_prompt",
+    operationType: "write",
     description: "Expand a motion description using the visible content of one or two animation frames.",
     followUpActions: ["pixellab.start_text_animation"],
     inputSchema: s.actionInput(
@@ -931,6 +951,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_pixflux_background",
+    operationType: "write",
     description: "Start asynchronous Pixflux pixel-art image generation.",
     followUpActions: ["pixellab.get_background_job"],
     asyncLifecycle: {
@@ -970,6 +991,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_edit_animation",
+    operationType: "write",
     description: "Start a consistent Pro text-guided edit across animation frames.",
     followUpActions: ["pixellab.get_background_job"],
     asyncLifecycle: {
@@ -994,6 +1016,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_interpolation",
+    operationType: "write",
     description: "Start Pro interpolation between two pixel-art keyframes.",
     followUpActions: ["pixellab.get_background_job"],
     asyncLifecycle: {
@@ -1016,6 +1039,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_transfer_outfit",
+    operationType: "write",
     description: "Start Pro transfer of an outfit or appearance across animation frames.",
     followUpActions: ["pixellab.get_background_job"],
     asyncLifecycle: {
@@ -1041,6 +1065,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_portrait_character_conversion",
+    operationType: "write",
     description: "Start Pro conversion between a bust portrait and a full-body character sprite.",
     followUpActions: ["pixellab.get_background_job"],
     asyncLifecycle: {
@@ -1068,6 +1093,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "animate_with_text_legacy",
+    operationType: "write",
     description: "Generate four animation frames synchronously with PixelLab's original text animation model.",
     inputSchema: s.actionInput(
       {
@@ -1115,6 +1141,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_text_animation_pro",
+    operationType: "write",
     description: "Start Pro text-guided animation from a reference character image.",
     followUpActions: ["pixellab.get_background_job"],
     asyncLifecycle: {
@@ -1145,6 +1172,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_generate_rotations_pro",
+    operationType: "write",
     description: "Start Pro generation of eight directional rotations using a reference, style, or concept image.",
     followUpActions: ["pixellab.get_background_job"],
     asyncLifecycle: {
@@ -1176,6 +1204,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "rotate_image",
+    operationType: "write",
     description: "Rotate or tilt a pixel-art character or object synchronously.",
     inputSchema: s.actionInput(
       {
@@ -1211,6 +1240,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "inpaint_image_legacy",
+    operationType: "write",
     description: "Inpaint a masked area synchronously with PixelLab's original image model.",
     inputSchema: s.actionInput(
       {
@@ -1247,6 +1277,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_edit_image_legacy",
+    operationType: "write",
     description: "Start PixelLab's original text-guided image editing operation.",
     followUpActions: ["pixellab.get_background_job"],
     asyncLifecycle: {
@@ -1276,6 +1307,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_create_ui_asset",
+    operationType: "write",
     description: "Start creation of a saved PixelLab Pro UI panel asset.",
     followUpActions: ["pixellab.get_background_job", "pixellab.get_ui_asset"],
     asyncLifecycle: {
@@ -1334,6 +1366,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_ui_assets",
+    operationType: "read",
     description: "List saved PixelLab UI assets with offset pagination.",
     followUpActions: ["pixellab.get_ui_asset"],
     inputSchema: s.actionInput(
@@ -1356,6 +1389,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ui_asset",
+    operationType: "read",
     description: "Retrieve one saved PixelLab UI asset and its generation status.",
     inputSchema: s.actionInput(
       { uiAssetId: s.uuid("The PixelLab UI asset identifier.") },
@@ -1366,6 +1400,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_ui_asset",
+    operationType: "destructive",
     description: "Delete one saved PixelLab UI asset.",
     inputSchema: s.actionInput(
       { uiAssetId: s.uuid("The PixelLab UI asset identifier to delete.") },
@@ -1383,6 +1418,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_create_character_4_directions",
+    operationType: "write",
     description: "Start creation of a persisted PixelLab character with four directional rotations.",
     followUpActions: ["pixellab.get_background_job", "pixellab.get_character"],
     asyncLifecycle: {
@@ -1402,6 +1438,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_create_character_8_directions",
+    operationType: "write",
     description: "Start creation of a persisted PixelLab character with eight directional rotations.",
     followUpActions: ["pixellab.get_background_job", "pixellab.get_character"],
     asyncLifecycle: {
@@ -1425,6 +1462,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_create_character_pro",
+    operationType: "write",
     description: "Start Pro creation of a persisted eight-direction PixelLab character.",
     followUpActions: ["pixellab.get_background_job", "pixellab.get_character"],
     asyncLifecycle: {
@@ -1457,6 +1495,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_create_character_v3",
+    operationType: "write",
     description: "Start v3 creation or rotation of a persisted eight-direction PixelLab character.",
     followUpActions: ["pixellab.get_background_job", "pixellab.get_character"],
     asyncLifecycle: {
@@ -1487,6 +1526,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_create_character_animation",
+    operationType: "write",
     description: "Start one or more background jobs that add an animation to a persisted character.",
     followUpActions: ["pixellab.get_background_job", "pixellab.get_character"],
     inputSchema: s.actionInput(
@@ -1526,6 +1566,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_create_character_state",
+    operationType: "write",
     description: "Start creation of an edited state for an existing persisted character.",
     followUpActions: ["pixellab.get_background_job", "pixellab.get_character"],
     asyncLifecycle: {
@@ -1550,6 +1591,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_characters",
+    operationType: "read",
     description: "List persisted PixelLab characters with offset pagination.",
     followUpActions: ["pixellab.get_character"],
     inputSchema: s.actionInput(
@@ -1572,6 +1614,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_character",
+    operationType: "read",
     description: "Retrieve one persisted PixelLab character with rotations and animations.",
     inputSchema: s.actionInput(
       { characterId: s.nonEmptyString("The PixelLab character identifier.") },
@@ -1582,6 +1625,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_character",
+    operationType: "destructive",
     description: "Delete a persisted PixelLab character and its associated animations.",
     inputSchema: s.actionInput(
       { characterId: s.nonEmptyString("The PixelLab character identifier to delete.") },
@@ -1603,6 +1647,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "download_character_zip",
+    operationType: "read",
     description: "Export one persisted PixelLab character as a ZIP transit file.",
     inputSchema: s.actionInput(
       { characterId: s.nonEmptyString("The PixelLab character identifier to export.") },
@@ -1613,6 +1658,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_character_tags",
+    operationType: "write",
     description: "Replace the user-defined tags on a persisted PixelLab character.",
     inputSchema: s.actionInput(
       {
@@ -1630,6 +1676,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_create_object_1_direction",
+    operationType: "write",
     description: "Start creation of a persisted one-direction PixelLab object.",
     followUpActions: ["pixellab.get_background_job", "pixellab.get_object", "pixellab.select_object_frames"],
     asyncLifecycle: {
@@ -1673,6 +1720,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_create_object_8_directions",
+    operationType: "write",
     description: "Start creation of a persisted PixelLab object with eight directional rotations.",
     followUpActions: ["pixellab.get_background_job", "pixellab.get_object"],
     asyncLifecycle: {
@@ -1700,6 +1748,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_animate_object",
+    operationType: "write",
     description: "Submit one or more directional animation jobs for an existing PixelLab object.",
     followUpActions: ["pixellab.get_background_job", "pixellab.get_object"],
     inputSchema: s.actionInput(
@@ -1754,6 +1803,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_create_object_state",
+    operationType: "write",
     description: "Start creation of an edited state for an existing PixelLab object.",
     followUpActions: ["pixellab.get_background_job", "pixellab.get_object"],
     asyncLifecycle: {
@@ -1773,6 +1823,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "select_object_frames",
+    operationType: "write",
     description: "Keep selected candidate frames from a one-direction object review as individual objects.",
     followUpActions: ["pixellab.get_object"],
     inputSchema: s.actionInput(
@@ -1797,6 +1848,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "dismiss_object_review",
+    operationType: "destructive",
     description: "Discard all candidate frames for a one-direction object awaiting review.",
     inputSchema: s.actionInput(
       { objectId: s.nonEmptyString("Review-status PixelLab object identifier.") },
@@ -1811,6 +1863,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_objects",
+    operationType: "read",
     description: "List persisted PixelLab objects with offset pagination.",
     followUpActions: ["pixellab.get_object"],
     inputSchema: s.actionInput(
@@ -1833,6 +1886,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_object",
+    operationType: "read",
     description: "Retrieve one persisted PixelLab object with rotations, review frames, and animations.",
     inputSchema: s.actionInput(
       { objectId: s.nonEmptyString("The PixelLab object identifier.") },
@@ -1843,6 +1897,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_object",
+    operationType: "destructive",
     description: "Delete one persisted PixelLab object.",
     inputSchema: s.actionInput(
       { objectId: s.nonEmptyString("The PixelLab object identifier to delete.") },
@@ -1862,6 +1917,7 @@ export const pixellabActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_object_tags",
+    operationType: "destructive",
     description: "Replace the user-defined tags on a persisted PixelLab object.",
     inputSchema: s.actionInput(
       {

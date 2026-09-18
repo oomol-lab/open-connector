@@ -171,6 +171,7 @@ const jobSchema = s.object(
 export const truveraActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_profile",
+    operationType: "read",
     description: "Get the authenticated Truvera account profile for the configured API key.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving the authenticated Truvera profile.", {}),
@@ -180,6 +181,7 @@ export const truveraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_dids",
+    operationType: "read",
     description: "List the DIDs controlled by the authenticated Truvera account.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -200,6 +202,7 @@ export const truveraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_did",
+    operationType: "read",
     description: "Get one DID document from Truvera by DID value.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for retrieving one DID document.", {
@@ -211,6 +214,7 @@ export const truveraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_did",
+    operationType: "write",
     description: "Create a new Truvera DID and return the background job handle for polling blockchain completion.",
     requiredScopes: [],
     asyncLifecycle: { startActionId: "truvera.create_did", statusActionId: "truvera.get_job" },
@@ -234,6 +238,7 @@ export const truveraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_did",
+    operationType: "destructive",
     description: "Delete a Truvera DID and return the background job handle for polling blockchain completion.",
     requiredScopes: [],
     asyncLifecycle: { startActionId: "truvera.delete_did", statusActionId: "truvera.get_job" },
@@ -251,6 +256,7 @@ export const truveraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_credential_schemas",
+    operationType: "read",
     description: "List credential schemas created by the authenticated Truvera account.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -271,6 +277,7 @@ export const truveraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_credential_schema",
+    operationType: "read",
     description: "Get one Truvera credential schema by schema identifier.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for retrieving one Truvera credential schema.", {
@@ -282,6 +289,7 @@ export const truveraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_credential_schema",
+    operationType: "write",
     description:
       "Create a credential schema in Truvera and return the background job handle for polling blockchain completion.",
     requiredScopes: [],
@@ -293,6 +301,7 @@ export const truveraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_credential_schema",
+    operationType: "destructive",
     description: "Delete a Truvera credential schema and return the background job handle for polling completion.",
     requiredScopes: [],
     asyncLifecycle: { startActionId: "truvera.delete_credential_schema", statusActionId: "truvera.get_job" },
@@ -303,6 +312,7 @@ export const truveraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job",
+    operationType: "read",
     description: "Get the latest status and result payload for a Truvera background job.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for retrieving one Truvera background job.", {

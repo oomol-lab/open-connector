@@ -127,12 +127,14 @@ const directObjectOutputSchema = (description: string) => s.looseObject(descript
 
 const defineModjoAction = <const TName extends string>(input: {
   name: TName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
 }) =>
   defineProviderAction(service, {
     name: input.name,
+    operationType: input.operationType,
     description: input.description,
     inputSchema: input.inputSchema,
     outputSchema: input.outputSchema,
@@ -141,30 +143,35 @@ const defineModjoAction = <const TName extends string>(input: {
 export const modjoAiActions: readonly ActionDefinition[] = [
   defineModjoAction({
     name: "list_users",
+    operationType: "read",
     description: "List Modjo users with optional pagination and exact email filtering.",
     inputSchema: emailListInputSchema,
     outputSchema: listOutputSchema("The paginated Modjo users response.", "A Modjo user."),
   }),
   defineModjoAction({
     name: "get_user",
+    operationType: "read",
     description: "Get one Modjo user by ID.",
     inputSchema: numericIdInputSchema,
     outputSchema: directObjectOutputSchema("A Modjo user."),
   }),
   defineModjoAction({
     name: "list_teams",
+    operationType: "read",
     description: "List Modjo teams with optional pagination and name filtering.",
     inputSchema: namedListInputSchema,
     outputSchema: listOutputSchema("The paginated Modjo teams response.", "A Modjo team."),
   }),
   defineModjoAction({
     name: "get_team",
+    operationType: "read",
     description: "Get one Modjo team by ID.",
     inputSchema: numericIdInputSchema,
     outputSchema: directObjectOutputSchema("A Modjo team."),
   }),
   defineModjoAction({
     name: "list_team_members",
+    operationType: "read",
     description: "List Modjo users that belong to a team.",
     inputSchema: s.object(
       "Identifier and pagination parameters for listing Modjo team members.",
@@ -179,90 +186,105 @@ export const modjoAiActions: readonly ActionDefinition[] = [
   }),
   defineModjoAction({
     name: "list_accounts",
+    operationType: "read",
     description: "List Modjo accounts with optional pagination and name filtering.",
     inputSchema: namedListInputSchema,
     outputSchema: listOutputSchema("The paginated Modjo accounts response.", "A Modjo account."),
   }),
   defineModjoAction({
     name: "get_account",
+    operationType: "read",
     description: "Get one Modjo account by ID.",
     inputSchema: numericIdInputSchema,
     outputSchema: directObjectOutputSchema("A Modjo account."),
   }),
   defineModjoAction({
     name: "list_contacts",
+    operationType: "read",
     description: "List Modjo contacts with optional pagination and name filtering.",
     inputSchema: namedListInputSchema,
     outputSchema: listOutputSchema("The paginated Modjo contacts response.", "A Modjo contact."),
   }),
   defineModjoAction({
     name: "get_contact",
+    operationType: "read",
     description: "Get one Modjo contact by ID.",
     inputSchema: numericIdInputSchema,
     outputSchema: directObjectOutputSchema("A Modjo contact."),
   }),
   defineModjoAction({
     name: "list_deals",
+    operationType: "read",
     description: "List Modjo deals with optional pagination and CRM filters.",
     inputSchema: dealListInputSchema,
     outputSchema: listOutputSchema("The paginated Modjo deals response.", "A Modjo deal."),
   }),
   defineModjoAction({
     name: "get_deal_summary",
+    operationType: "read",
     description: "Get the AI-generated summary for a Modjo deal.",
     inputSchema: numericIdInputSchema,
     outputSchema: directObjectOutputSchema("The AI-generated Modjo deal summary."),
   }),
   defineModjoAction({
     name: "list_calls",
+    operationType: "read",
     description: "List Modjo calls with optional pagination, relation expansion, and filters.",
     inputSchema: callListInputSchema,
     outputSchema: listOutputSchema("The paginated Modjo calls response.", "A Modjo call."),
   }),
   defineModjoAction({
     name: "get_call",
+    operationType: "read",
     description: "Get one Modjo call by integer ID or UUID with optional relation expansion.",
     inputSchema: callGetInputSchema,
     outputSchema: directObjectOutputSchema("A Modjo call."),
   }),
   defineModjoAction({
     name: "get_call_transcript",
+    operationType: "read",
     description: "Get the transcript for a Modjo call by integer ID or UUID.",
     inputSchema: callIdInputSchema,
     outputSchema: directObjectOutputSchema("The Modjo call transcript response."),
   }),
   defineModjoAction({
     name: "list_call_notes",
+    operationType: "read",
     description: "List published notes for a Modjo call.",
     inputSchema: callIdInputSchema,
     outputSchema: dataArrayOutputSchema("The Modjo call notes response.", "A Modjo call note."),
   }),
   defineModjoAction({
     name: "list_call_summaries",
+    operationType: "read",
     description: "List AI-generated summaries for a Modjo call.",
     inputSchema: callIdInputSchema,
     outputSchema: dataArrayOutputSchema("The Modjo call summaries response.", "A Modjo call summary."),
   }),
   defineModjoAction({
     name: "get_call_next_steps",
+    operationType: "read",
     description: "Get AI-extracted next steps for a Modjo call.",
     inputSchema: callIdInputSchema,
     outputSchema: dataArrayOutputSchema("The Modjo call next steps response.", "A Modjo next step."),
   }),
   defineModjoAction({
     name: "list_call_tags",
+    operationType: "read",
     description: "List tags associated with a Modjo call.",
     inputSchema: callIdInputSchema,
     outputSchema: dataArrayOutputSchema("The Modjo call tags response.", "A Modjo call tag."),
   }),
   defineModjoAction({
     name: "list_tags",
+    operationType: "read",
     description: "List Modjo tags with optional pagination.",
     inputSchema: paginationInputSchema,
     outputSchema: listOutputSchema("The paginated Modjo tags response.", "A Modjo tag."),
   }),
   defineModjoAction({
     name: "list_topics",
+    operationType: "read",
     description: "List Modjo topics with optional pagination.",
     inputSchema: paginationInputSchema,
     outputSchema: listOutputSchema("The paginated Modjo topics response.", "A Modjo topic."),

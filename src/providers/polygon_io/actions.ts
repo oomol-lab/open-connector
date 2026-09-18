@@ -157,6 +157,7 @@ const tickerTypeSchema = s.object("A normalized ticker type returned by Polygon.
 export const polygonIoActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tickers",
+    operationType: "read",
     description: "List ticker symbols supported by Polygon.io with optional filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -210,6 +211,7 @@ export const polygonIoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ticker_details",
+    operationType: "read",
     description: "Get comprehensive details for a single Polygon.io ticker.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -227,6 +229,7 @@ export const polygonIoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_previous_day_bar",
+    operationType: "read",
     description: "Get the previous trading day's OHLC aggregate bar for a stock ticker.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -241,6 +244,7 @@ export const polygonIoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_aggregate_bars",
+    operationType: "read",
     description: "Get historical OHLC aggregate bars for a stock ticker over a custom range.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -261,6 +265,7 @@ export const polygonIoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_exchanges",
+    operationType: "read",
     description: "List known exchanges available through Polygon.io.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -278,6 +283,7 @@ export const polygonIoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_ticker_types",
+    operationType: "read",
     description: "List ticker type codes supported by Polygon.io.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -295,6 +301,7 @@ export const polygonIoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_market_status",
+    operationType: "read",
     description: "Get the current Polygon.io market status for stocks, currencies, and indices.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving Polygon.io market status.", {}),

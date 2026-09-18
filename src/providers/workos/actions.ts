@@ -104,6 +104,7 @@ const organizationMutationFields = {
 export const workosActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List WorkOS AuthKit users with optional cursor and identity filters.",
     inputSchema: s.object(
       "Input parameters for listing WorkOS users.",
@@ -125,6 +126,7 @@ export const workosActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get a WorkOS AuthKit user by ID.",
     inputSchema: s.actionInput(
       { id: s.nonEmptyString("The unique ID of the user.") },
@@ -135,6 +137,7 @@ export const workosActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_user",
+    operationType: "write",
     description: "Create a WorkOS AuthKit user in the current environment.",
     inputSchema: s.object(
       "Input parameters for creating a WorkOS user.",
@@ -154,6 +157,7 @@ export const workosActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_user",
+    operationType: "write",
     description: "Update properties of an existing WorkOS AuthKit user.",
     inputSchema: s.object(
       "Input parameters for updating a WorkOS user.",
@@ -173,6 +177,7 @@ export const workosActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_organizations",
+    operationType: "read",
     description: "List WorkOS organizations with optional cursor, domain, and text filters.",
     inputSchema: s.object(
       "Input parameters for listing WorkOS organizations.",
@@ -194,6 +199,7 @@ export const workosActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_organization",
+    operationType: "read",
     description: "Get a WorkOS organization by ID.",
     inputSchema: s.actionInput(
       { id: s.nonEmptyString("Unique identifier of the organization.") },
@@ -204,6 +210,7 @@ export const workosActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_organization",
+    operationType: "write",
     description: "Create a WorkOS organization in the current environment.",
     inputSchema: s.object("Input parameters for creating a WorkOS organization.", organizationMutationFields, {
       optional: ["allow_profiles_outside_organization", "domain_data", "metadata", "external_id"],
@@ -212,6 +219,7 @@ export const workosActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_organization",
+    operationType: "write",
     description: "Update properties of an existing WorkOS organization.",
     inputSchema: s.object(
       "Input parameters for updating a WorkOS organization.",
@@ -225,6 +233,7 @@ export const workosActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_organization_memberships",
+    operationType: "read",
     description: "List WorkOS organization memberships filtered by user, organization, or membership status.",
     inputSchema: s.object(
       "Input parameters for listing WorkOS organization memberships.",
@@ -247,6 +256,7 @@ export const workosActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_organization_membership",
+    operationType: "read",
     description: "Get a WorkOS organization membership by ID.",
     inputSchema: s.actionInput(
       { id: s.nonEmptyString("The unique ID of the organization membership.") },
@@ -257,6 +267,7 @@ export const workosActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_organization_membership",
+    operationType: "write",
     description: "Create an active WorkOS organization membership for a user and organization.",
     inputSchema: s.object(
       "Input parameters for creating a WorkOS organization membership.",
@@ -272,6 +283,7 @@ export const workosActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_organization_membership",
+    operationType: "write",
     description: "Update roles on an existing WorkOS organization membership.",
     inputSchema: s.object(
       "Input parameters for updating a WorkOS organization membership.",
@@ -286,6 +298,7 @@ export const workosActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "deactivate_organization_membership",
+    operationType: "destructive",
     description: "Deactivate an active WorkOS organization membership.",
     inputSchema: s.actionInput(
       { id: s.nonEmptyString("The unique ID of the organization membership.") },
@@ -296,6 +309,7 @@ export const workosActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reactivate_organization_membership",
+    operationType: "write",
     description: "Reactivate an inactive WorkOS organization membership.",
     inputSchema: s.actionInput(
       { id: s.nonEmptyString("The unique ID of the organization membership.") },

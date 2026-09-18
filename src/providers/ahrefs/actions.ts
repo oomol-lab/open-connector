@@ -38,6 +38,7 @@ const targetMetricsInputProperties = {
 export const ahrefsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_limits_and_usage",
+    operationType: "read",
     description: "Retrieve Ahrefs API subscription limits and current usage.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for retrieving Ahrefs limits and usage.", {}),
@@ -45,6 +46,7 @@ export const ahrefsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_site_explorer_metrics",
+    operationType: "read",
     description: "Retrieve Site Explorer metrics for a domain or URL.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -58,6 +60,7 @@ export const ahrefsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_site_explorer_metrics_by_country",
+    operationType: "read",
     description: "Retrieve Site Explorer metrics grouped by country for a domain or URL.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -78,6 +81,7 @@ export const ahrefsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_keywords_overview",
+    operationType: "read",
     description: "Retrieve Keywords Explorer overview rows for keywords, a target, or a keyword list.",
     requiredScopes: [],
     inputSchema: s.object(

@@ -274,6 +274,7 @@ const lifecycle = {
 export const klingActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "submit_video_generation",
+    operationType: "write",
     description: "Submit an asynchronous Kling AI V3 video generation task.",
     followUpActions: [lifecycle.statusActionId],
     asyncLifecycle: lifecycle,
@@ -282,6 +283,7 @@ export const klingActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_video_generation",
+    operationType: "read",
     description: "Retrieve a Kling AI task state and its generated video when available.",
     asyncLifecycle: lifecycle,
     inputSchema: s.actionInput({ taskId: taskIdSchema }, ["taskId"], "A Kling AI task lookup."),

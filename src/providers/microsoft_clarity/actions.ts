@@ -45,6 +45,7 @@ const insightSchema = s.object(
 export const microsoftClarityActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "export_live_insights",
+    operationType: "write",
     description:
       "Export Microsoft Clarity live insights for the last 1 to 3 days with up to three optional breakdown dimensions.",
     requiredScopes: [],

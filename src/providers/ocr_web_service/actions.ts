@@ -88,12 +88,14 @@ const processDocumentOutputSchema = s.object(
 export const ocrWebServiceActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_information",
+    operationType: "read",
     description: "Get OCR Web Service account limits, remaining pages, subscription plan, and expiration metadata.",
     inputSchema: s.object("Input parameters for getting OCR Web Service account information.", {}),
     outputSchema: accountInformationOutputSchema,
   }),
   defineProviderAction(service, {
     name: "process_document_from_url",
+    operationType: "read",
     description:
       "Download a public image or PDF URL through the connector SSRF guard, upload it to OCR Web Service, and return extracted text or output file metadata.",
     inputSchema: processDocumentInputSchema,

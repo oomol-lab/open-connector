@@ -57,6 +57,7 @@ const userSchema = s.object("The current Keyword.com user profile.", {
 export const keywordActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current Keyword.com user profile for the API token.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving the current Keyword.com user.", {}),
@@ -66,6 +67,7 @@ export const keywordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List active Keyword.com projects and groups visible to the API token.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Keyword.com projects.", {}),
@@ -75,6 +77,7 @@ export const keywordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get one Keyword.com project or group by name.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving one Keyword.com project.", {
@@ -86,6 +89,7 @@ export const keywordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_keywords",
+    operationType: "read",
     description: "List Keyword.com keywords and ranking data for a project or group.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -106,6 +110,7 @@ export const keywordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_keyword",
+    operationType: "read",
     description: "Get one Keyword.com keyword and its ranking data by project and keyword ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -123,6 +128,7 @@ export const keywordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_project_regions",
+    operationType: "read",
     description: "List Google regions tracked by a Keyword.com project or group.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Keyword.com project regions.", {

@@ -146,6 +146,7 @@ const claidEditLifecycle = {
 export const claidAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "edit_image",
+    operationType: "write",
     description:
       "Edit one publicly accessible image with Claid's synchronous image editing API and return the processed image metadata.",
     requiredScopes: ["image_editing"],
@@ -155,6 +156,7 @@ export const claidAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_edit_image",
+    operationType: "write",
     description:
       "Submit one publicly accessible image to Claid's async image editing API and return the task handle for later polling.",
     requiredScopes: ["image_editing"],
@@ -166,6 +168,7 @@ export const claidAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_edit_task",
+    operationType: "read",
     description:
       "Poll one Claid async image editing task by ID and return its current status plus the finished result when available.",
     requiredScopes: ["image_editing"],

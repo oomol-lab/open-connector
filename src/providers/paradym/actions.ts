@@ -125,6 +125,7 @@ const listInputBaseOptional = ["sort", "filterId", "pageSize", "pageAfter", "pag
 
 const createOpenid4vcCredentialOfferAction = defineProviderAction(service, {
   name: "create_openid4vc_credential_offer",
+  operationType: "write",
   description: "Create an OpenID4VC credential offer using one or more SD-JWT VC or mDoc credential templates.",
   requiredScopes: [],
   inputSchema: s.object("Request payload for creating an OpenID4VC credential offer.", {
@@ -143,6 +144,7 @@ const createOpenid4vcCredentialOfferAction = defineProviderAction(service, {
 
 const listProjectsAction = defineProviderAction(service, {
   name: "list_projects",
+  operationType: "read",
   description: "List Paradym projects accessible to the connected API key.",
   requiredScopes: [],
   inputSchema: s.object("Input parameters for listing Paradym projects.", {}),
@@ -154,6 +156,7 @@ const listProjectsAction = defineProviderAction(service, {
 
 const getOpenid4vcIssuanceSessionAction = defineProviderAction(service, {
   name: "get_openid4vc_issuance_session",
+  operationType: "read",
   description: "Retrieve one OpenID4VC issuance session by ID.",
   requiredScopes: [],
   inputSchema: s.object("Request parameters for retrieving an OpenID4VC issuance session.", {
@@ -168,6 +171,7 @@ const getOpenid4vcIssuanceSessionAction = defineProviderAction(service, {
 
 const listOpenid4vcIssuanceSessionsAction = defineProviderAction(service, {
   name: "list_openid4vc_issuance_sessions",
+  operationType: "read",
   description:
     "List OpenID4VC issuance sessions for a Paradym project with optional status, ID, cursor, and sort filters.",
   requiredScopes: [],
@@ -190,6 +194,7 @@ const listOpenid4vcIssuanceSessionsAction = defineProviderAction(service, {
 
 const createOpenid4vcVerificationRequestAction = defineProviderAction(service, {
   name: "create_openid4vc_verification_request",
+  operationType: "write",
   description: "Create an OpenID4VC verification request for a Paradym presentation template.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -209,6 +214,7 @@ const createOpenid4vcVerificationRequestAction = defineProviderAction(service, {
 
 const getOpenid4vcVerificationSessionAction = defineProviderAction(service, {
   name: "get_openid4vc_verification_session",
+  operationType: "read",
   description: "Retrieve one OpenID4VC verification session by ID.",
   requiredScopes: [],
   inputSchema: s.object("Request parameters for retrieving an OpenID4VC verification session.", {
@@ -223,6 +229,7 @@ const getOpenid4vcVerificationSessionAction = defineProviderAction(service, {
 
 const listOpenid4vcVerificationSessionsAction = defineProviderAction(service, {
   name: "list_openid4vc_verification_sessions",
+  operationType: "read",
   description:
     "List OpenID4VC verification sessions for a Paradym project with optional status, template, ID, cursor, and sort filters.",
   requiredScopes: [],
@@ -266,6 +273,7 @@ const templateListOutputSchema = s.object("Paradym template list response.", {
 
 const listSdJwtVcCredentialTemplatesAction = defineProviderAction(service, {
   name: "list_sd_jwt_vc_credential_templates",
+  operationType: "read",
   description: "List SD-JWT VC credential templates for a Paradym project with optional filters.",
   requiredScopes: [],
   inputSchema: credentialTemplateListInputSchema,
@@ -274,6 +282,7 @@ const listSdJwtVcCredentialTemplatesAction = defineProviderAction(service, {
 
 const listMdocCredentialTemplatesAction = defineProviderAction(service, {
   name: "list_mdoc_credential_templates",
+  operationType: "read",
   description: "List mDoc credential templates for a Paradym project with optional filters.",
   requiredScopes: [],
   inputSchema: credentialTemplateListInputSchema,
@@ -282,6 +291,7 @@ const listMdocCredentialTemplatesAction = defineProviderAction(service, {
 
 const listPresentationTemplatesAction = defineProviderAction(service, {
   name: "list_presentation_templates",
+  operationType: "read",
   description: "List Paradym presentation templates for a project with optional ID, name, cursor, and sort filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -297,6 +307,7 @@ const listPresentationTemplatesAction = defineProviderAction(service, {
 
 const listIssuedCredentialsAction = defineProviderAction(service, {
   name: "list_issued_credentials",
+  operationType: "read",
   description: "List issued credential metadata for a Paradym project.",
   requiredScopes: [],
   inputSchema: s.object(

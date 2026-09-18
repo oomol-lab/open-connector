@@ -28,6 +28,7 @@ const jsonObjectSchema: JsonSchema = s.looseObject("A JSON-serializable model in
 export const replicateActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve the authenticated Replicate account for the connected API token.",
     inputSchema: emptyInputSchema,
     outputSchema: s.looseRequiredObject("The authenticated Replicate account response.", {
@@ -36,6 +37,7 @@ export const replicateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_models",
+    operationType: "read",
     description: "List public Replicate models with optional official sorting parameters.",
     inputSchema: s.object(
       "Input for listing public Replicate models.",
@@ -55,12 +57,14 @@ export const replicateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_model",
+    operationType: "read",
     description: "Retrieve one Replicate model by owner and model slug.",
     inputSchema: modelInputSchema,
     outputSchema: s.looseRequiredObject("A Replicate model response.", { model: loosePayloadSchema }),
   }),
   defineProviderAction(service, {
     name: "list_model_versions",
+    operationType: "read",
     description: "List versions for one Replicate model.",
     inputSchema: modelInputSchema,
     outputSchema: s.looseRequiredObject("A paginated list of Replicate model versions.", {
@@ -70,12 +74,14 @@ export const replicateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_model_version",
+    operationType: "read",
     description: "Retrieve one Replicate model version by owner, model, and version ID.",
     inputSchema: modelVersionInputSchema,
     outputSchema: s.looseRequiredObject("A Replicate model version response.", { version: loosePayloadSchema }),
   }),
   defineProviderAction(service, {
     name: "list_collections",
+    operationType: "read",
     description: "List public Replicate model collections.",
     inputSchema: emptyInputSchema,
     outputSchema: s.looseRequiredObject("A paginated list of Replicate collections.", {
@@ -85,6 +91,7 @@ export const replicateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_collection",
+    operationType: "read",
     description: "Retrieve one Replicate collection by slug.",
     inputSchema: s.object("Input for selecting a Replicate collection.", {
       collectionSlug: s.nonEmptyString("The Replicate collection slug."),
@@ -93,6 +100,7 @@ export const replicateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_prediction",
+    operationType: "write",
     description: "Create a Replicate prediction using JSON model input and optional synchronous wait headers.",
     inputSchema: s.object(
       "Input for creating a Replicate prediction from a model or model version.",
@@ -118,12 +126,14 @@ export const replicateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_prediction",
+    operationType: "read",
     description: "Retrieve the current state and output of a Replicate prediction.",
     inputSchema: predictionInputSchema,
     outputSchema: s.looseRequiredObject("A Replicate prediction response.", { prediction: loosePayloadSchema }),
   }),
   defineProviderAction(service, {
     name: "list_predictions",
+    operationType: "read",
     description: "List Replicate predictions for the authenticated account.",
     inputSchema: s.object(
       "Input for filtering Replicate predictions.",
@@ -141,6 +151,7 @@ export const replicateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "cancel_prediction",
+    operationType: "destructive",
     description: "Cancel a running Replicate prediction by prediction ID.",
     inputSchema: predictionInputSchema,
     outputSchema: s.looseRequiredObject("A Replicate prediction response after cancellation.", {

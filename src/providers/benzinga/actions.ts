@@ -40,6 +40,7 @@ const calendarInputSchema = s.object(
 export const benzingaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_news_channels",
+    operationType: "read",
     description: "List Benzinga news channels that can be used to filter news feeds.",
     inputSchema: s.object({}, { description: "The input payload for listing Benzinga news channels." }),
     outputSchema: s.object(
@@ -52,6 +53,7 @@ export const benzingaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_earnings",
+    operationType: "read",
     description: "List Benzinga earnings calendar events with optional date and symbol filters.",
     inputSchema: {
       ...calendarInputSchema,
@@ -67,6 +69,7 @@ export const benzingaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_analyst_ratings",
+    operationType: "read",
     description: "List Benzinga analyst rating calendar events with optional date and symbol filters.",
     inputSchema: {
       ...calendarInputSchema,
@@ -82,6 +85,7 @@ export const benzingaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_consensus_ratings",
+    operationType: "read",
     description: "Get Benzinga consensus analyst ratings and price target data for a ticker.",
     inputSchema: s.object(
       "The input payload for getting Benzinga consensus ratings.",

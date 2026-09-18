@@ -59,6 +59,7 @@ function getOutput(key: string, description: string): JsonSchema {
 export const taigaActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Taiga projects visible to the connected user.",
     inputSchema: s.object(
       "Filters and pagination for Taiga projects.",
@@ -74,12 +75,14 @@ export const taigaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get a Taiga project by numeric ID.",
     inputSchema: s.object("A Taiga project identifier.", { projectId: idSchema }),
     outputSchema: getOutput("project", "The requested Taiga project."),
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create a Taiga project.",
     inputSchema: s.object("Fields for a new Taiga project.", projectFields, {
       optional: [
@@ -95,6 +98,7 @@ export const taigaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_project",
+    operationType: "destructive",
     description: "Update a Taiga project using optimistic concurrency control.",
     inputSchema: s.object(
       "A Taiga project update.",
@@ -116,6 +120,7 @@ export const taigaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_user_stories",
+    operationType: "read",
     description: "List Taiga user stories with optional project filters.",
     inputSchema: s.object(
       "Filters and pagination for Taiga user stories.",
@@ -135,12 +140,14 @@ export const taigaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_story",
+    operationType: "read",
     description: "Get a Taiga user story by numeric ID.",
     inputSchema: s.object("A Taiga user story identifier.", { userStoryId: idSchema }),
     outputSchema: getOutput("userStory", "The requested Taiga user story."),
   }),
   defineProviderAction(service, {
     name: "create_user_story",
+    operationType: "write",
     description: "Create a Taiga user story.",
     inputSchema: s.object(
       "Fields for a new Taiga user story.",
@@ -170,6 +177,7 @@ export const taigaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_user_story",
+    operationType: "destructive",
     description: "Update a Taiga user story using optimistic concurrency control.",
     inputSchema: s.object(
       "A Taiga user story update.",
@@ -226,6 +234,7 @@ function createWorkItemActions(
   return [
     defineProviderAction(service, {
       name: `list_${plural}`,
+      operationType: "read",
       description: `List Taiga ${plural} with optional project filters.`,
       inputSchema: s.object(`Filters and pagination for Taiga ${plural}.`, listFilters, {
         optional: ["page", "pageSize", "project", "status", "milestone", "assigned_to", "status__is_closed"],
@@ -234,12 +243,14 @@ function createWorkItemActions(
     }),
     defineProviderAction(service, {
       name: `get_${singular}`,
+      operationType: "read",
       description: `Get a Taiga ${singular} by numeric ID.`,
       inputSchema: s.object(`A Taiga ${singular} identifier.`, { [idKey]: idSchema }),
       outputSchema: getOutput(singular, `The requested Taiga ${singular}.`),
     }),
     defineProviderAction(service, {
       name: `create_${singular}`,
+      operationType: "write",
       description: `Create a Taiga ${singular}.`,
       inputSchema: s.object(
         `Fields for a new Taiga ${singular}.`,
@@ -263,6 +274,7 @@ function createWorkItemActions(
     }),
     defineProviderAction(service, {
       name: `update_${singular}`,
+      operationType: "destructive",
       description: `Update a Taiga ${singular} using optimistic concurrency control.`,
       inputSchema: s.object(
         `A Taiga ${singular} update.`,

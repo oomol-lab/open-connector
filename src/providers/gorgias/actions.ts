@@ -8,6 +8,7 @@ const service = "gorgias";
 export const gorgiasActions: ActionDefinition[] = gorgiasGeneratedActionSchemas.map((actionSchema) =>
   defineProviderAction(service, {
     name: actionSchema.name,
+    operationType: actionSchema.operationType,
     description: actionSchema.description,
     requiredScopes: actionSchema.requiredScopes,
     providerPermissions: actionSchema.providerPermissions,

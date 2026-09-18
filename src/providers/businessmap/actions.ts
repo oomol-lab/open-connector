@@ -262,6 +262,7 @@ const deleteCardInputSchema = s.object(
 export const businessmapActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_workspaces",
+    operationType: "read",
     description: "List Businessmap workspaces visible to the connected API key.",
     inputSchema: listWorkspacesInputSchema,
     outputSchema: s.actionOutput(
@@ -273,6 +274,7 @@ export const businessmapActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_boards",
+    operationType: "read",
     description: "List Businessmap boards visible to the connected API key.",
     inputSchema: listBoardsInputSchema,
     outputSchema: s.actionOutput(
@@ -284,24 +286,28 @@ export const businessmapActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_board",
+    operationType: "read",
     description: "Retrieve a Businessmap board by ID.",
     inputSchema: getBoardInputSchema,
     outputSchema: s.actionOutput({ board: rawObjectSchema }, "Businessmap board response."),
   }),
   defineProviderAction(service, {
     name: "create_board",
+    operationType: "write",
     description: "Create a Businessmap board in a workspace.",
     inputSchema: createBoardInputSchema,
     outputSchema: s.actionOutput({ board: rawObjectSchema }, "Businessmap board response."),
   }),
   defineProviderAction(service, {
     name: "update_board",
+    operationType: "destructive",
     description: "Update a Businessmap board name, description, or archive state.",
     inputSchema: updateBoardInputSchema,
     outputSchema: s.actionOutput({ board: rawObjectSchema }, "Businessmap board response."),
   }),
   defineProviderAction(service, {
     name: "list_cards",
+    operationType: "read",
     description: "List Businessmap cards with common board, workflow, state, and date filters.",
     inputSchema: listCardsInputSchema,
     outputSchema: s.object(
@@ -315,24 +321,28 @@ export const businessmapActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_card",
+    operationType: "read",
     description: "Retrieve a Businessmap card by ID.",
     inputSchema: getCardInputSchema,
     outputSchema: s.actionOutput({ card: rawObjectSchema }, "Businessmap card response."),
   }),
   defineProviderAction(service, {
     name: "create_card",
+    operationType: "write",
     description: "Create a Businessmap card using JSON card fields.",
     inputSchema: createCardInputSchema,
     outputSchema: s.actionOutput({ card: rawObjectSchema }, "Businessmap card response."),
   }),
   defineProviderAction(service, {
     name: "update_card",
+    operationType: "write",
     description: "Update a Businessmap card using JSON card fields.",
     inputSchema: updateCardInputSchema,
     outputSchema: s.actionOutput({ card: rawObjectSchema }, "Businessmap card response."),
   }),
   defineProviderAction(service, {
     name: "delete_card",
+    operationType: "destructive",
     description: "Permanently delete a Businessmap card.",
     inputSchema: deleteCardInputSchema,
     outputSchema: s.actionOutput(

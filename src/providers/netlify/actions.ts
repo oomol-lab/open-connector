@@ -7,6 +7,7 @@ const service = "netlify";
 
 interface NetlifyActionSource {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -404,6 +405,7 @@ const submissionsOutputSchema = s.object(
 const actionSources: readonly NetlifyActionSource[] = [
   {
     name: "get_current_user",
+    operationType: "read",
     description: "Retrieve the Netlify user associated with the connected credential.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -411,6 +413,7 @@ const actionSources: readonly NetlifyActionSource[] = [
   },
   {
     name: "list_accounts",
+    operationType: "read",
     description: "List Netlify accounts accessible to the connected credential.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -418,6 +421,7 @@ const actionSources: readonly NetlifyActionSource[] = [
   },
   {
     name: "get_account",
+    operationType: "read",
     description:
       "Retrieve one Netlify account membership, including billing and capability fields returned by Netlify.",
     requiredScopes: [],
@@ -426,6 +430,7 @@ const actionSources: readonly NetlifyActionSource[] = [
   },
   {
     name: "list_sites",
+    operationType: "read",
     description: "List Netlify sites accessible to the connected credential.",
     requiredScopes: [],
     inputSchema: listSitesInputSchema,
@@ -433,6 +438,7 @@ const actionSources: readonly NetlifyActionSource[] = [
   },
   {
     name: "create_site",
+    operationType: "write",
     description:
       "Create a Netlify site, optionally assigning its account, name, domains, notification email, and HTTPS settings.",
     requiredScopes: [],
@@ -441,6 +447,7 @@ const actionSources: readonly NetlifyActionSource[] = [
   },
   {
     name: "get_site",
+    operationType: "read",
     description: "Retrieve one Netlify site by site ID or name.",
     requiredScopes: [],
     inputSchema: siteInputSchema,
@@ -448,6 +455,7 @@ const actionSources: readonly NetlifyActionSource[] = [
   },
   {
     name: "list_site_deploys",
+    operationType: "read",
     description: "List deploys for one Netlify site.",
     requiredScopes: [],
     inputSchema: listSiteDeploysInputSchema,
@@ -455,6 +463,7 @@ const actionSources: readonly NetlifyActionSource[] = [
   },
   {
     name: "get_deploy",
+    operationType: "read",
     description: "Retrieve one Netlify deploy by deploy ID.",
     requiredScopes: [],
     inputSchema: deployInputSchema,
@@ -462,6 +471,7 @@ const actionSources: readonly NetlifyActionSource[] = [
   },
   {
     name: "cancel_deploy",
+    operationType: "destructive",
     description: "Cancel one Netlify deploy by deploy ID.",
     requiredScopes: [],
     inputSchema: deployInputSchema,
@@ -469,6 +479,7 @@ const actionSources: readonly NetlifyActionSource[] = [
   },
   {
     name: "lock_deploy",
+    operationType: "write",
     description: "Lock one Netlify deploy by deploy ID.",
     requiredScopes: [],
     inputSchema: deployInputSchema,
@@ -476,6 +487,7 @@ const actionSources: readonly NetlifyActionSource[] = [
   },
   {
     name: "unlock_deploy",
+    operationType: "write",
     description: "Unlock one Netlify deploy by deploy ID.",
     requiredScopes: [],
     inputSchema: deployInputSchema,
@@ -483,6 +495,7 @@ const actionSources: readonly NetlifyActionSource[] = [
   },
   {
     name: "create_site_build",
+    operationType: "write",
     description: "Start a Netlify build for one site without uploading binary files.",
     requiredScopes: [],
     inputSchema: createSiteBuildInputSchema,
@@ -490,6 +503,7 @@ const actionSources: readonly NetlifyActionSource[] = [
   },
   {
     name: "create_site_deploy_from_zip_url",
+    operationType: "write",
     description: "Create a Netlify site deploy by downloading a public zip file URL and uploading it to Netlify.",
     requiredScopes: [],
     inputSchema: createSiteDeployFromZipUrlInputSchema,
@@ -497,6 +511,7 @@ const actionSources: readonly NetlifyActionSource[] = [
   },
   {
     name: "upload_deploy_file_from_url",
+    operationType: "write",
     description: "Upload one file into an existing Netlify deploy by downloading a public file URL first.",
     requiredScopes: [],
     inputSchema: uploadDeployFileFromUrlInputSchema,
@@ -504,6 +519,7 @@ const actionSources: readonly NetlifyActionSource[] = [
   },
   {
     name: "upload_deploy_function_from_zip_url",
+    operationType: "write",
     description:
       "Upload one Netlify function bundle into an existing deploy by downloading a public zip file URL first.",
     requiredScopes: [],
@@ -512,6 +528,7 @@ const actionSources: readonly NetlifyActionSource[] = [
   },
   {
     name: "get_build",
+    operationType: "read",
     description: "Retrieve one Netlify build by build ID.",
     requiredScopes: [],
     inputSchema: buildInputSchema,
@@ -519,6 +536,7 @@ const actionSources: readonly NetlifyActionSource[] = [
   },
   {
     name: "notify_build_start",
+    operationType: "write",
     description: "Notify Netlify that one build has started.",
     requiredScopes: [],
     inputSchema: buildInputSchema,
@@ -526,6 +544,7 @@ const actionSources: readonly NetlifyActionSource[] = [
   },
   {
     name: "list_site_forms",
+    operationType: "read",
     description: "List forms detected for one Netlify site.",
     requiredScopes: [],
     inputSchema: listSiteFormsInputSchema,
@@ -533,6 +552,7 @@ const actionSources: readonly NetlifyActionSource[] = [
   },
   {
     name: "list_submissions",
+    operationType: "read",
     description: "List Netlify form submissions by site or by form.",
     requiredScopes: [],
     inputSchema: listSubmissionsInputSchema,
@@ -540,6 +560,7 @@ const actionSources: readonly NetlifyActionSource[] = [
   },
   {
     name: "delete_submission",
+    operationType: "destructive",
     description: "Delete one Netlify form submission by submission ID.",
     requiredScopes: [],
     inputSchema: s.object(

@@ -150,18 +150,21 @@ const listInputSchema = s.actionInput(
 export const httpsmsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Fetch the current httpSMS user for the connected API key.",
     inputSchema: emptyInputSchema,
     outputSchema: currentUserOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_billing_usage",
+    operationType: "read",
     description: "Fetch the current month httpSMS sent and received message usage summary.",
     inputSchema: emptyInputSchema,
     outputSchema: billingUsageOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_billing_usage_history",
+    operationType: "read",
     description: "List past httpSMS billing usage records for sent and received messages.",
     inputSchema: s.actionInput(
       {
@@ -175,12 +178,14 @@ export const httpsmsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_phones",
+    operationType: "read",
     description: "List phones registered to the current httpSMS account.",
     inputSchema: listInputSchema,
     outputSchema: phonesOutputSchema,
   }),
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send one SMS or MMS message through a registered httpSMS Android phone.",
     inputSchema: s.actionInput(
       {
@@ -205,6 +210,7 @@ export const httpsmsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_messages",
+    operationType: "read",
     description: "List messages sent between one owner phone number and one contact phone number.",
     inputSchema: s.actionInput(
       {
@@ -221,6 +227,7 @@ export const httpsmsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_message",
+    operationType: "read",
     description: "Fetch one httpSMS message by ID.",
     inputSchema: s.actionInput(
       { messageId: s.nonEmptyString("The message ID to fetch.") },
@@ -231,6 +238,7 @@ export const httpsmsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_message",
+    operationType: "destructive",
     description: "Delete one httpSMS message by ID.",
     inputSchema: s.actionInput(
       { messageId: s.nonEmptyString("The message ID to delete.") },
@@ -241,6 +249,7 @@ export const httpsmsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_message_threads",
+    operationType: "read",
     description: "List message threads for one registered owner phone number.",
     inputSchema: s.actionInput(
       {

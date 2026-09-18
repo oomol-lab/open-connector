@@ -3,6 +3,7 @@ import type { UnifapiOperationDefinition } from "../operations.ts";
 export const hackerNewsOperations: readonly UnifapiOperationDefinition[] = [
   {
     name: "get_hacker_news_item",
+    operationType: "read",
     operationId: "getHackerNewsItemsById",
     description: "Get Hacker News item by ID.",
     method: "GET",
@@ -27,6 +28,7 @@ export const hackerNewsOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_hacker_news_max_item",
+    operationType: "read",
     operationId: "getHackerNewsMaxItem",
     description: "Get largest Hacker News item ID.",
     method: "GET",
@@ -44,6 +46,7 @@ export const hackerNewsOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_hacker_news_story_items",
+    operationType: "read",
     operationId: "getHackerNewsStoriesByFeedItems",
     description: "List Hacker News story items.",
     method: "GET",
@@ -79,6 +82,7 @@ export const hackerNewsOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_hacker_news_story_ids",
+    operationType: "read",
     operationId: "getHackerNewsStoriesByFeed",
     description: "List Hacker News story IDs.",
     method: "GET",
@@ -114,6 +118,7 @@ export const hackerNewsOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_hacker_news_updates",
+    operationType: "read",
     operationId: "getHackerNewsUpdates",
     description: "Get changed Hacker News items and profiles.",
     method: "GET",
@@ -131,6 +136,7 @@ export const hackerNewsOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_hacker_news_user",
+    operationType: "read",
     operationId: "getHackerNewsUsersById",
     description: "Get Hacker News user by ID.",
     method: "GET",

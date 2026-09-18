@@ -75,12 +75,14 @@ const markerDatasetSlugInputSchema = s.actionInput(
 export const honeycombActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_auth",
+    operationType: "read",
     description: "Validate the Honeycomb API key and return the team, environment, key type, and permission metadata.",
     inputSchema: s.actionInput({}, [], "Input parameters for reading Honeycomb authorization metadata."),
     outputSchema: s.actionOutput({ authorization: authSummarySchema }, "The Honeycomb authorization metadata result."),
   }),
   defineProviderAction(service, {
     name: "list_datasets",
+    operationType: "read",
     description: "List datasets available in the Honeycomb environment tied to the API key.",
     inputSchema: s.actionInput({}, [], "Input parameters for listing Honeycomb datasets."),
     outputSchema: s.actionOutput(
@@ -90,12 +92,14 @@ export const honeycombActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dataset",
+    operationType: "read",
     description: "Get one Honeycomb dataset by slug.",
     inputSchema: datasetSlugInputSchema,
     outputSchema: s.actionOutput({ dataset: datasetSchema }, "The Honeycomb dataset lookup result."),
   }),
   defineProviderAction(service, {
     name: "list_markers",
+    operationType: "read",
     description: "List Honeycomb markers for a dataset or for the environment-wide __all__ marker scope.",
     inputSchema: markerDatasetSlugInputSchema,
     outputSchema: s.actionOutput(
@@ -105,6 +109,7 @@ export const honeycombActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_marker",
+    operationType: "write",
     description: "Create a Honeycomb marker for a dataset or for the environment-wide __all__ marker scope.",
     inputSchema: s.object(
       "Input parameters for creating a Honeycomb marker.",
@@ -124,6 +129,7 @@ export const honeycombActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_boards",
+    operationType: "read",
     description: "List non-secret Honeycomb boards available in the API key environment.",
     inputSchema: s.actionInput({}, [], "Input parameters for listing Honeycomb boards."),
     outputSchema: s.actionOutput(
@@ -133,6 +139,7 @@ export const honeycombActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_board",
+    operationType: "read",
     description: "Get one Honeycomb board by ID.",
     inputSchema: s.actionInput(
       { boardId: s.nonEmptyString("The Honeycomb board ID.") },

@@ -120,6 +120,7 @@ const emptyInputSchema = s.object("No input is required.", {});
 export const jin10Actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_quote_codes",
+    operationType: "read",
     description: "List quote instrument codes supported by Jin10 from the `quote://codes` MCP resource.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -130,6 +131,7 @@ export const jin10Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_quote",
+    operationType: "read",
     description: "Get a real-time Jin10 quote for a supported instrument code.",
     requiredScopes: [],
     inputSchema: codeInputSchema,
@@ -140,6 +142,7 @@ export const jin10Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_kline",
+    operationType: "read",
     description: "Get minute-level K-line data for a supported Jin10 instrument code.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -170,6 +173,7 @@ export const jin10Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_flash",
+    operationType: "read",
     description: "List the latest Jin10 flash news items with cursor pagination.",
     requiredScopes: [],
     inputSchema: cursorInputSchema,
@@ -180,6 +184,7 @@ export const jin10Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_flash",
+    operationType: "read",
     description: "Search Jin10 flash news by keyword. The MCP tool returns up to 150 items without pagination.",
     requiredScopes: [],
     inputSchema: keywordInputSchema,
@@ -196,6 +201,7 @@ export const jin10Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_news",
+    operationType: "read",
     description: "List the latest Jin10 news articles with cursor pagination.",
     requiredScopes: [],
     inputSchema: cursorInputSchema,
@@ -206,6 +212,7 @@ export const jin10Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_news",
+    operationType: "read",
     description: "Search Jin10 news articles by keyword with cursor pagination.",
     requiredScopes: [],
     inputSchema: keywordCursorInputSchema,
@@ -216,6 +223,7 @@ export const jin10Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_news",
+    operationType: "read",
     description: "Get the full details for one Jin10 news article by article ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for reading a Jin10 article detail.", {
@@ -228,6 +236,7 @@ export const jin10Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_calendar",
+    operationType: "read",
     description: "Get Jin10 economic calendar items for the current natural week.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,

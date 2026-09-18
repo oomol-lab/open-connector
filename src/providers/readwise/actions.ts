@@ -77,6 +77,7 @@ const nextPageCursorSchema = s.nullableString(
 export const readwiseActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_highlights",
+    operationType: "write",
     description: "Create one or more highlights in Readwise.",
     inputSchema: s.object("The input payload for creating Readwise highlights.", {
       highlights: s.array("The highlights to create.", highlightInputSchema, { minItems: 1 }),
@@ -91,6 +92,7 @@ export const readwiseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "export_highlights",
+    operationType: "write",
     description: "Export Readwise books and highlights updated after an optional date cursor.",
     inputSchema: s.object(
       "The input payload for exporting Readwise highlights.",
@@ -109,6 +111,7 @@ export const readwiseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_books",
+    operationType: "read",
     description: "List Readwise books or sources with optional category and update filters.",
     inputSchema: s.object(
       "The input payload for listing Readwise books.",
@@ -131,6 +134,7 @@ export const readwiseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_documents",
+    operationType: "read",
     description: "List Readwise Reader documents with optional filters and pagination.",
     inputSchema: s.object(
       "The input payload for listing Readwise Reader documents.",
@@ -158,6 +162,7 @@ export const readwiseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "save_document",
+    operationType: "write",
     description: "Save a URL into Readwise Reader with optional metadata.",
     inputSchema: s.object(
       "The input payload for saving a Readwise Reader document.",
@@ -182,6 +187,7 @@ export const readwiseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_document",
+    operationType: "destructive",
     description: "Update the location, tags, or metadata for a Readwise Reader document.",
     inputSchema: s.object(
       "The input payload for updating a Readwise Reader document.",

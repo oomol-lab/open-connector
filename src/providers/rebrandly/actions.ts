@@ -79,6 +79,7 @@ const updateLinkInputSchema: JsonSchema = {
 export const rebrandlyActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Get the authenticated Rebrandly account details.",
     inputSchema: s.object("No input is required.", {}),
     outputSchema: s.object("Authenticated Rebrandly account.", {
@@ -87,6 +88,7 @@ export const rebrandlyActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_domains",
+    operationType: "read",
     description: "List branded domains available to a Rebrandly workspace.",
     inputSchema: s.object(
       "Filters for listing Rebrandly branded domains.",
@@ -108,6 +110,7 @@ export const rebrandlyActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_links",
+    operationType: "read",
     description: "List branded short links in a Rebrandly workspace.",
     inputSchema: s.object(
       "Filters for listing Rebrandly links.",
@@ -131,6 +134,7 @@ export const rebrandlyActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_link",
+    operationType: "read",
     description: "Get details for a Rebrandly branded short link.",
     inputSchema: s.object(
       "Rebrandly link lookup input.",
@@ -146,6 +150,7 @@ export const rebrandlyActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_link",
+    operationType: "write",
     description: "Create a Rebrandly branded short link in a workspace.",
     inputSchema: s.object(
       "Input for creating a Rebrandly branded link.",
@@ -165,6 +170,7 @@ export const rebrandlyActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_link",
+    operationType: "write",
     description: "Update editable fields on a Rebrandly branded short link.",
     inputSchema: updateLinkInputSchema,
     outputSchema: s.object("Updated Rebrandly branded link.", {
@@ -173,6 +179,7 @@ export const rebrandlyActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_link",
+    operationType: "destructive",
     description: "Soft delete a Rebrandly branded short link.",
     inputSchema: s.object(
       "Input for deleting a Rebrandly branded link.",

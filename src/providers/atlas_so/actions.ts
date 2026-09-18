@@ -178,6 +178,7 @@ const listMetadataSchema = {
 export const atlasSoActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_accounts",
+    operationType: "read",
     description: "List Atlas accounts visible to the current API key.",
     inputSchema: paginationInputSchema,
     outputSchema: s.object("Atlas account list response.", {
@@ -187,6 +188,7 @@ export const atlasSoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve a single Atlas account by ID.",
     inputSchema: s.object(
       "The input payload for retrieving an Atlas account.",
@@ -199,6 +201,7 @@ export const atlasSoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_account",
+    operationType: "write",
     description: "Create or update an Atlas account using the account upsert endpoint.",
     inputSchema: accountWriteSchema,
     outputSchema: s.object("Atlas account upsert response.", {
@@ -207,6 +210,7 @@ export const atlasSoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List Atlas customers visible to the current API key.",
     inputSchema: paginationInputSchema,
     outputSchema: s.object("Atlas customer list response.", {
@@ -216,6 +220,7 @@ export const atlasSoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Retrieve a single Atlas customer by ID.",
     inputSchema: s.object(
       "The input payload for retrieving an Atlas customer.",
@@ -228,6 +233,7 @@ export const atlasSoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "lookup_customer",
+    operationType: "read",
     description: "Retrieve a single Atlas customer by ID, email, phone number, or user ID.",
     inputSchema: customerLookupSchema,
     outputSchema: s.object("Atlas customer lookup response.", {
@@ -236,6 +242,7 @@ export const atlasSoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_customer",
+    operationType: "write",
     description: "Create an Atlas customer.",
     inputSchema: customerWriteSchema,
     outputSchema: s.object("Atlas customer create response.", {
@@ -244,6 +251,7 @@ export const atlasSoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_customer",
+    operationType: "write",
     description: "Update an Atlas customer by ID.",
     inputSchema: s.object(
       "The input payload for updating an Atlas customer.",
@@ -261,6 +269,7 @@ export const atlasSoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_customer",
+    operationType: "write",
     description: "Create or update an Atlas customer using the customer upsert endpoint.",
     inputSchema: customerUpsertSchema,
     outputSchema: s.object("Atlas customer upsert response.", {
@@ -269,6 +278,7 @@ export const atlasSoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sessions",
+    operationType: "read",
     description: "List Atlas session recordings with optional customer and date filters.",
     inputSchema: listSessionsInputSchema,
     outputSchema: s.object("Atlas session recording list response.", {

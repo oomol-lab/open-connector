@@ -200,42 +200,49 @@ const getTestRunStatusInputSchema = s.actionInput(
 export const bugbugActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tests",
+    operationType: "read",
     description: "List tests available in the connected BugBug workspace.",
     inputSchema: listTestsInputSchema,
     outputSchema: buildPaginatedOutputSchema(testSummarySchema, "Paginated BugBug test list."),
   }),
   defineProviderAction(service, {
     name: "get_test",
+    operationType: "read",
     description: "Retrieve details for a specific BugBug test by ID.",
     inputSchema: getTestInputSchema,
     outputSchema: testDetailsSchema,
   }),
   defineProviderAction(service, {
     name: "list_suites",
+    operationType: "read",
     description: "List suites available in the connected BugBug workspace.",
     inputSchema: listSuitesInputSchema,
     outputSchema: buildPaginatedOutputSchema(suiteSummarySchema, "Paginated BugBug suite list."),
   }),
   defineProviderAction(service, {
     name: "get_suite",
+    operationType: "read",
     description: "Retrieve details for a specific BugBug suite by ID.",
     inputSchema: getSuiteInputSchema,
     outputSchema: suiteDetailsSchema,
   }),
   defineProviderAction(service, {
     name: "list_profiles",
+    operationType: "read",
     description: "List run profiles available for executing BugBug tests.",
     inputSchema: listProfilesInputSchema,
     outputSchema: buildPaginatedOutputSchema(profileSummarySchema, "Paginated BugBug run profile list."),
   }),
   defineProviderAction(service, {
     name: "list_test_runs",
+    operationType: "read",
     description: "List historical BugBug test runs with optional filters.",
     inputSchema: listTestRunsInputSchema,
     outputSchema: buildPaginatedOutputSchema(testRunSummarySchema, "Paginated BugBug test run list."),
   }),
   defineProviderAction(service, {
     name: "run_test",
+    operationType: "write",
     description: "Execute a BugBug test using the official RunTest request contract.",
     followUpActions: ["bugbug.get_test_run_status"],
     inputSchema: runTestInputSchema,
@@ -243,6 +250,7 @@ export const bugbugActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_test_run_status",
+    operationType: "read",
     description: "Retrieve the current status of a BugBug test run by ID.",
     inputSchema: getTestRunStatusInputSchema,
     outputSchema: testRunStatusSchema,

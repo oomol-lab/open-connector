@@ -36,30 +36,35 @@ const datasetOutputSchema = s.object(
 export const predictleadsActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "lookup_company",
+    operationType: "read",
     description: "Retrieve PredictLeads company firmographic data for a website domain.",
     inputSchema: companyInputSchema,
     outputSchema: datasetOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_job_openings",
+    operationType: "read",
     description: "List job openings detected for a company domain.",
     inputSchema: pageInputSchema,
     outputSchema: datasetOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_news_events",
+    operationType: "read",
     description: "List news events detected for a company domain.",
     inputSchema: pageInputSchema,
     outputSchema: datasetOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_technology_detections",
+    operationType: "read",
     description: "List technologies detected on or associated with a company domain.",
     inputSchema: pageInputSchema,
     outputSchema: datasetOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_financing_events",
+    operationType: "read",
     description: "List financing events detected for a company domain.",
     inputSchema: pageInputSchema,
     outputSchema: datasetOutputSchema,

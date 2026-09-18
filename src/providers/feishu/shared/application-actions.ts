@@ -44,6 +44,7 @@ export function createFeishuApplicationActions(service: string): readonly Action
   return [
     defineProviderAction(service, {
       name: "list_app_slash_commands",
+      operationType: "read",
       description: "List every slash command registered on the currently connected Feishu app.",
       requiredScopes: [feishuApplicationProviderPermissions.read],
       providerPermissions: [feishuApplicationProviderPermissions.read],
@@ -67,6 +68,7 @@ export function createFeishuApplicationActions(service: string): readonly Action
     }),
     defineProviderAction(service, {
       name: "create_app_slash_command",
+      operationType: "write",
       description: "Register a slash command, optionally updating the existing command when its name already exists.",
       requiredScopes: [feishuApplicationProviderPermissions.write, feishuApplicationProviderPermissions.read],
       providerPermissions: [feishuApplicationProviderPermissions.write, feishuApplicationProviderPermissions.read],
@@ -89,6 +91,7 @@ export function createFeishuApplicationActions(service: string): readonly Action
     }),
     defineProviderAction(service, {
       name: "update_app_slash_command",
+      operationType: "write",
       description: "Update the description, localized descriptions, or icon of a slash command selected by ID or name.",
       requiredScopes: [feishuApplicationProviderPermissions.write, feishuApplicationProviderPermissions.read],
       providerPermissions: [feishuApplicationProviderPermissions.write, feishuApplicationProviderPermissions.read],
@@ -120,6 +123,7 @@ export function createFeishuApplicationActions(service: string): readonly Action
     }),
     defineProviderAction(service, {
       name: "delete_app_slash_command",
+      operationType: "destructive",
       description: "Permanently delete a slash command selected by command ID or exact command name.",
       requiredScopes: [feishuApplicationProviderPermissions.write, feishuApplicationProviderPermissions.read],
       providerPermissions: [feishuApplicationProviderPermissions.write, feishuApplicationProviderPermissions.read],

@@ -34,6 +34,7 @@ const createViewOutputSchema = s.actionOutput(
 export const excalidrawMcpActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "read_me",
+    operationType: "read",
     description: "Fetch the Excalidraw element format guide and drawing tips from the MCP server.",
     requiredScopes: [],
     inputSchema: s.actionInput({}, [], "No input is required."),
@@ -42,6 +43,7 @@ export const excalidrawMcpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_view",
+    operationType: "read",
     description: "Render a hand-drawn Excalidraw diagram from a JSON array string of elements.",
     requiredScopes: [],
     inputSchema: createViewInputSchema,

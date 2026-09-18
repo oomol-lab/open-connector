@@ -105,6 +105,7 @@ const listEventsOutputSchema = s.object("The response returned when listing Coin
 export const coinmarketcalActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_event_categories",
+    operationType: "read",
     description: "List available CoinMarketCal event categories.",
     inputSchema: s.object({}, { description: "The input payload for listing event categories." }),
     outputSchema: s.object("The response returned when listing CoinMarketCal event categories.", {
@@ -114,6 +115,7 @@ export const coinmarketcalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_coins",
+    operationType: "read",
     description: "List available CoinMarketCal coins.",
     inputSchema: s.object({}, { description: "The input payload for listing CoinMarketCal coins." }),
     outputSchema: s.object("The response returned when listing CoinMarketCal coins.", {
@@ -123,6 +125,7 @@ export const coinmarketcalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_events",
+    operationType: "read",
     description: "List CoinMarketCal events with optional filters.",
     inputSchema: s.object(
       "The input payload for listing CoinMarketCal events.",
@@ -151,6 +154,7 @@ export const coinmarketcalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_ranked_events",
+    operationType: "read",
     description: "List CoinMarketCal events ranked by market attention or impact.",
     inputSchema: s.object(
       "The input payload for listing CoinMarketCal events by ranking mode.",
@@ -176,6 +180,7 @@ export const coinmarketcalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_confirmed_events",
+    operationType: "read",
     description: "List CoinMarketCal events confirmed by project representatives.",
     inputSchema: s.object("The input payload for listing confirmed CoinMarketCal events.", eventListFilterFields, {
       optional: [

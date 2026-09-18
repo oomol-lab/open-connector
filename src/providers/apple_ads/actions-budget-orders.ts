@@ -109,6 +109,7 @@ const budgetOrderResource = resourceObject(
 export const appleAdsBudgetOrderActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_budget_orders",
+    operationType: "read",
     description:
       "Search the budget orders of one ad account with filters, sorting and offset pagination. Soft-deleted budget orders are excluded unless a filter on deleted asks for them.",
     requiredScopes: [],
@@ -136,6 +137,7 @@ export const appleAdsBudgetOrderActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_budget_order",
+    operationType: "read",
     description:
       "Read one budget order by identifier, including its amount, active date range, assigned ad account and invoice details.",
     requiredScopes: [],
@@ -152,6 +154,7 @@ export const appleAdsBudgetOrderActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_budget_order",
+    operationType: "write",
     description:
       "Create a budget order for the ad account this request is scoped to, then cap the total spend of a group of campaigns by assigning them to it. The ad account must be on the LOC (Line of Credit) payment model, which is why invoice details are required.",
     requiredScopes: [],
@@ -178,6 +181,7 @@ export const appleAdsBudgetOrderActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_budget_order",
+    operationType: "destructive",
     description:
       "Change the mutable fields of one budget order. Only the fields you pass are changed. On a budget order that is already active, an end date can only be shortened, never extended, and passing endTime as null removes the expiration date entirely.",
     requiredScopes: [],
@@ -208,6 +212,7 @@ export const appleAdsBudgetOrderActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_budget_order",
+    operationType: "destructive",
     description:
       "Soft-delete one budget order. Apple Ads rejects the deletion with 400 while any campaign is still assigned to the budget order, and also once it has started, expired, been exhausted or been canceled. A soft-deleted budget order cannot be restored; create a new one instead.",
     requiredScopes: [],

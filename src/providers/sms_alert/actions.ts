@@ -59,6 +59,7 @@ const batchOperationOutputSchema = s.actionOutput(
 export const smsAlertActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_credit_balance",
+    operationType: "read",
     description: "Get the remaining SMS Alert credits grouped by delivery route.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -71,6 +72,7 @@ export const smsAlertActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sender_ids",
+    operationType: "read",
     description: "List the sender IDs available in the SMS Alert account.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -82,6 +84,7 @@ export const smsAlertActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List SMS templates from the SMS Alert account with optional pagination.",
     inputSchema: s.object(
       {
@@ -100,6 +103,7 @@ export const smsAlertActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_sms",
+    operationType: "write",
     description: "Send a direct SMS message through SMS Alert.",
     inputSchema: s.actionInput(
       {
@@ -116,6 +120,7 @@ export const smsAlertActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "generate_otp",
+    operationType: "write",
     description: "Generate and send an OTP message through SMS Alert.",
     inputSchema: s.actionInput(
       {
@@ -135,6 +140,7 @@ export const smsAlertActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "validate_otp",
+    operationType: "read",
     description: "Validate an OTP code previously generated through SMS Alert.",
     inputSchema: s.actionInput(
       {

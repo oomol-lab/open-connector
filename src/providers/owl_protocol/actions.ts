@@ -128,6 +128,7 @@ const tokenSelectorProperties = {
 export const owlProtocolActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_project_info",
+    operationType: "read",
     description: "Read the connected Owl Protocol project's summary information.",
     inputSchema: s.actionInput({}, [], "No input is required for reading Owl Protocol project info."),
     outputSchema: s.actionOutput(
@@ -139,6 +140,7 @@ export const owlProtocolActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project_token",
+    operationType: "read",
     description: "Read one Owl Protocol token metadata record by chain, contract address, and token id.",
     inputSchema: s.actionInput(
       tokenSelectorProperties,
@@ -154,6 +156,7 @@ export const owlProtocolActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "patch_project_token",
+    operationType: "write",
     description: "Patch one Owl Protocol token metadata record with a JSON metadata object only.",
     inputSchema: s.actionInput(
       {

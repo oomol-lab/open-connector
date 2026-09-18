@@ -75,6 +75,7 @@ const searchListInput = {
 export const aviationstackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_flights",
+    operationType: "read",
     description: "Search real-time or recent historical Aviationstack flights with optional filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -128,6 +129,7 @@ export const aviationstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_routes",
+    operationType: "read",
     description: "Search Aviationstack airline routes with airport, airline, flight, and pagination filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -163,6 +165,7 @@ export const aviationstackActions: ActionDefinition[] = [
   }),
   collectionAction(
     "list_airports",
+    "read",
     "List or search Aviationstack airports with pagination.",
     searchListInput,
     "airports",
@@ -170,6 +173,7 @@ export const aviationstackActions: ActionDefinition[] = [
   ),
   collectionAction(
     "list_airlines",
+    "read",
     "List or search Aviationstack airlines with pagination.",
     searchListInput,
     "airlines",
@@ -177,6 +181,7 @@ export const aviationstackActions: ActionDefinition[] = [
   ),
   collectionAction(
     "list_airplanes",
+    "read",
     "List or search Aviationstack airplanes with pagination.",
     searchListInput,
     "airplanes",
@@ -184,6 +189,7 @@ export const aviationstackActions: ActionDefinition[] = [
   ),
   collectionAction(
     "list_aircraft_types",
+    "read",
     "List or search Aviationstack aircraft types with pagination.",
     searchListInput,
     "aircraftTypes",
@@ -191,6 +197,7 @@ export const aviationstackActions: ActionDefinition[] = [
   ),
   collectionAction(
     "list_taxes",
+    "read",
     "List or search Aviationstack aviation taxes with pagination.",
     searchListInput,
     "taxes",
@@ -198,6 +205,7 @@ export const aviationstackActions: ActionDefinition[] = [
   ),
   collectionAction(
     "list_cities",
+    "read",
     "List or search Aviationstack cities with pagination.",
     searchListInput,
     "cities",
@@ -205,6 +213,7 @@ export const aviationstackActions: ActionDefinition[] = [
   ),
   collectionAction(
     "list_countries",
+    "read",
     "List or search Aviationstack countries with pagination.",
     searchListInput,
     "countries",
@@ -214,6 +223,7 @@ export const aviationstackActions: ActionDefinition[] = [
 
 function collectionAction(
   name: string,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputProperties: Record<string, ReturnType<typeof s.string>>,
   outputKey: string,
@@ -221,6 +231,7 @@ function collectionAction(
 ): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     requiredScopes: [],
     inputSchema: s.object(`Input parameters for ${name}.`, inputProperties, {

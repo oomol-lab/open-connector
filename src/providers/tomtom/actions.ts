@@ -79,6 +79,7 @@ function optionalPositionInput(description: string, properties: Record<string, J
 export const tomtomActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "fuzzy_search",
+    operationType: "read",
     description: "Search addresses or places with the TomTom Search API fuzzy search endpoint.",
     inputSchema: optionalPositionInput("Input parameters for TomTom fuzzy search.", {
       query: s.nonEmptyString("The free-form text query sent to TomTom."),
@@ -98,6 +99,7 @@ export const tomtomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "autocomplete",
+    operationType: "read",
     description: "Return autocomplete suggestions from the TomTom Search API.",
     inputSchema: s.object(
       "Input parameters for TomTom autocomplete.",
@@ -117,6 +119,7 @@ export const tomtomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "nearby_search",
+    operationType: "read",
     description: "Search for nearby places of interest around a coordinate with TomTom.",
     inputSchema: s.object(
       "Input parameters for TomTom nearby search.",
@@ -138,6 +141,7 @@ export const tomtomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "geocode",
+    operationType: "read",
     description: "Convert an address into geographic search results with the TomTom Geocoding API.",
     inputSchema: optionalPositionInput("Input parameters for TomTom geocoding.", {
       query: s.nonEmptyString("The address or place query to geocode."),
@@ -155,6 +159,7 @@ export const tomtomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reverse_geocode",
+    operationType: "read",
     description: "Convert a coordinate into human-readable address candidates with the TomTom Reverse Geocoding API.",
     inputSchema: s.object(
       "Input parameters for TomTom reverse geocoding.",

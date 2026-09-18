@@ -224,6 +224,7 @@ countryOfOriginInputSchema.oneOf = [{ required: ["first_name"] }, { required: ["
 export const genderApiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_gender_by_first_name",
+    operationType: "read",
     description:
       "Determine the likely gender for one first name with optional country, locale, IP, and caller ID hints.",
     inputSchema: firstNameInputSchema,
@@ -231,24 +232,28 @@ export const genderApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_gender_by_full_name",
+    operationType: "read",
     description: "Determine the likely gender for one full name while letting Gender-API.com split the name.",
     inputSchema: fullNameInputSchema,
     outputSchema: predictionOutputSchema,
   }),
   defineProviderAction(service, {
     name: "query_gender_by_email_address",
+    operationType: "read",
     description: "Determine the likely gender for one email address after Gender-API.com extracts a name from it.",
     inputSchema: emailInputSchema,
     outputSchema: predictionOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_country_of_origin",
+    operationType: "read",
     description: "Get likely country-of-origin and ethnicity metadata for one first name, full name, or email address.",
     inputSchema: countryOfOriginInputSchema,
     outputSchema: countryOfOriginOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_statistics",
+    operationType: "read",
     description: "Read remaining credits and recent usage statistics for the connected account.",
     inputSchema: s.object("Input for querying Gender-API.com account statistics.", {}),
     outputSchema: statisticsOutputSchema,

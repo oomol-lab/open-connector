@@ -63,6 +63,7 @@ const branchTargetFields = {
 export const planetScaleActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_organizations",
+    operationType: "read",
     description: "List PlanetScale organizations available to the connected service token.",
     requiredScopes: [],
     inputSchema: s.object("Input for listing PlanetScale organizations.", listInputFields, {
@@ -75,6 +76,7 @@ export const planetScaleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_organization",
+    operationType: "read",
     description: "Get one PlanetScale organization by name.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a PlanetScale organization.", {
@@ -84,6 +86,7 @@ export const planetScaleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_databases",
+    operationType: "read",
     description: "List databases in a PlanetScale organization.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -102,6 +105,7 @@ export const planetScaleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_database",
+    operationType: "read",
     description: "Get one PlanetScale database by organization and database name.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a PlanetScale database.", databaseTargetFields),
@@ -109,6 +113,7 @@ export const planetScaleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_database",
+    operationType: "write",
     description: "Create a MySQL or PostgreSQL database in a PlanetScale organization.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -131,6 +136,7 @@ export const planetScaleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_database",
+    operationType: "destructive",
     description: "Delete a PlanetScale database.",
     requiredScopes: [],
     inputSchema: s.object("Input for deleting a PlanetScale database.", databaseTargetFields),
@@ -140,6 +146,7 @@ export const planetScaleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_branches",
+    operationType: "read",
     description: "List branches in a PlanetScale database.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -161,6 +168,7 @@ export const planetScaleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_branch",
+    operationType: "read",
     description: "Get one PlanetScale database branch.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a PlanetScale branch.", branchTargetFields),
@@ -168,6 +176,7 @@ export const planetScaleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_branch",
+    operationType: "write",
     description: "Create a branch in a PlanetScale database.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -185,6 +194,7 @@ export const planetScaleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_branch",
+    operationType: "destructive",
     description: "Delete a PlanetScale database branch, optionally including descendants.",
     requiredScopes: [],
     inputSchema: s.object(

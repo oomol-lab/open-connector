@@ -111,6 +111,7 @@ const searchNewsSourcesInputSchema: JsonSchema = {
 export const worldNewsApiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_news",
+    operationType: "read",
     description: "Search news articles with World News API using the first-pass filtering subset.",
     inputSchema: searchNewsInputSchema,
     outputSchema: s.looseObject("The article search response returned by World News API.", {
@@ -122,6 +123,7 @@ export const worldNewsApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_top_news",
+    operationType: "read",
     description: "Retrieve top-news clusters for one source country and optional language or date filters.",
     inputSchema: s.object(
       "Input parameters for retrieving top news with World News API.",
@@ -145,6 +147,7 @@ export const worldNewsApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "retrieve_news",
+    operationType: "read",
     description: "Retrieve one or more articles by identifier from World News API.",
     inputSchema: s.actionInput(
       {
@@ -163,6 +166,7 @@ export const worldNewsApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_news_sources",
+    operationType: "read",
     description: "Search World News API sources by name, language, or source country.",
     inputSchema: searchNewsSourcesInputSchema,
     outputSchema: s.looseObject("The news source search response returned by World News API.", {
@@ -172,6 +176,7 @@ export const worldNewsApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_geo_coordinates",
+    operationType: "read",
     description: "Resolve a location string to latitude and longitude with World News API.",
     inputSchema: s.object(
       "Input parameters for looking up geo coordinates with World News API.",

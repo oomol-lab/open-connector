@@ -69,6 +69,7 @@ const issuanceSchema = s.looseObject(
 export const certSpotterActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_certificate_issuances",
+    operationType: "read",
     description: "List certificate issuances for one domain from the Cert Spotter CT Search API.",
     inputSchema: s.object(
       {
@@ -102,6 +103,7 @@ export const certSpotterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_monitored_domains",
+    operationType: "read",
     description: "List monitored domains configured in the connected Cert Spotter account.",
     inputSchema: s.object({}, { description: "The input payload for listing monitored domains." }),
     outputSchema: s.actionOutput(
@@ -113,6 +115,7 @@ export const certSpotterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_monitored_domain",
+    operationType: "read",
     description: "Get one monitored domain configuration from the connected Cert Spotter account.",
     inputSchema: s.actionInput(
       { name: monitoredDomainNameField },
@@ -128,6 +131,7 @@ export const certSpotterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_monitored_domain",
+    operationType: "write",
     description: "Create or update one monitored domain configuration in the connected Cert Spotter account.",
     inputSchema: s.object(
       {
@@ -149,6 +153,7 @@ export const certSpotterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_monitored_domain",
+    operationType: "destructive",
     description: "Delete one monitored domain configuration from the connected Cert Spotter account.",
     inputSchema: s.actionInput(
       { name: monitoredDomainNameField },

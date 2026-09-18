@@ -251,6 +251,7 @@ export const promotedPurchaseResource: JsonSchema = resourceObject(
 export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_in_app_purchases",
+    operationType: "read",
     description:
       "List the in-app purchases of one app (consumables, non-consumables, and non-renewing subscriptions; auto-renewable subscriptions are a separate family). Filter by type, state, name, or product identifier.",
     requiredScopes: [],
@@ -281,6 +282,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "get_in_app_purchase",
+    operationType: "read",
     description: "Read one in-app purchase by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -292,6 +294,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "create_in_app_purchase",
+    operationType: "write",
     description:
       "Create an in-app purchase for an app. The product identifier is permanent and cannot be reused after deletion, so choose it carefully. The purchase starts in MISSING_METADATA until localizations, a price schedule, and a review screenshot are added.",
     requiredScopes: [],
@@ -314,6 +317,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "update_in_app_purchase",
+    operationType: "destructive",
     description:
       "Update the reference name, review note, or Family Sharing flag of an in-app purchase. Pass at least one field; each given field overwrites the current value.",
     requiredScopes: [],
@@ -332,6 +336,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "delete_in_app_purchase",
+    operationType: "destructive",
     description:
       "Delete an in-app purchase that has never been approved. Its product identifier can never be used again for this app.",
     requiredScopes: [],
@@ -348,6 +353,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "list_in_app_purchase_localizations",
+    operationType: "read",
     description: "List the localized display names and descriptions of one in-app purchase, one record per locale.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -364,6 +370,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "get_in_app_purchase_localization",
+    operationType: "read",
     description: "Read one in-app purchase localization by its identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -377,6 +384,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "create_in_app_purchase_localization",
+    operationType: "write",
     description:
       "Add the display name and description of an in-app purchase for one locale. Each locale can have only one localization per purchase.",
     requiredScopes: [],
@@ -395,6 +403,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "update_in_app_purchase_localization",
+    operationType: "write",
     description:
       "Overwrite the display name or description of an in-app purchase localization. Pass at least one field; the locale itself cannot be changed.",
     requiredScopes: [],
@@ -412,6 +421,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "delete_in_app_purchase_localization",
+    operationType: "destructive",
     description: "Delete one locale of an in-app purchase's display name and description.",
     requiredScopes: [],
     providerPermissions: [...manageInAppPurchaseRoles],
@@ -429,6 +439,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "list_in_app_purchase_price_points",
+    operationType: "read",
     description:
       "List the price points available to an in-app purchase, with the customer price and proceeds per territory. Use a price point identifier from here when building a price schedule or offer code price.",
     requiredScopes: [],
@@ -450,6 +461,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "list_in_app_purchase_price_point_equalizations",
+    operationType: "read",
     description:
       "List the price points in other territories that Apple considers equivalent to one price point, which is how automatic prices for a base territory are derived.",
     requiredScopes: [],
@@ -472,6 +484,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "get_in_app_purchase_price_schedule",
+    operationType: "read",
     description:
       "Read the price schedule of an in-app purchase together with its base territory. Returns null when the purchase has no price schedule yet.",
     requiredScopes: [],
@@ -494,6 +507,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "create_in_app_purchase_price_schedule",
+    operationType: "destructive",
     description:
       "Set the price schedule of an in-app purchase: a base territory plus manual prices for specific territories. Territories without a manual price get automatic prices equalized from the base territory. Posting a schedule replaces the prices App Store Connect currently has for the purchase.",
     requiredScopes: [],
@@ -527,6 +541,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "list_in_app_purchase_price_schedule_manual_prices",
+    operationType: "read",
     description:
       "List the manually set prices of an in-app purchase price schedule, with the price point, customer price, and proceeds of each.",
     requiredScopes: [],
@@ -550,6 +565,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "list_in_app_purchase_price_schedule_automatic_prices",
+    operationType: "read",
     description:
       "List the prices App Store Connect derived automatically from the base territory of an in-app purchase price schedule.",
     requiredScopes: [],
@@ -573,6 +589,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "get_in_app_purchase_price_schedule_base_territory",
+    operationType: "read",
     description: "Read the base territory of an in-app purchase price schedule, including its currency.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -586,6 +603,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "get_in_app_purchase_availability",
+    operationType: "read",
     description:
       "Read the availability record of an in-app purchase, which says whether it is offered in new territories automatically. Returns null when no availability has been set. Use list_in_app_purchase_available_territories for the territory list.",
     requiredScopes: [],
@@ -609,6 +627,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "create_in_app_purchase_availability",
+    operationType: "destructive",
     description:
       "Set the territories an in-app purchase is sold in. The list replaces the current availability entirely, so territories left out are removed from sale.",
     requiredScopes: [],
@@ -634,6 +653,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "list_in_app_purchase_available_territories",
+    operationType: "read",
     description:
       "List the territories an in-app purchase is currently sold in, using the availability record identifier from get_in_app_purchase_availability.",
     requiredScopes: [],
@@ -654,6 +674,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "get_in_app_purchase_content",
+    operationType: "read",
     description:
       "Read the metadata and temporary download URL of the hosted content package of an in-app purchase. Returns null when no content has been uploaded.",
     requiredScopes: [],
@@ -677,6 +698,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "list_in_app_purchase_versions",
+    operationType: "read",
     description: "List the metadata versions of an in-app purchase, optionally narrowed to one review state.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -697,6 +719,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "get_in_app_purchase_version",
+    operationType: "read",
     description: "Read one in-app purchase version by its identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -710,6 +733,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "create_in_app_purchase_version",
+    operationType: "write",
     description:
       "Create a new metadata version of an in-app purchase so its display text and images can be edited and reviewed without taking the approved version off sale.",
     requiredScopes: [],
@@ -723,6 +747,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "list_in_app_purchase_version_localizations",
+    operationType: "read",
     description: "List the localized display names and descriptions attached to one in-app purchase version.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -742,6 +767,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "get_in_app_purchase_version_localization",
+    operationType: "read",
     description: "Read one localization of an in-app purchase version by its identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -758,6 +784,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "create_in_app_purchase_version_localization",
+    operationType: "write",
     description: "Add the display name and description of an in-app purchase version for one locale.",
     requiredScopes: [],
     providerPermissions: [...manageInAppPurchaseRoles],
@@ -778,6 +805,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "update_in_app_purchase_version_localization",
+    operationType: "write",
     description:
       "Overwrite the display name or description of an in-app purchase version localization. Pass at least one field.",
     requiredScopes: [],
@@ -798,6 +826,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "delete_in_app_purchase_version_localization",
+    operationType: "destructive",
     description: "Delete one locale from an in-app purchase version.",
     requiredScopes: [],
     providerPermissions: [...manageInAppPurchaseRoles],
@@ -815,6 +844,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "submit_in_app_purchase_for_review",
+    operationType: "write",
     description:
       "Submit an in-app purchase to App Review. The purchase must be in READY_TO_SUBMIT; once submitted it cannot be edited until review finishes.",
     requiredScopes: [],
@@ -834,6 +864,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "list_in_app_purchase_offer_codes",
+    operationType: "read",
     description:
       "List the offer code configurations of an in-app purchase, optionally narrowed to offers priced in one territory.",
     requiredScopes: [],
@@ -855,6 +886,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "get_in_app_purchase_offer_code",
+    operationType: "read",
     description: "Read one in-app purchase offer code configuration by its identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -868,6 +900,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "create_in_app_purchase_offer_code",
+    operationType: "write",
     description:
       "Create an offer code configuration for an in-app purchase: who may redeem it and the discounted price per territory. Generate redeemable codes afterwards with the custom code or one-time-use code actions.",
     requiredScopes: [],
@@ -903,6 +936,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "update_in_app_purchase_offer_code",
+    operationType: "destructive",
     description:
       "Activate or deactivate an in-app purchase offer code. Deactivating stops every custom and one-time-use code of the offer from being redeemed.",
     requiredScopes: [],
@@ -919,6 +953,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "list_in_app_purchase_offer_code_prices",
+    operationType: "read",
     description:
       "List the discounted prices of an in-app purchase offer code per territory, with the price point, customer price, and proceeds of each.",
     requiredScopes: [],
@@ -940,6 +975,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "list_in_app_purchase_offer_code_custom_codes",
+    operationType: "read",
     description: "List the custom codes generated for an in-app purchase offer code.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -959,6 +995,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "create_in_app_purchase_offer_code_custom_code",
+    operationType: "write",
     description:
       "Create a custom code for an in-app purchase offer that customers redeem by typing it, with a redemption limit and optional expiration date.",
     requiredScopes: [],
@@ -980,6 +1017,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "update_in_app_purchase_offer_code_custom_code",
+    operationType: "destructive",
     description:
       "Activate or deactivate one custom code of an in-app purchase offer without touching the other codes of the offer.",
     requiredScopes: [],
@@ -996,6 +1034,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "list_in_app_purchase_offer_code_one_time_use_codes",
+    operationType: "read",
     description:
       "List the one-time-use code batches generated for an in-app purchase offer code. The code values are only available as a CSV download in App Store Connect.",
     requiredScopes: [],
@@ -1016,6 +1055,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "create_in_app_purchase_offer_code_one_time_use_code",
+    operationType: "write",
     description:
       "Generate a batch of one-time-use codes for an in-app purchase offer. Download the generated code values from App Store Connect afterwards; they are not returned here.",
     requiredScopes: [],
@@ -1040,6 +1080,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "update_in_app_purchase_offer_code_one_time_use_code",
+    operationType: "destructive",
     description: "Activate or deactivate one batch of one-time-use codes of an in-app purchase offer.",
     requiredScopes: [],
     providerPermissions: [...manageInAppPurchaseRoles],
@@ -1060,6 +1101,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "list_promoted_purchases",
+    operationType: "read",
     description:
       "List the in-app purchases and subscriptions promoted on the App Store product page of one app, in display order.",
     requiredScopes: [],
@@ -1077,6 +1119,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "get_promoted_purchase",
+    operationType: "read",
     description: "Read one promoted purchase by its identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -1090,6 +1133,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "create_promoted_purchase",
+    operationType: "write",
     description:
       "Promote an in-app purchase or a subscription on the App Store product page of an app. Pass exactly one of inAppPurchaseId or subscriptionId. A promotional image must still be uploaded in App Store Connect before the promotion can be submitted.",
     requiredScopes: [],
@@ -1113,6 +1157,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "update_promoted_purchase",
+    operationType: "destructive",
     description: "Change whether a promoted purchase is enabled or visible to all customers. Pass at least one field.",
     requiredScopes: [],
     providerPermissions: [...manageInAppPurchaseRoles],
@@ -1129,6 +1174,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "delete_promoted_purchase",
+    operationType: "destructive",
     description: "Remove a promotion from the App Store product page of an app.",
     requiredScopes: [],
     providerPermissions: [...manageInAppPurchaseRoles],
@@ -1146,6 +1192,7 @@ export const appStoreConnectInAppPurchaseActions: readonly ProviderActionDefinit
   }),
   defineProviderAction(service, {
     name: "reorder_promoted_purchases",
+    operationType: "destructive",
     description:
       "Set the display order of the promoted purchases of an app. The list replaces the current order, so include every promoted purchase that should stay listed.",
     requiredScopes: [],

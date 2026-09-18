@@ -38,6 +38,7 @@ const entitlementSkuIdsSchema = s.stringArray("The SKU IDs used to filter curren
 export const discordActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user_application_entitlements",
+    operationType: "read",
     description: "Get entitlements for the current OAuth user under a Discord application.",
     requiredScopes: ["applications.entitlements"],
     // The two entitlement operations are distinct in this pinned official OpenAPI snapshot:
@@ -56,6 +57,7 @@ export const discordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_my_application_role_connection",
+    operationType: "read",
     description: "Read the current OAuth user's role connection data for a Discord application.",
     requiredScopes: ["role_connections.write"],
     inputSchema: applicationInputSchema("Input parameters for reading an application role connection."),
@@ -63,6 +65,7 @@ export const discordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_my_application_role_connection",
+    operationType: "write",
     description: "Set the current OAuth user's role connection platform fields or metadata for a Discord application.",
     requiredScopes: ["role_connections.write"],
     inputSchema: s.object(
@@ -79,6 +82,7 @@ export const discordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_my_application_role_connection",
+    operationType: "destructive",
     description: "Remove the current OAuth user's role connection data for a Discord application.",
     requiredScopes: ["role_connections.write"],
     inputSchema: applicationInputSchema("Input parameters for deleting an application role connection."),
@@ -88,12 +92,14 @@ export const discordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_gateway",
+    operationType: "read",
     description: "Get a Discord Gateway URL.",
     inputSchema: noInputSchema,
     outputSchema: s.requiredObject("Discord Gateway URL.", { url: s.string("The WebSocket Gateway URL.") }),
   }),
   defineProviderAction(service, {
     name: "get_guild_template",
+    operationType: "read",
     description: "Get a Discord guild template by code.",
     inputSchema: s.requiredObject("Input for retrieving a Discord guild template.", {
       code: s.string("The guild template code.", { minLength: 1 }),
@@ -102,12 +108,14 @@ export const discordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_guild_widget",
+    operationType: "read",
     description: "Get a Discord guild widget as JSON.",
     inputSchema: guildInputSchema("Input for retrieving a Discord guild widget."),
     outputSchema: rawObjectSchema,
   }),
   defineProviderAction(service, {
     name: "get_guild_widget_png",
+    operationType: "read",
     description: "Get a Discord guild widget PNG.",
     inputSchema: s.object(
       "Input for retrieving a Discord guild widget PNG.",
@@ -123,6 +131,7 @@ export const discordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_invite",
+    operationType: "read",
     description: "Get a Discord invite by code or URL.",
     // Official removal of the obsolete with_expiration parameter:
     // https://github.com/discord/discord-api-docs/commit/56aa3199c523584e4142a285817ee8be7bb86ec0
@@ -138,6 +147,7 @@ export const discordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "resolve_invite",
+    operationType: "read",
     description: "Resolve a Discord invite code.",
     inputSchema: s.object(
       "Input parameters for resolving a Discord invite.",
@@ -151,6 +161,7 @@ export const discordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_my_guild_member",
+    operationType: "read",
     description: "Get the current OAuth user's member record in a guild.",
     requiredScopes: ["guilds.members.read"],
     inputSchema: guildInputSchema("Input for retrieving the current user's member record."),
@@ -158,12 +169,14 @@ export const discordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_my_oauth2_authorization",
+    operationType: "read",
     description: "Get the current OAuth2 authorization information.",
     inputSchema: noInputSchema,
     outputSchema: rawObjectSchema,
   }),
   defineProviderAction(service, {
     name: "get_my_user",
+    operationType: "read",
     description: "Get the current OAuth user's Discord profile.",
     requiredScopes: ["identify"],
     inputSchema: noInputSchema,
@@ -171,6 +184,7 @@ export const discordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_openid_connect_userinfo",
+    operationType: "read",
     description: "Get the OpenID Connect userinfo payload for the current OAuth user.",
     requiredScopes: ["openid"],
     inputSchema: noInputSchema,
@@ -178,6 +192,7 @@ export const discordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_public_keys",
+    operationType: "read",
     description: "Get Discord OAuth2 public keys.",
     inputSchema: noInputSchema,
     outputSchema: s.requiredObject("Discord OAuth2 public JWK set.", {
@@ -186,6 +201,7 @@ export const discordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get the current OAuth user. Discord OAuth tokens can only read @me through this provider.",
     requiredScopes: ["identify"],
     inputSchema: s.requiredObject("Input for retrieving a Discord user.", { user_id: s.literal("@me") }),
@@ -193,6 +209,7 @@ export const discordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_my_connections",
+    operationType: "read",
     description: "List the current OAuth user's connected external accounts.",
     requiredScopes: ["connections"],
     inputSchema: noInputSchema,
@@ -202,6 +219,7 @@ export const discordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_my_guilds",
+    operationType: "read",
     description: "List the current OAuth user's guilds.",
     requiredScopes: ["guilds"],
     inputSchema: s.object(
@@ -220,6 +238,7 @@ export const discordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sticker_packs",
+    operationType: "read",
     description: "List public Nitro sticker packs.",
     inputSchema: noInputSchema,
     outputSchema: rawObjectSchema,

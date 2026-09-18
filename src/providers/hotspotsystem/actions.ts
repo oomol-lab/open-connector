@@ -81,6 +81,7 @@ const listGlobalPeopleInputSchema = s.object(
 export const hotspotsystemActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_owner",
+    operationType: "read",
     description: "Verify the HotspotSystem API key and return the connected operator account.",
     inputSchema: s.actionInput({}, [], "The input payload for reading the current HotspotSystem operator."),
     outputSchema: s.actionOutput(
@@ -92,6 +93,7 @@ export const hotspotsystemActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_locations",
+    operationType: "read",
     description: "List HotspotSystem locations owned by the authenticated operator.",
     inputSchema: s.object(
       "Input parameters for listing HotspotSystem locations.",
@@ -110,6 +112,7 @@ export const hotspotsystemActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_location_options",
+    operationType: "read",
     description: "List HotspotSystem locations as lightweight id-name options.",
     inputSchema: s.actionInput({}, [], "The input payload for listing HotspotSystem location options."),
     outputSchema: s.actionOutput(
@@ -121,6 +124,7 @@ export const hotspotsystemActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List HotspotSystem customers across all accessible locations.",
     inputSchema: listGlobalPeopleInputSchema,
     outputSchema: s.actionOutput(
@@ -133,6 +137,7 @@ export const hotspotsystemActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_location_customers",
+    operationType: "read",
     description: "List HotspotSystem customers for one specific location.",
     inputSchema: listScopedPeopleInputSchema,
     outputSchema: s.actionOutput(
@@ -145,6 +150,7 @@ export const hotspotsystemActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subscribers",
+    operationType: "read",
     description: "List HotspotSystem subscribers across all accessible locations.",
     inputSchema: listGlobalPeopleInputSchema,
     outputSchema: s.actionOutput(
@@ -157,6 +163,7 @@ export const hotspotsystemActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_location_subscribers",
+    operationType: "read",
     description: "List HotspotSystem subscribers for one specific location.",
     inputSchema: listScopedPeopleInputSchema,
     outputSchema: s.actionOutput(

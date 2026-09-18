@@ -261,9 +261,16 @@ function paginatedOutput(key: string, schema: JsonSchema, description: string): 
   );
 }
 
-function action(name: string, description: string, input: JsonSchema, output: JsonSchema): ActionDefinition {
+function action(
+  name: string,
+  operationType: ActionDefinition["operationType"],
+  description: string,
+  input: JsonSchema,
+  output: JsonSchema,
+): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     requiredScopes: [],
     inputSchema: input,
@@ -286,12 +293,14 @@ const pageInput = (extra: Record<string, JsonSchema> = {}): JsonSchema =>
 export const vapiActions: ActionDefinition[] = [
   action(
     "list_assistants",
+    "read",
     "List Vapi assistants with optional created/updated timestamp filters and a configurable page size.",
     listInput,
     arrayOutput("assistants", assistantSchema, "The assistants returned by Vapi."),
   ),
   action(
     "create_assistant",
+    "write",
     "Create a new Vapi assistant with required transcriber, voice, and model settings plus optional messaging and duration controls.",
     inputSchema(
       "The input payload for this action.",
@@ -313,12 +322,14 @@ export const vapiActions: ActionDefinition[] = [
   ),
   action(
     "get_assistant",
+    "read",
     "Retrieve a Vapi assistant by its unique identifier.",
     idInput(),
     singleOutput("assistant", assistantSchema, "The assistant returned by Vapi."),
   ),
   action(
     "update_assistant",
+    "write",
     "Update an existing Vapi assistant and keep only the fields that should change in the request body.",
     inputSchema(
       "The input payload for this action.",
@@ -364,6 +375,7 @@ export const vapiActions: ActionDefinition[] = [
   ),
   action(
     "list_calls",
+    "read",
     "List Vapi calls with optional filtering by call, assistant, phone number, and created or updated timestamps.",
     inputSchema("The input payload for this action.", {
       id: s.string("Filter results by a specific call identifier."),
@@ -376,18 +388,21 @@ export const vapiActions: ActionDefinition[] = [
   ),
   action(
     "get_call",
+    "read",
     "Retrieve a single Vapi call by its unique identifier.",
     idInput(),
     singleOutput("call", callSchema, "The call returned by Vapi."),
   ),
   action(
     "delete_call",
+    "destructive",
     "Delete a Vapi call by its unique identifier.",
     idInput(),
     singleOutput("call", callSchema, "The deleted call returned by Vapi."),
   ),
   action(
     "list_chats",
+    "read",
     "List Vapi chats with pagination plus optional assistant, squad, session, previous chat, and timestamp filters.",
     pageInput({
       squadId: s.string("Filter results by the squad identifier."),
@@ -400,18 +415,21 @@ export const vapiActions: ActionDefinition[] = [
   ),
   action(
     "get_chat",
+    "read",
     "Retrieve a Vapi chat by its unique identifier.",
     idInput(),
     singleOutput("chat", chatSchema, "The chat returned by Vapi."),
   ),
   action(
     "delete_chat",
+    "destructive",
     "Delete a Vapi chat by its unique identifier.",
     idInput(),
     singleOutput("chat", chatSchema, "The deleted chat returned by Vapi."),
   ),
   action(
     "create_openai_chat",
+    "write",
     "Create an OpenAI-compatible Vapi chat response using an assistant or squad, with optional session and transport settings.",
     inputSchema(
       "The input payload for this action.",
@@ -437,6 +455,7 @@ export const vapiActions: ActionDefinition[] = [
   ),
   action(
     "create_analytics_query",
+    "read",
     "Create and execute one or more Vapi analytics queries across call and subscription data.",
     inputSchema(
       "The input payload for this action.",
@@ -450,6 +469,7 @@ export const vapiActions: ActionDefinition[] = [
   ),
   action(
     "create_eval",
+    "write",
     "Create a Vapi eval for a mock conversation and define the checkpoint messages used to evaluate model behavior.",
     inputSchema(
       "The input payload for this action.",
@@ -465,12 +485,14 @@ export const vapiActions: ActionDefinition[] = [
   ),
   action(
     "get_eval",
+    "read",
     "Retrieve a Vapi eval by its unique identifier.",
     idInput(),
     singleOutput("eval", evalSchema, "The eval returned by Vapi."),
   ),
   action(
     "update_eval",
+    "write",
     "Update a Vapi eval and keep only the fields that should change in the request body.",
     inputSchema(
       "The input payload for this action.",
@@ -487,12 +509,14 @@ export const vapiActions: ActionDefinition[] = [
   ),
   action(
     "delete_eval",
+    "destructive",
     "Delete a Vapi eval by its unique identifier.",
     idInput(),
     singleOutput("eval", evalSchema, "The deleted eval returned by Vapi."),
   ),
   action(
     "delete_eval_run",
+    "destructive",
     "Delete a Vapi eval run by its unique identifier.",
     idInput(),
     singleOutput(
@@ -503,24 +527,28 @@ export const vapiActions: ActionDefinition[] = [
   ),
   action(
     "list_evals",
+    "read",
     "List Vapi evals with pagination plus optional identifier and timestamp-based filters.",
     pageInput(),
     paginatedOutput("evals", evalSchema, "The evals returned by Vapi."),
   ),
   action(
     "get_file",
+    "read",
     "Retrieve Vapi file metadata by file identifier.",
     idInput(),
     singleOutput("file", fileSchema, "The file returned by Vapi."),
   ),
   action(
     "upload_file",
+    "write",
     "Upload a file to Vapi knowledge storage from a public URL or base64 payload and return the resulting file metadata.",
     inputSchema("The input payload for this action.", { file: uploadableFileSchema }, ["file"]),
     singleOutput("file", fileSchema, "The uploaded file returned by Vapi."),
   ),
   action(
     "list_monitoring_policies",
+    "read",
     "List Vapi monitoring policies with optional severity, monitor, and timestamp filters.",
     pageInput({
       severity: s.stringEnum("The monitoring policy severity level.", ["error", "warning", "info"]),
@@ -530,6 +558,7 @@ export const vapiActions: ActionDefinition[] = [
   ),
   action(
     "create_policy",
+    "write",
     "Create a Vapi monitoring policy with severity, threshold, and schedule or interval configuration.",
     inputSchema(
       "The input payload for this action.",
@@ -548,6 +577,7 @@ export const vapiActions: ActionDefinition[] = [
   ),
   action(
     "list_provider_resources",
+    "read",
     "List Vapi provider resources for a provider and resource type with optional identifier and timestamp filters.",
     pageInput({
       provider: s.stringEnum("The provider that owns the resource.", ["11labs", "cartesia"]),
@@ -558,6 +588,7 @@ export const vapiActions: ActionDefinition[] = [
   ),
   action(
     "create_provider_resource",
+    "write",
     "Create a pronunciation dictionary provider resource in Vapi, defaulting to the 11labs pronunciation-dictionary route used by the upstream toolkit.",
     inputSchema(
       "The input payload for this action.",
@@ -576,12 +607,14 @@ export const vapiActions: ActionDefinition[] = [
   ),
   action(
     "list_phone_numbers",
+    "read",
     "List Vapi phone numbers with optional created and updated timestamp filters.",
     listInput,
     arrayOutput("phoneNumbers", phoneNumberSchema, "The phone numbers returned by Vapi."),
   ),
   action(
     "create_phone_number",
+    "write",
     "Create a Vapi phone number using Vapi, Twilio, Vonage, Telnyx, or bring-your-own provider settings.",
     inputSchema(
       "The input payload for this action.",
@@ -614,6 +647,7 @@ export const vapiActions: ActionDefinition[] = [
   ),
   action(
     "update_phone_number",
+    "write",
     "Update a Vapi phone number and keep only the fields that should change in the request body.",
     inputSchema(
       "The input payload for this action.",
@@ -643,24 +677,28 @@ export const vapiActions: ActionDefinition[] = [
   ),
   action(
     "delete_phone_number",
+    "destructive",
     "Delete a Vapi phone number by its unique identifier.",
     idInput(),
     singleOutput("phoneNumber", phoneNumberSchema, "The deleted phone number returned by Vapi."),
   ),
   action(
     "list_structured_outputs",
+    "read",
     "List Vapi structured outputs with pagination plus optional identifier, name, and timestamp filters.",
     pageInput({ name: s.string("Filter results by a specific structured output name.") }),
     paginatedOutput("structuredOutputs", structuredOutputSchema, "The structured outputs returned by Vapi."),
   ),
   action(
     "list_insights",
+    "read",
     "List Vapi insights with pagination plus optional identifier and timestamp filters.",
     pageInput(),
     paginatedOutput("insights", insightSchema, "The insights returned by Vapi."),
   ),
   action(
     "update_insight",
+    "write",
     "Update a Vapi insight by replacing its name, queries, formulas, grouping, and time range settings.",
     inputSchema(
       "The input payload for this action.",
@@ -684,6 +722,7 @@ export const vapiActions: ActionDefinition[] = [
   ),
   action(
     "create_scorecard",
+    "write",
     "Create a Vapi scorecard for observability and evaluation using structured output metrics and conditions.",
     inputSchema(
       "The input payload for this action.",
@@ -699,12 +738,14 @@ export const vapiActions: ActionDefinition[] = [
   ),
   action(
     "list_scorecards",
+    "read",
     "List Vapi scorecards with pagination plus optional identifier and timestamp filters.",
     pageInput(),
     paginatedOutput("scorecards", scorecardSchema, "The scorecards returned by Vapi."),
   ),
   action(
     "create_session",
+    "write",
     "Create a Vapi session with either an assistant identifier or an inline assistant configuration.",
     inputSchema("The input payload for this action.", {
       name: s.string("The session name."),
@@ -715,6 +756,7 @@ export const vapiActions: ActionDefinition[] = [
   ),
   action(
     "list_sessions",
+    "read",
     "List Vapi sessions with pagination plus optional identifier, name, assistant, workflow, squad, and timestamp filters.",
     pageInput({
       name: s.string("Filter results by a specific session name."),
@@ -727,12 +769,14 @@ export const vapiActions: ActionDefinition[] = [
   ),
   action(
     "get_tool",
+    "read",
     "Retrieve a Vapi tool by its unique identifier.",
     idInput(),
     singleOutput("tool", toolSchema, "The tool returned by Vapi."),
   ),
   action(
     "update_tool",
+    "write",
     "Update a Vapi tool configuration, including function definitions, HTTP request settings, and retry policies.",
     inputSchema(
       "The input payload for this action.",
@@ -756,6 +800,7 @@ export const vapiActions: ActionDefinition[] = [
   ),
   action(
     "test_code_tool_execution",
+    "read",
     "Execute TypeScript code inside Vapi's code tool sandbox and return the logs, result, and execution outcome.",
     inputSchema(
       "The input payload for this action.",

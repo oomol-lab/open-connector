@@ -443,6 +443,7 @@ injuriesInputSchema.anyOf = [
 export const apiSportsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "football_list_leagues",
+    operationType: "read",
     description:
       "Query football leagues by league, country, season or search keyword and return the current available data coverage capabilities.",
     inputSchema: listLeaguesInputSchema,
@@ -453,6 +454,7 @@ export const apiSportsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "football_list_teams",
+    operationType: "read",
     description: "Search football teams by league, season, country, stadium or search keyword.",
     inputSchema: listTeamsInputSchema,
     outputSchema: s.object("Team list output.", {
@@ -462,6 +464,7 @@ export const apiSportsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "football_list_players_profiles",
+    operationType: "read",
     description: "Search football player profiles by player ID, search keyword or pagination page number.",
     inputSchema: s.object(
       "Query input for player profile list.",
@@ -479,6 +482,7 @@ export const apiSportsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "football_list_fixtures",
+    operationType: "read",
     description: "Check football schedules and scores by game, league, team, date, live status or time range.",
     inputSchema: listFixturesInputSchema,
     outputSchema: s.object("Match list output.", {
@@ -488,6 +492,7 @@ export const apiSportsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "football_get_standings",
+    operationType: "read",
     description:
       "Query the football standings for a specified season, and the results can be converged by league or team.",
     inputSchema: standingsInputSchema,
@@ -498,6 +503,7 @@ export const apiSportsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "football_get_fixture_events",
+    operationType: "read",
     description:
       "Query the event stream for a specified football match, such as goals, red and yellow cards, substitutions, and VAR.",
     inputSchema: fixtureFilterInputSchema,
@@ -507,6 +513,7 @@ export const apiSportsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "football_get_fixture_lineups",
+    operationType: "read",
     description:
       "Query the lineup, formation, starting lineup, substitutes and coaching information for a specified football game.",
     inputSchema: fixtureFilterInputSchema,
@@ -516,6 +523,7 @@ export const apiSportsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "football_get_fixture_statistics",
+    operationType: "read",
     description:
       "Query the technical statistics of the specified football match, optionally returning the statistics of the first and second halves.",
     inputSchema: fixtureStatisticsInputSchema,
@@ -525,6 +533,7 @@ export const apiSportsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "football_get_team_statistics",
+    operationType: "read",
     description: "Query the overall statistical performance of a specified team in a certain league season.",
     inputSchema: s.object(
       "Query input for team season statistics.",
@@ -542,6 +551,7 @@ export const apiSportsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "football_list_team_squad",
+    operationType: "read",
     description: "Query the current lineup of the specified team.",
     inputSchema: s.object(
       "Input to query the team's current lineup.",
@@ -554,6 +564,7 @@ export const apiSportsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "football_list_players_statistics",
+    operationType: "read",
     description: "Query player season statistics by player, team or league, support paging and search.",
     inputSchema: playersStatisticsInputSchema,
     outputSchema: s.object("Player season statistics list output.", {
@@ -563,6 +574,7 @@ export const apiSportsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "football_list_top_scorers",
+    operationType: "read",
     description: "Query the scorer list of the specified league season.",
     inputSchema: s.object(
       "Query the input of the league's scorer list.",
@@ -578,6 +590,7 @@ export const apiSportsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "football_list_injuries",
+    operationType: "read",
     description: "Check football injury information by game, league, team, player or date.",
     inputSchema: injuriesInputSchema,
     outputSchema: s.object("Injury list output.", {
@@ -587,6 +600,7 @@ export const apiSportsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "football_get_predictions",
+    operationType: "read",
     description: "Check official predictions and recommendations for selected football matches.",
     inputSchema: s.object(
       "Input for querying match predictions.",

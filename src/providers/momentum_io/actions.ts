@@ -167,6 +167,7 @@ const listMeetingsInputSchema: JsonSchema = {
 export const momentumIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Momentum organization users with optional pagination and filters.",
     inputSchema: s.object(
       "Input parameters for listing Momentum users.",
@@ -185,6 +186,7 @@ export const momentumIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_meetings",
+    operationType: "read",
     description: "List Momentum meetings with optional date, attendee, Salesforce, and source filters.",
     inputSchema: listMeetingsInputSchema,
     outputSchema: s.object(
@@ -198,6 +200,7 @@ export const momentumIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_signal_prompts",
+    operationType: "read",
     description: "List Momentum AI signal prompts configured for the organization.",
     inputSchema: s.object("Input parameters for listing Momentum signal prompts.", {}),
     outputSchema: s.requiredObject("A Momentum signals response.", {
@@ -206,6 +209,7 @@ export const momentumIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_signal_executions",
+    operationType: "read",
     description: "List executions for a Momentum v1 signal prompt within a time range.",
     inputSchema: s.object(
       "Input parameters for listing Momentum signal executions.",
@@ -226,6 +230,7 @@ export const momentumIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_signal_definitions",
+    operationType: "read",
     description: "List Momentum signal v2 definitions configured for the organization.",
     inputSchema: s.object("Input parameters for listing Momentum signal v2 definitions.", {}),
     outputSchema: s.requiredObject("A Momentum signals response.", {
@@ -234,6 +239,7 @@ export const momentumIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_signal_v2_executions",
+    operationType: "read",
     description: "List executions for a Momentum signal v2 definition within a time range.",
     inputSchema: s.object(
       "Input parameters for listing Momentum signal v2 executions.",

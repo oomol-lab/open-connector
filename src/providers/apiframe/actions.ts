@@ -56,6 +56,7 @@ const jobSchema = s.looseRequiredObject(
 function generationAction(name: "generate_image" | "generate_video" | "generate_music", noun: string) {
   return defineProviderAction(service, {
     name,
+    operationType: "write",
     description: `Submit an Apiframe ${noun} generation job and return its job ID.`,
     followUpActions: ["apiframe.get_job"],
     inputSchema: s.object(
@@ -73,6 +74,7 @@ function generationAction(name: "generate_image" | "generate_video" | "generate_
 export const apiframeActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",
+    operationType: "read",
     description: "List Apiframe models and their current generation control surfaces.",
     inputSchema: s.object(
       "The optional modality filter for the Apiframe model catalog.",
@@ -91,6 +93,7 @@ export const apiframeActions: ProviderActionDefinition[] = [
   generationAction("generate_music", "music"),
   defineProviderAction(service, {
     name: "get_job",
+    operationType: "read",
     description: "Get the current status and model-specific result for one Apiframe job.",
     inputSchema: s.requiredObject("The Apiframe job to retrieve.", {
       id: s.string("The Apiframe job UUID.", { format: "uuid" }),
@@ -99,6 +102,7 @@ export const apiframeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_jobs",
+    operationType: "read",
     description: "List Apiframe jobs with cursor pagination and optional status or model filters.",
     inputSchema: s.object(
       "The filters and pagination controls for listing Apiframe jobs.",

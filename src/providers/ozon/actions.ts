@@ -221,6 +221,7 @@ const fbsListOutputSchema = s.looseObject("An Ozon FBS posting list response.", 
 export const ozonActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_seller_info",
+    operationType: "read",
     description: "Retrieve information about the authenticated Ozon seller account.",
     requiredScopes: [],
     inputSchema: s.object("No input is required.", {}),
@@ -228,6 +229,7 @@ export const ozonActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List products in the authenticated Ozon seller account.",
     requiredScopes: [],
     inputSchema: listProductsInputSchema,
@@ -235,6 +237,7 @@ export const ozonActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product_info",
+    operationType: "read",
     description: "Retrieve detailed Ozon product information by offer, product, or SKU identifiers.",
     requiredScopes: [],
     inputSchema: getProductInfoInputSchema,
@@ -242,6 +245,7 @@ export const ozonActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_product_prices",
+    operationType: "read",
     description: "List prices for products in the authenticated Ozon seller account.",
     requiredScopes: [],
     inputSchema: cursorProductInputSchema("The input payload for listing Ozon product prices."),
@@ -249,6 +253,7 @@ export const ozonActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_product_stocks",
+    operationType: "read",
     description: "List stock quantities for products in the authenticated Ozon seller account.",
     requiredScopes: [],
     inputSchema: cursorProductInputSchema(
@@ -259,6 +264,7 @@ export const ozonActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_fbs_postings",
+    operationType: "read",
     description: "List Ozon FBS and rFBS postings for a date range.",
     requiredScopes: [],
     inputSchema: fbsListInputSchema,
@@ -266,6 +272,7 @@ export const ozonActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_fbs_posting",
+    operationType: "read",
     description: "Retrieve one Ozon FBS or rFBS posting by posting number.",
     requiredScopes: [],
     inputSchema: getFbsPostingInputSchema,

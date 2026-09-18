@@ -32,6 +32,7 @@ function paginatedOutputSchema(description: string, property: string, itemDescri
 export const favroActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_organizations",
+    operationType: "read",
     description: "List Favro organizations accessible to the configured user and API token.",
     requiredScopes: [],
     inputSchema: s.object("Continuation data for listing Favro organizations.", paginationInputProperties, {
@@ -45,6 +46,7 @@ export const favroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_organization",
+    operationType: "read",
     description: "Retrieve the Favro organization configured for this connection.",
     requiredScopes: [],
     inputSchema: s.object("No input is required.", {}),
@@ -52,6 +54,7 @@ export const favroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_collections",
+    operationType: "read",
     description: "List collections in the configured Favro organization.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -70,6 +73,7 @@ export const favroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_widgets",
+    operationType: "read",
     description: "List boards and other widgets in the configured Favro organization.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -87,6 +91,7 @@ export const favroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_widget",
+    operationType: "read",
     description: "Retrieve a Favro board or other widget by its common identifier.",
     requiredScopes: [],
     inputSchema: s.object("The widget to retrieve.", {
@@ -96,6 +101,7 @@ export const favroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_cards",
+    operationType: "read",
     description: "List Favro cards using a documented board, collection, card, or todo filter.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -133,6 +139,7 @@ export const favroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_card",
+    operationType: "read",
     description: "Retrieve one Favro card by its card identifier.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -147,6 +154,7 @@ export const favroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_card",
+    operationType: "write",
     description: "Create a Favro card in a board or in the configured user's todo list.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -179,6 +187,7 @@ export const favroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_card",
+    operationType: "write",
     description: "Update selected fields on an existing Favro card.",
     requiredScopes: [],
     inputSchema: s.object(

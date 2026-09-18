@@ -17,6 +17,7 @@ const detailsSchema = s.looseObject("Additional message delivery details returne
 export const whatsableActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send one WhatsApp text message with an optional attachment URL through WhatsAble.",
     inputSchema: s.object(
       "The recipient, message text, and optional public attachment sent through WhatsAble.",

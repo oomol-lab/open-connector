@@ -33,6 +33,7 @@ const apiKeyInfoSchema = s.object("Details about the Riveter API key used for th
 export const riveterActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve the Riveter account and API key details for the connected API key.",
     inputSchema: s.object("The input payload for retrieving the Riveter account.", {}),
     outputSchema: s.object("The Riveter account response.", {
@@ -42,6 +43,7 @@ export const riveterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "scrape",
+    operationType: "read",
     description: "Scrape a public webpage with Riveter and return extracted text content.",
     inputSchema: s.object(
       "The input payload for scraping a webpage with Riveter.",

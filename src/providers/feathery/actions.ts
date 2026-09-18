@@ -140,6 +140,7 @@ const userSessionInputSchema = s.requiredObject("Input payload for one Feathery 
 export const featheryActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_info",
+    operationType: "read",
     description: "Retrieve Feathery team and account information for the authenticated API key.",
     inputSchema: noInputSchema,
     outputSchema: s.requiredObject("The normalized Feathery account response.", {
@@ -148,6 +149,7 @@ export const featheryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_forms",
+    operationType: "read",
     description: "List Feathery forms, optionally filtered by tags.",
     inputSchema: listFormsInputSchema,
     outputSchema: s.requiredObject("The normalized Feathery form-list response.", {
@@ -156,6 +158,7 @@ export const featheryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form_schema",
+    operationType: "read",
     description: "Retrieve the complete schema for one Feathery form.",
     inputSchema: formIdInputSchema,
     outputSchema: s.requiredObject("The normalized Feathery form-schema response.", {
@@ -164,6 +167,7 @@ export const featheryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_or_update_form_submissions",
+    operationType: "write",
     description: "Create or update Feathery form submissions for one form.",
     inputSchema: createOrUpdateSubmissionsInputSchema,
     outputSchema: s.requiredObject("The normalized Feathery submission write response.", {
@@ -172,6 +176,7 @@ export const featheryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_hidden_fields",
+    operationType: "read",
     description: "List hidden fields configured in the Feathery account.",
     inputSchema: noInputSchema,
     outputSchema: s.requiredObject("The normalized Feathery hidden-field list response.", {
@@ -180,6 +185,7 @@ export const featheryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_hidden_field",
+    operationType: "write",
     description: "Create a Feathery hidden field by field ID.",
     inputSchema: hiddenFieldIdInputSchema,
     outputSchema: s.requiredObject("The normalized Feathery hidden-field create response.", {
@@ -188,6 +194,7 @@ export const featheryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "edit_hidden_field",
+    operationType: "write",
     description: "Rename or edit a Feathery hidden field by field ID.",
     inputSchema: editHiddenFieldInputSchema,
     outputSchema: s.requiredObject("The normalized Feathery hidden-field edit response.", {
@@ -196,6 +203,7 @@ export const featheryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_hidden_field",
+    operationType: "destructive",
     description: "Delete one Feathery hidden field by field ID.",
     inputSchema: hiddenFieldIdInputSchema,
     outputSchema: s.requiredObject("The normalized Feathery hidden-field delete response.", {
@@ -206,6 +214,7 @@ export const featheryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Feathery users with optional creation-time and field-value filters.",
     inputSchema: listUsersInputSchema,
     outputSchema: s.requiredObject("The normalized Feathery user-list response.", {
@@ -214,6 +223,7 @@ export const featheryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_data",
+    operationType: "read",
     description: "Retrieve all Feathery field data, optionally scoped to one user.",
     inputSchema: s.object(
       "Optional input payload for reading Feathery user field data.",
@@ -228,6 +238,7 @@ export const featheryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_session",
+    operationType: "read",
     description: "Retrieve Feathery form session and progress data for one user.",
     inputSchema: userSessionInputSchema,
     outputSchema: s.requiredObject("The normalized Feathery user-session response.", {
@@ -236,6 +247,7 @@ export const featheryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_or_fetch_user",
+    operationType: "write",
     description: "Create a Feathery user or fetch the existing user by ID.",
     inputSchema: userIdInputSchema,
     outputSchema: s.requiredObject("The normalized Feathery create-or-fetch-user response.", {
@@ -244,6 +256,7 @@ export const featheryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_user",
+    operationType: "destructive",
     description: "Delete one Feathery user by ID.",
     inputSchema: userIdInputSchema,
     outputSchema: s.requiredObject("The normalized Feathery delete-user response.", {

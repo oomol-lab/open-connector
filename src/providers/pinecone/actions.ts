@@ -70,6 +70,7 @@ const dataPlaneTargetSchema = {
 export const pineconeActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_indexes",
+    operationType: "read",
     description: "List Pinecone indexes in the authenticated project.",
     requiredScopes: [],
     inputSchema: s.object("The input for listing Pinecone indexes.", {}),
@@ -79,6 +80,7 @@ export const pineconeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "describe_index",
+    operationType: "read",
     description: "Describe one Pinecone index by name.",
     requiredScopes: [],
     inputSchema: s.object("The input for describing one Pinecone index.", { name: indexNameSchema }),
@@ -86,6 +88,7 @@ export const pineconeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_index",
+    operationType: "write",
     description: "Create a Pinecone serverless index.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -106,6 +109,7 @@ export const pineconeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "configure_index",
+    operationType: "write",
     description: "Configure an existing Pinecone index.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -122,6 +126,7 @@ export const pineconeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_index",
+    operationType: "destructive",
     description: "Delete one Pinecone index by name.",
     requiredScopes: [],
     inputSchema: s.object("The input for deleting one Pinecone index.", { name: indexNameSchema }),
@@ -131,6 +136,7 @@ export const pineconeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_index_stats",
+    operationType: "read",
     description: "Get statistics for a Pinecone index.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -142,6 +148,7 @@ export const pineconeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_vectors",
+    operationType: "write",
     description: "Upsert dense or sparse vectors into a Pinecone index namespace.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -160,6 +167,7 @@ export const pineconeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_vectors",
+    operationType: "read",
     description: "Search a Pinecone index namespace with a query vector.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -186,6 +194,7 @@ export const pineconeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "fetch_vectors",
+    operationType: "read",
     description: "Fetch Pinecone vectors by ID from one namespace.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -209,6 +218,7 @@ export const pineconeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_vector_ids",
+    operationType: "read",
     description: "List vector IDs in a Pinecone serverless index namespace.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -230,6 +240,7 @@ export const pineconeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_vectors",
+    operationType: "destructive",
     description: "Delete vectors from a Pinecone index namespace by IDs, filter, or deleteAll.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -250,6 +261,7 @@ export const pineconeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_vector",
+    operationType: "write",
     description: "Update one Pinecone vector or metadata-matched records in a namespace.",
     requiredScopes: [],
     inputSchema: s.object(

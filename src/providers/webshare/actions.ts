@@ -75,6 +75,7 @@ const statsSchema = s.looseObject("A Webshare hourly proxy stats object.", {
 export const webshareActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_profile",
+    operationType: "read",
     description: "Get the Webshare account profile for the connected API key.",
     requiredScopes: [],
     inputSchema: s.actionInput({}, [], "The input payload for retrieving the Webshare profile."),
@@ -85,6 +86,7 @@ export const webshareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_proxies",
+    operationType: "read",
     description: "List Webshare proxies with official mode, pagination, and filter options.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -118,6 +120,7 @@ export const webshareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_proxy_config",
+    operationType: "read",
     description: "Get the Webshare proxy configuration for a plan.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -132,6 +135,7 @@ export const webshareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_stats",
+    operationType: "read",
     description: "List Webshare hourly proxy usage stats for an optional time window.",
     requiredScopes: [],
     inputSchema: s.actionInput(

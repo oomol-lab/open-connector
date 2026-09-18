@@ -29,6 +29,7 @@ const mcpToolSummarySchema = s.object(
 export const lingxingMcpActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tools",
+    operationType: "read",
     description:
       "Discover the current Lingxing ERP MCP tools, behavior annotations, and live input schemas before choosing a tool to call.",
     inputSchema: s.actionInput({}, [], "No input is required."),
@@ -42,6 +43,7 @@ export const lingxingMcpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "call_tool",
+    operationType: "write",
     description:
       "Call a current Lingxing ERP MCP tool with JSON arguments. Discover the tool first and confirm the user's intent because some Lingxing tools create or update ERP data.",
     inputSchema: s.object(

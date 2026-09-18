@@ -14,6 +14,7 @@ const filterValuesSchema = (description: string) => s.array(description, filterV
 export const clinicalKeyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_service_status",
+    operationType: "read",
     description: "Get the current operational status of Elsevier's ClinicalKey COUNTER 5.1 service.",
     inputSchema: s.object("Input for checking the ClinicalKey COUNTER service status.", {}),
     outputSchema: s.object("The ClinicalKey COUNTER service status response.", {
@@ -22,6 +23,7 @@ export const clinicalKeyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_reports",
+    operationType: "read",
     description:
       "List the COUNTER 5.1 usage reports currently available to the connected ClinicalKey customer account.",
     inputSchema: s.object("Input for listing available ClinicalKey COUNTER reports.", {}),
@@ -31,6 +33,7 @@ export const clinicalKeyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_members",
+    operationType: "read",
     description: "List the consortium members or sites associated with the connected ClinicalKey customer account.",
     inputSchema: s.object("Input for listing ClinicalKey consortium members or sites.", {}),
     outputSchema: s.object("The ClinicalKey consortium members or sites.", {
@@ -42,6 +45,7 @@ export const clinicalKeyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_usage_report",
+    operationType: "read",
     description:
       "Retrieve one ClinicalKey COUNTER 5.1 usage report for an inclusive date range with optional standard filters and attributes.",
     inputSchema: s.object(

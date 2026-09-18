@@ -8,6 +8,7 @@ const service = "tailscale";
 export const tailscaleActions: ActionDefinition[] = tailscaleOperations.map((operation) =>
   defineProviderAction(service, {
     name: operation.name,
+    operationType: operation.operationType,
     description: operation.description,
     requiredScopes: operation.requiredScopes,
     providerPermissions: operation.requiredScopes,

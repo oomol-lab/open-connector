@@ -9,6 +9,7 @@ const articleSchema = s.looseObject("An Unpaywall DOI object. Additional fields 
 export const unpaywallActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_doi",
+    operationType: "read",
     description: "Retrieve Unpaywall open-access metadata for one DOI.",
     requiredScopes: [],
     inputSchema: s.object("The DOI to look up.", {
@@ -20,6 +21,7 @@ export const unpaywallActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_articles",
+    operationType: "read",
     description: "Search Unpaywall articles by title text.",
     requiredScopes: [],
     inputSchema: s.object(

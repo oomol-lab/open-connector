@@ -49,6 +49,7 @@ const booleanResultOutputSchema = s.object("The KlickTipp Listbuilding boolean r
 export const klicktippActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "signin",
+    operationType: "write",
     description: "Create or update a subscriber and associate the tag linked to the KlickTipp Listbuilding API key.",
     requiredScopes: [],
     inputSchema: signinInputSchema,
@@ -56,6 +57,7 @@ export const klicktippActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "signout",
+    operationType: "destructive",
     description: "Remove the tag linked to the KlickTipp Listbuilding API key from a subscriber by email address.",
     requiredScopes: [],
     inputSchema: emailOnlyInputSchema("Input for removing the Listbuilding API key tag."),
@@ -63,6 +65,7 @@ export const klicktippActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "signoff",
+    operationType: "destructive",
     description: "Unsubscribe a contact by email address through the KlickTipp Listbuilding API key.",
     requiredScopes: [],
     inputSchema: emailOnlyInputSchema("Input for unsubscribing a contact."),

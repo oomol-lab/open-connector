@@ -144,6 +144,7 @@ const transactionSortValues = [
 export const dealroomActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_companies",
+    operationType: "read",
     description:
       "Search Dealroom companies with documented keyword, boolean filter, projection, sorting, and pagination options.",
     requiredScopes: [],
@@ -152,6 +153,7 @@ export const dealroomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_investors",
+    operationType: "read",
     description:
       "Search Dealroom investment institutions with documented keyword, boolean filter, projection, sorting, and pagination options.",
     requiredScopes: [],
@@ -160,6 +162,7 @@ export const dealroomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_transactions",
+    operationType: "read",
     description:
       "Search Dealroom transactions and return their documented funding and round data without inferring seller or exit-party roles.",
     requiredScopes: [],

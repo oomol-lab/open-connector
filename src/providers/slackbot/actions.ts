@@ -10,6 +10,7 @@ export const slackbotActions: ActionDefinition[] = slackActions
   .map((action) =>
     defineProviderAction(service, {
       name: action.name,
+      operationType: action.operationType,
       description: action.description,
       requiredScopes: action.requiredScopes,
       inputSchema: action.inputSchema,

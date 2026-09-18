@@ -68,6 +68,7 @@ const groupSchema = s.object("Normalized Accredible group details.", {
 export const accredibleCertificatesActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List Accredible credential groups available to the API key.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Accredible groups.", {}),
@@ -78,6 +79,7 @@ export const accredibleCertificatesActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_group",
+    operationType: "read",
     description: "Get one Accredible credential group by group ID.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for reading one Accredible group.", {
@@ -89,6 +91,7 @@ export const accredibleCertificatesActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_groups",
+    operationType: "read",
     description: "Search Accredible credential groups with documented filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -125,6 +128,7 @@ export const accredibleCertificatesActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_credentials",
+    operationType: "read",
     description: "List Accredible credentials with documented query filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -163,6 +167,7 @@ export const accredibleCertificatesActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_credential",
+    operationType: "read",
     description: "Get one Accredible credential by credential ID.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for reading one Accredible credential.", {
@@ -174,6 +179,7 @@ export const accredibleCertificatesActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_credentials",
+    operationType: "read",
     description: "Search Accredible credentials with documented filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -218,6 +224,7 @@ export const accredibleCertificatesActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_credential",
+    operationType: "write",
     description: "Create one Accredible credential using JSON recipient and group fields.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -268,6 +275,7 @@ export const accredibleCertificatesActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_credential",
+    operationType: "destructive",
     description: "Delete one Accredible credential by credential ID.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for deleting one Accredible credential.", {

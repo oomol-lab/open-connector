@@ -55,6 +55,7 @@ const googleMapsPlaceInputSchema: JsonSchema = {
 export const scrapingdogActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "fetch_html",
+    operationType: "read",
     description: "Fetch the HTML response for one target URL through the Scrapingdog Web Scraping API.",
     inputSchema: s.object(
       "The input payload for fetching a web page through Scrapingdog.",
@@ -76,6 +77,7 @@ export const scrapingdogActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_search",
+    operationType: "read",
     description: "Run a Google Search request through Scrapingdog and return parsed results.",
     inputSchema: s.object(
       "The input payload for running a Google Search request through Scrapingdog.",
@@ -112,6 +114,7 @@ export const scrapingdogActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_maps_search",
+    operationType: "read",
     description: "Run a Google Maps Search request through Scrapingdog.",
     inputSchema: s.object(
       "The input payload for running a Google Maps Search request through Scrapingdog.",
@@ -131,6 +134,7 @@ export const scrapingdogActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_maps_place",
+    operationType: "read",
     description: "Retrieve details for one Google Maps place through Scrapingdog.",
     inputSchema: googleMapsPlaceInputSchema,
     outputSchema: s.object("The output payload for a Scrapingdog Google Maps Places request.", {
@@ -139,6 +143,7 @@ export const scrapingdogActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_scholar_search",
+    operationType: "read",
     description: "Run a Google Scholar search request through Scrapingdog.",
     inputSchema: s.object(
       "The input payload for running a Google Scholar search request through Scrapingdog.",
@@ -186,6 +191,7 @@ export const scrapingdogActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_account_usage",
+    operationType: "read",
     description: "Retrieve Scrapingdog account usage and credit information for the API key.",
     inputSchema: s.object("The input payload for retrieving Scrapingdog account usage.", {}),
     outputSchema: s.object("The output payload for Scrapingdog account usage.", {

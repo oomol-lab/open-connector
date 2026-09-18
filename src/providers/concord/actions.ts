@@ -27,6 +27,7 @@ const agreementStatuses = [
 export const concordActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get profile and current-organization information for the Concord API key owner.",
     inputSchema: s.actionInput({}, [], "No parameters are required to get the current Concord user."),
     outputSchema: s.actionOutput(
@@ -36,6 +37,7 @@ export const concordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_organizations",
+    operationType: "read",
     description: "List the Concord organizations available to the API key owner.",
     inputSchema: s.actionInput({}, [], "No parameters are required to list Concord organizations."),
     outputSchema: s.actionOutput(
@@ -47,6 +49,7 @@ export const concordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_organization",
+    operationType: "read",
     description: "Get one Concord organization by its numeric ID.",
     inputSchema: s.actionInput({ organizationId }, ["organizationId"], "A Concord organization selector."),
     outputSchema: s.actionOutput(
@@ -56,6 +59,7 @@ export const concordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_agreements",
+    operationType: "read",
     description: "List and search agreements accessible to the current user in a Concord organization.",
     inputSchema: s.actionInput(
       {
@@ -93,6 +97,7 @@ export const concordActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_folders",
+    operationType: "read",
     description: "List the folder tree shared with the current user in a Concord organization.",
     inputSchema: s.actionInput({ organizationId }, ["organizationId"], "A Concord organization selector."),
     outputSchema: s.actionOutput(

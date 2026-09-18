@@ -30,6 +30,7 @@ const transactionInfoIdInput = nonEmptyString(
 export const appStoreServerTransactionActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_transaction_history",
+    operationType: "read",
     description:
       "List a customer's in-app purchase transactions for your app, oldest first by default, decoded from the signed payloads Apple returns. Pass sort DESCENDING to get the most recent transactions first. Returns up to 20 transactions per page.",
     requiredScopes: [],
@@ -77,6 +78,7 @@ export const appStoreServerTransactionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_transaction_info",
+    operationType: "read",
     description: "Read one in-app purchase transaction by identifier, decoded from the signed payload Apple returns.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -88,6 +90,7 @@ export const appStoreServerTransactionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_app_transaction_info",
+    operationType: "read",
     description:
       "Read the app download transaction for a customer, decoded from the signed payload Apple returns. It records when and on which platform the customer first acquired the app.",
     requiredScopes: [],
@@ -103,6 +106,7 @@ export const appStoreServerTransactionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "look_up_order_id",
+    operationType: "read",
     description:
       "Look up the in-app purchase transactions behind an order ID from a customer's App Store receipt, to check that the order is genuine and belongs to your app. Apple serves this endpoint only in the production environment, so it fails on a sandbox connection.",
     requiredScopes: [],
@@ -125,6 +129,7 @@ export const appStoreServerTransactionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_app_account_token",
+    operationType: "destructive",
     description:
       "Set or replace the app account token on a transaction, to associate a purchase made outside your app with a customer on your own service. Overwrites any token already set.",
     requiredScopes: [],
@@ -151,6 +156,7 @@ export const appStoreServerTransactionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "finish_transaction",
+    operationType: "destructive",
     description:
       "Tell the App Store that your server finished delivering the content for a transaction. Call it only after the customer has the content; it cannot be undone. Apple still returns a finished transaction from get_transaction_history, so do not treat its disappearance as confirmation.",
     requiredScopes: [],

@@ -20,6 +20,7 @@ const graphQLErrorSchema = s.looseObject("One GraphQL error returned by Contentf
 export const contentfulGraphqlActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "execute_query",
+    operationType: "read",
     description: "Execute a Contentful GraphQL Content API query against a space and environment.",
     requiredScopes: [],
     inputSchema: s.object(

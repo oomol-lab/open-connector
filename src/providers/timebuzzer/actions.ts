@@ -47,6 +47,7 @@ const mutationOutput = s.requiredObject("The result of a timeBuzzer mutation.", 
 export const timebuzzerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the timeBuzzer user associated with the connected API key.",
     inputSchema: s.object("No input is required to get the current user.", {}),
     outputSchema: s.object(
@@ -67,6 +68,7 @@ export const timebuzzerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_layers",
+    operationType: "read",
     description: "List the timeBuzzer layers that organize tiles in hierarchy order.",
     inputSchema: s.object("No input is required to list layers.", {}),
     outputSchema: s.requiredObject("The timeBuzzer layers visible to the connected user.", {
@@ -89,6 +91,7 @@ export const timebuzzerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tiles",
+    operationType: "read",
     description: "List timeBuzzer tiles available to the connected user.",
     inputSchema: s.object("Filters for listing timeBuzzer tiles.", {
       archived: s.stringEnum("Which archived state to include.", ["true", "false", "all"]),
@@ -113,6 +116,7 @@ export const timebuzzerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_activities",
+    operationType: "read",
     description: "List timeBuzzer activities with offset-based pagination.",
     inputSchema: s.object(
       "Pagination and embedding options for listing activities.",
@@ -131,6 +135,7 @@ export const timebuzzerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_activity",
+    operationType: "read",
     description: "Get one timeBuzzer activity by ID.",
     inputSchema: s.requiredObject("The activity to retrieve.", {
       activityId: positiveId("The activity ID to retrieve."),
@@ -139,12 +144,14 @@ export const timebuzzerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_activity",
+    operationType: "write",
     description: "Create a timeBuzzer activity for a user and an ordered set of tiles.",
     inputSchema: s.object("The timeBuzzer activity to create.", activityWriteFields, { required: requiredWriteFields }),
     outputSchema: activitySchema,
   }),
   defineProviderAction(service, {
     name: "update_activity",
+    operationType: "destructive",
     description: "Replace the editable fields of an existing timeBuzzer activity.",
     inputSchema: s.object(
       "The activity ID and replacement activity fields.",
@@ -155,6 +162,7 @@ export const timebuzzerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_activity",
+    operationType: "destructive",
     description: "Delete a timeBuzzer activity by ID.",
     inputSchema: s.requiredObject("The activity to delete.", { activityId: positiveId("The activity ID to delete.") }),
     outputSchema: mutationOutput,

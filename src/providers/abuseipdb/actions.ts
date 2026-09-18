@@ -133,6 +133,7 @@ const blacklistEntrySchema = s.looseObject({}, { description: "Single AbuseIPDB 
 export const abuseipdbActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "check_ip",
+    operationType: "read",
     description: "Check the abuse reputation of a single IP address with AbuseIPDB.",
     inputSchema: s.object(
       {
@@ -160,6 +161,7 @@ export const abuseipdbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_reports",
+    operationType: "read",
     description: "List detailed AbuseIPDB reports for a single IP address.",
     inputSchema: s.object(
       {
@@ -192,6 +194,7 @@ export const abuseipdbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_block",
+    operationType: "read",
     description: "Inspect a CIDR block for reported addresses with AbuseIPDB.",
     inputSchema: s.object(
       {
@@ -218,6 +221,7 @@ export const abuseipdbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "blacklist",
+    operationType: "read",
     description: "Read the structured AbuseIPDB blacklist feed in JSON format.",
     inputSchema: s.object(
       {

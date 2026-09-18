@@ -94,6 +94,7 @@ const webhookFields: Record<string, JsonSchema> = {
 export const basinActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List projects available to the current Basin API key.",
     requiredScopes: [],
     inputSchema: listInputSchema,
@@ -108,6 +109,7 @@ export const basinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Fetch a single Basin project by ID.",
     requiredScopes: [],
     inputSchema: s.object("Path parameters for a Basin project endpoint.", { project_id: projectIdSchema }),
@@ -115,6 +117,7 @@ export const basinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create a new Basin project.",
     requiredScopes: [],
     inputSchema: s.object("Request payload for creating a Basin project.", {
@@ -124,6 +127,7 @@ export const basinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_project",
+    operationType: "write",
     description: "Update an existing Basin project by ID.",
     requiredScopes: [],
     inputSchema: s.object("Path and body parameters for updating a Basin project.", {
@@ -134,6 +138,7 @@ export const basinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_project",
+    operationType: "destructive",
     description: "Delete a Basin project by ID.",
     requiredScopes: [],
     inputSchema: s.object("Path parameters for a Basin project endpoint.", { project_id: projectIdSchema }),
@@ -141,6 +146,7 @@ export const basinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_forms",
+    operationType: "read",
     description: "List forms available to the current Basin API key.",
     requiredScopes: [],
     inputSchema: listInputSchema,
@@ -155,6 +161,7 @@ export const basinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form",
+    operationType: "read",
     description: "Fetch a single Basin form by ID.",
     requiredScopes: [],
     inputSchema: s.object("Path parameters for a Basin form endpoint.", { form_id: formIdSchema }),
@@ -162,6 +169,7 @@ export const basinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_form",
+    operationType: "write",
     description: "Create a new Basin form.",
     requiredScopes: [],
     inputSchema: s.object("Request payload for creating a Basin form.", formFields, { optional: optionalFormFields }),
@@ -169,6 +177,7 @@ export const basinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_form",
+    operationType: "write",
     description: "Update an existing Basin form by ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -183,6 +192,7 @@ export const basinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_form",
+    operationType: "destructive",
     description: "Delete a Basin form by ID.",
     requiredScopes: [],
     inputSchema: s.object("Path parameters for a Basin form endpoint.", { form_id: formIdSchema }),
@@ -190,6 +200,7 @@ export const basinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_submissions",
+    operationType: "read",
     description: "List Basin form submissions with optional filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -219,6 +230,7 @@ export const basinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_submission",
+    operationType: "read",
     description: "Fetch a single Basin submission by ID.",
     requiredScopes: [],
     inputSchema: s.object("Path parameters for a Basin submission endpoint.", { submission_id: submissionIdSchema }),
@@ -226,6 +238,7 @@ export const basinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_submission",
+    operationType: "destructive",
     description: "Delete a Basin submission by ID.",
     requiredScopes: [],
     inputSchema: s.object("Path parameters for a Basin submission endpoint.", { submission_id: submissionIdSchema }),
@@ -233,6 +246,7 @@ export const basinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_form_webhooks",
+    operationType: "read",
     description: "List Basin form webhooks with optional filters.",
     requiredScopes: [],
     inputSchema: listInputSchema,
@@ -247,6 +261,7 @@ export const basinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form_webhook",
+    operationType: "read",
     description: "Fetch a single Basin form webhook by ID.",
     requiredScopes: [],
     inputSchema: s.object("Path parameters for a Basin form webhook endpoint.", { webhook_id: webhookIdSchema }),
@@ -254,6 +269,7 @@ export const basinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_form_webhook",
+    operationType: "write",
     description: "Create a new Basin form webhook.",
     requiredScopes: [],
     inputSchema: s.object("Request payload for creating a Basin form webhook.", webhookFields, {
@@ -263,6 +279,7 @@ export const basinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_form_webhook",
+    operationType: "write",
     description: "Update an existing Basin form webhook by ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -277,6 +294,7 @@ export const basinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_form_webhook",
+    operationType: "destructive",
     description: "Delete a Basin form webhook by ID.",
     requiredScopes: [],
     inputSchema: s.object("Path parameters for a Basin form webhook endpoint.", { webhook_id: webhookIdSchema }),

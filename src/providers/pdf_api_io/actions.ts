@@ -38,6 +38,7 @@ const transitFileSchema = s.object("A copy of a provider-generated file stored i
 export const pdfApiIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List the PDF-API.io templates accessible to the provided API token.",
     requiredScopes: [],
     inputSchema: s.object("No input parameters are required for this action.", {}),
@@ -47,6 +48,7 @@ export const pdfApiIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_template",
+    operationType: "read",
     description: "Get one PDF-API.io template by template ID, including team and variable details.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for retrieving one PDF-API.io template.", {
@@ -58,6 +60,7 @@ export const pdfApiIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "render_pdf",
+    operationType: "read",
     description: "Render one PDF-API.io template with JSON data and return the temporary hosted PDF URL.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for rendering a PDF-API.io template to a hosted PDF URL.", {

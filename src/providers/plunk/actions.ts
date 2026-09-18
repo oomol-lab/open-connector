@@ -68,6 +68,7 @@ const contactWithMetaSchema = s.looseObject("A Plunk contact resource with upser
 export const plunkActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_email",
+    operationType: "write",
     description: "Send a transactional email through Plunk.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -102,6 +103,7 @@ export const plunkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "track_event",
+    operationType: "write",
     description: "Track an event for a Plunk contact.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -123,6 +125,7 @@ export const plunkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "verify_email",
+    operationType: "read",
     description: "Verify an email address with Plunk.",
     requiredScopes: [],
     inputSchema: s.object("Input for verifying an email address.", {
@@ -146,6 +149,7 @@ export const plunkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create or update a Plunk contact by email.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -164,6 +168,7 @@ export const plunkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Plunk contacts with cursor pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -192,6 +197,7 @@ export const plunkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get a single Plunk contact by ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a Plunk contact.", {
@@ -204,6 +210,7 @@ export const plunkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update a Plunk contact by ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -223,6 +230,7 @@ export const plunkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete a Plunk contact by ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for deleting a Plunk contact.", {

@@ -104,6 +104,7 @@ function paginatedOutputSchema(description: string, itemDescription: string, ite
 
 const listTokensAction = defineProviderAction(service, {
   name: "list_tokens",
+  operationType: "read",
   description: "List Token Metrics tokens and retrieve identifiers used by other market-data actions.",
   inputSchema: s.object("The filters and pagination for listing Token Metrics tokens.", {
     ...extendedTokenFilterFields,
@@ -120,6 +121,7 @@ const listTokensAction = defineProviderAction(service, {
 
 const getPricesAction = defineProviderAction(service, {
   name: "get_prices",
+  operationType: "read",
   description: "Retrieve current Token Metrics price records for selected cryptocurrencies.",
   inputSchema: s.object("The token identifiers for retrieving current prices.", priceFilterFields),
   outputSchema: paginatedOutputSchema(
@@ -131,6 +133,7 @@ const getPricesAction = defineProviderAction(service, {
 
 const listTopMarketCapTokensAction = defineProviderAction(service, {
   name: "list_top_market_cap_tokens",
+  operationType: "read",
   description: "List cryptocurrencies ranked by market capitalization in Token Metrics.",
   inputSchema: s.object("The options for listing top market-cap tokens.", {
     top_k: s.integer("The number of top cryptocurrencies to return.", {
@@ -149,6 +152,7 @@ const listTopMarketCapTokensAction = defineProviderAction(service, {
 
 const listTradingSignalsAction = defineProviderAction(service, {
   name: "list_trading_signals",
+  operationType: "read",
   description: "List Token Metrics long, short, or neutral trading signals with optional filters.",
   inputSchema: s.object("The filters and pagination for listing Token Metrics trading signals.", {
     ...extendedSignalFilterFields,
@@ -168,6 +172,7 @@ const listTradingSignalsAction = defineProviderAction(service, {
 
 const listHourlyOhlcvAction = defineProviderAction(service, {
   name: "list_hourly_ohlcv",
+  operationType: "read",
   description: "List hourly open, high, low, close, and volume records from Token Metrics.",
   inputSchema: s.object("The filters and pagination for listing hourly OHLCV records.", {
     ...ohlcvTokenFilterFields,
@@ -183,6 +188,7 @@ const listHourlyOhlcvAction = defineProviderAction(service, {
 
 const listDailyOhlcvAction = defineProviderAction(service, {
   name: "list_daily_ohlcv",
+  operationType: "read",
   description: "List daily open, high, low, close, and volume records from Token Metrics.",
   inputSchema: s.object("The filters and pagination for listing daily OHLCV records.", {
     ...ohlcvTokenFilterFields,

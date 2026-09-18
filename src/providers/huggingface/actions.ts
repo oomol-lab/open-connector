@@ -264,6 +264,7 @@ const trendingEntrySchema = s.object(
 export const huggingfaceActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current authenticated Hugging Face user profile.",
     requiredScopes: [huggingfaceOpenIdScope, huggingfaceProfileScope],
     inputSchema: s.actionInput({}, [], "No input parameters are required for this action."),
@@ -271,6 +272,7 @@ export const huggingfaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_models",
+    operationType: "read",
     description: "List Hugging Face models using user-friendly search filters.",
     inputSchema: s.object(
       "The input payload for listing Hugging Face models.",
@@ -292,6 +294,7 @@ export const huggingfaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_model_info",
+    operationType: "read",
     description: "Get detailed metadata for a Hugging Face model by modelId.",
     inputSchema: s.actionInput(
       {
@@ -304,6 +307,7 @@ export const huggingfaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_datasets",
+    operationType: "read",
     description: "List Hugging Face datasets using user-friendly search filters.",
     inputSchema: s.object(
       "The input payload for listing Hugging Face datasets.",
@@ -327,6 +331,7 @@ export const huggingfaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dataset_info",
+    operationType: "read",
     description: "Get detailed metadata for a Hugging Face dataset by dataset id.",
     inputSchema: s.object(
       "The input payload for retrieving Hugging Face dataset metadata.",
@@ -354,6 +359,7 @@ export const huggingfaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dataset_first_rows",
+    operationType: "read",
     description: "Preview the first rows of a dataset split from the Hugging Face Dataset Viewer.",
     requiredScopes: [huggingfaceReadReposScope],
     inputSchema: s.actionInput(
@@ -375,6 +381,7 @@ export const huggingfaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dataset_statistics",
+    operationType: "read",
     description: "Get column statistics for a dataset split from the Hugging Face Dataset Viewer.",
     requiredScopes: [huggingfaceReadReposScope],
     inputSchema: s.actionInput(
@@ -398,6 +405,7 @@ export const huggingfaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_spaces",
+    operationType: "read",
     description: "List Hugging Face Spaces using user-friendly discovery filters.",
     inputSchema: s.object(
       "The input payload for listing Hugging Face Spaces.",
@@ -421,6 +429,7 @@ export const huggingfaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_space_info",
+    operationType: "read",
     description: "Get detailed metadata for a Hugging Face Space by repo id.",
     requiredScopes: [huggingfaceReadReposScope],
     inputSchema: s.object(
@@ -435,6 +444,7 @@ export const huggingfaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_repo_files",
+    operationType: "read",
     description: "List files in a Hugging Face repository tree.",
     requiredScopes: [huggingfaceReadReposScope],
     inputSchema: s.object(
@@ -462,6 +472,7 @@ export const huggingfaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_trending",
+    operationType: "read",
     description: "Get trending Hugging Face repositories across models, datasets, and Spaces.",
     inputSchema: s.object(
       "The input payload for retrieving Hugging Face trending repositories.",
@@ -477,6 +488,7 @@ export const huggingfaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_endpoints",
+    operationType: "read",
     description: "List Hugging Face Inference Endpoints for a namespace.",
     inputSchema: s.object(
       "The input payload for listing Hugging Face Inference Endpoints.",
@@ -501,6 +513,7 @@ export const huggingfaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "generate_chat_completion",
+    operationType: "read",
     description: "Generate a chat completion with Hugging Face Inference Providers.",
     requiredScopes: [huggingfaceInferenceScope],
     inputSchema: s.object(
@@ -537,6 +550,7 @@ export const huggingfaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "generate_embeddings",
+    operationType: "read",
     description: "Generate text embeddings with Hugging Face inference.",
     requiredScopes: [huggingfaceInferenceScope],
     inputSchema: s.object(

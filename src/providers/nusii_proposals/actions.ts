@@ -114,6 +114,7 @@ const updateProposalFields = {
 
 const getAccountAction = defineProviderAction(service, {
   name: "get_account",
+  operationType: "read",
   description: "Get the Nusii account associated with the connected API token.",
   requiredScopes: [],
   inputSchema: s.object("No input parameters are required to get the Nusii account.", {}),
@@ -122,6 +123,7 @@ const getAccountAction = defineProviderAction(service, {
 
 const listClientsAction = defineProviderAction(service, {
   name: "list_clients",
+  operationType: "read",
   description: "List clients in the connected Nusii account with optional pagination.",
   requiredScopes: [],
   inputSchema: pagedInputSchema("Pagination parameters for listing Nusii clients."),
@@ -130,6 +132,7 @@ const listClientsAction = defineProviderAction(service, {
 
 const getClientAction = defineProviderAction(service, {
   name: "get_client",
+  operationType: "read",
   description: "Get one Nusii client by ID.",
   requiredScopes: [],
   inputSchema: resourceInputSchema("client"),
@@ -138,6 +141,7 @@ const getClientAction = defineProviderAction(service, {
 
 const createClientAction = defineProviderAction(service, {
   name: "create_client",
+  operationType: "write",
   description: "Create a client in the connected Nusii account.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for creating a Nusii client.", clientFields, {
@@ -161,6 +165,7 @@ const createClientAction = defineProviderAction(service, {
 
 const listProposalsAction = defineProviderAction(service, {
   name: "list_proposals",
+  operationType: "read",
   description: "List Nusii proposals with pagination and optional status, archive, or recipient filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -192,6 +197,7 @@ const listProposalsAction = defineProviderAction(service, {
 
 const getProposalAction = defineProviderAction(service, {
   name: "get_proposal",
+  operationType: "read",
   description: "Get one Nusii proposal by ID, including any recipient resources Nusii returns.",
   requiredScopes: [],
   inputSchema: resourceInputSchema("proposal"),
@@ -200,6 +206,7 @@ const getProposalAction = defineProviderAction(service, {
 
 const createProposalAction = defineProviderAction(service, {
   name: "create_proposal",
+  operationType: "write",
   description: "Create a Nusii proposal, optionally resolving a client and copying sections from a template.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for creating a Nusii proposal.", proposalFields),
@@ -208,6 +215,7 @@ const createProposalAction = defineProviderAction(service, {
 
 const updateProposalAction = defineProviderAction(service, {
   name: "update_proposal",
+  operationType: "write",
   description: "Update one or more documented fields on a Nusii proposal.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -223,6 +231,7 @@ const updateProposalAction = defineProviderAction(service, {
 
 const archiveProposalAction = defineProviderAction(service, {
   name: "archive_proposal",
+  operationType: "destructive",
   description: "Archive a Nusii proposal by ID.",
   requiredScopes: [],
   inputSchema: resourceInputSchema("proposal"),
@@ -241,6 +250,7 @@ const recipientSchema = s.object(
 
 const sendProposalAction = defineProviderAction(service, {
   name: "send_proposal",
+  operationType: "write",
   description: "Send a Nusii proposal to one legacy email address or up to 10 structured recipients.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -286,6 +296,7 @@ const sendProposalAction = defineProviderAction(service, {
 
 const listTemplatesAction = defineProviderAction(service, {
   name: "list_templates",
+  operationType: "read",
   description: "List account or public Nusii templates with optional pagination.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -302,6 +313,7 @@ const listTemplatesAction = defineProviderAction(service, {
 
 const getTemplateAction = defineProviderAction(service, {
   name: "get_template",
+  operationType: "read",
   description: "Get one Nusii proposal template by ID.",
   requiredScopes: [],
   inputSchema: resourceInputSchema("template"),
@@ -310,6 +322,7 @@ const getTemplateAction = defineProviderAction(service, {
 
 const listUsersAction = defineProviderAction(service, {
   name: "list_users",
+  operationType: "read",
   description: "List Nusii account users for prepared-by and sender selection.",
   requiredScopes: [],
   inputSchema: pagedInputSchema("Pagination parameters for listing Nusii users."),
@@ -318,6 +331,7 @@ const listUsersAction = defineProviderAction(service, {
 
 const listThemesAction = defineProviderAction(service, {
   name: "list_themes",
+  operationType: "read",
   description: "List the proposal themes available in Nusii.",
   requiredScopes: [],
   inputSchema: s.object("No input parameters are required to list Nusii themes.", {}),

@@ -27,11 +27,19 @@ function output(description: string, properties: Record<string, JsonSchema>): Js
 
 function action(
   name: string,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): ActionDefinition {
-  return defineProviderAction(service, { name, description, requiredScopes: [], inputSchema, outputSchema });
+  return defineProviderAction(service, {
+    name,
+    operationType,
+    description,
+    requiredScopes: [],
+    inputSchema,
+    outputSchema,
+  });
 }
 
 const cohortOutput = output("A FundzWatch scored company cohort.", {
@@ -43,36 +51,42 @@ const cohortOutput = output("A FundzWatch scored company cohort.", {
 export const fundzwatchActions: ActionDefinition[] = [
   action(
     "get_funded_and_hiring",
+    "read",
     "Get companies with recent funding and active hiring evidence. No API key is required.",
     publicInput,
     cohortOutput,
   ),
   action(
     "get_renewal_radar",
+    "read",
     "Get companies whose UCC-1 liens approach their lapse dates. No API key is required.",
     publicInput,
     cohortOutput,
   ),
   action(
     "get_stacked_borrowers",
+    "read",
     "Get companies with active secured debt from multiple lenders. No API key is required.",
     publicInput,
     cohortOutput,
   ),
   action(
     "get_benefit_plans",
+    "read",
     "Get recently funded companies with benefit-plan evidence. No API key is required.",
     publicInput,
     cohortOutput,
   ),
   action(
     "get_money_in_motion",
+    "read",
     "Get companies combining a recent executive move with recent funding. No API key is required.",
     publicInput,
     cohortOutput,
   ),
   action(
     "get_lenders",
+    "read",
     "Search the FundzWatch UCC secured-party directory. No API key is required.",
     s.actionInput(
       {
@@ -89,6 +103,7 @@ export const fundzwatchActions: ActionDefinition[] = [
   ),
   action(
     "get_brokers",
+    "read",
     "Search the FundzWatch benefits broker directory. No API key is required.",
     s.actionInput(
       {
@@ -106,6 +121,7 @@ export const fundzwatchActions: ActionDefinition[] = [
   ),
   action(
     "get_scored_leads",
+    "read",
     "Get leads scored against the connected account's ICP. Requires an API key.",
     s.actionInput(
       {
@@ -124,6 +140,7 @@ export const fundzwatchActions: ActionDefinition[] = [
   ),
   action(
     "get_events",
+    "read",
     "Get recent FundzWatch business events. Requires an API key.",
     s.actionInput(
       {
@@ -144,18 +161,21 @@ export const fundzwatchActions: ActionDefinition[] = [
   ),
   action(
     "get_market_pulse",
+    "read",
     "Get aggregate FundzWatch market activity. Requires an API key.",
     s.actionInput({}, [], "No input is required."),
     output("Market pulse results.", { pulse: s.looseObject("The market pulse.") }),
   ),
   action(
     "get_market_brief",
+    "read",
     "Get the current AI-generated strategic intelligence brief. Requires an API key.",
     s.actionInput({}, [], "No input is required."),
     output("Market brief results.", { brief: s.looseObject("The strategic intelligence brief.") }),
   ),
   action(
     "get_usage",
+    "read",
     "Get the connected API key's tier, counters, and limits.",
     s.actionInput({}, [], "No input is required."),
     output("API usage results.", {
@@ -169,6 +189,7 @@ export const fundzwatchActions: ActionDefinition[] = [
   ),
   action(
     "get_watchlist",
+    "read",
     "List companies tracked by the connected account.",
     s.actionInput({}, [], "No input is required."),
     output("Watchlist results.", {
@@ -179,6 +200,7 @@ export const fundzwatchActions: ActionDefinition[] = [
   ),
   action(
     "add_to_watchlist",
+    "write",
     "Add company domains to the connected account's watchlist.",
     s.actionInput(
       {
@@ -196,6 +218,7 @@ export const fundzwatchActions: ActionDefinition[] = [
   ),
   action(
     "get_watchlist_events",
+    "read",
     "Get recent events for tracked companies.",
     s.actionInput(
       {

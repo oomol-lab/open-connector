@@ -24,6 +24,7 @@ const contentfulEntrySchema = s.looseObject("Contentful entry payload.");
 export const contentfulActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the authenticated Contentful user profile for the current personal access token.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for reading the authenticated Contentful user profile.", {}),
@@ -33,6 +34,7 @@ export const contentfulActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_spaces",
+    operationType: "read",
     description: "List Contentful spaces accessible to the current personal access token.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -53,6 +55,7 @@ export const contentfulActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_environments",
+    operationType: "read",
     description: "List Contentful environments inside a specific space.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for listing environments in a Contentful space.", {
@@ -67,6 +70,7 @@ export const contentfulActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_content_types",
+    operationType: "read",
     description: "List Contentful content types available in a specific environment.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -89,6 +93,7 @@ export const contentfulActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_entries",
+    operationType: "read",
     description: "List Contentful entries with common filtering, pagination, and include options.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -124,6 +129,7 @@ export const contentfulActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_entry",
+    operationType: "read",
     description: "Get a single Contentful entry by identifier.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for reading a single Contentful entry.", {
@@ -137,6 +143,7 @@ export const contentfulActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_entry",
+    operationType: "write",
     description: "Create a Contentful entry in a specific environment.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -156,6 +163,7 @@ export const contentfulActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_entry",
+    operationType: "write",
     description: "Update a Contentful entry using optimistic locking.",
     requiredScopes: [],
     inputSchema: s.object(

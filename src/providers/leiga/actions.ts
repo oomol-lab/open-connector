@@ -36,6 +36,7 @@ const issueFieldSchema = s.object("One field definition from a Leiga issue schem
 export const leigaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Leiga projects using the official project list filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -59,6 +60,7 @@ export const leigaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Fetch one Leiga project by its official numeric projectId.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for fetching one Leiga project by ID.", {
@@ -70,6 +72,7 @@ export const leigaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project_by_key",
+    operationType: "read",
     description: "Fetch one Leiga project by its official project key.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for fetching one Leiga project by key.", {
@@ -81,6 +84,7 @@ export const leigaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_issues",
+    operationType: "read",
     description: "List Leiga issues for one project using the official issue query body.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -113,6 +117,7 @@ export const leigaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_issue_by_number",
+    operationType: "read",
     description: "Fetch one Leiga issue by its official issueNo identifier.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for fetching one Leiga issue by issue number.", {
@@ -124,6 +129,7 @@ export const leigaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_issue_schema",
+    operationType: "read",
     description: "Fetch the Leiga issue field schema for one project.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for fetching the Leiga issue schema.", {

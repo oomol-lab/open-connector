@@ -296,6 +296,7 @@ function noInput(description: string): JsonSchema {
 export const globalpingActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_limits",
+    operationType: "read",
     description: "Get the current Globalping authenticated rate limits and remaining user credits.",
     requiredScopes: [],
     inputSchema: noInput("The input payload for retrieving Globalping limits."),
@@ -308,6 +309,7 @@ export const globalpingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_probes",
+    operationType: "read",
     description: "List the Globalping probes that are currently online with their location metadata.",
     requiredScopes: [],
     inputSchema: noInput("The input payload for listing online Globalping probes."),
@@ -320,6 +322,7 @@ export const globalpingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_measurement",
+    operationType: "write",
     description: "Create a Globalping measurement and return the accepted measurement ID and headers.",
     requiredScopes: [],
     inputSchema: createMeasurementInputSchema,
@@ -350,6 +353,7 @@ export const globalpingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_measurement",
+    operationType: "read",
     description: "Get the current status and results of a Globalping measurement by ID.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving a Globalping measurement.", {

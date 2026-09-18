@@ -41,6 +41,7 @@ const subscriptionOutputSchema = s.object("A Baremetrics subscription response."
 export const baremetricsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_sources",
+    operationType: "read",
     description: "List Baremetrics sources available to the current API key.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list Baremetrics sources.", {}),
@@ -51,6 +52,7 @@ export const baremetricsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List customers for a Baremetrics source with optional search and ordering.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -70,6 +72,7 @@ export const baremetricsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_customer",
+    operationType: "write",
     description: "Create a customer record in a Baremetrics API source.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -88,6 +91,7 @@ export const baremetricsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_customer",
+    operationType: "write",
     description: "Update basic information for a Baremetrics customer.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -106,6 +110,7 @@ export const baremetricsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_plans",
+    operationType: "read",
     description: "List plans for a Baremetrics source with optional search.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -123,6 +128,7 @@ export const baremetricsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_plan",
+    operationType: "write",
     description: "Create a plan for use in Baremetrics subscription records.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -144,6 +150,7 @@ export const baremetricsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_plan",
+    operationType: "write",
     description: "Update the name of a Baremetrics plan.",
     requiredScopes: [],
     inputSchema: s.object("Input for updating a Baremetrics plan.", {
@@ -155,6 +162,7 @@ export const baremetricsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subscriptions",
+    operationType: "read",
     description: "List subscriptions for a Baremetrics source with optional customer and ordering filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -173,6 +181,7 @@ export const baremetricsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_subscription",
+    operationType: "write",
     description: "Create a subscription in a Baremetrics API source.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -194,6 +203,7 @@ export const baremetricsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_subscription",
+    operationType: "write",
     description: "Update plan, addon, quantity, or discount data for a Baremetrics subscription.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -213,6 +223,7 @@ export const baremetricsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "cancel_subscription",
+    operationType: "destructive",
     description: "Cancel a Baremetrics subscription at a documented cancellation timestamp.",
     requiredScopes: [],
     inputSchema: s.object("Input for canceling a Baremetrics subscription.", {
@@ -224,6 +235,7 @@ export const baremetricsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_charges",
+    operationType: "read",
     description: "List charges for a Baremetrics source with optional time and entity filters.",
     requiredScopes: [],
     inputSchema: s.object(

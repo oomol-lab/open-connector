@@ -108,6 +108,7 @@ const documentTemplateSchema = s.object("A normalized full PDFMonkey document te
 export const pdfmonkeyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current PDFMonkey account resolved by the provided API key.",
     requiredScopes: [],
     inputSchema: s.object("No input parameters are required for this action.", {}),
@@ -117,6 +118,7 @@ export const pdfmonkeyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_document",
+    operationType: "write",
     description:
       "Create a PDFMonkey document and optionally queue generation immediately by setting status to pending.",
     requiredScopes: [],
@@ -142,6 +144,7 @@ export const pdfmonkeyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document_card",
+    operationType: "read",
     description: "Get one PDFMonkey document card for lightweight status polling without the full payload.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for retrieving one PDFMonkey document card.", {
@@ -153,6 +156,7 @@ export const pdfmonkeyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_document_cards",
+    operationType: "read",
     description:
       "List PDFMonkey document cards with optional filters for template, status, workspace, update time, and search text.",
     requiredScopes: [],
@@ -177,6 +181,7 @@ export const pdfmonkeyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document",
+    operationType: "read",
     description: "Get one full PDFMonkey document including its payload and generation logs.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for retrieving one full PDFMonkey document.", {
@@ -188,6 +193,7 @@ export const pdfmonkeyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_document_template_cards",
+    operationType: "read",
     description:
       "List PDFMonkey document template cards for one workspace with optional folder, page, and sort filters.",
     requiredScopes: [],
@@ -211,6 +217,7 @@ export const pdfmonkeyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document_template",
+    operationType: "read",
     description: "Get one full PDFMonkey document template including draft and published fields.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for retrieving one full PDFMonkey document template.", {

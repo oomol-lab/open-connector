@@ -93,6 +93,7 @@ const securePdfInputSchema = s.object(
 export const encodianActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "compress_pdf",
+    operationType: "write",
     description: "Compress one PDF document with Encodian and return the optimized PDF file as base64 content.",
     inputSchema: s.object(
       "Input parameters for compressing one PDF document.",
@@ -141,12 +142,14 @@ export const encodianActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "extract_pdf_pages",
+    operationType: "read",
     description: "Extract selected pages from one PDF document and return the resulting PDF file as base64 content.",
     inputSchema: extractPdfPagesInputSchema,
     outputSchema: pdfFileOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_pdf_text_layer",
+    operationType: "read",
     description: "Extract the text layer from one PDF document with optional page-range and encoding controls.",
     inputSchema: s.object(
       "Input parameters for extracting the text layer from one PDF document.",
@@ -173,6 +176,7 @@ export const encodianActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "secure_pdf_document",
+    operationType: "write",
     description:
       "Encrypt one PDF document with optional open and edit passwords, then return the protected PDF as base64 content.",
     inputSchema: securePdfInputSchema,
@@ -180,6 +184,7 @@ export const encodianActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "unlock_pdf_document",
+    operationType: "read",
     description: "Remove password protection from one PDF document and return the unlocked PDF as base64 content.",
     inputSchema: s.object("Input parameters for unlocking one password-protected PDF document.", {
       fileName: fileNameField,

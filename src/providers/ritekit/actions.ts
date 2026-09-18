@@ -39,6 +39,7 @@ const suggestionOutputSchema = s.requiredObject("The response returned when Rite
 export const ritekitActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_hashtag_stats",
+    operationType: "read",
     description: "Get current engagement statistics for one or more hashtags.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input payload for reading RiteKit hashtag statistics.", {
@@ -61,6 +62,7 @@ export const ritekitActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "auto_hashtag",
+    operationType: "read",
     description: "Add relevant hashtags to social post text with RiteKit.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -80,6 +82,7 @@ export const ritekitActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "suggest_hashtags_for_text",
+    operationType: "write",
     description: "Generate engagement-ranked hashtag suggestions from text.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input payload for generating hashtags from text.", {
@@ -89,6 +92,7 @@ export const ritekitActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "suggest_hashtags_for_url",
+    operationType: "write",
     description: "Generate engagement-ranked hashtag suggestions from a public webpage URL.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input payload for generating hashtags from a webpage.", {
@@ -98,6 +102,7 @@ export const ritekitActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "suggest_hashtags_for_image",
+    operationType: "write",
     description: "Generate engagement-ranked hashtag suggestions from a public image URL.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input payload for generating hashtags from an image.", {
@@ -107,6 +112,7 @@ export const ritekitActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_trending_hashtags",
+    operationType: "read",
     description: "List hashtags that are currently trending according to RiteKit.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -125,6 +131,7 @@ export const ritekitActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "clean_banned_instagram_hashtags",
+    operationType: "read",
     description: "Remove hashtags that RiteKit identifies as currently blocked by Instagram.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The input payload for cleaning blocked Instagram hashtags.", {

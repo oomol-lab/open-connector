@@ -274,6 +274,7 @@ const campaignResource = resourceObject(
 export const appleAdsCampaignActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_campaigns",
+    operationType: "read",
     description:
       "Search the campaigns of one ad account with filters, sorting and offset pagination. Soft-deleted campaigns are excluded unless a filter on deleted asks for them.",
     requiredScopes: [],
@@ -301,6 +302,7 @@ export const appleAdsCampaignActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign",
+    operationType: "read",
     description: "Read one campaign by identifier. Apple Ads returns the campaign regardless of its deleted state.",
     requiredScopes: [],
     providerPermissions: [...readCampaignsRoles],
@@ -316,6 +318,7 @@ export const appleAdsCampaignActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_campaign",
+    operationType: "write",
     description:
       "Create a campaign. promotedObjectType, promotedObjectId and billingEvent are fixed at creation: promote a different app or brand by creating another campaign.",
     requiredScopes: [],
@@ -357,6 +360,7 @@ export const appleAdsCampaignActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_campaign",
+    operationType: "destructive",
     description:
       "Change the mutable fields of one campaign. Only the fields you pass are changed, but an array you pass replaces the stored array entirely.",
     requiredScopes: [],
@@ -383,6 +387,7 @@ export const appleAdsCampaignActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_campaign",
+    operationType: "destructive",
     description:
       "Soft-delete one campaign. Apple Ads keeps the record but stops delivery and cascades the deletion to the campaign's ad groups, keywords and ads.",
     requiredScopes: [],
@@ -402,6 +407,7 @@ export const appleAdsCampaignActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign_limited_status_details",
+    operationType: "read",
     description:
       "Read why a legacy app campaign delivers below its potential in each country or region, as a map of country or region code to limiting reason.",
     requiredScopes: [],

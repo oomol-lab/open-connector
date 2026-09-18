@@ -234,6 +234,7 @@ const listSegmentsOutputSchema = s.object(
 export const omnisendActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Omnisend contacts with documented filters and cursor pagination.",
     requiredScopes: ["contacts.read"],
     inputSchema: listContactsInputSchema,
@@ -241,6 +242,7 @@ export const omnisendActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Fetch a single Omnisend contact by ID.",
     requiredScopes: ["contacts.read"],
     inputSchema: getContactInputSchema,
@@ -248,6 +250,7 @@ export const omnisendActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_contact",
+    operationType: "write",
     description: "Create a new Omnisend contact or update an existing contact matched by email.",
     requiredScopes: ["contacts.write"],
     inputSchema: upsertContactInputSchema,
@@ -255,6 +258,7 @@ export const omnisendActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact_by_id",
+    operationType: "write",
     description: "Update an existing Omnisend contact selected by contact ID.",
     requiredScopes: ["contacts.write"],
     inputSchema: updateContactSchema("Contact payload for updating an Omnisend contact by ID.", "contactID"),
@@ -262,6 +266,7 @@ export const omnisendActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact_by_email",
+    operationType: "write",
     description: "Update an existing Omnisend contact selected by email address.",
     requiredScopes: ["contacts.write"],
     inputSchema: updateContactSchema("Contact payload for updating an Omnisend contact by email.", "email"),
@@ -269,6 +274,7 @@ export const omnisendActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_tags",
+    operationType: "write",
     description: "Add tags to multiple Omnisend contacts in a batch.",
     requiredScopes: ["contacts.write"],
     inputSchema: tagBatchInputSchema,
@@ -276,6 +282,7 @@ export const omnisendActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_tags",
+    operationType: "destructive",
     description: "Remove tags from multiple Omnisend contacts in a batch.",
     requiredScopes: ["contacts.write"],
     inputSchema: tagBatchInputSchema,
@@ -283,6 +290,7 @@ export const omnisendActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_segments",
+    operationType: "read",
     description: "List Omnisend segments with sorting and cursor pagination.",
     requiredScopes: ["segments.read"],
     inputSchema: listSegmentsInputSchema,
@@ -290,6 +298,7 @@ export const omnisendActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_segment",
+    operationType: "read",
     description: "Fetch a single Omnisend segment by ID.",
     requiredScopes: ["segments.read"],
     inputSchema: getSegmentInputSchema,

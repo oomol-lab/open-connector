@@ -107,6 +107,7 @@ const brandfetchBrandSchema = s.object(
 export const brandfetchActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_brand",
+    operationType: "read",
     description: "Fetch a Brandfetch brand profile from a domain, Brand ID, ISIN, or stock ticker identifier.",
     inputSchema: s.object("The input payload for fetching a Brandfetch brand profile.", {
       identifier: s.nonEmptyString("The identifier to look up, such as a domain, Brand ID, ISIN, or stock ticker."),
@@ -115,6 +116,7 @@ export const brandfetchActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_transaction_info",
+    operationType: "read",
     description: "Resolve a raw transaction label into the corresponding Brandfetch merchant brand profile.",
     inputSchema: s.object("The input payload for resolving Brandfetch transaction information.", {
       transactionLabel: s.nonEmptyString("The raw merchant label from a payment or card statement."),

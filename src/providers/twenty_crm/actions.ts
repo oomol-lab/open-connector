@@ -56,6 +56,7 @@ const updateRecordInputSchema = s.object("Input parameters for updating a Twenty
 export const twentyCrmActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_metadata_objects",
+    operationType: "read",
     description: "List Twenty metadata objects for the connected workspace.",
     inputSchema: s.object("Input parameters for listing Twenty metadata objects.", {}),
     outputSchema: s.object("Output payload for Twenty metadata objects.", {
@@ -65,6 +66,7 @@ export const twentyCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_records",
+    operationType: "read",
     description: "List Twenty records for one workspace object using the generated schema-per-tenant REST API.",
     inputSchema: listRecordsInputSchema,
     outputSchema: s.object("Output payload for a Twenty record listing.", {
@@ -75,6 +77,7 @@ export const twentyCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "retrieve_record",
+    operationType: "read",
     description: "Retrieve one Twenty record by object API name and record UUID.",
     inputSchema: retrieveRecordInputSchema,
     outputSchema: s.object("Output payload for one Twenty record.", {
@@ -84,6 +87,7 @@ export const twentyCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_record",
+    operationType: "write",
     description: "Create one Twenty record for a workspace object.",
     inputSchema: recordPayloadInputSchema,
     outputSchema: s.object("Output payload for a created Twenty record.", {
@@ -93,6 +97,7 @@ export const twentyCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_record",
+    operationType: "write",
     description: "Update one Twenty record by object API name and record UUID.",
     inputSchema: updateRecordInputSchema,
     outputSchema: s.object("Output payload for an updated Twenty record.", {
@@ -102,6 +107,7 @@ export const twentyCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_record",
+    operationType: "destructive",
     description: "Delete one Twenty record by object API name and record UUID.",
     inputSchema: retrieveRecordInputSchema,
     outputSchema: s.object("Output payload for a deleted Twenty record.", {

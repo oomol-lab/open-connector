@@ -156,6 +156,7 @@ const searchCompaniesInputSchema: JsonSchema = {
 export const rocketReachActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve the authenticated RocketReach account profile.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The output payload for this action.", {
@@ -164,6 +165,7 @@ export const rocketReachActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_people",
+    operationType: "read",
     description: "Search RocketReach people with the official structured query object and pagination controls.",
     inputSchema: searchPeopleInputSchema,
     outputSchema: s.object("The output payload for this action.", {
@@ -173,6 +175,7 @@ export const rocketReachActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "lookup_person",
+    operationType: "read",
     description:
       "Look up a RocketReach person profile by id, email, name, or LinkedIn URL through the official lookup endpoint.",
     inputSchema: lookupPersonInputSchema,
@@ -182,6 +185,7 @@ export const rocketReachActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "lookup_person_and_company",
+    operationType: "read",
     description:
       "Look up a RocketReach person profile and return any company profile embedded in the official lookup response.",
     inputSchema: lookupPersonAndCompanyInputSchema,
@@ -192,6 +196,7 @@ export const rocketReachActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_person_status",
+    operationType: "read",
     description: "Check the current status of one or more RocketReach person lookups.",
     inputSchema: checkPersonStatusInputSchema,
     outputSchema: s.object("The output payload for this action.", {
@@ -200,6 +205,7 @@ export const rocketReachActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_companies",
+    operationType: "read",
     description:
       "Look up a company by exact name, domain, or id and return it as a single-item company list for search-style compatibility.",
     inputSchema: searchCompaniesInputSchema,
@@ -210,6 +216,7 @@ export const rocketReachActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "lookup_company",
+    operationType: "read",
     description: "Look up a RocketReach company profile by id, name, or domain.",
     inputSchema: companyLookupInputSchema,
     outputSchema: s.object("The output payload for this action.", {
@@ -218,6 +225,7 @@ export const rocketReachActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company_size",
+    operationType: "read",
     description:
       "Retrieve the employee-count data exposed on a RocketReach company profile by looking up the target company first.",
     inputSchema: companyLookupInputSchema,
@@ -228,6 +236,7 @@ export const rocketReachActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company_funding",
+    operationType: "read",
     description:
       "Retrieve the revenue and funding-investor data exposed on a RocketReach company profile by looking up the target company first.",
     inputSchema: companyLookupInputSchema,
@@ -242,6 +251,7 @@ export const rocketReachActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company_industries",
+    operationType: "read",
     description:
       "Retrieve the industry and industry-keyword data exposed on a RocketReach company profile by looking up the target company first.",
     inputSchema: companyLookupInputSchema,

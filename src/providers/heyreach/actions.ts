@@ -90,6 +90,7 @@ const statsFilterInputSchema = s.actionInput(
 export const heyreachActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_campaigns",
+    operationType: "read",
     description: "List HeyReach campaigns with optional filters and pagination.",
     inputSchema: s.actionInput(
       {
@@ -114,6 +115,7 @@ export const heyreachActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign",
+    operationType: "read",
     description: "Retrieve one HeyReach campaign by ID.",
     inputSchema: s.actionInput(
       { campaignId: positiveInteger("The HeyReach campaign ID.") },
@@ -124,6 +126,7 @@ export const heyreachActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_lists",
+    operationType: "read",
     description: "List HeyReach lead and company lists with pagination.",
     inputSchema: s.actionInput(paginationInputSchema, [], "Input payload for listing HeyReach lists."),
     outputSchema: paginatedOutputSchema(
@@ -135,6 +138,7 @@ export const heyreachActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_empty_list",
+    operationType: "write",
     description: "Create an empty HeyReach lead or company list.",
     inputSchema: s.actionInput(
       {
@@ -148,6 +152,7 @@ export const heyreachActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_leads",
+    operationType: "read",
     description: "List leads from a HeyReach list with optional filters and pagination.",
     inputSchema: s.actionInput(
       {
@@ -171,6 +176,7 @@ export const heyreachActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_lead",
+    operationType: "read",
     description: "Retrieve HeyReach lead details by LinkedIn profile URL.",
     inputSchema: s.actionInput(
       { profileUrl: s.url("The LinkedIn profile URL for the lead.") },
@@ -181,6 +187,7 @@ export const heyreachActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_lead_tags",
+    operationType: "read",
     description: "Retrieve tags for a HeyReach lead by LinkedIn profile URL.",
     inputSchema: s.actionInput(
       { profileUrl: s.url("The LinkedIn profile URL for the lead.") },
@@ -197,6 +204,7 @@ export const heyreachActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_linkedin_accounts",
+    operationType: "read",
     description: "List HeyReach LinkedIn sender accounts with pagination.",
     inputSchema: s.actionInput(paginationInputSchema, [], "Input payload for listing sender accounts."),
     outputSchema: paginatedOutputSchema(
@@ -208,12 +216,14 @@ export const heyreachActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_overall_stats",
+    operationType: "read",
     description: "Retrieve aggregated HeyReach outreach stats for optional account and campaign filters.",
     inputSchema: statsFilterInputSchema,
     outputSchema: s.actionOutput({ stats: rawObjectSchema }, "The response returned when retrieving overall stats."),
   }),
   defineProviderAction(service, {
     name: "get_overall_stats_by_campaign",
+    operationType: "read",
     description: "Retrieve HeyReach outreach stats grouped by campaign.",
     inputSchema: statsFilterInputSchema,
     outputSchema: s.actionOutput(

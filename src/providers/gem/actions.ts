@@ -45,6 +45,7 @@ const createdRangeOptional = ["created_after", "created_before", "sort"] as cons
 export const gemActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Gem users visible to the current API key.",
     inputSchema: s.object(
       "Input parameters for listing Gem users.",
@@ -65,6 +66,7 @@ export const gemActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_candidates",
+    operationType: "read",
     description: "List candidates in Gem CRM.",
     inputSchema: s.object(
       "Input parameters for listing Gem candidates.",
@@ -109,6 +111,7 @@ export const gemActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_candidate",
+    operationType: "read",
     description: "Get one Gem candidate by ID.",
     inputSchema: s.object("Input parameters for getting a Gem candidate.", {
       candidate_id: objectIdSchema("The Gem candidate ID."),
@@ -119,6 +122,7 @@ export const gemActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List projects in Gem CRM.",
     inputSchema: s.object(
       "Input parameters for listing Gem projects.",
@@ -152,6 +156,7 @@ export const gemActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get one Gem project by ID.",
     inputSchema: s.object("Input parameters for getting a Gem project.", {
       project_id: objectIdSchema("The Gem project ID."),
@@ -162,6 +167,7 @@ export const gemActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_project_candidates",
+    operationType: "read",
     description: "List candidate memberships in a Gem project.",
     inputSchema: s.object(
       "Input parameters for listing candidates in a Gem project.",
@@ -188,6 +194,7 @@ export const gemActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sequences",
+    operationType: "read",
     description: "List outreach sequences in Gem.",
     inputSchema: s.object(
       "Input parameters for listing Gem sequences.",
@@ -209,6 +216,7 @@ export const gemActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_sequence",
+    operationType: "read",
     description: "Get one Gem sequence by ID.",
     inputSchema: s.object("Input parameters for getting a Gem sequence.", {
       sequence_id: objectIdSchema("The Gem sequence ID."),
@@ -219,6 +227,7 @@ export const gemActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_custom_fields",
+    operationType: "read",
     description: "List custom fields configured in Gem.",
     inputSchema: s.object(
       "Input parameters for listing Gem custom fields.",

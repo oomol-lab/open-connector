@@ -75,6 +75,7 @@ const messageOutputSchema = s.requiredObject("A Doppler operation result.", {
 export const dopplerMarketingAutomationActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_lists",
+    operationType: "read",
     description: "List Doppler Email Marketing subscriber lists with optional pagination.",
     inputSchema: s.object("Pagination for listing Doppler subscriber lists.", paginationFields, {
       optional: paginationOptionalKeys,
@@ -87,6 +88,7 @@ export const dopplerMarketingAutomationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_list",
+    operationType: "read",
     description: "Retrieve one Doppler Email Marketing subscriber list by ID.",
     inputSchema: s.requiredObject("The list to retrieve.", {
       listId: listIdSchema,
@@ -98,6 +100,7 @@ export const dopplerMarketingAutomationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_list",
+    operationType: "write",
     description: "Create a Doppler Email Marketing subscriber list.",
     inputSchema: s.requiredObject("The subscriber list to create.", {
       name: s.nonEmptyString("The new list name.", {
@@ -112,6 +115,7 @@ export const dopplerMarketingAutomationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_list",
+    operationType: "write",
     description: "Rename a Doppler Email Marketing subscriber list.",
     inputSchema: s.requiredObject("The subscriber list update.", {
       listId: listIdSchema,
@@ -123,6 +127,7 @@ export const dopplerMarketingAutomationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_list",
+    operationType: "destructive",
     description: "Remove a Doppler Email Marketing list while leaving its contacts in the account.",
     inputSchema: s.requiredObject("The subscriber list to remove.", {
       listId: listIdSchema,
@@ -131,6 +136,7 @@ export const dopplerMarketingAutomationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subscribers",
+    operationType: "read",
     description: "List subscribers across a Doppler Email Marketing account.",
     inputSchema: s.object("Pagination for listing account subscribers.", paginationFields, {
       optional: paginationOptionalKeys,
@@ -143,6 +149,7 @@ export const dopplerMarketingAutomationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_list_subscribers",
+    operationType: "read",
     description: "List subscribers associated with a Doppler Email Marketing list.",
     inputSchema: s.object(
       "The list and pagination for retrieving associated subscribers.",
@@ -160,6 +167,7 @@ export const dopplerMarketingAutomationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_subscriber",
+    operationType: "read",
     description: "Retrieve one Doppler Email Marketing subscriber by email address.",
     inputSchema: s.requiredObject("The subscriber to retrieve.", {
       email: s.email("The subscriber email address.", {
@@ -173,6 +181,7 @@ export const dopplerMarketingAutomationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_subscriber_to_list",
+    operationType: "write",
     description: "Create or update a Doppler subscriber and associate the subscriber with a list.",
     inputSchema: s.object(
       "The subscriber and list association to create.",
@@ -189,6 +198,7 @@ export const dopplerMarketingAutomationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_subscriber_from_list",
+    operationType: "destructive",
     description: "Remove a subscriber from a Doppler list without deleting the subscriber from the account.",
     inputSchema: s.requiredObject("The subscriber and list association to remove.", {
       listId: listIdSchema,

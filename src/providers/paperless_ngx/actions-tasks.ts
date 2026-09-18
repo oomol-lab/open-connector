@@ -98,6 +98,7 @@ const runnableTaskTypeValues = ["train_classifier", "sanity_check", "llm_index"]
 export const paperlessNgxTaskActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description:
       "List Paperless-ngx background tasks (document consumption, classifier training, sanity checks, mail fetches and other jobs) with pagination and filters. Non-staff users see their own tasks plus unowned system tasks; staff users see every task. Requires the view_paperlesstask permission.",
     requiredScopes: [],
@@ -126,6 +127,7 @@ export const paperlessNgxTaskActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task",
+    operationType: "read",
     description:
       "Get one background task by its Celery task UUID, the id returned by upload_document, update_document_version, run_task and other asynchronous actions. Poll it until status is success, failure or revoked; a successful consume task reports the new document id in result_data.document_id (also the first entry of related_document_ids), while a rejected duplicate reports the existing document in result_data.duplicate_of.",
     requiredScopes: [],
@@ -139,6 +141,7 @@ export const paperlessNgxTaskActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task_by_id",
+    operationType: "read",
     description:
       "Get one background task by its numeric row id (the id field of list_tasks), as opposed to the Celery UUID used by get_task.",
     requiredScopes: [],
@@ -149,6 +152,7 @@ export const paperlessNgxTaskActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "acknowledge_tasks",
+    operationType: "write",
     description:
       "Mark background tasks as acknowledged (dismissed from the task list). Pass tasks with the numeric task row ids, or all true to acknowledge every visible unacknowledged task; exactly one of the two must be given. Requires the change_paperlesstask permission.",
     requiredScopes: [],
@@ -171,6 +175,7 @@ export const paperlessNgxTaskActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task_summary",
+    operationType: "read",
     description:
       "Get aggregated background task statistics per task type over the last N days: counts by outcome, average run and wait times and the timestamps of the latest run, success and failure. Superusers, staff and users with the view_system_monitoring permission see all tasks; everyone else sees their own tasks plus unowned system tasks.",
     requiredScopes: [],
@@ -190,6 +195,7 @@ export const paperlessNgxTaskActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task_status_counts",
+    operationType: "read",
     description:
       "Get the number of visible background tasks in total and per status group: needs_attention (failure or revoked), in_progress (pending or started) and completed (success). Accepts the same filters as list_tasks except status and is_complete, which the counts already break down.",
     requiredScopes: [],
@@ -210,6 +216,7 @@ export const paperlessNgxTaskActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_active_tasks",
+    operationType: "read",
     description:
       "List the background tasks that are currently pending or started, newest first, capped at 50 entries and not paginated. Non-staff users see their own tasks plus unowned system tasks.",
     requiredScopes: [],
@@ -220,6 +227,7 @@ export const paperlessNgxTaskActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_task",
+    operationType: "write",
     description:
       "Manually start a maintenance task in the background: train_classifier retrains the automatic matching classifier, sanity_check verifies the document files and database, llm_index updates the AI index. Only these three task types can be dispatched, and only by a superuser. Returns the Celery task UUID to poll with get_task.",
     requiredScopes: [],

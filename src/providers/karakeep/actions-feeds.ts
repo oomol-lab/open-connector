@@ -45,6 +45,7 @@ const fetchFeedResultSchema = successResultSchema(
 export const karakeepFeedActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_feeds",
+    operationType: "read",
     description:
       "Retrieve all RSS feed subscriptions for the authenticated Karakeep user. The response is not paginated and returns every feed at once.",
     requiredScopes: feedReadScopes,
@@ -53,6 +54,7 @@ export const karakeepFeedActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_feed",
+    operationType: "write",
     description:
       "Create a new RSS feed subscription. Karakeep periodically fetches the feed and imports matching items as bookmarks. Karakeep answers with 400 when the per user feed limit has already been reached.",
     requiredScopes: feedWriteScopes,
@@ -70,6 +72,7 @@ export const karakeepFeedActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_feed",
+    operationType: "read",
     description: "Retrieve a single RSS feed subscription by its id.",
     requiredScopes: feedReadScopes,
     inputSchema: s.requiredObject("The RSS feed subscription to retrieve.", {
@@ -79,6 +82,7 @@ export const karakeepFeedActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_feed",
+    operationType: "destructive",
     description:
       "Update an RSS feed subscription. Only the fields present in the input are changed; every omitted field keeps its current value.",
     requiredScopes: feedWriteScopes,
@@ -97,6 +101,7 @@ export const karakeepFeedActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_feed",
+    operationType: "destructive",
     description: "Delete an RSS feed subscription. Bookmarks that the feed already imported are not affected.",
     requiredScopes: feedWriteScopes,
     inputSchema: s.requiredObject("The RSS feed subscription to delete.", {
@@ -106,6 +111,7 @@ export const karakeepFeedActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "fetch_feed_now",
+    operationType: "write",
     description:
       "Trigger an immediate fetch of an RSS feed subscription. The fetch is only enqueued and runs asynchronously, so newly imported bookmarks appear later; poll get_feed and watch lastFetchedAt to see when it finished.",
     requiredScopes: feedWriteScopes,

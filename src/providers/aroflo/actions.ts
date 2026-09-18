@@ -169,6 +169,7 @@ const taskFilters = {
 export const arofloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_health_status",
+    operationType: "read",
     description: "Retrieve the public health status for the AroFlo API.",
     inputSchema: s.actionInput({}, [], "The health request."),
     outputSchema: s.object(
@@ -179,30 +180,35 @@ export const arofloActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_clients",
+    operationType: "read",
     description: "List AroFlo clients with optional partial-name filtering and field selection.",
     inputSchema: s.actionInput({ name: s.string("Filter clients by partial name."), fields }, [], "Client list input."),
     outputSchema: listOutput("The normalized clients response.", clientSummary),
   }),
   defineProviderAction(service, {
     name: "get_client",
+    operationType: "read",
     description: "Retrieve a specific AroFlo client by encoded client ID.",
     inputSchema: s.actionInput({ clientId: encodedId, fields }, ["clientId"], "Client lookup input."),
     outputSchema: clientDetail,
   }),
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "List AroFlo tasks with business unit, status, resource, date, and pagination filters.",
     inputSchema: s.actionInput(taskFilters, [], "Task list input."),
     outputSchema: listOutput("The normalized tasks response.", taskSummary),
   }),
   defineProviderAction(service, {
     name: "get_task",
+    operationType: "read",
     description: "Retrieve a specific AroFlo task by encoded task ID.",
     inputSchema: s.actionInput({ taskId: encodedId, fields }, ["taskId"], "Task lookup input."),
     outputSchema: taskDetail,
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List AroFlo users for an organisation with optional filters.",
     inputSchema: s.actionInput(
       {
@@ -222,6 +228,7 @@ export const arofloActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Retrieve a specific AroFlo user by encoded user ID.",
     inputSchema: s.actionInput({ userId: encodedId, fields }, ["userId"], "User lookup input."),
     outputSchema: userDetail,

@@ -3,6 +3,7 @@ import type { UnifapiOperationDefinition } from "../operations.ts";
 export const redditOperations: readonly UnifapiOperationDefinition[] = [
   {
     name: "browse_reddit_feed_home",
+    operationType: "read",
     operationId: "getRedditFeedHome",
     description: "Browse Reddit's anonymous home feed.",
     method: "GET",
@@ -25,6 +26,7 @@ export const redditOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "browse_reddit_feed_news",
+    operationType: "read",
     operationId: "getRedditFeedNews",
     description: "Browse Reddit's news feed.",
     method: "GET",
@@ -47,6 +49,7 @@ export const redditOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "browse_reddit_feed_popular",
+    operationType: "read",
     operationId: "getRedditFeedPopular",
     description: "Browse Reddit's popular feed.",
     method: "GET",
@@ -69,6 +72,7 @@ export const redditOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_reddit_post_comments",
+    operationType: "read",
     operationId: "getRedditPostsByIdComments",
     description: "List Reddit comments on a post.",
     method: "GET",
@@ -97,6 +101,7 @@ export const redditOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_reddit_post",
+    operationType: "read",
     operationId: "getRedditPostsById",
     description: "Get a Reddit post by id.",
     method: "GET",
@@ -121,6 +126,7 @@ export const redditOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_reddit_subreddit",
+    operationType: "read",
     operationId: "getRedditSubredditsByName",
     description: "Get a Reddit subreddit by name.",
     method: "GET",
@@ -145,6 +151,7 @@ export const redditOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_reddit_trending_searches",
+    operationType: "read",
     operationId: "getRedditTrendingSearches",
     description: "List Reddit's current trending search queries.",
     method: "GET",
@@ -162,6 +169,7 @@ export const redditOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_reddit_user_comments",
+    operationType: "read",
     operationId: "getRedditUsersByUsernameComments",
     description: "List Reddit comments authored by a user.",
     method: "GET",
@@ -190,6 +198,7 @@ export const redditOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_reddit_user_posts",
+    operationType: "read",
     operationId: "getRedditUsersByUsernamePosts",
     description: "List Reddit posts authored by a user.",
     method: "GET",
@@ -218,6 +227,7 @@ export const redditOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_reddit_user",
+    operationType: "read",
     operationId: "getRedditUsersByUsername",
     description: "Get a Reddit user profile by username.",
     method: "GET",

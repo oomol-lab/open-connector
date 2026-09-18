@@ -38,6 +38,7 @@ const idInputSchema = s.actionInput(
 export const salesloftActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Fetch information about the authenticated Salesloft user.",
     requiredScopes: [],
     inputSchema: s.actionInput({}, [], "Input payload for fetching the authenticated Salesloft user."),
@@ -51,6 +52,7 @@ export const salesloftActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_people",
+    operationType: "read",
     description: "List Salesloft people with optional paging, sorting, and filters.",
     requiredScopes: ["people:read"],
     inputSchema: listInputSchema,
@@ -64,6 +66,7 @@ export const salesloftActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_person",
+    operationType: "read",
     description: "Fetch a Salesloft person by ID or GUID.",
     requiredScopes: ["people:read"],
     inputSchema: idInputSchema,
@@ -77,6 +80,7 @@ export const salesloftActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_accounts",
+    operationType: "read",
     description: "List Salesloft accounts with optional paging, sorting, and filters.",
     requiredScopes: ["accounts:read"],
     inputSchema: listInputSchema,
@@ -90,6 +94,7 @@ export const salesloftActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Fetch a Salesloft account by ID or GUID.",
     requiredScopes: ["accounts:read"],
     inputSchema: idInputSchema,
@@ -103,6 +108,7 @@ export const salesloftActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_cadences",
+    operationType: "read",
     description: "List Salesloft cadences with optional paging, sorting, and filters.",
     requiredScopes: ["cadences:read"],
     inputSchema: listInputSchema,
@@ -116,6 +122,7 @@ export const salesloftActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_cadence",
+    operationType: "read",
     description: "Fetch a Salesloft cadence by ID or GUID.",
     requiredScopes: ["cadences:read"],
     inputSchema: idInputSchema,

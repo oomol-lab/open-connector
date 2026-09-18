@@ -79,24 +79,28 @@ const simpleUserActionOutputSchema = (description: string) =>
 export const membervaultActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_courses",
+    operationType: "read",
     description: "List products or courses in the connected MemberVault account.",
     inputSchema: emptyInputSchema,
     outputSchema: listCoursesOutputSchema,
   }),
   defineProviderAction(service, {
     name: "add_user",
+    operationType: "write",
     description: "Add a user to MemberVault and optionally grant access to one product or course.",
     inputSchema: addUserInputSchema,
     outputSchema: addUserOutputSchema,
   }),
   defineProviderAction(service, {
     name: "remove_user",
+    operationType: "destructive",
     description: "Remove a user's access to one MemberVault product without deleting the user account.",
     inputSchema: removeUserInputSchema,
     outputSchema: simpleUserActionOutputSchema("MemberVault remove user response."),
   }),
   defineProviderAction(service, {
     name: "delete_user",
+    operationType: "destructive",
     description: "Permanently delete a MemberVault user and their data, progress, and quiz answers.",
     inputSchema: deleteUserInputSchema,
     outputSchema: simpleUserActionOutputSchema("MemberVault delete user response."),

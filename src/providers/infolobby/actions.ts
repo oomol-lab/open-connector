@@ -32,6 +32,7 @@ const queryFields = {
 
 const listSpacesAction = defineProviderAction(service, {
   name: "list_spaces",
+  operationType: "read",
   description: "List InfoLobby workspaces accessible to the connected API key.",
   inputSchema: s.requiredObject("The input for listing accessible InfoLobby workspaces.", {}),
   outputSchema: s.requiredObject("The accessible InfoLobby workspaces.", {
@@ -41,6 +42,7 @@ const listSpacesAction = defineProviderAction(service, {
 
 const getSpaceAction = defineProviderAction(service, {
   name: "get_space",
+  operationType: "read",
   description: "Get storage-oriented metadata for one InfoLobby workspace.",
   inputSchema: s.requiredObject("The input for retrieving an InfoLobby workspace.", {
     spaceId: positiveIdSchema("The InfoLobby workspace id."),
@@ -50,6 +52,7 @@ const getSpaceAction = defineProviderAction(service, {
 
 const listTablesAction = defineProviderAction(service, {
   name: "list_tables",
+  operationType: "read",
   description: "List tables in an InfoLobby workspace.",
   inputSchema: s.requiredObject("The input for listing InfoLobby tables.", {
     spaceId: positiveIdSchema("The InfoLobby workspace id."),
@@ -61,6 +64,7 @@ const listTablesAction = defineProviderAction(service, {
 
 const getTableAction = defineProviderAction(service, {
   name: "get_table",
+  operationType: "read",
   description: "Get an InfoLobby table and its field schema.",
   inputSchema: s.requiredObject("The input for retrieving an InfoLobby table schema.", {
     tableId: positiveIdSchema("The InfoLobby table id."),
@@ -72,6 +76,7 @@ const getTableAction = defineProviderAction(service, {
 
 const createRecordAction = defineProviderAction(service, {
   name: "create_record",
+  operationType: "write",
   description: "Create a record in an InfoLobby table.",
   inputSchema: s.requiredObject("The input for creating an InfoLobby record.", {
     tableId: positiveIdSchema("The InfoLobby table id."),
@@ -82,6 +87,7 @@ const createRecordAction = defineProviderAction(service, {
 
 const getRecordAction = defineProviderAction(service, {
   name: "get_record",
+  operationType: "read",
   description: "Get one InfoLobby record with typed field values.",
   inputSchema: s.requiredObject("The input for retrieving an InfoLobby record.", {
     tableId: positiveIdSchema("The InfoLobby table id."),
@@ -92,6 +98,7 @@ const getRecordAction = defineProviderAction(service, {
 
 const updateRecordAction = defineProviderAction(service, {
   name: "update_record",
+  operationType: "write",
   description: "Update selected fields on an InfoLobby record.",
   inputSchema: s.requiredObject("The input for updating an InfoLobby record.", {
     tableId: positiveIdSchema("The InfoLobby table id."),
@@ -103,6 +110,7 @@ const updateRecordAction = defineProviderAction(service, {
 
 const deleteRecordAction = defineProviderAction(service, {
   name: "delete_record",
+  operationType: "destructive",
   description: "Delete one InfoLobby record.",
   inputSchema: s.requiredObject("The input for deleting an InfoLobby record.", {
     tableId: positiveIdSchema("The InfoLobby table id."),
@@ -115,6 +123,7 @@ const deleteRecordAction = defineProviderAction(service, {
 
 const queryRecordsAction = defineProviderAction(service, {
   name: "query_records",
+  operationType: "read",
   description: "Query and page through flat InfoLobby table rows.",
   inputSchema: s.object(
     "The input for querying InfoLobby records.",
@@ -137,6 +146,7 @@ const queryRecordsAction = defineProviderAction(service, {
 
 const countRecordsAction = defineProviderAction(service, {
   name: "count_records",
+  operationType: "read",
   description: "Count InfoLobby records matching filters, search, or a saved view.",
   inputSchema: s.object(
     "The input for counting InfoLobby records.",

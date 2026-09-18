@@ -8,6 +8,7 @@ const service = "googlechat";
 
 interface GoogleChatActionSource {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -72,6 +73,7 @@ const message = s.object(
 const actions: GoogleChatActionSource[] = [
   action(
     "list_spaces",
+    "read",
     "List the Google Chat spaces the authenticated user is a member of, with optional filtering and pagination.",
     [googleChatSpacesReadonlyScope],
     s.actionInput({
@@ -86,6 +88,7 @@ const actions: GoogleChatActionSource[] = [
   ),
   action(
     "get_space",
+    "read",
     "Retrieve the details of a single Google Chat space.",
     [googleChatSpacesReadonlyScope],
     s.actionInput(
@@ -98,6 +101,7 @@ const actions: GoogleChatActionSource[] = [
   ),
   action(
     "list_messages",
+    "read",
     "List the message history of a Google Chat space, with optional filtering, ordering, and pagination.",
     [googleChatMessagesReadonlyScope],
     s.actionInput(
@@ -122,6 +126,7 @@ const actions: GoogleChatActionSource[] = [
   ),
   action(
     "get_message",
+    "read",
     "Retrieve a single Google Chat message by its resource name, or by space and message ID.",
     [googleChatMessagesReadonlyScope],
     s.actionInput(
@@ -146,6 +151,7 @@ export const googleChatActions: ActionDefinition[] = actions.map((source) =>
 
 function action(
   name: string,
+  operationType: ActionDefinition["operationType"],
   description: string,
   requiredScopes: string[],
   inputSchema: JsonSchema,
@@ -153,6 +159,7 @@ function action(
 ): GoogleChatActionSource {
   return {
     name,
+    operationType,
     description,
     requiredScopes,
     inputSchema,

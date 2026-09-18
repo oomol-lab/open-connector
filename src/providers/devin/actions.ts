@@ -84,6 +84,7 @@ const sessionOutput = s.object("The response returned with a Devin session.", {
 export const devinActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_self",
+    operationType: "read",
     description: "Get identity information for the authenticated Devin API credential.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for getting the authenticated Devin principal.", {}),
@@ -91,6 +92,7 @@ export const devinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_session",
+    operationType: "write",
     description: "Create a new Devin organization session from a prompt.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -148,6 +150,7 @@ export const devinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sessions",
+    operationType: "read",
     description: "List Devin organization sessions with optional filters using cursor-based pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -205,6 +208,7 @@ export const devinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_session",
+    operationType: "read",
     description: "Get details for one Devin organization session.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for getting a Devin session.", {
@@ -215,6 +219,7 @@ export const devinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send a message to an active Devin session and resume it if suspended.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -235,6 +240,7 @@ export const devinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "terminate_session",
+    operationType: "destructive",
     description: "Terminate a Devin session, optionally archiving it for future reference.",
     requiredScopes: [],
     inputSchema: s.object(

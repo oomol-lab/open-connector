@@ -21,6 +21,7 @@ const stringArray = (description: string, itemDescription: string) =>
 export const cincopaActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_galleries",
+    operationType: "read",
     description: "List galleries from a Cincopa account with optional search and tag filters.",
     inputSchema: s.object(
       "Input parameters for listing galleries from a Cincopa account.",
@@ -44,6 +45,7 @@ export const cincopaActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_gallery_items",
+    operationType: "read",
     description: "List items from one Cincopa gallery by FID.",
     inputSchema: s.object(
       "Input parameters for listing items inside one Cincopa gallery.",
@@ -69,6 +71,7 @@ export const cincopaActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_assets",
+    operationType: "read",
     description: "List assets from a Cincopa account with optional metadata filters.",
     inputSchema: s.object(
       "Input parameters for listing assets from a Cincopa account.",
@@ -97,6 +100,7 @@ export const cincopaActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_asset_tags",
+    operationType: "read",
     description: "List the asset tag cloud available in a Cincopa account.",
     inputSchema: s.actionInput({}, [], "Input parameters for listing Cincopa asset tags."),
     outputSchema: s.actionOutput({ tagCloud: tagCloudSchema }),

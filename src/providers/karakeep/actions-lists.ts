@@ -38,6 +38,7 @@ const listQueryField = s.nonEmptyString(
 export const karakeepListActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_lists",
+    operationType: "read",
     description:
       "Retrieve all bookmark lists for the authenticated Karakeep user, including both manual and smart lists. This endpoint is not paginated and returns every list in one response.",
     requiredScopes: listReadScopes,
@@ -48,6 +49,7 @@ export const karakeepListActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_list",
+    operationType: "write",
     description:
       "Create a new bookmark list. Manual lists receive bookmarks that are added explicitly, while smart lists are populated automatically by a saved search query.",
     requiredScopes: listWriteScopes,
@@ -78,6 +80,7 @@ export const karakeepListActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_list",
+    operationType: "read",
     description: "Retrieve a single Karakeep list by its id.",
     requiredScopes: listReadScopes,
     inputSchema: s.requiredObject("Input for retrieving one Karakeep list.", {
@@ -87,6 +90,7 @@ export const karakeepListActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_list",
+    operationType: "write",
     description:
       "Partially update a Karakeep list. Only the fields present in the input are changed, and sending null for description or parentId clears the stored value.",
     requiredScopes: listWriteScopes,
@@ -111,6 +115,7 @@ export const karakeepListActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_list",
+    operationType: "destructive",
     description: "Delete a Karakeep list. Only the list itself is removed; the bookmarks it contained are kept.",
     requiredScopes: listWriteScopes,
     inputSchema: s.requiredObject("Input for deleting a Karakeep list.", {
@@ -124,6 +129,7 @@ export const karakeepListActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_list_bookmarks",
+    operationType: "read",
     description:
       "Retrieve one page of the bookmarks inside a Karakeep list. For smart lists the bookmarks are computed from the saved query of the list.",
     requiredScopes: bookmarkReadScopes,
@@ -142,6 +148,7 @@ export const karakeepListActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_bookmark_to_list",
+    operationType: "write",
     description:
       "Add a bookmark to a manual Karakeep list. The operation is idempotent, so adding a bookmark that is already in the list succeeds and changes nothing.",
     requiredScopes: listWriteScopes,
@@ -160,6 +167,7 @@ export const karakeepListActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_bookmark_from_list",
+    operationType: "destructive",
     description:
       "Remove a bookmark from a manual Karakeep list. The bookmark itself is kept. Karakeep rejects the request when the bookmark is not a member of the list.",
     requiredScopes: listWriteScopes,

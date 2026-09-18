@@ -99,6 +99,7 @@ const optionSetFlags = {
 export const mingdaoManagementActions: readonly ProviderActionDefinition[] = [
   defineProviderAction("mingdao", {
     name: "create_role",
+    operationType: "write",
     requiredScopes: [],
     description: "Create an application role with global or per-worksheet, view, field and page permissions.",
     inputSchema: s.object(
@@ -156,6 +157,7 @@ export const mingdaoManagementActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "delete_role",
+    operationType: "destructive",
     requiredScopes: [],
     description: "Delete an application role and revoke the access it grants.",
     inputSchema: s.object("The role deletion request.", { roleId }),
@@ -163,6 +165,7 @@ export const mingdaoManagementActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "add_role_members",
+    operationType: "write",
     requiredScopes: [],
     description: "Add users, departments, department trees, jobs or organization roles to an application role.",
     inputSchema: s.object(
@@ -180,6 +183,7 @@ export const mingdaoManagementActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "remove_role_members",
+    operationType: "destructive",
     requiredScopes: [],
     description: "Remove users, departments, department trees, jobs or organization roles from an application role.",
     inputSchema: s.object(
@@ -191,6 +195,7 @@ export const mingdaoManagementActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "remove_user_from_all_roles",
+    operationType: "destructive",
     requiredScopes: [],
     description: "Remove a user from every role in the connected application.",
     inputSchema: s.object("The user role removal request.", {
@@ -200,6 +205,7 @@ export const mingdaoManagementActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "create_optionset",
+    operationType: "write",
     requiredScopes: [],
     description: "Create an application option set with ordered values, colors and scores.",
     inputSchema: s.object("The option set creation request.", {
@@ -213,6 +219,7 @@ export const mingdaoManagementActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "update_optionset",
+    operationType: "destructive",
     requiredScopes: [],
     description: "Update an option set's name, keyed options, order, colors and scores.",
     inputSchema: s.object("The option set update request.", {
@@ -232,6 +239,7 @@ export const mingdaoManagementActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "disable_optionset",
+    operationType: "destructive",
     requiredScopes: [],
     description: "Disable an existing application option set.",
     inputSchema: s.object("The option set disable request.", { optionsetId }),
@@ -239,6 +247,7 @@ export const mingdaoManagementActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "generate_record_share_link",
+    operationType: "write",
     requiredScopes: [],
     description:
       "Generate a record share link with selected visible fields, optional password and expiration. Omitted or zero expiration means the link does not expire.",

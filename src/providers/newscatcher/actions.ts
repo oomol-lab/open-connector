@@ -70,6 +70,7 @@ const commonArticleOptionalFields = [
 
 const searchArticlesAction = defineProviderAction(service, {
   name: "search_articles",
+  operationType: "read",
   description: "Search NewsCatcher's global news index with practical publication filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -85,6 +86,7 @@ const searchArticlesAction = defineProviderAction(service, {
 
 const latestHeadlinesAction = defineProviderAction(service, {
   name: "get_latest_headlines",
+  operationType: "read",
   description: "Retrieve recent NewsCatcher headlines with source and publication filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -117,6 +119,7 @@ const sourceSchema = s.looseRequiredObject(
 
 const listSourcesAction = defineProviderAction(service, {
   name: "list_sources",
+  operationType: "read",
   description: "List news sources indexed by NewsCatcher using language and country filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -148,6 +151,7 @@ const listSourcesAction = defineProviderAction(service, {
 
 const getSubscriptionAction = defineProviderAction(service, {
   name: "get_subscription",
+  operationType: "read",
   description: "Retrieve the active NewsCatcher subscription plan and remaining API allowance.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for retrieving the NewsCatcher subscription.", {}),

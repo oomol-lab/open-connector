@@ -1,4 +1,5 @@
 import type { ProviderActionDefinition } from "../../core/provider-definition.ts";
+import type { ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
@@ -34,9 +35,15 @@ const sendMessageInput = s.looseObject("Input parameters for sending a Pushover 
   attachment_base64: s.string("Legacy base64-encoded image attachment content."),
 });
 
-function action(name: PushoverActionName, description: string, outputSchema = raw): ProviderActionDefinition {
+function action(
+  name: PushoverActionName,
+  operationType: ActionDefinition["operationType"],
+  description: string,
+  outputSchema = raw,
+): ProviderActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     inputSchema: tokenInput,
     outputSchema,
@@ -46,6 +53,7 @@ function action(name: PushoverActionName, description: string, outputSchema = ra
 export const pushoverActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description:
       "Send a Pushover notification to a user or delivery group, with optional emergency settings, URL metadata, and image attachment.",
     inputSchema: sendMessageInput,
@@ -57,48 +65,57 @@ export const pushoverActions: ProviderActionDefinition[] = [
   }),
   action(
     "validate_user_or_group",
+    "read",
     "Validate that a Pushover user or delivery group key can receive notifications.",
     status,
   ),
   action(
     "get_app_limits",
+    "read",
     "Get the current monthly message limit, remaining messages, and reset time for the connected Pushover application.",
     raw,
   ),
   action(
     "get_app_token",
+    "read",
     "Return the application API token resolved from the action input or the connected credential.",
     raw,
   ),
   action(
     "get_team_api_token",
+    "read",
     "Return the Team API token resolved from the action input or the connected credential.",
     raw,
   ),
-  action("store_team_api_token", "Validate and return metadata for a Pushover Team API token.", raw),
-  action("get_app_icon_image", "Fetch a Pushover application icon image.", raw),
-  action("get_receipt_status", "Get the status of an emergency notification receipt.", raw),
-  action("cancel_receipt_retries", "Cancel retries for one emergency notification receipt.", status),
-  action("cancel_retries_by_tag", "Cancel emergency notification retries by tag.", status),
-  action("update_glances", "Update Pushover glance data for a user or device.", status),
-  action("create_group", "Create a Pushover delivery group.", raw),
-  action("list_groups", "List Pushover delivery groups for the application token.", raw),
-  action("get_group", "Get one Pushover delivery group.", raw),
-  action("add_group_user", "Add one user to a Pushover delivery group.", status),
-  action("remove_group_user", "Remove one user from a Pushover delivery group.", status),
-  action("disable_group_user", "Disable one user in a Pushover delivery group.", status),
-  action("enable_group_user", "Enable one user in a Pushover delivery group.", status),
-  action("rename_group", "Rename a Pushover delivery group.", status),
-  action("assign_license", "Assign a Pushover license through the Team API.", raw),
-  action("check_license_credits", "Check available Pushover Team license credits.", raw),
-  action("subscription_flow", "Build or validate a Pushover subscription flow URL.", raw),
-  action("add_team_user", "Add a user to a Pushover Team.", raw),
-  action("remove_team_user", "Remove a user from a Pushover Team.", status),
-  action("client_login", "Log in to the Pushover Open Client API.", raw),
-  action("register_client_device", "Register a Pushover Open Client device.", raw),
-  action("fetch_client_messages", "Fetch messages from the Pushover Open Client message queue.", raw),
-  action("ack_delete_messages_up_to_id", "Acknowledge and delete Pushover Open Client messages up to an ID.", status),
-  action("listen_client_websocket", "Listen briefly to the Pushover Open Client WebSocket server.", raw),
+  action("store_team_api_token", "read", "Validate and return metadata for a Pushover Team API token.", raw),
+  action("get_app_icon_image", "read", "Fetch a Pushover application icon image.", raw),
+  action("get_receipt_status", "read", "Get the status of an emergency notification receipt.", raw),
+  action("cancel_receipt_retries", "destructive", "Cancel retries for one emergency notification receipt.", status),
+  action("cancel_retries_by_tag", "destructive", "Cancel emergency notification retries by tag.", status),
+  action("update_glances", "write", "Update Pushover glance data for a user or device.", status),
+  action("create_group", "write", "Create a Pushover delivery group.", raw),
+  action("list_groups", "read", "List Pushover delivery groups for the application token.", raw),
+  action("get_group", "read", "Get one Pushover delivery group.", raw),
+  action("add_group_user", "write", "Add one user to a Pushover delivery group.", status),
+  action("remove_group_user", "destructive", "Remove one user from a Pushover delivery group.", status),
+  action("disable_group_user", "destructive", "Disable one user in a Pushover delivery group.", status),
+  action("enable_group_user", "write", "Enable one user in a Pushover delivery group.", status),
+  action("rename_group", "write", "Rename a Pushover delivery group.", status),
+  action("assign_license", "write", "Assign a Pushover license through the Team API.", raw),
+  action("check_license_credits", "read", "Check available Pushover Team license credits.", raw),
+  action("subscription_flow", "read", "Build or validate a Pushover subscription flow URL.", raw),
+  action("add_team_user", "write", "Add a user to a Pushover Team.", raw),
+  action("remove_team_user", "destructive", "Remove a user from a Pushover Team.", status),
+  action("client_login", "write", "Log in to the Pushover Open Client API.", raw),
+  action("register_client_device", "write", "Register a Pushover Open Client device.", raw),
+  action("fetch_client_messages", "read", "Fetch messages from the Pushover Open Client message queue.", raw),
+  action(
+    "ack_delete_messages_up_to_id",
+    "destructive",
+    "Acknowledge and delete Pushover Open Client messages up to an ID.",
+    status,
+  ),
+  action("listen_client_websocket", "write", "Listen briefly to the Pushover Open Client WebSocket server.", raw),
 ];
 
 export type PushoverActionName =

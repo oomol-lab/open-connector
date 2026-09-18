@@ -69,6 +69,7 @@ const inputSchema = s.object(
 export const openfootballWorldcupActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_matches",
+    operationType: "read",
     description:
       "List World Cup matches from the public OpenFootball JSON dataset. This community dataset is not a real-time or official results source.",
     requiredScopes: [],
@@ -81,6 +82,7 @@ export const openfootballWorldcupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List World Cup groups from the public OpenFootball JSON dataset.",
     requiredScopes: [],
     inputSchema,
@@ -92,6 +94,7 @@ export const openfootballWorldcupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_teams",
+    operationType: "read",
     description: "List World Cup teams from the public OpenFootball JSON dataset.",
     requiredScopes: [],
     inputSchema,
@@ -102,6 +105,7 @@ export const openfootballWorldcupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_stadiums",
+    operationType: "read",
     description: "List World Cup stadiums from the public OpenFootball JSON dataset.",
     requiredScopes: [],
     inputSchema,
@@ -113,6 +117,7 @@ export const openfootballWorldcupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_squads",
+    operationType: "read",
     description: "List World Cup squads from the public OpenFootball JSON dataset when a season publishes squad files.",
     requiredScopes: [],
     inputSchema,
@@ -123,6 +128,7 @@ export const openfootballWorldcupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_qualification_playoffs",
+    operationType: "read",
     description:
       "List World Cup qualification playoff matches from the public OpenFootball JSON dataset when a season publishes playoff files.",
     requiredScopes: [],

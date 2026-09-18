@@ -96,6 +96,7 @@ const subscriptionListInputSchema = listInputSchema("subscriptions", {
 export const samcartActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List customers in the connected SamCart marketplace.",
     requiredScopes: [],
     inputSchema: customerListInputSchema,
@@ -103,6 +104,7 @@ export const samcartActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Retrieve a customer by its SamCart ID.",
     requiredScopes: [],
     inputSchema: idInputSchema("customer"),
@@ -110,6 +112,7 @@ export const samcartActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List products in the connected SamCart marketplace.",
     requiredScopes: [],
     inputSchema: productListInputSchema,
@@ -117,6 +120,7 @@ export const samcartActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Retrieve a product by its SamCart ID.",
     requiredScopes: [],
     inputSchema: idInputSchema("product"),
@@ -124,6 +128,7 @@ export const samcartActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description: "List orders in the connected SamCart marketplace.",
     requiredScopes: [],
     inputSchema: listInputSchema("orders", testModeProperty),
@@ -131,6 +136,7 @@ export const samcartActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_order",
+    operationType: "read",
     description: "Retrieve an order by its SamCart ID.",
     requiredScopes: [],
     inputSchema: idInputSchema("order"),
@@ -138,6 +144,7 @@ export const samcartActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subscriptions",
+    operationType: "read",
     description: "List subscriptions in the connected SamCart marketplace.",
     requiredScopes: [],
     inputSchema: subscriptionListInputSchema,
@@ -145,6 +152,7 @@ export const samcartActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_subscription",
+    operationType: "read",
     description: "Retrieve a subscription by its SamCart ID.",
     requiredScopes: [],
     inputSchema: idInputSchema("subscription"),

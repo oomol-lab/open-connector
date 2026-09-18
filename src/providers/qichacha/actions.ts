@@ -78,6 +78,7 @@ const historicalInvestmentSchema = s.object("A historical Qichacha investment re
 export const qichachaActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_company_shareholders",
+    operationType: "read",
     description:
       "List a company's shareholders and subscribed contribution details from Qichacha business registration data.",
     requiredScopes: [],
@@ -89,6 +90,7 @@ export const qichachaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_company_historical_investments",
+    operationType: "read",
     description: "List a company's historical outbound investments and exit details from Qichacha.",
     requiredScopes: [],
     inputSchema: searchInputSchema,

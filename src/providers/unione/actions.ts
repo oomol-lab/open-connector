@@ -241,6 +241,7 @@ const listSuppressionsOutputSchema = s.object(
 export const unioneActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_info",
+    operationType: "read",
     description: "Get UniOne user or project information for the current API key.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for this action.", {}),
@@ -248,6 +249,7 @@ export const unioneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_email",
+    operationType: "write",
     description: "Send a transactional email through UniOne without attachments.",
     requiredScopes: [],
     inputSchema: sendEmailInputSchema,
@@ -255,6 +257,7 @@ export const unioneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List UniOne templates available to the current API key.",
     requiredScopes: [],
     inputSchema: listTemplatesInputSchema,
@@ -262,6 +265,7 @@ export const unioneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List UniOne user-defined tags.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for this action.", {}),
@@ -269,6 +273,7 @@ export const unioneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_suppressions",
+    operationType: "read",
     description: "List UniOne suppressed recipients with optional filters.",
     requiredScopes: [],
     inputSchema: listSuppressionsInputSchema,

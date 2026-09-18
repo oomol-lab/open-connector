@@ -10,6 +10,7 @@ const writePermissions = [microsoftTodoProviderScopes.tasksReadWrite];
 
 interface MicrosoftTodoActionSource {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   providerPermissions: string[];
@@ -184,6 +185,7 @@ const deletedConfirmation = (description: string): JsonSchema =>
 const actions: MicrosoftTodoActionSource[] = [
   action(
     "list_task_lists",
+    "read",
     "List the current user's Microsoft To Do task lists.",
     microsoftTodoReadScopes,
     readPermissions,
@@ -192,6 +194,7 @@ const actions: MicrosoftTodoActionSource[] = [
   ),
   action(
     "get_task_list",
+    "read",
     "Get one Microsoft To Do task list by ID.",
     microsoftTodoReadScopes,
     readPermissions,
@@ -200,6 +203,7 @@ const actions: MicrosoftTodoActionSource[] = [
   ),
   action(
     "create_task_list",
+    "write",
     "Create a new Microsoft To Do task list.",
     microsoftTodoWriteScopes,
     writePermissions,
@@ -208,6 +212,7 @@ const actions: MicrosoftTodoActionSource[] = [
   ),
   action(
     "update_task_list",
+    "write",
     "Rename a Microsoft To Do task list.",
     microsoftTodoWriteScopes,
     writePermissions,
@@ -219,6 +224,7 @@ const actions: MicrosoftTodoActionSource[] = [
   ),
   action(
     "delete_task_list",
+    "destructive",
     "Delete a Microsoft To Do task list and all of its tasks.",
     microsoftTodoWriteScopes,
     writePermissions,
@@ -227,6 +233,7 @@ const actions: MicrosoftTodoActionSource[] = [
   ),
   action(
     "list_tasks",
+    "read",
     "List tasks in a Microsoft To Do task list.",
     microsoftTodoReadScopes,
     readPermissions,
@@ -242,6 +249,7 @@ const actions: MicrosoftTodoActionSource[] = [
   ),
   action(
     "get_task",
+    "read",
     "Get one task from a Microsoft To Do task list.",
     microsoftTodoReadScopes,
     readPermissions,
@@ -250,6 +258,7 @@ const actions: MicrosoftTodoActionSource[] = [
   ),
   action(
     "create_task",
+    "write",
     "Create a new task in a Microsoft To Do task list.",
     microsoftTodoWriteScopes,
     writePermissions,
@@ -276,6 +285,7 @@ const actions: MicrosoftTodoActionSource[] = [
   ),
   action(
     "update_task",
+    "write",
     "Update fields on an existing Microsoft To Do task.",
     microsoftTodoWriteScopes,
     writePermissions,
@@ -304,6 +314,7 @@ const actions: MicrosoftTodoActionSource[] = [
   ),
   action(
     "delete_task",
+    "destructive",
     "Delete a task from a Microsoft To Do task list.",
     microsoftTodoWriteScopes,
     writePermissions,
@@ -312,6 +323,7 @@ const actions: MicrosoftTodoActionSource[] = [
   ),
   action(
     "list_checklist_items",
+    "read",
     "List checklist items on a Microsoft To Do task.",
     microsoftTodoReadScopes,
     readPermissions,
@@ -320,6 +332,7 @@ const actions: MicrosoftTodoActionSource[] = [
   ),
   action(
     "create_checklist_item",
+    "write",
     "Add a checklist item to a Microsoft To Do task.",
     microsoftTodoWriteScopes,
     writePermissions,
@@ -331,6 +344,7 @@ const actions: MicrosoftTodoActionSource[] = [
   ),
   action(
     "update_checklist_item",
+    "write",
     "Update a checklist item on a Microsoft To Do task.",
     microsoftTodoWriteScopes,
     writePermissions,
@@ -348,6 +362,7 @@ const actions: MicrosoftTodoActionSource[] = [
   ),
   action(
     "delete_checklist_item",
+    "destructive",
     "Delete a checklist item from a Microsoft To Do task.",
     microsoftTodoWriteScopes,
     writePermissions,
@@ -360,11 +375,12 @@ export const microsoftTodoActions: ActionDefinition[] = actions.map((item) => de
 
 function action(
   name: string,
+  operationType: ActionDefinition["operationType"],
   description: string,
   requiredScopes: string[],
   providerPermissions: string[],
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): MicrosoftTodoActionSource {
-  return { name, description, requiredScopes, providerPermissions, inputSchema, outputSchema };
+  return { name, operationType, description, requiredScopes, providerPermissions, inputSchema, outputSchema };
 }

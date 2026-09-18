@@ -137,6 +137,7 @@ const exaCostDollarsSchema = s.looseObject("The Exa costDollars object.", {
 export const exaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search",
+    operationType: "read",
     description: "Search the web with Exa and optionally enrich each result with contents.",
     inputSchema: s.object(
       "The input payload for an Exa search request. includeDomains and excludeDomains cannot be provided together.",
@@ -189,6 +190,7 @@ export const exaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contents",
+    operationType: "read",
     description: "Fetch text, highlights, or summaries from Exa for URLs or document IDs.",
     inputSchema: s.object(
       "The input payload for fetching Exa contents by URL.",
@@ -233,6 +235,7 @@ export const exaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "answer",
+    operationType: "write",
     description: "Generate a citation-backed answer from Exa search results.",
     inputSchema: s.object(
       "The input payload for an Exa answer request.",
@@ -257,6 +260,7 @@ export const exaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_similar",
+    operationType: "read",
     description: "Find pages similar to a given URL and optionally enrich them with contents.",
     inputSchema: s.object(
       "The input payload for an Exa findSimilar request. includeDomains and excludeDomains cannot be provided together.",

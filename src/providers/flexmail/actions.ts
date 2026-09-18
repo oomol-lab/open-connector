@@ -136,6 +136,7 @@ const contactIdInputSchema = s.requiredObject("The input payload for selecting a
 
 const listContactsAction = defineProviderAction(service, {
   name: "list_contacts",
+  operationType: "read",
   description: "List Flexmail contacts, optionally filtering by email address and paging through the collection.",
   inputSchema: s.object(
     "The input payload for listing Flexmail contacts.",
@@ -150,6 +151,7 @@ const listContactsAction = defineProviderAction(service, {
 
 const createContactAction = defineProviderAction(service, {
   name: "create_contact",
+  operationType: "write",
   description: "Create a Flexmail contact in a specific source.",
   inputSchema: createContactInputSchema,
   outputSchema: createdResourceOutputSchema,
@@ -157,6 +159,7 @@ const createContactAction = defineProviderAction(service, {
 
 const getContactAction = defineProviderAction(service, {
   name: "get_contact",
+  operationType: "read",
   description: "Fetch a Flexmail contact by id.",
   inputSchema: contactIdInputSchema,
   outputSchema: resourceOutputSchema,
@@ -164,6 +167,7 @@ const getContactAction = defineProviderAction(service, {
 
 const updateContactAction = defineProviderAction(service, {
   name: "update_contact",
+  operationType: "write",
   description: "Partially update a Flexmail contact.",
   inputSchema: updateContactInputSchema,
   outputSchema: resourceOutputSchema,
@@ -171,6 +175,7 @@ const updateContactAction = defineProviderAction(service, {
 
 const unsubscribeContactAction = defineProviderAction(service, {
   name: "unsubscribe_contact",
+  operationType: "destructive",
   description: "Unsubscribe a Flexmail contact from all future communication.",
   inputSchema: contactIdInputSchema,
   outputSchema: emptyOutputSchema,
@@ -178,6 +183,7 @@ const unsubscribeContactAction = defineProviderAction(service, {
 
 const listCustomFieldsAction = defineProviderAction(service, {
   name: "list_custom_fields",
+  operationType: "read",
   description: "List custom fields configured in the Flexmail account.",
   inputSchema: s.object(
     "The input payload for listing Flexmail custom fields.",
@@ -210,6 +216,7 @@ const interestFields = {
 
 const listInterestsAction = defineProviderAction(service, {
   name: "list_interests",
+  operationType: "read",
   description: "List Flexmail interests with optional name and visibility filters.",
   inputSchema: s.object(
     "The input payload for listing Flexmail interests.",
@@ -227,6 +234,7 @@ const listInterestsAction = defineProviderAction(service, {
 
 const createInterestAction = defineProviderAction(service, {
   name: "create_interest",
+  operationType: "write",
   description: "Create a Flexmail interest.",
   inputSchema: s.object("The input payload for creating a Flexmail interest.", interestFields, {
     optional: ["label", "description"],
@@ -236,6 +244,7 @@ const createInterestAction = defineProviderAction(service, {
 
 const getInterestAction = defineProviderAction(service, {
   name: "get_interest",
+  operationType: "read",
   description: "Fetch a Flexmail interest by UUID.",
   inputSchema: s.requiredObject("The input payload for selecting a Flexmail interest.", {
     id: interestIdSchema,
@@ -245,6 +254,7 @@ const getInterestAction = defineProviderAction(service, {
 
 const updateInterestAction = defineProviderAction(service, {
   name: "update_interest",
+  operationType: "write",
   description: "Partially update a Flexmail interest.",
   inputSchema: s.object(
     "The input payload for partially updating a Flexmail interest.",
@@ -259,6 +269,7 @@ const updateInterestAction = defineProviderAction(service, {
 
 const deleteInterestAction = defineProviderAction(service, {
   name: "delete_interest",
+  operationType: "destructive",
   description: "Delete a Flexmail interest by UUID.",
   inputSchema: s.requiredObject("The input payload for deleting a Flexmail interest.", {
     id: interestIdSchema,
@@ -268,6 +279,7 @@ const deleteInterestAction = defineProviderAction(service, {
 
 const listContactInterestSubscriptionsAction = defineProviderAction(service, {
   name: "list_contact_interest_subscriptions",
+  operationType: "read",
   description: "List the interests to which a Flexmail contact is subscribed.",
   inputSchema: contactIdInputSchema,
   outputSchema: collectionOutputSchema,
@@ -275,6 +287,7 @@ const listContactInterestSubscriptionsAction = defineProviderAction(service, {
 
 const addContactInterestSubscriptionAction = defineProviderAction(service, {
   name: "add_contact_interest_subscription",
+  operationType: "write",
   description: "Subscribe a Flexmail contact to an interest.",
   inputSchema: s.requiredObject("The input payload for subscribing a Flexmail contact to an interest.", {
     contactId: contactIdSchema,
@@ -285,6 +298,7 @@ const addContactInterestSubscriptionAction = defineProviderAction(service, {
 
 const removeContactInterestSubscriptionAction = defineProviderAction(service, {
   name: "remove_contact_interest_subscription",
+  operationType: "destructive",
   description: "Remove a Flexmail contact from an interest.",
   inputSchema: s.requiredObject("The input payload for removing a Flexmail contact from an interest.", {
     contactId: contactIdSchema,
@@ -295,6 +309,7 @@ const removeContactInterestSubscriptionAction = defineProviderAction(service, {
 
 const listContactPreferencesAction = defineProviderAction(service, {
   name: "list_contact_preferences",
+  operationType: "read",
   description: "List preferences selected by a Flexmail contact.",
   inputSchema: contactIdInputSchema,
   outputSchema: collectionOutputSchema,
@@ -302,6 +317,7 @@ const listContactPreferencesAction = defineProviderAction(service, {
 
 const addContactPreferenceSubscriptionAction = defineProviderAction(service, {
   name: "add_contact_preference_subscription",
+  operationType: "write",
   description: "Subscribe a Flexmail contact to a preference.",
   inputSchema: s.requiredObject("The input payload for subscribing a Flexmail contact to a preference.", {
     contactId: contactIdSchema,
@@ -312,6 +328,7 @@ const addContactPreferenceSubscriptionAction = defineProviderAction(service, {
 
 const removeContactPreferenceSubscriptionAction = defineProviderAction(service, {
   name: "remove_contact_preference_subscription",
+  operationType: "destructive",
   description: "Remove a Flexmail contact preference subscription by compound id.",
   inputSchema: s.requiredObject("The input payload for deleting a Flexmail contact preference subscription.", {
     id: compoundIdSchema,
@@ -321,6 +338,7 @@ const removeContactPreferenceSubscriptionAction = defineProviderAction(service, 
 
 const listContactSourcesAction = defineProviderAction(service, {
   name: "list_contact_sources",
+  operationType: "read",
   description: "List sources through which a Flexmail contact was added.",
   inputSchema: contactIdInputSchema,
   outputSchema: collectionOutputSchema,
@@ -328,6 +346,7 @@ const listContactSourcesAction = defineProviderAction(service, {
 
 const listAccountContactLanguagesAction = defineProviderAction(service, {
   name: "list_account_contact_languages",
+  operationType: "read",
   description: "Fetch the contact languages configured for the Flexmail account.",
   inputSchema: s.object("The input payload for fetching Flexmail account contact languages.", {}),
   outputSchema: resourceOutputSchema,
@@ -335,6 +354,7 @@ const listAccountContactLanguagesAction = defineProviderAction(service, {
 
 const listInterestLabelsAction = defineProviderAction(service, {
   name: "list_interest_labels",
+  operationType: "read",
   description: "List Flexmail interest labels.",
   inputSchema: s.object("The input payload for listing Flexmail interest labels.", {}),
   outputSchema: collectionOutputSchema,
@@ -342,6 +362,7 @@ const listInterestLabelsAction = defineProviderAction(service, {
 
 const listPreferencesAction = defineProviderAction(service, {
   name: "list_preferences",
+  operationType: "read",
   description: "List preferences configured in the Flexmail account.",
   inputSchema: s.object("The input payload for listing Flexmail preferences.", {}),
   outputSchema: collectionOutputSchema,
@@ -349,6 +370,7 @@ const listPreferencesAction = defineProviderAction(service, {
 
 const listSegmentsAction = defineProviderAction(service, {
   name: "list_segments",
+  operationType: "read",
   description: "List active segments in the Flexmail account.",
   inputSchema: s.object("The input payload for listing Flexmail segments.", {}),
   outputSchema: collectionOutputSchema,
@@ -356,6 +378,7 @@ const listSegmentsAction = defineProviderAction(service, {
 
 const listSourcesAction = defineProviderAction(service, {
   name: "list_sources",
+  operationType: "read",
   description: "List sources configured in the Flexmail account.",
   inputSchema: s.object("The input payload for listing Flexmail sources.", {}),
   outputSchema: collectionOutputSchema,
@@ -363,6 +386,7 @@ const listSourcesAction = defineProviderAction(service, {
 
 const getSourceAction = defineProviderAction(service, {
   name: "get_source",
+  operationType: "read",
   description: "Fetch a Flexmail source by id.",
   inputSchema: s.requiredObject("The input payload for selecting a Flexmail source.", {
     id: sourceIdSchema,

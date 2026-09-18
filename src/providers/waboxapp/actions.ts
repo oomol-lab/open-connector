@@ -32,6 +32,7 @@ const sendTargetFields = {
 export const waboxappActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_status",
+    operationType: "read",
     description: "Fetch the current Waboxapp account status for the connected WhatsApp number.",
     inputSchema: s.actionInput({}),
     outputSchema: s.actionOutput({
@@ -40,6 +41,7 @@ export const waboxappActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_chat",
+    operationType: "write",
     description: "Send a plain text WhatsApp chat message through Waboxapp.",
     inputSchema: s.actionInput(
       {
@@ -52,6 +54,7 @@ export const waboxappActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_image",
+    operationType: "write",
     description: "Send an image by public URL through Waboxapp.",
     inputSchema: s.actionInput(
       {
@@ -66,6 +69,7 @@ export const waboxappActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_link",
+    operationType: "write",
     description: "Send a link with preview metadata through Waboxapp.",
     inputSchema: s.actionInput(
       {
@@ -81,6 +85,7 @@ export const waboxappActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_media",
+    operationType: "write",
     description: "Send a file attachment by public URL through Waboxapp.",
     inputSchema: s.actionInput(
       {

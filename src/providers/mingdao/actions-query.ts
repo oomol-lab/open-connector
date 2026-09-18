@@ -37,6 +37,7 @@ const role = s.looseObject("The role metadata and membership information.", {
 export const mingdaoQueryActions: readonly ProviderActionDefinition[] = [
   defineProviderAction("mingdao", {
     name: "list_record_logs",
+    operationType: "read",
     requiredScopes: [],
     description: "Read a Mingdao record's change logs, optionally filtered by operators, field and date range.",
     inputSchema: s.object(
@@ -68,6 +69,7 @@ export const mingdaoQueryActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "list_record_discussions",
+    operationType: "read",
     requiredScopes: [],
     description:
       "Read a Mingdao record's discussions, including replies, mentions and attachment metadata, with optional search and Markdown output.",
@@ -104,6 +106,7 @@ export const mingdaoQueryActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "get_approval",
+    operationType: "read",
     requiredScopes: [],
     description:
       "Get the execution details, current steps and available operation metadata for an existing Mingdao record approval.",
@@ -166,6 +169,7 @@ export const mingdaoQueryActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "list_approvals",
+    operationType: "read",
     requiredScopes: [],
     description:
       "List approval executions for a Mingdao record, optionally selecting completed or incomplete executions.",
@@ -190,6 +194,7 @@ export const mingdaoQueryActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "list_roles",
+    operationType: "read",
     requiredScopes: [],
     description:
       "List the connected Mingdao application's roles and their user, department, job and organization-role memberships.",
@@ -202,6 +207,7 @@ export const mingdaoQueryActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "get_role",
+    operationType: "read",
     requiredScopes: [],
     description: "Get a Mingdao application role's global, worksheet, field and custom-page permissions.",
     inputSchema: s.object("The role details request.", {
@@ -233,6 +239,7 @@ export const mingdaoQueryActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "list_optionsets",
+    operationType: "read",
     requiredScopes: [],
     description: "List the reusable option sets in the connected Mingdao application.",
     inputSchema: s.object("The option set list request.", {}),
@@ -244,6 +251,7 @@ export const mingdaoQueryActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "lookup_users",
+    operationType: "read",
     requiredScopes: [],
     description: "Look up users in the Mingdao application's organization, optionally matching an exact user name.",
     inputSchema: lookupInput,
@@ -255,6 +263,7 @@ export const mingdaoQueryActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "lookup_departments",
+    operationType: "read",
     requiredScopes: [],
     description:
       "Look up departments in the Mingdao application's organization, optionally matching an exact department name.",
@@ -270,6 +279,7 @@ export const mingdaoQueryActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "list_regions",
+    operationType: "read",
     requiredScopes: [],
     description: "List or search Mingdao geographic regions; omit the region ID to retrieve top-level regions.",
     inputSchema: s.object(
@@ -288,6 +298,7 @@ export const mingdaoQueryActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "list_knowledge",
+    operationType: "read",
     requiredScopes: [],
     description: "List Mingdao application knowledge bases, including their configured embedding models.",
     inputSchema: s.object("The knowledge base list request.", { knowledgeIds }, { optional: ["knowledgeIds"] }),
@@ -305,6 +316,7 @@ export const mingdaoQueryActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "search_knowledge",
+    operationType: "read",
     requiredScopes: [],
     description:
       "Search Mingdao knowledge content using vector, keyword or hybrid retrieval. Knowledge bases with different embedding models must be searched in separate calls.",

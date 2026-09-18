@@ -60,6 +60,7 @@ const webhookRecordSchema = s.looseRequiredObject("An Emelia webhook record.", {
 
 const listCampaignsAction = defineProviderAction(service, {
   name: "list_campaigns",
+  operationType: "read",
   description: "List Emelia email campaigns, optionally filtered by page, limit, or search text.",
   inputSchema: s.object(
     "The input for listing Emelia email campaigns.",
@@ -77,6 +78,7 @@ const listCampaignsAction = defineProviderAction(service, {
 
 const getCampaignAction = defineProviderAction(service, {
   name: "get_campaign",
+  operationType: "read",
   description: "Get details for one Emelia email campaign.",
   inputSchema: s.requiredObject("The input for getting an Emelia email campaign.", {
     campaignId: campaignIdSchema,
@@ -88,6 +90,7 @@ const getCampaignAction = defineProviderAction(service, {
 
 const listCampaignContactsAction = defineProviderAction(service, {
   name: "list_campaign_contacts",
+  operationType: "read",
   description: "List contacts in one Emelia email campaign.",
   inputSchema: s.object(
     "The input for listing contacts in an Emelia email campaign.",
@@ -120,6 +123,7 @@ const activityTypeValues: [string, ...string[]] = [
 
 const getCampaignActivitiesAction = defineProviderAction(service, {
   name: "get_campaign_activities",
+  operationType: "read",
   description: "List activity events for one Emelia email campaign.",
   inputSchema: s.object(
     "The input for listing Emelia campaign activities.",
@@ -140,6 +144,7 @@ const getCampaignActivitiesAction = defineProviderAction(service, {
 
 const listEmailProvidersAction = defineProviderAction(service, {
   name: "list_email_providers",
+  operationType: "read",
   description: "List configured Emelia email providers for the authenticated account.",
   inputSchema: s.object("The input for listing Emelia email providers.", {}),
   outputSchema: s.requiredObject("The output from listing Emelia email providers.", {
@@ -149,6 +154,7 @@ const listEmailProvidersAction = defineProviderAction(service, {
 
 const listWebhooksAction = defineProviderAction(service, {
   name: "list_webhooks",
+  operationType: "read",
   description: "List user webhooks configured in Emelia.",
   inputSchema: s.object("The input for listing Emelia webhooks.", {}),
   outputSchema: s.requiredObject("The output from listing Emelia webhooks.", {

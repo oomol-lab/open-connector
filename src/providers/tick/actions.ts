@@ -72,6 +72,7 @@ const entrySchema = s.looseRequiredObject("A Tick time entry.", {
 
 const listClientsAction = defineProviderAction(service, {
   name: "list_clients",
+  operationType: "read",
   description: "List Tick clients with open projects, or include every client.",
   inputSchema: s.object(
     "The client list options.",
@@ -85,6 +86,7 @@ const listClientsAction = defineProviderAction(service, {
 
 const listProjectsAction = defineProviderAction(service, {
   name: "list_projects",
+  operationType: "read",
   description: "List open or closed Tick projects.",
   inputSchema: s.object(
     "The project list options.",
@@ -101,6 +103,7 @@ const listProjectsAction = defineProviderAction(service, {
 
 const listTasksAction = defineProviderAction(service, {
   name: "list_tasks",
+  operationType: "read",
   description: "List open or closed Tick tasks, optionally within one project.",
   inputSchema: s.object(
     "The task list options.",
@@ -118,6 +121,7 @@ const listTasksAction = defineProviderAction(service, {
 
 const listUsersAction = defineProviderAction(service, {
   name: "list_users",
+  operationType: "read",
   description: "List active or deleted users visible to the Tick API token.",
   inputSchema: s.object(
     "The user list options.",
@@ -134,6 +138,7 @@ const listUsersAction = defineProviderAction(service, {
 
 const listEntriesAction = defineProviderAction(service, {
   name: "list_entries",
+  operationType: "read",
   description: "List Tick time entries by date range or update timestamp.",
   inputSchema: s.object(
     "The time entry filters. Provide both startDate and endDate, or provide updatedAt.",
@@ -161,6 +166,7 @@ const listEntriesAction = defineProviderAction(service, {
 
 const getEntryAction = defineProviderAction(service, {
   name: "get_entry",
+  operationType: "read",
   description: "Retrieve one Tick time entry by ID.",
   inputSchema: s.object("The time entry lookup input.", {
     entryId: positiveId("The time entry ID."),
@@ -170,6 +176,7 @@ const getEntryAction = defineProviderAction(service, {
 
 const createEntryAction = defineProviderAction(service, {
   name: "create_entry",
+  operationType: "write",
   description: "Create a Tick time entry.",
   inputSchema: s.object(
     "The new time entry fields.",
@@ -187,6 +194,7 @@ const createEntryAction = defineProviderAction(service, {
 
 const updateEntryAction = defineProviderAction(service, {
   name: "update_entry",
+  operationType: "write",
   description: "Update fields on an existing Tick time entry.",
   inputSchema: s.object(
     "The time entry ID and replacement fields.",
@@ -206,6 +214,7 @@ const updateEntryAction = defineProviderAction(service, {
 
 const deleteEntryAction = defineProviderAction(service, {
   name: "delete_entry",
+  operationType: "destructive",
   description: "Permanently delete a Tick time entry.",
   inputSchema: s.object("The time entry deletion input.", {
     entryId: positiveId("The time entry ID."),

@@ -124,12 +124,14 @@ const chatCompletionOutputSchema = s.looseRequiredObject(
 export const writerActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",
+    operationType: "read",
     description: "Retrieve the Writer models available for text generation, chat completions, and other AI tasks.",
     inputSchema: noInputSchema,
     outputSchema: listModelsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_chat_completion",
+    operationType: "read",
     description: "Generate a non-streaming Writer chat completion from plain-text conversation messages.",
     inputSchema: chatCompletionInputSchema,
     outputSchema: chatCompletionOutputSchema,

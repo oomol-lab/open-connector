@@ -110,6 +110,7 @@ const sourceResponseSchema = s.object("The normalized Imgix Source response.", {
 export const imgixActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_sources",
+    operationType: "read",
     description: "List Imgix Sources with optional pagination, sorting, sparse fields, and source filters.",
     inputSchema: listSourcesInputSchema,
     outputSchema: s.object("The normalized Imgix Sources list response.", {
@@ -124,6 +125,7 @@ export const imgixActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_source",
+    operationType: "read",
     description: "Retrieve a single Imgix Source by its ID.",
     inputSchema: s.object("Input parameters for retrieving an Imgix Source.", sourceIdInputFields, {
       optional: ["fieldsSources"],
@@ -132,6 +134,7 @@ export const imgixActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_source",
+    operationType: "write",
     description: "Update an Imgix Source by sending JSON:API Source attributes to the Management API.",
     inputSchema: s.object("Input parameters for updating an Imgix Source.", {
       sourceId: sourceIdInputFields.sourceId,
@@ -141,6 +144,7 @@ export const imgixActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "purge_asset",
+    operationType: "destructive",
     description: "Purge an Imgix asset URL from cache so subsequent requests fetch a fresh origin copy.",
     inputSchema: s.object(
       "Input parameters for purging an Imgix asset.",

@@ -101,6 +101,7 @@ const workflowInterfaceOutputSchema = s.object("Roboflow workflow interface desc
 export const roboflowActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Roboflow projects visible to the API key workspace.",
     inputSchema: s.object("Input parameters for listing Roboflow projects.", {}),
     outputSchema: s.object("Roboflow workspace projects returned by the connector.", {
@@ -110,6 +111,7 @@ export const roboflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project_versions",
+    operationType: "read",
     description: "Get one Roboflow project and list its available versions.",
     inputSchema: s.object("Input parameters for reading one Roboflow project.", {
       workspace: workspaceField,
@@ -122,6 +124,7 @@ export const roboflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_version",
+    operationType: "read",
     description: "Read one Roboflow project version and return training/export metadata.",
     inputSchema: s.object("Input parameters for reading one Roboflow project version.", {
       workspace: workspaceField,
@@ -134,6 +137,7 @@ export const roboflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "detect_objects",
+    operationType: "read",
     description:
       "Run Roboflow hosted object detection for one project version using a public image URL or Base64 image content.",
     inputSchema: detectObjectsInputSchema,
@@ -164,6 +168,7 @@ export const roboflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_workflow",
+    operationType: "write",
     description: "Run a Roboflow workflow specification with runtime inputs and return serialized workflow outputs.",
     inputSchema: s.object(
       "Input parameters for running a Roboflow workflow specification.",
@@ -184,6 +189,7 @@ export const roboflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_saved_workflow",
+    operationType: "write",
     description: "Run a workflow saved in Roboflow using workspace and workflow identifiers with runtime inputs.",
     inputSchema: s.object(
       "Input parameters for running a saved Roboflow workflow.",
@@ -205,6 +211,7 @@ export const roboflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "validate_workflow",
+    operationType: "read",
     description: "Validate a Roboflow workflow specification before running it.",
     inputSchema: s.object("Input parameters for validating a Roboflow workflow specification.", {
       specification: workflowSpecificationSchema,
@@ -216,6 +223,7 @@ export const roboflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "describe_workflow_interface",
+    operationType: "read",
     description:
       "Describe workflow inputs, outputs, typing hints, and kind schemas for a specification or saved Roboflow workflow.",
     inputSchema: describeWorkflowInterfaceInputSchema,
@@ -223,6 +231,7 @@ export const roboflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workflow_schema",
+    operationType: "read",
     description: "Fetch the Roboflow workflow block JSON schema.",
     inputSchema: s.object("Input parameters for fetching the Roboflow workflow schema.", {}),
     outputSchema: s.object("Roboflow workflow block schema result.", {
@@ -232,6 +241,7 @@ export const roboflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_execution_engine_versions",
+    operationType: "read",
     description: "List available Roboflow workflow execution engine versions.",
     inputSchema: s.object("Input parameters for listing execution engine versions.", {}),
     outputSchema: s.object("Roboflow execution engine versions result.", {
@@ -241,6 +251,7 @@ export const roboflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_server_info",
+    operationType: "read",
     description: "Read Roboflow inference server name, version, and UUID.",
     inputSchema: s.object("Input parameters for reading Roboflow inference server info.", {}),
     outputSchema: s.object("Roboflow inference server info.", {
@@ -252,6 +263,7 @@ export const roboflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_server_metrics",
+    operationType: "read",
     description: "Read Prometheus metrics exposed by the Roboflow inference server.",
     inputSchema: s.object("Input parameters for reading Roboflow inference server metrics.", {}),
     outputSchema: s.object("Roboflow inference server metrics text.", {

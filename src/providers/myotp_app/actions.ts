@@ -56,6 +56,7 @@ const transactionSchema = s.object(
 export const myOtpAppActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "generate_otp",
+    operationType: "write",
     description: "Generate and deliver an OTP through MyOTP.App by SMS or WhatsApp.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -93,6 +94,7 @@ export const myOtpAppActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "verify_otp",
+    operationType: "read",
     description: "Verify an OTP using its message id or destination phone number.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -118,6 +120,7 @@ export const myOtpAppActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "extend_otp",
+    operationType: "write",
     description: "Extend the expiry time of an existing MyOTP.App OTP.",
     requiredScopes: [],
     inputSchema: s.object("The input for extending an OTP expiry time.", {
@@ -138,6 +141,7 @@ export const myOtpAppActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_otp_status",
+    operationType: "read",
     description: "Check the delivery and validity status of a MyOTP.App OTP message.",
     requiredScopes: [],
     inputSchema: s.object("The input for checking an OTP message status.", {
@@ -155,6 +159,7 @@ export const myOtpAppActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_transactions_report",
+    operationType: "read",
     description: "Retrieve a paginated MyOTP.App transaction report for a date range.",
     requiredScopes: [],
     inputSchema: s.object(

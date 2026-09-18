@@ -156,12 +156,14 @@ const openrouterModelListOutputSchema = s.object("Standard OpenRouter response t
 export const openrouterActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_chat_completion",
+    operationType: "read",
     description: "Create an OpenRouter chat completion through the OpenAI-compatible `/chat/completions` endpoint.",
     inputSchema: chatCompletionInputSchema,
     outputSchema: rawObjectSchema,
   }),
   defineProviderAction(service, {
     name: "create_coinbase_charge",
+    operationType: "write",
     description:
       "Call OpenRouter's deprecated Coinbase charge endpoint for credits purchases. The upstream endpoint is currently deprecated and may return 410 Gone.",
     inputSchema: s.object(
@@ -187,12 +189,14 @@ export const openrouterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_message",
+    operationType: "write",
     description: "Create an OpenRouter Anthropic-format message through the `/messages` endpoint.",
     inputSchema: messageInputSchema,
     outputSchema: rawObjectSchema,
   }),
   defineProviderAction(service, {
     name: "get_credits",
+    operationType: "read",
     description: "Get the authenticated OpenRouter credit balance summary.",
     inputSchema: noInputSchema,
     outputSchema: s.object("Returns the standard response for an OpenRouter credit overview.", {
@@ -204,6 +208,7 @@ export const openrouterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_current_key",
+    operationType: "read",
     description: "Get metadata for the currently authenticated OpenRouter API key.",
     inputSchema: s.object(
       "Input parameters when querying the current API key information.",
@@ -218,6 +223,7 @@ export const openrouterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_generation",
+    operationType: "read",
     description: "Get request and usage metadata for a specific OpenRouter generation.",
     inputSchema: s.object(
       "Input parameters when querying generation metadata.",
@@ -232,6 +238,7 @@ export const openrouterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_models_count",
+    operationType: "read",
     description: "Get the total number of OpenRouter models, optionally filtered by output modalities.",
     inputSchema: s.object(
       "Input parameters when getting the number of models.",
@@ -251,6 +258,7 @@ export const openrouterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_available_models",
+    operationType: "read",
     description: "List the available OpenRouter models, or return the RSS feed when requested.",
     inputSchema: s.object(
       "Input parameters when listing available models for OpenRouter.",
@@ -278,6 +286,7 @@ export const openrouterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_embedding_models",
+    operationType: "read",
     description: "List the embedding models available through OpenRouter.",
     inputSchema: s.object("Input parameters when listing embedding models.", openrouterHeaderInputFields, {
       optional: openrouterHeaderOptionalFields,
@@ -286,6 +295,7 @@ export const openrouterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_model_endpoints",
+    operationType: "read",
     description: "List the currently available endpoints for a specific OpenRouter model.",
     inputSchema: s.object(
       "Input parameters when listing endpoints for a specific model.",
@@ -301,6 +311,7 @@ export const openrouterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_providers",
+    operationType: "read",
     description: "List the model providers currently available through OpenRouter.",
     inputSchema: noInputSchema,
     outputSchema: s.object("Returns a standard response with a list of providers.", {
@@ -309,6 +320,7 @@ export const openrouterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_user_models",
+    operationType: "read",
     description:
       "List models filtered by the current user's OpenRouter routing preferences, privacy settings, and guardrails.",
     inputSchema: s.object(
@@ -322,6 +334,7 @@ export const openrouterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_zdr_endpoints",
+    operationType: "read",
     description: "Preview the OpenRouter endpoints that remain available under Zero Data Retention.",
     inputSchema: s.object("Input parameters when listing ZDR endpoints.", openrouterHeaderInputFields, {
       optional: openrouterHeaderOptionalFields,

@@ -12,6 +12,7 @@ const rawObjectSchema = s.looseObject("The raw ORCID API object.");
 export const orcidActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_record",
+    operationType: "read",
     description: "Get the public ORCID record for a researcher by ORCID iD.",
     requiredScopes: [readScope],
     inputSchema: s.object("Input parameters for reading an ORCID record.", {
@@ -25,6 +26,7 @@ export const orcidActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_works",
+    operationType: "read",
     description: "Get the public works summary for a researcher by ORCID iD.",
     requiredScopes: [readScope],
     inputSchema: s.object("Input parameters for reading an ORCID works summary.", {
@@ -38,6 +40,7 @@ export const orcidActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_records",
+    operationType: "read",
     description: "Search public ORCID records with ORCID's Solr query syntax.",
     requiredScopes: [readScope],
     inputSchema: s.object(

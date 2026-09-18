@@ -59,6 +59,7 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
   return [
     defineProviderAction(service, {
       name: "list_wiki_spaces",
+      operationType: "read",
       description: "List Feishu Wiki spaces accessible to the caller.",
       requiredScopes: ["wiki:space:retrieve"],
       providerPermissions: ["wiki:space:retrieve"],
@@ -73,6 +74,7 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "get_wiki_space",
+      operationType: "read",
       description: "Get one Feishu Wiki space by ID.",
       requiredScopes: ["wiki:space:read"],
       providerPermissions: ["wiki:space:read"],
@@ -87,6 +89,7 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "create_wiki_space",
+      operationType: "write",
       description: "Create a Feishu Wiki space.",
       requiredScopes: ["wiki:space:write_only"],
       providerPermissions: ["wiki:space:write_only"],
@@ -104,6 +107,7 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "list_wiki_nodes",
+      operationType: "read",
       description: "List nodes in a Feishu Wiki space or below one parent node.",
       requiredScopes: ["wiki:node:retrieve"],
       providerPermissions: ["wiki:node:retrieve"],
@@ -125,6 +129,7 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "get_wiki_node",
+      operationType: "read",
       description: "Resolve and get a Feishu Wiki node by token and object type.",
       requiredScopes: ["wiki:node:retrieve"],
       providerPermissions: ["wiki:node:retrieve"],
@@ -142,6 +147,7 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "create_wiki_node",
+      operationType: "write",
       description: "Create a document node in a Feishu Wiki space.",
       requiredScopes: ["wiki:node:create"],
       providerPermissions: ["wiki:node:create"],
@@ -165,6 +171,7 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "copy_wiki_node",
+      operationType: "write",
       description: "Copy a Feishu Wiki node into another space or below another parent.",
       requiredScopes: ["wiki:node:copy"],
       providerPermissions: ["wiki:node:copy"],
@@ -185,6 +192,7 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "move_wiki_node",
+      operationType: "destructive",
       description: "Move a Feishu Wiki node to another space or parent node.",
       requiredScopes: ["wiki:node:move"],
       providerPermissions: ["wiki:node:move"],
@@ -204,6 +212,7 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "delete_wiki_node",
+      operationType: "destructive",
       description: "Delete a Feishu Wiki node and optionally its descendants.",
       requiredScopes: ["wiki:node:create"],
       providerPermissions: ["wiki:node:create"],
@@ -233,6 +242,7 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "submit_wiki_move_to_drive",
+      operationType: "destructive",
       description: "Move a Wiki node out of its knowledge space into Drive and return an asynchronous task handle.",
       requiredScopes: ["space:document:move", "wiki:space:read"],
       providerPermissions: ["space:document:move", "wiki:space:read"],
@@ -266,6 +276,7 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "delete_wiki_space",
+      operationType: "destructive",
       description: "Delete a Feishu Wiki space and return either synchronous completion or an asynchronous task ID.",
       requiredScopes: ["wiki:space:write_only", "wiki:space:read"],
       providerPermissions: ["wiki:space:write_only", "wiki:space:read"],
@@ -291,6 +302,7 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "get_wiki_task",
+      operationType: "read",
       description: "Get a normalized Wiki asynchronous task status.",
       requiredScopes: ["wiki:space:read"],
       providerPermissions: ["wiki:space:read"],
@@ -323,6 +335,7 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "list_wiki_members",
+      operationType: "read",
       description: "List members of a Feishu Wiki space.",
       requiredScopes: ["wiki:member:retrieve"],
       providerPermissions: ["wiki:member:retrieve"],
@@ -337,6 +350,7 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "add_wiki_member",
+      operationType: "write",
       description: "Add a member to a Feishu Wiki space.",
       requiredScopes: ["wiki:member:create"],
       providerPermissions: ["wiki:member:create"],
@@ -357,6 +371,7 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "remove_wiki_member",
+      operationType: "destructive",
       description: "Remove a member from a Feishu Wiki space.",
       requiredScopes: ["wiki:member:update"],
       providerPermissions: ["wiki:member:update"],

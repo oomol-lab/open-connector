@@ -118,6 +118,7 @@ const receivedEmailSchema = s.looseObject(
 export const proxiedmailActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_proxy_bindings",
+    operationType: "read",
     description: "List ProxiedMail proxy email bindings for the connected account.",
     inputSchema: s.object(
       {},
@@ -140,6 +141,7 @@ export const proxiedmailActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_proxy_binding",
+    operationType: "write",
     description: "Create a ProxiedMail proxy email binding that forwards to real addresses.",
     inputSchema: s.object(
       {
@@ -173,6 +175,7 @@ export const proxiedmailActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_proxy_binding",
+    operationType: "write",
     description: "Update a ProxiedMail proxy email binding by ID.",
     inputSchema: s.object(
       {
@@ -204,6 +207,7 @@ export const proxiedmailActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_received_email_links",
+    operationType: "read",
     description: "List received-email links for a browsable ProxiedMail proxy binding.",
     inputSchema: s.object(
       {
@@ -227,6 +231,7 @@ export const proxiedmailActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_received_email",
+    operationType: "read",
     description: "Get the payload and metadata for one ProxiedMail received email.",
     inputSchema: s.object(
       {

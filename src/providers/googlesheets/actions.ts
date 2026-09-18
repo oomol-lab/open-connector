@@ -8,6 +8,7 @@ const service = "googlesheets";
 
 interface GooglesheetsActionSource {
   name: GooglesheetsActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -191,6 +192,7 @@ const dimensionRange = s.object(
 const actions: GooglesheetsActionSource[] = [
   {
     name: "search_spreadsheets",
+    operationType: "read",
     description: "Search Google Sheets files in Drive with spreadsheet-only filters and normalized summary output.",
     requiredScopes: googlesheetsReadScopes,
     inputSchema: input({
@@ -217,6 +219,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "create_google_sheet1",
+    operationType: "write",
     description: "Create a Google Sheets spreadsheet and return stable spreadsheet metadata for the new file.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input({ title: s.string({ description: "New spreadsheet title." }) }),
@@ -224,6 +227,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "get_spreadsheet_info",
+    operationType: "read",
     description: "Read spreadsheet metadata through spreadsheets.get with optional ranges and grid data flags.",
     requiredScopes: googlesheetsReadScopes,
     inputSchema: input(
@@ -239,6 +243,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "get_spreadsheet_by_data_filter",
+    operationType: "read",
     description:
       "Read spreadsheet metadata through spreadsheets.getByDataFilter and return the normalized spreadsheet payload.",
     requiredScopes: googlesheetsReadScopes,
@@ -255,6 +260,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "get_sheet_names",
+    operationType: "read",
     description: "List visible or all sheet names from a spreadsheet and include a stable name-to-sheetId map.",
     requiredScopes: googlesheetsReadScopes,
     inputSchema: input(
@@ -272,6 +278,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "search_developer_metadata",
+    operationType: "read",
     description: "Search spreadsheet developer metadata via developerMetadata:search and return matched entries only.",
     requiredScopes: googlesheetsReadScopes,
     inputSchema: input({ ...spreadsheetReference, dataFilters: objectArray }, ["spreadsheetId", "dataFilters"]),
@@ -285,6 +292,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "get_conditional_format_rules",
+    operationType: "read",
     description: "Read spreadsheet conditional formatting rules and project them into a stable per-sheet structure.",
     requiredScopes: googlesheetsReadScopes,
     inputSchema: input(
@@ -306,6 +314,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "get_data_validation_rules",
+    operationType: "read",
     description:
       "Read spreadsheet data validation rules from the minimum necessary sheet ranges and return flattened rule entries.",
     requiredScopes: googlesheetsReadScopes,
@@ -329,6 +338,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "values_get",
+    operationType: "read",
     description: "Read a single spreadsheet value range and return a stable ValueRange without a wrapper envelope.",
     requiredScopes: googlesheetsReadScopes,
     inputSchema: input({ ...spreadsheetReference, range: a1Range, ...renderOptions }, ["spreadsheetId", "range"]),
@@ -336,6 +346,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "batch_get",
+    operationType: "read",
     description: "Read multiple spreadsheet ranges through values:batchGet and return stable valueRanges output.",
     requiredScopes: googlesheetsReadScopes,
     inputSchema: input({ ...spreadsheetReference, ranges: stringList, ...renderOptions }, ["spreadsheetId", "ranges"]),
@@ -349,6 +360,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "spreadsheets_values_batch_get_by_data_filter",
+    operationType: "read",
     description:
       "Read spreadsheet values through values:batchGetByDataFilter and return matched value ranges with their filters.",
     requiredScopes: googlesheetsReadScopes,
@@ -366,6 +378,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "values_update",
+    operationType: "destructive",
     description: "Write a single spreadsheet value range through values.update and return stable update counters.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input(
@@ -384,6 +397,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "update_values_batch",
+    operationType: "destructive",
     description:
       "Write multiple spreadsheet value ranges through values.batchUpdate and return stable aggregate counters.",
     requiredScopes: googlesheetsWriteScopes,
@@ -406,6 +420,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "spreadsheets_values_append",
+    operationType: "write",
     description:
       "Append values through values.append and flatten the nested updates payload into stable top-level fields.",
     requiredScopes: googlesheetsWriteScopes,
@@ -433,6 +448,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "clear_values",
+    operationType: "destructive",
     description: "Clear a single spreadsheet value range through values.clear and return the cleared A1 range.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input({ ...spreadsheetReference, range: a1Range }, ["spreadsheetId", "range"]),
@@ -446,6 +462,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "spreadsheets_values_batch_clear",
+    operationType: "destructive",
     description: "Clear multiple spreadsheet value ranges through values.batchClear and return cleared ranges only.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input({ ...spreadsheetReference, ranges: stringList }, ["spreadsheetId", "ranges"]),
@@ -453,6 +470,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "batch_clear_values_by_data_filter",
+    operationType: "destructive",
     description: "Clear spreadsheet values through values.batchClearByDataFilter and return the cleared ranges.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input({ ...spreadsheetReference, dataFilters: objectArray }, ["spreadsheetId", "dataFilters"]),
@@ -460,6 +478,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "batch_update_values_by_data_filter",
+    operationType: "destructive",
     description:
       "Write spreadsheet values through values.batchUpdateByDataFilter and return stable aggregate counters.",
     requiredScopes: googlesheetsWriteScopes,
@@ -482,6 +501,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "add_sheet",
+    operationType: "write",
     description: "Add a new sheet through spreadsheets.batchUpdate and return stable batch replies.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input(
@@ -500,6 +520,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "delete_sheet",
+    operationType: "destructive",
     description: "Delete a sheet through spreadsheets.batchUpdate and return stable batch replies.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input({ ...spreadsheetReference, sheetId, ...responseOptions }, ["spreadsheetId", "sheetId"]),
@@ -507,6 +528,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "update_sheet_properties",
+    operationType: "destructive",
     description: "Update a sheet's properties through spreadsheets.batchUpdate and return stable batch replies.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input(
@@ -529,6 +551,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "update_spreadsheet_properties",
+    operationType: "destructive",
     description:
       "Update spreadsheet-level properties through spreadsheets.batchUpdate and return stable batch replies.",
     requiredScopes: googlesheetsWriteScopes,
@@ -545,6 +568,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "append_dimension",
+    operationType: "write",
     description: "Append rows or columns through spreadsheets.batchUpdate and return stable batch replies.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input(
@@ -561,6 +585,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "insert_dimension",
+    operationType: "write",
     description: "Insert rows or columns through spreadsheets.batchUpdate and return stable batch replies.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input(
@@ -581,6 +606,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "delete_dimension",
+    operationType: "destructive",
     description: "Delete rows or columns through spreadsheets.batchUpdate and return stable batch replies.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input(
@@ -603,6 +629,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "auto_resize_dimensions",
+    operationType: "write",
     description: "Auto-resize rows or columns through spreadsheets.batchUpdate and return stable batch replies.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input(
@@ -621,6 +648,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "update_dimension_properties",
+    operationType: "destructive",
     description: "Update row or column properties through spreadsheets.batchUpdate and return stable batch replies.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input(
@@ -641,6 +669,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "set_basic_filter",
+    operationType: "write",
     description: "Set a basic filter through spreadsheets.batchUpdate and return stable batch replies.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input({ ...spreadsheetReference, filter: objectSchema, ...responseOptions }, [
@@ -651,6 +680,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "clear_basic_filter",
+    operationType: "destructive",
     description: "Clear a basic filter through spreadsheets.batchUpdate and return stable batch replies.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input({ ...spreadsheetReference, sheetId, ...responseOptions }, ["spreadsheetId", "sheetId"]),
@@ -658,6 +688,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "find_replace",
+    operationType: "destructive",
     description: "Run find and replace through spreadsheets.batchUpdate and return stable batch replies.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input(
@@ -682,6 +713,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "format_cell",
+    operationType: "write",
     description: "Format cells through spreadsheets.batchUpdate and return stable batch replies.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input(
@@ -706,6 +738,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "mutate_conditional_format_rules",
+    operationType: "destructive",
     description: "Mutate conditional format rules through spreadsheets.batchUpdate and return stable batch replies.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input(
@@ -723,6 +756,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "set_data_validation_rule",
+    operationType: "destructive",
     description: "Set or clear data validation through spreadsheets.batchUpdate and return stable batch replies.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input(
@@ -746,6 +780,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "create_chart",
+    operationType: "write",
     description: "Create a chart through spreadsheets.batchUpdate and return stable batch replies.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input(
@@ -770,6 +805,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "spreadsheets_sheets_copy_to",
+    operationType: "write",
     description: "Copy a sheet to another spreadsheet through sheets.copyTo and return a stable copiedSheet payload.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: input(
@@ -790,6 +826,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "create_spreadsheet_row",
+    operationType: "write",
     description: "Insert an empty row into a sheet through spreadsheets.batchUpdate with stable top-level fields.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: rowOrColumnInput(),
@@ -797,6 +834,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "create_spreadsheet_column",
+    operationType: "write",
     description: "Insert an empty column into a sheet through spreadsheets.batchUpdate with stable top-level fields.",
     requiredScopes: googlesheetsWriteScopes,
     inputSchema: rowOrColumnInput(),
@@ -804,6 +842,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "lookup_spreadsheet_row",
+    operationType: "read",
     description: "Find the first row where a cell exactly matches the query and return a stable found/rowData payload.",
     requiredScopes: googlesheetsReadScopes,
     inputSchema: input(
@@ -826,6 +865,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "aggregate_column_data",
+    operationType: "read",
     description:
       "Aggregate numeric values from a target column, optionally filtered by another column, with stable counters.",
     requiredScopes: googlesheetsReadScopes,
@@ -869,6 +909,7 @@ const actions: GooglesheetsActionSource[] = [
   },
   {
     name: "upsert_rows",
+    operationType: "write",
     description:
       "Upsert rows by key while preserving uncovered columns, adding missing headers when needed, and returning stable counters.",
     requiredScopes: googlesheetsWriteScopes,
@@ -948,6 +989,7 @@ export type GooglesheetsActionName =
 export const googlesheetsActions: ActionDefinition[] = actions.map((action) =>
   defineProviderAction(service, {
     name: action.name,
+    operationType: action.operationType,
     description: action.description,
     requiredScopes: action.requiredScopes,
     inputSchema: action.inputSchema,

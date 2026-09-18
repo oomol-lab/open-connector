@@ -445,6 +445,7 @@ const translationOutputSchema = s.object(
 export const lokaliseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Lokalise projects visible to the API token.",
     requiredScopes: [],
     inputSchema: listProjectsInputSchema,
@@ -452,6 +453,7 @@ export const lokaliseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Retrieve one Lokalise project by project ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -465,6 +467,7 @@ export const lokaliseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_project_languages",
+    operationType: "read",
     description: "List languages configured on a Lokalise project.",
     requiredScopes: [],
     inputSchema: listProjectLanguagesInputSchema,
@@ -472,6 +475,7 @@ export const lokaliseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_keys",
+    operationType: "read",
     description: "List translation keys in a Lokalise project.",
     requiredScopes: [],
     inputSchema: listKeysInputSchema,
@@ -479,6 +483,7 @@ export const lokaliseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_keys",
+    operationType: "write",
     description: "Create one or more translation keys in a Lokalise project.",
     requiredScopes: [],
     inputSchema: createKeysInputSchema,
@@ -486,6 +491,7 @@ export const lokaliseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_key",
+    operationType: "read",
     description: "Retrieve one Lokalise key by key ID.",
     requiredScopes: [],
     inputSchema: getKeyInputSchema,
@@ -493,6 +499,7 @@ export const lokaliseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_key",
+    operationType: "write",
     description: "Update one Lokalise key by key ID.",
     requiredScopes: [],
     inputSchema: updateKeyInputSchema,
@@ -500,6 +507,7 @@ export const lokaliseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_key",
+    operationType: "destructive",
     description: "Delete one Lokalise key by key ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -514,6 +522,7 @@ export const lokaliseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_translations",
+    operationType: "read",
     description: "List translation items in a Lokalise project.",
     requiredScopes: [],
     inputSchema: listTranslationsInputSchema,
@@ -521,6 +530,7 @@ export const lokaliseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_translation",
+    operationType: "read",
     description: "Retrieve one Lokalise translation by translation ID.",
     requiredScopes: [],
     inputSchema: getTranslationInputSchema,
@@ -528,6 +538,7 @@ export const lokaliseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_translation",
+    operationType: "write",
     description: "Update one Lokalise translation by translation ID.",
     requiredScopes: [],
     inputSchema: updateTranslationInputSchema,

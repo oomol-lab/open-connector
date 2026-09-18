@@ -164,6 +164,7 @@ function providerFixture(service: string, actionNames: string[]): ProviderDefini
       service,
       name,
       description: `${name} action.`,
+      operationType: "read",
       requiredScopes: [],
       providerPermissions: [],
       inputSchema: { type: "object", properties: { [name]: { type: "string" } } },

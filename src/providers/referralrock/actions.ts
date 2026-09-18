@@ -50,6 +50,7 @@ const referralSort = [
 export const referralRockActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_programs",
+    operationType: "read",
     description: "List referral programs in the connected Referral Rock account.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -64,6 +65,7 @@ export const referralRockActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_members",
+    operationType: "read",
     description: "List and search members across Referral Rock referral programs.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -83,6 +85,7 @@ export const referralRockActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_referrals",
+    operationType: "read",
     description: "List and search referrals in the connected Referral Rock account.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -108,6 +111,7 @@ export const referralRockActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_member_stats",
+    operationType: "read",
     description: "Get sharing, referral, and reward statistics for one Referral Rock member.",
     requiredScopes: [],
     inputSchema: s.object("A member identifier and time period for retrieving Referral Rock member statistics.", {

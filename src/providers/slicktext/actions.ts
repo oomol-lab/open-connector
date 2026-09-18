@@ -81,6 +81,7 @@ const emptyInputSchema = s.object("This action does not require input fields.", 
 
 const getBrandAction = defineProviderAction(service, {
   name: "get_brand",
+  operationType: "read",
   description: "Retrieve the SlickText brand associated with the connected API key.",
   requiredScopes: [],
   inputSchema: emptyInputSchema,
@@ -89,6 +90,7 @@ const getBrandAction = defineProviderAction(service, {
 
 const listContactsAction = defineProviderAction(service, {
   name: "list_contacts",
+  operationType: "read",
   description: "List contacts for the authenticated SlickText brand with optional pagination.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for listing SlickText contacts.", paginationFields, {
@@ -102,6 +104,7 @@ const listContactsAction = defineProviderAction(service, {
 
 const getContactAction = defineProviderAction(service, {
   name: "get_contact",
+  operationType: "read",
   description: "Retrieve one SlickText contact by contact ID.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for retrieving a SlickText contact.", {
@@ -112,6 +115,7 @@ const getContactAction = defineProviderAction(service, {
 
 const createContactAction = defineProviderAction(service, {
   name: "create_contact",
+  operationType: "write",
   description: "Create a contact in the authenticated SlickText brand.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for creating a SlickText contact.", contactWriteFields, {
@@ -136,6 +140,7 @@ const createContactAction = defineProviderAction(service, {
 
 const updateContactAction = defineProviderAction(service, {
   name: "update_contact",
+  operationType: "write",
   description: "Update an existing SlickText contact by contact ID.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -150,6 +155,7 @@ const updateContactAction = defineProviderAction(service, {
 
 const deleteContactAction = defineProviderAction(service, {
   name: "delete_contact",
+  operationType: "destructive",
   description: "Delete a SlickText contact by contact ID.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for deleting a SlickText contact.", {

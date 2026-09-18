@@ -705,6 +705,7 @@ const getTagsOutputSchema = s.object(
 export const dropboxActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_account",
+    operationType: "read",
     description: "Get basic profile information for the current Dropbox account.",
     requiredScopes: [dropboxProviderScopes.accountInfoRead],
     providerPermissions: [dropboxProviderScopes.accountInfoRead],
@@ -713,6 +714,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_folder",
+    operationType: "read",
     description: "List files and folders inside one Dropbox folder.",
     requiredScopes: [dropboxProviderScopes.filesMetadataRead],
     providerPermissions: [dropboxProviderScopes.filesMetadataRead],
@@ -721,6 +723,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_folder_continue",
+    operationType: "read",
     description: "Continue a previous Dropbox folder listing with a cursor.",
     requiredScopes: [dropboxProviderScopes.filesMetadataRead],
     providerPermissions: [dropboxProviderScopes.filesMetadataRead],
@@ -729,6 +732,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_metadata",
+    operationType: "read",
     description: "Get Dropbox metadata for one file or folder.",
     requiredScopes: [dropboxProviderScopes.filesMetadataRead],
     providerPermissions: [dropboxProviderScopes.filesMetadataRead],
@@ -737,6 +741,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "download_file",
+    operationType: "read",
     description: "Download one Dropbox file into local transit file storage.",
     requiredScopes: [dropboxProviderScopes.filesContentRead],
     providerPermissions: [dropboxProviderScopes.filesContentRead],
@@ -745,6 +750,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upload_file",
+    operationType: "write",
     description: "Upload one file to Dropbox from inline text or base64 content.",
     requiredScopes: [dropboxProviderScopes.filesContentWrite],
     providerPermissions: [dropboxProviderScopes.filesContentWrite],
@@ -753,6 +759,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_folder",
+    operationType: "write",
     description: "Create one folder in Dropbox.",
     requiredScopes: [dropboxProviderScopes.filesContentWrite],
     providerPermissions: [dropboxProviderScopes.filesContentWrite],
@@ -761,6 +768,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "move",
+    operationType: "destructive",
     description: "Move one file or folder to another Dropbox path.",
     requiredScopes: [dropboxProviderScopes.filesContentWrite],
     providerPermissions: [dropboxProviderScopes.filesContentWrite],
@@ -769,6 +777,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "copy",
+    operationType: "write",
     description: "Copy one file or folder to another Dropbox path.",
     requiredScopes: [dropboxProviderScopes.filesContentWrite],
     providerPermissions: [dropboxProviderScopes.filesContentWrite],
@@ -777,6 +786,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete",
+    operationType: "destructive",
     description: "Delete one file or folder from Dropbox.",
     requiredScopes: [dropboxProviderScopes.filesContentWrite],
     providerPermissions: [dropboxProviderScopes.filesContentWrite],
@@ -785,6 +795,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_shared_link",
+    operationType: "write",
     description: "Create one Dropbox shared link with optional custom settings.",
     requiredScopes: [dropboxProviderScopes.sharingWrite],
     providerPermissions: [dropboxProviderScopes.sharingWrite],
@@ -793,6 +804,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_shared_links",
+    operationType: "read",
     description: "List Dropbox shared links for the current user or a specific path.",
     requiredScopes: [dropboxProviderScopes.sharingRead],
     providerPermissions: [dropboxProviderScopes.sharingRead],
@@ -801,6 +813,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_files",
+    operationType: "read",
     description: "Search Dropbox files and folders with the official search_v2 endpoint.",
     requiredScopes: [dropboxProviderScopes.filesMetadataRead],
     providerPermissions: [dropboxProviderScopes.filesMetadataRead],
@@ -809,6 +822,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_files_continue",
+    operationType: "read",
     description: "Continue a previous Dropbox file search with a cursor.",
     requiredScopes: [dropboxProviderScopes.filesMetadataRead],
     providerPermissions: [dropboxProviderScopes.filesMetadataRead],
@@ -817,6 +831,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_temporary_link",
+    operationType: "read",
     description: "Create a temporary direct-download Dropbox link for one file.",
     requiredScopes: [dropboxProviderScopes.filesContentRead],
     providerPermissions: [dropboxProviderScopes.filesContentRead],
@@ -825,6 +840,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "save_url",
+    operationType: "write",
     description: "Ask Dropbox to save a public URL into a Dropbox file path.",
     requiredScopes: [dropboxProviderScopes.filesContentWrite],
     providerPermissions: [dropboxProviderScopes.filesContentWrite],
@@ -833,6 +849,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "save_url_check_job_status",
+    operationType: "read",
     description: "Check the status of an asynchronous Dropbox save_url job.",
     requiredScopes: [dropboxProviderScopes.filesContentWrite],
     providerPermissions: [dropboxProviderScopes.filesContentWrite],
@@ -841,6 +858,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_revisions",
+    operationType: "read",
     description: "List revisions for one Dropbox file.",
     requiredScopes: [dropboxProviderScopes.filesMetadataRead],
     providerPermissions: [dropboxProviderScopes.filesMetadataRead],
@@ -849,6 +867,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "restore",
+    operationType: "destructive",
     description: "Restore one Dropbox file to a previous revision.",
     requiredScopes: [dropboxProviderScopes.filesContentWrite],
     providerPermissions: [dropboxProviderScopes.filesContentWrite],
@@ -857,6 +876,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_shared_link_metadata",
+    operationType: "read",
     description: "Get metadata for a Dropbox shared link.",
     requiredScopes: [dropboxProviderScopes.sharingRead],
     providerPermissions: [dropboxProviderScopes.sharingRead],
@@ -865,6 +885,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_shared_link_file",
+    operationType: "read",
     description: "Download a Dropbox shared-link file into local transit file storage.",
     requiredScopes: [dropboxProviderScopes.sharingRead],
     providerPermissions: [dropboxProviderScopes.sharingRead],
@@ -873,6 +894,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "modify_shared_link",
+    operationType: "write",
     description: "Modify settings for an existing Dropbox shared link.",
     requiredScopes: [dropboxProviderScopes.sharingWrite],
     providerPermissions: [dropboxProviderScopes.sharingWrite],
@@ -881,6 +903,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "revoke_shared_link",
+    operationType: "destructive",
     description: "Revoke an existing Dropbox shared link.",
     requiredScopes: [dropboxProviderScopes.sharingWrite],
     providerPermissions: [dropboxProviderScopes.sharingWrite],
@@ -889,6 +912,7 @@ export const dropboxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tags",
+    operationType: "read",
     description: "Get user-generated Dropbox tags for one or more files or folders.",
     requiredScopes: [dropboxProviderScopes.filesMetadataRead],
     providerPermissions: [dropboxProviderScopes.filesMetadataRead],

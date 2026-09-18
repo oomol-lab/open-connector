@@ -226,6 +226,7 @@ const versionStatesInput = s.array(
 export const appStoreConnectSubscriptionActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_subscription_groups",
+    operationType: "read",
     description:
       "List the subscription groups of one app, optionally narrowed by reference name or by the state of the subscriptions they contain.",
     requiredScopes: [],
@@ -253,6 +254,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_subscription_group",
+    operationType: "read",
     description: "Read one subscription group by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -264,6 +266,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_subscription_group",
+    operationType: "write",
     description:
       "Create a subscription group for an app. Subscriptions are created inside a group, and customers can switch between the subscriptions of one group.",
     requiredScopes: [],
@@ -280,6 +283,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "update_subscription_group",
+    operationType: "write",
     description: "Rename a subscription group. The new reference name replaces the existing one.",
     requiredScopes: [],
     providerPermissions: [...manageInAppPurchaseRoles],
@@ -295,6 +299,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "delete_subscription_group",
+    operationType: "destructive",
     description:
       "Delete a subscription group. App Store Connect only deletes groups that no longer contain subscriptions that have been approved.",
     requiredScopes: [],
@@ -312,6 +317,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
 
   defineProviderAction(service, {
     name: "list_subscription_group_localizations",
+    operationType: "read",
     description: "List the customer-facing localized names of one subscription group.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -328,6 +334,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_subscription_group_localization",
+    operationType: "read",
     description: "Read one subscription group localization by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -346,6 +353,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_subscription_group_localization",
+    operationType: "write",
     description:
       "Add the customer-facing name of a subscription group in one locale. Each locale can only be added once per group.",
     requiredScopes: [],
@@ -367,6 +375,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "update_subscription_group_localization",
+    operationType: "write",
     description:
       "Change the customer-facing name or custom app name of a subscription group in one locale. Pass at least one field; the locale itself cannot be changed.",
     requiredScopes: [],
@@ -389,6 +398,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "delete_subscription_group_localization",
+    operationType: "destructive",
     description: "Delete the customer-facing name of a subscription group in one locale.",
     requiredScopes: [],
     providerPermissions: [...manageInAppPurchaseRoles],
@@ -409,6 +419,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
 
   defineProviderAction(service, {
     name: "list_subscriptions",
+    operationType: "read",
     description:
       "List the auto-renewable subscriptions of one subscription group, optionally narrowed by name, product identifier, or state.",
     requiredScopes: [],
@@ -437,6 +448,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_subscription",
+    operationType: "read",
     description: "Read one auto-renewable subscription by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -448,6 +460,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_subscription",
+    operationType: "write",
     description:
       "Create an auto-renewable subscription inside a subscription group. The product identifier cannot be changed afterwards, and the subscription still needs localizations, a price, availability, and a review submission before it can go on sale.",
     requiredScopes: [],
@@ -473,6 +486,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "update_subscription",
+    operationType: "destructive",
     description:
       "Change the reference name, subscription period, Family Sharing setting, review note, or group level of a subscription. Pass at least one field; each given field overwrites the existing value. Family Sharing cannot be turned off again once enabled for an approved subscription.",
     requiredScopes: [],
@@ -496,6 +510,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "delete_subscription",
+    operationType: "destructive",
     description:
       "Delete an auto-renewable subscription. App Store Connect only deletes subscriptions that have never been approved; approved subscriptions can only be removed from sale.",
     requiredScopes: [],
@@ -513,6 +528,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
 
   defineProviderAction(service, {
     name: "list_subscription_localizations",
+    operationType: "read",
     description: "List the customer-facing localized names and descriptions of one subscription.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -529,6 +545,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_subscription_localization",
+    operationType: "read",
     description: "Read one subscription localization by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -545,6 +562,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_subscription_localization",
+    operationType: "write",
     description:
       "Add the customer-facing name and description of a subscription in one locale. Each locale can only be added once per subscription.",
     requiredScopes: [],
@@ -566,6 +584,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "update_subscription_localization",
+    operationType: "write",
     description:
       "Change the customer-facing name or description of a subscription in one locale. Pass at least one field; the locale itself cannot be changed.",
     requiredScopes: [],
@@ -586,6 +605,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "delete_subscription_localization",
+    operationType: "destructive",
     description: "Delete the customer-facing name and description of a subscription in one locale.",
     requiredScopes: [],
     providerPermissions: [...manageInAppPurchaseRoles],
@@ -604,6 +624,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
 
   defineProviderAction(service, {
     name: "list_subscription_prices",
+    operationType: "read",
     description:
       "List the current and scheduled prices of one subscription, with the territory and price point of each price. Filter by territory, payment plan, or price point.",
     requiredScopes: [],
@@ -627,6 +648,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_subscription_price",
+    operationType: "write",
     description:
       "Set the price of a subscription in one territory from a subscription price point, either as the initial price or as a scheduled price change. Use list_subscription_price_points to find the price point identifier. A scheduled change can be removed again with delete_subscription_price.",
     requiredScopes: [],
@@ -655,6 +677,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "delete_subscription_price",
+    operationType: "destructive",
     description:
       "Delete a scheduled price change of a subscription before it takes effect. The price that is already in effect cannot be deleted.",
     requiredScopes: [],
@@ -674,6 +697,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
 
   defineProviderAction(service, {
     name: "list_subscription_price_points",
+    operationType: "read",
     description:
       "List the price points a subscription can be priced at, with the customer price and developer proceeds of each. Apple recommends filtering by territory and plans to make that filter mandatory.",
     requiredScopes: [],
@@ -699,6 +723,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_subscription_price_point",
+    operationType: "read",
     description: "Read one subscription price point by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -715,6 +740,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "list_subscription_price_point_equalizations",
+    operationType: "read",
     description:
       "List the price points in other territories that App Store Connect considers equivalent to one subscription price point, which is how a price set in one territory is carried over to the rest.",
     requiredScopes: [],
@@ -743,6 +769,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "list_subscription_price_point_adjusted_equalizations",
+    operationType: "read",
     description:
       "List the adjusted territory equalizations of one subscription price point, the equivalents App Store Connect proposes after its territory-specific price adjustments.",
     requiredScopes: [],
@@ -772,6 +799,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
 
   defineProviderAction(service, {
     name: "get_subscription_grace_period",
+    operationType: "read",
     description:
       "Read the billing grace period settings of an app, either by app or by the grace period record identifier. Pass exactly one of appId or subscriptionGracePeriodId.",
     requiredScopes: [],
@@ -792,6 +820,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "update_subscription_grace_period",
+    operationType: "destructive",
     description:
       "Change the billing grace period settings of an app: turn it on or off in production or the sandbox, set its length, or choose which renewals it covers. Pass at least one field; the change applies to every subscription of the app.",
     requiredScopes: [],
@@ -820,6 +849,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
 
   defineProviderAction(service, {
     name: "list_subscription_plan_availabilities",
+    operationType: "read",
     description:
       "List the territory availability records of one subscription, one per payment plan. Use list_subscription_plan_availability_territories for the full territory list of a record.",
     requiredScopes: [],
@@ -837,6 +867,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_subscription_plan_availability",
+    operationType: "read",
     description: "Read one subscription plan availability by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -855,6 +886,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_subscription_plan_availability",
+    operationType: "write",
     description:
       "Make one payment plan of a subscription available in a set of territories. Each plan type can only have one availability record per subscription; use update_subscription_plan_availability to change an existing one.",
     requiredScopes: [],
@@ -881,6 +913,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "update_subscription_plan_availability",
+    operationType: "destructive",
     description:
       "Change the territories a subscription payment plan is sold in, or whether it opens automatically in new territories. Pass at least one field; availableTerritoryIds replaces the whole territory list, so territories left out stop selling the plan.",
     requiredScopes: [],
@@ -908,6 +941,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "list_subscription_plan_availability_territories",
+    operationType: "read",
     description: "List the territories in which one subscription plan availability sells the plan.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -930,6 +964,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
 
   defineProviderAction(service, {
     name: "list_subscription_versions",
+    operationType: "read",
     description: `List the versions of one subscription, optionally narrowed by review state. ${versionFlowNote}`,
     requiredScopes: [],
     inputSchema: s.object(
@@ -946,6 +981,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_subscription_version",
+    operationType: "read",
     description: `Read one subscription version by its App Store Connect identifier. ${versionFlowNote}`,
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -962,6 +998,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_subscription_version",
+    operationType: "write",
     description: `Create a new draft version of a subscription so its localized metadata can be edited and submitted for review while the approved version stays live. ${versionFlowNote}`,
     requiredScopes: [],
     providerPermissions: [...manageInAppPurchaseRoles],
@@ -977,6 +1014,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "list_subscription_version_localizations",
+    operationType: "read",
     description: `List the localized names and descriptions attached to one subscription version. ${versionFlowNote}`,
     requiredScopes: [],
     inputSchema: s.object(
@@ -996,6 +1034,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_subscription_version_localization",
+    operationType: "read",
     description: `Read one subscription version localization by its App Store Connect identifier. ${versionFlowNote}`,
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -1014,6 +1053,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_subscription_version_localization",
+    operationType: "write",
     description: `Add the customer-facing name and description of a subscription in one locale to a subscription version. ${versionFlowNote}`,
     requiredScopes: [],
     providerPermissions: [...manageInAppPurchaseRoles],
@@ -1034,6 +1074,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "update_subscription_version_localization",
+    operationType: "destructive",
     description: `Change the customer-facing name or description of a subscription version localization. Pass at least one field; the locale itself cannot be changed. ${versionFlowNote}`,
     requiredScopes: [],
     providerPermissions: [...manageInAppPurchaseRoles],
@@ -1055,6 +1096,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "delete_subscription_version_localization",
+    operationType: "destructive",
     description: `Delete one localization from a subscription version. ${versionFlowNote}`,
     requiredScopes: [],
     providerPermissions: [...manageInAppPurchaseRoles],
@@ -1075,6 +1117,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
 
   defineProviderAction(service, {
     name: "list_subscription_group_versions",
+    operationType: "read",
     description: `List the versions of one subscription group, optionally narrowed by review state. ${versionFlowNote}`,
     requiredScopes: [],
     inputSchema: s.object(
@@ -1095,6 +1138,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_subscription_group_version",
+    operationType: "read",
     description: `Read one subscription group version by its App Store Connect identifier. ${versionFlowNote}`,
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -1111,6 +1155,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_subscription_group_version",
+    operationType: "write",
     description: `Create a new draft version of a subscription group so its localized names can be edited and submitted for review while the approved version stays live. ${versionFlowNote}`,
     requiredScopes: [],
     providerPermissions: [...manageInAppPurchaseRoles],
@@ -1126,6 +1171,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "list_subscription_group_version_localizations",
+    operationType: "read",
     description: `List the localized names attached to one subscription group version. ${versionFlowNote}`,
     requiredScopes: [],
     inputSchema: s.object(
@@ -1145,6 +1191,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_subscription_group_version_localization",
+    operationType: "read",
     description: `Read one subscription group version localization by its App Store Connect identifier. ${versionFlowNote}`,
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -1163,6 +1210,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_subscription_group_version_localization",
+    operationType: "write",
     description: `Add the customer-facing name of a subscription group in one locale to a subscription group version. ${versionFlowNote}`,
     requiredScopes: [],
     providerPermissions: [...manageInAppPurchaseRoles],
@@ -1183,6 +1231,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "update_subscription_group_version_localization",
+    operationType: "destructive",
     description: `Change the customer-facing name or custom app name of a subscription group version localization. Pass at least one field; the locale itself cannot be changed. ${versionFlowNote}`,
     requiredScopes: [],
     providerPermissions: [...manageInAppPurchaseRoles],
@@ -1204,6 +1253,7 @@ export const appStoreConnectSubscriptionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "delete_subscription_group_version_localization",
+    operationType: "destructive",
     description: `Delete one localization from a subscription group version. ${versionFlowNote}`,
     requiredScopes: [],
     providerPermissions: [...manageInAppPurchaseRoles],

@@ -57,6 +57,7 @@ const meetingIdInputSchema = s.object("The input payload for selecting a tl;dv m
 export const tldvActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_meetings",
+    operationType: "read",
     description:
       "List tl;dv meetings available to the API key with optional search, date, participation, and meeting-type filters.",
     requiredScopes: [],
@@ -87,6 +88,7 @@ export const tldvActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_meeting",
+    operationType: "read",
     description: "Get a tl;dv meeting by its identifier.",
     requiredScopes: [],
     inputSchema: meetingIdInputSchema,
@@ -94,6 +96,7 @@ export const tldvActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_transcript",
+    operationType: "read",
     description: "Get the structured transcript for a tl;dv meeting.",
     requiredScopes: [],
     inputSchema: meetingIdInputSchema,
@@ -105,6 +108,7 @@ export const tldvActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_notes",
+    operationType: "read",
     description: "Get markdown and structured AI notes for a tl;dv meeting.",
     requiredScopes: [],
     inputSchema: meetingIdInputSchema,
@@ -116,6 +120,7 @@ export const tldvActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "import_meeting",
+    operationType: "write",
     description:
       "Submit a publicly accessible recording URL to tl;dv for meeting import and receive the created job payload.",
     requiredScopes: [],

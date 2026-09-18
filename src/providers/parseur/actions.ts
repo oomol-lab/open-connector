@@ -81,6 +81,7 @@ const document = s.object("Detailed Parseur document metadata and parsed data.",
 export const parseurActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_mailboxes",
+    operationType: "read",
     description: "List Parseur mailboxes with pagination, search, and ordering filters.",
     inputSchema: s.object(
       "Input parameters for listing Parseur mailboxes.",
@@ -97,6 +98,7 @@ export const parseurActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_mailbox",
+    operationType: "read",
     description: "Retrieve detailed metadata for a Parseur mailbox.",
     inputSchema: s.object("Input parameters for retrieving a Parseur mailbox.", {
       id: positiveInteger("Parseur mailbox identifier."),
@@ -105,6 +107,7 @@ export const parseurActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_mailbox_schema",
+    operationType: "read",
     description: "Retrieve the parsed result JSON Schema for a Parseur mailbox.",
     inputSchema: s.object("Input parameters for retrieving a Parseur mailbox schema.", {
       id: positiveInteger("Parseur mailbox identifier."),
@@ -115,6 +118,7 @@ export const parseurActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_mailbox_documents",
+    operationType: "read",
     description: "List documents in a Parseur mailbox with pagination and filters.",
     inputSchema: s.object(
       "Input parameters for listing documents in a Parseur mailbox.",
@@ -149,6 +153,7 @@ export const parseurActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document",
+    operationType: "read",
     description: "Retrieve detailed metadata and parsed result for one Parseur document.",
     inputSchema: s.object("Input parameters for retrieving a Parseur document.", {
       id: positiveInteger("Parseur document identifier."),

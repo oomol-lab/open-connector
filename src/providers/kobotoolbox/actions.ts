@@ -54,6 +54,7 @@ const queryObjectSchema = s.record(
 export const koboToolboxActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_assets",
+    operationType: "read",
     description: "List KoboToolbox projects and library assets visible to the connected account.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -80,6 +81,7 @@ export const koboToolboxActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_asset",
+    operationType: "read",
     description: "Retrieve one KoboToolbox project or library asset by UID.",
     requiredScopes: [],
     inputSchema: s.object("The KoboToolbox asset to retrieve.", {
@@ -89,6 +91,7 @@ export const koboToolboxActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create a new draft KoboToolbox survey project.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -106,6 +109,7 @@ export const koboToolboxActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "clone_project",
+    operationType: "write",
     description: "Clone an existing KoboToolbox asset into a new survey project.",
     requiredScopes: [],
     inputSchema: s.object("The KoboToolbox asset clone request.", {
@@ -116,6 +120,7 @@ export const koboToolboxActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "deploy_project",
+    operationType: "destructive",
     description: "Deploy or redeploy the current form version for a KoboToolbox project.",
     requiredScopes: [],
     inputSchema: s.object("The KoboToolbox project to deploy.", {
@@ -131,6 +136,7 @@ export const koboToolboxActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_submissions",
+    operationType: "read",
     description: "List form submissions for a KoboToolbox project.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -163,6 +169,7 @@ export const koboToolboxActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_submission",
+    operationType: "read",
     description: "Retrieve one KoboToolbox form submission by ID or UUID.",
     requiredScopes: [],
     inputSchema: s.object("The KoboToolbox submission to retrieve.", {
@@ -175,6 +182,7 @@ export const koboToolboxActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_submission_validation",
+    operationType: "destructive",
     description: "Replace the validation status of one KoboToolbox submission.",
     requiredScopes: [],
     inputSchema: s.object("The KoboToolbox submission validation update.", {
@@ -197,6 +205,7 @@ export const koboToolboxActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_submission",
+    operationType: "destructive",
     description: "Permanently delete one KoboToolbox form submission.",
     requiredScopes: [],
     inputSchema: s.object("The KoboToolbox submission to delete.", {
@@ -209,6 +218,7 @@ export const koboToolboxActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_export",
+    operationType: "write",
     description: "Start an asynchronous KoboToolbox submission data export.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -264,6 +274,7 @@ export const koboToolboxActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_export",
+    operationType: "read",
     description: "Get the status and download URL of a KoboToolbox export task.",
     requiredScopes: [],
     inputSchema: s.object("The KoboToolbox export task to retrieve.", {

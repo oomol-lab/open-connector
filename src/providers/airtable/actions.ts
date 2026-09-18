@@ -15,6 +15,7 @@ const service = "airtable";
 
 interface AirtableActionSource {
   name: AirtableActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -253,6 +254,7 @@ const updateRecordInput = s.object(
 const actions: AirtableActionSource[] = [
   action({
     name: "list_bases",
+    operationType: "read",
     description: "List Airtable bases accessible to the authenticated credential.",
     requiredScopes: [airtableBaseSchemaReadScope],
     followUpActions: ["airtable.get_base_collaborators", "airtable.get_base_schema"],
@@ -266,6 +268,7 @@ const actions: AirtableActionSource[] = [
   }),
   action({
     name: "get_base_collaborators",
+    operationType: "read",
     description: "Read Airtable base metadata, including workspaceId and optional collaborator details.",
     requiredScopes: [airtableBaseSchemaReadScope, airtableWorkspacesAndBasesReadScope],
     followUpActions: ["airtable.create_base", "airtable.get_base_schema"],
@@ -283,6 +286,7 @@ const actions: AirtableActionSource[] = [
   }),
   action({
     name: "get_base_schema",
+    operationType: "read",
     description: "Read Airtable table, field, and view schema for a specific base.",
     requiredScopes: [airtableBaseSchemaReadScope],
     followUpActions: ["airtable.create_table", "airtable.create_field", "airtable.list_records"],
@@ -303,6 +307,7 @@ const actions: AirtableActionSource[] = [
   }),
   action({
     name: "create_base",
+    operationType: "write",
     description: "Create an Airtable base in a workspace with the provided initial table and field schema.",
     requiredScopes: [airtableBaseSchemaWriteScope],
     followUpActions: ["airtable.get_base_schema", "airtable.delete_base"],
@@ -321,6 +326,7 @@ const actions: AirtableActionSource[] = [
   }),
   action({
     name: "delete_base",
+    operationType: "destructive",
     description: "Delete an Airtable base. Airtable restricts this endpoint to enterprise admins.",
     requiredScopes: [airtableWorkspacesAndBasesManageScope],
     inputSchema: input({ baseId }, ["baseId"]),
@@ -328,6 +334,7 @@ const actions: AirtableActionSource[] = [
   }),
   action({
     name: "create_table",
+    operationType: "write",
     description: "Create a table in an Airtable base with the provided field schema.",
     requiredScopes: [airtableBaseSchemaWriteScope],
     followUpActions: ["airtable.create_records", "airtable.update_table", "airtable.create_field"],
@@ -347,6 +354,7 @@ const actions: AirtableActionSource[] = [
   }),
   action({
     name: "update_table",
+    operationType: "write",
     description: "Update an Airtable table name, description, or date dependency settings.",
     requiredScopes: [airtableBaseSchemaWriteScope],
     followUpActions: ["airtable.get_base_schema"],
@@ -364,6 +372,7 @@ const actions: AirtableActionSource[] = [
   }),
   action({
     name: "create_field",
+    operationType: "write",
     description: "Create a field in an Airtable table.",
     requiredScopes: [airtableBaseSchemaWriteScope],
     followUpActions: ["airtable.update_field", "airtable.create_records"],
@@ -382,6 +391,7 @@ const actions: AirtableActionSource[] = [
   }),
   action({
     name: "update_field",
+    operationType: "write",
     description: "Update an Airtable field name, description, or type-specific options.",
     requiredScopes: [airtableBaseSchemaWriteScope],
     followUpActions: ["airtable.get_base_schema"],
@@ -400,6 +410,7 @@ const actions: AirtableActionSource[] = [
   }),
   action({
     name: "list_records",
+    operationType: "read",
     description:
       "List Airtable records from a table with optional fields, sorting, view filters, formula filters, and pagination.",
     requiredScopes: [airtableRecordsReadScope],
@@ -423,6 +434,7 @@ const actions: AirtableActionSource[] = [
   }),
   action({
     name: "get_record",
+    operationType: "read",
     description: "Read a single Airtable record by record ID.",
     requiredScopes: [airtableRecordsReadScope],
     followUpActions: ["airtable.update_records", "airtable.delete_records"],
@@ -431,6 +443,7 @@ const actions: AirtableActionSource[] = [
   }),
   action({
     name: "create_records",
+    operationType: "write",
     description: "Create one or more Airtable records in a table.",
     requiredScopes: [airtableRecordsWriteScope],
     followUpActions: ["airtable.list_records"],
@@ -454,6 +467,7 @@ const actions: AirtableActionSource[] = [
   }),
   action({
     name: "update_records",
+    operationType: "write",
     description: "Update one or more existing Airtable records by record ID.",
     requiredScopes: [airtableRecordsWriteScope],
     followUpActions: ["airtable.get_record"],
@@ -477,6 +491,7 @@ const actions: AirtableActionSource[] = [
   }),
   action({
     name: "delete_records",
+    operationType: "destructive",
     description: "Delete one or more Airtable records by record ID.",
     requiredScopes: [airtableRecordsWriteScope],
     inputSchema: input(
@@ -518,6 +533,7 @@ export type AirtableActionName =
 export const airtableActions: ActionDefinition[] = actions.map((source) =>
   defineProviderAction(service, {
     name: source.name,
+    operationType: source.operationType,
     description: source.description,
     requiredScopes: source.requiredScopes,
     providerPermissions: [],

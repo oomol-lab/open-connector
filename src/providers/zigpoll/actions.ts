@@ -71,18 +71,21 @@ const surveyLinkSchema = s.object("A generated Zigpoll survey link.", {
 export const zigpollActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Fetch the authenticated Zigpoll user object.",
     inputSchema: emptyInputSchema,
     outputSchema: userSchema,
   }),
   defineProviderAction(service, {
     name: "list_accounts",
+    operationType: "read",
     description: "List Zigpoll account objects available to the authenticated user.",
     inputSchema: emptyInputSchema,
     outputSchema: rawObjectListSchema("Zigpoll account objects returned by the API."),
   }),
   defineProviderAction(service, {
     name: "list_polls",
+    operationType: "read",
     description: "List Zigpoll polls for an account.",
     inputSchema: s.object("Input for listing Zigpoll polls.", {
       accountId: idField("account"),
@@ -91,6 +94,7 @@ export const zigpollActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_poll",
+    operationType: "read",
     description: "Fetch a Zigpoll poll by ID.",
     inputSchema: s.object("Input for fetching a Zigpoll poll.", {
       pollId: idField("poll"),
@@ -99,6 +103,7 @@ export const zigpollActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_slides",
+    operationType: "read",
     description: "List Zigpoll slides for a poll.",
     inputSchema: s.object("Input for listing Zigpoll slides.", {
       pollId: idField("poll"),
@@ -107,12 +112,14 @@ export const zigpollActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_participants",
+    operationType: "read",
     description: "List Zigpoll participants by account, poll, or slide with cursor pagination.",
     inputSchema: oneFilterInput("Input for listing paginated Zigpoll participants by account, poll, or slide."),
     outputSchema: cursorPageSchema,
   }),
   defineProviderAction(service, {
     name: "list_responses",
+    operationType: "read",
     description: "List Zigpoll responses by account, poll, or slide with cursor pagination.",
     inputSchema: oneFilterInput(
       "Input for listing paginated Zigpoll responses by account, poll, or slide.",
@@ -123,6 +130,7 @@ export const zigpollActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "generate_survey_link",
+    operationType: "write",
     description: "Generate a unique trackable Zigpoll survey link for a poll.",
     inputSchema: s.object(
       "Input for generating a unique Zigpoll survey link.",

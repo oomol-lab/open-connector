@@ -1,5 +1,5 @@
 import type { ProviderActionDefinition } from "../../core/provider-definition.ts";
-import type { JsonSchema as ActionJsonSchema } from "../../core/types.ts";
+import type { ActionOperationType, JsonSchema as ActionJsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
@@ -64,6 +64,7 @@ const input = (properties: Record<string, ActionJsonSchema>, required: readonly 
 
 function action<const TName extends string>(definition: {
   name: TName;
+  operationType: ActionOperationType;
   description: string;
   scope: string | string[];
   inputSchema: ActionJsonSchema;
@@ -72,6 +73,7 @@ function action<const TName extends string>(definition: {
   const requiredScopes = typeof definition.scope === "string" ? [definition.scope] : definition.scope;
   return defineProviderAction(service, {
     name: definition.name,
+    operationType: definition.operationType,
     description: definition.description,
     requiredScopes,
     providerPermissions: requiredScopes,
@@ -204,6 +206,7 @@ const membershipListInput = input({
 export const webexActions: ProviderActionDefinition[] = [
   action({
     name: "list_people",
+    operationType: "read",
     description: "List people visible to the authenticated Webex user.",
     scope: "spark:people_read",
     inputSchema: peopleListInput,
@@ -211,6 +214,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "get_person",
+    operationType: "read",
     description: "Get a Webex person by ID.",
     scope: "spark:people_read",
     inputSchema: input(
@@ -224,6 +228,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "list_messages",
+    operationType: "read",
     description: "List messages in a Webex room.",
     scope: "spark:messages_read",
     inputSchema: messageListInput,
@@ -231,6 +236,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "list_direct_messages",
+    operationType: "read",
     description: "List direct messages involving the authenticated Webex user.",
     scope: "spark:messages_read",
     inputSchema: directMessageListInput,
@@ -238,6 +244,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "create_message",
+    operationType: "write",
     description: "Send a message to a Webex room or person.",
     scope: "spark:messages_write",
     inputSchema: createMessageInput,
@@ -245,6 +252,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "get_message",
+    operationType: "read",
     description: "Get a Webex message by ID.",
     scope: "spark:messages_read",
     inputSchema: inputSchemaWithId("messageId", "The Webex message ID."),
@@ -252,6 +260,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "update_message",
+    operationType: "write",
     description: "Update a Webex message.",
     scope: "spark:messages_write",
     inputSchema: updateMessageInput,
@@ -259,6 +268,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "delete_message",
+    operationType: "destructive",
     description: "Delete a Webex message.",
     scope: "spark:messages_write",
     inputSchema: inputSchemaWithId("messageId", "The Webex message ID."),
@@ -266,6 +276,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "list_rooms",
+    operationType: "read",
     description: "List rooms visible to the authenticated Webex user.",
     scope: "spark:rooms_read",
     inputSchema: input({
@@ -281,6 +292,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "create_room",
+    operationType: "write",
     description: "Create a Webex room.",
     scope: "spark:rooms_write",
     inputSchema: input(
@@ -382,6 +394,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "list_meetings",
+    operationType: "read",
     description: "List meetings visible to the authenticated Webex user.",
     scope: "meeting:schedules_read",
 
@@ -418,6 +431,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "create_meeting",
+    operationType: "write",
     description: "Schedule a Webex meeting.",
     scope: "meeting:schedules_write",
 
@@ -426,6 +440,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "get_meeting",
+    operationType: "read",
     description: "Get a scheduled or historical Webex meeting by ID.",
     scope: "meeting:schedules_read",
 
@@ -440,6 +455,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "update_meeting",
+    operationType: "write",
     description: "Update a scheduled Webex meeting.",
     scope: "meeting:schedules_write",
 
@@ -448,6 +464,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "delete_meeting",
+    operationType: "destructive",
     description: "Delete a scheduled Webex meeting.",
     scope: "meeting:schedules_write",
     inputSchema: input(
@@ -461,6 +478,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "list_meeting_participants",
+    operationType: "read",
     description: "List participants for a Webex meeting.",
     scope: "meeting:participants_read",
     inputSchema: input(
@@ -479,6 +497,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "get_meeting_participant",
+    operationType: "read",
     description: "Get a Webex meeting participant by ID.",
     scope: "meeting:participants_read",
     inputSchema: input(
@@ -491,6 +510,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "list_recordings",
+    operationType: "read",
     description: "List Webex meeting recordings.",
     scope: "meeting:recordings_read",
 
@@ -509,6 +529,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "get_recording",
+    operationType: "read",
     description: "Get Webex meeting recording details.",
     scope: "meeting:recordings_read",
 
@@ -522,6 +543,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "list_meeting_transcripts",
+    operationType: "read",
     description: "List transcripts generated for Webex meetings.",
     scope: "meeting:transcripts_read",
     inputSchema: input({
@@ -535,6 +557,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "download_meeting_transcript",
+    operationType: "read",
     description: "Download a Webex meeting transcript as VTT or plain text.",
     scope: "meeting:transcripts_read",
     inputSchema: input(
@@ -548,6 +571,7 @@ export const webexActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "get_meeting_summary",
+    operationType: "read",
     description: "Get the AI-generated summary for a Webex meeting.",
     scope: "meeting:summaries_read",
     inputSchema: input(
@@ -573,6 +597,7 @@ function resourceCrudActions<const TResource extends string>(definition: {
   return [
     action({
       name: `get_${definition.resource}`,
+      operationType: "read",
       description: `Get a Webex ${definition.resource.replaceAll("_", " ")} by ID.`,
       scope: definition.readScope,
       inputSchema: inputSchemaWithId(definition.idField, definition.idDescription),
@@ -580,6 +605,7 @@ function resourceCrudActions<const TResource extends string>(definition: {
     }),
     action({
       name: `update_${definition.resource}`,
+      operationType: "write",
       description: `Update a Webex ${definition.resource.replaceAll("_", " ")}.`,
       scope: definition.writeScope,
       inputSchema: input({ [definition.idField]: id(definition.idDescription), ...definition.updateFields }, [
@@ -590,6 +616,7 @@ function resourceCrudActions<const TResource extends string>(definition: {
     }),
     action({
       name: `delete_${definition.resource}`,
+      operationType: "destructive",
       description: `Delete a Webex ${definition.resource.replaceAll("_", " ")}.`,
       scope: definition.writeScope,
       inputSchema: inputSchemaWithId(definition.idField, definition.idDescription),
@@ -616,6 +643,7 @@ function collectionActions<const TResource extends string, const TPlural extends
   return [
     action({
       name: `list_${inputValue.plural}`,
+      operationType: "read",
       description: `List Webex ${inputValue.plural.replaceAll("_", " ")}.`,
       scope: inputValue.readScope,
       inputSchema: inputValue.listInputSchema ?? input(inputValue.listFields ?? {}, inputValue.listRequired),
@@ -623,6 +651,7 @@ function collectionActions<const TResource extends string, const TPlural extends
     }),
     action({
       name: `create_${inputValue.resource}`,
+      operationType: "write",
       description: `Create a Webex ${inputValue.resource.replaceAll("_", " ")}.`,
       scope: inputValue.writeScope,
       inputSchema:

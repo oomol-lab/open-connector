@@ -249,6 +249,7 @@ const listVoucherPoolsOutputSchema = s.object("A page of Chatarmin voucher pools
 export const chatarminActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "Retrieve a paginated list of Chatarmin contacts with optional text search.",
     inputSchema: s.object(
       "Input for listing Chatarmin contacts.",
@@ -265,6 +266,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Retrieve one Chatarmin contact by contact ID or externalId.",
     inputSchema: s.object(
       "Input for retrieving one Chatarmin contact.",
@@ -279,6 +281,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a new Chatarmin contact.",
     inputSchema: s.object("Input for creating a Chatarmin contact.", contactInputFields, {
       optional: ["email", "lastname", "externalId", "properties"],
@@ -289,6 +292,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update an existing Chatarmin contact by contact ID or externalId.",
     inputSchema: contactUpdateInputSchema,
     outputSchema: s.object("The updated Chatarmin contact.", {
@@ -297,6 +301,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete a Chatarmin contact by contact ID or externalId.",
     inputSchema: s.object(
       "Input for deleting a Chatarmin contact.",
@@ -309,6 +314,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send a WhatsApp text, media, document, or template message to a Chatarmin contact.",
     inputSchema: sendMessageInputSchema,
     outputSchema: s.object("The Chatarmin message send result.", {
@@ -317,6 +323,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_campaigns",
+    operationType: "read",
     description: "Retrieve a paginated list of Chatarmin campaigns with optional day or month metrics.",
     inputSchema: s.object(
       "Input for listing Chatarmin campaigns.",
@@ -333,6 +340,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign",
+    operationType: "read",
     description: "Retrieve one Chatarmin campaign by campaign ID.",
     inputSchema: s.object(
       "Input for retrieving one Chatarmin campaign.",
@@ -347,6 +355,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_flows",
+    operationType: "read",
     description: "Retrieve a paginated list of Chatarmin flows with optional day or month metrics.",
     inputSchema: s.object(
       "Input for listing Chatarmin flows.",
@@ -363,6 +372,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_flow",
+    operationType: "read",
     description: "Retrieve one Chatarmin flow by flow ID.",
     inputSchema: s.object(
       "Input for retrieving one Chatarmin flow.",
@@ -377,6 +387,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_flow_analytics",
+    operationType: "read",
     description: "Retrieve paginated Chatarmin flow analytics for a flow.",
     inputSchema: s.object(
       "Input for retrieving paginated Chatarmin flow analytics.",
@@ -399,6 +410,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_flow_contact_analytics",
+    operationType: "read",
     description: "Retrieve Chatarmin flow analytics for specific contacts.",
     inputSchema: s.object(
       "Input for retrieving Chatarmin flow analytics for specific contacts.",
@@ -421,6 +433,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_voucher_pools",
+    operationType: "read",
     description: "Retrieve a paginated list of Chatarmin voucher pools with voucher codes.",
     inputSchema: s.object(
       "Input for listing Chatarmin voucher pools.",
@@ -434,6 +447,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_voucher_pool",
+    operationType: "read",
     description: "Retrieve one Chatarmin voucher pool by voucher pool ID.",
     inputSchema: s.object(
       "Input for retrieving one Chatarmin voucher pool.",
@@ -448,6 +462,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_voucher_pool",
+    operationType: "write",
     description: "Create a Chatarmin voucher pool with an initial list of voucher codes.",
     inputSchema: s.object("Input for creating a Chatarmin voucher pool.", voucherPoolInputFields, {
       optional: ["reuseCodes", "reminder", "emptyOptions"],
@@ -458,6 +473,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_voucher_pool",
+    operationType: "write",
     description: "Update a Chatarmin voucher pool's name, settings, or unused voucher codes.",
     inputSchema: updateVoucherPoolInputSchema,
     outputSchema: s.object("The updated Chatarmin voucher pool.", {
@@ -466,6 +482,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_or_replace_voucher_codes",
+    operationType: "destructive",
     description: "Add new voucher codes to a Chatarmin pool or replace one unused code.",
     inputSchema: addOrReplaceVoucherCodesInputSchema,
     outputSchema: s.object("The Chatarmin voucher code update result.", {
@@ -475,6 +492,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_voucher_code",
+    operationType: "destructive",
     description: "Remove one unused voucher code from a Chatarmin voucher pool.",
     inputSchema: s.object(
       "Input for removing one Chatarmin voucher code.",
@@ -488,6 +506,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_voucher_pool",
+    operationType: "destructive",
     description: "Delete a Chatarmin voucher pool and its unused voucher codes.",
     inputSchema: s.object(
       "Input for deleting a Chatarmin voucher pool.",
@@ -500,6 +519,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_webhooks",
+    operationType: "read",
     description: "Retrieve all Chatarmin webhooks for the authenticated user.",
     inputSchema: s.object("Input for listing Chatarmin webhooks.", {}),
     outputSchema: s.object("Chatarmin webhooks for the authenticated user.", {
@@ -508,6 +528,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_webhook",
+    operationType: "write",
     description: "Create a Chatarmin webhook for one supported topic.",
     inputSchema: s.object("Input for creating a Chatarmin webhook.", {
       url: s.url("The webhook target URL."),
@@ -519,6 +540,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_webhook",
+    operationType: "write",
     description: "Update a Chatarmin webhook URL or topic.",
     inputSchema: updateWebhookInputSchema,
     outputSchema: s.object("The updated Chatarmin webhook.", {
@@ -527,6 +549,7 @@ export const chatarminActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_webhook",
+    operationType: "destructive",
     description: "Delete a Chatarmin webhook by webhook ID.",
     inputSchema: s.object(
       "Input for deleting a Chatarmin webhook.",

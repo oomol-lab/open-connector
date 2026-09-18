@@ -331,6 +331,7 @@ const listResponseInputItemsOutputSchema = s.looseObject(
 
 function action(input: {
   name: QianfanActionName;
+  operationType: ProviderActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
@@ -342,66 +343,77 @@ function action(input: {
 export const qianfanActions: ProviderActionDefinition[] = [
   action({
     name: "list_models",
+    operationType: "read",
     description: "List the models available to the current Baidu Qianfan API key.",
     inputSchema: emptyInputSchema,
     outputSchema: modelListOutputSchema,
   }),
   action({
     name: "create_completion",
+    operationType: "write",
     description: "Create a non-streaming fill-in-the-middle completion with Baidu Qianfan.",
     inputSchema: completionInputSchema,
     outputSchema: completionOutputSchema,
   }),
   action({
     name: "create_chat_completion",
+    operationType: "read",
     description: "Create a non-streaming OpenAI-compatible chat completion with Baidu Qianfan.",
     inputSchema: chatCompletionInputSchema,
     outputSchema: chatCompletionOutputSchema,
   }),
   action({
     name: "create_ai_search_completion",
+    operationType: "read",
     description: "Create a non-streaming AI search chat completion with Baidu Qianfan.",
     inputSchema: aiSearchInputSchema,
     outputSchema: aiSearchOutputSchema,
   }),
   action({
     name: "create_embeddings",
+    operationType: "write",
     description: "Generate embedding vectors for one or more input strings with Baidu Qianfan.",
     inputSchema: embeddingsInputSchema,
     outputSchema: embeddingsOutputSchema,
   }),
   action({
     name: "rerank",
+    operationType: "read",
     description: "Score and rank candidate documents against a query with a Baidu Qianfan rerank model.",
     inputSchema: rerankInputSchema,
     outputSchema: rerankOutputSchema,
   }),
   action({
     name: "run_paddleocr_vl",
+    operationType: "write",
     description: "Run the Baidu Qianfan PaddleOCR-VL endpoint on a document or image.",
     inputSchema: ocrInputSchema,
     outputSchema: ocrOutputSchema,
   }),
   action({
     name: "run_pp_structure_v3",
+    operationType: "write",
     description: "Run the Baidu Qianfan PP-StructureV3 OCR endpoint on a document or image.",
     inputSchema: ocrInputSchema,
     outputSchema: ocrOutputSchema,
   }),
   action({
     name: "create_image_generation",
+    operationType: "write",
     description: "Generate images with the Baidu Qianfan general image generation endpoint.",
     inputSchema: imageGenerationInputSchema,
     outputSchema: imageGenerationOutputSchema,
   }),
   action({
     name: "create_air_image_generation",
+    operationType: "write",
     description: "Generate images with the Baidu Qianfan MuseSteamer Air image endpoint.",
     inputSchema: imageGenerationInputSchema,
     outputSchema: imageGenerationOutputSchema,
   }),
   action({
     name: "create_video_generation_task",
+    operationType: "write",
     description: "Create a Baidu Qianfan video generation task.",
     inputSchema: createVideoTaskInputSchema,
     outputSchema: createVideoTaskOutputSchema,
@@ -413,18 +425,21 @@ export const qianfanActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "get_video_generation_task",
+    operationType: "read",
     description: "Fetch a Baidu Qianfan video generation task by its task identifier.",
     inputSchema: videoTaskInputSchema,
     outputSchema: videoTaskOutputSchema,
   }),
   action({
     name: "cancel_video_generation_task",
+    operationType: "destructive",
     description: "Cancel a Baidu Qianfan video generation task by its task identifier.",
     inputSchema: videoTaskInputSchema,
     outputSchema: videoTaskOutputSchema,
   }),
   action({
     name: "list_video_generation_tasks",
+    operationType: "read",
     description: "List Baidu Qianfan video generation tasks with optional filters.",
     inputSchema: listVideoTasksInputSchema,
     outputSchema: s.looseObject("The response payload for listing video generation tasks.", {
@@ -435,12 +450,14 @@ export const qianfanActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "upload_file",
+    operationType: "write",
     description: "Upload a file to Baidu Qianfan for batch or other file-based APIs.",
     inputSchema: uploadFileInputSchema,
     outputSchema: fileObjectSchema,
   }),
   action({
     name: "list_files",
+    operationType: "read",
     description: "List files stored in Baidu Qianfan with optional filters.",
     inputSchema: listFilesInputSchema,
     outputSchema: s.looseObject("The response payload for listing Qianfan files.", {
@@ -449,12 +466,14 @@ export const qianfanActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "get_file_content",
+    operationType: "read",
     description: "Fetch the raw content of a Baidu Qianfan file by its identifier.",
     inputSchema: fileIdInputSchema,
     outputSchema: fileContentOutputSchema,
   }),
   action({
     name: "create_batch",
+    operationType: "write",
     description: "Create a Baidu Qianfan batch prediction job from an uploaded input file.",
     inputSchema: createBatchInputSchema,
     outputSchema: batchObjectSchema,
@@ -466,18 +485,21 @@ export const qianfanActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "cancel_batch",
+    operationType: "destructive",
     description: "Cancel a Baidu Qianfan batch prediction job by its identifier.",
     inputSchema: batchIdInputSchema,
     outputSchema: batchObjectSchema,
   }),
   action({
     name: "get_batch",
+    operationType: "read",
     description: "Fetch a Baidu Qianfan batch prediction job by its identifier.",
     inputSchema: batchIdInputSchema,
     outputSchema: batchObjectSchema,
   }),
   action({
     name: "list_batches",
+    operationType: "read",
     description: "List Baidu Qianfan batch prediction jobs with optional pagination.",
     inputSchema: s.actionInput({
       after: s.string("Return batches after this batch identifier."),
@@ -493,24 +515,28 @@ export const qianfanActions: ProviderActionDefinition[] = [
   }),
   action({
     name: "create_response",
+    operationType: "write",
     description: "Create a non-streaming stored response with the Baidu Qianfan responses API.",
     inputSchema: responseInputSchema,
     outputSchema: responseObjectSchema,
   }),
   action({
     name: "get_response",
+    operationType: "read",
     description: "Fetch a previously stored Baidu Qianfan response by its identifier.",
     inputSchema: responseIdInputSchema,
     outputSchema: responseObjectSchema,
   }),
   action({
     name: "delete_response",
+    operationType: "destructive",
     description: "Delete a previously stored Baidu Qianfan response by its identifier.",
     inputSchema: responseIdInputSchema,
     outputSchema: deleteResponseOutputSchema,
   }),
   action({
     name: "list_response_input_items",
+    operationType: "read",
     description: "List the stored context items for a previously created Baidu Qianfan response.",
     inputSchema: listResponseInputItemsInputSchema,
     outputSchema: listResponseInputItemsOutputSchema,

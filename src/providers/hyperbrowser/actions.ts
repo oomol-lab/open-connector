@@ -168,18 +168,21 @@ const responseSchema = (description: string, status = statusSchema) =>
 export const hyperbrowserActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "fetch_page",
+    operationType: "read",
     description: "Fetch a web page with Hyperbrowser and return the requested data formats.",
     inputSchema: fetchInputSchema,
     outputSchema: responseSchema("The Hyperbrowser fetch response.", fetchStatusSchema),
   }),
   defineProviderAction(service, {
     name: "search_web",
+    operationType: "read",
     description: "Search the web with Hyperbrowser and return structured search results.",
     inputSchema: searchInputSchema,
     outputSchema: responseSchema("The Hyperbrowser search response."),
   }),
   defineProviderAction(service, {
     name: "start_web_crawl",
+    operationType: "write",
     description: "Start an asynchronous Hyperbrowser crawl job from a URL.",
     inputSchema: startCrawlInputSchema,
     outputSchema: s.actionOutput(
@@ -195,6 +198,7 @@ export const hyperbrowserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_web_crawl_status",
+    operationType: "read",
     description: "Get the current status of a Hyperbrowser crawl job.",
     inputSchema: s.actionInput(
       {
@@ -212,6 +216,7 @@ export const hyperbrowserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_web_crawl_results",
+    operationType: "read",
     description: "Get paginated results for a Hyperbrowser crawl job.",
     inputSchema: s.object(
       "Request parameters for reading Hyperbrowser crawl job results.",

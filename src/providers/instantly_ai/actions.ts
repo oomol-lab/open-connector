@@ -244,6 +244,7 @@ const createLeadInputSchema = s.object(
 export const instantlyAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_campaigns",
+    operationType: "read",
     description: "List Instantly campaigns with optional search, tag, and status filters.",
     requiredScopes: ["campaigns:read"],
     inputSchema: listCampaignsInputSchema,
@@ -251,6 +252,7 @@ export const instantlyAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign",
+    operationType: "read",
     description: "Retrieve one Instantly campaign by ID.",
     requiredScopes: ["campaigns:read"],
     inputSchema: getCampaignInputSchema,
@@ -258,6 +260,7 @@ export const instantlyAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_leads",
+    operationType: "read",
     description: "List Instantly leads using JSON filters and cursor pagination.",
     requiredScopes: ["leads:read"],
     inputSchema: listLeadsInputSchema,
@@ -265,6 +268,7 @@ export const instantlyAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_lead",
+    operationType: "write",
     description: "Create a lead in an Instantly campaign or lead list.",
     requiredScopes: ["leads:create"],
     inputSchema: createLeadInputSchema,

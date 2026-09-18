@@ -146,6 +146,7 @@ export const reviewSubmissionItemResource: JsonSchema = resourceObject(
 export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_app_store_version",
+    operationType: "write",
     description:
       "Create a new App Store version for an app on one platform. The version starts in PREPARE_FOR_SUBMISSION and can be deleted again until it is submitted for review.",
     requiredScopes: [],
@@ -174,6 +175,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "update_app_store_version",
+    operationType: "destructive",
     description:
       "Change the version string, copyright, review or release settings, or attached build of an App Store version. Each given field overwrites the current value; pass null for copyright or earliestReleaseDate to clear them.",
     requiredScopes: [],
@@ -200,6 +202,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "delete_app_store_version",
+    operationType: "destructive",
     description:
       "Delete an App Store version that has not been submitted yet, together with its localizations and review information.",
     requiredScopes: [],
@@ -216,6 +219,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "set_app_store_version_build",
+    operationType: "destructive",
     description:
       "Select the build an App Store version submits for review, replacing any build selected before. Pass null as buildId to detach the current build.",
     requiredScopes: [],
@@ -241,6 +245,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_app_store_version_build",
+    operationType: "read",
     description: "Read the build currently attached to an App Store version, or null when no build has been selected.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -252,6 +257,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_app_store_version_localizations",
+    operationType: "read",
     description:
       "List the localized App Store metadata (description, keywords, release notes, URLs) of one App Store version, optionally narrowed to specific locales.",
     requiredScopes: [],
@@ -276,6 +282,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_app_store_version_localization",
+    operationType: "read",
     description: "Read the localized App Store metadata of one version in one locale.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -292,6 +299,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "create_app_store_version_localization",
+    operationType: "write",
     description:
       "Add App Store metadata for one locale to an App Store version. The locale must be enabled for the app and must not already have a localization on this version.",
     requiredScopes: [],
@@ -326,6 +334,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "update_app_store_version_localization",
+    operationType: "destructive",
     description:
       "Overwrite the localized App Store metadata of one version in one locale. Only the given fields change; pass null to clear a field.",
     requiredScopes: [],
@@ -361,6 +370,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "delete_app_store_version_localization",
+    operationType: "destructive",
     description:
       "Remove the App Store metadata of one locale from an App Store version, including its screenshots and previews.",
     requiredScopes: [],
@@ -379,6 +389,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_app_store_version_phased_release",
+    operationType: "read",
     description:
       "Read the phased release configuration of an App Store version, or null when phased release is not configured for it.",
     requiredScopes: [],
@@ -394,6 +405,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "create_app_store_version_phased_release",
+    operationType: "write",
     description:
       "Enable phased release for an App Store version so an approved update rolls out to automatic-update users over seven days. Can be removed again with delete_app_store_version_phased_release before the version is released.",
     requiredScopes: [],
@@ -416,6 +428,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "update_app_store_version_phased_release",
+    operationType: "destructive",
     description:
       "Pause, resume, or complete the phased rollout of a released version. COMPLETE releases the version to every user at once and cannot be undone.",
     requiredScopes: [],
@@ -438,6 +451,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "delete_app_store_version_phased_release",
+    operationType: "destructive",
     description: "Turn off phased release for an App Store version so the approved update reaches every user at once.",
     requiredScopes: [],
     providerPermissions: [...manageAppStoreRoles],
@@ -455,6 +469,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "release_app_store_version",
+    operationType: "destructive",
     description:
       "Release an approved App Store version that is waiting in PENDING_DEVELOPER_RELEASE to the App Store. The release starts immediately and cannot be undone.",
     requiredScopes: [],
@@ -474,6 +489,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_app_store_review_detail",
+    operationType: "read",
     description:
       "Read the App Review contact details, demo account, and notes attached to an App Store version, or null when none were entered yet.",
     requiredScopes: [],
@@ -489,6 +505,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "create_app_store_review_detail",
+    operationType: "write",
     description:
       "Enter the App Review contact details, demo account, and notes for an App Store version that has none yet.",
     requiredScopes: [],
@@ -512,6 +529,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "update_app_store_review_detail",
+    operationType: "destructive",
     description:
       "Overwrite the App Review contact details, demo account, or notes of an App Store version. Only the given fields change; pass null to clear a text field.",
     requiredScopes: [],
@@ -535,6 +553,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_review_submissions",
+    operationType: "read",
     description:
       "List the review submissions of one app, with the App Store version each submission carries. Filter by platform or review state.",
     requiredScopes: [],
@@ -561,6 +580,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_review_submission",
+    operationType: "read",
     description: "Read one review submission with its state and the App Store version it carries.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -574,6 +594,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "create_review_submission",
+    operationType: "write",
     description:
       "Start a new review submission for an app on one platform. Add items with add_review_submission_item, then send it with submit_review_submission. An app can have only one open submission per platform.",
     requiredScopes: [],
@@ -590,6 +611,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "submit_review_submission",
+    operationType: "write",
     description:
       "Send a prepared review submission and all of its items to App Review. The submission moves to WAITING_FOR_REVIEW and can only be taken back with cancel_review_submission.",
     requiredScopes: [],
@@ -605,6 +627,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "cancel_review_submission",
+    operationType: "destructive",
     description:
       "Cancel a review submission, removing it from the App Review queue. Its items return to their previous state and a new submission is needed to submit them again.",
     requiredScopes: [],
@@ -620,6 +643,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_review_submission_items",
+    operationType: "read",
     description:
       "List the items in a review submission, each naming the App Store version, custom product page version, experiment, or in-app event it reviews.",
     requiredScopes: [],
@@ -640,6 +664,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "add_review_submission_item",
+    operationType: "write",
     description:
       "Add one record to an open review submission. Give exactly one of appStoreVersionId, appCustomProductPageVersionId, appStoreVersionExperimentId, appStoreVersionExperimentV2Id, or appEventId. The item can be removed again with delete_review_submission_item before the submission is sent.",
     requiredScopes: [],
@@ -669,6 +694,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "update_review_submission_item",
+    operationType: "destructive",
     description:
       "Mark a review submission item as resolved after fixing the issues App Review raised, or mark it as removed so the submission continues without it.",
     requiredScopes: [],
@@ -689,6 +715,7 @@ export const appStoreConnectReleaseActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "delete_review_submission_item",
+    operationType: "destructive",
     description: "Delete an item from a review submission that has not been sent to App Review yet.",
     requiredScopes: [],
     providerPermissions: [...manageAppStoreRoles],

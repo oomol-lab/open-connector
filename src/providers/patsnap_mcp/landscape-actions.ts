@@ -146,12 +146,14 @@ const patentDetailInput = {
 export const patsnapLandscapeActions: ProviderActionDefinition[] = [
   defineProviderAction("patsnap_mcp", {
     name: "landscape_trend",
+    operationType: "read",
     description: "Analyzes Patent Trend to show activity changes, leading entities, and directional signals.",
     inputSchema: landscapeQueryInput,
     outputSchema: patsnapResultSchema,
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_tech_applicant_dist",
+    operationType: "read",
     description:
       "Analyzes Key Technology Branch Applicant Distribution to show structure, distribution, hotspots, and the overall landscape.",
     inputSchema: landscapeQueryInput,
@@ -159,12 +161,14 @@ export const patsnapLandscapeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_technology_life_cycle",
+    operationType: "read",
     description: "Analyzes Technology Life Cycle to show structure, distribution, hotspots, and the overall landscape.",
     inputSchema: lifeCycleInput,
     outputSchema: patsnapResultSchema,
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_technology_constitute",
+    operationType: "read",
     description:
       "Analyzes Technology Composition to show structure, distribution, hotspots, and the overall landscape.",
     inputSchema: landscapeQueryInput,
@@ -172,6 +176,7 @@ export const patsnapLandscapeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_search_patents_with_detail",
+    operationType: "read",
     description:
       "Searches Patent Search With Details based on input criteria and returns matching results for screening, comparison, and follow-up analysis.",
     inputSchema: detailSearchInput,
@@ -179,6 +184,7 @@ export const patsnapLandscapeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_search_patents_v3",
+    operationType: "read",
     description:
       "Searches Patent Search based on input criteria and returns matching results for screening, comparison, and follow-up analysis.",
     inputSchema: searchV3Input,
@@ -186,12 +192,14 @@ export const patsnapLandscapeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_search_patents_statistics",
+    operationType: "read",
     description: "Analyzes Patent Statistics to show activity changes, leading entities, and directional signals.",
     inputSchema: statisticsInput,
     outputSchema: patsnapResultSchema,
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_search_patents_facet",
+    operationType: "read",
     description:
       "Searches Patent Search Facets based on input criteria and returns matching results for screening, comparison, and follow-up analysis.",
     inputSchema: facetInput,
@@ -199,12 +207,14 @@ export const patsnapLandscapeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_refered_rank",
+    operationType: "read",
     description: "Analyzes Citation Count Ranking to show activity changes, leading entities, and directional signals.",
     inputSchema: landscapeQueryInput,
     outputSchema: patsnapResultSchema,
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_rec_office",
+    operationType: "read",
     description:
       "Analyzes Receiving Office Statistics to show activity changes, leading entities, and directional signals.",
     inputSchema: landscapeQueryInput,
@@ -212,24 +222,28 @@ export const patsnapLandscapeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_map_3d",
+    operationType: "read",
     description: "Analyzes 3D Map Analysis to show structure, distribution, hotspots, and the overall landscape.",
     inputSchema: landscapeQueryInput,
     outputSchema: patsnapResultSchema,
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_list",
+    operationType: "read",
     description: "Retrieves a Patent List for batch review, filtering, and further processing.",
     inputSchema: patentListInput,
     outputSchema: patsnapResultSchema,
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_info",
+    operationType: "read",
     description: "Retrieves detailed Patent Field Details for verification, full-text review, and deeper analysis.",
     inputSchema: patentInfoInput,
     outputSchema: patsnapResultSchema,
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_get_rec_office_year",
+    operationType: "read",
     description:
       "Analyzes Receiving Office Statistics By Year to show activity changes, leading entities, and directional signals.",
     inputSchema: landscapeQueryInput,
@@ -237,6 +251,7 @@ export const patsnapLandscapeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_get_patent_pdf",
+    operationType: "read",
     description:
       "Retrieves Patent PDF data so users can review the key information and continue with downstream analysis.",
     inputSchema: patentPdfInput,
@@ -244,24 +259,28 @@ export const patsnapLandscapeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_famn_rank",
+    operationType: "read",
     description: "Analyzes Patent Family Ranking to show activity changes, leading entities, and directional signals.",
     inputSchema: landscapeQueryInput,
     outputSchema: patsnapResultSchema,
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_domain_map",
+    operationType: "read",
     description: "Analyzes Domain Map to show structure, distribution, hotspots, and the overall landscape.",
     inputSchema: landscapeQueryInput,
     outputSchema: patsnapResultSchema,
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_detail_text",
+    operationType: "read",
     description: "Retrieves detailed Patent Detail Text for verification, full-text review, and deeper analysis.",
     inputSchema: patentTextInput,
     outputSchema: patsnapResultSchema,
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_detail_aggregation",
+    operationType: "read",
     description:
       "Retrieves detailed Patent Detail Aggregation for verification, full-text review, and deeper analysis.",
     inputSchema: patentAggregationInput,
@@ -269,12 +288,14 @@ export const patsnapLandscapeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_detail",
+    operationType: "read",
     description: "Retrieves detailed Patent Details for verification, full-text review, and deeper analysis.",
     inputSchema: patentDetailInput,
     outputSchema: patsnapResultSchema,
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_cooperation_applicant_analysis",
+    operationType: "read",
     description:
       "Retrieves Cooperation Applicant Analysis data so users can review the key information and continue with downstream analysis.",
     inputSchema: landscapeQueryInput,
@@ -282,6 +303,7 @@ export const patsnapLandscapeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_applicant_trend",
+    operationType: "read",
     description:
       "Analyzes Leading Applicant Filing Trend to show activity changes, leading entities, and directional signals.",
     inputSchema: landscapeQueryInput,
@@ -289,6 +311,7 @@ export const patsnapLandscapeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_applicant_technology_analysis",
+    operationType: "read",
     description:
       "Retrieves Applicant Technology Analysis data so users can review the key information and continue with downstream analysis.",
     inputSchema: landscapeQueryInput,
@@ -296,6 +319,7 @@ export const patsnapLandscapeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "landscape_applicant_rank",
+    operationType: "read",
     description: "Analyzes Applicant Ranking to show activity changes, leading entities, and directional signals.",
     inputSchema: landscapeQueryInput,
     outputSchema: patsnapResultSchema,

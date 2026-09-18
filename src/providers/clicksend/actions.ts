@@ -95,30 +95,35 @@ const contactInputSchema = s.object("A ClickSend contact payload.", contactField
 export const clicksendActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Get the ClickSend account profile associated with the configured credentials.",
     inputSchema: s.object("Input for getting the current ClickSend account.", {}),
     outputSchema: responseEnvelopeSchema,
   }),
   defineProviderAction(service, {
     name: "send_sms",
+    operationType: "write",
     description: "Send one or more SMS messages through ClickSend.",
     inputSchema: smsPayloadSchema,
     outputSchema: responseEnvelopeSchema,
   }),
   defineProviderAction(service, {
     name: "calculate_sms_price",
+    operationType: "read",
     description: "Calculate the ClickSend price for one or more SMS messages without sending them.",
     inputSchema: smsPayloadSchema,
     outputSchema: responseEnvelopeSchema,
   }),
   defineProviderAction(service, {
     name: "list_contact_lists",
+    operationType: "read",
     description: "List ClickSend contact lists with pagination controls.",
     inputSchema: paginationInputSchema,
     outputSchema: responseEnvelopeSchema,
   }),
   defineProviderAction(service, {
     name: "create_contact_list",
+    operationType: "write",
     description: "Create a ClickSend contact list.",
     inputSchema: s.object(
       "Input for creating a ClickSend contact list.",
@@ -131,6 +136,7 @@ export const clicksendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact_list",
+    operationType: "read",
     description: "Get one ClickSend contact list by ID.",
     inputSchema: s.object(
       "Input for getting a ClickSend contact list.",
@@ -143,6 +149,7 @@ export const clicksendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact_list",
+    operationType: "write",
     description: "Update a ClickSend contact list name.",
     inputSchema: s.object(
       "Input for updating a ClickSend contact list.",
@@ -156,6 +163,7 @@ export const clicksendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact_list",
+    operationType: "destructive",
     description: "Delete a ClickSend contact list by ID.",
     inputSchema: s.object(
       "Input for deleting a ClickSend contact list.",
@@ -168,6 +176,7 @@ export const clicksendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List contacts in a ClickSend contact list.",
     inputSchema: s.object(
       "Input for listing ClickSend contacts.",
@@ -182,6 +191,7 @@ export const clicksendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a contact in a ClickSend contact list.",
     inputSchema: s.object(
       "Input for creating a ClickSend contact.",
@@ -195,6 +205,7 @@ export const clicksendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get one ClickSend contact by list ID and contact ID.",
     inputSchema: s.object(
       "Input for getting a ClickSend contact.",
@@ -208,6 +219,7 @@ export const clicksendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update a ClickSend contact by list ID and contact ID.",
     inputSchema: s.object(
       "Input for updating a ClickSend contact.",
@@ -222,6 +234,7 @@ export const clicksendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete a ClickSend contact by list ID and contact ID.",
     inputSchema: s.object(
       "Input for deleting a ClickSend contact.",

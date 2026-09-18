@@ -18,6 +18,7 @@ const testEmailSchema = s.looseRequiredObject(
 export const mailgeniusActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_daily_limit",
+    operationType: "read",
     description: "Get the MailGenius API token daily test limit, used count, and remaining count.",
     inputSchema: s.actionInput({}, [], "Input parameters for fetching the MailGenius daily limit."),
     outputSchema: s.requiredObject("The wrapped MailGenius daily limit response.", {
@@ -26,6 +27,7 @@ export const mailgeniusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_email_audit",
+    operationType: "write",
     description: "Generate a MailGenius test email address for an inbound deliverability audit.",
     inputSchema: s.actionInput({}, [], "Input parameters for generating a MailGenius test email."),
     outputSchema: s.requiredObject("The wrapped generated test email response.", {
@@ -35,6 +37,7 @@ export const mailgeniusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_email_result",
+    operationType: "read",
     description:
       "Get the MailGenius result for a generated test email slug, including NOT_READY responses before analysis is complete.",
     inputSchema: s.actionInput(
@@ -50,6 +53,7 @@ export const mailgeniusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_email_audits",
+    operationType: "read",
     description:
       "List MailGenius generated test emails and their slugs, optionally filtered by time range and used state.",
     inputSchema: s.actionInput(

@@ -46,6 +46,7 @@ const singleCheckResultSchema = s.looseRequiredObject(
 export const tpscheckActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_credits",
+    operationType: "read",
     description: "Retrieve current TPSCheck usage, remaining requests, and plan reset details.",
     inputSchema: s.actionInput({}, [], "Input payload for retrieving the current TPSCheck credits summary."),
     outputSchema: s.looseRequiredObject("Current TPSCheck credits and usage summary.", {
@@ -58,6 +59,7 @@ export const tpscheckActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_phone",
+    operationType: "read",
     description: "Check one UK phone number against TPS and CTPS and return the TPSCheck v2 response.",
     inputSchema: s.actionInput(
       {
@@ -70,6 +72,7 @@ export const tpscheckActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "batch_check_phones",
+    operationType: "read",
     description: "Check up to 100 UK phone numbers against TPS and CTPS and return the TPSCheck v2 batch response.",
     inputSchema: s.actionInput(
       {

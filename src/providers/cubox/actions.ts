@@ -8,6 +8,7 @@ const service = "cubox";
 export const cuboxActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "save_url",
+    operationType: "write",
     description: "Save a web page to Cubox for queued parsing and snapshot processing.",
     inputSchema: s.object(
       "The web page and optional metadata to save to Cubox.",

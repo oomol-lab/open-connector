@@ -42,6 +42,7 @@ const breezeFolderSchema = s.looseRequiredObject("One Breeze tag folder record."
 export const breezeActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_people",
+    operationType: "read",
     description: "List people from Breeze with optional details, pagination, and filter_json criteria.",
     inputSchema: s.actionInput(
       {
@@ -63,6 +64,7 @@ export const breezeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_person",
+    operationType: "read",
     description: "Get one Breeze person by Breeze person ID.",
     inputSchema: s.actionInput(
       {
@@ -84,6 +86,7 @@ export const breezeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_profile_fields",
+    operationType: "read",
     description: "List Breeze profile sections and fields used to construct Breeze people filters.",
     inputSchema: s.actionInput(
       {
@@ -101,6 +104,7 @@ export const breezeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List Breeze tags, optionally narrowed to one Breeze tag folder.",
     inputSchema: s.actionInput(
       {
@@ -119,6 +123,7 @@ export const breezeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tag_folders",
+    operationType: "read",
     description: "List Breeze tag folders.",
     inputSchema: s.actionInput(
       {

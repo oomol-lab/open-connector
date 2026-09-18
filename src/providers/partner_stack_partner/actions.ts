@@ -319,6 +319,7 @@ const listPayoutsOutputSchema = s.object(
 export const partnerStackPartnerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_marketplace_programs",
+    operationType: "read",
     description: "List active marketplace programs available through the PartnerStack Partner API.",
     requiredScopes: [],
     inputSchema: listMarketplaceProgramsInputSchema,
@@ -326,6 +327,7 @@ export const partnerStackPartnerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_marketplace_program",
+    operationType: "read",
     description: "Retrieve one marketplace program by company key through the PartnerStack Partner API.",
     requiredScopes: [],
     inputSchema: getMarketplaceProgramInputSchema,
@@ -333,6 +335,7 @@ export const partnerStackPartnerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_partnerships",
+    operationType: "read",
     description: "List partnerships managed by or owned by the connected PartnerStack partner account.",
     requiredScopes: [],
     inputSchema: listPartnershipsInputSchema,
@@ -340,6 +343,7 @@ export const partnerStackPartnerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_rewards",
+    operationType: "read",
     description: "List rewards for the connected PartnerStack partner account.",
     requiredScopes: [],
     inputSchema: listRewardsInputSchema,
@@ -347,6 +351,7 @@ export const partnerStackPartnerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_payouts",
+    operationType: "read",
     description: "List payouts for the connected PartnerStack partner account.",
     requiredScopes: [],
     inputSchema: listPayoutsInputSchema,

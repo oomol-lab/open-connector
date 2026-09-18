@@ -18,7 +18,7 @@ export const fastmossMcpActions: readonly ActionDefinition[] = [
   ...officialTools.map((tool) =>
     defineProviderAction("fastmoss_mcp", {
       name: tool.name,
-
+      operationType: "read",
       description: tool.description,
       requiredScopes: [],
       inputSchema: tool.inputSchema,
@@ -27,7 +27,7 @@ export const fastmossMcpActions: readonly ActionDefinition[] = [
   ),
   defineProviderAction("fastmoss_mcp", {
     name: "list_tools",
-
+    operationType: "read",
     description:
       "Discover current FastMoss MCP tools, live argument schemas and behavior annotations for TikTok Shop product, creator, shop, advertising, agency and market research.",
     requiredScopes: [],
@@ -55,7 +55,7 @@ export const fastmossMcpActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction("fastmoss_mcp", {
     name: "call_tool",
-
+    operationType: "destructive",
     description:
       "Call any current FastMoss MCP tool after inspecting list_tools. Arguments must match the live schema. Calls may consume FastMoss Credits; inspect behavior annotations before invoking newly added tools.",
     requiredScopes: [],

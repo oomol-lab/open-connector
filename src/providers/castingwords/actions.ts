@@ -32,6 +32,7 @@ const normalizedStatusSchema = s.stringEnum("The normalized lifecycle state used
 export const castingwordsActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "submit_transcription",
+    operationType: "write",
     description: "Submit one publicly accessible audio or video URL for asynchronous human transcription.",
     inputSchema: s.actionInput(
       {
@@ -68,6 +69,7 @@ export const castingwordsActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_transcription_status",
+    operationType: "read",
     description: "Get the current CastingWords processing state and documented audio file details.",
     inputSchema: s.actionInput(
       {
@@ -90,6 +92,7 @@ export const castingwordsActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_transcript",
+    operationType: "read",
     description: "Retrieve a completed CastingWords transcript as plain text or HTML.",
     inputSchema: s.actionInput(
       {
@@ -110,6 +113,7 @@ export const castingwordsActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_prepay_balance",
+    operationType: "read",
     description: "Get the current CastingWords prepay balance in US dollars.",
     inputSchema: s.actionInput({}, [], "No input is required to read the prepay balance."),
     outputSchema: s.actionOutput(

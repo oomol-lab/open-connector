@@ -206,6 +206,7 @@ const urlInspectionResultSchema = s.looseObject(
 export const googleSearchConsoleActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_sites",
+    operationType: "read",
     description: "List Search Console properties visible to the connected Google account.",
     requiredScopes: [...readScope],
     inputSchema: s.object(
@@ -228,6 +229,7 @@ export const googleSearchConsoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_site",
+    operationType: "read",
     description: "Fetch one Search Console property and the current account permission level.",
     requiredScopes: [...readScope],
     inputSchema: s.object(
@@ -251,6 +253,7 @@ export const googleSearchConsoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_site",
+    operationType: "write",
     description: "Add a property to the connected account's Search Console site set.",
     requiredScopes: [...writeScope],
     inputSchema: s.object(
@@ -266,6 +269,7 @@ export const googleSearchConsoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_site",
+    operationType: "destructive",
     description: "Remove a property from the connected account's Search Console site set.",
     requiredScopes: [...writeScope],
     inputSchema: s.object(
@@ -281,6 +285,7 @@ export const googleSearchConsoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_search_analytics",
+    operationType: "read",
     description:
       "Query Search Console performance data for a property across dates, dimensions, filters, and search types.",
     requiredScopes: [...readScope],
@@ -331,6 +336,7 @@ export const googleSearchConsoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sitemaps",
+    operationType: "read",
     description: "List sitemaps submitted for a Search Console property.",
     requiredScopes: [...readScope],
     inputSchema: s.object(
@@ -360,6 +366,7 @@ export const googleSearchConsoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_sitemap",
+    operationType: "read",
     description: "Fetch one Search Console sitemap by property URL and sitemap URL.",
     requiredScopes: [...readScope],
     inputSchema: s.object(
@@ -384,6 +391,7 @@ export const googleSearchConsoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_sitemap",
+    operationType: "write",
     description: "Submit a sitemap URL for a Search Console property.",
     requiredScopes: [...writeScope],
     inputSchema: s.object(
@@ -400,6 +408,7 @@ export const googleSearchConsoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_sitemap",
+    operationType: "destructive",
     description: "Delete a sitemap from a Search Console property.",
     requiredScopes: [...writeScope],
     inputSchema: s.object(
@@ -416,6 +425,7 @@ export const googleSearchConsoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "inspect_url",
+    operationType: "read",
     description:
       "Inspect the indexed status of a URL under a Search Console property using Google's URL Inspection API.",
     requiredScopes: [...readScope],

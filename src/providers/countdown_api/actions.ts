@@ -22,12 +22,14 @@ const actionResultSchema = s.object(
 export const countdownApiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve Countdown API account usage, quota, and platform status details.",
     inputSchema: s.object({}, { description: "The input payload for retrieving Countdown API account details." }),
     outputSchema: actionResultSchema,
   }),
   defineProviderAction(service, {
     name: "autocomplete",
+    operationType: "read",
     description: "Get eBay autocomplete suggestions for a search term through Countdown API.",
     inputSchema: s.object(
       {
@@ -40,6 +42,7 @@ export const countdownApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_products",
+    operationType: "read",
     description: "Search eBay products through Countdown API with optional filters.",
     inputSchema: s.object(
       {
@@ -124,6 +127,7 @@ export const countdownApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Retrieve eBay product details by product ID through Countdown API.",
     inputSchema: s.object(
       {

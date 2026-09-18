@@ -135,12 +135,14 @@ const ntfyMessageOutputSchema = s.object(
 export const ntfyActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve ntfy account profile, limits, and usage for the access token.",
     inputSchema: s.object({}, { required: [], description: "Input parameters for retrieving the ntfy account." }),
     outputSchema: ntfyAccountOutputSchema,
   }),
   defineProviderAction(service, {
     name: "publish_message",
+    operationType: "write",
     description: "Publish a notification message to a ntfy topic.",
     inputSchema: ntfyPublishInputSchema,
     outputSchema: ntfyMessageOutputSchema,

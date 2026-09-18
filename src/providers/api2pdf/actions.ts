@@ -38,6 +38,7 @@ const markdownToPdfOutputSchema = s.object(
 export const api2pdfActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "markdown_to_pdf",
+    operationType: "read",
     description: "Convert raw Markdown to PDF with API2PDF and return the generated PDF URL plus conversion metadata.",
     inputSchema: markdownToPdfInputSchema,
     outputSchema: markdownToPdfOutputSchema,

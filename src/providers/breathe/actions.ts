@@ -34,6 +34,7 @@ const singleOutputSchema = (description: string, fieldName: string, itemDescript
 export const breatheActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_employees",
+    operationType: "read",
     description: "List employees from Breathe with optional pagination and role filters.",
     inputSchema: s.object(
       "Request parameters for listing Breathe employees.",
@@ -49,6 +50,7 @@ export const breatheActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_employee",
+    operationType: "read",
     description: "Fetch one employee from Breathe by employee ID.",
     inputSchema: s.object("Request parameters for fetching a Breathe employee.", {
       employeeId: positiveInteger("ID of the Breathe employee to fetch."),
@@ -57,18 +59,21 @@ export const breatheActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_departments",
+    operationType: "read",
     description: "List company departments from Breathe.",
     inputSchema: paginationInputSchema,
     outputSchema: listOutputSchema("Breathe departments list response.", "Breathe department record.", "departments"),
   }),
   defineProviderAction(service, {
     name: "list_locations",
+    operationType: "read",
     description: "List company locations from Breathe.",
     inputSchema: s.object("No input is required to list Breathe locations.", {}),
     outputSchema: listOutputSchema("Breathe locations list response.", "Breathe location record.", "locations"),
   }),
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Fetch account details for the authenticated Breathe account.",
     inputSchema: s.object("No input is required to fetch the Breathe account.", {}),
     outputSchema: singleOutputSchema("Breathe account detail response.", "account", "Breathe account record."),

@@ -189,6 +189,7 @@ const getBalanceInputSchema = s.object("Input parameters for fetching one Plisio
 export const plisioActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_invoice",
+    operationType: "write",
     description:
       "Create a hosted Plisio invoice for one merchant order using either a crypto amount or a fiat amount that Plisio converts.",
     requiredScopes: [],
@@ -199,6 +200,7 @@ export const plisioActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_operations",
+    operationType: "read",
     description:
       "List Plisio operations and invoices with official pagination, type, status, currency, and search filters.",
     requiredScopes: [],
@@ -211,6 +213,7 @@ export const plisioActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_operation",
+    operationType: "read",
     description: "Fetch one Plisio operation or invoice by its official operation identifier.",
     requiredScopes: [],
     inputSchema: getOperationInputSchema,
@@ -220,6 +223,7 @@ export const plisioActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_balance",
+    operationType: "read",
     description: "Fetch the current Plisio balance for one supported cryptocurrency identifier.",
     requiredScopes: [],
     inputSchema: getBalanceInputSchema,

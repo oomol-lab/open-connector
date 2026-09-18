@@ -320,6 +320,7 @@ const taskUpdateInputSchema = s.object(
 export const agiledActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Agiled CRM contacts.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -327,6 +328,7 @@ export const agiledActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get one Agiled CRM contact by ID.",
     requiredScopes: [],
     inputSchema: idInputSchema,
@@ -334,6 +336,7 @@ export const agiledActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create an Agiled CRM contact.",
     requiredScopes: [],
     inputSchema: contactWriteInputSchema,
@@ -341,6 +344,7 @@ export const agiledActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update an Agiled CRM contact.",
     requiredScopes: [],
     inputSchema: contactUpdateInputSchema,
@@ -348,6 +352,7 @@ export const agiledActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete an Agiled CRM contact.",
     requiredScopes: [],
     inputSchema: idInputSchema,
@@ -355,6 +360,7 @@ export const agiledActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Agiled projects.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -362,6 +368,7 @@ export const agiledActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get one Agiled project by ID.",
     requiredScopes: [],
     inputSchema: idInputSchema,
@@ -369,6 +376,7 @@ export const agiledActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create an Agiled project.",
     requiredScopes: [],
     inputSchema: createProjectInputSchema,
@@ -376,6 +384,7 @@ export const agiledActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_project",
+    operationType: "write",
     description: "Update an Agiled project.",
     requiredScopes: [],
     inputSchema: updateProjectInputSchema,
@@ -383,6 +392,7 @@ export const agiledActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_project",
+    operationType: "destructive",
     description: "Delete an Agiled project.",
     requiredScopes: [],
     inputSchema: idInputSchema,
@@ -390,6 +400,7 @@ export const agiledActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "List Agiled tasks.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -397,6 +408,7 @@ export const agiledActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task",
+    operationType: "read",
     description: "Get one Agiled task by ID.",
     requiredScopes: [],
     inputSchema: idInputSchema,
@@ -404,6 +416,7 @@ export const agiledActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_task",
+    operationType: "write",
     description: "Create an Agiled task.",
     requiredScopes: [],
     inputSchema: taskWriteInputSchema,
@@ -411,6 +424,7 @@ export const agiledActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_task",
+    operationType: "write",
     description: "Update an Agiled task.",
     requiredScopes: [],
     inputSchema: taskUpdateInputSchema,
@@ -418,6 +432,7 @@ export const agiledActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_task",
+    operationType: "destructive",
     description: "Delete an Agiled task.",
     requiredScopes: [],
     inputSchema: idInputSchema,

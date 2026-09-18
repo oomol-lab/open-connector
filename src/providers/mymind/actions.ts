@@ -152,6 +152,7 @@ const updateSpaceInputSchema = s.requireAnyProperty(
 export const myMindActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_objects",
+    operationType: "read",
     description:
       "Search a mind and return the matching objects with their relevance scores. Supports keyword syntax (quoted phrases, && || -, wildcards, and field filters such as tag:, type:, domain:, created:) and, with semantic enabled, matching by meaning rather than exact terms.",
     requiredScopes: [readOnly],
@@ -194,6 +195,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_objects",
+    operationType: "read",
     description:
       "List objects in a mind, optionally narrowed to a text query, a space, specific identifiers, or objects similar to one you already have.",
     requiredScopes: [readOnly],
@@ -215,6 +217,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_object",
+    operationType: "read",
     description: "Get one mymind object with its title, summary, tags, spaces, notes, and source.",
     requiredScopes: [readOnly],
     inputSchema: s.object("The input for getting an object.", { objectId: objectIdSchema }),
@@ -223,6 +226,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_object_content",
+    operationType: "read",
     description:
       "Get the content body of a mymind object as markdown. Many objects are saved without an inline body — a bookmark or an image is the whole object — and those come back empty rather than as an error.",
     requiredScopes: [readOnly],
@@ -235,6 +239,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "save_url",
+    operationType: "write",
     description:
       "Save a URL to a mind. mymind fetches the page itself and fills in the title, summary, tags, and screenshot.",
     requiredScopes: [fullAccess],
@@ -252,6 +257,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_note",
+    operationType: "write",
     description: "Create a note in a mind from markdown content.",
     requiredScopes: [fullAccess],
     inputSchema: s.object(
@@ -268,6 +274,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_object",
+    operationType: "write",
     description: "Update the title, summary, or completed state of a mymind object.",
     requiredScopes: [fullAccess],
     inputSchema: updateObjectInputSchema,
@@ -275,6 +282,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_object_content",
+    operationType: "destructive",
     description: "Replace the content body of a mymind object with markdown.",
     requiredScopes: [fullAccess],
     inputSchema: s.object("The input for replacing object content.", {
@@ -285,6 +293,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_object",
+    operationType: "destructive",
     description: "Soft-delete a mymind object. Use restore_object to bring it back.",
     requiredScopes: [fullAccess],
     inputSchema: s.object("The input for deleting an object.", { objectId: objectIdSchema }),
@@ -293,6 +302,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "restore_object",
+    operationType: "write",
     description: "Restore a soft-deleted mymind object.",
     requiredScopes: [fullAccess],
     inputSchema: s.object("The input for restoring an object.", { objectId: objectIdSchema }),
@@ -300,6 +310,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "pin_object",
+    operationType: "write",
     description: "Pin a mymind object, optionally into a specific slot.",
     requiredScopes: [fullAccess],
     inputSchema: s.object(
@@ -314,6 +325,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "unpin_object",
+    operationType: "destructive",
     description: "Unpin a mymind object.",
     requiredScopes: [fullAccess],
     inputSchema: s.object("The input for unpinning an object.", { objectId: objectIdSchema }),
@@ -321,6 +333,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_object_note",
+    operationType: "write",
     description: "Attach a markdown note to a mymind object.",
     requiredScopes: [fullAccess],
     inputSchema: s.object("The input for adding a note to an object.", {
@@ -334,6 +347,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_object_note",
+    operationType: "destructive",
     description: "Replace the body of a note attached to a mymind object.",
     requiredScopes: [fullAccess],
     inputSchema: s.object("The input for updating a note.", {
@@ -345,6 +359,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_object_note",
+    operationType: "destructive",
     description: "Delete a note attached to a mymind object.",
     requiredScopes: [fullAccess],
     inputSchema: s.object("The input for deleting a note.", {
@@ -355,6 +370,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List the tags in a mind, most recently used first.",
     requiredScopes: [readOnly],
     inputSchema: s.object(
@@ -380,6 +396,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_object_tags",
+    operationType: "write",
     description: "Add tags to a mymind object.",
     requiredScopes: [fullAccess],
     inputSchema: s.object("The input for tagging an object.", {
@@ -390,6 +407,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_object_tags",
+    operationType: "destructive",
     description: "Remove tags from a mymind object.",
     requiredScopes: [fullAccess],
     inputSchema: s.object("The input for untagging an object.", {
@@ -400,6 +418,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_spaces",
+    operationType: "read",
     description: "List the spaces in a mind. The objects in each space are returned by get_space.",
     requiredScopes: [readOnly],
     inputSchema: s.object("The input for listing spaces.", {}),
@@ -408,6 +427,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_space",
+    operationType: "read",
     description: "Get one mymind space and the objects it holds.",
     requiredScopes: [readOnly],
     inputSchema: s.object("The input for getting a space.", { spaceId: spaceIdSchema }),
@@ -415,6 +435,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_space",
+    operationType: "write",
     description: "Create a mymind space, optionally seeded with objects.",
     requiredScopes: [fullAccess],
     inputSchema: s.object(
@@ -433,6 +454,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_space",
+    operationType: "write",
     description: "Rename a mymind space or change its colour.",
     requiredScopes: [fullAccess],
     inputSchema: updateSpaceInputSchema,
@@ -440,6 +462,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_space",
+    operationType: "destructive",
     description: "Delete a mymind space. The objects it held stay in the mind.",
     requiredScopes: [fullAccess],
     inputSchema: s.object("The input for deleting a space.", { spaceId: spaceIdSchema }),
@@ -447,6 +470,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_object_to_space",
+    operationType: "write",
     description: "Put a mymind object into a space.",
     requiredScopes: [fullAccess],
     inputSchema: s.object("The input for adding an object to a space.", {
@@ -457,6 +481,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_object_from_space",
+    operationType: "destructive",
     description: "Take a mymind object out of a space. The object stays in the mind.",
     requiredScopes: [fullAccess],
     inputSchema: s.object("The input for removing an object from a space.", {
@@ -467,6 +492,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_links",
+    operationType: "read",
     description: "List the links between objects in a mind, both wiki-style references and manual links.",
     requiredScopes: [readOnly],
     inputSchema: s.object("The input for listing links.", {}),
@@ -474,6 +500,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_link",
+    operationType: "write",
     description: "Link one mymind object to another.",
     requiredScopes: [fullAccess],
     inputSchema: s.object("The input for creating a link.", {
@@ -487,6 +514,7 @@ export const myMindActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_link",
+    operationType: "destructive",
     description:
       "Delete a manual link. A wiki-style link cannot be deleted directly; remove the reference from the source note instead.",
     requiredScopes: [fullAccess],

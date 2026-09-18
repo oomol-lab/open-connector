@@ -109,6 +109,7 @@ function resourceOutputSchema(resourceName: string) {
 export const aircallActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Aircall users with the current V2 Users API.",
     requiredScopes: [],
     inputSchema: listUsersInputSchema,
@@ -116,6 +117,7 @@ export const aircallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Retrieve one Aircall user with the current V2 Users API.",
     requiredScopes: [],
     inputSchema: getResourceInputSchema,
@@ -123,6 +125,7 @@ export const aircallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_teams",
+    operationType: "read",
     description: "List Aircall teams.",
     requiredScopes: [],
     inputSchema: listInputSchema("teams"),
@@ -130,6 +133,7 @@ export const aircallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_team",
+    operationType: "read",
     description: "Retrieve one Aircall team.",
     requiredScopes: [],
     inputSchema: getResourceInputSchema,
@@ -137,6 +141,7 @@ export const aircallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_numbers",
+    operationType: "read",
     description: "List Aircall phone numbers.",
     requiredScopes: [],
     inputSchema: listInputSchema("phone numbers"),
@@ -144,6 +149,7 @@ export const aircallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_number",
+    operationType: "read",
     description: "Retrieve one Aircall phone number.",
     requiredScopes: [],
     inputSchema: getResourceInputSchema,
@@ -151,6 +157,7 @@ export const aircallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Aircall contacts.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -165,6 +172,7 @@ export const aircallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Retrieve one Aircall contact.",
     requiredScopes: [],
     inputSchema: getResourceInputSchema,
@@ -172,6 +180,7 @@ export const aircallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_calls",
+    operationType: "read",
     description: "List Aircall calls with optional date and payload expansion filters.",
     requiredScopes: [],
     inputSchema: listCallsInputSchema,
@@ -179,6 +188,7 @@ export const aircallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_call",
+    operationType: "read",
     description: "Retrieve one Aircall call by ID.",
     requiredScopes: [],
     inputSchema: getCallInputSchema,

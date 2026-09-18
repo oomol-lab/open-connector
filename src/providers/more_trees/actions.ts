@@ -122,6 +122,7 @@ const plantTreesOutputSchema = s.looseRequiredObject(
 export const moreTreesActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description:
       "Get account identity, planting credit balance, and forest identifiers for the connected More Trees account.",
     inputSchema: s.requiredObject("The request for the connected More Trees account.", {}),
@@ -129,6 +130,7 @@ export const moreTreesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_forest",
+    operationType: "read",
     description: "Get More Trees forest branding and cumulative planting and carbon statistics.",
     inputSchema: s.object(
       "The request for a More Trees forest.",
@@ -143,12 +145,14 @@ export const moreTreesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List active More Trees planting projects and the tree species available within each project.",
     inputSchema: s.requiredObject("The request for active More Trees planting projects.", {}),
     outputSchema: s.array("The active planting projects returned by More Trees.", projectSchema),
   }),
   defineProviderAction(service, {
     name: "plant_trees",
+    operationType: "write",
     description:
       "Plant trees for the connected More Trees account or gift trees to recipients, with optional non-persistent test mode.",
     inputSchema: plantTreesInputSchema,

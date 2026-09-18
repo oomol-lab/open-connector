@@ -157,6 +157,7 @@ const cityOrderStatusSchema = s.integer(
 export const sfExpressFreightTlCityActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "freight_create_tl_order",
+    operationType: "write",
     description:
       "Create an SF Freight truckload (整车直达) order. Set generate_waybill_no to have SF assign a waybill number, or pass your own waybill_no. A monthly card (monthly_card) is required when pay_method is 1 (寄付月结) or 2 (寄付转第三方).",
     requiredScopes: [],
@@ -224,6 +225,7 @@ export const sfExpressFreightTlCityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_cancel_tl_order",
+    operationType: "destructive",
     description:
       "Cancel an SF Freight truckload order. Cancellation only succeeds while the order is in a cancellable state; otherwise the error message explains why.",
     requiredScopes: [],
@@ -244,6 +246,7 @@ export const sfExpressFreightTlCityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_query_tl_order",
+    operationType: "read",
     description:
       "Query an SF Freight truckload order by client order number; pass waybill_no as well when you have it.",
     requiredScopes: [],
@@ -259,6 +262,7 @@ export const sfExpressFreightTlCityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_create_vehicle_track_url",
+    operationType: "write",
     description:
       "Create the vehicle track playback page URL for an SF Freight waybill. Requires the monthly card that paid the waybill.",
     requiredScopes: [],
@@ -272,6 +276,7 @@ export const sfExpressFreightTlCityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_city_confirm_order",
+    operationType: "write",
     description:
       "Place an SF Freight city-delivery (城市配送货运) order. send_start_time must be at least 2 hours in the future.",
     requiredScopes: [],
@@ -303,6 +308,7 @@ export const sfExpressFreightTlCityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_city_calc_fee",
+    operationType: "read",
     description: "Calculate the freight fee for an SF Freight city-delivery shipment before ordering.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -338,6 +344,7 @@ export const sfExpressFreightTlCityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_city_list_orders",
+    operationType: "read",
     description:
       "List SF Freight city-delivery orders for an ordering phone number, with optional time and pagination filters.",
     requiredScopes: [],
@@ -371,6 +378,7 @@ export const sfExpressFreightTlCityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_city_get_order_detail",
+    operationType: "read",
     description: "Get the details of an SF Freight city-delivery order by order number or client order number.",
     requiredScopes: [],
     inputSchema: s.requireAnyProperty(
@@ -412,6 +420,7 @@ export const sfExpressFreightTlCityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_city_cancel_order",
+    operationType: "destructive",
     description: "Cancel an SF Freight city-delivery order.",
     requiredScopes: [],
     inputSchema: s.requireAnyProperty(
@@ -434,6 +443,7 @@ export const sfExpressFreightTlCityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_city_list_available_vas",
+    operationType: "read",
     description: "List the value-added services available for a city and vehicle model in SF Freight city delivery.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The city and vehicle whose services should be listed.", {
@@ -460,6 +470,7 @@ export const sfExpressFreightTlCityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_city_list_vehicles",
+    operationType: "read",
     description: "List the vehicle models available for a city and business scenario in SF Freight city delivery.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The city and scenario whose vehicle models should be listed.", {
@@ -497,6 +508,7 @@ export const sfExpressFreightTlCityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_city_list_cities",
+    operationType: "read",
     description: "List the cities where SF Freight city delivery is available.",
     requiredScopes: [],
     inputSchema: s.object("No input is required.", {}),
@@ -506,6 +518,7 @@ export const sfExpressFreightTlCityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_city_list_appointment_times",
+    operationType: "read",
     description: "Get the pickup appointment time window available for a city in SF Freight city delivery.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The city whose appointment window should be read.", {

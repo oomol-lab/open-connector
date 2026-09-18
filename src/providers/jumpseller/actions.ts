@@ -247,6 +247,7 @@ const listOutputSchema = (resourceName: string) =>
 export const jumpsellerActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_store_info",
+    operationType: "read",
     description: "Retrieve store information from Jumpseller.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -263,6 +264,7 @@ export const jumpsellerActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "Retrieve products from Jumpseller.",
     requiredScopes: [],
     inputSchema: localizedListInputSchema,
@@ -270,6 +272,7 @@ export const jumpsellerActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Retrieve a single product from Jumpseller.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -285,6 +288,7 @@ export const jumpsellerActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_products",
+    operationType: "read",
     description: "Search products in Jumpseller.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -302,6 +306,7 @@ export const jumpsellerActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_product",
+    operationType: "write",
     description: "Create a product in Jumpseller.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -317,6 +322,7 @@ export const jumpsellerActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_product",
+    operationType: "write",
     description: "Update a product in Jumpseller.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -333,6 +339,7 @@ export const jumpsellerActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description: "Retrieve orders from Jumpseller.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -353,6 +360,7 @@ export const jumpsellerActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_order",
+    operationType: "read",
     description: "Retrieve a single order from Jumpseller.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Order id to retrieve.", {
@@ -362,6 +370,7 @@ export const jumpsellerActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_orders",
+    operationType: "read",
     description: "Search orders in Jumpseller.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -377,6 +386,7 @@ export const jumpsellerActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_order",
+    operationType: "write",
     description: "Update status, tracking, or additional information for a Jumpseller order.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Order id and fields to update.", {
@@ -387,6 +397,7 @@ export const jumpsellerActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "Retrieve customers from Jumpseller.",
     requiredScopes: [],
     inputSchema: listInputSchema,
@@ -394,6 +405,7 @@ export const jumpsellerActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Retrieve a single customer from Jumpseller.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Customer id to retrieve.", {
@@ -403,6 +415,7 @@ export const jumpsellerActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_customers",
+    operationType: "read",
     description: "Search customers in Jumpseller.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -419,6 +432,7 @@ export const jumpsellerActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_customer",
+    operationType: "write",
     description: "Create a customer in Jumpseller.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Customer data to create.", {
@@ -428,6 +442,7 @@ export const jumpsellerActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_customer",
+    operationType: "write",
     description: "Update a customer in Jumpseller.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Customer id and fields to update.", {
@@ -438,6 +453,7 @@ export const jumpsellerActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_categories",
+    operationType: "read",
     description: "Retrieve categories from Jumpseller.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -451,6 +467,7 @@ export const jumpsellerActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_category",
+    operationType: "read",
     description: "Retrieve a single category from Jumpseller.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -465,6 +482,7 @@ export const jumpsellerActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_category",
+    operationType: "write",
     description: "Create a category in Jumpseller.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Category data to create.", {
@@ -474,6 +492,7 @@ export const jumpsellerActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_category",
+    operationType: "write",
     description: "Update a category in Jumpseller.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Category id and fields to update.", {

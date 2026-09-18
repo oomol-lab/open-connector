@@ -57,6 +57,7 @@ const convertedFileSchema = s.object(
 export const convertapiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "convert_pdf_to_docx",
+    operationType: "read",
     description:
       "Convert a publicly accessible PDF URL to DOCX with ConvertAPI and return temporary file download URLs.",
     requiredScopes: [],

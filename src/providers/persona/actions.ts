@@ -186,6 +186,7 @@ const inquiryOutputSchema = s.object("The normalized Persona inquiry response.",
 export const personaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_inquiries",
+    operationType: "read",
     description: "List Persona inquiries across inquiry templates with documented cursor pagination and filters.",
     requiredScopes: [],
     inputSchema: listInquiriesInputSchema,
@@ -201,6 +202,7 @@ export const personaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_inquiry",
+    operationType: "read",
     description: "Retrieve one Persona inquiry by ID.",
     requiredScopes: [],
     inputSchema: inquiryIdInputSchema,
@@ -208,6 +210,7 @@ export const personaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_inquiry",
+    operationType: "write",
     description: "Create a Persona inquiry with an inquiry template and optional JSON prefilled attributes.",
     requiredScopes: [],
     inputSchema: createInquiryInputSchema,
@@ -215,6 +218,7 @@ export const personaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_inquiry",
+    operationType: "write",
     description: "Update supported Persona inquiry attributes such as reference ID, note, tags, or fields.",
     requiredScopes: [],
     inputSchema: updateInquiryInputSchema,

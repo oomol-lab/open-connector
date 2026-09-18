@@ -122,12 +122,14 @@ const jobOutputSchema = s.object("The Streamtime job response wrapper.", {
 export const streamtimeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_organisation",
+    operationType: "read",
     description: "Get the authenticated Streamtime organisation details.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The Streamtime organisation response wrapper.", { organisation: organisationSchema }),
   }),
   defineProviderAction(service, {
     name: "list_branches",
+    operationType: "read",
     description: "List the Streamtime branches available to the authenticated organisation.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The Streamtime branch list response wrapper.", {
@@ -136,6 +138,7 @@ export const streamtimeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_rate_cards",
+    operationType: "read",
     description: "List the Streamtime rate cards available to the authenticated organisation.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The Streamtime rate card list response wrapper.", {
@@ -144,6 +147,7 @@ export const streamtimeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List the Streamtime users available to the authenticated organisation.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The Streamtime user list response wrapper.", {
@@ -152,24 +156,28 @@ export const streamtimeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_company",
+    operationType: "write",
     description: "Create a company in Streamtime for the authenticated organisation.",
     inputSchema: createCompanyInputSchema,
     outputSchema: companyOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description: "Get a Streamtime company by ID.",
     inputSchema: companyIdInputSchema,
     outputSchema: companyOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_company",
+    operationType: "write",
     description: "Update a Streamtime company by ID.",
     inputSchema: updateCompanyInputSchema,
     outputSchema: companyOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_company_contacts",
+    operationType: "read",
     description: "List the contacts that belong to a Streamtime company.",
     inputSchema: companyIdInputSchema,
     outputSchema: s.object("The Streamtime contact list response wrapper.", {
@@ -178,36 +186,42 @@ export const streamtimeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_company_contact",
+    operationType: "write",
     description: "Create a contact under a Streamtime company.",
     inputSchema: createCompanyContactInputSchema,
     outputSchema: contactOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get a Streamtime contact by ID.",
     inputSchema: contactIdInputSchema,
     outputSchema: contactOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update a Streamtime contact by ID.",
     inputSchema: updateContactInputSchema,
     outputSchema: contactOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_job",
+    operationType: "write",
     description: "Create a Streamtime job linked to a company, rate card, and optional contact.",
     inputSchema: createJobInputSchema,
     outputSchema: jobOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_job",
+    operationType: "read",
     description: "Get a Streamtime job by ID.",
     inputSchema: jobIdInputSchema,
     outputSchema: jobOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_job",
+    operationType: "write",
     description: "Update a Streamtime job by ID.",
     inputSchema: updateJobInputSchema,
     outputSchema: jobOutputSchema,

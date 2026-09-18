@@ -54,6 +54,7 @@ const userInfoSchema = s.object(
 export const hoopActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the Hoop profile for the connected API key.",
     requiredScopes: ["userinfo:read"],
     inputSchema: s.actionInput({}, [], "Input for reading the current Hoop API user."),
@@ -66,6 +67,7 @@ export const hoopActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_connections",
+    operationType: "read",
     description: "List Hoop connections with optional filters and pagination.",
     requiredScopes: ["connections:read"],
     inputSchema: s.object(
@@ -117,6 +119,7 @@ export const hoopActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sessions",
+    operationType: "read",
     description: "List Hoop sessions with optional filters and pagination.",
     requiredScopes: ["sessions:read"],
     inputSchema: s.object(

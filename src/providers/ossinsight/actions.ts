@@ -27,6 +27,7 @@ export type OssinsightActionName =
 
 interface OssinsightActionDefinition {
   name: OssinsightActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
@@ -212,18 +213,21 @@ const pullRequestCreatorHistoryPointSchema = s.object(
 const actions: OssinsightActionDefinition[] = [
   {
     name: "list_collections",
+    operationType: "read",
     description: "List all OSS Insight repository collections.",
     inputSchema: noInputSchema,
     outputSchema: collectionsOutputSchema(collectionSchema, "Collections returned by OSS Insight."),
   },
   {
     name: "list_hot_collections",
+    operationType: "read",
     description: "List hot OSS Insight collections with representative repositories.",
     inputSchema: noInputSchema,
     outputSchema: collectionsOutputSchema(hotCollectionSchema, "Hot collections returned by OSS Insight."),
   },
   {
     name: "list_collection_repos",
+    operationType: "read",
     description: "List repositories in an OSS Insight collection.",
     inputSchema: s.actionInput(
       { collection_id: collectionIdSchema },
@@ -237,24 +241,28 @@ const actions: OssinsightActionDefinition[] = [
   },
   {
     name: "rank_collection_repos_by_stars",
+    operationType: "write",
     description: "Rank repositories in an OSS Insight collection by star growth.",
     inputSchema: collectionRankingInputSchema(),
     outputSchema: collectionRankingOutputSchema("Repository star-growth rankings returned by OSS Insight."),
   },
   {
     name: "rank_collection_repos_by_pull_requests",
+    operationType: "write",
     description: "Rank repositories in an OSS Insight collection by pull request growth.",
     inputSchema: collectionRankingInputSchema(),
     outputSchema: collectionRankingOutputSchema("Repository pull-request-growth rankings returned by OSS Insight."),
   },
   {
     name: "rank_collection_repos_by_issues",
+    operationType: "write",
     description: "Rank repositories in an OSS Insight collection by issue growth.",
     inputSchema: collectionRankingInputSchema(),
     outputSchema: collectionRankingOutputSchema("Repository issue-growth rankings returned by OSS Insight."),
   },
   {
     name: "list_trending_repos",
+    operationType: "read",
     description: "List recently trending GitHub repositories from OSS Insight.",
     inputSchema: s.object(
       "The input payload for this action.",
@@ -273,6 +281,7 @@ const actions: OssinsightActionDefinition[] = [
   },
   {
     name: "list_issue_creators",
+    operationType: "read",
     description: "List issue creators for a GitHub repository.",
     inputSchema: creatorListInputSchema("issues-desc"),
     outputSchema: s.actionOutput({
@@ -282,6 +291,7 @@ const actions: OssinsightActionDefinition[] = [
   },
   {
     name: "list_issue_creator_countries",
+    operationType: "read",
     description: "List countries or regions of issue creators for a GitHub repository.",
     inputSchema: repoAnalysisInputSchema(),
     outputSchema: s.actionOutput({
@@ -291,6 +301,7 @@ const actions: OssinsightActionDefinition[] = [
   },
   {
     name: "list_issue_creator_organizations",
+    operationType: "read",
     description: "List organizations of issue creators for a GitHub repository.",
     inputSchema: repoAnalysisInputSchema(),
     outputSchema: s.actionOutput({
@@ -300,6 +311,7 @@ const actions: OssinsightActionDefinition[] = [
   },
   {
     name: "get_issue_creators_history",
+    operationType: "read",
     description: "Get historical issue creator counts for a GitHub repository.",
     inputSchema: repoHistoryInputSchema(),
     outputSchema: s.actionOutput({
@@ -309,6 +321,7 @@ const actions: OssinsightActionDefinition[] = [
   },
   {
     name: "list_pull_request_creators",
+    operationType: "read",
     description: "List pull request creators for a GitHub repository.",
     inputSchema: creatorListInputSchema("prs-desc"),
     outputSchema: s.actionOutput({
@@ -318,6 +331,7 @@ const actions: OssinsightActionDefinition[] = [
   },
   {
     name: "list_pull_request_creator_countries",
+    operationType: "read",
     description: "List countries or regions of pull request creators for a GitHub repository.",
     inputSchema: repoAnalysisInputSchema(),
     outputSchema: s.actionOutput({
@@ -330,6 +344,7 @@ const actions: OssinsightActionDefinition[] = [
   },
   {
     name: "list_pull_request_creator_organizations",
+    operationType: "read",
     description: "List organizations of pull request creators for a GitHub repository.",
     inputSchema: repoAnalysisInputSchema(),
     outputSchema: s.actionOutput({
@@ -342,6 +357,7 @@ const actions: OssinsightActionDefinition[] = [
   },
   {
     name: "get_pull_request_creators_history",
+    operationType: "read",
     description: "Get historical pull request creator counts for a GitHub repository.",
     inputSchema: repoHistoryInputSchema(),
     outputSchema: s.actionOutput({
@@ -351,6 +367,7 @@ const actions: OssinsightActionDefinition[] = [
   },
   {
     name: "list_stargazer_countries",
+    operationType: "read",
     description: "List countries or regions of stargazers for a GitHub repository.",
     inputSchema: repoAnalysisInputSchema(),
     outputSchema: s.actionOutput({
@@ -360,6 +377,7 @@ const actions: OssinsightActionDefinition[] = [
   },
   {
     name: "list_stargazer_organizations",
+    operationType: "read",
     description: "List organizations of stargazers for a GitHub repository.",
     inputSchema: repoAnalysisInputSchema(),
     outputSchema: s.actionOutput({
@@ -369,6 +387,7 @@ const actions: OssinsightActionDefinition[] = [
   },
   {
     name: "get_stargazers_history",
+    operationType: "read",
     description: "Get the historical stargazer count for a GitHub repository.",
     inputSchema: repoHistoryInputSchema(),
     outputSchema: s.actionOutput({

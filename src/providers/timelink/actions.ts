@@ -308,6 +308,7 @@ const emptyInputSchema = s.object("The input payload for this Timelink action.",
 export const timelinkActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_clients",
+    operationType: "read",
     description: "List Timelink clients with optional filtering and pagination parameters.",
     requiredScopes: [],
     inputSchema: listClientsInputSchema,
@@ -318,6 +319,7 @@ export const timelinkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_client",
+    operationType: "read",
     description: "Fetch one Timelink client by its identifier.",
     requiredScopes: [],
     inputSchema: getByIdInputSchema,
@@ -327,6 +329,7 @@ export const timelinkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Timelink projects with optional filtering and pagination parameters.",
     requiredScopes: [],
     inputSchema: listProjectsInputSchema,
@@ -337,6 +340,7 @@ export const timelinkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Fetch one Timelink project by its identifier.",
     requiredScopes: [],
     inputSchema: getByIdInputSchema,
@@ -346,6 +350,7 @@ export const timelinkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_services",
+    operationType: "read",
     description: "List Timelink services with optional filtering and pagination parameters.",
     requiredScopes: [],
     inputSchema: listServicesInputSchema,
@@ -356,6 +361,7 @@ export const timelinkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_service",
+    operationType: "read",
     description: "Fetch one Timelink service by its identifier.",
     requiredScopes: [],
     inputSchema: getByIdInputSchema,
@@ -365,6 +371,7 @@ export const timelinkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_time_entries",
+    operationType: "read",
     description: "List Timelink time entries with optional filtering and pagination parameters.",
     requiredScopes: [],
     inputSchema: listTimeEntriesInputSchema,
@@ -375,6 +382,7 @@ export const timelinkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_time_entry",
+    operationType: "read",
     description: "Fetch one Timelink time entry by its identifier.",
     requiredScopes: [],
     inputSchema: getByIdInputSchema,
@@ -384,6 +392,7 @@ export const timelinkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_active_time_entries",
+    operationType: "read",
     description: "List currently active Timelink time entries.",
     requiredScopes: [],
     inputSchema: listActiveTimeEntriesInputSchema,
@@ -394,6 +403,7 @@ export const timelinkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_time_entry_required_fields",
+    operationType: "read",
     description: "List the Timelink field names that are required for time entries.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -403,6 +413,7 @@ export const timelinkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Timelink users with optional filtering and pagination parameters.",
     requiredScopes: [],
     inputSchema: listUsersInputSchema,
@@ -413,6 +424,7 @@ export const timelinkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Fetch one Timelink user by its identifier.",
     requiredScopes: [],
     inputSchema: getByIdInputSchema,
@@ -422,6 +434,7 @@ export const timelinkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description: "Fetch the current Timelink company details for the authenticated token.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -431,6 +444,7 @@ export const timelinkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_current_token",
+    operationType: "read",
     description: "Inspect the current Timelink API token metadata.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,

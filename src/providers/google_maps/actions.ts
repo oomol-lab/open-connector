@@ -36,6 +36,7 @@ const nearbyPlacesOutput = s.looseObject(
 export const googleMapsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_places",
+    operationType: "read",
     description: "Search Google Places using a text query.",
     inputSchema: s.looseRequiredObject(
       "Input for a Google Places text search.",
@@ -52,6 +53,7 @@ export const googleMapsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_nearby_places",
+    operationType: "read",
     description: "Search Google Places near a geographic point.",
     inputSchema: s.looseRequiredObject(
       "Input for a Google Places nearby search.",
@@ -77,6 +79,7 @@ export const googleMapsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_place",
+    operationType: "read",
     description: "Get details for a Google Place by place ID.",
     inputSchema: s.looseRequiredObject(
       "Input for retrieving Google Place details.",
@@ -87,6 +90,7 @@ export const googleMapsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "autocomplete_places",
+    operationType: "read",
     description: "Return Google Places autocomplete predictions for text input.",
     inputSchema: s.looseRequiredObject(
       "Input for Google Places autocomplete.",
@@ -104,6 +108,7 @@ export const googleMapsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "geocode_address",
+    operationType: "read",
     description: "Convert an address into geographic coordinates with Google Geocoding.",
     inputSchema: s.object(
       {
@@ -119,6 +124,7 @@ export const googleMapsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reverse_geocode",
+    operationType: "read",
     description: "Convert geographic coordinates into addresses with Google Geocoding.",
     inputSchema: s.object(
       {
@@ -138,6 +144,7 @@ export const googleMapsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "compute_routes",
+    operationType: "read",
     description: "Compute one or more routes between an origin and destination with Google Routes.",
     inputSchema: s.looseRequiredObject("Input for Google Routes computeRoutes.", {
       fieldMask,
@@ -148,6 +155,7 @@ export const googleMapsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "compute_route_matrix",
+    operationType: "read",
     description: "Compute routes for every origin and destination combination with Google Routes.",
     inputSchema: s.looseRequiredObject("Input for Google Routes computeRouteMatrix.", {
       fieldMask,

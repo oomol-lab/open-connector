@@ -242,6 +242,7 @@ const updateCompanyInputSchema = {
 export const folkActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current Folk workspace user associated with the API key.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for fetching the current Folk user.", {}),
@@ -251,6 +252,7 @@ export const folkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List workspace users from Folk with cursor pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -265,6 +267,7 @@ export const folkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get one Folk workspace user by user ID.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for fetching one Folk user.", {
@@ -276,6 +279,7 @@ export const folkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List Folk workspace groups with cursor pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -290,6 +294,7 @@ export const folkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_group_custom_fields",
+    operationType: "read",
     description: "List Folk custom fields for one group and entity type.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -309,6 +314,7 @@ export const folkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_people",
+    operationType: "read",
     description: "List Folk people with official cursor pagination and the documented nested filter syntax.",
     requiredScopes: [],
     inputSchema: listInputSchema("The input payload for listing Folk people.", true),
@@ -319,6 +325,7 @@ export const folkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_person",
+    operationType: "read",
     description: "Get one Folk person by person ID.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for fetching one Folk person.", {
@@ -330,6 +337,7 @@ export const folkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_person",
+    operationType: "write",
     description: "Create one Folk person using the official people payload fields.",
     requiredScopes: [],
     inputSchema: personMutationInputSchema,
@@ -339,6 +347,7 @@ export const folkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_person",
+    operationType: "write",
     description: "Update one Folk person by person ID using the official people payload fields.",
     requiredScopes: [],
     inputSchema: updatePersonInputSchema,
@@ -348,6 +357,7 @@ export const folkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_person",
+    operationType: "destructive",
     description: "Delete one Folk person by person ID.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for deleting one Folk person.", {
@@ -359,6 +369,7 @@ export const folkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_companies",
+    operationType: "read",
     description: "List Folk companies with official cursor pagination and the documented nested filter syntax.",
     requiredScopes: [],
     inputSchema: listInputSchema("The input payload for listing Folk companies.", true),
@@ -369,6 +380,7 @@ export const folkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description: "Get one Folk company by company ID.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for fetching one Folk company.", {
@@ -380,6 +392,7 @@ export const folkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_company",
+    operationType: "write",
     description: "Create one Folk company using the official companies payload fields.",
     requiredScopes: [],
     inputSchema: companyMutationInputSchema,
@@ -389,6 +402,7 @@ export const folkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_company",
+    operationType: "write",
     description: "Update one Folk company by company ID using the official companies payload fields.",
     requiredScopes: [],
     inputSchema: updateCompanyInputSchema,
@@ -398,6 +412,7 @@ export const folkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_company",
+    operationType: "destructive",
     description: "Delete one Folk company by company ID.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for deleting one Folk company.", {

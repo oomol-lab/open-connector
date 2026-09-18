@@ -134,24 +134,28 @@ const modelListOutputSchema = s.object("Standard OrcaRouter response that return
 export const orcarouterActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_chat_completion",
+    operationType: "read",
     description: "Create an OrcaRouter chat completion through the OpenAI-compatible `/chat/completions` endpoint.",
     inputSchema: chatCompletionInputSchema,
     outputSchema: rawObjectSchema,
   }),
   defineProviderAction(service, {
     name: "create_message",
+    operationType: "write",
     description: "Create an OrcaRouter Anthropic-format message through the `/messages` endpoint.",
     inputSchema: messageInputSchema,
     outputSchema: rawObjectSchema,
   }),
   defineProviderAction(service, {
     name: "list_models",
+    operationType: "read",
     description: "List the models available through OrcaRouter.",
     inputSchema: noInputSchema,
     outputSchema: modelListOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_embeddings",
+    operationType: "write",
     description: "Create embeddings through the OpenAI-compatible `/embeddings` endpoint.",
     inputSchema: embeddingInputSchema,
     outputSchema: s.object("Standard OrcaRouter response that returns a list of embeddings.", {

@@ -59,6 +59,7 @@ const cloudflareR2BucketJobTypeSchema = s.stringEnum("The bucket job kind.", ["p
 export const cloudflareR2ObjectActions: ActionDefinition[] = [
   defineProviderAction("cloudflare_r2", {
     name: "list_objects",
+    operationType: "read",
     description: "List objects in an R2 bucket with optional prefix, delimiter grouping, and cursor pagination.",
     requiredScopes: ["workers-r2.read"],
     providerPermissions: [...cloudflareR2ReadPermissions],
@@ -101,6 +102,7 @@ export const cloudflareR2ObjectActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "delete_object",
+    operationType: "destructive",
     description: "Delete one R2 object by key.",
     requiredScopes: ["workers-r2.write"],
     providerPermissions: [...cloudflareR2WritePermissions],
@@ -121,6 +123,7 @@ export const cloudflareR2ObjectActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "delete_objects",
+    operationType: "destructive",
     description: "Delete a list of R2 objects by key in one request.",
     requiredScopes: ["workers-r2.write"],
     providerPermissions: [...cloudflareR2WritePermissions],
@@ -147,6 +150,7 @@ export const cloudflareR2ObjectActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "delete_objects_by_prefix",
+    operationType: "destructive",
     description: "Start a background job that deletes every object under a key prefix, or empties the whole bucket.",
     requiredScopes: ["workers-r2.write"],
     providerPermissions: [...cloudflareR2WritePermissions],
@@ -175,6 +179,7 @@ export const cloudflareR2ObjectActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "list_bucket_jobs",
+    operationType: "read",
     description: "List background jobs for an R2 bucket, such as prefix delete jobs.",
     requiredScopes: ["workers-r2.read"],
     providerPermissions: [...cloudflareR2ReadPermissions],
@@ -205,6 +210,7 @@ export const cloudflareR2ObjectActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "get_bucket_job",
+    operationType: "read",
     description: "Get the current status of one R2 bucket background job.",
     requiredScopes: ["workers-r2.read"],
     providerPermissions: [...cloudflareR2ReadPermissions],

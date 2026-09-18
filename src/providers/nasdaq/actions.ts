@@ -139,12 +139,14 @@ const quoteInputSchema = s.object(
 export const nasdaqActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_datatable_metadata",
+    operationType: "read",
     description: "Retrieve schema, filter, refresh, and premium metadata for a Nasdaq Data Link datatable.",
     inputSchema: datatableCodeInputSchema,
     outputSchema: datatableMetadataOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_datatable",
+    operationType: "read",
     description:
       "Request a bulk export for a Nasdaq Data Link datatable and return the current file status plus download link when available.",
     inputSchema: datatableCodeInputSchema,
@@ -152,6 +154,7 @@ export const nasdaqActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_table_row",
+    operationType: "read",
     description:
       "Query a Nasdaq Data Link datatable with a single filter column and normalize the returned rows into key-value objects.",
     inputSchema: tableRowInputSchema,
@@ -159,12 +162,14 @@ export const nasdaqActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dividend_history",
+    operationType: "read",
     description: "Retrieve quarterly dividend fundamentals for a ticker from SHARADAR/SF1 using the ARQ dimension.",
     inputSchema: dividendHistoryInputSchema,
     outputSchema: datatableQueryResultSchema,
   }),
   defineProviderAction(service, {
     name: "get_analyst_ratings",
+    operationType: "read",
     description:
       "Retrieve analyst recommendation and target-price history for a stock symbol from the ZACKS analyst datatables.",
     inputSchema: analystRatingsInputSchema,
@@ -175,12 +180,14 @@ export const nasdaqActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_end_of_day_quote",
+    operationType: "read",
     description: "Retrieve QuoteMedia end-of-day price rows for a ticker, optionally filtered by a date range.",
     inputSchema: quoteInputSchema,
     outputSchema: quoteOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_real_time_quote",
+    operationType: "read",
     description:
       "Compatibility alias of get_end_of_day_quote. Returns QuoteMedia end-of-day price rows rather than live real-time quotes.",
     inputSchema: quoteInputSchema,

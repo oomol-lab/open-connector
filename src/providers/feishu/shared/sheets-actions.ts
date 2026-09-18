@@ -86,6 +86,7 @@ export function createFeishuSheetsActions(service: string): readonly ActionDefin
   return [
     defineProviderAction(service, {
       name: "create_workbook",
+      operationType: "write",
       description: "Create a Feishu spreadsheet workbook.",
       requiredScopes: [feishuSheetsProviderPermissions.create],
       providerPermissions: [feishuSheetsProviderPermissions.create],
@@ -112,6 +113,7 @@ export function createFeishuSheetsActions(service: string): readonly ActionDefin
     }),
     defineProviderAction(service, {
       name: "get_workbook",
+      operationType: "read",
       description: "Get workbook structure and metadata, including all sub-sheets.",
       requiredScopes: [feishuSheetsProviderPermissions.read],
       providerPermissions: [feishuSheetsProviderPermissions.read],
@@ -136,6 +138,7 @@ export function createFeishuSheetsActions(service: string): readonly ActionDefin
     }),
     defineProviderAction(service, {
       name: "get_sheet_changeset",
+      operationType: "read",
       description: "Get the raw spreadsheet edit actions between two revisions for reviewing applied changes.",
       requiredScopes: [feishuSheetsProviderPermissions.read],
       providerPermissions: [feishuSheetsProviderPermissions.read],
@@ -156,6 +159,7 @@ export function createFeishuSheetsActions(service: string): readonly ActionDefin
     }),
     defineProviderAction(service, {
       name: "get_sheet",
+      operationType: "read",
       description: "Get one sub-sheet from a workbook structure.",
       requiredScopes: [feishuSheetsProviderPermissions.read],
       providerPermissions: [feishuSheetsProviderPermissions.read],
@@ -172,6 +176,7 @@ export function createFeishuSheetsActions(service: string): readonly ActionDefin
     }),
     defineProviderAction(service, {
       name: "create_sheet",
+      operationType: "write",
       description: "Create an empty sub-sheet with optional position and dimensions.",
       requiredScopes: [feishuSheetsProviderPermissions.write],
       providerPermissions: [feishuSheetsProviderPermissions.write],
@@ -192,6 +197,7 @@ export function createFeishuSheetsActions(service: string): readonly ActionDefin
     }),
     defineProviderAction(service, {
       name: "update_sheet",
+      operationType: "write",
       description: "Rename, move, hide, show, or recolor one sub-sheet.",
       requiredScopes: [feishuSheetsProviderPermissions.read, feishuSheetsProviderPermissions.write],
       providerPermissions: [feishuSheetsProviderPermissions.read, feishuSheetsProviderPermissions.write],
@@ -239,6 +245,7 @@ export function createFeishuSheetsActions(service: string): readonly ActionDefin
     }),
     defineProviderAction(service, {
       name: "delete_sheet",
+      operationType: "destructive",
       description: "Delete one sub-sheet from a workbook.",
       requiredScopes: [feishuSheetsProviderPermissions.write],
       providerPermissions: [feishuSheetsProviderPermissions.write],
@@ -247,6 +254,7 @@ export function createFeishuSheetsActions(service: string): readonly ActionDefin
     }),
     defineProviderAction(service, {
       name: "get_cells",
+      operationType: "read",
       description: "Read one or more A1 ranges with values, formulas, and optional styles.",
       requiredScopes: [feishuSheetsProviderPermissions.read],
       providerPermissions: [feishuSheetsProviderPermissions.read],
@@ -261,6 +269,7 @@ export function createFeishuSheetsActions(service: string): readonly ActionDefin
     }),
     defineProviderAction(service, {
       name: "set_cells",
+      operationType: "destructive",
       description: "Write values, formulas, styles, comments, or validation to an A1 range.",
       requiredScopes: [feishuSheetsProviderPermissions.write],
       providerPermissions: [feishuSheetsProviderPermissions.write],
@@ -280,6 +289,7 @@ export function createFeishuSheetsActions(service: string): readonly ActionDefin
     }),
     defineProviderAction(service, {
       name: "clear_cells",
+      operationType: "destructive",
       description: "Clear cell contents, formats, or both from an A1 range.",
       requiredScopes: [feishuSheetsProviderPermissions.write],
       providerPermissions: [feishuSheetsProviderPermissions.write],
@@ -291,6 +301,7 @@ export function createFeishuSheetsActions(service: string): readonly ActionDefin
     }),
     defineProviderAction(service, {
       name: "search_cells",
+      operationType: "read",
       description: "Find cell coordinates matching text or a regular expression.",
       requiredScopes: [feishuSheetsProviderPermissions.read],
       providerPermissions: [feishuSheetsProviderPermissions.read],
@@ -305,6 +316,7 @@ export function createFeishuSheetsActions(service: string): readonly ActionDefin
     }),
     defineProviderAction(service, {
       name: "replace_cells",
+      operationType: "destructive",
       description: "Find and replace matching text in a sub-sheet.",
       requiredScopes: [feishuSheetsProviderPermissions.write],
       providerPermissions: [feishuSheetsProviderPermissions.write],
@@ -318,6 +330,7 @@ export function createFeishuSheetsActions(service: string): readonly ActionDefin
     }),
     defineProviderAction(service, {
       name: "get_typed_table",
+      operationType: "read",
       description: "Read a sub-sheet range into a DataFrame-friendly typed table with inferred dtypes.",
       requiredScopes: [feishuSheetsProviderPermissions.read],
       providerPermissions: [feishuSheetsProviderPermissions.read],
@@ -337,6 +350,7 @@ export function createFeishuSheetsActions(service: string): readonly ActionDefin
     }),
     defineProviderAction(service, {
       name: "put_typed_table",
+      operationType: "write",
       description: "Write a DataFrame-friendly typed table while preserving numbers, booleans, and real dates.",
       requiredScopes: [feishuSheetsProviderPermissions.read, feishuSheetsProviderPermissions.write],
       providerPermissions: [feishuSheetsProviderPermissions.read, feishuSheetsProviderPermissions.write],
@@ -392,6 +406,7 @@ export function createFeishuSheetsActions(service: string): readonly ActionDefin
     }),
     defineProviderAction(service, {
       name: "batch_update_sheet",
+      operationType: "destructive",
       description: "Execute multiple Sheet AI write tools in one batch request.",
       requiredScopes: [feishuSheetsProviderPermissions.write],
       providerPermissions: [feishuSheetsProviderPermissions.write],

@@ -56,6 +56,7 @@ updateDestinationInputSchema.anyOf = Object.keys(updateDestinationFields).map((f
 export const asinDataApiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "clear_collection_requests",
+    operationType: "destructive",
     description: "Delete multiple requests from a collection by their request IDs in ASIN Data API.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for deleting multiple collection requests.", {
@@ -72,6 +73,7 @@ export const asinDataApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_destination",
+    operationType: "destructive",
     description: "Delete a destination from the ASIN Data API account.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for deleting an ASIN Data API destination.", {
@@ -83,6 +85,7 @@ export const asinDataApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_collection",
+    operationType: "read",
     description: "Get details of a specific ASIN Data API collection including status and request counts.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for getting an ASIN Data API collection.", {
@@ -94,6 +97,7 @@ export const asinDataApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_collection_requests",
+    operationType: "read",
     description: "List requests in an ASIN Data API collection by page.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -112,6 +116,7 @@ export const asinDataApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_destinations",
+    operationType: "read",
     description: "List destinations configured on the ASIN Data API account with optional filtering and sorting.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -128,6 +133,7 @@ export const asinDataApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_destination",
+    operationType: "write",
     description: "Update an existing ASIN Data API destination configuration. Only include fields you want to update.",
     requiredScopes: [],
     inputSchema: updateDestinationInputSchema,

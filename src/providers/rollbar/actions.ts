@@ -77,6 +77,7 @@ const projectSchema = s.object("A normalized Rollbar project.", {
 export const rollbarActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get one Rollbar project by project ID.",
     requiredScopes: [rollbarReadScope],
     providerPermissions: ["read"],
@@ -87,6 +88,7 @@ export const rollbarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_items",
+    operationType: "read",
     description: "List Rollbar items in the connected project with optional filters.",
     requiredScopes: [rollbarReadScope],
     providerPermissions: ["read"],
@@ -129,6 +131,7 @@ export const rollbarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_item",
+    operationType: "read",
     description: "Get one Rollbar item by item ID.",
     requiredScopes: [rollbarReadScope],
     providerPermissions: ["read"],
@@ -139,6 +142,7 @@ export const rollbarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_item_occurrences",
+    operationType: "read",
     description: "List occurrences for one Rollbar item.",
     requiredScopes: [rollbarReadScope],
     providerPermissions: ["read"],
@@ -159,6 +163,7 @@ export const rollbarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_occurrence",
+    operationType: "read",
     description: "Get one Rollbar occurrence by occurrence ID.",
     requiredScopes: [rollbarReadScope],
     providerPermissions: ["read"],
@@ -171,6 +176,7 @@ export const rollbarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_environments",
+    operationType: "read",
     description: "List environments in the connected Rollbar project.",
     requiredScopes: [rollbarReadScope],
     providerPermissions: ["read"],
@@ -188,6 +194,7 @@ export const rollbarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_deploys",
+    operationType: "read",
     description: "List deploys in the connected Rollbar project.",
     requiredScopes: [rollbarReadScope],
     providerPermissions: ["read"],
@@ -205,6 +212,7 @@ export const rollbarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_deploy",
+    operationType: "read",
     description: "Get one Rollbar deploy by deploy ID.",
     requiredScopes: [rollbarReadScope],
     providerPermissions: ["read"],

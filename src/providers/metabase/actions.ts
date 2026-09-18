@@ -31,6 +31,7 @@ const searchModelSchema = s.stringEnum("Metabase model type to include in search
 export const metabaseActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the Metabase user associated with the API key.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("Output payload for the current Metabase user.", {
@@ -40,6 +41,7 @@ export const metabaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_databases",
+    operationType: "read",
     description: "List Metabase databases visible to the API key.",
     inputSchema: s.object(
       "Query parameters for listing Metabase databases.",
@@ -75,6 +77,7 @@ export const metabaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_database",
+    operationType: "read",
     description: "Retrieve one Metabase database by ID.",
     inputSchema: s.object(
       "Input parameters for retrieving one Metabase database.",
@@ -93,6 +96,7 @@ export const metabaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_collections",
+    operationType: "read",
     description: "List Metabase collections visible to the API key.",
     inputSchema: s.object(
       "Query parameters for listing Metabase collections.",
@@ -111,6 +115,7 @@ export const metabaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_collection",
+    operationType: "read",
     description: "Retrieve one Metabase collection by ID.",
     inputSchema: s.object("Input parameters for retrieving one Metabase collection.", {
       id: entityIdSchema,
@@ -122,6 +127,7 @@ export const metabaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_cards",
+    operationType: "read",
     description: "List Metabase cards, also known as questions.",
     inputSchema: s.object(
       "Query parameters for listing Metabase cards.",
@@ -147,6 +153,7 @@ export const metabaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_card",
+    operationType: "read",
     description: "Retrieve one Metabase card by ID.",
     inputSchema: s.object(
       "Input parameters for retrieving one Metabase card.",
@@ -163,6 +170,7 @@ export const metabaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_dashboards",
+    operationType: "read",
     description: "List Metabase dashboards visible to the API key.",
     inputSchema: s.object(
       "Query parameters for listing Metabase dashboards.",
@@ -176,6 +184,7 @@ export const metabaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dashboard",
+    operationType: "read",
     description: "Retrieve one Metabase dashboard by ID.",
     inputSchema: s.object("Input parameters for retrieving one Metabase dashboard.", {
       id: entityIdSchema,
@@ -187,6 +196,7 @@ export const metabaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search",
+    operationType: "read",
     description: "Search Metabase content visible to the API key.",
     inputSchema: s.object(
       "Query parameters for searching Metabase content.",

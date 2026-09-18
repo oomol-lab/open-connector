@@ -109,6 +109,7 @@ export type SpotifyActionName =
 export const spotifyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user_profile",
+    operationType: "read",
     description: "Get Current User Profile using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userReadPrivate, spotifyProviderScopes.userReadEmail],
     inputSchema: spotifyInputSchema("get_current_user_profile"),
@@ -116,6 +117,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_items",
+    operationType: "read",
     description: "Search Items using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("search_items"),
@@ -123,6 +125,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_top_tracks",
+    operationType: "read",
     description: "Get User Top Tracks using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userTopRead],
     inputSchema: spotifyInputSchema("get_user_top_tracks"),
@@ -130,6 +133,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_top_artists",
+    operationType: "read",
     description: "Get User Top Artists using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userTopRead],
     inputSchema: spotifyInputSchema("get_user_top_artists"),
@@ -137,6 +141,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_playlist",
+    operationType: "read",
     description: "Get Playlist using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.playlistReadPrivate, spotifyProviderScopes.playlistReadCollaborative],
     inputSchema: spotifyInputSchema("get_playlist"),
@@ -144,6 +149,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_playlist_items",
+    operationType: "read",
     description: "Get Playlist Items using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.playlistReadPrivate, spotifyProviderScopes.playlistReadCollaborative],
     inputSchema: spotifyInputSchema("get_playlist_items"),
@@ -151,6 +157,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_album",
+    operationType: "read",
     description: "Get Album using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_album"),
@@ -158,6 +165,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_album_tracks",
+    operationType: "read",
     description: "Get Album Tracks using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_album_tracks"),
@@ -165,6 +173,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_artist",
+    operationType: "read",
     description: "Get Artist using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_artist"),
@@ -172,6 +181,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_artist_albums",
+    operationType: "read",
     description: "Get Artist Albums using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_artist_albums"),
@@ -179,6 +189,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_artist_related_artists",
+    operationType: "read",
     description: "Get Artist Related Artists using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_artist_related_artists"),
@@ -186,6 +197,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_artist_top_tracks",
+    operationType: "read",
     description: "Get Artist Top Tracks using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userTopRead],
     inputSchema: spotifyInputSchema("get_artist_top_tracks"),
@@ -193,6 +205,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_track",
+    operationType: "read",
     description: "Get Track using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_track"),
@@ -200,6 +213,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_several_tracks",
+    operationType: "read",
     description: "Get Several Tracks using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_several_tracks"),
@@ -207,6 +221,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_several_artists",
+    operationType: "read",
     description: "Get Several Artists using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_several_artists"),
@@ -214,6 +229,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_several_albums",
+    operationType: "read",
     description: "Get Several Albums using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_several_albums"),
@@ -221,6 +237,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_track_audio_features",
+    operationType: "read",
     description: "Get Track Audio Features using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_track_audio_features"),
@@ -228,6 +245,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_several_track_audio_features",
+    operationType: "read",
     description: "Get Several Track Audio Features using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_several_track_audio_features"),
@@ -235,6 +253,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_track_audio_analysis",
+    operationType: "read",
     description: "Get Track Audio Analysis using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_track_audio_analysis"),
@@ -242,6 +261,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_recommendations",
+    operationType: "read",
     description: "Get Recommendations using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_recommendations"),
@@ -249,6 +269,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_available_genre_seeds",
+    operationType: "read",
     description: "Get Available Genre Seeds using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_available_genre_seeds"),
@@ -256,6 +277,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_available_markets",
+    operationType: "read",
     description: "Get Available Markets using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_available_markets"),
@@ -263,6 +285,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_playlist_cover_image",
+    operationType: "read",
     description: "Get Playlist Cover Image using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.playlistReadPrivate, spotifyProviderScopes.playlistReadCollaborative],
     inputSchema: spotifyInputSchema("get_playlist_cover_image"),
@@ -270,6 +293,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_playlist",
+    operationType: "write",
     description: "Create Playlist using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.playlistModifyPublic, spotifyProviderScopes.playlistModifyPrivate],
     inputSchema: spotifyInputSchema("create_playlist"),
@@ -277,6 +301,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "change_playlist_details",
+    operationType: "write",
     description: "Change Playlist Details using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.playlistModifyPublic, spotifyProviderScopes.playlistModifyPrivate],
     inputSchema: spotifyInputSchema("change_playlist_details"),
@@ -284,6 +309,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_items_to_playlist",
+    operationType: "write",
     description: "Add Items To Playlist using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.playlistModifyPublic, spotifyProviderScopes.playlistModifyPrivate],
     inputSchema: spotifyInputSchema("add_items_to_playlist"),
@@ -291,6 +317,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_playlist_items",
+    operationType: "destructive",
     description: "Update Playlist Items using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.playlistModifyPublic, spotifyProviderScopes.playlistModifyPrivate],
     inputSchema: spotifyInputSchema("update_playlist_items"),
@@ -298,6 +325,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_playlist_items",
+    operationType: "destructive",
     description: "Remove Playlist Items using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.playlistModifyPublic, spotifyProviderScopes.playlistModifyPrivate],
     inputSchema: spotifyInputSchema("remove_playlist_items"),
@@ -305,6 +333,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "follow_playlist",
+    operationType: "write",
     description: "Follow Playlist using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.playlistModifyPublic, spotifyProviderScopes.playlistModifyPrivate],
     inputSchema: spotifyInputSchema("follow_playlist"),
@@ -312,6 +341,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "unfollow_playlist",
+    operationType: "destructive",
     description: "Unfollow Playlist using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.playlistModifyPublic, spotifyProviderScopes.playlistModifyPrivate],
     inputSchema: spotifyInputSchema("unfollow_playlist"),
@@ -319,6 +349,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_show",
+    operationType: "read",
     description: "Get Show using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_show"),
@@ -326,6 +357,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_show_episodes",
+    operationType: "read",
     description: "Get Show Episodes using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_show_episodes"),
@@ -333,6 +365,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_episode",
+    operationType: "read",
     description: "Get Episode using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_episode"),
@@ -340,6 +373,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_several_episodes",
+    operationType: "read",
     description: "Get Several Episodes using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_several_episodes"),
@@ -347,6 +381,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_audiobook",
+    operationType: "read",
     description: "Get Audiobook using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_audiobook"),
@@ -354,6 +389,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_audiobook_chapters",
+    operationType: "read",
     description: "Get Audiobook Chapters using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_audiobook_chapters"),
@@ -361,6 +397,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_chapter",
+    operationType: "read",
     description: "Get Chapter using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_chapter"),
@@ -368,6 +405,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_several_audiobooks",
+    operationType: "read",
     description: "Get Several Audiobooks using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_several_audiobooks"),
@@ -375,6 +413,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_several_chapters",
+    operationType: "read",
     description: "Get Several Chapters using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_several_chapters"),
@@ -382,6 +421,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_several_shows",
+    operationType: "read",
     description: "Get Several Shows using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_several_shows"),
@@ -389,6 +429,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_featured_playlists",
+    operationType: "read",
     description: "Get Featured Playlists using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_featured_playlists"),
@@ -396,6 +437,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_new_releases",
+    operationType: "read",
     description: "Get New Releases using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_new_releases"),
@@ -403,6 +445,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_browse_categories",
+    operationType: "read",
     description: "Get Browse Categories using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_browse_categories"),
@@ -410,6 +453,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_browse_category",
+    operationType: "read",
     description: "Get Browse Category using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_browse_category"),
@@ -417,6 +461,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_category_playlists",
+    operationType: "read",
     description: "Get Category Playlists using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_category_playlists"),
@@ -424,6 +469,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_profile",
+    operationType: "read",
     description: "Get User Profile using the Spotify Web API.",
     requiredScopes: [],
     inputSchema: spotifyInputSchema("get_user_profile"),
@@ -431,6 +477,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_current_user_playlists",
+    operationType: "read",
     description: "Get Current User Playlists using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.playlistReadPrivate, spotifyProviderScopes.playlistReadCollaborative],
     inputSchema: spotifyInputSchema("get_current_user_playlists"),
@@ -438,6 +485,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_playlists",
+    operationType: "read",
     description: "Get User Playlists using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.playlistReadPrivate, spotifyProviderScopes.playlistReadCollaborative],
     inputSchema: spotifyInputSchema("get_user_playlists"),
@@ -445,6 +493,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "save_albums_for_current_user",
+    operationType: "write",
     description: "Save Albums For Current User using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userLibraryModify],
     inputSchema: spotifyInputSchema("save_albums_for_current_user"),
@@ -452,6 +501,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_users_saved_albums",
+    operationType: "destructive",
     description: "Remove Users Saved Albums using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userLibraryModify],
     inputSchema: spotifyInputSchema("remove_users_saved_albums"),
@@ -459,6 +509,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "save_audiobooks_for_current_user",
+    operationType: "write",
     description: "Save Audiobooks For Current User using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userLibraryModify],
     inputSchema: spotifyInputSchema("save_audiobooks_for_current_user"),
@@ -466,6 +517,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_user_s_saved_audiobooks",
+    operationType: "destructive",
     description: "Remove User S Saved Audiobooks using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userLibraryModify],
     inputSchema: spotifyInputSchema("remove_user_s_saved_audiobooks"),
@@ -473,6 +525,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "save_episodes_for_current_user",
+    operationType: "write",
     description: "Save Episodes For Current User using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userLibraryModify],
     inputSchema: spotifyInputSchema("save_episodes_for_current_user"),
@@ -480,6 +533,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_user_s_saved_episodes",
+    operationType: "destructive",
     description: "Remove User S Saved Episodes using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userLibraryModify],
     inputSchema: spotifyInputSchema("remove_user_s_saved_episodes"),
@@ -487,6 +541,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "save_shows_for_current_user",
+    operationType: "write",
     description: "Save Shows For Current User using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userLibraryModify],
     inputSchema: spotifyInputSchema("save_shows_for_current_user"),
@@ -494,6 +549,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_user_s_saved_shows",
+    operationType: "destructive",
     description: "Remove User S Saved Shows using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userLibraryModify],
     inputSchema: spotifyInputSchema("remove_user_s_saved_shows"),
@@ -501,6 +557,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "save_tracks_for_current_user",
+    operationType: "write",
     description: "Save Tracks For Current User using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userLibraryModify],
     inputSchema: spotifyInputSchema("save_tracks_for_current_user"),
@@ -508,6 +565,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_user_s_saved_tracks",
+    operationType: "destructive",
     description: "Remove User S Saved Tracks using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userLibraryModify],
     inputSchema: spotifyInputSchema("remove_user_s_saved_tracks"),
@@ -515,6 +573,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_saved_albums",
+    operationType: "read",
     description: "Get User Saved Albums using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userLibraryRead],
     inputSchema: spotifyInputSchema("get_user_saved_albums"),
@@ -522,6 +581,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_saved_audiobooks",
+    operationType: "read",
     description: "Get User Saved Audiobooks using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userLibraryRead],
     inputSchema: spotifyInputSchema("get_user_saved_audiobooks"),
@@ -529,6 +589,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_saved_episodes",
+    operationType: "read",
     description: "Get User Saved Episodes using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userLibraryRead],
     inputSchema: spotifyInputSchema("get_user_saved_episodes"),
@@ -536,6 +597,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_saved_shows",
+    operationType: "read",
     description: "Get User Saved Shows using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userLibraryRead],
     inputSchema: spotifyInputSchema("get_user_saved_shows"),
@@ -543,6 +605,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_saved_tracks",
+    operationType: "read",
     description: "Get User Saved Tracks using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userLibraryRead],
     inputSchema: spotifyInputSchema("get_user_saved_tracks"),
@@ -550,6 +613,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_saved_albums",
+    operationType: "read",
     description: "Check Saved Albums using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userLibraryRead],
     inputSchema: spotifyInputSchema("check_saved_albums"),
@@ -557,6 +621,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_saved_audiobooks",
+    operationType: "read",
     description: "Check Saved Audiobooks using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userLibraryRead],
     inputSchema: spotifyInputSchema("check_saved_audiobooks"),
@@ -564,6 +629,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_saved_episodes",
+    operationType: "read",
     description: "Check Saved Episodes using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userLibraryRead],
     inputSchema: spotifyInputSchema("check_saved_episodes"),
@@ -571,6 +637,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_saved_shows",
+    operationType: "read",
     description: "Check Saved Shows using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userLibraryRead],
     inputSchema: spotifyInputSchema("check_saved_shows"),
@@ -578,6 +645,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_saved_tracks",
+    operationType: "read",
     description: "Check Saved Tracks using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userLibraryRead],
     inputSchema: spotifyInputSchema("check_saved_tracks"),
@@ -585,6 +653,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "follow_artists_or_users",
+    operationType: "write",
     description: "Follow Artists Or Users using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userFollowModify],
     inputSchema: spotifyInputSchema("follow_artists_or_users"),
@@ -592,6 +661,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "unfollow_artists_or_users",
+    operationType: "destructive",
     description: "Unfollow Artists Or Users using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userFollowModify],
     inputSchema: spotifyInputSchema("unfollow_artists_or_users"),
@@ -599,6 +669,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_followed_artists",
+    operationType: "read",
     description: "Get Followed Artists using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userFollowRead],
     inputSchema: spotifyInputSchema("get_followed_artists"),
@@ -606,6 +677,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_user_follows_artists_or_users",
+    operationType: "read",
     description: "Check User Follows Artists Or Users using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userFollowRead],
     inputSchema: spotifyInputSchema("check_user_follows_artists_or_users"),
@@ -613,6 +685,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_users_follow_playlist",
+    operationType: "read",
     description: "Check Users Follow Playlist using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.playlistReadPrivate, spotifyProviderScopes.playlistReadCollaborative],
     inputSchema: spotifyInputSchema("check_users_follow_playlist"),
@@ -620,6 +693,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_available_devices",
+    operationType: "read",
     description: "Get Available Devices using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userReadPlaybackState, spotifyProviderScopes.userReadCurrentlyPlaying],
     inputSchema: spotifyInputSchema("get_available_devices"),
@@ -627,6 +701,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_resume_playback",
+    operationType: "write",
     description: "Start Resume Playback using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userModifyPlaybackState],
     inputSchema: spotifyInputSchema("start_resume_playback"),
@@ -634,6 +709,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "pause_playback",
+    operationType: "destructive",
     description: "Pause Playback using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userModifyPlaybackState],
     inputSchema: spotifyInputSchema("pause_playback"),
@@ -641,6 +717,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "seek_to_position",
+    operationType: "write",
     description: "Seek To Position using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userModifyPlaybackState],
     inputSchema: spotifyInputSchema("seek_to_position"),
@@ -648,6 +725,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_repeat_mode",
+    operationType: "write",
     description: "Set Repeat Mode using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userModifyPlaybackState],
     inputSchema: spotifyInputSchema("set_repeat_mode"),
@@ -655,6 +733,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_playback_volume",
+    operationType: "write",
     description: "Set Playback Volume using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userModifyPlaybackState],
     inputSchema: spotifyInputSchema("set_playback_volume"),
@@ -662,6 +741,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "skip_to_next",
+    operationType: "write",
     description: "Skip To Next using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userModifyPlaybackState],
     inputSchema: spotifyInputSchema("skip_to_next"),
@@ -669,6 +749,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "skip_to_previous",
+    operationType: "write",
     description: "Skip To Previous using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userModifyPlaybackState],
     inputSchema: spotifyInputSchema("skip_to_previous"),
@@ -676,6 +757,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "toggle_playback_shuffle",
+    operationType: "write",
     description: "Toggle Playback Shuffle using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userModifyPlaybackState],
     inputSchema: spotifyInputSchema("toggle_playback_shuffle"),
@@ -683,6 +765,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "transfer_playback",
+    operationType: "write",
     description: "Transfer Playback using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userModifyPlaybackState],
     inputSchema: spotifyInputSchema("transfer_playback"),
@@ -690,6 +773,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_item_to_playback_queue",
+    operationType: "write",
     description: "Add Item To Playback Queue using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userModifyPlaybackState],
     inputSchema: spotifyInputSchema("add_item_to_playback_queue"),
@@ -697,6 +781,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_playback_state",
+    operationType: "read",
     description: "Get Playback State using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userReadPlaybackState, spotifyProviderScopes.userReadCurrentlyPlaying],
     inputSchema: spotifyInputSchema("get_playback_state"),
@@ -704,6 +789,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_currently_playing_track",
+    operationType: "read",
     description: "Get Currently Playing Track using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userReadPlaybackState, spotifyProviderScopes.userReadCurrentlyPlaying],
     inputSchema: spotifyInputSchema("get_currently_playing_track"),
@@ -711,6 +797,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_recently_played_tracks",
+    operationType: "read",
     description: "Get Recently Played Tracks using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userReadRecentlyPlayed],
     inputSchema: spotifyInputSchema("get_recently_played_tracks"),
@@ -718,6 +805,7 @@ export const spotifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_queue",
+    operationType: "read",
     description: "Get User Queue using the Spotify Web API.",
     requiredScopes: [spotifyProviderScopes.userReadPlaybackState, spotifyProviderScopes.userReadCurrentlyPlaying],
     inputSchema: spotifyInputSchema("get_user_queue"),

@@ -283,6 +283,7 @@ const proposalContentSchema = s.looseRequiredObject(
 export const bidsketchActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_clients",
+    operationType: "read",
     description: "List clients available in the authenticated BidSketch account.",
     requiredScopes: [],
     inputSchema: listInputSchema,
@@ -295,6 +296,7 @@ export const bidsketchActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_client",
+    operationType: "read",
     description: "Get one BidSketch client by client ID.",
     requiredScopes: [],
     inputSchema: clientIdInputSchema,
@@ -307,6 +309,7 @@ export const bidsketchActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_proposals",
+    operationType: "read",
     description: "List proposals available in the authenticated BidSketch account.",
     requiredScopes: [],
     inputSchema: listInputSchema,
@@ -319,6 +322,7 @@ export const bidsketchActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_client_proposals",
+    operationType: "read",
     description: "List proposals that belong to one BidSketch client.",
     requiredScopes: [],
     inputSchema: listClientProposalsInputSchema,
@@ -331,6 +335,7 @@ export const bidsketchActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_proposal",
+    operationType: "read",
     description: "Get one BidSketch proposal by proposal ID.",
     requiredScopes: [],
     inputSchema: proposalIdInputSchema,
@@ -343,6 +348,7 @@ export const bidsketchActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_proposal_content",
+    operationType: "read",
     description: "Get one BidSketch proposal with its grouped sections and fees.",
     requiredScopes: [],
     inputSchema: proposalIdInputSchema,

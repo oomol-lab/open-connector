@@ -25,6 +25,7 @@ const graphqlErrorSchema = s.looseObject("A GraphQL error returned by Beebole.",
 export const beeboleActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "execute_graphql",
+    operationType: "write",
     description: "Execute a JSON-friendly Beebole GraphQL query or mutation against the connected account.",
     inputSchema: s.object(
       "The input payload for executing a Beebole GraphQL operation.",

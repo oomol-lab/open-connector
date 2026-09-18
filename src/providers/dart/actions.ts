@@ -382,6 +382,7 @@ export type DartActionName = "get_config" | "list_tasks" | "get_task" | "create_
 export const dartActions: ProviderActionDefinition<DartActionName>[] = [
   defineProviderAction(service, {
     name: "get_config",
+    operationType: "read",
     description: "Retrieve the authenticated Dart workspace configuration and valid task values.",
     requiredScopes: [],
     inputSchema: s.object("No parameters are required to retrieve Dart configuration.", {}),
@@ -389,6 +390,7 @@ export const dartActions: ProviderActionDefinition<DartActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "List Dart tasks with documented filters, ordering, and pagination.",
     requiredScopes: [],
     inputSchema: listTasksInputSchema,
@@ -396,6 +398,7 @@ export const dartActions: ProviderActionDefinition<DartActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "get_task",
+    operationType: "read",
     description: "Retrieve a Dart task by its ID.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The Dart task lookup request.", { id: taskIdSchema }),
@@ -403,6 +406,7 @@ export const dartActions: ProviderActionDefinition<DartActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "create_task",
+    operationType: "write",
     description: "Create a Dart task using the official item wrapper.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The official Dart create task request.", {
@@ -412,6 +416,7 @@ export const dartActions: ProviderActionDefinition<DartActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "update_task",
+    operationType: "write",
     description: "Update a Dart task using its item ID and the official item wrapper.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The official Dart update task request.", {
@@ -421,6 +426,7 @@ export const dartActions: ProviderActionDefinition<DartActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "delete_task",
+    operationType: "destructive",
     description: "Move a Dart task to trash and return the updated task.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The Dart task delete request.", { id: taskIdSchema }),

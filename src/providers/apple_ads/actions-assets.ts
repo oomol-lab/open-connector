@@ -220,6 +220,7 @@ const appLocaleDetailsResource = looseResource(
 export const appleAdsAssetActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_assets",
+    operationType: "read",
     description:
       "Search the creative assets of one ad account. Soft-deleted assets and variant crops are excluded from the results; filter on deleted to include soft-deleted assets, and read a variant with get_asset. Filter on promotedObjectId to scope the query to one app or brand, because an unfiltered query spans every promoted object in the ad account.",
     requiredScopes: [],
@@ -244,6 +245,7 @@ export const appleAdsAssetActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_asset",
+    operationType: "read",
     description:
       "Read one creative asset by identifier, including its eligibility status. Apple Ads returns the asset regardless of its deleted state, and this is the only way to read a variant crop, which query_assets omits.",
     requiredScopes: [],
@@ -257,6 +259,7 @@ export const appleAdsAssetActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_asset",
+    operationType: "destructive",
     description:
       "Soft-delete one creative asset. Only assets uploaded through the Apple Ads API can be deleted, deleting an already deleted asset fails with 404, and get_asset keeps returning the record with deleted set to true.",
     requiredScopes: [],
@@ -273,6 +276,7 @@ export const appleAdsAssetActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_product_pages",
+    operationType: "read",
     description:
       "Search the App Store product pages available to one ad account, covering default product pages, custom product pages and product page optimization variants. Filter on adamId to list the pages of a single app, because an unfiltered query spans every app the ad account can reach. Product pages come from App Store Connect and appear here after a short propagation delay.",
     requiredScopes: [],
@@ -297,6 +301,7 @@ export const appleAdsAssetActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product_page",
+    operationType: "read",
     description:
       "Read one App Store product page by identifier. Use query_product_pages to discover the identifiers of an app's product pages first.",
     requiredScopes: [],
@@ -313,6 +318,7 @@ export const appleAdsAssetActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_product_page_locale_details",
+    operationType: "read",
     description:
       "Read the localized content of one custom product page: the localized app name, subtitle, promotional text and the screenshots and preview videos grouped by device type. A filter on productPageId is required; without a languageCode filter Apple Ads returns every locale configured for the page.",
     requiredScopes: [],
@@ -338,6 +344,7 @@ export const appleAdsAssetActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_app_locale_details",
+    operationType: "read",
     description:
       "Read the localized content of one app's default product page, identified by the app's adamId. It returns every locale configured for the default product page unless a languageCode filter narrows it. Custom product pages are not covered here: use query_product_page_locale_details for those.",
     requiredScopes: [],

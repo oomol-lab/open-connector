@@ -302,6 +302,7 @@ const listPoolTradesInput = s.object(
 export const coingeckoOnchainActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_onchain_networks",
+    operationType: "read",
     description:
       "List a page of GeckoTerminal network IDs and their CoinGecko asset platform mappings. Use network IDs such as eth for onchain actions.",
     requiredScopes: [],
@@ -310,6 +311,7 @@ export const coingeckoOnchainActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_onchain_pools",
+    operationType: "read",
     description:
       "Search DEX pools by pool address, token address, name or symbol, optionally filtered by network. Returns up to 20 pools per page; pages beyond 10 require Analyst or above.",
     requiredScopes: [],
@@ -318,6 +320,7 @@ export const coingeckoOnchainActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_onchain_token",
+    operationType: "read",
     description:
       "Get token price, supply, volume and token reserve value across pools, with optional top pools. Prices follow the upstream selected pool; unavailable market capitalization remains null.",
     requiredScopes: [],
@@ -326,6 +329,7 @@ export const coingeckoOnchainActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_onchain_token_info",
+    operationType: "read",
     description:
       "Get token project metadata and available GeckoTerminal verification, holder and authority signals. Field availability varies by network and does not constitute a safety assessment.",
     requiredScopes: [],
@@ -334,6 +338,7 @@ export const coingeckoOnchainActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_token_pools",
+    operationType: "read",
     description:
       "List up to 20 pools for a token per page, with sorting and related resources. The default sort combines 24-hour volume and liquidity; pages beyond 10 require Analyst or above.",
     requiredScopes: [],
@@ -342,6 +347,7 @@ export const coingeckoOnchainActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_onchain_pool",
+    operationType: "read",
     description:
       "Get prices, reserves and activity for one explicitly selected DEX pool, with optional token and DEX resources, composition and volume breakdown.",
     requiredScopes: [],
@@ -350,6 +356,7 @@ export const coingeckoOnchainActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_pool_ohlcv",
+    operationType: "read",
     description:
       "Get OHLCV candles for an explicit pool and token direction. Timestamps are UNIX seconds. Empty intervals are omitted unless requested. Each request covers at most six months; accessible history depends on plan and pool tracking. Second timeframes require eligible paid access.",
     requiredScopes: [],
@@ -378,6 +385,7 @@ export const coingeckoOnchainActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pool_trades",
+    operationType: "read",
     description:
       "List the latest 300 trades within the past 24 hours for a pool, optionally filtered by USD volume and token direction. This is not complete transaction history or a complete capital-flow dataset.",
     requiredScopes: [],

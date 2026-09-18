@@ -30,6 +30,7 @@ const listingOutputSchema = s.object("A normalized page of Reddit posts.", {
 
 function action(input: {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -44,6 +45,7 @@ function action(input: {
 export const redditActions: ActionDefinition[] = [
   action({
     name: "get_me",
+    operationType: "read",
     description: "Get the profile of the authenticated Reddit account.",
     requiredScopes: [redditIdentityScope],
     inputSchema: s.object({}, { description: "The input payload for the authenticated Reddit profile." }),
@@ -51,6 +53,7 @@ export const redditActions: ActionDefinition[] = [
   }),
   action({
     name: "list_posts",
+    operationType: "read",
     description: "List posts from a subreddit using a supported Reddit sort order.",
     requiredScopes: [redditReadScope],
     inputSchema: s.object(
@@ -73,6 +76,7 @@ export const redditActions: ActionDefinition[] = [
   }),
   action({
     name: "search_posts",
+    operationType: "read",
     description: "Search Reddit posts globally or within one subreddit.",
     requiredScopes: [redditReadScope],
     inputSchema: s.object(
@@ -92,6 +96,7 @@ export const redditActions: ActionDefinition[] = [
   }),
   action({
     name: "get_post_comments",
+    operationType: "read",
     description: "Get a Reddit post and its comment tree.",
     requiredScopes: [redditReadScope],
     inputSchema: s.object(
@@ -121,6 +126,7 @@ export const redditActions: ActionDefinition[] = [
   }),
   action({
     name: "create_post",
+    operationType: "write",
     description: "Create a text or link post in a subreddit as the authenticated Reddit user.",
     requiredScopes: [redditSubmitScope],
     inputSchema: s.object(
@@ -146,6 +152,7 @@ export const redditActions: ActionDefinition[] = [
   }),
   action({
     name: "create_comment",
+    operationType: "write",
     description: "Reply to a Reddit post or comment as the authenticated Reddit user.",
     requiredScopes: [redditSubmitScope],
     inputSchema: s.object("The input payload for creating a Reddit comment.", {
@@ -156,6 +163,7 @@ export const redditActions: ActionDefinition[] = [
   }),
   action({
     name: "edit_content",
+    operationType: "destructive",
     description: "Replace the body of the authenticated user's Reddit comment or text post.",
     requiredScopes: [redditEditScope],
     inputSchema: s.object("The input payload for editing Reddit content.", {
@@ -166,6 +174,7 @@ export const redditActions: ActionDefinition[] = [
   }),
   action({
     name: "delete_content",
+    operationType: "destructive",
     description: "Permanently delete the authenticated user's Reddit post or comment.",
     requiredScopes: [redditEditScope],
     inputSchema: s.object("The input payload for deleting Reddit content.", { fullname: fullnameSchema }),

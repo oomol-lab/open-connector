@@ -77,6 +77,7 @@ const prospectDepurationConfigSchema = s.object(
 export const sendsparkActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_dynamic_campaigns",
+    operationType: "read",
     description: "List Sendspark dynamic video campaigns in a workspace with optional pagination and search filters.",
     inputSchema: s.actionInput(
       {
@@ -104,6 +105,7 @@ export const sendsparkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dynamic_campaign",
+    operationType: "read",
     description: "Get one Sendspark dynamic video campaign by workspace and campaign ID.",
     inputSchema: s.actionInput(
       {
@@ -123,6 +125,7 @@ export const sendsparkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_dynamic_campaign",
+    operationType: "write",
     description: "Create a Sendspark dynamic video campaign in a workspace.",
     inputSchema: s.actionInput(
       {
@@ -142,6 +145,7 @@ export const sendsparkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_prospect",
+    operationType: "write",
     description: "Add a prospect to a Sendspark dynamic video campaign.",
     inputSchema: s.actionInput(
       {
@@ -166,6 +170,7 @@ export const sendsparkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_prospect_by_email",
+    operationType: "read",
     description:
       "Get Sendspark prospect data by email for a dynamic campaign, including generated video URLs when available.",
     inputSchema: s.actionInput(

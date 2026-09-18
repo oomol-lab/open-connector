@@ -1345,6 +1345,7 @@ interface RuntimeActionSearchResult {
   service: string;
   name: string;
   description: string;
+  operationType: RuntimeActionDefinition["operationType"];
   authenticated: boolean;
   inputSchema: RuntimeActionDefinition["inputSchema"];
   outputSchema: RuntimeActionDefinition["outputSchema"];
@@ -1360,6 +1361,7 @@ function serializeActionSearchResult(
     service: result.service,
     name: result.name,
     description: result.description,
+    operationType: action.operationType,
     authenticated,
     inputSchema: action.inputSchema,
     outputSchema: action.outputSchema,

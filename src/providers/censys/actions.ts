@@ -36,6 +36,7 @@ export const censysActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "get_host",
+    operationType: "read",
     description: "Get one Censys Global Data host asset by host ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -56,6 +57,7 @@ export const censysActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "get_certificate",
+    operationType: "read",
     description: "Get one Censys Global Data certificate asset by certificate ID.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for retrieving one Censys certificate asset.", {
@@ -71,6 +73,7 @@ export const censysActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "get_web_property",
+    operationType: "read",
     description: "Get one Censys Global Data web property asset by web property ID.",
     requiredScopes: [],
     inputSchema: s.object(

@@ -241,6 +241,7 @@ const deleteOutputSchema = s.actionOutput(
 export const hookdeckActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_connections",
+    operationType: "read",
     description: "List Hookdeck connections with optional filters and cursor pagination.",
     inputSchema: connectionListInputSchema,
     outputSchema: s.actionOutput(
@@ -255,6 +256,7 @@ export const hookdeckActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_connection",
+    operationType: "read",
     description: "Get one Hookdeck connection by ID.",
     inputSchema: connectionIdInputSchema,
     outputSchema: s.actionOutput(
@@ -267,6 +269,7 @@ export const hookdeckActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_connection",
+    operationType: "write",
     description: "Create a Hookdeck connection and optionally create or bind its source and destination.",
     inputSchema: connectionCreateInputSchema,
     outputSchema: s.actionOutput(
@@ -279,6 +282,7 @@ export const hookdeckActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_connection",
+    operationType: "write",
     description: "Update a Hookdeck connection by ID.",
     inputSchema: connectionUpdateInputSchema,
     outputSchema: s.actionOutput(
@@ -291,12 +295,14 @@ export const hookdeckActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_connection",
+    operationType: "destructive",
     description: "Delete a Hookdeck connection by ID.",
     inputSchema: connectionIdInputSchema,
     outputSchema: deleteOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_sources",
+    operationType: "read",
     description: "List Hookdeck sources with optional filters and cursor pagination.",
     inputSchema: listInputSchema,
     outputSchema: s.actionOutput(
@@ -311,6 +317,7 @@ export const hookdeckActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_source",
+    operationType: "read",
     description: "Get one Hookdeck source by ID.",
     inputSchema: sourceIdInputSchema,
     outputSchema: s.actionOutput(
@@ -323,6 +330,7 @@ export const hookdeckActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_source",
+    operationType: "write",
     description: "Create a Hookdeck source.",
     inputSchema: sourceCreateInputSchema,
     outputSchema: s.actionOutput(
@@ -335,6 +343,7 @@ export const hookdeckActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_source",
+    operationType: "write",
     description: "Update a Hookdeck source by ID.",
     inputSchema: sourceUpdateInputSchema,
     outputSchema: s.actionOutput(
@@ -347,12 +356,14 @@ export const hookdeckActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_source",
+    operationType: "destructive",
     description: "Delete a Hookdeck source by ID.",
     inputSchema: sourceIdInputSchema,
     outputSchema: deleteOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_destinations",
+    operationType: "read",
     description: "List Hookdeck destinations with optional filters and cursor pagination.",
     inputSchema: listInputSchema,
     outputSchema: s.actionOutput(
@@ -367,6 +378,7 @@ export const hookdeckActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_destination",
+    operationType: "read",
     description: "Get one Hookdeck destination by ID.",
     inputSchema: destinationIdInputSchema,
     outputSchema: s.actionOutput(
@@ -379,6 +391,7 @@ export const hookdeckActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_destination",
+    operationType: "write",
     description: "Create a Hookdeck destination.",
     inputSchema: destinationCreateInputSchema,
     outputSchema: s.actionOutput(
@@ -391,6 +404,7 @@ export const hookdeckActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_destination",
+    operationType: "write",
     description: "Update a Hookdeck destination by ID.",
     inputSchema: destinationUpdateInputSchema,
     outputSchema: s.actionOutput(
@@ -403,6 +417,7 @@ export const hookdeckActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_destination",
+    operationType: "destructive",
     description: "Delete a Hookdeck destination by ID.",
     inputSchema: destinationIdInputSchema,
     outputSchema: deleteOutputSchema,

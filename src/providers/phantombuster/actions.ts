@@ -39,12 +39,14 @@ const container = s.looseObject("A Phantombuster container, with upstream fields
 export const phantombusterActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_organization",
+    operationType: "read",
     description: "Get the current Phantombuster organization for the connected API key.",
     inputSchema: s.object("Input parameters for getting the current organization.", {}),
     outputSchema: s.object("The current Phantombuster organization.", { organization }),
   }),
   defineProviderAction(service, {
     name: "list_agents",
+    operationType: "read",
     description: "List all Phantombuster agents in the current organization.",
     inputSchema: s.object("Input parameters for listing Phantombuster agents.", {}),
     outputSchema: s.object("All Phantombuster agents in the current organization.", {
@@ -53,12 +55,14 @@ export const phantombusterActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_agent",
+    operationType: "read",
     description: "Get a Phantombuster agent by ID.",
     inputSchema: s.object("Input parameters for getting a Phantombuster agent.", { id }),
     outputSchema: s.object("The requested Phantombuster agent.", { agent }),
   }),
   defineProviderAction(service, {
     name: "launch_agent",
+    operationType: "write",
     description: "Add a Phantombuster agent to the launch queue.",
     inputSchema: s.object(
       "Input parameters for launching a Phantombuster agent.",
@@ -102,6 +106,7 @@ export const phantombusterActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "stop_agent",
+    operationType: "destructive",
     description: "Stop a Phantombuster agent.",
     inputSchema: s.object(
       "Input parameters for stopping a Phantombuster agent.",
@@ -118,6 +123,7 @@ export const phantombusterActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_containers",
+    operationType: "read",
     description: "List containers associated with a Phantombuster agent.",
     inputSchema: s.object("Input parameters for listing Phantombuster containers.", {
       agentId: id,
@@ -133,6 +139,7 @@ export const phantombusterActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_container",
+    operationType: "read",
     description: "Get a Phantombuster container by ID.",
     inputSchema: s.object("Input parameters for getting a Phantombuster container.", { id }),
     outputSchema: s.object("The requested Phantombuster container.", { container }),

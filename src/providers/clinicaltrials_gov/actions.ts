@@ -253,6 +253,7 @@ const listSizeStatisticSchema = s.looseRequiredObject(
 export const clinicalTrialsGovActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_studies",
+    operationType: "read",
     description:
       "Search ClinicalTrials.gov studies with official Essie queries, filters, field selection, sorting, and cursor pagination.",
     inputSchema: s.object(
@@ -332,6 +333,7 @@ export const clinicalTrialsGovActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_study",
+    operationType: "read",
     description: "Get one ClinicalTrials.gov study by NCT identifier.",
     inputSchema: s.object(
       "Input parameters for getting one ClinicalTrials.gov study.",
@@ -349,6 +351,7 @@ export const clinicalTrialsGovActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_studies_by_nct_ids",
+    operationType: "read",
     description:
       "Get multiple ClinicalTrials.gov studies by NCT identifier and report identifiers that were not found.",
     inputSchema: s.object(
@@ -372,6 +375,7 @@ export const clinicalTrialsGovActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_study_eligibility",
+    operationType: "read",
     description:
       "Get patient-facing eligibility criteria, age and sex requirements, and study population details for one ClinicalTrials.gov study.",
     inputSchema: s.object(
@@ -392,6 +396,7 @@ export const clinicalTrialsGovActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_study_locations",
+    operationType: "read",
     description:
       "Get study sites, geographic coordinates, central contacts, local contacts, and study officials for one ClinicalTrials.gov study.",
     inputSchema: s.object("Input parameters for getting study locations.", {
@@ -409,6 +414,7 @@ export const clinicalTrialsGovActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_study_results",
+    operationType: "read",
     description:
       "Get posted participant flow, baseline characteristics, outcome measures, adverse events, and result notes for one ClinicalTrials.gov study.",
     inputSchema: s.object(
@@ -431,6 +437,7 @@ export const clinicalTrialsGovActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_study_documents",
+    operationType: "read",
     description:
       "List uploaded study protocols, statistical analysis plans, and informed consent forms with their official metadata.",
     inputSchema: s.object("Input parameters for listing uploaded study documents.", {
@@ -448,6 +455,7 @@ export const clinicalTrialsGovActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_study_metadata",
+    operationType: "read",
     description: "Get the official ClinicalTrials.gov study data model and field definitions.",
     inputSchema: s.object(
       "Input parameters for getting the study data model.",
@@ -466,6 +474,7 @@ export const clinicalTrialsGovActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_search_areas",
+    operationType: "read",
     description: "List the official ClinicalTrials.gov search documents, areas, parameters, and indexed pieces.",
     inputSchema: s.object("This action does not require input.", {}),
     outputSchema: s.object("The official ClinicalTrials.gov search area documents.", {
@@ -475,6 +484,7 @@ export const clinicalTrialsGovActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_enums",
+    operationType: "read",
     description: "List official ClinicalTrials.gov enumeration types, values, legacy values, and field usages.",
     inputSchema: s.object("This action does not require input.", {}),
     outputSchema: s.object("The official ClinicalTrials.gov enumeration definitions.", {
@@ -502,6 +512,7 @@ export const clinicalTrialsGovActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_registry_size_statistics",
+    operationType: "read",
     description: "Get ClinicalTrials.gov registry counts and the distribution of study JSON record sizes.",
     inputSchema: s.object("This action does not require input.", {}),
     outputSchema: s.object("ClinicalTrials.gov study JSON size statistics.", {
@@ -529,6 +540,7 @@ export const clinicalTrialsGovActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_field_value_statistics",
+    operationType: "read",
     description: "Get value statistics for selected ClinicalTrials.gov leaf fields or field data types.",
     inputSchema: s.object(
       "Input parameters for getting field value statistics.",
@@ -549,6 +561,7 @@ export const clinicalTrialsGovActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_list_field_size_statistics",
+    operationType: "read",
     description: "Get observed list-size statistics for selected ClinicalTrials.gov array fields.",
     inputSchema: s.object(
       "Input parameters for getting list field size statistics.",
@@ -566,6 +579,7 @@ export const clinicalTrialsGovActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_api_version",
+    operationType: "read",
     description: "Get the current ClinicalTrials.gov API version and daily data refresh timestamp.",
     inputSchema: s.object("This action does not require input.", {}),
     outputSchema: s.object("The current ClinicalTrials.gov API and data versions.", {

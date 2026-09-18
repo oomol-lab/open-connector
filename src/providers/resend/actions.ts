@@ -204,6 +204,7 @@ function getAttachmentInput(description: string): JsonSchema {
 export const resendActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_email",
+    operationType: "write",
     description: "Send an email with Resend.",
     inputSchema: {
       ...s.object(
@@ -225,6 +226,7 @@ export const resendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_batch_emails",
+    operationType: "write",
     description: "Send up to 100 emails in one Resend batch request.",
     inputSchema: s.object(
       "Emails and request options for a Resend batch send.",
@@ -249,6 +251,7 @@ export const resendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sent_emails",
+    operationType: "read",
     description: "List emails sent by the authenticated Resend team.",
     requiredScopes: fullAccessScopes,
     inputSchema: listInput("Cursor pagination for sent Resend emails."),
@@ -259,6 +262,7 @@ export const resendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_sent_email",
+    operationType: "read",
     description: "Retrieve one sent Resend email, including its message content and delivery state.",
     requiredScopes: fullAccessScopes,
     inputSchema: s.object("The sent email to retrieve.", { emailId: emailIdSchema }),
@@ -266,6 +270,7 @@ export const resendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_scheduled_email",
+    operationType: "write",
     description: "Change the delivery time of a scheduled Resend email.",
     requiredScopes: fullAccessScopes,
     inputSchema: s.object("The scheduled email and its new delivery time.", {
@@ -276,6 +281,7 @@ export const resendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "cancel_scheduled_email",
+    operationType: "destructive",
     description: "Cancel a scheduled Resend email before delivery.",
     requiredScopes: fullAccessScopes,
     inputSchema: s.object("The scheduled email to cancel.", { emailId: emailIdSchema }),
@@ -283,6 +289,7 @@ export const resendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sent_email_attachments",
+    operationType: "read",
     description: "List attachments for a sent Resend email.",
     requiredScopes: fullAccessScopes,
     inputSchema: attachmentListInput("The sent email and cursor pagination for its attachments."),
@@ -293,6 +300,7 @@ export const resendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_sent_email_attachment",
+    operationType: "read",
     description: "Retrieve one attachment from a sent Resend email, including its temporary download URL.",
     requiredScopes: fullAccessScopes,
     inputSchema: getAttachmentInput("The sent email attachment to retrieve."),
@@ -300,6 +308,7 @@ export const resendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_received_emails",
+    operationType: "read",
     description: "List emails received by the authenticated Resend team.",
     requiredScopes: fullAccessScopes,
     inputSchema: listInput("Cursor pagination for received Resend emails."),
@@ -310,6 +319,7 @@ export const resendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_received_email",
+    operationType: "read",
     description: "Retrieve one received Resend email, including its content, headers, and attachment metadata.",
     requiredScopes: fullAccessScopes,
     inputSchema: s.object("The received email to retrieve.", { emailId: emailIdSchema }),
@@ -317,6 +327,7 @@ export const resendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_received_email_attachments",
+    operationType: "read",
     description: "List attachments for a received Resend email.",
     requiredScopes: fullAccessScopes,
     inputSchema: attachmentListInput("The received email and cursor pagination for its attachments."),
@@ -327,6 +338,7 @@ export const resendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_received_email_attachment",
+    operationType: "read",
     description: "Retrieve one attachment from a received Resend email, including its temporary download URL.",
     requiredScopes: fullAccessScopes,
     inputSchema: getAttachmentInput("The received email attachment to retrieve."),

@@ -188,30 +188,35 @@ const searchArticlesOutputSchema = s.object("Elevio article search response.", {
 export const elevioActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_categories",
+    operationType: "read",
     description: "List Elevio knowledge base categories.",
     inputSchema: s.object("Input parameters for listing Elevio categories.", {}),
     outputSchema: listCategoriesOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_category",
+    operationType: "read",
     description: "Get one Elevio knowledge base category by ID.",
     inputSchema: idInputSchema,
     outputSchema: getCategoryOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_articles",
+    operationType: "read",
     description: "List Elevio knowledge base articles with optional pagination and filters.",
     inputSchema: listArticlesInputSchema,
     outputSchema: listArticlesOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_article",
+    operationType: "read",
     description: "Get one Elevio knowledge base article by ID.",
     inputSchema: idInputSchema,
     outputSchema: getArticleOutputSchema,
   }),
   defineProviderAction(service, {
     name: "search_articles",
+    operationType: "read",
     description: "Search Elevio articles in a language with optional access filters.",
     inputSchema: searchArticlesInputSchema,
     outputSchema: searchArticlesOutputSchema,

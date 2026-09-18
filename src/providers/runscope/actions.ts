@@ -186,6 +186,7 @@ const listTestResultsOutputSchema = s.object("Runscope test result list response
 export const runscopeActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Get details for the authenticated Runscope account.",
     requiredScopes: [],
     inputSchema: s.object("Input for getting the authenticated Runscope account.", {}),
@@ -193,6 +194,7 @@ export const runscopeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_buckets",
+    operationType: "read",
     description: "List Runscope API Monitoring buckets accessible to the authenticated account.",
     requiredScopes: [],
     inputSchema: listBucketsInputSchema,
@@ -200,6 +202,7 @@ export const runscopeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_bucket",
+    operationType: "read",
     description: "Get details for a Runscope API Monitoring bucket.",
     requiredScopes: [],
     inputSchema: getBucketInputSchema,
@@ -207,6 +210,7 @@ export const runscopeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tests",
+    operationType: "read",
     description: "List Runscope API Monitoring tests in a bucket.",
     requiredScopes: [],
     inputSchema: listTestsInputSchema,
@@ -214,6 +218,7 @@ export const runscopeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_test",
+    operationType: "read",
     description: "Get details for a Runscope API Monitoring test.",
     requiredScopes: [],
     inputSchema: getTestInputSchema,
@@ -221,6 +226,7 @@ export const runscopeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_environments",
+    operationType: "read",
     description: "List shared Runscope environments in a bucket.",
     requiredScopes: [],
     inputSchema: listEnvironmentsInputSchema,
@@ -228,6 +234,7 @@ export const runscopeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_test_results",
+    operationType: "read",
     description: "List recent Runscope API Monitoring results for a test.",
     requiredScopes: [],
     inputSchema: listTestResultsInputSchema,

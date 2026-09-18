@@ -37,6 +37,7 @@ const recordSummarySchema = s.looseRequiredObject("An AnyDB record summary retur
 export const anydbActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_teams",
+    operationType: "read",
     requiredScopes: [],
     description: "List the AnyDB teams accessible to the connected account.",
     inputSchema: s.object("No input is required to list accessible AnyDB teams.", {}),
@@ -46,6 +47,7 @@ export const anydbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_databases",
+    operationType: "read",
     requiredScopes: [],
     description: "List the AnyDB databases in a team.",
     inputSchema: s.object("The team whose databases should be listed.", {
@@ -57,6 +59,7 @@ export const anydbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_records",
+    operationType: "read",
     requiredScopes: [],
     description: "List records in an AnyDB database with cursor pagination and optional hierarchy filters.",
     inputSchema: s.object(
@@ -85,6 +88,7 @@ export const anydbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_record",
+    operationType: "read",
     requiredScopes: [],
     description: "Get one AnyDB record with its metadata and cell content.",
     inputSchema: s.object("The identifiers of the record to retrieve.", {
@@ -96,6 +100,7 @@ export const anydbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_records",
+    operationType: "read",
     requiredScopes: [],
     description: "Search records in an AnyDB database by keyword.",
     inputSchema: s.object(
@@ -114,6 +119,7 @@ export const anydbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_record",
+    operationType: "write",
     requiredScopes: [],
     description: "Create a structured record in an AnyDB database.",
     inputSchema: s.object(
@@ -132,6 +138,7 @@ export const anydbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_record",
+    operationType: "write",
     requiredScopes: [],
     description: "Update the metadata or cell content of an AnyDB record.",
     inputSchema: s.object(

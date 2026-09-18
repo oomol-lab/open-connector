@@ -137,6 +137,7 @@ const orderSchema = s.looseObject("Stay AI order object.", {
 export const stayAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_settings",
+    operationType: "read",
     description: "Retrieve account-level Stay AI settings for the current API key.",
     inputSchema: accountSettingsInputSchema,
     outputSchema: s.object(
@@ -149,6 +150,7 @@ export const stayAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subscriptions",
+    operationType: "read",
     description: "Query Stay AI subscriptions with documented filters, sorting, and pagination.",
     inputSchema: subscriptionListInputSchema,
     outputSchema: s.object(
@@ -162,6 +164,7 @@ export const stayAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_subscription",
+    operationType: "read",
     description: "Retrieve a Stay AI subscription by Shopify or internal subscription ID.",
     inputSchema: subscriptionIdInputSchema,
     outputSchema: s.object(
@@ -174,6 +177,7 @@ export const stayAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description: "Query Stay AI orders with documented filters, sorting, and pagination.",
     inputSchema: orderListInputSchema,
     outputSchema: s.object(

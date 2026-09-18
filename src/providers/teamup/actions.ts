@@ -15,6 +15,7 @@ const subcalendarSchema = s.looseObject("The subcalendar object returned by Team
 
 const listEventsAction = defineProviderAction(service, {
   name: "list_events",
+  operationType: "read",
   description: "List events from a Teamup calendar over an optional date range.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -36,6 +37,7 @@ const listEventsAction = defineProviderAction(service, {
 
 const getEventAction = defineProviderAction(service, {
   name: "get_event",
+  operationType: "read",
   description: "Get one Teamup calendar event by its identifier.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -66,6 +68,7 @@ const eventWriteFields = {
 
 const createEventAction = defineProviderAction(service, {
   name: "create_event",
+  operationType: "write",
   description: "Create an event in a Teamup calendar.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -80,6 +83,7 @@ const createEventAction = defineProviderAction(service, {
 
 const updateEventAction = defineProviderAction(service, {
   name: "update_event",
+  operationType: "write",
   description: "Update selected fields of an existing Teamup calendar event.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -113,6 +117,7 @@ const updateEventAction = defineProviderAction(service, {
 
 const deleteEventAction = defineProviderAction(service, {
   name: "delete_event",
+  operationType: "destructive",
   description: "Delete an event from a Teamup calendar.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for deleting a Teamup event.", {
@@ -126,6 +131,7 @@ const deleteEventAction = defineProviderAction(service, {
 
 const listSubcalendarsAction = defineProviderAction(service, {
   name: "list_subcalendars",
+  operationType: "read",
   description: "List subcalendars available through a Teamup calendar key or identifier.",
   requiredScopes: [],
   inputSchema: s.object(

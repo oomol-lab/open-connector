@@ -129,6 +129,7 @@ const listInputSchema = s.object(
 
 const listStreamsAction = defineProviderAction(service, {
   name: "list_streams",
+  operationType: "read",
   description: "List TextPeak streams in the CommPeak account.",
   inputSchema: listInputSchema,
   outputSchema: s.requiredObject("The TextPeak streams returned by CommPeak.", {
@@ -138,6 +139,7 @@ const listStreamsAction = defineProviderAction(service, {
 
 const getStreamAction = defineProviderAction(service, {
   name: "get_stream",
+  operationType: "read",
   description: "Retrieve one TextPeak stream by ID.",
   inputSchema: s.requiredObject("Input for retrieving one TextPeak stream.", {
     streamId: streamIdSchema,
@@ -149,6 +151,7 @@ const getStreamAction = defineProviderAction(service, {
 
 const getStreamTokenAction = defineProviderAction(service, {
   name: "get_stream_token",
+  operationType: "read",
   description: "Retrieve the stream token used to call TextPeak messaging endpoints.",
   inputSchema: s.requiredObject("Input for retrieving one TextPeak stream token.", {
     streamId: streamIdSchema,
@@ -160,6 +163,7 @@ const getStreamTokenAction = defineProviderAction(service, {
 
 const listSendersAction = defineProviderAction(service, {
   name: "list_senders",
+  operationType: "read",
   description: "List TextPeak sender identities in the CommPeak account.",
   inputSchema: listInputSchema,
   outputSchema: s.requiredObject("The TextPeak sender identities returned by CommPeak.", {
@@ -169,6 +173,7 @@ const listSendersAction = defineProviderAction(service, {
 
 const listDomainsAction = defineProviderAction(service, {
   name: "list_domains",
+  operationType: "read",
   description: "List TextPeak domains in the CommPeak account.",
   inputSchema: listInputSchema,
   outputSchema: s.requiredObject("The TextPeak domains returned by CommPeak.", {
@@ -178,6 +183,7 @@ const listDomainsAction = defineProviderAction(service, {
 
 const listMessagesAction = defineProviderAction(service, {
   name: "list_messages",
+  operationType: "read",
   description: "List outgoing TextPeak messages with optional filters.",
   inputSchema: s.object(
     "Input filters for listing outgoing TextPeak messages.",
@@ -203,6 +209,7 @@ const listMessagesAction = defineProviderAction(service, {
 
 const listIncomingMessagesAction = defineProviderAction(service, {
   name: "list_incoming_messages",
+  operationType: "read",
   description: "List incoming TextPeak messages with optional filters.",
   inputSchema: s.object(
     "Input filters for listing incoming TextPeak messages.",
@@ -227,6 +234,7 @@ const listIncomingMessagesAction = defineProviderAction(service, {
 
 const sendSmsAction = defineProviderAction(service, {
   name: "send_sms",
+  operationType: "write",
   description:
     "Send one or more SMS messages through a TextPeak stream, fetching the stream token with the API key before sending.",
   inputSchema: s.object(

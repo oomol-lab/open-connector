@@ -23,6 +23,7 @@ export type Docsend2PdfActionName = "convert";
 export const docsend2PdfActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "convert",
+    operationType: "read",
     description: "Convert a DocSend document URL to PDF and return JSON-safe download metadata.",
     requiredScopes: [],
     inputSchema: s.object(

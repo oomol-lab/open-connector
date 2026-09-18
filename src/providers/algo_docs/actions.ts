@@ -72,6 +72,7 @@ const extractedRecordSchema = s.looseRequiredObject(
 export const algoDocsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_me",
+    operationType: "read",
     description: "Get the AlgoDocs account identity for the connected API key.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for getting the AlgoDocs account identity.", {}),
@@ -83,6 +84,7 @@ export const algoDocsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_extractors",
+    operationType: "read",
     description: "List document data extractors in the connected AlgoDocs account.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for listing AlgoDocs extractors.", {}),
@@ -93,6 +95,7 @@ export const algoDocsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_folders",
+    operationType: "read",
     description: "List folders in the connected AlgoDocs file manager.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for listing AlgoDocs folders.", {}),
@@ -103,6 +106,7 @@ export const algoDocsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upload_document_from_url",
+    operationType: "write",
     description: "Import a publicly accessible document URL into AlgoDocs for an extractor and folder.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for importing an AlgoDocs document from URL.", {
@@ -117,6 +121,7 @@ export const algoDocsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_extracted_data_by_document",
+    operationType: "read",
     description: "Get extracted data records for one AlgoDocs document ID.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for getting extracted data by document ID.", {
@@ -129,6 +134,7 @@ export const algoDocsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_extracted_data",
+    operationType: "read",
     description:
       "List extracted data records for an AlgoDocs extractor, optionally filtered by folder, limit, and upload date.",
     requiredScopes: [],

@@ -298,6 +298,7 @@ function beaconchainInput(properties: Record<string, JsonSchema>, required: stri
 export const beaconchainActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_staking_queues",
+    operationType: "read",
     description: "Get the current staking queue metrics for the requested Beaconcha.in chain.",
     inputSchema: beaconchainInput(
       {
@@ -309,6 +310,7 @@ export const beaconchainActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_network_performance",
+    operationType: "read",
     description: "Get aggregated Beaconcha.in network performance metrics for a fixed evaluation window.",
     inputSchema: beaconchainInput(
       {
@@ -321,6 +323,7 @@ export const beaconchainActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_validator",
+    operationType: "read",
     description: "Get the current validator snapshot for a single validator identifier.",
     inputSchema: beaconchainInput(
       {
@@ -333,6 +336,7 @@ export const beaconchainActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_validators",
+    operationType: "read",
     description: "List the current validator snapshots for one or more validator identifiers.",
     inputSchema: beaconchainInput(
       {
@@ -347,6 +351,7 @@ export const beaconchainActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_validator_consensus_rewards",
+    operationType: "read",
     description: "Get per-validator reward breakdowns for a finalized Beaconcha.in epoch.",
     inputSchema: beaconchainInput(
       {

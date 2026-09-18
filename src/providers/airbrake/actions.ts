@@ -100,6 +100,7 @@ const noticeStatusInputSchema = s.actionInput(
 export const airbrakeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Airbrake projects visible to the User API key.",
     inputSchema: s.actionInput(
       {
@@ -119,6 +120,7 @@ export const airbrakeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get details for one Airbrake project.",
     inputSchema: projectIdInputSchema,
     outputSchema: s.actionOutput(
@@ -131,6 +133,7 @@ export const airbrakeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_deploys",
+    operationType: "read",
     description: "List deploys for one Airbrake project.",
     inputSchema: s.actionInput(
       {
@@ -151,6 +154,7 @@ export const airbrakeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_deploy",
+    operationType: "read",
     description: "Get details for one Airbrake deploy.",
     inputSchema: projectDeployIdInputSchema,
     outputSchema: s.actionOutput(
@@ -163,6 +167,7 @@ export const airbrakeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List error groups for one Airbrake project with optional filters.",
     inputSchema: s.actionInput(
       {
@@ -190,6 +195,7 @@ export const airbrakeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_group",
+    operationType: "read",
     description: "Get details for one Airbrake error group.",
     inputSchema: groupIdInputSchema,
     outputSchema: s.actionOutput(
@@ -202,6 +208,7 @@ export const airbrakeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_notices",
+    operationType: "read",
     description: "List notices for one Airbrake error group.",
     inputSchema: s.actionInput(
       {
@@ -225,6 +232,7 @@ export const airbrakeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_notice_status",
+    operationType: "read",
     description: "Get Airbrake processing status for a notice UUID.",
     inputSchema: noticeStatusInputSchema,
     outputSchema: statusOutputSchema,

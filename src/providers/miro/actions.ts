@@ -173,6 +173,7 @@ const connectorCaptionSchema = s.object(
 export const miroActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_boards",
+    operationType: "read",
     description: "List Miro boards visible to the connected user with optional team, project, owner, or text filters.",
     requiredScopes: [miroBoardsReadScope],
     inputSchema: s.object(
@@ -201,6 +202,7 @@ export const miroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_board",
+    operationType: "read",
     description: "Get one Miro board by ID.",
     requiredScopes: [miroBoardsReadScope],
     inputSchema: s.object("Miro board identifier.", { boardId: boardIdSchema }),
@@ -208,6 +210,7 @@ export const miroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_board",
+    operationType: "write",
     description: "Create a Miro board with optional team, project, and sharing policy settings.",
     requiredScopes: [miroBoardsWriteScope],
     inputSchema: s.object(
@@ -225,6 +228,7 @@ export const miroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_items",
+    operationType: "read",
     description: "List items on a Miro board with cursor pagination and an optional item-type filter.",
     requiredScopes: [miroBoardsReadScope],
     inputSchema: s.object(
@@ -244,6 +248,7 @@ export const miroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_item",
+    operationType: "read",
     description: "Get one item from a Miro board.",
     requiredScopes: [miroBoardsReadScope],
     inputSchema: s.object("Miro board and item identifiers.", {
@@ -254,6 +259,7 @@ export const miroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_item",
+    operationType: "destructive",
     description: "Delete an item from a Miro board.",
     requiredScopes: [miroBoardsWriteScope],
     inputSchema: s.object("Miro board and item identifiers.", { boardId: boardIdSchema, itemId: itemIdSchema }),
@@ -265,6 +271,7 @@ export const miroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_sticky_note",
+    operationType: "write",
     description: "Create a sticky note on a Miro board with optional style, position, geometry, and parent frame.",
     requiredScopes: [miroBoardsWriteScope],
     inputSchema: s.object(
@@ -283,6 +290,7 @@ export const miroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_text",
+    operationType: "write",
     description: "Create a text item on a Miro board with optional style, position, geometry, and parent frame.",
     requiredScopes: [miroBoardsWriteScope],
     inputSchema: s.object(
@@ -301,6 +309,7 @@ export const miroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_shape",
+    operationType: "write",
     description: "Create a shape on a Miro board.",
     requiredScopes: [miroBoardsWriteScope],
     inputSchema: s.object(
@@ -319,6 +328,7 @@ export const miroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_sticky_note",
+    operationType: "write",
     description: "Update a sticky note on a Miro board.",
     requiredScopes: [miroBoardsWriteScope],
     inputSchema: s.object(
@@ -338,6 +348,7 @@ export const miroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_connector",
+    operationType: "write",
     description: "Create a connector between two items on a Miro board.",
     requiredScopes: [miroBoardsWriteScope],
     inputSchema: s.object(
@@ -356,6 +367,7 @@ export const miroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_connector",
+    operationType: "destructive",
     description: "Delete a connector from a Miro board.",
     requiredScopes: [miroBoardsWriteScope],
     inputSchema: s.object("Miro board and connector identifiers.", {

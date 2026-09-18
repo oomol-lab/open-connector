@@ -95,6 +95,7 @@ const contactWriteOptionalKeys: readonly (keyof typeof contactWriteFields & stri
 
 const sendSms = defineProviderAction(service, {
   name: "send_sms",
+  operationType: "write",
   description: "Send an SMS message through Altiria's REST SMS endpoint.",
   inputSchema: s.object(
     "The input payload for sending an Altiria SMS message.",
@@ -134,6 +135,7 @@ const sendSms = defineProviderAction(service, {
 
 const getSms = defineProviderAction(service, {
   name: "get_sms",
+  operationType: "read",
   description: "Fetch SMS information from Altiria by one or more message identifiers.",
   inputSchema: s.requiredObject("The input payload for fetching Altiria SMS information.", {
     id: s.nonEmptyString("Altiria SMS message identifier, or multiple identifiers separated by commas."),
@@ -146,6 +148,7 @@ const getSms = defineProviderAction(service, {
 
 const listContacts = defineProviderAction(service, {
   name: "list_contacts",
+  operationType: "read",
   description: "List contacts from the connected Altiria account.",
   inputSchema: s.object(
     "The input payload for listing Altiria contacts.",
@@ -165,6 +168,7 @@ const listContacts = defineProviderAction(service, {
 
 const getContact = defineProviderAction(service, {
   name: "get_contact",
+  operationType: "read",
   description: "Fetch one Altiria contact by contact ID.",
   inputSchema: s.object(
     "The input payload for fetching one Altiria contact.",
@@ -182,6 +186,7 @@ const getContact = defineProviderAction(service, {
 
 const createContact = defineProviderAction(service, {
   name: "create_contact",
+  operationType: "write",
   description: "Create a new Altiria contact.",
   inputSchema: s.object("The input payload for creating an Altiria contact.", contactWriteFields, {
     optional: contactWriteOptionalKeys,
@@ -194,6 +199,7 @@ const createContact = defineProviderAction(service, {
 
 const updateContact = defineProviderAction(service, {
   name: "update_contact",
+  operationType: "write",
   description: "Update an existing Altiria contact.",
   inputSchema: s.object(
     "The input payload for updating an Altiria contact.",
@@ -211,6 +217,7 @@ const updateContact = defineProviderAction(service, {
 
 const deleteContact = defineProviderAction(service, {
   name: "delete_contact",
+  operationType: "destructive",
   description: "Delete one Altiria contact by contact ID.",
   inputSchema: s.requiredObject("The input payload for deleting one Altiria contact.", {
     id: s.integer("Altiria contact identifier."),
@@ -222,6 +229,7 @@ const deleteContact = defineProviderAction(service, {
 
 const listGroups = defineProviderAction(service, {
   name: "list_groups",
+  operationType: "read",
   description: "List contact groups from the connected Altiria account.",
   inputSchema: s.object(
     "The input payload for listing Altiria contact groups.",

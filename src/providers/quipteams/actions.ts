@@ -206,6 +206,7 @@ const employeeListInputSchema = s.actionInput(
 export const quipteamsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_quotes",
+    operationType: "read",
     description: "List Quipteams hardware procurement quotes with optional filters and cursor pagination.",
     requiredScopes: ["quotes:read"],
     inputSchema: quoteListInputSchema,
@@ -213,6 +214,7 @@ export const quipteamsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_quote",
+    operationType: "read",
     description: "Retrieve one Quipteams quote including its items, recipients, and alternatives.",
     requiredScopes: ["quotes:read"],
     inputSchema: s.actionInput(
@@ -226,6 +228,7 @@ export const quipteamsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_assets",
+    operationType: "read",
     description: "List Quipteams holding assets with optional inventory filters and cursor pagination.",
     requiredScopes: ["assets:read"],
     inputSchema: assetListInputSchema,
@@ -233,6 +236,7 @@ export const quipteamsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_device_actions",
+    operationType: "read",
     description: "List Quipteams device actions with optional status, type, serial number, and date filters.",
     requiredScopes: ["device_actions:read"],
     inputSchema: deviceActionListInputSchema,
@@ -240,6 +244,7 @@ export const quipteamsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_device_action",
+    operationType: "read",
     description: "Retrieve one Quipteams device action including comments, notes, and status history.",
     requiredScopes: ["device_actions:read"],
     inputSchema: s.actionInput(
@@ -254,6 +259,7 @@ export const quipteamsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List the Quipteams product catalog with optional product and specification filters.",
     requiredScopes: ["products:read"],
     inputSchema: productListInputSchema,
@@ -261,6 +267,7 @@ export const quipteamsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Retrieve one Quipteams product with its active configurations.",
     requiredScopes: ["products:read"],
     inputSchema: s.actionInput(
@@ -274,6 +281,7 @@ export const quipteamsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_kits",
+    operationType: "read",
     description: "List Quipteams reusable kit templates with optional filters and cursor pagination.",
     requiredScopes: ["kits:read"],
     inputSchema: kitListInputSchema,
@@ -281,6 +289,7 @@ export const quipteamsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_kit",
+    operationType: "read",
     description: "Retrieve one Quipteams kit including all device specifications.",
     requiredScopes: ["kits:read"],
     inputSchema: s.actionInput(
@@ -294,6 +303,7 @@ export const quipteamsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_employees",
+    operationType: "read",
     description: "List Quipteams employees synced from HRIS with optional status and search filters.",
     requiredScopes: ["employees:read"],
     inputSchema: employeeListInputSchema,
@@ -301,6 +311,7 @@ export const quipteamsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_employee",
+    operationType: "read",
     description: "Retrieve one Quipteams employee including HRIS metadata.",
     requiredScopes: ["employees:read"],
     inputSchema: s.actionInput(

@@ -178,6 +178,7 @@ const userOptional = [
 export const maintainxActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_work_orders",
+    operationType: "read",
     description: "List MaintainX work orders with filters and cursor pagination.",
     inputSchema: s.object(
       "Query parameters for listing MaintainX work orders.",
@@ -253,6 +254,7 @@ export const maintainxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_work_order",
+    operationType: "read",
     description: "Retrieve one MaintainX work order by global id.",
     inputSchema: s.object(
       "Path and query parameters for retrieving a MaintainX work order.",
@@ -269,6 +271,7 @@ export const maintainxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_work_order",
+    operationType: "write",
     description: "Create a MaintainX work order.",
     inputSchema: s.object(
       "Input payload for creating a MaintainX work order.",
@@ -283,6 +286,7 @@ export const maintainxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_work_order",
+    operationType: "write",
     description: "Update a MaintainX work order.",
     inputSchema: s.object(
       "Input payload for updating a MaintainX work order.",
@@ -300,6 +304,7 @@ export const maintainxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_work_order_status",
+    operationType: "write",
     description: "Update the status of a MaintainX work order.",
     inputSchema: s.object(
       "Input payload for updating a MaintainX work order status.",
@@ -316,6 +321,7 @@ export const maintainxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_work_order_comments",
+    operationType: "read",
     description: "List comments on a MaintainX work order.",
     inputSchema: s.object(
       "Path and query parameters for listing MaintainX work order comments.",
@@ -336,6 +342,7 @@ export const maintainxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_work_order_comment",
+    operationType: "write",
     description: "Create a comment on a MaintainX work order.",
     inputSchema: s.object(
       "Input payload for creating a MaintainX work order comment.",
@@ -350,6 +357,7 @@ export const maintainxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_locations",
+    operationType: "read",
     description: "List MaintainX locations with filters and cursor pagination.",
     inputSchema: s.object(
       "Query parameters for listing MaintainX locations.",
@@ -375,6 +383,7 @@ export const maintainxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_location",
+    operationType: "read",
     description: "Retrieve one MaintainX location by id.",
     inputSchema: s.object("Path parameters for retrieving a MaintainX location.", {
       id: positiveId("MaintainX location id."),
@@ -385,6 +394,7 @@ export const maintainxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_location",
+    operationType: "write",
     description: "Create a MaintainX location.",
     inputSchema: s.object(
       "Input payload for creating a MaintainX location.",
@@ -399,6 +409,7 @@ export const maintainxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_location",
+    operationType: "write",
     description: "Update a MaintainX location.",
     inputSchema: s.object(
       "Input payload for updating a MaintainX location.",
@@ -415,6 +426,7 @@ export const maintainxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_location",
+    operationType: "destructive",
     description: "Delete a MaintainX location by id.",
     inputSchema: s.object(
       "Input payload for deleting a MaintainX location.",
@@ -428,6 +440,7 @@ export const maintainxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List MaintainX users with filters and cursor pagination.",
     inputSchema: s.object(
       "Query parameters for listing MaintainX users.",
@@ -451,6 +464,7 @@ export const maintainxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Retrieve one MaintainX user by id.",
     inputSchema: s.object(
       "Path and query parameters for retrieving a MaintainX user.",
@@ -466,6 +480,7 @@ export const maintainxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_user",
+    operationType: "write",
     description: "Create a MaintainX user.",
     inputSchema: s.object(
       "Input payload for creating a MaintainX user.",
@@ -480,6 +495,7 @@ export const maintainxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_user",
+    operationType: "write",
     description: "Update a MaintainX user.",
     inputSchema: s.object(
       "Input payload for updating a MaintainX user.",

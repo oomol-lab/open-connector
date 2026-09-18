@@ -33,6 +33,7 @@ const pageSchema = s.nullable(s.integer("Current page number when returned by Av
 export const avochatoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_identity",
+    operationType: "read",
     description: "Retrieve the account and user associated with the configured Avochato API tokens.",
     requiredScopes: [],
     inputSchema: s.object("No input is required.", {}),
@@ -45,6 +46,7 @@ export const avochatoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List contacts in the Avochato inbox with cursor-style pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -67,6 +69,7 @@ export const avochatoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contacts",
+    operationType: "read",
     description: "Retrieve one or more Avochato contacts by their identifiers.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -86,6 +89,7 @@ export const avochatoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_contact",
+    operationType: "write",
     description: "Create or update an Avochato contact, matched by phone number.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -144,6 +148,7 @@ export const avochatoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_messages",
+    operationType: "read",
     description: "List or search messages in the Avochato inbox.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -170,6 +175,7 @@ export const avochatoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_message",
+    operationType: "read",
     description: "Retrieve one Avochato message by its Event ID.",
     requiredScopes: [],
     inputSchema: s.object("Event identifier of the message to retrieve.", {
@@ -179,6 +185,7 @@ export const avochatoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send a text message to an Avochato contact phone number.",
     requiredScopes: [],
     inputSchema: s.object(

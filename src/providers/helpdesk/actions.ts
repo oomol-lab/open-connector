@@ -234,6 +234,7 @@ const updateTicketInputSchema = s.object(
 
 const listTicketsAction = defineProviderAction(service, {
   name: "list_tickets",
+  operationType: "read",
   description: "List and search HelpDesk tickets with documented filters and composite cursor pagination.",
   inputSchema: listTicketsInputSchema,
   outputSchema: s.requiredObject("A page of HelpDesk tickets and cursor metadata.", {
@@ -247,6 +248,7 @@ const listTicketsAction = defineProviderAction(service, {
 
 const getTicketAction = defineProviderAction(service, {
   name: "get_ticket",
+  operationType: "read",
   description: "Get one HelpDesk ticket by UUID.",
   inputSchema: s.requiredObject("Input for selecting one HelpDesk ticket.", {
     ticketId: ticketIdSchema,
@@ -258,6 +260,7 @@ const getTicketAction = defineProviderAction(service, {
 
 const createTicketAction = defineProviderAction(service, {
   name: "create_ticket",
+  operationType: "write",
   description:
     "Create a HelpDesk ticket with a requester and plain-text first message; attachment transactions are intentionally excluded.",
   inputSchema: createTicketInputSchema,
@@ -268,6 +271,7 @@ const createTicketAction = defineProviderAction(service, {
 
 const updateTicketAction = defineProviderAction(service, {
   name: "update_ticket",
+  operationType: "write",
   description: "Partially update a HelpDesk ticket and optionally add one plain-text public or private message.",
   inputSchema: updateTicketInputSchema,
   outputSchema: s.requiredObject("The ticket updated by HelpDesk.", {
@@ -277,6 +281,7 @@ const updateTicketAction = defineProviderAction(service, {
 
 const deleteTicketAction = defineProviderAction(service, {
   name: "delete_ticket",
+  operationType: "destructive",
   description: "Delete a HelpDesk ticket by UUID.",
   inputSchema: s.requiredObject("Input for deleting one HelpDesk ticket.", {
     ticketId: ticketIdSchema,
@@ -288,6 +293,7 @@ const deleteTicketAction = defineProviderAction(service, {
 
 const moveTicketToSiloAction = defineProviderAction(service, {
   name: "move_ticket_to_silo",
+  operationType: "destructive",
   description: "Move a HelpDesk ticket between the active, archive, trash, or spam silos.",
   inputSchema: s.requiredObject("Input for moving one HelpDesk ticket.", {
     ticketId: ticketIdSchema,
@@ -300,6 +306,7 @@ const moveTicketToSiloAction = defineProviderAction(service, {
 
 const listAgentsAction = defineProviderAction(service, {
   name: "list_agents",
+  operationType: "read",
   description: "List HelpDesk agents available for ticket assignment and following.",
   inputSchema: s.requiredObject("Input for listing HelpDesk agents.", {}),
   outputSchema: s.requiredObject("The HelpDesk agent list.", {
@@ -309,6 +316,7 @@ const listAgentsAction = defineProviderAction(service, {
 
 const listTeamsAction = defineProviderAction(service, {
   name: "list_teams",
+  operationType: "read",
   description: "List HelpDesk teams available for ticket assignment and visibility.",
   inputSchema: s.requiredObject("Input for listing HelpDesk teams.", {}),
   outputSchema: s.requiredObject("The HelpDesk team list.", {

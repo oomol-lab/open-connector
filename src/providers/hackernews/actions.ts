@@ -125,6 +125,7 @@ export const hackernewsActions: ActionDefinition[] = [
   storyListAction("get_best_stories", "Get the best story IDs from Hacker News ranked by score.", true),
   defineProviderAction(service, {
     name: "get_item",
+    operationType: "read",
     description: "Get a Hacker News item by its numeric ID.",
     inputSchema: s.object(
       {
@@ -140,6 +141,7 @@ export const hackernewsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_item_with_id",
+    operationType: "read",
     description: "Get a Hacker News item with a bounded nested comment tree.",
     inputSchema: s.object(
       {
@@ -182,12 +184,14 @@ export const hackernewsActions: ActionDefinition[] = [
   storyListAction("get_job_stories", "Get the latest job story IDs from Hacker News.", false),
   defineProviderAction(service, {
     name: "get_latest_posts",
+    operationType: "read",
     description: "Get the latest Hacker News posts via Algolia search_by_date.",
     inputSchema: searchInput(false),
     outputSchema: searchOutput("The latest post hits."),
   }),
   defineProviderAction(service, {
     name: "get_max_item_id",
+    operationType: "read",
     description: "Get the current largest Hacker News item ID.",
     inputSchema: prettyInput,
     outputSchema: s.object(
@@ -203,6 +207,7 @@ export const hackernewsActions: ActionDefinition[] = [
   storyListAction("get_top_stories", "Get the top story IDs from Hacker News sorted by front page position.", true),
   defineProviderAction(service, {
     name: "get_updates",
+    operationType: "read",
     description: "Get recently changed items and user profiles from Hacker News.",
     inputSchema: prettyInput,
     outputSchema: s.object(
@@ -218,6 +223,7 @@ export const hackernewsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get a Hacker News user's public profile summary by username.",
     inputSchema: usernameInput(),
     outputSchema: s.nullable(
@@ -236,6 +242,7 @@ export const hackernewsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_by_username",
+    operationType: "read",
     description: "Get a Hacker News user's detailed public profile by username.",
     inputSchema: usernameInput(),
     outputSchema: s.nullable(
@@ -256,6 +263,7 @@ export const hackernewsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_posts",
+    operationType: "read",
     description: "Search Hacker News posts using Algolia full-text search.",
     inputSchema: searchInput(true),
     outputSchema: searchOutput("The search result hits.", { query: s.string() }),
@@ -265,6 +273,7 @@ export const hackernewsActions: ActionDefinition[] = [
 function storyListAction(name: string, description: string, includeCount: boolean): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType: "read",
     description,
     inputSchema: prettyInput,
     outputSchema: includeCount ? countedStoryIdsOutput : storyIdsOutput,

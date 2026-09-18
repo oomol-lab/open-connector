@@ -247,6 +247,7 @@ export function createCanvaActions(service: string): ActionDefinition[] {
   return [
     defineProviderAction(service, {
       name: "get_current_user",
+      operationType: "read",
       description: "Get the Canva user and profile associated with the current OAuth token.",
       requiredScopes: [canvaProviderScopes.profileRead],
       providerPermissions: [canvaProviderScopes.profileRead],
@@ -259,6 +260,7 @@ export function createCanvaActions(service: string): ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "list_designs",
+      operationType: "read",
       description:
         "List metadata for the current Canva user's designs, with optional search, ownership, sorting, and pagination filters.",
       requiredScopes: [canvaProviderScopes.designMetaRead],
@@ -292,6 +294,7 @@ export function createCanvaActions(service: string): ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "get_design",
+      operationType: "read",
       description: "Get metadata for a Canva design, including owner, URLs, and thumbnail details.",
       requiredScopes: [canvaProviderScopes.designMetaRead],
       providerPermissions: [canvaProviderScopes.designMetaRead],
@@ -304,6 +307,7 @@ export function createCanvaActions(service: string): ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "create_design",
+      operationType: "write",
       description:
         "Create a new Canva design from a preset type, custom dimensions, an optional image asset, an existing design, or a brand template.",
       requiredScopes: [canvaProviderScopes.designContentWrite],
@@ -315,6 +319,7 @@ export function createCanvaActions(service: string): ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "list_folder_items",
+      operationType: "read",
       description:
         "List Canva folder contents, including folders, designs, and image assets, with pagination and filtering options.",
       requiredScopes: [canvaProviderScopes.folderRead],
@@ -354,6 +359,7 @@ export function createCanvaActions(service: string): ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "create_folder",
+      operationType: "write",
       description: "Create a Canva folder at the top level, in uploads, or inside another folder.",
       requiredScopes: [canvaProviderScopes.folderWrite],
       providerPermissions: [canvaProviderScopes.folderWrite],
@@ -370,6 +376,7 @@ export function createCanvaActions(service: string): ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "move_folder_item",
+      operationType: "write",
       description: "Move a Canva folder item to another Canva folder.",
       requiredScopes: [canvaProviderScopes.folderWrite],
       providerPermissions: [canvaProviderScopes.folderWrite],
@@ -388,6 +395,7 @@ export function createCanvaActions(service: string): ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "get_asset",
+      operationType: "read",
       description: "Get metadata for a Canva asset, including owner, thumbnail, and type-specific metadata.",
       requiredScopes: [canvaProviderScopes.assetRead],
       providerPermissions: [canvaProviderScopes.assetRead],
@@ -400,6 +408,7 @@ export function createCanvaActions(service: string): ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "get_design_export_formats",
+      operationType: "read",
       description: "List the file formats currently available for exporting a Canva design.",
       requiredScopes: [canvaProviderScopes.designContentRead],
       providerPermissions: [canvaProviderScopes.designContentRead],
@@ -415,6 +424,7 @@ export function createCanvaActions(service: string): ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "create_design_export_job",
+      operationType: "write",
       description: "Start an asynchronous Canva export job for a design and return the job handle for polling.",
       requiredScopes: [canvaProviderScopes.designContentRead],
       providerPermissions: [canvaProviderScopes.designContentRead],
@@ -432,6 +442,7 @@ export function createCanvaActions(service: string): ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "get_design_export_job",
+      operationType: "read",
       description:
         "Get the current status and result URLs for a Canva design export job created by create_design_export_job.",
       requiredScopes: [canvaProviderScopes.designContentRead],
@@ -445,6 +456,7 @@ export function createCanvaActions(service: string): ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "create_url_asset_upload_job",
+      operationType: "write",
       description:
         "Start an asynchronous Canva asset upload job from a publicly accessible URL and return the job handle for polling.",
       requiredScopes: [canvaProviderScopes.assetWrite],
@@ -466,6 +478,7 @@ export function createCanvaActions(service: string): ActionDefinition[] {
     }),
     defineProviderAction(service, {
       name: "get_url_asset_upload_job",
+      operationType: "read",
       description: "Get the current status and uploaded asset metadata for a Canva URL asset upload job.",
       requiredScopes: [canvaProviderScopes.assetRead],
       providerPermissions: [canvaProviderScopes.assetRead],

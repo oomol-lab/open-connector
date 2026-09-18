@@ -83,6 +83,7 @@ const datapointSchema = s.object(
 export const beeminderActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get Beeminder user information, including goals and optional diff-based goal details.",
     inputSchema: s.object(
       "The input payload for reading a Beeminder user.",
@@ -109,6 +110,7 @@ export const beeminderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_goals",
+    operationType: "read",
     description: "List active Beeminder goals for a user.",
     inputSchema: s.object(
       "The input payload for listing active Beeminder goals.",
@@ -127,6 +129,7 @@ export const beeminderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_archived_goals",
+    operationType: "read",
     description: "List archived Beeminder goals for a user.",
     inputSchema: s.object(
       "The input payload for listing archived Beeminder goals.",
@@ -145,6 +148,7 @@ export const beeminderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_goal",
+    operationType: "read",
     description: "Read one Beeminder goal, optionally including its datapoints.",
     inputSchema: s.object(
       "The input payload for reading a Beeminder goal.",
@@ -165,6 +169,7 @@ export const beeminderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_datapoints",
+    operationType: "read",
     description: "List datapoints for one Beeminder goal with optional count or page parameters.",
     inputSchema: s.object(
       "The input payload for listing Beeminder datapoints.",
@@ -193,6 +198,7 @@ export const beeminderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_datapoint",
+    operationType: "write",
     description: "Create one datapoint on a Beeminder goal.",
     inputSchema: s.object(
       "The input payload for creating a Beeminder datapoint.",
@@ -219,6 +225,7 @@ export const beeminderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_datapoint",
+    operationType: "write",
     description: "Update one Beeminder datapoint by ID.",
     inputSchema: s.object(
       "The input payload for updating a Beeminder datapoint.",
@@ -243,6 +250,7 @@ export const beeminderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_datapoint",
+    operationType: "destructive",
     description: "Delete one Beeminder datapoint by ID.",
     inputSchema: s.object(
       "The input payload for deleting a Beeminder datapoint.",

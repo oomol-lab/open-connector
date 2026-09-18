@@ -126,6 +126,7 @@ export const mingdaoActions: readonly ProviderActionDefinition[] = [
   ...mingdaoBuildActions,
   defineProviderAction("mingdao", {
     name: "get_app",
+    operationType: "read",
     requiredScopes: [],
     description: "Get the connected Mingdao application's identity, metadata and navigation sections.",
     inputSchema: s.object("The application information request.", {}),
@@ -147,6 +148,7 @@ export const mingdaoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "list_worksheets",
+    operationType: "read",
     requiredScopes: [],
     description:
       "List worksheets in the connected Mingdao application, optionally restricted to selected worksheet IDs.",
@@ -176,6 +178,7 @@ export const mingdaoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "get_worksheet",
+    operationType: "read",
     requiredScopes: [],
     description: "Get a Mingdao worksheet's fields, views and metadata before querying or writing its records.",
     inputSchema: s.object(
@@ -203,6 +206,7 @@ export const mingdaoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "list_records",
+    operationType: "read",
     requiredScopes: [],
     description:
       "Search, filter, sort and page through Mingdao worksheet records, with optional field selection and total count.",
@@ -236,6 +240,7 @@ export const mingdaoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "get_record",
+    operationType: "read",
     requiredScopes: [],
     description: "Get one Mingdao worksheet record with its dynamic field values and optional system fields.",
     inputSchema: s.object(
@@ -256,6 +261,7 @@ export const mingdaoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "create_record",
+    operationType: "write",
     requiredScopes: [],
     description: "Create a Mingdao worksheet record using field IDs or aliases and URL-based attachment values.",
     inputSchema: s.object(
@@ -267,6 +273,7 @@ export const mingdaoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "update_record",
+    operationType: "destructive",
     requiredScopes: [],
     description: "Update a Mingdao worksheet record, replacing, adding or removing supported field values.",
     inputSchema: s.object(
@@ -278,6 +285,7 @@ export const mingdaoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "delete_record",
+    operationType: "destructive",
     requiredScopes: [],
     description: "Delete a Mingdao worksheet record, optionally permanently instead of using the recycle bin.",
     inputSchema: s.object(
@@ -291,6 +299,7 @@ export const mingdaoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "batch_create_records",
+    operationType: "write",
     requiredScopes: [],
     description:
       "Create multiple Mingdao worksheet records with the batch API's string-encoded field values and URL-based attachments.",
@@ -331,6 +340,7 @@ export const mingdaoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "batch_update_records",
+    operationType: "destructive",
     requiredScopes: [],
     description:
       "Apply the same field updates to multiple Mingdao worksheet records and report successful and failed record IDs.",
@@ -352,6 +362,7 @@ export const mingdaoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "batch_delete_records",
+    operationType: "destructive",
     requiredScopes: [],
     description: "Delete multiple Mingdao worksheet records, optionally permanently instead of using the recycle bin.",
     inputSchema: s.object(
@@ -365,6 +376,7 @@ export const mingdaoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "get_related_records",
+    operationType: "read",
     requiredScopes: [],
     description: "Page through the records linked by a Mingdao record's relationship field.",
     inputSchema: s.object(
@@ -383,6 +395,7 @@ export const mingdaoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "pivot_records",
+    operationType: "read",
     requiredScopes: [],
     description:
       "Aggregate Mingdao worksheet records into a pivot table with grouping dimensions, filters, sorting and optional summary totals.",
@@ -436,6 +449,7 @@ export const mingdaoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "list_workflows",
+    operationType: "read",
     requiredScopes: [],
     description:
       "List the existing webhook and packaged business process workflows available in the connected Mingdao application.",
@@ -448,6 +462,7 @@ export const mingdaoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "get_workflow",
+    operationType: "read",
     requiredScopes: [],
     description: "Get a Mingdao workflow's input and output parameter definitions before triggering it.",
     inputSchema: s.object("The workflow details request.", { processId }),
@@ -471,6 +486,7 @@ export const mingdaoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "trigger_workflow",
+    operationType: "destructive",
     requiredScopes: [],
     description:
       "Trigger an existing Mingdao workflow with its defined parameters. Its configured steps may update or delete business data; the returned result does not imply that all downstream work has completed.",

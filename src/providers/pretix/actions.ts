@@ -51,6 +51,7 @@ const eventInput = s.string("The event slug.");
 export const pretixActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_organizers",
+    operationType: "read",
     description: "List pretix organizers accessible to the connected API token.",
     requiredScopes: [],
     inputSchema: s.object("The input for listing pretix organizers.", pageInput, {
@@ -63,6 +64,7 @@ export const pretixActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_organizer",
+    operationType: "read",
     description: "Get one pretix organizer by slug.",
     requiredScopes: [],
     inputSchema: s.object("The input for getting a pretix organizer.", {
@@ -72,6 +74,7 @@ export const pretixActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_events",
+    operationType: "read",
     description: "List events belonging to a pretix organizer.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -86,6 +89,7 @@ export const pretixActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_event",
+    operationType: "read",
     description: "Get one pretix event by organizer and event slug.",
     requiredScopes: [],
     inputSchema: s.object("The input for getting a pretix event.", {
@@ -96,6 +100,7 @@ export const pretixActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_items",
+    operationType: "read",
     description: "List products or ticket items configured for a pretix event.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -110,6 +115,7 @@ export const pretixActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_item",
+    operationType: "read",
     description: "Get one product or ticket item from a pretix event.",
     requiredScopes: [],
     inputSchema: s.object("The input for getting a pretix item.", {
@@ -121,6 +127,7 @@ export const pretixActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description: "List and filter orders for a pretix event.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -142,6 +149,7 @@ export const pretixActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_order",
+    operationType: "read",
     description: "Get one pretix order by organizer, event, and order code.",
     requiredScopes: [],
     inputSchema: s.object("The input for getting a pretix order.", {

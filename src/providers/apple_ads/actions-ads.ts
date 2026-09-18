@@ -252,6 +252,7 @@ const destinationInput = s.object(
 export const appleAdsAdActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_ads",
+    operationType: "read",
     description:
       "Search the ads of one ad account with filters, sorting and offset pagination. Filter on adGroupId to scope to one ad group or on campaignId for a whole campaign. Soft-deleted ads are excluded unless a deleted EQUALS true filter asks for them.",
     requiredScopes: [],
@@ -274,6 +275,7 @@ export const appleAdsAdActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ad",
+    operationType: "read",
     description:
       "Read one ad by identifier, including systemStatus, displayStatus and the reason arrays that explain why it is not delivering. Apple Ads still returns a soft-deleted ad with deleted set to true.",
     requiredScopes: [],
@@ -290,6 +292,7 @@ export const appleAdsAdActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_ad",
+    operationType: "write",
     description:
       "Create an ad that links an existing ad creative to an ad group. adGroupId and creativeId are fixed at creation: serve a different ad creative by creating another ad and deleting this one. The ad creative must have a systemStatus of VALID, and only one ad per ad group can be ENABLED at a time.",
     requiredScopes: [],
@@ -314,6 +317,7 @@ export const appleAdsAdActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_ad",
+    operationType: "destructive",
     description:
       "Change the name or status of one ad. They are the only mutable fields; adGroupId, creativeId, campaignId and adAccountId are locked at creation. Only the fields you pass are changed. Updating a soft-deleted ad returns 404.",
     requiredScopes: [],
@@ -332,6 +336,7 @@ export const appleAdsAdActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_ad",
+    operationType: "destructive",
     description:
       "Soft-delete one ad. Delivery stops immediately and query results exclude it, but Apple Ads keeps the record and still returns it from a read. The referenced ad creative is untouched and stays available to other ads.",
     requiredScopes: [],
@@ -351,6 +356,7 @@ export const appleAdsAdActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_creatives",
+    operationType: "read",
     description:
       "Search the ad creatives of one ad account with filters, sorting and offset pagination. Soft-deleted ad creatives are excluded unless a deleted EQUALS true filter asks for them, which is the only way to read one back after deletion.",
     requiredScopes: [],
@@ -379,6 +385,7 @@ export const appleAdsAdActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_creative",
+    operationType: "read",
     description:
       "Read one ad creative by identifier, including its creative spec, destination, system status and per-placement eligibility. A soft-deleted ad creative returns 404: read it back through query_creatives with a deleted filter instead.",
     requiredScopes: [],
@@ -395,6 +402,7 @@ export const appleAdsAdActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_creative",
+    operationType: "write",
     description:
       "Create an ad creative at the ad account level. It is not tied to a campaign or ad group, so several ads can reference the same one. creativeType and destination are fixed at creation. Pass the returned identifier as creativeId when creating an ad.",
     requiredScopes: [],
@@ -417,6 +425,7 @@ export const appleAdsAdActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_creative",
+    operationType: "destructive",
     description:
       "Change the name or creative spec of one ad creative. They are the only mutable fields; creativeType and destination are locked at creation. Changing creativeSpec can send the ad creative back to PENDING for re-review, which stops the ads referencing it from delivering until it is VALID again.",
     requiredScopes: [],
@@ -435,6 +444,7 @@ export const appleAdsAdActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_creative",
+    operationType: "destructive",
     description:
       "Soft-delete one ad creative. It cannot be undone or reused for new ads, and every ad already referencing it drops to systemStatus NOT_RUNNING without being deleted. Deleting an already deleted ad creative returns 404.",
     requiredScopes: [],

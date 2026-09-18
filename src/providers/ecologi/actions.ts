@@ -89,6 +89,7 @@ function purchaseInput(properties: Record<string, JsonSchema>, description: stri
 function totalsAction(name: string, description: string): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType: "read",
     description,
     inputSchema: s.actionInput(
       {
@@ -104,6 +105,7 @@ function totalsAction(name: string, description: string): ActionDefinition {
 export const ecologiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "purchase_trees",
+    operationType: "write",
     description: "Purchase Ecologi tree planting with optional test mode, attribution, notification, and idempotency.",
     inputSchema: purchaseInput(
       {
@@ -118,6 +120,7 @@ export const ecologiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "purchase_local_trees",
+    operationType: "write",
     description: "Purchase Ecologi tree planting in the UK, US, Australia, or Brazil.",
     inputSchema: purchaseInput(
       {
@@ -130,6 +133,7 @@ export const ecologiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "purchase_carbon_avoidance",
+    operationType: "write",
     description: "Purchase Ecologi carbon avoidance by kilograms or tonnes.",
     inputSchema: purchaseInput(
       {
@@ -151,6 +155,7 @@ export const ecologiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "purchase_carbon_removal",
+    operationType: "write",
     description: "Purchase permanent Ecologi carbon removal measured in kilograms.",
     inputSchema: purchaseInput(
       {
@@ -162,6 +167,7 @@ export const ecologiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "purchase_habitat_restoration",
+    operationType: "write",
     description: "Purchase Ecologi habitat restoration measured in square metres.",
     inputSchema: purchaseInput(
       {
@@ -186,6 +192,7 @@ export const ecologiActions: ActionDefinition[] = [
   ),
   defineProviderAction(service, {
     name: "get_total_impact",
+    operationType: "read",
     description: "Get a combined view of an Ecologi user's confirmed and pending impact totals.",
     inputSchema: s.actionInput(
       {

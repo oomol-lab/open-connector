@@ -7,6 +7,7 @@ const service = "scrape_creators";
 
 const getCreditBalanceAction = defineProviderAction(service, {
   name: "get_credit_balance",
+  operationType: "read",
   requiredScopes: [],
   providerPermissions: [],
   description: "Get the remaining credit balance for the current Scrape Creators API key.",
@@ -29,6 +30,7 @@ const endpointSchema = s.object("One endpoint discovered from the official OpenA
 
 const discoverEndpointsAction = defineProviderAction(service, {
   name: "discover_endpoints",
+  operationType: "read",
   requiredScopes: [],
   providerPermissions: [],
   description: "Discover current Scrape Creators GET and POST endpoints from the official OpenAPI document.",
@@ -63,6 +65,7 @@ const discoverEndpointsAction = defineProviderAction(service, {
 
 const invokeEndpointAction = defineProviderAction(service, {
   name: "invoke_endpoint",
+  operationType: "read",
   requiredScopes: [],
   providerPermissions: [],
   description: "Invoke a currently documented Scrape Creators GET or POST endpoint at the fixed official API origin.",

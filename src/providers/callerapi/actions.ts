@@ -103,6 +103,7 @@ const getPhoneNumberInformationOutputSchema = s.object(
 export const callerapiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user_information",
+    operationType: "read",
     description: "Retrieve the authenticated CallerAPI account email and credit balance.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving CallerAPI account details.", {}),
@@ -110,6 +111,7 @@ export const callerapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_phone_number_information",
+    operationType: "read",
     description:
       "Look up CallerAPI spam reputation, business details, complaints, and optional HLR carrier data for a phone number.",
     requiredScopes: [],

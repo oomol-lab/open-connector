@@ -58,6 +58,7 @@ const commentSchema = s.looseObject("A Teamcamp task comment.", {
 export const teamcampActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List all projects in the Teamcamp workspace.",
     inputSchema: s.actionInput({}),
     outputSchema: s.actionOutput({
@@ -67,6 +68,7 @@ export const teamcampActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get detailed information about one Teamcamp project.",
     inputSchema: s.actionInput(
       {
@@ -81,6 +83,7 @@ export const teamcampActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "List tasks in a Teamcamp project, optionally filtered by completion status.",
     inputSchema: s.actionInput(
       {
@@ -96,6 +99,7 @@ export const teamcampActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task",
+    operationType: "read",
     description: "Get detailed information about one Teamcamp task.",
     inputSchema: s.actionInput(
       {
@@ -110,6 +114,7 @@ export const teamcampActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "post_task_comment",
+    operationType: "write",
     description: "Post a comment to a Teamcamp task.",
     inputSchema: s.actionInput(
       {
@@ -125,6 +130,7 @@ export const teamcampActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_company_users",
+    operationType: "read",
     description: "List users in the Teamcamp workspace.",
     inputSchema: s.actionInput({}),
     outputSchema: s.actionOutput({
@@ -134,6 +140,7 @@ export const teamcampActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List customers in the Teamcamp workspace.",
     inputSchema: s.actionInput({}),
     outputSchema: s.actionOutput({

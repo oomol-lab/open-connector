@@ -80,6 +80,7 @@ const commentSchema = s.looseObject("The Pivotal Tracker story comment returned 
 
 const getCurrentUserAction = defineProviderAction(service, {
   name: "get_current_user",
+  operationType: "read",
   description: "Get the Pivotal Tracker user associated with the API token.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for getting the current Tracker user.", {}),
@@ -90,6 +91,7 @@ const getCurrentUserAction = defineProviderAction(service, {
 
 const listProjectsAction = defineProviderAction(service, {
   name: "list_projects",
+  operationType: "read",
   description: "List Pivotal Tracker projects visible to the API token.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -108,6 +110,7 @@ const listProjectsAction = defineProviderAction(service, {
 
 const getProjectAction = defineProviderAction(service, {
   name: "get_project",
+  operationType: "read",
   description: "Get one Pivotal Tracker project by ID.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -125,6 +128,7 @@ const getProjectAction = defineProviderAction(service, {
 
 const listProjectStoriesAction = defineProviderAction(service, {
   name: "list_project_stories",
+  operationType: "read",
   description: "List stories in a Pivotal Tracker project with optional filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -147,6 +151,7 @@ const listProjectStoriesAction = defineProviderAction(service, {
 
 const getStoryAction = defineProviderAction(service, {
   name: "get_story",
+  operationType: "read",
   description: "Get one Pivotal Tracker story by project ID and story ID.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -165,6 +170,7 @@ const getStoryAction = defineProviderAction(service, {
 
 const createStoryAction = defineProviderAction(service, {
   name: "create_story",
+  operationType: "write",
   description: "Create a Pivotal Tracker story in a project.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -191,6 +197,7 @@ const createStoryAction = defineProviderAction(service, {
 
 const updateStoryStateAction = defineProviderAction(service, {
   name: "update_story_state",
+  operationType: "write",
   description: "Update the current state of a Pivotal Tracker story.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for updating a Tracker story state.", {
@@ -205,6 +212,7 @@ const updateStoryStateAction = defineProviderAction(service, {
 
 const listStoryCommentsAction = defineProviderAction(service, {
   name: "list_story_comments",
+  operationType: "read",
   description: "List text comments on a Pivotal Tracker story.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -225,6 +233,7 @@ const listStoryCommentsAction = defineProviderAction(service, {
 
 const createStoryCommentAction = defineProviderAction(service, {
   name: "create_story_comment",
+  operationType: "write",
   description: "Create a text comment on a Pivotal Tracker story.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for creating a Tracker story comment.", {

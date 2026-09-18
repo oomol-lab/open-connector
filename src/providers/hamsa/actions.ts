@@ -34,6 +34,7 @@ const ttsVoiceSchema = s.looseObject("A Hamsa text-to-speech voice.", {
 export const hamsaActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get the Hamsa project associated with the connected API key.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving the connected Hamsa project.", {}),
@@ -43,6 +44,7 @@ export const hamsaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_voice_agents",
+    operationType: "read",
     description: "List Hamsa voice agents with pagination, search, sorting, and filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -71,6 +73,7 @@ export const hamsaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_voice_agent",
+    operationType: "read",
     description: "Get a Hamsa voice agent by its identifier.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving a Hamsa voice agent.", {
@@ -82,6 +85,7 @@ export const hamsaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tts_voices",
+    operationType: "read",
     description: "List Hamsa text-to-speech voices available to a project.",
     requiredScopes: [],
     inputSchema: s.object(

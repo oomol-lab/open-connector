@@ -172,6 +172,7 @@ const idResult = s.requiredObject("Identifier acknowledged by Cursor.", {
 export const cursorActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_agent",
+    operationType: "write",
     description:
       "Create a durable Cursor cloud session and enqueue its first run. Returns immediately; poll get_run for the result. MCP servers can give the session access to external tools.",
     inputSchema: s.requiredObject("Start a cloud session.", {
@@ -202,6 +203,7 @@ export const cursorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_agents",
+    operationType: "read",
     description: "List cloud sessions, newest first. Use nextCursor to request another page.",
     inputSchema: s.requiredObject("Filter cloud sessions.", {
       limit,
@@ -213,12 +215,14 @@ export const cursorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_agent",
+    operationType: "read",
     description: "Read a cloud session's configuration and latestRunId. Use get_run for execution status and results.",
     inputSchema: agentInput,
     outputSchema: agent,
   }),
   defineProviderAction(service, {
     name: "create_run",
+    operationType: "write",
     description:
       "Send a follow-up using the session's conversation and workspace. Wait for or cancel an active run before starting another. Unarchive archived sessions first.",
     inputSchema: s.requiredObject("Continue a cloud session.", { agentId, prompt, mode, mcpServers }),
@@ -232,12 +236,14 @@ export const cursorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_runs",
+    operationType: "read",
     description: "List a cloud session's runs, newest first, with cursor pagination.",
     inputSchema: s.requiredObject("List session runs.", { agentId, limit, cursor }),
     outputSchema: s.requiredObject("One page of runs.", { items: s.array(run), nextCursor: cursor }),
   }),
   defineProviderAction(service, {
     name: "get_run",
+    operationType: "read",
     description:
       "Read a run's progress, final assistant reply, and pushed branches. FINISHED, ERROR, CANCELLED, and EXPIRED are terminal statuses.",
     inputSchema: runInput,
@@ -245,12 +251,14 @@ export const cursorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "cancel_run",
+    operationType: "destructive",
     description: "Cancel an active run. To continue afterward, create a new run on the same session.",
     inputSchema: runInput,
     outputSchema: idResult,
   }),
   defineProviderAction(service, {
     name: "archive_agent",
+    operationType: "destructive",
     description:
       "Archive a session while retaining readable history. Call unarchive_agent before sending another prompt.",
     inputSchema: agentInput,
@@ -258,18 +266,21 @@ export const cursorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "unarchive_agent",
+    operationType: "write",
     description: "Restore an archived session so it can accept new runs.",
     inputSchema: agentInput,
     outputSchema: idResult,
   }),
   defineProviderAction(service, {
     name: "delete_agent",
+    operationType: "destructive",
     description: "Permanently delete a cloud session. This is irreversible; archive_agent provides reversible removal.",
     inputSchema: agentInput,
     outputSchema: idResult,
   }),
   defineProviderAction(service, {
     name: "list_models",
+    operationType: "read",
     description: "List available cloud agent models and their supported parameters and variants.",
     inputSchema: s.object({}),
     outputSchema: s.requiredObject("Available models.", {
@@ -309,6 +320,7 @@ export const cursorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_team_members",
+    operationType: "read",
     requiredScopes: ["admin:*"],
     description: "List team members. Requires Enterprise Admin API access.",
     inputSchema: s.object({}, { description: "The input for listing Cursor team members." }),
@@ -322,6 +334,7 @@ export const cursorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_audit_logs",
+    operationType: "read",
     requiredScopes: ["admin:*"],
     description:
       "List team audit events with time, user, event type, and page filters. Requires Enterprise Admin API access.",
@@ -358,6 +371,7 @@ export const cursorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_daily_usage_data",
+    operationType: "read",
     requiredScopes: ["admin:*"],
     description: "Retrieve up to 30 days of team usage metrics. Requires Enterprise Admin API access.",
     inputSchema: s.object(
@@ -389,6 +403,7 @@ export const cursorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_team_spend",
+    operationType: "read",
     requiredScopes: ["admin:*"],
     description:
       "Retrieve team spending for the current billing cycle with search, sorting, and pagination. Requires Enterprise Admin API access.",

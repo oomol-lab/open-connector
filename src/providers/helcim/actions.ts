@@ -49,6 +49,7 @@ const customerOutputSchema = s.looseObject("A customer returned by Helcim.", {
 
 const listCustomersAction = defineProviderAction(service, {
   name: "list_customers",
+  operationType: "read",
   description: "List or search Helcim customers with page-based pagination.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -72,6 +73,7 @@ const listCustomersAction = defineProviderAction(service, {
 
 const getCustomerAction = defineProviderAction(service, {
   name: "get_customer",
+  operationType: "read",
   description: "Retrieve one Helcim customer by ID.",
   requiredScopes: [],
   inputSchema: s.object("The customer lookup input.", {
@@ -84,6 +86,7 @@ const getCustomerAction = defineProviderAction(service, {
 
 const createCustomerAction = defineProviderAction(service, {
   name: "create_customer",
+  operationType: "write",
   description: "Create a Helcim customer using a contact name, business name, or both.",
   requiredScopes: [],
   inputSchema: customerInputSchema,
@@ -94,6 +97,7 @@ const createCustomerAction = defineProviderAction(service, {
 
 const updateCustomerAction = defineProviderAction(service, {
   name: "update_customer",
+  operationType: "write",
   description: "Update an existing Helcim customer.",
   requiredScopes: [],
   inputSchema: s.object(

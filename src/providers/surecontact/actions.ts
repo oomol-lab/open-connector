@@ -222,6 +222,7 @@ const mutationOutputSchema = s.object("SureContact mutation response.", {
 export const surecontactActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List SureContact contacts with optional search, status, list, tag, and pagination filters.",
     requiredScopes: [],
     inputSchema: listContactsInputSchema,
@@ -229,6 +230,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Retrieve one SureContact contact by UUID.",
     requiredScopes: [],
     inputSchema: getByUuidInputSchema("Input for retrieving a SureContact contact.", "The SureContact contact UUID."),
@@ -236,6 +238,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact_by_email",
+    operationType: "read",
     description: "Retrieve one SureContact contact by email address.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a SureContact contact by email.", {
@@ -245,6 +248,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a SureContact contact and optionally attach lists or tags.",
     requiredScopes: [],
     inputSchema: createContactInputSchema,
@@ -252,6 +256,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_contact",
+    operationType: "write",
     description: "Create or update a SureContact contact by email address.",
     requiredScopes: [],
     inputSchema: upsertContactInputSchema,
@@ -259,6 +264,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update a SureContact contact by UUID.",
     requiredScopes: [],
     inputSchema: updateContactInputSchema,
@@ -266,6 +272,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete a SureContact contact by UUID.",
     requiredScopes: [],
     inputSchema: getByUuidInputSchema("Input for deleting a SureContact contact.", "The SureContact contact UUID."),
@@ -273,6 +280,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "attach_contact_tags",
+    operationType: "write",
     description: "Attach one or more SureContact tags to a contact.",
     requiredScopes: [],
     inputSchema: attachResourcesInputSchema,
@@ -280,6 +288,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "detach_contact_tags",
+    operationType: "destructive",
     description: "Detach one or more SureContact tags from a contact.",
     requiredScopes: [],
     inputSchema: attachResourcesInputSchema,
@@ -287,6 +296,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "attach_contact_lists",
+    operationType: "write",
     description: "Attach one or more SureContact lists to a contact.",
     requiredScopes: [],
     inputSchema: attachResourcesInputSchema,
@@ -294,6 +304,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "detach_contact_lists",
+    operationType: "destructive",
     description: "Detach one or more SureContact lists from a contact.",
     requiredScopes: [],
     inputSchema: attachResourcesInputSchema,
@@ -301,6 +312,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_lists",
+    operationType: "read",
     description: "List SureContact lists with optional search and pagination filters.",
     requiredScopes: [],
     inputSchema: listTagsOrListsInputSchema,
@@ -308,6 +320,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_list",
+    operationType: "read",
     description: "Retrieve one SureContact list by UUID.",
     requiredScopes: [],
     inputSchema: getByUuidInputSchema("Input for retrieving a SureContact list.", "The SureContact list UUID."),
@@ -315,6 +328,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_list",
+    operationType: "write",
     description: "Create a SureContact list.",
     requiredScopes: [],
     inputSchema: createListInputSchema,
@@ -322,6 +336,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_list",
+    operationType: "write",
     description: "Update a SureContact list by UUID.",
     requiredScopes: [],
     inputSchema: updateListInputSchema,
@@ -329,6 +344,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_list",
+    operationType: "destructive",
     description: "Delete a SureContact list by UUID.",
     requiredScopes: [],
     inputSchema: getByUuidInputSchema("Input for deleting a SureContact list.", "The SureContact list UUID."),
@@ -336,6 +352,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_contacts_to_list",
+    operationType: "write",
     description: "Add one or more SureContact contacts to a list.",
     requiredScopes: [],
     inputSchema: listContactMutationInputSchema,
@@ -343,6 +360,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_contacts_from_list",
+    operationType: "destructive",
     description: "Remove one or more SureContact contacts from a list.",
     requiredScopes: [],
     inputSchema: listContactMutationInputSchema,
@@ -350,6 +368,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List SureContact tags with optional search and pagination filters.",
     requiredScopes: [],
     inputSchema: listTagsOrListsInputSchema,
@@ -357,6 +376,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tag",
+    operationType: "read",
     description: "Retrieve one SureContact tag by UUID.",
     requiredScopes: [],
     inputSchema: getByUuidInputSchema("Input for retrieving a SureContact tag.", "The SureContact tag UUID."),
@@ -364,6 +384,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_tag",
+    operationType: "write",
     description: "Create a SureContact tag.",
     requiredScopes: [],
     inputSchema: createTagInputSchema,
@@ -371,6 +392,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_tag",
+    operationType: "write",
     description: "Update a SureContact tag by UUID.",
     requiredScopes: [],
     inputSchema: updateTagInputSchema,
@@ -378,6 +400,7 @@ export const surecontactActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_tag",
+    operationType: "destructive",
     description: "Delete a SureContact tag by UUID.",
     requiredScopes: [],
     inputSchema: getByUuidInputSchema("Input for deleting a SureContact tag.", "The SureContact tag UUID."),

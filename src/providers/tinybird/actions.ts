@@ -89,6 +89,7 @@ const getDataSourceOutputSchema = s.actionOutput(
 export const tinybirdActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "run_sql_query",
+    operationType: "read",
     description: "Run a SQL query against Tinybird through the synchronous Query API.",
     followUpActions: ["tinybird.run_pipe_endpoint"],
     inputSchema: runSqlQueryInputSchema,
@@ -96,6 +97,7 @@ export const tinybirdActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_pipe_endpoint",
+    operationType: "read",
     description: "Query a published Tinybird Pipe endpoint and return its JSON response.",
     followUpActions: ["tinybird.run_sql_query"],
     inputSchema: runPipeEndpointInputSchema,
@@ -103,6 +105,7 @@ export const tinybirdActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_data_sources",
+    operationType: "read",
     description: "List Tinybird Data Sources visible to the authenticated token.",
     followUpActions: ["tinybird.get_data_source"],
     inputSchema: listDataSourcesInputSchema,
@@ -110,6 +113,7 @@ export const tinybirdActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_data_source",
+    operationType: "read",
     description: "Read metadata and stats for one Tinybird Data Source.",
     inputSchema: getDataSourceInputSchema,
     outputSchema: getDataSourceOutputSchema,

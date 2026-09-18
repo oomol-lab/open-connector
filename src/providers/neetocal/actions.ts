@@ -68,6 +68,7 @@ const slotDaySchema = s.looseRequiredObject(
 
 const listSchedulingLinksAction = defineProviderAction(service, {
   name: "list_scheduling_links",
+  operationType: "read",
   description: "List NeetoCal scheduling links with optional host, search, and pagination filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -92,6 +93,7 @@ const listSchedulingLinksAction = defineProviderAction(service, {
 
 const getSchedulingLinkAction = defineProviderAction(service, {
   name: "get_scheduling_link",
+  operationType: "read",
   description: "Get one NeetoCal scheduling link by SID.",
   requiredScopes: [],
   inputSchema: s.object("The input for getting a NeetoCal scheduling link.", {
@@ -102,6 +104,7 @@ const getSchedulingLinkAction = defineProviderAction(service, {
 
 const listBookingsAction = defineProviderAction(service, {
   name: "list_bookings",
+  operationType: "read",
   description: "List NeetoCal bookings with optional type, email, parent, sorting, and pagination filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -132,6 +135,7 @@ const listBookingsAction = defineProviderAction(service, {
 
 const getBookingAction = defineProviderAction(service, {
   name: "get_booking",
+  operationType: "read",
   description: "Get one NeetoCal booking by SID.",
   requiredScopes: [],
   inputSchema: s.object("The input for getting a NeetoCal booking.", {
@@ -142,6 +146,7 @@ const getBookingAction = defineProviderAction(service, {
 
 const listAvailableSlotsAction = defineProviderAction(service, {
   name: "list_available_slots",
+  operationType: "read",
   description: "List available NeetoCal slots for a scheduling link and calendar month.",
   requiredScopes: [],
   inputSchema: s.object(

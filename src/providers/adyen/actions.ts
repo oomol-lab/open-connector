@@ -77,6 +77,7 @@ const credentialSchema = s.object(
 export const adyenActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_api_credential",
+    operationType: "read",
     description: "Retrieve details for the Adyen API credential used by this connection.",
     inputSchema: s.object({}, { description: "Input parameters for retrieving the current Adyen API credential." }),
     outputSchema: s.object(
@@ -89,6 +90,7 @@ export const adyenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_companies",
+    operationType: "read",
     description: "List Adyen company accounts accessible to the API credential.",
     requiredScopes: [accountReadScope],
     inputSchema: paginationInputSchema,
@@ -103,6 +105,7 @@ export const adyenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description: "Retrieve one Adyen company account by ID.",
     requiredScopes: [accountReadScope],
     inputSchema: s.object(
@@ -122,6 +125,7 @@ export const adyenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_company_merchants",
+    operationType: "read",
     description: "List merchant accounts under an Adyen company account.",
     requiredScopes: [accountReadScope],
     inputSchema: s.object(
@@ -144,6 +148,7 @@ export const adyenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_merchants",
+    operationType: "read",
     description: "List Adyen merchant accounts accessible to the API credential.",
     requiredScopes: [accountReadScope],
     inputSchema: paginationInputSchema,
@@ -158,6 +163,7 @@ export const adyenActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_merchant",
+    operationType: "read",
     description: "Retrieve one Adyen merchant account by ID.",
     requiredScopes: [accountReadScope],
     inputSchema: s.object(

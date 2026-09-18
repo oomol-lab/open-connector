@@ -336,6 +336,7 @@ const initialAppointmentOutputSchema = s.object(
 export const acculynxActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_company_settings",
+    operationType: "read",
     description: "Get the current AccuLynx company settings for the connected location.",
     requiredScopes: [],
     inputSchema: s.object({}, { description: "The input payload for loading company settings." }),
@@ -343,6 +344,7 @@ export const acculynxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contact_types",
+    operationType: "read",
     description: "List the contact types configured for the current AccuLynx company.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -356,6 +358,7 @@ export const acculynxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_lead_sources",
+    operationType: "read",
     description: "List the active lead sources configured for the current AccuLynx company.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -369,6 +372,7 @@ export const acculynxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_job_categories",
+    operationType: "read",
     description: "List the active AccuLynx job categories configured for the company.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -382,6 +386,7 @@ export const acculynxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_trade_types",
+    operationType: "read",
     description: "List the active AccuLynx trade types configured for the company.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -395,6 +400,7 @@ export const acculynxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_work_types",
+    operationType: "read",
     description: "List the active AccuLynx work types configured for the company.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -408,6 +414,7 @@ export const acculynxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create one new contact in AccuLynx.",
     requiredScopes: [],
     inputSchema: createContactInputSchema,
@@ -415,6 +422,7 @@ export const acculynxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_job",
+    operationType: "write",
     description: "Create one new job in the AccuLynx Lead milestone.",
     requiredScopes: [],
     inputSchema: createJobInputSchema,
@@ -422,6 +430,7 @@ export const acculynxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_calendars",
+    operationType: "read",
     description: "List the calendars available in the current AccuLynx location.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -435,6 +444,7 @@ export const acculynxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_calendar_appointments",
+    operationType: "read",
     description: "List appointment summaries for one AccuLynx calendar within a date range.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -454,6 +464,7 @@ export const acculynxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_initial_appointment",
+    operationType: "read",
     description: "Get the initial appointment for one AccuLynx job.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -466,6 +477,7 @@ export const acculynxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_initial_appointment",
+    operationType: "write",
     description: "Add or update the initial appointment for one AccuLynx job.",
     requiredScopes: [],
     inputSchema: s.object(

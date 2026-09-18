@@ -19,6 +19,7 @@ const listPaginationInputSchema = {
 
 const listJobsAction = defineProviderAction(service, {
   name: "list_jobs",
+  operationType: "read",
   description: "List Recruiterflow jobs with optional pagination and inclusion flags.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -43,6 +44,7 @@ const listJobsAction = defineProviderAction(service, {
 
 const getJobAction = defineProviderAction(service, {
   name: "get_job",
+  operationType: "read",
   description: "Get one Recruiterflow job by its job ID.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -61,6 +63,7 @@ const getJobAction = defineProviderAction(service, {
 
 const listCandidatesAction = defineProviderAction(service, {
   name: "list_candidates",
+  operationType: "read",
   description: "List Recruiterflow candidates with optional pagination and inclusion flags.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -84,6 +87,7 @@ const listCandidatesAction = defineProviderAction(service, {
 
 const getCandidateAction = defineProviderAction(service, {
   name: "get_candidate",
+  operationType: "read",
   description: "Get one Recruiterflow candidate by prospect ID.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for retrieving a Recruiterflow candidate.", {
@@ -97,6 +101,7 @@ const getCandidateAction = defineProviderAction(service, {
 
 const listUsersAction = defineProviderAction(service, {
   name: "list_users",
+  operationType: "read",
   description: "List Recruiterflow users in the connected workspace.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -124,6 +129,7 @@ const getUserInputSchema = s.object(
 
 const getUserAction = defineProviderAction(service, {
   name: "get_user",
+  operationType: "read",
   description: "Get one Recruiterflow user by user ID or email address.",
   requiredScopes: [],
   inputSchema: getUserInputSchema,

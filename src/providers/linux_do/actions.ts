@@ -109,12 +109,14 @@ const limitInput = s.integer(`The maximum number of items to return. ${limitNote
 export const linuxDoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_latest_topics",
+    operationType: "read",
     description: `List the latest public topics from Linux DO. RSS endpoint: GET https://linux.do/latest.rss. ${rateLimitNote}`,
     inputSchema: s.object("Input for listing latest Linux DO topics.", { limit: limitInput }, { optional: ["limit"] }),
     outputSchema: topicListOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_top_topics",
+    operationType: "read",
     description:
       "List public top topics from Linux DO for a time period. RSS endpoint: " +
       `GET https://linux.do/top.rss?period={period} (daily/weekly/monthly/quarterly/yearly/all). ${rateLimitNote}`,
@@ -137,12 +139,14 @@ export const linuxDoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_hot_topics",
+    operationType: "read",
     description: `List public hot/trending topics from Linux DO. RSS endpoint: GET https://linux.do/hot.rss. ${rateLimitNote}`,
     inputSchema: s.object("Input for listing hot Linux DO topics.", { limit: limitInput }, { optional: ["limit"] }),
     outputSchema: topicListOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_category_topics",
+    operationType: "read",
     description: `List topics in a Linux DO category. RSS endpoint: GET https://linux.do/c/{slug}/{id}.rss. ${notFoundNote} ${rateLimitNote}`,
     inputSchema: s.object(
       "Input for listing topics in a Linux DO category.",
@@ -157,6 +161,7 @@ export const linuxDoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tag_topics",
+    operationType: "read",
     description: `List topics with a Linux DO tag. RSS endpoint: GET https://linux.do/tag/{tag}.rss. ${notFoundNote} ${rateLimitNote}`,
     inputSchema: s.object(
       "Input for listing topics with a Linux DO tag.",
@@ -170,6 +175,7 @@ export const linuxDoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_user_topics",
+    operationType: "read",
     description: `List topics created by a Linux DO user. RSS endpoint: GET https://linux.do/u/{username}/activity/topics.rss. ${notFoundNote} ${rateLimitNote}`,
     inputSchema: s.object(
       "Input for listing a Linux DO user's topics.",
@@ -183,6 +189,7 @@ export const linuxDoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_category_tag_topics",
+    operationType: "read",
     description: `List topics with a tag inside a category. RSS endpoint: GET https://linux.do/tags/c/{slug}/{id}/{tag}.rss. ${notFoundNote} ${rateLimitNote}`,
     inputSchema: s.object(
       "Input for listing topics with a tag inside a Linux DO category.",
@@ -198,12 +205,14 @@ export const linuxDoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_latest_posts",
+    operationType: "read",
     description: `List the latest public posts across Linux DO. RSS endpoint: GET https://linux.do/posts.rss. ${rateLimitNote}`,
     inputSchema: s.object("Input for listing latest Linux DO posts.", { limit: limitInput }, { optional: ["limit"] }),
     outputSchema: postListOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_topic_posts",
+    operationType: "read",
     description: `List posts within a Linux DO topic. RSS endpoint: GET https://linux.do/t/{slug}/{id}.rss (slug defaults to "topic"). ${notFoundNote} ${rateLimitNote}`,
     inputSchema: s.object(
       "Input for listing posts within a Linux DO topic.",
@@ -218,6 +227,7 @@ export const linuxDoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_user_posts",
+    operationType: "read",
     description: `List posts by a Linux DO user. RSS endpoint: GET https://linux.do/u/{username}/activity.rss. ${notFoundNote} ${rateLimitNote}`,
     inputSchema: s.object(
       "Input for listing a Linux DO user's posts.",
@@ -231,6 +241,7 @@ export const linuxDoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_group_posts",
+    operationType: "read",
     description: `List posts by members of a Linux DO group. RSS endpoint: GET https://linux.do/g/{name}/posts.rss. ${notFoundNote} ${rateLimitNote}`,
     inputSchema: s.object(
       "Input for listing a Linux DO group's posts.",
@@ -244,6 +255,7 @@ export const linuxDoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_group_mentions",
+    operationType: "read",
     description: `List posts mentioning a Linux DO group. RSS endpoint: GET https://linux.do/g/{name}/mentions.rss. ${notFoundNote} ${rateLimitNote}`,
     inputSchema: s.object(
       "Input for listing a Linux DO group's mentions.",
@@ -257,6 +269,7 @@ export const linuxDoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_badge_grants",
+    operationType: "read",
     description: `List recent grants of a Linux DO badge. RSS endpoint: GET https://linux.do/badges/{id}.rss. ${notFoundNote} ${rateLimitNote}`,
     inputSchema: s.object(
       "Input for listing Linux DO badge grants.",

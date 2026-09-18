@@ -51,6 +51,7 @@ const candidateSchema = s.looseRequiredObject(
 export const workableActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_jobs",
+    operationType: "read",
     description: "List jobs from a Workable account with optional state and timestamp filters.",
     inputSchema: s.actionInput(
       {
@@ -84,6 +85,7 @@ export const workableActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job",
+    operationType: "read",
     description: "Get full details for a Workable job by shortcode.",
     inputSchema: s.actionInput(
       {
@@ -101,6 +103,7 @@ export const workableActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_candidates",
+    operationType: "read",
     description: "List candidates from a Workable account with optional job, stage, and timestamp filters.",
     inputSchema: s.actionInput(
       {
@@ -126,6 +129,7 @@ export const workableActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_candidate",
+    operationType: "read",
     description: "Get full details for a Workable candidate by candidate ID.",
     inputSchema: s.actionInput(
       {

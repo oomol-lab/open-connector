@@ -53,6 +53,7 @@ const incidentSchema = s.looseObject("A StatusPal incident.", {
 export const statuspalActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_status_page_status",
+    operationType: "read",
     description: "Get the current status reported on a public StatusPal status page.",
     inputSchema: subdomainInputSchema,
     outputSchema: s.object(
@@ -65,6 +66,7 @@ export const statuspalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_status_page_summary",
+    operationType: "read",
     description: "Get a StatusPal page summary including services and active incidents.",
     inputSchema: subdomainInputSchema,
     outputSchema: s.object(
@@ -97,6 +99,7 @@ export const statuspalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_services",
+    operationType: "read",
     description: "List services configured on a StatusPal status page.",
     inputSchema: subdomainInputSchema,
     outputSchema: s.object(
@@ -109,6 +112,7 @@ export const statuspalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_service",
+    operationType: "read",
     description: "Get one StatusPal service by ID.",
     inputSchema: serviceInputSchema,
     outputSchema: s.object(
@@ -121,6 +125,7 @@ export const statuspalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_incidents",
+    operationType: "read",
     description: "List StatusPal incidents with cursor, limit, and type filters.",
     inputSchema: s.object(
       {
@@ -142,6 +147,7 @@ export const statuspalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_incident",
+    operationType: "read",
     description: "Get one StatusPal incident by ID.",
     inputSchema: incidentInputSchema,
     outputSchema: s.object(

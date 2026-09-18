@@ -22,6 +22,7 @@ const resultsSchema = s.object("The Azure Translator operation result.", {
 export const microsoftTextTranslateActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "translate_text",
+    operationType: "read",
     description: "Translate one or more text strings into one or more target languages.",
     inputSchema: s.object(
       "Input parameters for translating text with Azure Translator.",
@@ -62,6 +63,7 @@ export const microsoftTextTranslateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "detect_language",
+    operationType: "read",
     description: "Detect the language of one or more text strings.",
     inputSchema: s.object("Input parameters for detecting languages with Azure Translator.", {
       texts: detectTextsSchema,
@@ -70,6 +72,7 @@ export const microsoftTextTranslateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "transliterate_text",
+    operationType: "read",
     description: "Convert text from one supported script into another script.",
     inputSchema: s.object("Input parameters for transliterating text with Azure Translator.", {
       texts: transliterateTextsSchema,
@@ -81,6 +84,7 @@ export const microsoftTextTranslateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "break_sentences",
+    operationType: "read",
     description: "Identify sentence boundaries in one or more text strings.",
     inputSchema: s.object(
       "Input parameters for finding sentence boundaries with Azure Translator.",
@@ -91,6 +95,7 @@ export const microsoftTextTranslateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "dictionary_lookup",
+    operationType: "read",
     description: "Look up alternative translations for words and short idiomatic phrases.",
     inputSchema: s.object("Input parameters for Azure Translator dictionary lookup.", {
       texts: dictionaryTextsSchema,
@@ -101,6 +106,7 @@ export const microsoftTextTranslateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "dictionary_examples",
+    operationType: "read",
     description: "Get examples showing source and translated dictionary terms in context.",
     inputSchema: s.object("Input parameters for Azure Translator dictionary examples.", {
       entries: s.array(
@@ -118,6 +124,7 @@ export const microsoftTextTranslateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_languages",
+    operationType: "read",
     description: "Get the languages and scripts currently supported by Azure Translator.",
     inputSchema: s.object(
       "Input parameters for retrieving Azure Translator language capabilities.",

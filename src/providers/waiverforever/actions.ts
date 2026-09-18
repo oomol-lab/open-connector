@@ -29,6 +29,7 @@ const prefillDataSchema = s.record(
 export const waiverforeverActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user_info",
+    operationType: "read",
     description: "Get the WaiverForever account username associated with the API key.",
     inputSchema: s.object({}, { description: "The input payload for getting WaiverForever user info." }),
     outputSchema: s.object(
@@ -41,6 +42,7 @@ export const waiverforeverActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List waiver templates available to the WaiverForever account.",
     inputSchema: s.object({}, { description: "The input payload for listing WaiverForever templates." }),
     outputSchema: s.object(
@@ -50,6 +52,7 @@ export const waiverforeverActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_template_signing_link",
+    operationType: "write",
     description: "Create a one-off signing link for a WaiverForever template.",
     inputSchema: s.object(
       {
@@ -80,6 +83,7 @@ export const waiverforeverActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_waiver",
+    operationType: "read",
     description: "Get a signed WaiverForever waiver by ID.",
     inputSchema: s.object(
       { waiver_id: stringIdSchema },
@@ -92,6 +96,7 @@ export const waiverforeverActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_waivers",
+    operationType: "read",
     description: "Search signed WaiverForever waivers with keyword, date, template, and status filters.",
     inputSchema: s.object(
       {
@@ -130,6 +135,7 @@ export const waiverforeverActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_waiver_request",
+    operationType: "write",
     description: "Create a WaiverForever waiver request group.",
     inputSchema: s.object(
       {
@@ -154,6 +160,7 @@ export const waiverforeverActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_waiver_request",
+    operationType: "read",
     description: "Get a WaiverForever waiver request group by ID.",
     inputSchema: s.object(
       {
@@ -170,6 +177,7 @@ export const waiverforeverActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_waiver_requests",
+    operationType: "read",
     description: "List WaiverForever waiver request groups for a template with optional filters.",
     inputSchema: s.object(
       {

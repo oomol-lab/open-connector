@@ -1,5 +1,5 @@
 import type { ProviderActionDefinition } from "../../core/provider-definition.ts";
-import type { JsonSchema } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
@@ -42,6 +42,7 @@ interface MercadoOperation {
 }
 function operation<const T extends string>(
   name: T,
+  operationType: ActionDefinition["operationType"],
   toolName: string,
   description: string,
   inputSchema: JsonSchema,
@@ -52,13 +53,14 @@ function operation<const T extends string>(
     toolName,
     usage,
     marketplace,
-    action: defineProviderAction("linkfox", { name, description, inputSchema, outputSchema }),
+    action: defineProviderAction("linkfox", { name, operationType, description, inputSchema, outputSchema }),
   };
 }
 
 export const mercadoOperations: MercadoOperation[] = [
   operation(
     "get_mercado_item",
+    "read",
     "itemInfo",
     "Get Mercado Libre product details through LinkFox.",
     strictObject("Get Mercado Libre product details parameters.", {
@@ -72,6 +74,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "get_mercado_item_history",
+    "read",
     "itemHistory",
     "Get Mercado Libre product sales history through LinkFox.",
     strictObject("Get Mercado Libre product sales history parameters.", {
@@ -82,6 +85,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "search_mercado_items",
+    "read",
     "itemSearch",
     "Search Mercado Libre products with commercial filters through LinkFox.",
     strictObject("Search Mercado Libre products with commercial filters parameters.", {
@@ -155,6 +159,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "get_mercado_catalog",
+    "read",
     "catalogInfo",
     "Get Mercado Libre catalog product details through LinkFox.",
     strictObject("Get Mercado Libre catalog product details parameters.", {
@@ -170,6 +175,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "get_mercado_catalog_history",
+    "read",
     "catalogHistory",
     "Get Mercado Libre catalog product sales history through LinkFox.",
     strictObject("Get Mercado Libre catalog product sales history parameters.", {
@@ -185,6 +191,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "search_mercado_catalogs",
+    "read",
     "catalogSearch",
     "Search Mercado Libre catalog products with commercial filters through LinkFox.",
     strictObject("Search Mercado Libre catalog products with commercial filters parameters.", {
@@ -246,6 +253,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "search_mercado_daily_keywords",
+    "read",
     "keywordDateSearch",
     "Search daily Mercado Libre trending keywords through LinkFox.",
     strictObject("Search daily Mercado Libre trending keywords parameters. Maximum pagination depth: 10000.", {
@@ -268,6 +276,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "search_mercado_monthly_keywords",
+    "read",
     "keywordMonthSearch",
     "Search monthly Mercado Libre trending keywords through LinkFox.",
     strictObject("Search monthly Mercado Libre trending keywords parameters. Maximum pagination depth: 10000.", {
@@ -289,6 +298,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "reverse_search_mercado_item_keywords",
+    "read",
     "keywordReverse",
     "Find keywords driving traffic to a Mercado Libre product through LinkFox.",
     strictObject("Find keywords driving traffic to a Mercado Libre product parameters.", {
@@ -302,6 +312,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "search_mercado_categories",
+    "read",
     "categorySearch",
     "Search Mercado Libre categories through LinkFox.",
     strictObject("Search Mercado Libre categories parameters.", {
@@ -317,6 +328,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "search_mercado_leaf_categories",
+    "read",
     "categorySmallSearch",
     "Search Mercado Libre leaf categories through LinkFox.",
     strictObject("Search Mercado Libre leaf categories parameters.", {
@@ -332,6 +344,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "list_mercado_top_brands",
+    "read",
     "trendBrandTopBrand",
     "Get top brands in a Mercado Libre category through LinkFox.",
     strictObject("Get top brands in a Mercado Libre category parameters.", {
@@ -345,6 +358,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "list_mercado_top_items",
+    "read",
     "trendBrandTopItem",
     "Get top products in a Mercado Libre category through LinkFox.",
     strictObject("Get top products in a Mercado Libre category parameters.", {
@@ -358,6 +372,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "list_mercado_top_sellers",
+    "read",
     "trendBrandTopSeller",
     "Get top sellers in a Mercado Libre category through LinkFox.",
     strictObject("Get top sellers in a Mercado Libre category parameters.", {
@@ -371,6 +386,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "get_mercado_new_item_opportunities",
+    "read",
     "trendNewItems",
     "Get new product opportunities in a Mercado Libre category through LinkFox.",
     strictObject("Get new product opportunities in a Mercado Libre category parameters.", {
@@ -384,6 +400,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "get_mercado_category_price_distribution",
+    "read",
     "trendPrice",
     "Get the price distribution in a Mercado Libre category through LinkFox.",
     strictObject("Get the price distribution in a Mercado Libre category parameters.", {
@@ -397,6 +414,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "get_mercado_category_sales_history",
+    "read",
     "trendSoldHis",
     "Get sales history for a Mercado Libre category through LinkFox.",
     strictObject("Get sales history for a Mercado Libre category parameters.", {
@@ -410,6 +428,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "get_mercado_category_statistics",
+    "read",
     "trendStatistical",
     "Get summary statistics for a Mercado Libre category through LinkFox.",
     strictObject("Get summary statistics for a Mercado Libre category parameters.", {
@@ -423,6 +442,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "get_mercado_category_sales_distribution",
+    "read",
     "trendSale",
     "Get the sales distribution in a Mercado Libre category through LinkFox.",
     strictObject("Get the sales distribution in a Mercado Libre category parameters.", {
@@ -437,6 +457,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "get_mercado_category_inventory_types",
+    "read",
     "trendStoreInventoryType",
     "Get warehouse type distribution in a Mercado Libre category through LinkFox.",
     strictObject("Get warehouse type distribution in a Mercado Libre category parameters.", {
@@ -451,6 +472,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "search_mercado_sellers",
+    "read",
     "sellerSearch",
     "Search Mercado Libre sellers by type and reputation through LinkFox.",
     strictObject("Search Mercado Libre sellers by type and reputation parameters.", {
@@ -479,6 +501,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "list_mercado_item_reviews",
+    "read",
     "reviewSearch",
     "Get reviews for a Mercado Libre product through LinkFox.",
     strictObject("Get reviews for a Mercado Libre product parameters.", {
@@ -490,6 +513,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "get_mercado_exchange_rate",
+    "read",
     "rateInfo",
     "Get the exchange rate for a Mercado Libre market through LinkFox.",
     strictObject("Get the exchange rate for a Mercado Libre market parameters.", {
@@ -502,6 +526,7 @@ export const mercadoOperations: MercadoOperation[] = [
   ),
   operation(
     "get_mercado_account_usage",
+    "read",
     "myUsage",
     "Get the connected supplier account package and usage information through LinkFox.",
     strictObject("Get the connected supplier account package and usage information parameters.", {}),

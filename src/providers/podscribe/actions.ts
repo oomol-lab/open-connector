@@ -91,6 +91,7 @@ const showInfoSchema = s.looseObject("Show information returned by Podscribe.", 
 export const podscribeActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_integration_health",
+    operationType: "read",
     description: "Retrieve Podscribe integration health, optionally filtered by advertiser and including pixel data.",
     requiredScopes: ["integration_health:read"],
     inputSchema: s.object(
@@ -105,6 +106,7 @@ export const podscribeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_episodes",
+    operationType: "read",
     description: "Search Podscribe episodes by query string with optional time frame, media type, and show filters.",
     requiredScopes: ["episodes:read"],
     inputSchema: s.object(
@@ -130,6 +132,7 @@ export const podscribeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_show_info",
+    operationType: "read",
     description: "Retrieve Podscribe show information by iTunes or YouTube identifier.",
     requiredScopes: ["shows:read"],
     inputSchema: s.object("Input parameters for retrieving Podscribe show info.", {

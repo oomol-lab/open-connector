@@ -8,6 +8,7 @@ const action: ActionDefinition = {
   service: "github",
   name: "create_issue",
   description: "Create an issue.",
+  operationType: "write",
   requiredScopes: [],
   providerPermissions: [],
   inputSchema: { type: "object" },

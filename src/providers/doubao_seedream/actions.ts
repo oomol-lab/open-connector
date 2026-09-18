@@ -25,6 +25,7 @@ const sizeSchema: JsonSchema = s.oneOf(
 export const doubaoSeedreamActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "generate_image",
+    operationType: "write",
     description: "Generate or edit one or more images with Doubao Seedream.",
     inputSchema: s.actionInput(
       {

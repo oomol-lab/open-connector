@@ -19,6 +19,7 @@ const loosePayload = (description: string) => s.looseObject(description);
 
 const getCurrentKeyAction = defineProviderAction(service, {
   name: "get_current_key",
+  operationType: "read",
   description: "Get the authorization level for the current Hybrid Analysis API key.",
   requiredScopes: [],
   inputSchema: s.object("Input parameters for reading the current Hybrid Analysis API key.", {}),
@@ -30,6 +31,7 @@ const getCurrentKeyAction = defineProviderAction(service, {
 
 const searchHashAction = defineProviderAction(service, {
   name: "search_hash",
+  operationType: "read",
   description: "Find Hybrid Analysis detonation reports associated with a file hash.",
   requiredScopes: [],
   inputSchema: s.object("Input parameters for searching by file hash.", {
@@ -46,6 +48,7 @@ const searchHashAction = defineProviderAction(service, {
 
 const getOverviewAction = defineProviderAction(service, {
   name: "get_overview",
+  operationType: "read",
   description: "Get the Hybrid Analysis overview for a SHA256 file hash.",
   requiredScopes: [],
   inputSchema: s.object("Input parameters for reading an analysis overview.", {
@@ -62,6 +65,7 @@ const reportIdSchema = trimmedString(
 
 const getReportStateAction = defineProviderAction(service, {
   name: "get_report_state",
+  operationType: "read",
   description: "Get the processing state of a Hybrid Analysis sandbox report.",
   requiredScopes: [],
   inputSchema: s.object("Input parameters for reading a sandbox report state.", {
@@ -74,6 +78,7 @@ const getReportStateAction = defineProviderAction(service, {
 
 const getReportSummaryAction = defineProviderAction(service, {
   name: "get_report_summary",
+  operationType: "read",
   description: "Get the summary of a Hybrid Analysis sandbox report.",
   requiredScopes: [],
   inputSchema: s.object("Input parameters for reading a sandbox report summary.", {

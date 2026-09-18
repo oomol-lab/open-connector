@@ -156,12 +156,14 @@ const envVarListSchema = s.object("Paginated CircleCI environment variable list.
 export const circleciActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the currently authenticated CircleCI user profile.",
     inputSchema: emptyInputSchema,
     outputSchema: userSchema,
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get CircleCI project details by project slug.",
     followUpActions: ["circleci.list_pipelines_for_project"],
     inputSchema: s.actionInput({ projectSlug: projectSlugField }, ["projectSlug"], "Input for getting a project."),
@@ -169,6 +171,7 @@ export const circleciActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pipelines_for_project",
+    operationType: "read",
     description: "List CircleCI pipelines for a project.",
     inputSchema: s.object(
       "Input for listing project pipelines.",
@@ -183,6 +186,7 @@ export const circleciActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_pipeline",
+    operationType: "read",
     description: "Get a CircleCI pipeline by pipeline ID.",
     followUpActions: ["circleci.list_workflows_by_pipeline"],
     inputSchema: s.actionInput({ pipelineId: pipelineIdField }, ["pipelineId"], "Input for getting a pipeline."),
@@ -190,6 +194,7 @@ export const circleciActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workflows_by_pipeline",
+    operationType: "read",
     description: "List workflows for a CircleCI pipeline.",
     inputSchema: s.object(
       "Input for listing pipeline workflows.",
@@ -203,6 +208,7 @@ export const circleciActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workflow_summary",
+    operationType: "read",
     description: "Get CircleCI Insights summary metrics for a workflow.",
     inputSchema: s.object(
       "Input for getting a workflow insights summary. Do not provide both allBranches and branch.",
@@ -218,6 +224,7 @@ export const circleciActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job_details",
+    operationType: "read",
     description: "Get CircleCI job details by project slug and job number.",
     inputSchema: s.actionInput(
       { projectSlug: projectSlugField, jobNumber: jobNumberField },
@@ -228,6 +235,7 @@ export const circleciActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job_artifacts",
+    operationType: "read",
     description: "List artifacts for a CircleCI job.",
     inputSchema: s.actionInput(
       { projectSlug: projectSlugField, jobNumber: jobNumberField },
@@ -238,6 +246,7 @@ export const circleciActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_insights_summary",
+    operationType: "read",
     description: "Get CircleCI Insights summary metrics for an organization.",
     inputSchema: s.object(
       "Input for listing organization insights summary.",
@@ -251,6 +260,7 @@ export const circleciActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "trigger_pipeline",
+    operationType: "write",
     description: "Trigger a new CircleCI pipeline for a project.",
     followUpActions: ["circleci.get_pipeline"],
     inputSchema: s.object(
@@ -274,6 +284,7 @@ export const circleciActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_project_env_vars",
+    operationType: "read",
     description: "List masked CircleCI environment variables for a project.",
     inputSchema: s.actionInput(
       { projectSlug: projectSlugField },

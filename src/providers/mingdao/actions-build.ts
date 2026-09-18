@@ -6,6 +6,7 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 export const mingdaoBuildActions: readonly ProviderActionDefinition[] = [
   defineProviderAction("mingdao", {
     name: "create_app_sections",
+    operationType: "write",
     requiredScopes: [],
     description: "Create navigation sections in the connected Mingdao application.",
     inputSchema: s.object(
@@ -34,6 +35,7 @@ export const mingdaoBuildActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "create_app_items",
+    operationType: "write",
     requiredScopes: [],
     description: "Create blank worksheet or custom-page application items.",
     inputSchema: s.object(
@@ -73,6 +75,7 @@ export const mingdaoBuildActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "create_chatbot",
+    operationType: "write",
     requiredScopes: [],
     description: "Create a chatbot with a system prompt, welcome message and up to five preset questions.",
     inputSchema: s.object(
@@ -105,6 +108,7 @@ export const mingdaoBuildActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "create_worksheet",
+    operationType: "write",
     requiredScopes: [],
     description: "Create a worksheet and its fields, including links to already-created worksheets.",
     inputSchema: s.object(
@@ -169,6 +173,7 @@ export const mingdaoBuildActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "update_worksheet",
+    operationType: "destructive",
     requiredScopes: [],
     description: "Update worksheet metadata and add, edit or delete fields.",
     inputSchema: s.object(
@@ -287,6 +292,7 @@ export const mingdaoBuildActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "delete_worksheet",
+    operationType: "destructive",
     requiredScopes: [],
     description: "Delete a worksheet from the connected application.",
     inputSchema: s.object(
@@ -306,6 +312,7 @@ export const mingdaoBuildActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "batch_create_custom_actions",
+    operationType: "write",
     requiredScopes: [],
     description: "Create workflow, record-update or related-record custom action buttons.",
     inputSchema: s.object(
@@ -370,6 +377,7 @@ export const mingdaoBuildActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "update_custom_page",
+    operationType: "destructive",
     requiredScopes: [],
     description:
       "Replace the complete custom-page component layout, including inline charts, views, tabs, containers and filter groups.",
@@ -529,6 +537,7 @@ export const mingdaoBuildActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "batch_create_views",
+    operationType: "write",
     requiredScopes: [],
     description:
       "Create table, kanban, gallery, calendar, hierarchy, gantt, resource, detail or map views with their configuration.",
@@ -699,6 +708,7 @@ export const mingdaoBuildActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction("mingdao", {
     name: "create_chart",
+    operationType: "write",
     requiredScopes: [],
     description: "Create a worksheet chart with dimensions, metrics, date ranges and filters.",
     inputSchema: s.object(

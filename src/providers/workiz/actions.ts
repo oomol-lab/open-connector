@@ -22,6 +22,7 @@ const record = (description: string) => s.looseObject(description);
 export const workizActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_jobs",
+    operationType: "read",
     description: "List Workiz jobs with date, offset, open-state, and status filters.",
     requiredScopes: [],
     inputSchema: listInput,
@@ -31,6 +32,7 @@ export const workizActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job",
+    operationType: "read",
     description: "Get one Workiz job by its unique identifier.",
     requiredScopes: [],
     inputSchema: identifier("job"),
@@ -38,6 +40,7 @@ export const workizActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_leads",
+    operationType: "read",
     description: "List Workiz leads with date, offset, open-state, and status filters.",
     requiredScopes: [],
     inputSchema: listInput,
@@ -47,6 +50,7 @@ export const workizActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_lead",
+    operationType: "read",
     description: "Get one Workiz lead by its unique identifier.",
     requiredScopes: [],
     inputSchema: identifier("lead"),
@@ -54,6 +58,7 @@ export const workizActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_team_members",
+    operationType: "read",
     description: "List active team members in the connected Workiz account.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list Workiz team members.", {}),

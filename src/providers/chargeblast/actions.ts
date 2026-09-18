@@ -82,6 +82,7 @@ const deflectionLogSchema = s.requiredObject("A Chargeblast deflection log entry
 export const chargeblastActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_alerts",
+    operationType: "read",
     description: "List Chargeblast alerts with optional alert-network filtering and pagination.",
     inputSchema: s.object(
       "Input parameters for listing Chargeblast alerts.",
@@ -102,6 +103,7 @@ export const chargeblastActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_alert",
+    operationType: "read",
     description: "Fetch one Chargeblast alert by identifier.",
     inputSchema: s.requiredObject("Input parameters for fetching one Chargeblast alert.", {
       id: idSchema,
@@ -113,6 +115,7 @@ export const chargeblastActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_alert",
+    operationType: "write",
     description: "Action one Chargeblast alert with an official reason code and optional expiration-time handling.",
     inputSchema: s.object(
       "Input parameters for updating a Chargeblast alert.",
@@ -131,6 +134,7 @@ export const chargeblastActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_credit_request",
+    operationType: "write",
     description: "Create a Chargeblast credit request for a rejected alert.",
     inputSchema: s.object(
       "Input parameters for creating a Chargeblast credit request.",
@@ -146,6 +150,7 @@ export const chargeblastActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_merchants",
+    operationType: "read",
     description: "List merchants in a Chargeblast account.",
     inputSchema: s.object(
       "Input parameters for listing Chargeblast merchants.",
@@ -164,6 +169,7 @@ export const chargeblastActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description: "List Chargeblast order identifiers with pagination.",
     inputSchema: s.object(
       "Input parameters for listing Chargeblast orders.",
@@ -184,6 +190,7 @@ export const chargeblastActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_order",
+    operationType: "read",
     description: "Fetch one Chargeblast order by identifier, including receipt and eligibility data.",
     inputSchema: s.requiredObject("Input parameters for fetching one Chargeblast order.", {
       id: idSchema,
@@ -195,6 +202,7 @@ export const chargeblastActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_deflection_logs",
+    operationType: "read",
     description: "List Chargeblast digital receipt and deflection lookup logs.",
     inputSchema: s.object(
       "Input parameters for listing Chargeblast deflection logs.",

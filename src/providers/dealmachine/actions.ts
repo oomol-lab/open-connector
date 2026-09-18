@@ -214,6 +214,7 @@ const searchOutputSchema = s.looseRequiredObject(
 export const dealMachineActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Get the DealMachine organization, authentication identity, and plan details.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to get the connected DealMachine account.", {}),
@@ -221,6 +222,7 @@ export const dealMachineActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_filters",
+    operationType: "read",
     description: "Discover DealMachine property and people filters and their allowed operators.",
     requiredScopes: [],
     inputSchema: filterDiscoveryQuerySchema,
@@ -228,6 +230,7 @@ export const dealMachineActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_fields",
+    operationType: "read",
     description: "Discover DealMachine property and people fields available for search results.",
     requiredScopes: [],
     inputSchema: fieldDiscoveryQuerySchema,
@@ -235,6 +238,7 @@ export const dealMachineActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_property",
+    operationType: "read",
     description: "Get one DealMachine property and optionally enrich its fields and contacts.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -253,6 +257,7 @@ export const dealMachineActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "count_properties",
+    operationType: "read",
     description: "Count properties and people matching DealMachine search criteria without consuming data credits.",
     requiredScopes: [],
     inputSchema: countPropertiesInputSchema,
@@ -260,6 +265,7 @@ export const dealMachineActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_properties",
+    operationType: "read",
     description: "Search DealMachine property data or estimate the credit cost of a search.",
     requiredScopes: [],
     inputSchema: searchPropertiesInputSchema,

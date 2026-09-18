@@ -7,6 +7,7 @@ export function createFeishuNoteActions(service: string): readonly ActionDefinit
   return [
     defineProviderAction(service, {
       name: "get_vc_note",
+      operationType: "read",
       description: "Get meeting-note metadata and its related document tokens.",
       requiredScopes: ["vc:note:read"],
       providerPermissions: ["vc:note:read"],
@@ -45,6 +46,7 @@ export function createFeishuNoteActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "download_vc_note_transcript",
+      operationType: "read",
       description:
         "Fetch every page of a unified meeting-note transcript and save the complete text to local transit storage.",
       requiredScopes: ["vc:note:read"],
@@ -88,6 +90,7 @@ export function createFeishuNoteActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "get_vc_meeting_note",
+      operationType: "read",
       description: "Resolve a video meeting to its note ID and return normalized meeting-note details.",
       requiredScopes: ["vc:meeting.meetingevent:read", "vc:note:read"],
       providerPermissions: ["vc:meeting.meetingevent:read", "vc:note:read"],

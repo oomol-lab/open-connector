@@ -163,6 +163,7 @@ function idInput(description: string): JsonSchema {
 export const gladiaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "upload_file",
+    operationType: "write",
     description:
       "Upload an audio or video file up to 100 MiB to Gladia from a local transit file, base64 content, or public URL.",
     requiredScopes: [],
@@ -188,6 +189,7 @@ export const gladiaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_transcription",
+    operationType: "write",
     description: "Start an asynchronous Gladia pre-recorded transcription job from a public audio or video URL.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -265,6 +267,7 @@ export const gladiaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_transcription",
+    operationType: "read",
     description: "Retrieve a Gladia pre-recorded transcription job by ID, including results when done.",
     requiredScopes: [],
     inputSchema: idInput("Input parameters for retrieving a Gladia transcription job."),
@@ -277,6 +280,7 @@ export const gladiaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_transcriptions",
+    operationType: "read",
     description:
       "List Gladia pre-recorded transcription jobs with optional pagination, date, status, and metadata filters.",
     requiredScopes: [],
@@ -306,6 +310,7 @@ export const gladiaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "download_transcription_audio",
+    operationType: "read",
     description:
       "Download the original audio file for a Gladia pre-recorded transcription and store it in local transit storage.",
     requiredScopes: [],
@@ -332,6 +337,7 @@ export const gladiaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_transcription",
+    operationType: "destructive",
     description: "Delete a Gladia pre-recorded transcription job and its associated data.",
     requiredScopes: [],
     inputSchema: idInput("Input parameters for deleting a Gladia transcription job."),

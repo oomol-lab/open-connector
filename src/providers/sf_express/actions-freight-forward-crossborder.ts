@@ -122,6 +122,7 @@ const fbaShipmentIdSchema = s.string("The FBA shipment id.", { pattern: "^FBA[0-
 export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "freight_forward_upload_sign_image",
+    operationType: "write",
     description:
       "Upload the recipient's signature or other proof-of-delivery images for an SF Freight forwarding waybill; SF reviews them and then marks the waybill signed. Image URLs must be publicly accessible.",
     requiredScopes: [],
@@ -176,6 +177,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_forward_upload_driver",
+    operationType: "write",
     description:
       "Upload the pickup driver information for an SF Freight forwarding order once the carrier assigns the driver.",
     requiredScopes: [],
@@ -200,6 +202,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_forward_upload_track_batch",
+    operationType: "write",
     description:
       "Upload multiple vehicle track points for one SF Freight forwarding waybill in a single call. All track points must belong to the same waybill number.",
     requiredScopes: [],
@@ -213,6 +216,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_forward_upload_waybill_remark",
+    operationType: "write",
     description: "Upload a remark for an SF Freight forwarding waybill.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The waybill remark.", {
@@ -224,6 +228,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_forward_upload_receipt",
+    operationType: "write",
     description: "Upload the sign-back receipt number for an SF Freight forwarding waybill.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The receipt reference.", {
@@ -235,6 +240,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_forward_update_order_status",
+    operationType: "write",
     description: "Upload a real-time order status update for an SF Freight forwarding shipment.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -292,6 +298,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_forward_upload_route",
+    operationType: "write",
     description:
       "Upload route events for an SF Freight forwarding waybill. Upload incrementally, newest first; cover all loading, unloading, and out-for-delivery nodes (use freight_forward_upload_sign_image for the signed node).",
     requiredScopes: [],
@@ -312,6 +319,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_forward_upload_track",
+    operationType: "write",
     description: "Upload one vehicle track point for an SF Freight forwarding waybill.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -359,6 +367,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_forward_apply_add_fee",
+    operationType: "write",
     description:
       "Apply for an additional last-mile fee on an SF Freight forwarding waybill; currently only 入仓垫付 (warehouse entry advance, type 50) is supported.",
     requiredScopes: [],
@@ -377,6 +386,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_forward_place_return_order",
+    operationType: "write",
     description: "Place a return-receipt order (标快到付) for one or more SF Freight forwarding waybills.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The return-receipt order.", {
@@ -396,6 +406,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_forward_report_exception",
+    operationType: "write",
     description:
       "Report an exception for an SF Freight forwarding waybill, for example damage, miscount, delay, or a reweigh appeal. delay_days is required for codes SIGN_03/SIGN_05/SIGN_15/TRANSITING_15; weight and sub_items are required for the reweigh codes HANDOVER_06/TRANSITING_17.",
     requiredScopes: [],
@@ -444,6 +455,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_forward_start_pay",
+    operationType: "write",
     description: "Get the payment QR code for an unpaid SF Freight forwarding waybill.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The waybill to pay.", {
@@ -461,6 +473,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_forward_apply_monthly_payment",
+    operationType: "write",
     description:
       "Bind the payment of an SF Freight forwarding waybill to a monthly settlement card (月结卡号) so the fee is charged to it. Requires a monthly card.",
     requiredScopes: [],
@@ -485,6 +498,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_forward_upload_return_route",
+    operationType: "write",
     description:
       "Upload route events for an SF Freight forwarding return receipt. Upload incrementally, newest first; cover all loading, unloading, out-for-delivery, and signed nodes.",
     requiredScopes: [],
@@ -496,6 +510,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_crossborder_report_trace",
+    operationType: "write",
     description:
       "Report logistics traces for an SF cross-border bulky shipment, as the carrier agent. Routes are stored newest first; milestone values make the corresponding nodes visible to end customers.",
     requiredScopes: [],
@@ -568,6 +583,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_crossborder_place_order",
+    operationType: "write",
     description:
       "Place an SF cross-border bulky (大件跨境) order and receive the master and sub waybill numbers. A monthly card (monthly_card) is required when settlement_type is 2 (寄付月结).",
     requiredScopes: [],
@@ -758,6 +774,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_crossborder_query_postcode_address",
+    operationType: "read",
     description:
       "Check whether a destination postal code is served for SF cross-border bulky shipments, returning the address info and remote-area flag.",
     requiredScopes: [],
@@ -785,6 +802,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_crossborder_get_print_batch",
+    operationType: "write",
     description: "Start an SF cross-border bulky waybill print download and get the print batch number.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The waybill to print.", {
@@ -797,6 +815,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_crossborder_query_print_result",
+    operationType: "read",
     description:
       "Get the waybill print file download URLs for a print batch created by freight_crossborder_get_print_batch.",
     requiredScopes: [],
@@ -823,6 +842,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_crossborder_confirm_delivery_window",
+    operationType: "write",
     description: "Confirm and update a new delivery window option for an FBA shipment as the carrier agent.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The delivery window confirmation.", {
@@ -841,6 +861,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_crossborder_query_delivery_window_options",
+    operationType: "read",
     description: "Query the selectable delivery window options for an FBA shipment as the carrier agent.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The FBA shipment.", {
@@ -883,6 +904,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_crossborder_get_delivery_window",
+    operationType: "read",
     description: "Query the current delivery window of an FBA shipment as the carrier agent.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The FBA shipment.", {
@@ -902,6 +924,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_crossborder_get_pod_info",
+    operationType: "read",
     description: "Query the proof-of-delivery information for an SF cross-border bulky waybill.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The waybill to query.", {
@@ -923,6 +946,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_crossborder_upload_pod_files",
+    operationType: "write",
     description:
       "Upload proof-of-delivery files for an SF cross-border bulky waybill, as publicly accessible file URLs.",
     requiredScopes: [],
@@ -934,6 +958,7 @@ export const sfExpressFreightForwardCrossborderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_crossborder_cancel_order",
+    operationType: "destructive",
     description: "Cancel one or more SF cross-border bulky orders by waybill number.",
     requiredScopes: [],
     inputSchema: s.object(

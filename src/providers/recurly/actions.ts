@@ -186,6 +186,7 @@ const subscriptionCreateInputSchema = s.object(
 export const recurlyActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_accounts",
+    operationType: "read",
     description: "List Recurly accounts with pagination and common filters.",
     inputSchema: s.object(
       "Query parameters for listing Recurly accounts.",
@@ -204,24 +205,28 @@ export const recurlyActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve one Recurly account by ID or code.",
     inputSchema: s.object("Path parameters for retrieving a Recurly account.", { accountId }),
     outputSchema: s.object("The normalized Recurly account response.", { account: accountSchema }),
   }),
   defineProviderAction(service, {
     name: "create_account",
+    operationType: "write",
     description: "Create a Recurly account from JSON-friendly account fields.",
     inputSchema: accountCreateInputSchema,
     outputSchema: s.object("The normalized created Recurly account.", { account: accountSchema }),
   }),
   defineProviderAction(service, {
     name: "update_account",
+    operationType: "write",
     description: "Update basic profile fields on a Recurly account.",
     inputSchema: accountUpdateInputSchema,
     outputSchema: s.object("The normalized updated Recurly account.", { account: accountSchema }),
   }),
   defineProviderAction(service, {
     name: "list_plans",
+    operationType: "read",
     description: "List Recurly plans with pagination and common filters.",
     inputSchema: s.object(
       "Query parameters for listing Recurly plans.",
@@ -238,18 +243,21 @@ export const recurlyActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_plan",
+    operationType: "read",
     description: "Retrieve one Recurly plan by ID or code.",
     inputSchema: s.object("Path parameters for retrieving a Recurly plan.", { planId }),
     outputSchema: s.object("The normalized Recurly plan response.", { plan: planSchema }),
   }),
   defineProviderAction(service, {
     name: "create_plan",
+    operationType: "write",
     description: "Create a fixed-price Recurly plan with one or more currencies.",
     inputSchema: planCreateInputSchema,
     outputSchema: s.object("The normalized created Recurly plan.", { plan: planSchema }),
   }),
   defineProviderAction(service, {
     name: "list_subscriptions",
+    operationType: "read",
     description: "List Recurly subscriptions with pagination and common filters.",
     inputSchema: s.object(
       "Query parameters for listing Recurly subscriptions.",
@@ -273,12 +281,14 @@ export const recurlyActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_subscription",
+    operationType: "read",
     description: "Retrieve one Recurly subscription by ID or UUID.",
     inputSchema: s.object("Path parameters for retrieving a Recurly subscription.", { subscriptionId }),
     outputSchema: s.object("The normalized Recurly subscription response.", { subscription: subscriptionSchema }),
   }),
   defineProviderAction(service, {
     name: "create_subscription",
+    operationType: "write",
     description: "Create a Recurly subscription for an existing account and plan.",
     inputSchema: subscriptionCreateInputSchema,
     outputSchema: s.object("The normalized created Recurly subscription.", { subscription: subscriptionSchema }),

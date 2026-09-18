@@ -165,6 +165,7 @@ function randomInput(includeRandomId: boolean): JsonSchema {
 export const giphyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_gifs",
+    operationType: "read",
     description: "Search GIPHY GIFs by query text.",
     requiredScopes: [],
     inputSchema: listInput(
@@ -178,6 +179,7 @@ export const giphyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_trending_gifs",
+    operationType: "read",
     description: "List trending GIPHY GIFs.",
     requiredScopes: [],
     inputSchema: listInput(),
@@ -185,6 +187,7 @@ export const giphyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_stickers",
+    operationType: "read",
     description: "Search GIPHY stickers by query text.",
     requiredScopes: [],
     inputSchema: listInput(
@@ -198,6 +201,7 @@ export const giphyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_trending_stickers",
+    operationType: "read",
     description: "List trending GIPHY stickers.",
     requiredScopes: [],
     inputSchema: listInput(),
@@ -205,6 +209,7 @@ export const giphyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "translate_gif",
+    operationType: "read",
     description: "Translate a phrase into a single best-match GIPHY GIF.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -222,6 +227,7 @@ export const giphyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "translate_sticker",
+    operationType: "read",
     description: "Translate a phrase into a single best-match GIPHY sticker.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -239,6 +245,7 @@ export const giphyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_random_gif",
+    operationType: "read",
     description: "Fetch a random GIPHY GIF, optionally filtered by tag.",
     requiredScopes: [],
     inputSchema: randomInput(true),
@@ -246,6 +253,7 @@ export const giphyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_random_sticker",
+    operationType: "read",
     description: "Fetch a random GIPHY sticker, optionally filtered by tag.",
     requiredScopes: [],
     inputSchema: randomInput(true),
@@ -253,6 +261,7 @@ export const giphyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_gif",
+    operationType: "read",
     description: "Get a GIPHY GIF by GIF Object id. This is not the random_id value.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -267,6 +276,7 @@ export const giphyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_gifs_by_ids",
+    operationType: "read",
     description: "Fetch multiple GIPHY GIFs by id.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -289,6 +299,7 @@ export const giphyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_tags",
+    operationType: "read",
     description: "Autocomplete GIPHY tags for a partial query.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -308,6 +319,7 @@ export const giphyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_trending_tags",
+    operationType: "read",
     description: "List trending search terms on GIPHY.",
     requiredScopes: [],
     inputSchema: emptyInput(),
@@ -320,6 +332,7 @@ export const giphyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_related_tags",
+    operationType: "read",
     description: "List GIPHY tags related to a term.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for this action.", {
@@ -334,6 +347,7 @@ export const giphyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_categories",
+    operationType: "read",
     description: "List GIPHY content categories.",
     requiredScopes: [],
     inputSchema: emptyInput(),
@@ -347,6 +361,7 @@ export const giphyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_random_id",
+    operationType: "read",
     description: "Create a GIPHY random_id value for personalization across requests.",
     requiredScopes: [],
     inputSchema: emptyInput(),

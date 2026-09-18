@@ -241,18 +241,21 @@ const embeddingOutputSchema = s.object("The response payload for Together AI emb
 export const togetherAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",
+    operationType: "read",
     description: "List the Together AI models available to the current API key.",
     inputSchema: noInputSchema,
     outputSchema: listModelsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_chat_completion",
+    operationType: "read",
     description: "Create a non-streaming Together AI chat completion.",
     inputSchema: chatCompletionInputSchema,
     outputSchema: chatCompletionOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_embedding",
+    operationType: "write",
     description: "Create Together AI embeddings for one or more text inputs.",
     inputSchema: embeddingInputSchema,
     outputSchema: embeddingOutputSchema,

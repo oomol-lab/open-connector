@@ -97,6 +97,7 @@ function deletedOutput(fields: Record<string, JsonSchema>, description: string) 
 export const appStoreServerRetentionMessagingActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "upload_retention_image",
+    operationType: "write",
     description: `Upload a PNG image for retention messages, either a FULL_SIZE image shown above the message body or a BULLET_POINT icon. The image starts in the PENDING state and Apple reviews it before it can be displayed; check the state with get_retention_image_list. Each app can hold up to 2000 images and an identifier can be uploaded only once. ${approvalNote} ${accessNote}`,
     requiredScopes: [],
     inputSchema: s.object(
@@ -124,6 +125,7 @@ export const appStoreServerRetentionMessagingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_retention_image_list",
+    operationType: "read",
     description: `List every image uploaded for retention messaging in this app and environment, with its size slot and approval state. ${approvalNote} ${accessNote}`,
     requiredScopes: [],
     inputSchema: s.actionInput({}, [], "No input. The list covers the app and environment of this connection."),
@@ -147,6 +149,7 @@ export const appStoreServerRetentionMessagingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_retention_image",
+    operationType: "destructive",
     description: `Delete an uploaded retention image. Apple refuses with 403 while a message still references the image, so delete the message first; a missing image answers 404. ${accessNote}`,
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -162,6 +165,7 @@ export const appStoreServerRetentionMessagingActions: ActionDefinition[] = [
 
   defineProviderAction(service, {
     name: "upload_retention_message",
+    operationType: "write",
     description: `Upload the text of a retention message: a header, a body, optionally a full-size image and bullet points with icons. The message starts in the PENDING state and Apple reviews it; check the state with get_retention_message_list. Leave out image and bulletPoints for messages you will use as switch-plan or promotional-offer messages. Each app can hold up to 2000 messages and an identifier can be uploaded only once. ${approvalNote} ${accessNote}`,
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -197,6 +201,7 @@ export const appStoreServerRetentionMessagingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_retention_message_list",
+    operationType: "read",
     description: `List every message uploaded for retention messaging in this app and environment, with its approval state. A message that carries an image also needs that image to be APPROVED; check it with get_retention_image_list. ${accessNote}`,
     requiredScopes: [],
     inputSchema: s.actionInput({}, [], "No input. The list covers the app and environment of this connection."),
@@ -219,6 +224,7 @@ export const appStoreServerRetentionMessagingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_retention_message",
+    operationType: "destructive",
     description: `Delete an uploaded retention message. A missing message answers 404. Stop returning the identifier from your Get Retention Message endpoint first, and delete any image it used afterwards with delete_retention_image. ${accessNote}`,
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -234,6 +240,7 @@ export const appStoreServerRetentionMessagingActions: ActionDefinition[] = [
 
   defineProviderAction(service, {
     name: "configure_default_retention_message",
+    operationType: "destructive",
     description: `Set the default retention message the App Store shows for one subscription product in one locale, replacing any default configured before. Only text-based messages, with or without an image, can be defaults, and both the message and its image must be APPROVED. Products without a default in a locale show no retention message there, and the default is also the fallback when your real-time endpoint fails. ${accessNote}`,
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -257,6 +264,7 @@ export const appStoreServerRetentionMessagingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_default_retention_message",
+    operationType: "read",
     description: `Read which message is configured as the default retention message for one subscription product in one locale. Returns a null messageIdentifier when no default is configured there. ${accessNote}`,
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -277,6 +285,7 @@ export const appStoreServerRetentionMessagingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_default_retention_message",
+    operationType: "destructive",
     description: `Remove the default retention message of one subscription product in one locale, so the App Store shows no retention message there. Succeeds even when no default was configured. ${accessNote}`,
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -295,6 +304,7 @@ export const appStoreServerRetentionMessagingActions: ActionDefinition[] = [
 
   defineProviderAction(service, {
     name: "configure_retention_realtime_url",
+    operationType: "destructive",
     description: `Register the URL of your Get Retention Message endpoint for the environment of this connection, replacing any URL registered before. Once set, the App Store calls it whenever a subscriber opens the cancellation flow and shows the message you pick. A production URL is accepted only after your endpoint passed the sandbox performance test (Apple answers 403 otherwise). ${accessNote}`,
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -317,6 +327,7 @@ export const appStoreServerRetentionMessagingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_retention_realtime_url",
+    operationType: "read",
     description: `Read the URL of the Get Retention Message endpoint registered for the environment of this connection. Returns a null realtimeUrl when none is registered. ${accessNote}`,
     requiredScopes: [],
     inputSchema: s.actionInput({}, [], "No input. The lookup covers the app and environment of this connection."),
@@ -332,6 +343,7 @@ export const appStoreServerRetentionMessagingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_retention_realtime_url",
+    operationType: "destructive",
     description: `Unregister the Get Retention Message endpoint URL for the environment of this connection. Afterwards the App Store shows only default messages in that environment until a URL is registered again. ${accessNote}`,
     requiredScopes: [],
     inputSchema: s.actionInput({}, [], "No input. The removal covers the app and environment of this connection."),
@@ -343,6 +355,7 @@ export const appStoreServerRetentionMessagingActions: ActionDefinition[] = [
 
   defineProviderAction(service, {
     name: "initiate_retention_performance_test",
+    operationType: "write",
     description: `Start Apple's performance test of the Get Retention Message endpoint registered in the sandbox, using an active sandbox subscription as the sample purchase. Passing the test is required before configure_retention_realtime_url accepts a production URL. Returns the request identifier and the test parameters; the test runs for the returned totalDuration. ${sandboxOnlyNote} ${accessNote}`,
     requiredScopes: [],
     asyncLifecycle: {
@@ -369,6 +382,7 @@ export const appStoreServerRetentionMessagingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_retention_performance_test_results",
+    operationType: "read",
     description: `Read the outcome of a sandbox performance test started with initiate_retention_performance_test: PENDING while it runs, then PASS or FAIL together with the measured response times, success rate and failure counts. ${sandboxOnlyNote} ${accessNote}`,
     requiredScopes: [],
     asyncLifecycle: {

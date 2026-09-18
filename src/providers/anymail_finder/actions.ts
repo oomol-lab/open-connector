@@ -110,6 +110,7 @@ const personOutputSchema = s.object("A normalized Anymail Finder person result."
 export const anymailFinderActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Get the Anymail Finder account email and remaining credits.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -121,6 +122,7 @@ export const anymailFinderActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_person_email",
+    operationType: "read",
     description: "Find a person's work email from their name and company or LinkedIn profile.",
     requiredScopes: [],
     inputSchema: findPersonInputSchema,
@@ -128,6 +130,7 @@ export const anymailFinderActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_company_emails",
+    operationType: "read",
     description: "Find up to 20 verified email addresses for a company.",
     requiredScopes: [],
     inputSchema: companyInputSchema,
@@ -154,6 +157,7 @@ export const anymailFinderActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_decision_maker_email",
+    operationType: "read",
     description: "Find a verified email for a decision maker at a company.",
     requiredScopes: [],
     inputSchema: decisionMakerInputSchema,
@@ -161,6 +165,7 @@ export const anymailFinderActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "verify_email",
+    operationType: "read",
     description: "Verify the deliverability status of an email address.",
     requiredScopes: [],
     inputSchema: s.object("Input for verifying an email address.", {

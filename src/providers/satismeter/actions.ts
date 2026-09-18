@@ -184,6 +184,7 @@ const getSurveyStatisticsInputSchema = s.object(
 export const satismeterActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Retrieve a SatisMeter project by ID.",
     inputSchema: getProjectInputSchema,
     outputSchema: s.object("The output payload for retrieving a SatisMeter project.", {
@@ -192,6 +193,7 @@ export const satismeterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_surveys",
+    operationType: "read",
     description: "List surveys configured in a SatisMeter project.",
     inputSchema: listSurveysInputSchema,
     outputSchema: s.object("The output payload for listing SatisMeter surveys.", {
@@ -200,6 +202,7 @@ export const satismeterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_survey",
+    operationType: "read",
     description: "Retrieve a SatisMeter survey by ID.",
     inputSchema: getSurveyInputSchema,
     outputSchema: s.object("The output payload for retrieving a SatisMeter survey.", {
@@ -208,6 +211,7 @@ export const satismeterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_project_responses",
+    operationType: "read",
     description: "List responses recorded across all surveys in a SatisMeter project.",
     inputSchema: listProjectResponsesInputSchema,
     outputSchema: s.object("The output payload for listing project-level SatisMeter responses.", {
@@ -217,6 +221,7 @@ export const satismeterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_survey_responses",
+    operationType: "read",
     description: "List responses recorded for one SatisMeter survey.",
     inputSchema: listSurveyResponsesInputSchema,
     outputSchema: s.object("The output payload for listing survey-level SatisMeter responses.", {
@@ -226,6 +231,7 @@ export const satismeterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_survey_statistics",
+    operationType: "read",
     description: "Retrieve aggregated statistics for one SatisMeter survey.",
     inputSchema: getSurveyStatisticsInputSchema,
     outputSchema: s.object("The output payload for retrieving SatisMeter survey statistics.", {

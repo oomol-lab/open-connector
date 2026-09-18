@@ -3,6 +3,7 @@ import type { UnifapiOperationDefinition } from "../operations.ts";
 export const threadsOperations: readonly UnifapiOperationDefinition[] = [
   {
     name: "search_threads_profiles",
+    operationType: "read",
     operationId: "getThreadsSearchProfiles",
     description: "Search Threads users by keyword.",
     method: "GET",
@@ -27,6 +28,7 @@ export const threadsOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_threads_recent",
+    operationType: "read",
     operationId: "getThreadsSearchRecent",
     description: "Search recent Threads posts.",
     method: "GET",
@@ -55,6 +57,7 @@ export const threadsOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_threads_top",
+    operationType: "read",
     operationId: "getThreadsSearchTop",
     description: "Search top Threads posts.",
     method: "GET",
@@ -83,6 +86,7 @@ export const threadsOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_threads_user_posts",
+    operationType: "read",
     operationId: "getThreadsUsersByUsernamePosts",
     description: "List Threads posts authored by a user.",
     method: "GET",
@@ -111,6 +115,7 @@ export const threadsOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_threads_user_replies",
+    operationType: "read",
     operationId: "getThreadsUsersByUsernameReplies",
     description: "List Threads replies authored by a user.",
     method: "GET",
@@ -139,6 +144,7 @@ export const threadsOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_threads_user_reposts",
+    operationType: "read",
     operationId: "getThreadsUsersByUsernameReposts",
     description: "List Threads reposts by a user.",
     method: "GET",
@@ -167,6 +173,7 @@ export const threadsOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_threads_user",
+    operationType: "read",
     operationId: "getThreadsUsersByUsername",
     description: "Get a Threads user profile by username.",
     method: "GET",

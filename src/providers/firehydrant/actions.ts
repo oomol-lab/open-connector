@@ -188,6 +188,7 @@ const getEnvironmentInputSchema = s.requiredObject("The input payload for loadin
 export const firehydrantActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_incidents",
+    operationType: "read",
     description: "List FireHydrant incidents with stable pagination and common filters.",
     inputSchema: listIncidentsInputSchema,
     outputSchema: s.requiredObject("The response returned when listing FireHydrant incidents.", {
@@ -198,6 +199,7 @@ export const firehydrantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_incident",
+    operationType: "read",
     description: "Retrieve a single FireHydrant incident by ID.",
     inputSchema: getIncidentInputSchema,
     outputSchema: s.requiredObject("The response returned when loading a FireHydrant incident.", {
@@ -207,6 +209,7 @@ export const firehydrantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_incident",
+    operationType: "write",
     description: "Create a FireHydrant incident using a JSON-friendly request body.",
     inputSchema: createIncidentInputSchema,
     outputSchema: s.requiredObject("The response returned when creating a FireHydrant incident.", {
@@ -216,6 +219,7 @@ export const firehydrantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_services",
+    operationType: "read",
     description: "List FireHydrant services with pagination and search filters.",
     inputSchema: listInputSchema,
     outputSchema: s.requiredObject("The response returned when listing FireHydrant services.", {
@@ -226,6 +230,7 @@ export const firehydrantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_service",
+    operationType: "read",
     description: "Retrieve a single FireHydrant service by UUID or slug.",
     inputSchema: getServiceInputSchema,
     outputSchema: s.requiredObject("The response returned when loading a FireHydrant service.", {
@@ -235,6 +240,7 @@ export const firehydrantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_environments",
+    operationType: "read",
     description: "List FireHydrant environments with pagination and search filters.",
     inputSchema: listInputSchema,
     outputSchema: s.requiredObject("The response returned when listing FireHydrant environments.", {
@@ -245,6 +251,7 @@ export const firehydrantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_environment",
+    operationType: "read",
     description: "Retrieve a single FireHydrant environment by UUID or slug.",
     inputSchema: getEnvironmentInputSchema,
     outputSchema: s.requiredObject("The response returned when loading a FireHydrant environment.", {

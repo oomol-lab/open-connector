@@ -28,6 +28,7 @@ const provider: ProviderDefinition = {
       service: "example",
       name: "echo",
       description: "Echo the input.",
+      operationType: "write",
       requiredScopes: [],
       providerPermissions: [],
       inputSchema: { type: "object", additionalProperties: true },
@@ -122,7 +123,6 @@ describe("action execution OpenAPI", () => {
       required: string[];
       properties: { alias?: { description?: string }; marketplace?: { required?: string[] } };
     };
-
     const health = document.paths["/v1/health"] as {
       get: {
         responses: Record<

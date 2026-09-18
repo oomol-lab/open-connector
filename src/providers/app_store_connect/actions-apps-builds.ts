@@ -19,6 +19,7 @@ import {
 export const appStoreConnectAppsBuildsActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_apps",
+    operationType: "read",
     description: "List the apps the API key can see, optionally filtered by bundle identifier, name, or SKU.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -43,6 +44,7 @@ export const appStoreConnectAppsBuildsActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_app",
+    operationType: "read",
     description: "Read one app record by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -54,6 +56,7 @@ export const appStoreConnectAppsBuildsActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_builds",
+    operationType: "read",
     description:
       "List builds uploaded for one app, with the prerelease version each build belongs to. Filter by version, platform, processing state, or TestFlight review state.",
     requiredScopes: [],
@@ -91,6 +94,7 @@ export const appStoreConnectAppsBuildsActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_build",
+    operationType: "read",
     description:
       "Read one build together with its prerelease version, its TestFlight review submission, and the app it belongs to.",
     requiredScopes: [],
@@ -103,6 +107,7 @@ export const appStoreConnectAppsBuildsActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_pre_release_versions",
+    operationType: "read",
     description: "List the prerelease versions of one app, which group its TestFlight builds by marketing version.",
     requiredScopes: [],
     inputSchema: s.object(

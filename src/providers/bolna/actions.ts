@@ -223,6 +223,7 @@ const getExecutionRawLogsOutputSchema = s.object(
 export const bolnaActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user_info",
+    operationType: "read",
     description: "Get the authenticated Bolna workspace user, wallet, and concurrency summary.",
     requiredScopes: [],
     inputSchema: getUserInfoInputSchema,
@@ -230,6 +231,7 @@ export const bolnaActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_agents",
+    operationType: "read",
     description: "List all Bolna voice agents in the authenticated workspace.",
     requiredScopes: [],
     inputSchema: s.object("Input payload for listing Bolna agents.", {}),
@@ -237,6 +239,7 @@ export const bolnaActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_agent",
+    operationType: "read",
     description: "Get one Bolna voice agent by agent_id.",
     requiredScopes: [],
     inputSchema: getAgentInputSchema,
@@ -244,6 +247,7 @@ export const bolnaActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_agent_executions",
+    operationType: "read",
     description: "List execution history for one Bolna voice agent.",
     requiredScopes: [],
     inputSchema: listAgentExecutionsInputSchema,
@@ -251,6 +255,7 @@ export const bolnaActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_execution",
+    operationType: "read",
     description: "Get one Bolna execution by execution_id.",
     requiredScopes: [],
     inputSchema: getExecutionInputSchema,
@@ -258,6 +263,7 @@ export const bolnaActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_execution_raw_logs",
+    operationType: "read",
     description: "Get raw logs for one Bolna execution by execution_id.",
     requiredScopes: [],
     inputSchema: getExecutionInputSchema,

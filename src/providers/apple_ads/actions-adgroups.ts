@@ -247,6 +247,7 @@ const adGroupResource = resourceObject(
 export const appleAdsAdGroupActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_ad_groups",
+    operationType: "read",
     description:
       "Search the ad groups of one ad account with filters, sorting and offset pagination. Filter on campaignId to scope the result to a single campaign. Soft-deleted ad groups are excluded unless a filter on deleted asks for them.",
     requiredScopes: [],
@@ -274,6 +275,7 @@ export const appleAdsAdGroupActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ad_group",
+    operationType: "read",
     description:
       "Read one ad group by identifier, including its full targeting and bid strategy. Apple Ads returns the ad group regardless of its deleted state.",
     requiredScopes: [],
@@ -290,6 +292,7 @@ export const appleAdsAdGroupActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_ad_group",
+    operationType: "write",
     description:
       "Create an ad group inside an existing campaign. campaignId, pricingModel and automatedKeywordsRequired are fixed at creation. Keywords and negative keywords cannot be created inline: add them afterwards with the keyword actions.",
     requiredScopes: [],
@@ -326,6 +329,7 @@ export const appleAdsAdGroupActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_ad_group",
+    operationType: "destructive",
     description:
       "Change the mutable fields of one ad group. Only the fields you pass are changed, and targeting is merged dimension by dimension: a dimension you pass replaces the stored one, and a dimension you omit is left alone. campaignId, pricingModel and automatedKeywordsRequired cannot be changed.",
     requiredScopes: [],
@@ -350,6 +354,7 @@ export const appleAdsAdGroupActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_ad_group",
+    operationType: "destructive",
     description:
       "Soft-delete one ad group. Apple Ads keeps the record but stops delivery and cascades the deletion to the ad group's ads, keywords and negative keywords. It cannot be undone.",
     requiredScopes: [],

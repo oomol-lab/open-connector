@@ -23,6 +23,7 @@ const userInfoSchema = s.object("The authenticated CollegeFootballData account i
 export const collegeFootballDataActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_info",
+    operationType: "read",
     description: "Get CollegeFootballData account information including patron level and remaining calls.",
     inputSchema: s.object("Input parameters for getting CollegeFootballData account info.", {}),
     outputSchema: s.object("The CollegeFootballData account info response.", {
@@ -31,6 +32,7 @@ export const collegeFootballDataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_conferences",
+    operationType: "read",
     description: "List college football conferences from CollegeFootballData.",
     inputSchema: s.object("Input parameters for listing CollegeFootballData conferences.", {}),
     outputSchema: s.object("The CollegeFootballData conferences response.", {
@@ -39,6 +41,7 @@ export const collegeFootballDataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_teams",
+    operationType: "read",
     description: "List college football teams from CollegeFootballData with optional year and conference filters.",
     inputSchema: s.object(
       "Input parameters for listing CollegeFootballData teams.",
@@ -54,6 +57,7 @@ export const collegeFootballDataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_venues",
+    operationType: "read",
     description: "List college football venues from CollegeFootballData.",
     inputSchema: s.object("Input parameters for listing CollegeFootballData venues.", {}),
     outputSchema: s.object("The CollegeFootballData venues response.", {
@@ -62,6 +66,7 @@ export const collegeFootballDataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_games",
+    operationType: "read",
     description:
       "List college football games and results from CollegeFootballData by year, game id, and optional filters.",
     inputSchema: s.object(

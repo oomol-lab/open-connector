@@ -7,6 +7,7 @@ const service = "stripe";
 
 interface StripeActionSource {
   name: StripeActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
@@ -155,6 +156,7 @@ const deletedOutput = output("A Stripe delete result.", {
 const actions: StripeActionSource[] = [
   action(
     "identify_account",
+    "read",
     "Retrieve the Stripe account associated with the current secret API key.",
     input("No input is required to identify a Stripe account.", {}),
     output("Stripe account metadata.", {
@@ -167,12 +169,14 @@ const actions: StripeActionSource[] = [
   ),
   action(
     "create_customer",
+    "write",
     "Create a Stripe customer with common profile and metadata fields.",
     input("Input for creating a Stripe customer.", customerPayload),
     customerOutput,
   ),
   action(
     "update_customer",
+    "write",
     "Update a Stripe customer with common profile and metadata fields.",
     input(
       "Input for updating a Stripe customer.",
@@ -186,6 +190,7 @@ const actions: StripeActionSource[] = [
   ),
   action(
     "get_customer",
+    "read",
     "Retrieve a Stripe customer by ID.",
     input(
       "Input for retrieving a Stripe customer.",
@@ -198,6 +203,7 @@ const actions: StripeActionSource[] = [
   ),
   action(
     "list_customers",
+    "read",
     "List Stripe customers with optional email, created timestamp, and cursor filters.",
     input("Input for listing Stripe customers.", {
       ...paginationInput,
@@ -208,6 +214,7 @@ const actions: StripeActionSource[] = [
   ),
   action(
     "search_customers",
+    "read",
     "Search Stripe customers with Stripe's search query syntax.",
     input(
       "Input for searching Stripe customers.",
@@ -222,6 +229,7 @@ const actions: StripeActionSource[] = [
   ),
   action(
     "delete_customer",
+    "destructive",
     "Delete a Stripe customer by ID.",
     input(
       "Input for deleting a Stripe customer.",
@@ -234,12 +242,14 @@ const actions: StripeActionSource[] = [
   ),
   action(
     "create_product",
+    "write",
     "Create a Stripe product with common catalog fields.",
     input("Input for creating a Stripe product.", productPayload, ["name"]),
     productOutput,
   ),
   action(
     "update_product",
+    "write",
     "Update a Stripe product with common catalog fields.",
     input(
       "Input for updating a Stripe product.",
@@ -253,6 +263,7 @@ const actions: StripeActionSource[] = [
   ),
   action(
     "get_product",
+    "read",
     "Retrieve a Stripe product by ID.",
     input(
       "Input for retrieving a Stripe product.",
@@ -265,6 +276,7 @@ const actions: StripeActionSource[] = [
   ),
   action(
     "list_products",
+    "read",
     "List Stripe products with optional active and cursor filters.",
     input("Input for listing Stripe products.", {
       ...paginationInput,
@@ -276,6 +288,7 @@ const actions: StripeActionSource[] = [
   ),
   action(
     "search_products",
+    "read",
     "Search Stripe products with Stripe's search query syntax.",
     input(
       "Input for searching Stripe products.",
@@ -290,6 +303,7 @@ const actions: StripeActionSource[] = [
   ),
   action(
     "delete_product",
+    "destructive",
     "Delete a Stripe product by ID.",
     input(
       "Input for deleting a Stripe product.",
@@ -302,12 +316,14 @@ const actions: StripeActionSource[] = [
   ),
   action(
     "create_price",
+    "write",
     "Create a Stripe one-time or recurring price for an existing or inline product.",
     input("Input for creating a Stripe price.", pricePayload, ["currency"]),
     priceOutput,
   ),
   action(
     "update_price",
+    "destructive",
     "Update mutable fields on a Stripe price.",
     input(
       "Input for updating a Stripe price.",
@@ -325,6 +341,7 @@ const actions: StripeActionSource[] = [
   ),
   action(
     "get_price",
+    "read",
     "Retrieve a Stripe price by ID.",
     input(
       "Input for retrieving a Stripe price.",
@@ -337,6 +354,7 @@ const actions: StripeActionSource[] = [
   ),
   action(
     "list_prices",
+    "read",
     "List Stripe prices with optional product, active, type, and cursor filters.",
     input("Input for listing Stripe prices.", {
       ...paginationInput,
@@ -354,6 +372,7 @@ const actions: StripeActionSource[] = [
   ),
   action(
     "search_prices",
+    "read",
     "Search Stripe prices with Stripe's search query syntax.",
     input(
       "Input for searching Stripe prices.",
@@ -391,6 +410,7 @@ export type StripeActionName =
 export const stripeActions: ActionDefinition[] = actions.map((source) =>
   defineProviderAction(service, {
     name: source.name,
+    operationType: source.operationType,
     description: source.description,
     requiredScopes: [],
     providerPermissions: [],
@@ -401,11 +421,12 @@ export const stripeActions: ActionDefinition[] = actions.map((source) =>
 
 function action(
   name: StripeActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): StripeActionSource {
-  return { name, description, inputSchema, outputSchema };
+  return { name, operationType, description, inputSchema, outputSchema };
 }
 
 function input(description: string, properties: Record<string, JsonSchema>, required: string[] = []): JsonSchema {

@@ -295,6 +295,7 @@ const taskProgressSchema = s.object("The progress counters reported by the task.
 
 const pingCluster = defineProviderAction(service, {
   name: "ping_cluster",
+  operationType: "read",
   description: "Check whether the Elasticsearch cluster is reachable and return its health status.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for checking Elasticsearch cluster health.", {}),
@@ -309,6 +310,7 @@ const pingCluster = defineProviderAction(service, {
 
 const listIndices = defineProviderAction(service, {
   name: "list_indices",
+  operationType: "read",
   description: "List Elasticsearch indices visible to the connected user.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -333,6 +335,7 @@ const listIndices = defineProviderAction(service, {
 
 const getIndexSchema = defineProviderAction(service, {
   name: "get_index_schema",
+  operationType: "read",
   description: "Get mappings, settings, aliases, and field statistics for one Elasticsearch index.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for reading one Elasticsearch index schema.", {
@@ -351,6 +354,7 @@ const getIndexSchema = defineProviderAction(service, {
 
 const queryIndex = defineProviderAction(service, {
   name: "query_index",
+  operationType: "read",
   description: "Search an Elasticsearch index with text queries, filters, pagination, sorting, and aggregations.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for searching one Elasticsearch index.", {
@@ -412,6 +416,7 @@ const queryIndex = defineProviderAction(service, {
 
 const createIndex = defineProviderAction(service, {
   name: "create_index",
+  operationType: "write",
   description: "Create one Elasticsearch index with explicit mappings, settings, and aliases.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for creating one Elasticsearch index.", {
@@ -436,6 +441,7 @@ const createIndex = defineProviderAction(service, {
 
 const deleteIndex = defineProviderAction(service, {
   name: "delete_index",
+  operationType: "destructive",
   description:
     "Permanently delete one or more Elasticsearch indices by exact name. This destroys data and cannot be undone, so wildcards, comma-separated lists, and _all are rejected, and expectedCount must equal the number of names supplied.",
   requiredScopes: [],
@@ -460,6 +466,7 @@ const deleteIndex = defineProviderAction(service, {
 
 const updateIndexMappings = defineProviderAction(service, {
   name: "update_index_mappings",
+  operationType: "write",
   description:
     "Add or update field mappings on an existing Elasticsearch index. Existing field types cannot be changed in place, so incompatible changes require a new index and a reindex.",
   requiredScopes: [],
@@ -483,6 +490,7 @@ const updateIndexMappings = defineProviderAction(service, {
 
 const getIndexStats = defineProviderAction(service, {
   name: "get_index_stats",
+  operationType: "read",
   description:
     "Get document, store, search, get, and indexing statistics for Elasticsearch indices. Counters such as searchQueryTotal are cumulative since each node started rather than a time window, so compare them against the node uptime in counterWindow before concluding that a zero means the index is never queried.",
   requiredScopes: [],
@@ -508,6 +516,7 @@ const getIndexStats = defineProviderAction(service, {
 
 const listAliases = defineProviderAction(service, {
   name: "list_aliases",
+  operationType: "read",
   description: "List Elasticsearch aliases and the indices behind them, optionally filtered by alias or index pattern.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for listing Elasticsearch aliases.", {
@@ -521,6 +530,7 @@ const listAliases = defineProviderAction(service, {
 
 const updateAliases = defineProviderAction(service, {
   name: "update_aliases",
+  operationType: "destructive",
   description:
     "Atomically add or remove Elasticsearch alias assignments in a single request, which is how an alias is switched between indices without downtime. This action cannot delete an index; use delete_index for that.",
   requiredScopes: [],
@@ -560,6 +570,7 @@ const updateAliases = defineProviderAction(service, {
 
 const getClusterHealth = defineProviderAction(service, {
   name: "get_cluster_health",
+  operationType: "read",
   description: "Get detailed Elasticsearch cluster health including shard counts and an optional per-index breakdown.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for reading Elasticsearch cluster health.", {
@@ -593,6 +604,7 @@ const getClusterHealth = defineProviderAction(service, {
 
 const getClusterNodes = defineProviderAction(service, {
   name: "get_cluster_nodes",
+  operationType: "read",
   description:
     "List Elasticsearch cluster nodes with uptime, heap, disk, and role information. Node uptime is what makes the cumulative counters from get_index_stats interpretable.",
   requiredScopes: [],
@@ -605,6 +617,7 @@ const getClusterNodes = defineProviderAction(service, {
 
 const listShards = defineProviderAction(service, {
   name: "list_shards",
+  operationType: "read",
   description:
     "List Elasticsearch shard placement, state, and size, optionally limited to an index pattern or a shard state.",
   requiredScopes: [],
@@ -624,6 +637,7 @@ const listShards = defineProviderAction(service, {
 
 const getDocument = defineProviderAction(service, {
   name: "get_document",
+  operationType: "read",
   description:
     "Get one Elasticsearch document by id. A missing document returns found as false instead of raising an error.",
   requiredScopes: [],
@@ -649,6 +663,7 @@ const getDocument = defineProviderAction(service, {
 
 const indexDocument = defineProviderAction(service, {
   name: "index_document",
+  operationType: "destructive",
   description:
     "Index or replace one document in an Elasticsearch index. Supplying documentId replaces that document, while omitting it lets Elasticsearch generate an id.",
   requiredScopes: [],
@@ -686,6 +701,7 @@ const indexDocument = defineProviderAction(service, {
 
 const deleteDocument = defineProviderAction(service, {
   name: "delete_document",
+  operationType: "destructive",
   description:
     "Delete one Elasticsearch document by id. A missing document returns a not_found result instead of raising an error.",
   requiredScopes: [],
@@ -704,6 +720,7 @@ const deleteDocument = defineProviderAction(service, {
 
 const bulkIndexDocuments = defineProviderAction(service, {
   name: "bulk_index_documents",
+  operationType: "destructive",
   description:
     "Apply many Elasticsearch document writes in one bulk request. Each operation names its own index, and per-operation failures are reported in the response instead of failing the whole request.",
   requiredScopes: [],
@@ -741,6 +758,7 @@ const bulkIndexDocuments = defineProviderAction(service, {
 
 const countDocuments = defineProviderAction(service, {
   name: "count_documents",
+  operationType: "read",
   description:
     "Count Elasticsearch documents matching a query without returning any hits, which is cheaper than a search when only the size of a result set matters.",
   requiredScopes: [],
@@ -758,6 +776,7 @@ const countDocuments = defineProviderAction(service, {
 
 const deleteByQuery = defineProviderAction(service, {
   name: "delete_by_query",
+  operationType: "destructive",
   description:
     "Delete Elasticsearch documents matching a query. This destroys data and cannot be undone, so a bounded maxDocs and at least one of query, termFilters, rangeFilters, or timeFilter are required, the index name must be exact, and _all is rejected. That makes it impossible to empty an entire index by accident. The action waits for the deletion to finish, and a large maxDocs can outlast that wait: a timeout does not cancel the deletion, which keeps running on the cluster with no task id to poll, so a retry after a timeout deletes a further batch.",
   requiredScopes: [],
@@ -792,6 +811,7 @@ const deleteByQuery = defineProviderAction(service, {
 
 const reindex = defineProviderAction(service, {
   name: "reindex",
+  operationType: "write",
   description:
     "Start an Elasticsearch reindex from one index to another and return a task id to poll with get_task. The copy runs in the background, so this action returns before the data has moved.",
   requiredScopes: [],
@@ -821,6 +841,7 @@ const reindex = defineProviderAction(service, {
 
 const getTask = defineProviderAction(service, {
   name: "get_task",
+  operationType: "read",
   description: "Get the state and progress of one Elasticsearch task, such as a reindex started by the reindex action.",
   requiredScopes: [],
   asyncLifecycle: { startActionId: "elasticsearch.reindex", statusActionId: "elasticsearch.get_task" },

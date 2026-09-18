@@ -113,6 +113,7 @@ const commonSearchFilters = {
 export const arcgisOnlineActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "suggest",
+    operationType: "read",
     description: "Return ArcGIS address and place autocomplete suggestions.",
     inputSchema: s.object(
       "Input parameters for ArcGIS geocoding suggestions.",
@@ -143,6 +144,7 @@ export const arcgisOnlineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_address_candidates",
+    operationType: "read",
     description: "Convert an address or place query into ArcGIS geocoding candidates.",
     inputSchema: s.object(
       "Input parameters for ArcGIS findAddressCandidates.",
@@ -179,6 +181,7 @@ export const arcgisOnlineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reverse_geocode",
+    operationType: "read",
     description: "Convert longitude and latitude into an ArcGIS address result.",
     inputSchema: s.object(
       "Input parameters for ArcGIS reverseGeocode.",

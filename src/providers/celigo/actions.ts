@@ -83,6 +83,7 @@ export const celigoActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "get_token_info",
+    operationType: "read",
     description: "Get metadata for the current Celigo API token.",
     requiredScopes: [],
     inputSchema: noInputSchema,
@@ -93,6 +94,7 @@ export const celigoActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "list_exports",
+    operationType: "read",
     description: "List exports available in the current Celigo account.",
     requiredScopes: [],
     inputSchema: noInputSchema,
@@ -103,6 +105,7 @@ export const celigoActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "get_export",
+    operationType: "read",
     description: "Get one Celigo export by export ID.",
     requiredScopes: [],
     inputSchema: s.object("Input payload for retrieving one Celigo export.", {
@@ -115,6 +118,7 @@ export const celigoActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "list_imports",
+    operationType: "read",
     description: "List imports available in the current Celigo account.",
     requiredScopes: [],
     inputSchema: noInputSchema,
@@ -125,6 +129,7 @@ export const celigoActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "get_import",
+    operationType: "read",
     description: "Get one Celigo import by import ID.",
     requiredScopes: [],
     inputSchema: s.object("Input payload for retrieving one Celigo import.", {
@@ -137,6 +142,7 @@ export const celigoActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "list_flows",
+    operationType: "read",
     description: "List flows available in the current Celigo account.",
     requiredScopes: [],
     inputSchema: noInputSchema,
@@ -147,6 +153,7 @@ export const celigoActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "get_flow",
+    operationType: "read",
     description: "Get one Celigo flow by flow ID.",
     requiredScopes: [],
     inputSchema: s.object("Input payload for retrieving one Celigo flow.", {
@@ -159,6 +166,7 @@ export const celigoActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "get_connection",
+    operationType: "read",
     description: "Get one Celigo connection by connection ID.",
     requiredScopes: [],
     inputSchema: s.object("Input payload for retrieving one Celigo connection.", {

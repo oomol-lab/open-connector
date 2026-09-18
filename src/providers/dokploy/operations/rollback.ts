@@ -10,6 +10,7 @@ export const rollbackOperations: readonly DokployOperationDefinition[] = [
     tag: "rollback",
     description:
       "Modify Dokploy state via POST /rollback.delete. Warning: this operation can remove, stop, or otherwise disrupt resources.",
+    operationType: "destructive",
     method: "POST",
     path: "/rollback.delete",
     pathFields: [],
@@ -40,6 +41,7 @@ export const rollbackOperations: readonly DokployOperationDefinition[] = [
     tag: "rollback",
     description:
       "Modify Dokploy state via POST /rollback.rollback. Warning: this operation can remove, stop, or otherwise disrupt resources.",
+    operationType: "destructive",
     method: "POST",
     path: "/rollback.rollback",
     pathFields: [],

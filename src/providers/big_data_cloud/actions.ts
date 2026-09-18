@@ -148,6 +148,7 @@ const reverseGeocodeWithTimezoneOutputSchema = s.object(
 export const bigDataCloudActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_country_by_ip",
+    operationType: "read",
     description: "Get country-level BigDataCloud geolocation data for an IP address.",
     requiredScopes: [],
     inputSchema: countryByIpInputSchema,
@@ -155,6 +156,7 @@ export const bigDataCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_network_by_ip",
+    operationType: "read",
     description: "Get BigDataCloud network and ASN details for an IP address.",
     requiredScopes: [],
     inputSchema: networkByIpInputSchema,
@@ -162,6 +164,7 @@ export const bigDataCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_timezone_by_ip",
+    operationType: "read",
     description: "Get BigDataCloud timezone data for an IP address.",
     requiredScopes: [],
     inputSchema: timezoneByIpInputSchema,
@@ -169,6 +172,7 @@ export const bigDataCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reverse_geocode_with_timezone",
+    operationType: "read",
     description: "Reverse geocode coordinates and return timezone data from BigDataCloud.",
     requiredScopes: [],
     inputSchema: reverseGeocodeWithTimezoneInputSchema,

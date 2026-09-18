@@ -94,6 +94,7 @@ function idInputSchema(description: string): JsonSchema {
 export const replyIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the authenticated Reply.io user ID and username.",
     inputSchema: s.object("No input is required to retrieve the current Reply.io user.", {}),
     outputSchema: s.object("Authenticated Reply.io user response.", {
@@ -105,6 +106,7 @@ export const replyIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Reply.io contacts with optional pagination.",
     inputSchema: listContactsInputSchema,
     outputSchema: s.object("Paginated Reply.io contact list response.", {
@@ -114,24 +116,28 @@ export const replyIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a Reply.io contact using standard contact fields.",
     inputSchema: createContactInputSchema,
     outputSchema: contactOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get a Reply.io contact by ID.",
     inputSchema: idInputSchema("Input parameters for retrieving a Reply.io contact."),
     outputSchema: contactOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update a Reply.io contact by ID.",
     inputSchema: updateContactInputSchema,
     outputSchema: contactOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_sequences",
+    operationType: "read",
     description: "List Reply.io sequences with optional pagination and filters.",
     inputSchema: listSequencesInputSchema,
     outputSchema: s.object("Paginated Reply.io sequence list response.", {
@@ -141,18 +147,21 @@ export const replyIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_sequence",
+    operationType: "read",
     description: "Get a Reply.io sequence by ID.",
     inputSchema: idInputSchema("Input parameters for retrieving a Reply.io sequence."),
     outputSchema: sequenceOutputSchema,
   }),
   defineProviderAction(service, {
     name: "start_sequence",
+    operationType: "write",
     description: "Start a paused or new Reply.io sequence.",
     inputSchema: idInputSchema("Input parameters for starting a Reply.io sequence."),
     outputSchema: sequenceOutputSchema,
   }),
   defineProviderAction(service, {
     name: "pause_sequence",
+    operationType: "destructive",
     description: "Pause an active Reply.io sequence.",
     inputSchema: idInputSchema("Input parameters for pausing a Reply.io sequence."),
     outputSchema: sequenceOutputSchema,

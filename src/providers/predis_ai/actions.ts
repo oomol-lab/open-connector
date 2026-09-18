@@ -153,6 +153,7 @@ const createContentOutputSchema = s.requiredObject("The Predis.ai create content
 export const predisAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description:
       "List Predis.ai system templates and the brand's custom templates with optional media, post type, aspect ratio, and pagination filters.",
     requiredScopes: [],
@@ -161,6 +162,7 @@ export const predisAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_posts",
+    operationType: "read",
     description: "List generated Predis.ai posts for a brand with optional media type and pagination filters.",
     requiredScopes: [],
     inputSchema: listPostsInputSchema,
@@ -168,6 +170,7 @@ export const predisAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_content",
+    operationType: "write",
     description:
       "Submit a Predis.ai content generation request and return the created post IDs and immediate generation status.",
     requiredScopes: [],

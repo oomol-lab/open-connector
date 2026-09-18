@@ -61,6 +61,7 @@ const mcpToolConfigs = {
   list_apps: {
     title: "List Apps",
     description: "List available provider apps with connection and action counts.",
+    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     inputSchema: z.object({
       query: z.string().optional().describe("Optional case-insensitive app name, service, category, or auth filter."),
     }),
@@ -69,6 +70,7 @@ const mcpToolConfigs = {
     title: "List Connections",
     description:
       "List configured provider connections and their safe account profiles, optionally filtered by service id.",
+    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     inputSchema: z.object({
       service: z.string().optional().describe("Optional provider service id such as github, gmail, or notion."),
     }),
@@ -77,6 +79,7 @@ const mcpToolConfigs = {
     title: "Search Actions",
     description:
       "Search catalog actions by query and optional provider service id. Use this before requesting an action guide.",
+    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     inputSchema: z.object({
       query: z
         .string()
@@ -93,6 +96,7 @@ const mcpToolConfigs = {
     title: "Get Action Guide",
     description:
       "Return one action's compact markdown guide, including an execute_action example and input parameters.",
+    annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     inputSchema: z.object({
       actionId: z.string().describe("Full action id, for example github.get_current_user."),
       connectionName: optionalConnectionNameSchema,
@@ -102,6 +106,7 @@ const mcpToolConfigs = {
     title: "Execute Action",
     description:
       "Execute one local provider action by id with a JSON input object. Call get_action_guide first if the input shape is unclear.",
+    annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
     inputSchema: z.object({
       actionId: z.string().describe("Full action id, for example hackernews.get_item."),
       input: z
@@ -260,6 +265,7 @@ async function searchActions(
     service: action.service,
     name: action.name,
     description: action.description,
+    operationType: action.operationType,
     capability: describeActionCapability(
       action,
       policy,
@@ -378,6 +384,7 @@ function summarizeInputSchema(schema: JsonSchema): unknown {
 }
 
 type ActionCapability = {
+  operationType: RuntimeActionDefinition["operationType"];
   execution: RuntimeActionDefinition["execution"];
   authTypes: AuthType[];
   requiredScopes: string[];
@@ -392,6 +399,7 @@ function describeActionCapability(
   connection: ConnectionSummary | undefined,
 ): ActionCapability {
   return {
+    operationType: action.operationType,
     execution: action.execution,
     authTypes: action.execution.requiredAuthTypes,
     requiredScopes: action.requiredScopes,

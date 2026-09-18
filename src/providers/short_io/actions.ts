@@ -175,6 +175,7 @@ const getLinkStatisticsInputSchema = s.object(
 export const shortIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_domains",
+    operationType: "read",
     description: "List domains available to the authenticated Short.io API key.",
     inputSchema: s.object("Action input.", {}),
     outputSchema: s.object("List of Short.io domains.", {
@@ -183,6 +184,7 @@ export const shortIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_domain",
+    operationType: "read",
     description: "Get Short.io domain details by domain ID.",
     followUpActions: ["short_io.list_links"],
     inputSchema: s.object("Action input.", { domainId: domainIdField }),
@@ -190,6 +192,7 @@ export const shortIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_links",
+    operationType: "read",
     description: "List links for a Short.io domain with optional pagination and sort order.",
     inputSchema: s.object(
       "Action input.",
@@ -205,6 +208,7 @@ export const shortIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_link",
+    operationType: "read",
     description: "Get Short.io link details by link ID.",
     followUpActions: ["short_io.update_link", "short_io.delete_link", "short_io.get_link_statistics"],
     inputSchema: s.object("Action input.", { linkId: linkIdField }),
@@ -212,6 +216,7 @@ export const shortIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_link",
+    operationType: "write",
     description: "Create a new Short.io link on one of the authenticated domains.",
     followUpActions: ["short_io.get_link", "short_io.get_link_statistics"],
     inputSchema: s.object(
@@ -229,6 +234,7 @@ export const shortIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_link",
+    operationType: "write",
     description: "Update an existing Short.io link by link ID.",
     followUpActions: ["short_io.get_link", "short_io.get_link_statistics"],
     inputSchema: updateLinkInputSchema,
@@ -236,6 +242,7 @@ export const shortIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_link",
+    operationType: "destructive",
     description: "Delete a Short.io link by link ID.",
     inputSchema: s.object("Action input.", { linkId: linkIdField }),
     outputSchema: s.object("Acknowledgement for a deleted Short.io link.", {
@@ -245,6 +252,7 @@ export const shortIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_link_statistics",
+    operationType: "read",
     description: "Get click statistics for a Short.io link.",
     inputSchema: getLinkStatisticsInputSchema,
     outputSchema: linkStatisticsSchema,

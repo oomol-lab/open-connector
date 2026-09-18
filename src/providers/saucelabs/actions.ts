@@ -36,6 +36,7 @@ const buildSourceSchema = s.stringEnum("The Sauce Labs device source for the bui
 export const saucelabsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_jobs",
+    operationType: "read",
     description: "List recent Sauce Labs virtual-device jobs for the connected username.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -54,6 +55,7 @@ export const saucelabsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job",
+    operationType: "read",
     description: "Get details for one Sauce Labs virtual-device job.",
     requiredScopes: [],
     inputSchema: s.object("The Sauce Labs job to retrieve.", {
@@ -63,6 +65,7 @@ export const saucelabsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_job",
+    operationType: "write",
     description: "Update the name, tags, visibility, or pass status of a Sauce Labs virtual-device job.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -86,6 +89,7 @@ export const saucelabsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_job_assets",
+    operationType: "read",
     description: "List the asset file names available for a Sauce Labs virtual-device job.",
     requiredScopes: [],
     inputSchema: s.object("The Sauce Labs job whose assets should be listed.", {
@@ -100,6 +104,7 @@ export const saucelabsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_builds",
+    operationType: "read",
     description: "List Sauce Labs builds for virtual or real devices with optional filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -130,6 +135,7 @@ export const saucelabsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_build",
+    operationType: "read",
     description: "Get details for one Sauce Labs build.",
     requiredScopes: [],
     inputSchema: s.object("The Sauce Labs build to retrieve.", {
@@ -140,6 +146,7 @@ export const saucelabsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_build_jobs",
+    operationType: "read",
     description: "List jobs associated with one Sauce Labs build.",
     requiredScopes: [],
     inputSchema: s.object(

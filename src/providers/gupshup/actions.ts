@@ -53,6 +53,7 @@ const listTemplatesInputSchema = s.object(
 export const gupshupActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_text_message",
+    operationType: "write",
     description: "Send a text message in an active WhatsApp conversation through Gupshup.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -68,6 +69,7 @@ export const gupshupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_template_message",
+    operationType: "write",
     description: "Send an approved text template message through Gupshup.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -85,6 +87,7 @@ export const gupshupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List message templates for the connected Gupshup app.",
     requiredScopes: [],
     inputSchema: listTemplatesInputSchema,

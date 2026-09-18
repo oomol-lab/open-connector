@@ -244,18 +244,21 @@ const bulkScreenshotInputSchema = s.object(
 export const screenshotoneActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "take_screenshot",
+    operationType: "write",
     description: "Take a ScreenshotOne screenshot from a website URL, HTML, or Markdown source.",
     inputSchema: screenshotInputSchema,
     outputSchema: screenshotBinaryOutputSchema,
   }),
   defineProviderAction(service, {
     name: "take_animated_screenshot",
+    operationType: "read",
     description: "Take an animated ScreenshotOne capture as a video or GIF file.",
     inputSchema: animatedScreenshotInputSchema,
     outputSchema: animationOutputSchema,
   }),
   defineProviderAction(service, {
     name: "take_bulk_screenshots",
+    operationType: "read",
     description: "Submit multiple ScreenshotOne screenshot requests in a single bulk call.",
     inputSchema: bulkScreenshotInputSchema,
     outputSchema: s.object("The output payload for taking ScreenshotOne bulk screenshots.", {
@@ -264,6 +267,7 @@ export const screenshotoneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_devices",
+    operationType: "read",
     description: "List the ScreenshotOne device presets available for viewport emulation.",
     inputSchema: s.object("The input payload for listing ScreenshotOne devices.", {}),
     outputSchema: s.object("The output payload for listing ScreenshotOne devices.", {
@@ -272,6 +276,7 @@ export const screenshotoneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_usage",
+    operationType: "read",
     description: "Retrieve the current ScreenshotOne plan usage and concurrency information.",
     inputSchema: s.object("The input payload for reading ScreenshotOne usage.", {}),
     outputSchema: usageSchema,

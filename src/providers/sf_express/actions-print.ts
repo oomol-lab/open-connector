@@ -181,6 +181,7 @@ const customTemplateListSchema = s.object("The merchant's published custom templ
 export const sfExpressPrintActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "print_waybill_pdf",
+    operationType: "write",
     description:
       "Generate waybill PDF print files from a cloud print template (云打印面单转PDF). Returns download URLs that need the returned token in the X-Auth-token header (valid 24h).",
     requiredScopes: [],
@@ -210,6 +211,7 @@ export const sfExpressPrintActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "print_waybill_command",
+    operationType: "read",
     description:
       "Convert waybills into printer command sets (云打印面单转指令, cpcl or zpl), returned inline as text or as downloadable files.",
     requiredScopes: [],
@@ -271,6 +273,7 @@ export const sfExpressPrintActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "print_waybill_cainiao_template",
+    operationType: "read",
     description:
       "Convert waybills into Cainiao print template URLs (云打印面单转菜鸟模板) for systems already integrated with the Cainiao print component.",
     requiredScopes: [],
@@ -326,6 +329,7 @@ export const sfExpressPrintActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "print_waybill_html",
+    operationType: "write",
     description:
       "Generate waybill HTML print files from a cloud print template (云打印面单转HTML). Returns download URLs that need the returned token in the X-Auth-token header (valid 24h).",
     requiredScopes: [],
@@ -349,6 +353,7 @@ export const sfExpressPrintActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_citywide_print",
+    operationType: "write",
     description:
       "Submit waybill print content for 大同城 citywide freight orders. Asynchronous by default: returns a print batch number to poll with sf_express.query_citywide_print_status; sync mode (max 20 documents) returns the files directly.",
     requiredScopes: [],
@@ -381,6 +386,7 @@ export const sfExpressPrintActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_citywide_print_status",
+    operationType: "read",
     description: "Query the status and generated PDF files of a 大同城 citywide print batch.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The print batch to query.", {
@@ -398,6 +404,7 @@ export const sfExpressPrintActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_print_templates",
+    operationType: "read",
     description:
       "List a merchant's published custom print templates with their placeholder fields (ISV 自定义模板列表).",
     requiredScopes: [],
@@ -413,6 +420,7 @@ export const sfExpressPrintActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "save_print_template",
+    operationType: "write",
     description:
       "Save a merchant custom print template (ISV 保存自定义模板); same name means a new version of the same template. The content follows the SF markup language spec.",
     requiredScopes: [],
@@ -432,6 +440,7 @@ export const sfExpressPrintActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_print_template",
+    operationType: "destructive",
     description:
       "Delete a merchant custom print template (ISV 删除自定义模板); SF caps the number of templates per account, so delete unused ones before adding new.",
     requiredScopes: [],

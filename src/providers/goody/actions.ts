@@ -64,6 +64,7 @@ const orderListInputSchema = s.object(
 export const goodyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Retrieve the current Goody API user.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to retrieve the current Goody API user.", {}),
@@ -79,6 +80,7 @@ export const goodyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List active products in the Goody catalog.",
     requiredScopes: [],
     inputSchema: productListInputSchema,
@@ -86,6 +88,7 @@ export const goodyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Retrieve a Goody product by ID.",
     requiredScopes: [],
     inputSchema: productIdInputSchema,
@@ -93,6 +96,7 @@ export const goodyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description: "List Goody orders, optionally filtered by creation timestamp.",
     requiredScopes: [],
     inputSchema: orderListInputSchema,
@@ -100,6 +104,7 @@ export const goodyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_order",
+    operationType: "read",
     description: "Retrieve a Goody order by ID.",
     requiredScopes: [],
     inputSchema: idInputSchema("Input parameters for retrieving a Goody order.", "The Goody order ID."),
@@ -107,6 +112,7 @@ export const goodyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_payment_methods",
+    operationType: "read",
     description: "List Goody payment methods available to the current account.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list Goody payment methods.", {}),
@@ -114,6 +120,7 @@ export const goodyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workspaces",
+    operationType: "read",
     description: "List Goody workspaces available to the current account.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list Goody workspaces.", {}),

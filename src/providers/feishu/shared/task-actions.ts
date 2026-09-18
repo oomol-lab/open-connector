@@ -89,6 +89,7 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
   return [
     defineProviderAction(service, {
       name: "list_tasks",
+      operationType: "read",
       description: "List Feishu tasks related to the caller with server-side status filters.",
       requiredScopes: ["task:task:read"],
       providerPermissions: ["task:task:read"],
@@ -114,6 +115,7 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "search_tasks",
+      operationType: "read",
       description: "Search Feishu tasks by text, members, completion state, and due range.",
       requiredScopes: ["task:task:read"],
       providerPermissions: ["task:task:read"],
@@ -157,6 +159,7 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "get_task",
+      operationType: "read",
       description: "Get one Feishu task by GUID.",
       requiredScopes: ["task:task:read"],
       providerPermissions: ["task:task:read"],
@@ -171,6 +174,7 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "create_task",
+      operationType: "write",
       description: "Create a Feishu task with members, dates, reminders, and tasklist membership.",
       requiredScopes: ["task:task:write"],
       providerPermissions: ["task:task:write"],
@@ -210,6 +214,7 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "update_task",
+      operationType: "write",
       description: "Update the editable attributes of a Feishu task.",
       requiredScopes: ["task:task:write"],
       providerPermissions: ["task:task:write"],
@@ -233,6 +238,7 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "complete_task",
+      operationType: "write",
       description: "Mark a Feishu task as completed.",
       requiredScopes: ["task:task:write"],
       providerPermissions: ["task:task:write"],
@@ -247,6 +253,7 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "reopen_task",
+      operationType: "write",
       description: "Reopen a completed Feishu task.",
       requiredScopes: ["task:task:write"],
       providerPermissions: ["task:task:write"],
@@ -261,6 +268,7 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "manage_task_assignees",
+      operationType: "destructive",
       description: "Add or remove assignees on a Feishu task.",
       requiredScopes: ["task:task:write"],
       providerPermissions: ["task:task:write"],
@@ -285,6 +293,7 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "manage_task_followers",
+      operationType: "destructive",
       description: "Add or remove followers on a Feishu task.",
       requiredScopes: ["task:task:write"],
       providerPermissions: ["task:task:write"],
@@ -309,6 +318,7 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "set_task_ancestor",
+      operationType: "destructive",
       description: "Set or clear the ancestor of a Feishu task.",
       requiredScopes: ["task:task:write"],
       providerPermissions: ["task:task:write"],
@@ -345,6 +355,7 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "get_related_tasks",
+      operationType: "read",
       description: "List tasks related to the authorized Feishu user, with optional bounded auto-pagination.",
       requiredScopes: ["task:task:read"],
       providerPermissions: ["task:task:read"],
@@ -367,6 +378,7 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "add_task_comment",
+      operationType: "write",
       description: "Add a text comment to a Feishu task.",
       requiredScopes: ["task:comment:write"],
       providerPermissions: ["task:comment:write"],
@@ -399,6 +411,7 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "manage_task_reminders",
+      operationType: "destructive",
       description: "List, add, or remove reminders on a Feishu task.",
       requiredScopes: ["task:task:write"],
       providerPermissions: ["task:task:write"],
@@ -440,6 +453,7 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "create_tasklist",
+      operationType: "write",
       description: "Create a Feishu tasklist.",
       requiredScopes: ["task:tasklist:write"],
       providerPermissions: ["task:tasklist:write"],
@@ -458,6 +472,7 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "search_tasklists",
+      operationType: "read",
       description: "Search Feishu tasklists by name and ownership.",
       requiredScopes: ["task:tasklist:read"],
       providerPermissions: ["task:tasklist:read"],
@@ -480,6 +495,7 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "add_task_to_tasklist",
+      operationType: "write",
       description: "Add a Feishu task to a tasklist.",
       requiredScopes: ["task:task:write"],
       providerPermissions: ["task:task:write"],
@@ -494,6 +510,7 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "manage_tasklist_members",
+      operationType: "destructive",
       description: "Add or remove members on a Feishu tasklist.",
       requiredScopes: ["task:tasklist:write"],
       providerPermissions: ["task:tasklist:write"],

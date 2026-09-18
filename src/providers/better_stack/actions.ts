@@ -343,6 +343,7 @@ const listMetadataInputSchema = s.actionInput(
 export const betterStackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_incidents",
+    operationType: "read",
     description: "List Better Stack incidents with optional date and status filters.",
     requiredScopes: [],
     followUpActions: ["better_stack.get_incident"],
@@ -357,6 +358,7 @@ export const betterStackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_incident",
+    operationType: "read",
     description: "Get a Better Stack incident by ID with included resource context when available.",
     requiredScopes: [],
     followUpActions: ["better_stack.list_incident_comments"],
@@ -377,6 +379,7 @@ export const betterStackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_incident",
+    operationType: "write",
     description: "Create a Better Stack incident and alert the current on-call responder.",
     requiredScopes: [],
     followUpActions: ["better_stack.acknowledge_incident", "better_stack.escalate_incident"],
@@ -390,6 +393,7 @@ export const betterStackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "acknowledge_incident",
+    operationType: "destructive",
     description: "Acknowledge a Better Stack incident to stop further escalations.",
     requiredScopes: [],
     inputSchema: acknowledgeIncidentInputSchema,
@@ -402,6 +406,7 @@ export const betterStackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "escalate_incident",
+    operationType: "write",
     description: "Escalate a Better Stack incident to a user, team, schedule, policy, or organization.",
     requiredScopes: [],
     inputSchema: escalateIncidentInputSchema,
@@ -414,6 +419,7 @@ export const betterStackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_incident_comments",
+    operationType: "read",
     description: "List all comments attached to a Better Stack incident.",
     requiredScopes: [],
     inputSchema: listIncidentCommentsInputSchema,
@@ -426,6 +432,7 @@ export const betterStackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_metadata",
+    operationType: "read",
     description: "List Better Stack metadata records for incidents or other supported owner types.",
     requiredScopes: [],
     inputSchema: listMetadataInputSchema,

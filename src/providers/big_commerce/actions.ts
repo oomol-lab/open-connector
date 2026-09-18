@@ -184,6 +184,7 @@ const productUpdateInputSchema = s.object(
 export const bigCommerceActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List BigCommerce catalog products with common filters and pagination.",
     requiredScopes: [],
     inputSchema: productListInputSchema,
@@ -197,6 +198,7 @@ export const bigCommerceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Retrieve one BigCommerce catalog product by ID.",
     requiredScopes: [],
     inputSchema: productReadInputSchema,
@@ -209,6 +211,7 @@ export const bigCommerceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_product",
+    operationType: "write",
     description: "Create a BigCommerce catalog product from JSON-friendly fields.",
     requiredScopes: [],
     inputSchema: productCreateInputSchema,
@@ -221,6 +224,7 @@ export const bigCommerceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_product",
+    operationType: "write",
     description: "Update provided fields on a BigCommerce catalog product.",
     requiredScopes: [],
     inputSchema: productUpdateInputSchema,
@@ -233,6 +237,7 @@ export const bigCommerceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_product",
+    operationType: "destructive",
     description: "Delete a BigCommerce catalog product by ID.",
     requiredScopes: [],
     inputSchema: s.object("Path parameters for deleting a BigCommerce product.", {

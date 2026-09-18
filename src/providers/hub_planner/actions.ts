@@ -236,6 +236,7 @@ const createResourceInputSchema = s.object(
 export const hubPlannerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Hub Planner projects with optional zero-based pagination and sorting.",
     inputSchema: listInputSchema,
     outputSchema: s.requiredObject("Hub Planner project list response.", {
@@ -244,6 +245,7 @@ export const hubPlannerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get one Hub Planner project by its unique ID.",
     inputSchema: getProjectInputSchema,
     outputSchema: s.requiredObject("Hub Planner project detail response.", {
@@ -252,6 +254,7 @@ export const hubPlannerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create a Hub Planner project with core scheduling and budget fields.",
     inputSchema: createProjectInputSchema,
     outputSchema: s.requiredObject("Hub Planner project creation response.", {
@@ -260,6 +263,7 @@ export const hubPlannerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_resources",
+    operationType: "read",
     description: "List Hub Planner resources with optional zero-based pagination and sorting.",
     inputSchema: listInputSchema,
     outputSchema: s.requiredObject("Hub Planner resource list response.", {
@@ -268,6 +272,7 @@ export const hubPlannerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_resource",
+    operationType: "read",
     description: "Get one Hub Planner resource by its unique ID.",
     inputSchema: getResourceInputSchema,
     outputSchema: s.requiredObject("Hub Planner resource detail response.", {
@@ -276,6 +281,7 @@ export const hubPlannerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_resource",
+    operationType: "write",
     description: "Create a Hub Planner resource and optionally send an invitation email.",
     inputSchema: createResourceInputSchema,
     outputSchema: s.requiredObject("Hub Planner resource creation response.", {

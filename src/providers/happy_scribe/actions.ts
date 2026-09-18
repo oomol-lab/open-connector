@@ -42,6 +42,7 @@ const organizationSchema = s.looseObject("A Happy Scribe organization.", {
 
 const createTranscriptionOrderAction = defineProviderAction(service, {
   name: "create_transcription_order",
+  operationType: "write",
   description: "Submit a transcription or subtitling order from a public media URL.",
   requiredScopes: [],
   asyncLifecycle: {
@@ -71,6 +72,7 @@ const createTranscriptionOrderAction = defineProviderAction(service, {
 
 const createTranslationOrderAction = defineProviderAction(service, {
   name: "create_translation_order",
+  operationType: "write",
   description: "Submit a translation order for an existing Happy Scribe transcription.",
   requiredScopes: [],
   asyncLifecycle: { startActionId: "happy_scribe.create_translation_order", statusActionId: "happy_scribe.get_order" },
@@ -96,6 +98,7 @@ const createTranslationOrderAction = defineProviderAction(service, {
 
 const getOrderAction = defineProviderAction(service, {
   name: "get_order",
+  operationType: "read",
   description: "Get the current state and details of a Happy Scribe order.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for retrieving a Happy Scribe order.", {
@@ -108,6 +111,7 @@ const getOrderAction = defineProviderAction(service, {
 
 const confirmOrderAction = defineProviderAction(service, {
   name: "confirm_order",
+  operationType: "write",
   description: "Confirm a previously created Happy Scribe order so processing can begin.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for confirming a Happy Scribe order.", {
@@ -121,6 +125,7 @@ const confirmOrderAction = defineProviderAction(service, {
 
 const listOrganizationsAction = defineProviderAction(service, {
   name: "list_organizations",
+  operationType: "read",
   description: "List the Happy Scribe organizations available to the current API key.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for listing Happy Scribe organizations.", {}),
@@ -132,6 +137,7 @@ const listOrganizationsAction = defineProviderAction(service, {
 
 const listTranscriptionsAction = defineProviderAction(service, {
   name: "list_transcriptions",
+  operationType: "read",
   description: "List transcriptions in a Happy Scribe organization.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -156,6 +162,7 @@ const listTranscriptionsAction = defineProviderAction(service, {
 
 const getTranscriptionAction = defineProviderAction(service, {
   name: "get_transcription",
+  operationType: "read",
   description: "Get one Happy Scribe transcription by ID.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for retrieving a Happy Scribe transcription.", {
@@ -168,6 +175,7 @@ const getTranscriptionAction = defineProviderAction(service, {
 
 const updateTranscriptionAction = defineProviderAction(service, {
   name: "update_transcription",
+  operationType: "write",
   description: "Update editable fields on a Happy Scribe transcription.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -190,6 +198,7 @@ const updateTranscriptionAction = defineProviderAction(service, {
 
 const deleteTranscriptionAction = defineProviderAction(service, {
   name: "delete_transcription",
+  operationType: "destructive",
   description: "Delete one Happy Scribe transcription by ID.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -208,6 +217,7 @@ const deleteTranscriptionAction = defineProviderAction(service, {
 
 const createExportAction = defineProviderAction(service, {
   name: "create_export",
+  operationType: "write",
   description: "Create an asynchronous export for one or more Happy Scribe transcriptions.",
   requiredScopes: [],
   asyncLifecycle: { startActionId: "happy_scribe.create_export", statusActionId: "happy_scribe.get_export" },
@@ -232,6 +242,7 @@ const createExportAction = defineProviderAction(service, {
 
 const getExportAction = defineProviderAction(service, {
   name: "get_export",
+  operationType: "read",
   description: "Get the state and download link of a Happy Scribe export.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for retrieving a Happy Scribe export.", {

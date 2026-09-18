@@ -9,6 +9,7 @@ export const auditLogOperations: readonly DokployOperationDefinition[] = [
     operationId: "auditLog-all",
     tag: "auditLog",
     description: "Read Dokploy data via GET /auditLog.all.",
+    operationType: "read",
     method: "GET",
     path: "/auditLog.all",
     pathFields: [],

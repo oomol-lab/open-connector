@@ -57,6 +57,7 @@ const searchEmployeesInputSchema = s.object(
 export const findymailActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_credits",
+    operationType: "read",
     description: "Get remaining Findymail credits and usage information for the API key.",
     inputSchema: emptyInputSchema,
     outputSchema: s.requiredObject("The normalized Findymail credits response.", {
@@ -66,6 +67,7 @@ export const findymailActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "verify_email",
+    operationType: "read",
     description: "Verify a professional email address with Findymail.",
     inputSchema: verifyEmailInputSchema,
     outputSchema: s.requiredObject("The normalized Findymail email verification response.", {
@@ -75,6 +77,7 @@ export const findymailActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_by_name",
+    operationType: "read",
     description: "Find a verified professional email from a person's name and company domain.",
     inputSchema: searchByNameInputSchema,
     outputSchema: s.requiredObject("The normalized Findymail name-search response.", {
@@ -84,6 +87,7 @@ export const findymailActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_domain",
+    operationType: "read",
     description: "Find professional email contacts associated with a company domain.",
     inputSchema: searchDomainInputSchema,
     outputSchema: s.requiredObject("The normalized Findymail domain-search response.", {
@@ -93,6 +97,7 @@ export const findymailActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_employees",
+    operationType: "read",
     description: "Find employees at a company using Findymail's company search endpoint.",
     inputSchema: searchEmployeesInputSchema,
     outputSchema: s.requiredObject("The normalized Findymail employee-search response.", {

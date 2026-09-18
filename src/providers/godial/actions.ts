@@ -80,6 +80,7 @@ const createContactInputSchema = s.object(
 export const godialActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_accounts",
+    operationType: "read",
     description: "List GoDial accounts in the current company.",
     requiredScopes: [],
     inputSchema: s.object("Input for listing GoDial accounts.", {}),
@@ -93,6 +94,7 @@ export const godialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_lists",
+    operationType: "read",
     description: "List GoDial lists in the current company.",
     requiredScopes: [],
     inputSchema: s.object("Input for listing GoDial lists.", {}),
@@ -106,6 +108,7 @@ export const godialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts_in_list",
+    operationType: "read",
     description: "List all contacts currently stored in one GoDial list.",
     requiredScopes: [],
     inputSchema: listContactsInListInputSchema,
@@ -119,6 +122,7 @@ export const godialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Fetch one GoDial contact by contact ID.",
     requiredScopes: [],
     inputSchema: getContactInputSchema,
@@ -134,6 +138,7 @@ export const godialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create one GoDial contact in a target list using the official external API form fields.",
     requiredScopes: [],
     inputSchema: createContactInputSchema,

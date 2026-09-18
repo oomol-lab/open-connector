@@ -117,6 +117,7 @@ const okOutputSchema = s.actionOutput(
 export const permitIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List users in a Permit.io environment.",
     inputSchema: s.actionInput(
       {
@@ -132,6 +133,7 @@ export const permitIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Retrieve a Permit.io user by id or key.",
     inputSchema: s.actionInput(
       {
@@ -145,6 +147,7 @@ export const permitIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_user",
+    operationType: "write",
     description: "Create a user in a Permit.io environment.",
     inputSchema: s.actionInput(
       {
@@ -158,6 +161,7 @@ export const permitIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_user",
+    operationType: "write",
     description: "Partially update a Permit.io user.",
     inputSchema: s.actionInput(
       {
@@ -175,6 +179,7 @@ export const permitIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_user",
+    operationType: "destructive",
     description: "Delete a Permit.io user by id or key.",
     inputSchema: s.actionInput(
       {
@@ -188,6 +193,7 @@ export const permitIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tenants",
+    operationType: "read",
     description: "List tenants in a Permit.io environment.",
     inputSchema: s.actionInput(
       {
@@ -202,6 +208,7 @@ export const permitIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tenant",
+    operationType: "read",
     description: "Retrieve a Permit.io tenant by id or key.",
     inputSchema: s.actionInput(
       {
@@ -215,6 +222,7 @@ export const permitIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_tenant",
+    operationType: "write",
     description: "Create a tenant in a Permit.io environment.",
     inputSchema: s.actionInput(
       {
@@ -228,6 +236,7 @@ export const permitIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_tenant",
+    operationType: "write",
     description: "Partially update a Permit.io tenant.",
     inputSchema: s.actionInput(
       {
@@ -244,6 +253,7 @@ export const permitIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_tenant",
+    operationType: "destructive",
     description: "Delete a Permit.io tenant by id or key.",
     inputSchema: s.actionInput(
       {
@@ -257,6 +267,7 @@ export const permitIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_role_assignments",
+    operationType: "read",
     description: "List role assignments in a Permit.io environment.",
     inputSchema: s.actionInput(
       {
@@ -280,6 +291,7 @@ export const permitIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "assign_role",
+    operationType: "write",
     description: "Assign a Permit.io role to a user.",
     inputSchema: s.actionInput(
       {
@@ -293,6 +305,7 @@ export const permitIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "unassign_role",
+    operationType: "destructive",
     description: "Remove a Permit.io role assignment from a user.",
     inputSchema: s.actionInput(
       {

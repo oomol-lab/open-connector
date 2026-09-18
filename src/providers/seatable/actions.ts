@@ -20,6 +20,7 @@ const rawResponseSchema = s.looseRequiredObject("The raw SeaTable API response."
 export const seatableActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_metadata",
+    operationType: "read",
     description: "Get metadata for the SeaTable base associated with the API token.",
     inputSchema: s.object("Input payload for reading SeaTable base metadata.", {}),
     outputSchema: s.object("SeaTable base metadata response.", {
@@ -28,6 +29,7 @@ export const seatableActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_rows",
+    operationType: "read",
     description: "List rows from a SeaTable table or view with offset pagination.",
     inputSchema: s.object(
       "Input payload for listing SeaTable rows.",
@@ -48,6 +50,7 @@ export const seatableActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_row",
+    operationType: "read",
     description: "Get one row from a SeaTable table by row ID.",
     inputSchema: s.object(
       "Input payload for reading one SeaTable row.",
@@ -66,6 +69,7 @@ export const seatableActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "append_rows",
+    operationType: "write",
     description: "Append one or more rows to a SeaTable table using column names as keys.",
     inputSchema: s.object(
       "Input payload for appending SeaTable rows.",
@@ -88,6 +92,7 @@ export const seatableActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_rows",
+    operationType: "write",
     description: "Update one or more SeaTable rows using column names as keys.",
     inputSchema: s.object("Input payload for updating SeaTable rows.", {
       tableName: tableNameField,
@@ -107,6 +112,7 @@ export const seatableActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_rows",
+    operationType: "destructive",
     description: "Delete one or more SeaTable rows by row ID.",
     inputSchema: s.object("Input payload for deleting SeaTable rows.", {
       tableName: tableNameField,

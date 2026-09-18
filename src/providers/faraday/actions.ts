@@ -1,9 +1,17 @@
-import type { ActionDefinition } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "faraday";
+
+interface FaradayActionSource {
+  name: string;
+  operationType: ActionDefinition["operationType"];
+  description: string;
+  inputSchema: JsonSchema;
+  outputSchema: JsonSchema;
+}
 
 const emptyInputSchema = s.object("Input payload for this Faraday action.", {});
 const resourceIdSchema = (description: string) => s.nonEmptyString(description);
@@ -35,9 +43,10 @@ const datasetSchema = resourceSchema("A Faraday dataset resource.");
 const traitSchema = resourceSchema("A Faraday trait resource.");
 const targetSchema = resourceSchema("A Faraday target resource.");
 
-const faradayActionSources = [
+const faradayActionSources: FaradayActionSource[] = [
   {
     name: "get_current_account",
+    operationType: "read",
     description: "Retrieve the Faraday account identified by the API key.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object(
@@ -51,6 +60,7 @@ const faradayActionSources = [
   },
   {
     name: "list_accounts",
+    operationType: "read",
     description: "List Faraday accounts controlled by the API key.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object(
@@ -64,6 +74,7 @@ const faradayActionSources = [
   },
   {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve a Faraday account by ID.",
     inputSchema: s.object(
       "Input payload for retrieving a Faraday account.",
@@ -83,6 +94,7 @@ const faradayActionSources = [
   },
   {
     name: "list_scopes",
+    operationType: "read",
     description: "List Faraday scopes defined on the account.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object(
@@ -96,6 +108,7 @@ const faradayActionSources = [
   },
   {
     name: "get_scope",
+    operationType: "read",
     description: "Retrieve a Faraday scope by ID.",
     inputSchema: s.object(
       "Input payload for retrieving a Faraday scope.",
@@ -115,6 +128,7 @@ const faradayActionSources = [
   },
   {
     name: "list_datasets",
+    operationType: "read",
     description: "List Faraday datasets available in the account.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object(
@@ -128,6 +142,7 @@ const faradayActionSources = [
   },
   {
     name: "get_dataset",
+    operationType: "read",
     description: "Retrieve a Faraday dataset by ID.",
     inputSchema: s.object(
       "Input payload for retrieving a Faraday dataset.",
@@ -147,6 +162,7 @@ const faradayActionSources = [
   },
   {
     name: "list_traits",
+    operationType: "read",
     description: "List user-defined and Faraday-provided traits.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object(
@@ -160,6 +176,7 @@ const faradayActionSources = [
   },
   {
     name: "get_trait",
+    operationType: "read",
     description: "Retrieve a Faraday trait by ID.",
     inputSchema: s.object(
       "Input payload for retrieving a Faraday trait.",
@@ -179,6 +196,7 @@ const faradayActionSources = [
   },
   {
     name: "list_targets",
+    operationType: "read",
     description: "List Faraday targets defined on the account.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object(
@@ -192,6 +210,7 @@ const faradayActionSources = [
   },
   {
     name: "get_target",
+    operationType: "read",
     description: "Retrieve a Faraday target by ID.",
     inputSchema: s.object(
       "Input payload for retrieving a Faraday target.",
@@ -211,6 +230,7 @@ const faradayActionSources = [
   },
   {
     name: "list_usages",
+    operationType: "read",
     description: "List Faraday usage statistics for the account.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object(

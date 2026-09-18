@@ -262,12 +262,14 @@ const submitSubmissionSchema = s.object("Submission payload returned after a suc
 
 function action<TName extends GetformActionName>(
   name: TName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     inputSchema,
     outputSchema,
@@ -277,6 +279,7 @@ function action<TName extends GetformActionName>(
 export const getformActions: ActionDefinition[] = [
   action(
     "submit_form",
+    "write",
     "Submit a protected Forminit form with JSON blocks using the documented sender, tracking, and field block types.",
     submitFormInputSchema,
     s.object(
@@ -291,6 +294,7 @@ export const getformActions: ActionDefinition[] = [
   ),
   action(
     "list_submissions",
+    "read",
     "List submissions from one protected Forminit form with pagination, keyword search, optional file metadata, and timezone formatting.",
     listSubmissionsInputSchema,
     s.object("Normalized result returned by the Forminit list submissions API.", {

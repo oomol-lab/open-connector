@@ -71,18 +71,21 @@ const chatInviteLinkOptionsSchema = {
 export const telegramActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_me",
+    operationType: "read",
     description: "Validate the bot token and return the bot profile from Telegram Bot API.",
     inputSchema: s.actionInput({}),
     outputSchema: telegramUserSchema,
   }),
   defineProviderAction(service, {
     name: "get_webhook_info",
+    operationType: "read",
     description: "Return the webhook status configured for the bot.",
     inputSchema: s.actionInput({}),
     outputSchema: looseObject("Telegram webhook status information."),
   }),
   defineProviderAction(service, {
     name: "get_updates",
+    operationType: "read",
     description: "Poll pending updates for the bot. Use this only when webhook delivery is disabled or for debugging.",
     inputSchema: s.actionInput({
       offset: s.integer("The update ID offset to start polling from."),
@@ -96,6 +99,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send a text message to a chat, group, supergroup, channel, or forum topic.",
     inputSchema: s.actionInput(
       {
@@ -115,6 +119,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "copy_message",
+    operationType: "write",
     description: "Copy one message without linking back to the original message.",
     inputSchema: s.actionInput(
       {
@@ -136,6 +141,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "copy_messages",
+    operationType: "write",
     description: "Copy 1-100 messages without links to the originals while preserving album grouping.",
     inputSchema: s.actionInput(
       {
@@ -153,6 +159,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "forward_messages",
+    operationType: "write",
     description: "Forward 1-100 messages while preserving links and album grouping.",
     inputSchema: s.actionInput(
       {
@@ -169,6 +176,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_messages",
+    operationType: "destructive",
     description: "Delete 1-100 messages from one Telegram chat.",
     inputSchema: s.actionInput(
       {
@@ -181,6 +189,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_message_reaction",
+    operationType: "destructive",
     description: "Replace the bot's chosen reaction on a Telegram message.",
     inputSchema: s.actionInput(
       {
@@ -201,6 +210,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_chat_action",
+    operationType: "write",
     description: "Show a temporary typing, upload, recording, or location activity status in a chat.",
     inputSchema: s.actionInput(
       {
@@ -227,6 +237,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_video",
+    operationType: "write",
     description: "Send an MPEG-4 video by URL or Telegram file_id.",
     inputSchema: s.actionInput(
       {
@@ -253,6 +264,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_audio",
+    operationType: "write",
     description: "Send an MP3 or M4A audio track by URL or Telegram file_id.",
     inputSchema: s.actionInput(
       {
@@ -274,6 +286,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_voice",
+    operationType: "write",
     description: "Send a playable voice message by URL or Telegram file_id.",
     inputSchema: s.actionInput(
       {
@@ -293,6 +306,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_animation",
+    operationType: "write",
     description: "Send a GIF or silent MPEG-4 animation by URL or Telegram file_id.",
     inputSchema: s.actionInput(
       {
@@ -316,6 +330,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_media_group",
+    operationType: "write",
     description: "Send an album containing 2-10 photos, videos, documents, or audio items.",
     inputSchema: s.actionInput(
       {
@@ -341,6 +356,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_contact",
+    operationType: "write",
     description: "Send a phone contact to a Telegram chat.",
     inputSchema: s.actionInput(
       {
@@ -360,6 +376,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_venue",
+    operationType: "write",
     description: "Send a venue with coordinates, title, address, and optional place identifiers.",
     inputSchema: s.actionInput(
       {
@@ -383,6 +400,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_dice",
+    operationType: "write",
     description: "Send an animated dice, darts, basketball, football, bowling, or slot-machine emoji.",
     inputSchema: s.actionInput(
       {
@@ -399,6 +417,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_business_connection",
+    operationType: "read",
     description: "Return the current state and granted rights of a Telegram business connection.",
     inputSchema: s.actionInput(
       {
@@ -410,6 +429,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "read_business_message",
+    operationType: "write",
     description: "Mark an incoming message as read on behalf of a connected Telegram business account.",
     inputSchema: s.actionInput(
       {
@@ -423,6 +443,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_business_messages",
+    operationType: "destructive",
     description: "Delete one or more messages on behalf of a connected Telegram business account.",
     inputSchema: s.actionInput(
       {
@@ -435,6 +456,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "edit_message_text",
+    operationType: "write",
     description: "Edit the text of a previously sent message or an inline message.",
     inputSchema: s.actionInput(
       {
@@ -455,6 +477,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_photo",
+    operationType: "write",
     description: "Send a photo by public URL or existing Telegram file_id.",
     inputSchema: s.actionInput(
       {
@@ -473,6 +496,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_document",
+    operationType: "write",
     description: "Send a document by public URL or existing Telegram file_id.",
     inputSchema: s.actionInput(
       {
@@ -492,6 +516,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_poll",
+    operationType: "write",
     description: "Send a native Telegram poll to a chat.",
     inputSchema: s.actionInput(
       {
@@ -520,12 +545,14 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_chat",
+    operationType: "read",
     description: "Return metadata for a chat the bot can access.",
     inputSchema: s.actionInput({ chatId: chatIdSchema }, ["chatId"]),
     outputSchema: telegramChatSchema,
   }),
   defineProviderAction(service, {
     name: "get_chat_member",
+    operationType: "read",
     description: "Return information about one chat member.",
     inputSchema: s.actionInput(
       {
@@ -538,6 +565,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_chat_administrators",
+    operationType: "read",
     description: "Return the chat administrators visible to the bot.",
     inputSchema: s.actionInput({ chatId: chatIdSchema }, ["chatId"]),
     outputSchema: s.actionOutput({
@@ -546,6 +574,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_chat_members_count",
+    operationType: "read",
     description: "Return the number of members in a chat.",
     inputSchema: s.actionInput({ chatId: chatIdSchema }, ["chatId"]),
     outputSchema: s.actionOutput({
@@ -554,6 +583,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "ban_chat_member",
+    operationType: "destructive",
     description: "Ban a user from a group, supergroup, or channel.",
     inputSchema: s.actionInput(
       {
@@ -568,6 +598,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "unban_chat_member",
+    operationType: "write",
     description: "Unban a user so they can join the chat again.",
     inputSchema: s.actionInput(
       {
@@ -581,6 +612,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "restrict_chat_member",
+    operationType: "write",
     description: "Set temporary or permanent permissions for one supergroup member.",
     inputSchema: s.actionInput(
       {
@@ -596,6 +628,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "promote_chat_member",
+    operationType: "write",
     description: "Promote, update, or demote a supergroup or channel administrator.",
     inputSchema: s.actionInput(
       {
@@ -625,6 +658,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_chat_permissions",
+    operationType: "write",
     description: "Set default permissions for all members of a group or supergroup.",
     inputSchema: s.actionInput(
       {
@@ -638,6 +672,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "pin_chat_message",
+    operationType: "write",
     description: "Pin a message in a Telegram chat.",
     inputSchema: s.actionInput(
       {
@@ -652,6 +687,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "unpin_chat_message",
+    operationType: "destructive",
     description: "Unpin one message, or the most recently pinned message, from a Telegram chat.",
     inputSchema: s.actionInput(
       {
@@ -665,12 +701,14 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "unpin_all_chat_messages",
+    operationType: "destructive",
     description: "Remove all pinned messages from a Telegram chat.",
     inputSchema: s.actionInput({ chatId: chatIdSchema }, ["chatId"]),
     outputSchema: successSchema,
   }),
   defineProviderAction(service, {
     name: "approve_chat_join_request",
+    operationType: "write",
     description: "Approve a user's pending request to join a Telegram chat.",
     inputSchema: s.actionInput(
       {
@@ -683,6 +721,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "decline_chat_join_request",
+    operationType: "destructive",
     description: "Decline a user's pending request to join a Telegram chat.",
     inputSchema: s.actionInput(
       {
@@ -695,6 +734,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_message",
+    operationType: "destructive",
     description: "Delete a message from a chat.",
     inputSchema: s.actionInput(
       {
@@ -707,6 +747,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "forward_message",
+    operationType: "write",
     description: "Forward a message from one chat to another.",
     inputSchema: s.actionInput(
       {
@@ -721,6 +762,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_location",
+    operationType: "write",
     description: "Send a map location to a chat.",
     inputSchema: s.actionInput(
       {
@@ -747,6 +789,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "export_chat_invite_link",
+    operationType: "write",
     description: "Export the primary invite link for a Telegram chat.",
     inputSchema: s.actionInput({ chatId: chatIdSchema }, ["chatId"]),
     outputSchema: s.actionOutput({
@@ -755,6 +798,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_chat_invite_link",
+    operationType: "write",
     description: "Create an additional Telegram chat invite link with optional expiry or approval rules.",
     inputSchema: s.actionInput(
       {
@@ -767,6 +811,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "edit_chat_invite_link",
+    operationType: "write",
     description: "Edit an additional Telegram chat invite link created by the bot.",
     inputSchema: s.actionInput(
       {
@@ -780,6 +825,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "revoke_chat_invite_link",
+    operationType: "destructive",
     description: "Revoke a Telegram chat invite link created by the bot.",
     inputSchema: s.actionInput(
       {
@@ -792,6 +838,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "answer_callback_query",
+    operationType: "read",
     description: "Answer an inline keyboard callback query.",
     inputSchema: s.actionInput(
       {
@@ -807,6 +854,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_my_commands",
+    operationType: "write",
     description: "Set the bot command list exposed in Telegram clients.",
     inputSchema: s.actionInput(
       {
@@ -829,6 +877,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_webhook",
+    operationType: "write",
     description: "Configure a webhook endpoint for update delivery.",
     inputSchema: s.actionInput(
       {
@@ -850,6 +899,7 @@ export const telegramActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_webhook",
+    operationType: "destructive",
     description: "Delete the configured webhook and optionally drop pending updates.",
     inputSchema: s.actionInput({
       dropPendingUpdates: s.boolean("Whether to drop all pending updates when deleting the webhook."),

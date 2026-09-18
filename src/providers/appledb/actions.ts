@@ -180,6 +180,7 @@ const resultLimitSchema = s.optional(
 export const appledbActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_device",
+    operationType: "read",
     description: "Get an Apple device record by its case-sensitive AppleDB key, such as iPhone17,1.",
     inputSchema: s.object(
       {
@@ -191,6 +192,7 @@ export const appledbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_devices",
+    operationType: "read",
     description: "Search AppleDB devices by name, key, identifier, model, board, or processor.",
     inputSchema: s.object(
       {
@@ -209,6 +211,7 @@ export const appledbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_os_build",
+    operationType: "read",
     description: "Get an Apple operating system build record by its AppleDB operating system name and build key.",
     inputSchema: s.object(
       {
@@ -231,6 +234,7 @@ export const appledbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_os_builds",
+    operationType: "read",
     description:
       "Search an AppleDB firmware calendar by version, build, device identifier, or release text; results are newest first.",
     inputSchema: s.object(

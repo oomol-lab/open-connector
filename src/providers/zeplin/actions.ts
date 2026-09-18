@@ -111,6 +111,7 @@ const projectInputSchema = (description: string): JsonSchema =>
 export const zeplinActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current authenticated Zeplin user profile.",
     requiredScopes: [zeplinReadScope],
     inputSchema: emptyInputSchema,
@@ -118,6 +119,7 @@ export const zeplinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_personal_projects",
+    operationType: "read",
     description: "List projects in the current user's Zeplin personal workspace.",
     requiredScopes: [zeplinReadScope],
     inputSchema: paginationInputSchema,
@@ -128,6 +130,7 @@ export const zeplinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get a Zeplin project by project ID.",
     requiredScopes: [zeplinReadScope],
     inputSchema: s.actionInput(
@@ -148,6 +151,7 @@ export const zeplinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_project_colors",
+    operationType: "read",
     description: "List color tokens defined for a Zeplin project.",
     requiredScopes: [zeplinReadScope],
     inputSchema: projectInputSchema("The input payload for this action."),
@@ -158,6 +162,7 @@ export const zeplinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_project_text_styles",
+    operationType: "read",
     description: "List text styles defined for a Zeplin project.",
     requiredScopes: [zeplinReadScope],
     inputSchema: projectInputSchema("The input payload for this action."),
@@ -168,6 +173,7 @@ export const zeplinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_screen_versions",
+    operationType: "read",
     description:
       "List versions of a Zeplin screen. This action requires both projectId and screenId to match the official endpoint.",
     requiredScopes: [zeplinReadScope],

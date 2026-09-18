@@ -93,6 +93,7 @@ createCallInputSchema.oneOf = [{ required: ["url"] }, { required: ["twiml"] }];
 export const twilioActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Fetch the current Twilio account profile for the connected credential.",
     requiredScopes: [],
     inputSchema: s.actionInput({}, [], "No input is required for this action."),
@@ -100,6 +101,7 @@ export const twilioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_usage_records",
+    operationType: "read",
     description: "List Twilio usage records for the connected account.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -124,6 +126,7 @@ export const twilioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_messages",
+    operationType: "read",
     description: "List SMS or MMS messages for the connected Twilio account.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -146,6 +149,7 @@ export const twilioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_message",
+    operationType: "read",
     description: "Fetch one Twilio message by message SID.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -157,6 +161,7 @@ export const twilioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send an outbound SMS or MMS message with Twilio.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -172,6 +177,7 @@ export const twilioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_calls",
+    operationType: "read",
     description: "List Twilio voice calls with optional recipient, status, date, and pagination filters.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -201,6 +207,7 @@ export const twilioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_call",
+    operationType: "read",
     description: "Fetch one Twilio voice call by call SID.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -212,6 +219,7 @@ export const twilioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_call",
+    operationType: "write",
     description: "Create an outbound Twilio voice call using a TwiML URL or inline TwiML.",
     requiredScopes: [],
     inputSchema: createCallInputSchema,

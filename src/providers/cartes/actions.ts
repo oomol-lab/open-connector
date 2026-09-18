@@ -298,6 +298,7 @@ const successOutputSchema = s.object(
 export const cartesActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current Cartes.io user for the connected API token.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -305,6 +306,7 @@ export const cartesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_maps",
+    operationType: "read",
     description: "List public Cartes.io maps, optionally including maps owned by the account.",
     requiredScopes: [],
     inputSchema: listMapsInputSchema,
@@ -312,6 +314,7 @@ export const cartesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_maps",
+    operationType: "read",
     description: "Search public Cartes.io maps.",
     requiredScopes: [],
     inputSchema: searchMapsInputSchema,
@@ -319,6 +322,7 @@ export const cartesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_map",
+    operationType: "write",
     description: "Create a Cartes.io map.",
     requiredScopes: [],
     inputSchema: createMapInputSchema,
@@ -326,6 +330,7 @@ export const cartesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_map",
+    operationType: "read",
     description: "Get one Cartes.io map.",
     requiredScopes: [],
     inputSchema: mapIdInputSchema,
@@ -333,6 +338,7 @@ export const cartesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_map",
+    operationType: "write",
     description: "Update one Cartes.io map.",
     requiredScopes: [],
     inputSchema: updateMapInputSchema,
@@ -340,6 +346,7 @@ export const cartesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_map",
+    operationType: "destructive",
     description: "Delete one Cartes.io map.",
     requiredScopes: [],
     inputSchema: mapIdInputSchema,
@@ -347,6 +354,7 @@ export const cartesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_markers",
+    operationType: "read",
     description: "List markers on one Cartes.io map.",
     requiredScopes: [],
     inputSchema: listMarkersInputSchema,
@@ -354,6 +362,7 @@ export const cartesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_public_markers",
+    operationType: "read",
     description: "List public Cartes.io markers across public maps.",
     requiredScopes: [],
     inputSchema: listPublicMarkersInputSchema,
@@ -367,6 +376,7 @@ export const cartesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_marker",
+    operationType: "write",
     description: "Create a marker on one Cartes.io map.",
     requiredScopes: [],
     inputSchema: createMarkerInputSchema,
@@ -374,6 +384,7 @@ export const cartesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_marker",
+    operationType: "read",
     description: "Get one marker from a Cartes.io map.",
     requiredScopes: [],
     inputSchema: markerIdInputSchema,
@@ -381,6 +392,7 @@ export const cartesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_marker",
+    operationType: "write",
     description: "Update one marker on a Cartes.io map.",
     requiredScopes: [],
     inputSchema: updateMarkerInputSchema,
@@ -388,6 +400,7 @@ export const cartesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_marker",
+    operationType: "destructive",
     description: "Delete one marker from a Cartes.io map.",
     requiredScopes: [],
     inputSchema: markerIdInputSchema,
@@ -395,6 +408,7 @@ export const cartesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_marker_location",
+    operationType: "write",
     description: "Append a new location point to one Cartes.io marker.",
     requiredScopes: [],
     inputSchema: createMarkerLocationInputSchema,
@@ -402,6 +416,7 @@ export const cartesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_categories",
+    operationType: "read",
     description: "List Cartes.io marker categories.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -409,6 +424,7 @@ export const cartesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_related_maps",
+    operationType: "read",
     description: "List Cartes.io maps related to one map.",
     requiredScopes: [],
     inputSchema: listRelatedMapsInputSchema,
@@ -421,6 +437,7 @@ export const cartesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List public Cartes.io users.",
     requiredScopes: [],
     inputSchema: listUsersInputSchema,
@@ -428,6 +445,7 @@ export const cartesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get one public Cartes.io user.",
     requiredScopes: [],
     inputSchema: getUserInputSchema,

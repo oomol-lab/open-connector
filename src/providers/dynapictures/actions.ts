@@ -152,6 +152,7 @@ const generateImagesInputSchema = s.object(
 export const dynapicturesActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List DynaPictures templates that are ready for API generation and have Sync to Zapier enabled.",
     inputSchema: s.requiredObject("No input is required to list DynaPictures templates.", {}),
     outputSchema: s.requiredObject("The available DynaPictures templates.", {
@@ -160,6 +161,7 @@ export const dynapicturesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_template",
+    operationType: "read",
     description: "Retrieve one DynaPictures template and its customizable layers by UID.",
     inputSchema: s.requiredObject("Input for retrieving a DynaPictures template.", {
       templateId: templateIdSchema,
@@ -170,6 +172,7 @@ export const dynapicturesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "generate_images",
+    operationType: "write",
     description:
       "Generate one image from a single-page template or multiple images from a multipage template and return hosted URLs.",
     inputSchema: generateImagesInputSchema,

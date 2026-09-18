@@ -47,6 +47,7 @@ function requireUserIdOrAnonymousId(schema: JsonSchema): JsonSchema {
 
 const identifyAction: ActionDefinition = defineProviderAction(service, {
   name: "identify",
+  operationType: "write",
   description: "Send a Segment Identify call to record user traits.",
   inputSchema: requireUserIdOrAnonymousId(
     s.object(
@@ -63,6 +64,7 @@ const identifyAction: ActionDefinition = defineProviderAction(service, {
 
 const trackAction: ActionDefinition = defineProviderAction(service, {
   name: "track",
+  operationType: "write",
   description: "Send a Segment Track call to record one user event.",
   inputSchema: requireUserIdOrAnonymousId(
     s.object(
@@ -80,6 +82,7 @@ const trackAction: ActionDefinition = defineProviderAction(service, {
 
 const pageAction: ActionDefinition = defineProviderAction(service, {
   name: "page",
+  operationType: "write",
   description: "Send a Segment Page call to record a website page view.",
   inputSchema: requireUserIdOrAnonymousId(
     s.object(
@@ -97,6 +100,7 @@ const pageAction: ActionDefinition = defineProviderAction(service, {
 
 const screenAction: ActionDefinition = defineProviderAction(service, {
   name: "screen",
+  operationType: "write",
   description: "Send a Segment Screen call to record a mobile app screen view.",
   inputSchema: requireUserIdOrAnonymousId(
     s.object(
@@ -114,6 +118,7 @@ const screenAction: ActionDefinition = defineProviderAction(service, {
 
 const groupAction: ActionDefinition = defineProviderAction(service, {
   name: "group",
+  operationType: "write",
   description: "Send a Segment Group call to associate a user with a group.",
   inputSchema: requireUserIdOrAnonymousId(
     s.object(
@@ -131,6 +136,7 @@ const groupAction: ActionDefinition = defineProviderAction(service, {
 
 const aliasAction: ActionDefinition = defineProviderAction(service, {
   name: "alias",
+  operationType: "write",
   description: "Send a Segment Alias call to associate one user identity with another.",
   inputSchema: s.object(
     "The input payload for a Segment Alias call.",
@@ -154,6 +160,7 @@ const batchEventSchema = s.looseRequiredObject("One Segment batch event.", {
 
 const batchAction: ActionDefinition = defineProviderAction(service, {
   name: "batch",
+  operationType: "write",
   description: "Send a Segment Batch call containing Identify, Group, Track, Page, or Screen items.",
   inputSchema: s.object(
     "The input payload for a Segment Batch call.",

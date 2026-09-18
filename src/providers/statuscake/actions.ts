@@ -145,6 +145,7 @@ const listWindowedInput = s.actionInput(
 export const statuscakeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_uptime_tests",
+    operationType: "read",
     description: "List uptime tests available in the connected StatusCake account.",
     requiredScopes: [],
     followUpActions: ["statuscake.get_uptime_test"],
@@ -165,6 +166,7 @@ export const statuscakeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_uptime_test",
+    operationType: "read",
     description: "Get the full configuration and status of a single StatusCake uptime test.",
     requiredScopes: [],
     followUpActions: [
@@ -177,6 +179,7 @@ export const statuscakeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_uptime_test",
+    operationType: "write",
     description: "Create a new StatusCake uptime test.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -188,6 +191,7 @@ export const statuscakeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_uptime_test",
+    operationType: "write",
     description: "Update an existing StatusCake uptime test.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -202,6 +206,7 @@ export const statuscakeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_uptime_test",
+    operationType: "destructive",
     description: "Delete a StatusCake uptime test.",
     requiredScopes: [],
     inputSchema: targetUptimeInput,
@@ -211,6 +216,7 @@ export const statuscakeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_uptime_test_history",
+    operationType: "read",
     description: "List historical probe results for a StatusCake uptime test.",
     requiredScopes: [],
     inputSchema: listWindowedInput,
@@ -221,6 +227,7 @@ export const statuscakeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_uptime_test_periods",
+    operationType: "read",
     description: "List uptime or downtime periods recorded for a StatusCake uptime test.",
     requiredScopes: [],
     inputSchema: listWindowedInput,
@@ -231,6 +238,7 @@ export const statuscakeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_uptime_test_alerts",
+    operationType: "read",
     description: "List alerts triggered for a StatusCake uptime test.",
     requiredScopes: [],
     inputSchema: listWindowedInput,
@@ -241,6 +249,7 @@ export const statuscakeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_uptime_locations",
+    operationType: "read",
     description: "List available monitoring locations for StatusCake uptime tests.",
     requiredScopes: [],
     inputSchema: s.actionInput({}, [], "No input parameters are required for this action."),

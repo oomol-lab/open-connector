@@ -115,6 +115,7 @@ export type OksignActionName =
 export const oksignActions: ActionDefinition[] = [
   action(
     "get_credits",
+    "read",
     "Get OKSign credits balance, expiry, and account storage details.",
     noInput,
     s.actionOutput(
@@ -131,6 +132,7 @@ export const oksignActions: ActionDefinition[] = [
   ),
   action(
     "list_active_documents",
+    "read",
     "List active OKSign documents visible in the current account.",
     noInput,
     s.actionOutput(
@@ -142,6 +144,7 @@ export const oksignActions: ActionDefinition[] = [
   ),
   action(
     "get_document_metadata",
+    "read",
     "Get OKSign metadata v2 for a signed document by signed_docid.",
     docIdInput,
     s.actionOutput(
@@ -153,6 +156,7 @@ export const oksignActions: ActionDefinition[] = [
   ),
   action(
     "get_linked_document",
+    "read",
     "Resolve the corresponding source_docid and signed_docid pair for an OKSign document identifier.",
     docIdInput,
     s.actionOutput(
@@ -164,6 +168,7 @@ export const oksignActions: ActionDefinition[] = [
   ),
   action(
     "list_users",
+    "read",
     "List the users configured in the current OKSign account.",
     noInput,
     s.actionOutput(
@@ -177,12 +182,14 @@ export const oksignActions: ActionDefinition[] = [
 
 function action(
   name: OksignActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     requiredScopes: [],
     inputSchema,

@@ -47,6 +47,7 @@ export type NewRelicActionName =
 export const newRelicActions: ActionDefinition[] = [
   action(
     "get_current_user",
+    "read",
     "Validate the connected New Relic user key and return the current user profile from NerdGraph.",
     {},
     [],
@@ -56,6 +57,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "search_entities",
+    "read",
     "Search New Relic entities with either the raw entity search language or a structured query builder.",
     {
       query: s.string({ description: "The raw entity search query." }),
@@ -71,6 +73,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "execute_nrql_query",
+    "read",
     "Execute an NRQL query against a specific New Relic account and return the query results and metadata.",
     {
       accountId: s.positiveInteger("The account ID to query."),
@@ -89,6 +92,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "get_alert_policies",
+    "read",
     "List New Relic alert policies with optional name, incident preference, and pagination filters using the REST alerts API.",
     {
       name: s.string({ description: "The optional partial policy name filter." }),
@@ -102,6 +106,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "create_alert_policy",
+    "write",
     "Create a New Relic alert policy using the REST alerts API.",
     {
       name: s.nonEmptyString("The alert policy name."),
@@ -114,6 +119,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "update_alert_policy",
+    "write",
     "Update a New Relic alert policy name or incident preference using the REST alerts API.",
     {
       policyId: stringOrNumber,
@@ -124,6 +130,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "delete_alert_policy",
+    "destructive",
     "Delete a New Relic alert policy using the REST alerts API.",
     {
       policyId: stringOrNumber,
@@ -136,6 +143,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "list_nrql_conditions",
+    "read",
     "List NRQL alert conditions for a specific alert policy using the REST alerts API.",
     {
       policyId: s.positiveInteger("The alert policy ID."),
@@ -148,6 +156,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "create_nrql_condition",
+    "write",
     "Create a static or baseline NRQL alert condition for a policy using the REST alerts API.",
     {
       policyId: s.positiveInteger("The alert policy ID."),
@@ -160,6 +169,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "update_nrql_condition",
+    "write",
     "Update a static or baseline NRQL alert condition using the REST alerts API.",
     {
       conditionId: stringOrNumber,
@@ -172,6 +182,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "delete_nrql_condition",
+    "destructive",
     "Delete a New Relic NRQL alert condition using the REST alerts API.",
     {
       conditionId: stringOrNumber,
@@ -184,6 +195,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "get_dashboard_entity",
+    "read",
     "Read a New Relic dashboard entity, including its pages and widgets, by GUID.",
     {
       guid: s.nonEmptyString("The dashboard entity GUID."),
@@ -193,6 +205,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "create_dashboard",
+    "write",
     "Create a New Relic dashboard with pages and widgets using NerdGraph.",
     {
       accountId: s.positiveInteger("The account ID that will own the dashboard."),
@@ -211,6 +224,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "update_dashboard",
+    "write",
     "Update a New Relic dashboard by GUID, replacing the dashboard configuration with the supplied pages and widgets.",
     {
       guid: s.nonEmptyString("The dashboard entity GUID."),
@@ -229,6 +243,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "delete_dashboard",
+    "destructive",
     "Delete a New Relic dashboard by its entity GUID.",
     {
       guid: s.nonEmptyString("The dashboard entity GUID."),
@@ -241,6 +256,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "create_dashboard_snapshot_url",
+    "write",
     "Generate a snapshot URL for a New Relic dashboard page GUID.",
     {
       guid: s.nonEmptyString("The dashboard page GUID."),
@@ -252,6 +268,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "list_monitors",
+    "read",
     "List synthetic monitors by using NerdGraph entity search over the SYNTH MONITOR entity type.",
     {
       cursor: s.string({ description: "The entity search cursor for the next page." }),
@@ -266,6 +283,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "get_synth_monitor",
+    "read",
     "Get a synthetic monitor by its legacy monitor ID or entity GUID using NerdGraph entity search.",
     {
       monitorId: s.string({ description: "The legacy synthetic monitor ID." }),
@@ -278,6 +296,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "create_synthetics_simple_monitor",
+    "write",
     "Create a New Relic ping monitor by using the syntheticsCreateSimpleMonitor mutation.",
     {
       accountId: s.positiveInteger("The account ID that will own the monitor."),
@@ -297,6 +316,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "update_synthetics_simple_monitor",
+    "write",
     "Update a New Relic ping monitor by GUID using the syntheticsUpdateSimpleMonitor mutation.",
     {
       guid: s.nonEmptyString("The synthetic monitor GUID."),
@@ -309,6 +329,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "delete_synthetics_monitor",
+    "destructive",
     "Delete a synthetic monitor by GUID using the syntheticsDeleteMonitor mutation.",
     {
       guid: s.nonEmptyString("The synthetic monitor GUID."),
@@ -320,6 +341,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "list_secure_credentials",
+    "read",
     "List synthetic secure credentials by using NerdGraph entity search over the SYNTH SECURE_CRED entity type.",
     {
       cursor: s.string({ description: "The entity search cursor for the next page." }),
@@ -334,6 +356,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "get_secure_credential",
+    "read",
     "Get a synthetic secure credential by key using NerdGraph entity search metadata only.",
     {
       key: s.nonEmptyString("The secure credential key."),
@@ -345,6 +368,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "create_secure_credential",
+    "write",
     "Create a New Relic synthetic secure credential using NerdGraph.",
     {
       accountId: s.positiveInteger("The account ID that will own the secure credential."),
@@ -360,6 +384,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "update_secure_credential",
+    "write",
     "Update a New Relic synthetic secure credential value or description using NerdGraph.",
     {
       accountId: s.positiveInteger("The account ID that owns the secure credential."),
@@ -377,6 +402,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "delete_secure_credential",
+    "destructive",
     "Delete a New Relic synthetic secure credential using NerdGraph.",
     {
       accountId: s.positiveInteger("The account ID that owns the secure credential."),
@@ -391,6 +417,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "create_deployment_marker",
+    "write",
     "Create a New Relic change-tracking deployment marker for an entity GUID using NerdGraph.",
     {
       entityGuid: s.nonEmptyString("The target entity GUID."),
@@ -411,6 +438,7 @@ export const newRelicActions: ActionDefinition[] = [
   ),
   action(
     "list_deployments",
+    "read",
     "List deployment markers for a legacy APM application by using the REST v2 deployments API.",
     {
       applicationId: s.positiveInteger("The APM application ID."),
@@ -426,6 +454,7 @@ export const newRelicActions: ActionDefinition[] = [
 
 function action(
   name: NewRelicActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputProperties: Record<string, JsonSchema>,
   required: string[],
@@ -433,6 +462,7 @@ function action(
 ): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     requiredScopes: [],
     inputSchema: s.actionInput(inputProperties, required, "The input payload for this action."),

@@ -185,6 +185,7 @@ export interface MxToolboxLookupActionDefinition {
     | "lookup_ping"
     | "lookup_mta_sts_record"
     | "lookup_bimi_record";
+  operationType: ActionDefinition["operationType"];
   command: "dns" | "mx" | "dkim" | "dmarc" | "spf" | "blacklist" | "http" | "smtp" | "ping" | "mta-sts" | "bimi";
   description: string;
   inputKey: LookupInputKey;
@@ -195,6 +196,7 @@ export interface MxToolboxLookupActionDefinition {
 export const mxToolboxLookupActionDefinitions: readonly MxToolboxLookupActionDefinition[] = [
   {
     name: "lookup_dns",
+    operationType: "read",
     command: "dns",
     description: "Perform a comprehensive DNS lookup for a domain and return the official MxToolbox response payload.",
     inputKey: "domain",
@@ -203,6 +205,7 @@ export const mxToolboxLookupActionDefinitions: readonly MxToolboxLookupActionDef
   },
   {
     name: "lookup_mx",
+    operationType: "read",
     command: "mx",
     description: "Look up MX records for a domain and return the official MxToolbox response payload.",
     inputKey: "domain",
@@ -211,6 +214,7 @@ export const mxToolboxLookupActionDefinitions: readonly MxToolboxLookupActionDef
   },
   {
     name: "lookup_dkim",
+    operationType: "read",
     command: "dkim",
     description: "Look up one DKIM record and return the official MxToolbox response payload.",
     inputKey: "domain",
@@ -220,6 +224,7 @@ export const mxToolboxLookupActionDefinitions: readonly MxToolboxLookupActionDef
   },
   {
     name: "lookup_dmarc",
+    operationType: "read",
     command: "dmarc",
     description: "Look up the DMARC record for a domain and return the official MxToolbox response payload.",
     inputKey: "domain",
@@ -228,6 +233,7 @@ export const mxToolboxLookupActionDefinitions: readonly MxToolboxLookupActionDef
   },
   {
     name: "lookup_spf",
+    operationType: "read",
     command: "spf",
     description: "Look up the SPF record for a domain and return the official MxToolbox response payload.",
     inputKey: "domain",
@@ -236,6 +242,7 @@ export const mxToolboxLookupActionDefinitions: readonly MxToolboxLookupActionDef
   },
   {
     name: "lookup_blacklist",
+    operationType: "read",
     command: "blacklist",
     description:
       "Check whether a domain or IP is listed on blacklists and return the official MxToolbox response payload.",
@@ -245,6 +252,7 @@ export const mxToolboxLookupActionDefinitions: readonly MxToolboxLookupActionDef
   },
   {
     name: "lookup_http",
+    operationType: "read",
     command: "http",
     description: "Run an HTTP lookup for a domain and return the official MxToolbox response payload.",
     inputKey: "domain",
@@ -253,6 +261,7 @@ export const mxToolboxLookupActionDefinitions: readonly MxToolboxLookupActionDef
   },
   {
     name: "lookup_smtp",
+    operationType: "read",
     command: "smtp",
     description: "Run an SMTP lookup for a domain and return the official MxToolbox response payload.",
     inputKey: "domain",
@@ -261,6 +270,7 @@ export const mxToolboxLookupActionDefinitions: readonly MxToolboxLookupActionDef
   },
   {
     name: "lookup_ping",
+    operationType: "read",
     command: "ping",
     description: "Ping a domain or IP and return the official MxToolbox response payload.",
     inputKey: "domain_or_ip",
@@ -269,6 +279,7 @@ export const mxToolboxLookupActionDefinitions: readonly MxToolboxLookupActionDef
   },
   {
     name: "lookup_mta_sts_record",
+    operationType: "read",
     command: "mta-sts",
     description: "Look up the MTA-STS record for a domain and return the official MxToolbox response payload.",
     inputKey: "domain",
@@ -277,6 +288,7 @@ export const mxToolboxLookupActionDefinitions: readonly MxToolboxLookupActionDef
   },
   {
     name: "lookup_bimi_record",
+    operationType: "read",
     command: "bimi",
     description: "Look up the BIMI record for a domain and return the official MxToolbox response payload.",
     inputKey: "domain",
@@ -299,6 +311,7 @@ function buildLookupInputSchema(definition: MxToolboxLookupActionDefinition): Js
 
 const usageCheckAction = defineProviderAction(service, {
   name: "usage_check",
+  operationType: "read",
   description: "Retrieve API usage statistics for DNS and network lookups from MxToolbox.",
   inputSchema: s.object({}, { description: "Input parameters for retrieving MxToolbox API usage statistics." }),
   outputSchema: usageCheckResponseSchema,
@@ -306,6 +319,7 @@ const usageCheckAction = defineProviderAction(service, {
 
 const monitorStatusAction = defineProviderAction(service, {
   name: "monitor_status",
+  operationType: "read",
   description: "Retrieve the current status of all monitors in the authenticated MxToolbox account.",
   inputSchema: s.object({}, { description: "Input parameters for retrieving MxToolbox monitor status." }),
   outputSchema: monitorStatusResponseSchema,
@@ -315,6 +329,7 @@ export const mxToolboxActions: ActionDefinition[] = [
   ...mxToolboxLookupActionDefinitions.map((definition) =>
     defineProviderAction(service, {
       name: definition.name,
+      operationType: definition.operationType,
       description: definition.description,
       requiredScopes: [],
       inputSchema: buildLookupInputSchema(definition),

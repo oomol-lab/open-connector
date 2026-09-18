@@ -69,6 +69,7 @@ const templateSchema = s.object("A normalized Dropbox Sign template.", {
 export const dropboxSignActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description:
       "Retrieve Dropbox Sign account properties and settings for the connected account or a specified account.",
     requiredScopes: [],
@@ -86,6 +87,7 @@ export const dropboxSignActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_signature_requests",
+    operationType: "read",
     description:
       "List Dropbox Sign signature requests accessible to the connected account with optional search and pagination.",
     requiredScopes: [],
@@ -100,6 +102,7 @@ export const dropboxSignActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_signature_request",
+    operationType: "read",
     description: "Retrieve one Dropbox Sign signature request by ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a Dropbox Sign signature request.", {
@@ -111,6 +114,7 @@ export const dropboxSignActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List Dropbox Sign templates accessible to the connected account with optional search and pagination.",
     requiredScopes: [],
     inputSchema: s.object("Input for listing Dropbox Sign templates.", pageInputProperties, {
@@ -124,6 +128,7 @@ export const dropboxSignActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_template",
+    operationType: "read",
     description: "Retrieve one Dropbox Sign template by ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a Dropbox Sign template.", {

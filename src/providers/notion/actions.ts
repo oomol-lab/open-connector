@@ -169,6 +169,7 @@ const pageParent = s.oneOf(
 
 const action = (input: {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -176,6 +177,7 @@ const action = (input: {
 }): ActionDefinition =>
   defineProviderAction(service, {
     name: input.name,
+    operationType: input.operationType,
     description: input.description,
     requiredScopes: input.requiredScopes,
     inputSchema: input.inputSchema,
@@ -185,6 +187,7 @@ const action = (input: {
 export const notionActions: ActionDefinition[] = [
   action({
     name: "search",
+    operationType: "read",
     description: "Search Notion pages and data sources with optional filter, sort, and pagination controls.",
     requiredScopes: notionReadScopes,
     inputSchema: s.object(
@@ -208,6 +211,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "get_page",
+    operationType: "read",
     description:
       "Get a Notion page together with its first-level child blocks. This is an aggregate helper over page retrieval plus block-children listing.",
     requiredScopes: notionReadScopes,
@@ -222,6 +226,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "create_page",
+    operationType: "write",
     description: "Create a Notion page under a parent page, data source, or workspace-level private area.",
     requiredScopes: notionWriteScopes,
     inputSchema: s.object(
@@ -242,6 +247,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "update_page",
+    operationType: "destructive",
     description: "Update a Notion page's properties, title, icon, cover, trash status, or locked state.",
     requiredScopes: notionWriteScopes,
     inputSchema: s.object(
@@ -262,6 +268,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "move_page",
+    operationType: "write",
     description: "Move a Notion page under another page or data source.",
     requiredScopes: notionWriteScopes,
     inputSchema: s.object(
@@ -275,6 +282,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "append_block",
+    operationType: "write",
     description: "Append a single paragraph block to a Notion page.",
     requiredScopes: notionWriteScopes,
     inputSchema: s.object(
@@ -288,6 +296,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "retrieve_page",
+    operationType: "read",
     description: "Retrieve a Notion page's properties and metadata by page ID.",
     requiredScopes: notionReadScopes,
     inputSchema: idInput("pageId", "The page ID to retrieve."),
@@ -295,6 +304,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "retrieve_page_markdown",
+    operationType: "read",
     description: "Retrieve a Notion page or block subtree rendered as enhanced Markdown.",
     requiredScopes: notionReadScopes,
     inputSchema: s.object(
@@ -310,6 +320,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "update_page_markdown",
+    operationType: "write",
     description: "Update a Notion page's content as enhanced Markdown.",
     requiredScopes: notionWriteScopes,
     inputSchema: s.object(
@@ -327,6 +338,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "retrieve_page_property",
+    operationType: "read",
     description: "Retrieve a specific property item from a Notion page.",
     requiredScopes: notionReadScopes,
     inputSchema: s.object(
@@ -346,6 +358,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "list_users",
+    operationType: "read",
     description: "List users in the Notion workspace with pagination.",
     requiredScopes: notionReadScopes,
     inputSchema: paginationInput(),
@@ -353,6 +366,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "retrieve_user",
+    operationType: "read",
     description: "Retrieve a Notion user by user ID.",
     requiredScopes: notionReadScopes,
     inputSchema: idInput("userId", "The user ID to retrieve."),
@@ -360,6 +374,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "retrieve_block",
+    operationType: "read",
     description: "Retrieve a Notion block by block ID.",
     requiredScopes: notionReadScopes,
     inputSchema: idInput("blockId", "The block ID to retrieve."),
@@ -367,6 +382,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "list_block_children",
+    operationType: "read",
     description: "List the direct child blocks under a Notion block with pagination.",
     requiredScopes: notionReadScopes,
     inputSchema: paginationInput("blockId", "The parent block ID."),
@@ -374,6 +390,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "append_block_children",
+    operationType: "write",
     description: "Append raw Notion child blocks to an existing parent block.",
     requiredScopes: notionWriteScopes,
     inputSchema: s.object(
@@ -388,6 +405,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "update_block",
+    operationType: "destructive",
     description: "Update a Notion block using raw block fields.",
     requiredScopes: notionWriteScopes,
     inputSchema: s.object(
@@ -402,6 +420,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "delete_block",
+    operationType: "destructive",
     description: "Archive a Notion block through the official delete endpoint.",
     requiredScopes: notionWriteScopes,
     inputSchema: idInput("blockId", "The block ID to delete."),
@@ -409,6 +428,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "create_database",
+    operationType: "write",
     description: "Create a Notion database container under a parent page or workspace.",
     requiredScopes: notionWriteScopes,
     inputSchema: s.object(
@@ -427,6 +447,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "retrieve_database",
+    operationType: "read",
     description: "Retrieve a Notion database's metadata and schema by database ID.",
     requiredScopes: notionReadScopes,
     inputSchema: idInput("databaseId", "The database ID to retrieve."),
@@ -434,6 +455,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "update_database",
+    operationType: "destructive",
     description: "Update a Notion database container.",
     requiredScopes: notionWriteScopes,
     inputSchema: s.object(
@@ -454,6 +476,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "create_data_source",
+    operationType: "write",
     description: "Create a Notion data source under a parent database.",
     requiredScopes: notionWriteScopes,
     inputSchema: s.object(
@@ -469,6 +492,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "retrieve_data_source",
+    operationType: "read",
     description: "Retrieve a Notion data source by data source ID.",
     requiredScopes: notionReadScopes,
     inputSchema: idInput("dataSourceId", "The data source ID to retrieve."),
@@ -476,6 +500,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "update_data_source",
+    operationType: "destructive",
     description: "Update a Notion data source's title, icon, properties schema, parent, or trash status.",
     requiredScopes: notionWriteScopes,
     inputSchema: s.object(
@@ -494,6 +519,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "query_data_source",
+    operationType: "read",
     description: "Query a Notion data source with filters, sorts, pagination, and optional property filtering.",
     requiredScopes: notionReadScopes,
     inputSchema: s.object(
@@ -519,6 +545,7 @@ export const notionActions: ActionDefinition[] = [
   }),
   action({
     name: "list_data_source_templates",
+    operationType: "read",
     description: "List templates available on a Notion data source.",
     requiredScopes: notionReadScopes,
     inputSchema: paginationInput("dataSourceId", "The data source ID whose templates should be listed."),

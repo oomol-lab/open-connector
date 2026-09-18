@@ -185,6 +185,7 @@ function bucketScopedInputSchema(description: string) {
 export const cloudflareR2BucketSettingsActions: ActionDefinition[] = [
   defineProviderAction("cloudflare_r2", {
     name: "get_bucket_lifecycle",
+    operationType: "read",
     description: "Get the object lifecycle rules of an R2 bucket.",
     requiredScopes: ["workers-r2.read"],
     providerPermissions: [...cloudflareR2ReadPermissions],
@@ -195,6 +196,7 @@ export const cloudflareR2BucketSettingsActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "update_bucket_lifecycle",
+    operationType: "destructive",
     description: "Replace the object lifecycle rules of an R2 bucket with the given rule set.",
     requiredScopes: ["workers-r2.write"],
     providerPermissions: [...cloudflareR2WritePermissions],
@@ -217,6 +219,7 @@ export const cloudflareR2BucketSettingsActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "get_bucket_lock",
+    operationType: "read",
     description: "Get the object lock rules of an R2 bucket.",
     requiredScopes: ["workers-r2.read"],
     providerPermissions: [...cloudflareR2ReadPermissions],
@@ -227,6 +230,7 @@ export const cloudflareR2BucketSettingsActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "update_bucket_lock",
+    operationType: "destructive",
     description: "Replace the object lock rules of an R2 bucket with the given rule set.",
     requiredScopes: ["workers-r2.write"],
     providerPermissions: [...cloudflareR2WritePermissions],
@@ -249,6 +253,7 @@ export const cloudflareR2BucketSettingsActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "get_bucket_local_uploads",
+    operationType: "read",
     description:
       "Get whether local uploads are enabled, which writes objects to the nearest region before replicating to the primary region.",
     requiredScopes: ["workers-r2.read"],
@@ -262,6 +267,7 @@ export const cloudflareR2BucketSettingsActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "update_bucket_local_uploads",
+    operationType: "destructive",
     description: "Enable or disable local uploads for an R2 bucket.",
     requiredScopes: ["workers-r2.write"],
     providerPermissions: [...cloudflareR2WritePermissions],
@@ -276,6 +282,7 @@ export const cloudflareR2BucketSettingsActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "get_sippy_config",
+    operationType: "read",
     description: "Get the Sippy incremental migration configuration of an R2 bucket.",
     requiredScopes: ["workers-r2.read"],
     providerPermissions: [...cloudflareR2ReadPermissions],
@@ -284,6 +291,7 @@ export const cloudflareR2BucketSettingsActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "enable_sippy",
+    operationType: "write",
     description:
       "Enable Sippy so that objects missing from the R2 bucket are copied on demand from a source bucket on AWS S3, Google Cloud Storage, an S3-compatible service, or Azure Blob Storage.",
     requiredScopes: ["workers-r2.write"],
@@ -302,6 +310,7 @@ export const cloudflareR2BucketSettingsActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "disable_sippy",
+    operationType: "destructive",
     description: "Disable Sippy on an R2 bucket.",
     requiredScopes: ["workers-r2.write"],
     providerPermissions: [...cloudflareR2WritePermissions],

@@ -31,6 +31,7 @@ export const sunsamaMcpActions: ActionDefinition[] = [
   ...sunsamaMcpOfficialActions,
   defineProviderAction(service, {
     name: "list_tools",
+    operationType: "read",
     description: "Discover the current Sunsama task and daily planning MCP tools with their live input schemas.",
     requiredScopes: ["read"],
     followUpActions: ["sunsama_mcp.call_tool"],
@@ -41,6 +42,7 @@ export const sunsamaMcpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "call_tool",
+    operationType: "destructive",
     description:
       "Call a current Sunsama MCP tool with JSON arguments after checking its live schema and behavior annotations.",
     requiredScopes: ["execute"],

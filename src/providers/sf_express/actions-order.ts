@@ -349,6 +349,7 @@ const createOrderOptionalFields = [
 export const sfExpressOrderActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_order",
+    operationType: "write",
     description:
       "Create a real SF Express shipment order (下订单) and allocate waybill numbers; charges may apply. Mainland China and Hong Kong/Macao/Taiwan lanes are supported. The response includes the screening result (filterResult) and the allocated waybill numbers. Use pre_order to validate an order without creating it.",
     requiredScopes: [],
@@ -358,6 +359,7 @@ export const sfExpressOrderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "pre_order",
+    operationType: "read",
     description:
       "Validate whether an SF Express order would be accepted (预下单) — checks cargo, monthly card, address reachability, and number controls — without creating it, and returns the available service time windows.",
     requiredScopes: [],
@@ -391,6 +393,7 @@ export const sfExpressOrderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_order",
+    operationType: "destructive",
     description:
       "Confirm (deal_type confirm) or cancel (deal_type cancel) an SF Express order before shipment, optionally updating weight, volume, or the recipient address. Confirming requires the waybill numbers. A cancelled order number cannot be reused.",
     requiredScopes: [],
@@ -462,6 +465,7 @@ export const sfExpressOrderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_order_result",
+    operationType: "read",
     description:
       "Query the processing result of a previously placed SF Express order, for example when the create_order response never arrived.",
     requiredScopes: [],
@@ -496,6 +500,7 @@ export const sfExpressOrderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_sub_waybill_nos",
+    operationType: "read",
     description:
       "Allocate additional child waybill numbers (子单号) for an existing SF Express order, at most 20 per call.",
     requiredScopes: [],
@@ -519,6 +524,7 @@ export const sfExpressOrderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "intercept_order",
+    operationType: "destructive",
     description:
       "Intercept, redirect, return, or adjust an in-transit SF Express waybill (截单转寄退回), for example redirecting it to a new address or returning it to the sender. Only for waybills already picked up; cancel an unshipped order with update_order instead.",
     requiredScopes: [],
@@ -610,6 +616,7 @@ export const sfExpressOrderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_delivery_notice",
+    operationType: "write",
     description:
       "Send a delivery or return notification for an SF Express waybill (派件通知), used in pre-sale scenarios where the goods were stocked in an SF warehouse in advance.",
     requiredScopes: [],
@@ -632,6 +639,7 @@ export const sfExpressOrderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_waybill_fee",
+    operationType: "read",
     description:
       "Query the freight fee breakdown (清单运费) of an SF Express shipment by order number (only orders placed under your partnerID) or by waybill number (the waybill's monthly card must be bound to your partnerID).",
     requiredScopes: [],

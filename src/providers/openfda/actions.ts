@@ -47,6 +47,7 @@ const metaSchema = s.object("Metadata returned by openFDA.", {
 
 const searchDrugRecordsAction = defineProviderAction(service, {
   name: "search_drug_records",
+  operationType: "read",
   description:
     "Search and page through records from a supported openFDA drug dataset. Results are informational and must not be used as medical advice.",
   inputSchema: s.object(
@@ -68,6 +69,7 @@ const searchDrugRecordsAction = defineProviderAction(service, {
 
 const countDrugValuesAction = defineProviderAction(service, {
   name: "count_drug_values",
+  operationType: "read",
   description:
     "Count the most frequent values of a field in a supported openFDA drug dataset, optionally filtered by a search expression.",
   inputSchema: s.object(

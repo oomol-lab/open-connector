@@ -103,12 +103,14 @@ const deleteMapOutputSchema = s.object("A Felt map deletion confirmation.", {
 export const feltActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the Felt user profile for the authenticated API token.",
     inputSchema: s.object("The input payload for retrieving the current Felt user.", {}),
     outputSchema: userOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Felt projects accessible to the authenticated user.",
     inputSchema: s.object(
       "The input payload for listing Felt projects.",
@@ -121,6 +123,7 @@ export const feltActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create a Felt project in the authenticated workspace.",
     inputSchema: s.object(
       "The input payload for creating a Felt project.",
@@ -135,6 +138,7 @@ export const feltActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get one Felt project by ID.",
     inputSchema: s.object("The input payload for retrieving a Felt project.", {
       project_id: feltIdSchema,
@@ -143,6 +147,7 @@ export const feltActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_project",
+    operationType: "write",
     description: "Update Felt project properties.",
     inputSchema: s.object(
       "The input payload for updating a Felt project.",
@@ -158,6 +163,7 @@ export const feltActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_project",
+    operationType: "destructive",
     description: "Delete one Felt project by ID.",
     inputSchema: s.object("The input payload for deleting a Felt project.", {
       project_id: feltIdSchema,
@@ -166,6 +172,7 @@ export const feltActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_map",
+    operationType: "write",
     description: "Create a Felt map with optional initial metadata.",
     inputSchema: s.object(
       "The input payload for creating a Felt map.",
@@ -204,6 +211,7 @@ export const feltActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_map",
+    operationType: "read",
     description: "Get one Felt map by ID.",
     inputSchema: s.object("The input payload for retrieving a Felt map.", {
       map_id: feltIdSchema,
@@ -212,6 +220,7 @@ export const feltActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_map",
+    operationType: "write",
     description: "Update Felt map metadata and sharing settings.",
     inputSchema: s.object(
       "The input payload for updating a Felt map.",
@@ -230,6 +239,7 @@ export const feltActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "duplicate_map",
+    operationType: "write",
     description: "Duplicate a Felt map, optionally into another project or folder.",
     inputSchema: s.object(
       "The input payload for duplicating a Felt map.",
@@ -244,12 +254,14 @@ export const feltActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "move_map",
+    operationType: "destructive",
     description: "Move a Felt map to another project or folder in the same workspace.",
     inputSchema: moveMapInputSchema,
     outputSchema: mapOutputSchema,
   }),
   defineProviderAction(service, {
     name: "delete_map",
+    operationType: "destructive",
     description: "Delete one Felt map by ID.",
     inputSchema: s.object("The input payload for deleting a Felt map.", {
       map_id: feltIdSchema,

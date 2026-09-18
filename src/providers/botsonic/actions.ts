@@ -242,12 +242,14 @@ const listConversationsInputSchema = s.object(
 export const botsonicActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "generate_response",
+    operationType: "write",
     description: "Generate one synchronous response from the connected Botsonic bot.",
     inputSchema: generateResponseInputSchema,
     outputSchema: generateResponseOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_faqs",
+    operationType: "read",
     description: "List FAQs attached to the connected Botsonic bot token.",
     inputSchema: listFaqsInputSchema,
     outputSchema: s.looseRequiredObject(
@@ -261,6 +263,7 @@ export const botsonicActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_conversations",
+    operationType: "read",
     description: "List conversations for the connected Botsonic bot token.",
     inputSchema: listConversationsInputSchema,
     outputSchema: s.looseRequiredObject(
@@ -274,6 +277,7 @@ export const botsonicActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_conversation",
+    operationType: "read",
     description: "Get one Botsonic conversation by chat identifier.",
     inputSchema: s.object("The input payload for fetching one Botsonic conversation.", {
       chat_id: s.uuid("The Botsonic conversation chat identifier."),

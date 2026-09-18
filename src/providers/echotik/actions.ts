@@ -837,6 +837,7 @@ const influencerDetailsInputSchema = s.object(
 const echotikActionDefinitions = [
   defineProviderAction(service, {
     name: "list_product_categories",
+    operationType: "read",
     description: "List EchoTik's localized TikTok Shop category dictionary at the first, second, or third level.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -860,6 +861,7 @@ const echotikActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "resolve_product_id",
+    operationType: "read",
     description: "Resolve a TikTok product share URL to the stable product ID used by EchoTik product actions.",
     requiredScopes: [],
     inputSchema: s.object("TikTok product share URL to resolve through EchoTik.", {
@@ -878,6 +880,7 @@ const echotikActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description:
       "Browse EchoTik's T+1 TikTok Shop product dataset with category, sales, GMV, price, commission, store, and ranking filters.",
     requiredScopes: [],
@@ -891,6 +894,7 @@ const echotikActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "list_product_comments",
+    operationType: "read",
     description: "List EchoTik's offline TikTok Shop product reviews with optional integer rating filters.",
     requiredScopes: [],
     inputSchema: productCommentInputSchema,
@@ -902,6 +906,7 @@ const echotikActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "get_product_details",
+    operationType: "read",
     description: "Get EchoTik's detailed offline commerce profile for up to 10 TikTok Shop products in one request.",
     requiredScopes: [],
     inputSchema: s.object("TikTok Shop product IDs to retrieve from EchoTik.", {
@@ -920,6 +925,7 @@ const echotikActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "get_product_trend",
+    operationType: "read",
     description:
       "Get up to 180 days of EchoTik offline price, sales, GMV, creator, video, and live snapshots for one product.",
     requiredScopes: [],
@@ -932,6 +938,7 @@ const echotikActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "get_category_overview",
+    operationType: "read",
     description:
       "Get EchoTik's T+1 market-size, sales, GMV, product, creator, price, and live-commerce overview for one first-level category.",
     requiredScopes: [],
@@ -947,6 +954,7 @@ const echotikActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "get_category_trend",
+    operationType: "read",
     description:
       "Get EchoTik offline daily sales and GMV trend snapshots for a region and optional first-, second-, or third-level category filters.",
     requiredScopes: [],
@@ -959,6 +967,7 @@ const echotikActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "list_product_influencers",
+    operationType: "read",
     description: "List creators associated with an EchoTik product, including estimated attributed sales and GMV.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -988,6 +997,7 @@ const echotikActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "list_product_videos",
+    operationType: "read",
     description:
       "List offline commerce videos associated with an EchoTik product, including engagement and estimated sales performance.",
     requiredScopes: [],
@@ -1000,6 +1010,7 @@ const echotikActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "list_product_lives",
+    operationType: "read",
     description:
       "List offline live sessions associated with an EchoTik product, including audience and estimated sales performance.",
     requiredScopes: [],
@@ -1012,6 +1023,7 @@ const echotikActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "list_product_rankings",
+    operationType: "read",
     description:
       "List EchoTik daily, weekly, or monthly TikTok Shop product rankings by sales or creator promotion growth.",
     requiredScopes: [],
@@ -1049,6 +1061,7 @@ const echotikActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "get_shop_details",
+    operationType: "read",
     description:
       "Get EchoTik's offline TikTok Shop profile for a seller discovered through product or proxy workflows.",
     requiredScopes: [],
@@ -1059,6 +1072,7 @@ const echotikActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "get_influencer_details",
+    operationType: "read",
     description: "Get EchoTik's offline creator profiles for up to 10 TikTok user IDs or handles in one request.",
     requiredScopes: [],
     inputSchema: influencerDetailsInputSchema,
@@ -1070,6 +1084,7 @@ const echotikActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "get_video_details",
+    operationType: "read",
     description: "Get EchoTik's offline engagement and commerce profiles for up to 10 TikTok videos in one request.",
     requiredScopes: [],
     inputSchema: s.object("TikTok video IDs to retrieve from EchoTik.", {
@@ -1083,6 +1098,7 @@ const echotikActionDefinitions = [
   }),
   defineProviderAction(service, {
     name: "get_live_details",
+    operationType: "read",
     description: "Get EchoTik's offline audience and commerce profiles for up to 10 TikTok live rooms in one request.",
     requiredScopes: [],
     inputSchema: s.object("TikTok live room IDs to retrieve from EchoTik.", {

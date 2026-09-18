@@ -76,6 +76,7 @@ const exampleSchema = s.object("A LangSmith dataset example.", {
 export const langSmithActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_workspaces",
+    operationType: "read",
     description: "List LangSmith workspaces visible to the connected API key.",
     inputSchema: s.object(
       "Input parameters for listing LangSmith workspaces.",
@@ -91,6 +92,7 @@ export const langSmithActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List LangSmith tracing projects with optional name and pagination filters.",
     inputSchema: s.object(
       "Input parameters for listing LangSmith projects.",
@@ -109,6 +111,7 @@ export const langSmithActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get a LangSmith tracing project by ID.",
     inputSchema: s.object(
       "Input parameters for getting a LangSmith project.",
@@ -124,6 +127,7 @@ export const langSmithActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create a LangSmith tracing project.",
     inputSchema: s.object(
       "Input parameters for creating a LangSmith project.",
@@ -155,6 +159,7 @@ export const langSmithActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_datasets",
+    operationType: "read",
     description: "List LangSmith datasets with optional name, type, and pagination filters.",
     inputSchema: s.object(
       "Input parameters for listing LangSmith datasets.",
@@ -172,6 +177,7 @@ export const langSmithActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dataset",
+    operationType: "read",
     description: "Get a LangSmith dataset by ID.",
     inputSchema: s.object("Input parameters for getting a LangSmith dataset.", {
       datasetId: uuidSchema,
@@ -182,6 +188,7 @@ export const langSmithActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_dataset",
+    operationType: "write",
     description: "Create a LangSmith dataset.",
     inputSchema: s.object(
       "Input parameters for creating a LangSmith dataset.",
@@ -211,6 +218,7 @@ export const langSmithActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_examples",
+    operationType: "read",
     description: "List LangSmith dataset examples with optional dataset and text filters.",
     inputSchema: s.object(
       "Input parameters for listing LangSmith examples.",
@@ -232,6 +240,7 @@ export const langSmithActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_example",
+    operationType: "read",
     description: "Get a LangSmith dataset example by ID.",
     inputSchema: s.object(
       "Input parameters for getting a LangSmith example.",
@@ -248,6 +257,7 @@ export const langSmithActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_example",
+    operationType: "write",
     description: "Create a LangSmith dataset example with JSON inputs, outputs, and metadata.",
     inputSchema: s.object(
       "Input parameters for creating a LangSmith example.",

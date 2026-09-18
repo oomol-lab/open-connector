@@ -65,6 +65,7 @@ const uploadImageOutputSchema = s.object("The output payload for uploading an im
 export const imgbbActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "upload_image",
+    operationType: "write",
     description: "Upload one image to ImgBB from a public URL or Base64 content and return the hosted image metadata.",
     inputSchema: uploadImageInputSchema,
     outputSchema: uploadImageOutputSchema,

@@ -39,6 +39,7 @@ const updateRowSchema = s.object("One row update.", {
 export const retableActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_workspaces",
+    operationType: "read",
     description: "List the Retable workspaces accessible to the authenticated API key.",
     inputSchema: s.object("Input payload for listing Retable workspaces.", {}),
     outputSchema: s.object("Accessible Retable workspaces.", {
@@ -47,6 +48,7 @@ export const retableActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List the projects inside one accessible Retable workspace.",
     inputSchema: s.object("Input payload for listing Retable projects.", {
       workspaceId: workspaceIdField,
@@ -57,6 +59,7 @@ export const retableActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_retables",
+    operationType: "read",
     description: "List the tables inside one accessible Retable project.",
     inputSchema: s.object("Input payload for listing tables in a Retable project.", {
       projectId: projectIdField,
@@ -67,6 +70,7 @@ export const retableActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_retable",
+    operationType: "read",
     description: "Get one Retable table and its column definitions.",
     inputSchema: s.object("Input payload for reading one Retable table.", {
       retableId: retableIdField,
@@ -77,6 +81,7 @@ export const retableActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_rows",
+    operationType: "read",
     description: "List all rows or up to 50 selected row IDs from one Retable table.",
     inputSchema: s.object("Input payload for listing rows from one Retable table.", {
       retableId: retableIdField,
@@ -97,6 +102,7 @@ export const retableActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_rows",
+    operationType: "read",
     description: "Search a Retable table for a term in one column with optional pagination.",
     inputSchema: s.object("Input payload for searching Retable rows.", {
       retableId: retableIdField,
@@ -120,6 +126,7 @@ export const retableActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "insert_rows",
+    operationType: "write",
     description: "Insert one or more rows into a Retable table.",
     inputSchema: s.object("Input payload for inserting Retable rows.", {
       retableId: retableIdField,
@@ -131,6 +138,7 @@ export const retableActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_rows",
+    operationType: "write",
     description: "Update cells in one or more rows of a Retable table.",
     inputSchema: s.object("Input payload for updating Retable rows.", {
       retableId: retableIdField,
@@ -142,6 +150,7 @@ export const retableActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_rows",
+    operationType: "destructive",
     description: "Delete one or more rows from a Retable table.",
     inputSchema: s.object("Input payload for deleting Retable rows.", {
       retableId: retableIdField,

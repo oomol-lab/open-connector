@@ -27,6 +27,7 @@ export type HasdataActionName = "scrape_web" | "search_google_serp";
 export const hasdataActions: readonly ProviderActionDefinition<HasdataActionName>[] = [
   defineProviderAction(service, {
     name: "scrape_web",
+    operationType: "read",
     description:
       "Scrape one public web page through HasData's synchronous Web Scraping API and return the official JSON payload.",
     inputSchema: s.actionInput(
@@ -75,6 +76,7 @@ export const hasdataActions: readonly ProviderActionDefinition<HasdataActionName
   }),
   defineProviderAction(service, {
     name: "search_google_serp",
+    operationType: "read",
     description: "Run one synchronous Google SERP search through HasData and return the official JSON payload.",
     inputSchema: s.actionInput(
       {

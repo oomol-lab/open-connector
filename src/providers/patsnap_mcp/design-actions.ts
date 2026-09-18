@@ -61,6 +61,7 @@ const uploadInput = s.requiredObject("Patsnap MCP tool arguments.", {
 export const patsnapDesignActions: ProviderActionDefinition[] = [
   defineProviderAction("patsnap_mcp", {
     name: "design_submit_workflow",
+    operationType: "write",
     description:
       "Submit FTO workflow task \u2014 triggers the full pipeline (lineart conversion \u2192 search \u2192 rerank \u2192 RRF fusion \u2192 feature comparison \u2192 report generation) in one shot. Returns a task_id for polling via design_get_task_status and fetching results via design_get_stage_result",
     inputSchema: submitInput,
@@ -69,6 +70,7 @@ export const patsnapDesignActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "design_get_task_status",
+    operationType: "read",
     description:
       "Query workflow task status \u2014 returns lightweight task overview and per-stage summaries (status/duration/retry count/error message) without large result_data, suitable for high-frequency polling",
     inputSchema: statusInput,
@@ -77,6 +79,7 @@ export const patsnapDesignActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "design_get_stage_result",
+    operationType: "read",
     description:
       "Get execution result of a specific stage \u2014 returns the full business data (result_data) of a stage, which may be large. To get final results, typically use stage='feature_comparison' or 'generate_report'",
     inputSchema: stageInput,
@@ -84,6 +87,7 @@ export const patsnapDesignActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "design_create_image_upload_url",
+    operationType: "write",
     description:
       "Returns a temporary PUT upload URL. Upload the image binary to this URL using HTTP PUT, then pass the returned image URL to design_submit_workflow. This tool only creates the upload URL and does not accept image binaries or large base64 payloads.",
     inputSchema: uploadInput,

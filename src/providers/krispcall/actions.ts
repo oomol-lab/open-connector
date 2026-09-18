@@ -91,6 +91,7 @@ const contactFieldsSchema = {
 
 const getWorkspaceAction = defineProviderAction(service, {
   name: "get_workspace",
+  operationType: "read",
   description: "Get the connected KrispCall workspace profile.",
   requiredScopes: [],
   inputSchema: s.requiredObject("This action does not require input fields.", {}),
@@ -102,6 +103,7 @@ const getWorkspaceAction = defineProviderAction(service, {
 
 const listContactsAction = defineProviderAction(service, {
   name: "list_contacts",
+  operationType: "read",
   description: "List contacts in the connected KrispCall workspace.",
   requiredScopes: [],
   inputSchema: pageInputSchema,
@@ -114,6 +116,7 @@ const listContactsAction = defineProviderAction(service, {
 
 const getContactAction = defineProviderAction(service, {
   name: "get_contact",
+  operationType: "read",
   description: "Get one KrispCall contact by identifier.",
   requiredScopes: [],
   inputSchema: contactIdInputSchema,
@@ -125,6 +128,7 @@ const getContactAction = defineProviderAction(service, {
 
 const createContactAction = defineProviderAction(service, {
   name: "create_contact",
+  operationType: "write",
   description: "Create a contact in the connected KrispCall workspace.",
   requiredScopes: [],
   inputSchema: s.object("The KrispCall contact fields to create.", contactFieldsSchema, {
@@ -138,6 +142,7 @@ const createContactAction = defineProviderAction(service, {
 
 const updateContactAction = defineProviderAction(service, {
   name: "update_contact",
+  operationType: "write",
   description: "Update a KrispCall contact by identifier.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -168,6 +173,7 @@ const updateContactAction = defineProviderAction(service, {
 
 const deleteContactAction = defineProviderAction(service, {
   name: "delete_contact",
+  operationType: "destructive",
   description: "Delete a KrispCall contact by identifier.",
   requiredScopes: [],
   inputSchema: contactIdInputSchema,
@@ -179,6 +185,7 @@ const deleteContactAction = defineProviderAction(service, {
 
 const listMembersAction = defineProviderAction(service, {
   name: "list_members",
+  operationType: "read",
   description: "List members in the connected KrispCall workspace.",
   requiredScopes: [],
   inputSchema: pageInputSchema,
@@ -191,6 +198,7 @@ const listMembersAction = defineProviderAction(service, {
 
 const getMemberAction = defineProviderAction(service, {
   name: "get_member",
+  operationType: "read",
   description: "Get one KrispCall workspace member by identifier.",
   requiredScopes: [],
   inputSchema: s.requiredObject("The KrispCall member lookup input.", {

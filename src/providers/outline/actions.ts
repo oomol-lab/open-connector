@@ -210,6 +210,7 @@ const getDocumentInputSchema = {
 export const outlineActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_collections",
+    operationType: "read",
     description:
       "List Outline collections the authenticated user can access, with optional search, status filtering, pagination, and sorting.",
     inputSchema: s.object(
@@ -234,6 +235,7 @@ export const outlineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_collection",
+    operationType: "read",
     description: "Retrieve one Outline collection by its UUID.",
     inputSchema: s.object(
       "Input parameters for retrieving one Outline collection.",
@@ -252,6 +254,7 @@ export const outlineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_collection_documents",
+    operationType: "read",
     description: "Retrieve the document tree for one Outline collection by UUID.",
     inputSchema: s.object(
       "Input parameters for retrieving one Outline collection document tree.",
@@ -270,6 +273,7 @@ export const outlineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_documents",
+    operationType: "read",
     description:
       "List Outline documents visible to the authenticated user with optional collection, user, parent, status, pagination, and sorting filters.",
     inputSchema: s.object(
@@ -310,6 +314,7 @@ export const outlineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_documents",
+    operationType: "read",
     description:
       "Search Outline documents by keyword with optional scope, recency, snippet, pagination, and sorting controls.",
     inputSchema: s.object(
@@ -356,6 +361,7 @@ export const outlineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document",
+    operationType: "read",
     description:
       "Retrieve one Outline document by UUID or urlId, or by shareId when reading through a share link context.",
     inputSchema: getDocumentInputSchema,

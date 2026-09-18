@@ -90,6 +90,7 @@ const results = s.object("Normalized iTunes Search API results.", {
 export const itunesSearchActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_store",
+    operationType: "read",
     description: "Search the iTunes Store and Apple Books Store for media and software records.",
     inputSchema: s.object("The store search query.", {
       term: s.nonWhitespaceString("Plain text to search for."),
@@ -105,6 +106,7 @@ export const itunesSearchActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "lookup_store",
+    operationType: "read",
     description: "Look up iTunes Store and Apple Books Store records by one kind of identifier.",
     inputSchema: s.requireAnyProperty(
       s.object("Identifiers and optional related-content settings.", {

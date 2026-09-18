@@ -244,6 +244,7 @@ searchDocumentsInputSchema.allOf = [
 
 const searchDocumentsAction = defineProviderAction(service, {
   name: "search_documents",
+  operationType: "read",
   description:
     "Search Web of Science Expanded records with advanced queries, quota-aware detail selection, filters, sorting, and pagination.",
   inputSchema: searchDocumentsInputSchema,
@@ -283,6 +284,7 @@ getDocumentsInputSchema.allOf = [customFieldSelectionConstraint];
 
 const getDocumentsAction = defineProviderAction(service, {
   name: "get_documents",
+  operationType: "read",
   description: "Get one or more Web of Science Expanded records by UID with short, full, or custom field detail.",
   inputSchema: getDocumentsInputSchema,
   outputSchema: s.actionOutput(
@@ -334,6 +336,7 @@ function relatedDocumentsInputSchema(description: string): JsonSchema {
 
 const listCitingDocumentsAction = defineProviderAction(service, {
   name: "list_citing_documents",
+  operationType: "read",
   description: "List Web of Science documents that cite a source document.",
   inputSchema: relatedDocumentsInputSchema("The input payload for finding documents that cite a source document."),
   outputSchema: s.actionOutput(
@@ -348,6 +351,7 @@ const listCitingDocumentsAction = defineProviderAction(service, {
 
 const listRelatedDocumentsAction = defineProviderAction(service, {
   name: "list_related_documents",
+  operationType: "read",
   description: "List Web of Science documents related through shared cited references.",
   inputSchema: relatedDocumentsInputSchema(
     "The input payload for finding documents related through shared cited references.",
@@ -364,6 +368,7 @@ const listRelatedDocumentsAction = defineProviderAction(service, {
 
 const listCitedReferencesAction = defineProviderAction(service, {
   name: "list_cited_references",
+  operationType: "read",
   description: "List the bibliographic references cited by a Web of Science document.",
   inputSchema: s.actionInput(
     {
@@ -427,6 +432,7 @@ citationReportInputSchema.allOf = [...timeSpanExclusionConstraints, wokTimeSpanC
 
 const getCitationReportAction = defineProviderAction(service, {
   name: "get_citation_report",
+  operationType: "read",
   description:
     "Generate citation totals, self-citation-adjusted metrics, yearly counts, and h-index for a Web of Science query.",
   inputSchema: citationReportInputSchema,

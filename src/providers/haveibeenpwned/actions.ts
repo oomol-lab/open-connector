@@ -60,6 +60,7 @@ const emailAddressSchema = s.email("Email address to search in Have I Been Pwned
 export const haveibeenpwnedActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_breaches",
+    operationType: "read",
     description: "List breaches in Have I Been Pwned and optionally filter by domain or spam-list flag.",
     inputSchema: s.actionInput(
       {
@@ -78,6 +79,7 @@ export const haveibeenpwnedActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_breach",
+    operationType: "read",
     description: "Get one breach by its stable HIBP Name value.",
     inputSchema: s.actionInput(
       {
@@ -90,12 +92,14 @@ export const haveibeenpwnedActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_latest_breach",
+    operationType: "read",
     description: "Get the most recently added breach in Have I Been Pwned.",
     inputSchema: s.actionInput({}, [], "Input parameters for retrieving the latest HIBP breach."),
     outputSchema: s.actionOutput({ breach: breachSchema }, "Most recently added breach returned by Have I Been Pwned."),
   }),
   defineProviderAction(service, {
     name: "list_data_classes",
+    operationType: "read",
     description: "List all data classes currently used by breaches in Have I Been Pwned.",
     inputSchema: s.actionInput({}, [], "Input parameters for listing HIBP data classes."),
     outputSchema: s.actionOutput(
@@ -109,6 +113,7 @@ export const haveibeenpwnedActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_breached_account",
+    operationType: "read",
     description:
       "Search full HIBP breach models for an email address, with optional domain and unverified-breach filters.",
     inputSchema: s.actionInput(
@@ -129,6 +134,7 @@ export const haveibeenpwnedActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pastes_for_account",
+    operationType: "read",
     description: "List paste exposures for an email address from Have I Been Pwned.",
     inputSchema: s.actionInput(
       {
@@ -146,6 +152,7 @@ export const haveibeenpwnedActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_subscription_status",
+    operationType: "read",
     description: "Get the current subscription details for the connected HIBP API key.",
     inputSchema: s.actionInput({}, [], "Input parameters for retrieving the current HIBP subscription status."),
     outputSchema: s.actionOutput(

@@ -91,6 +91,7 @@ const exhibitor = s.object(
 
 function action(input: {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
@@ -105,6 +106,7 @@ function action(input: {
 export const expofpActions: ActionDefinition[] = [
   action({
     name: "list_expos",
+    operationType: "read",
     description: "List all expos accessible to the current ExpoFP API token.",
     inputSchema: s.actionInput({}, []),
     outputSchema: s.actionOutput(
@@ -114,6 +116,7 @@ export const expofpActions: ActionDefinition[] = [
   }),
   action({
     name: "list_exhibitors",
+    operationType: "read",
     description: "List all exhibitors in one ExpoFP expo.",
     inputSchema: s.actionInput({ eventId: positiveId("Expo identifier whose exhibitors should be listed.") }, [
       "eventId",
@@ -125,12 +128,14 @@ export const expofpActions: ActionDefinition[] = [
   }),
   action({
     name: "get_exhibitor",
+    operationType: "read",
     description: "Get one ExpoFP exhibitor by exhibitor ID.",
     inputSchema: s.actionInput({ id: positiveId("Exhibitor identifier returned by ExpoFP.") }, ["id"]),
     outputSchema: s.actionOutput({ exhibitor }, "The response returned when fetching one ExpoFP exhibitor."),
   }),
   action({
     name: "get_exhibitor_id",
+    operationType: "read",
     description: "Resolve an ExpoFP exhibitor ID from expo ID and exhibitor external ID.",
     inputSchema: s.actionInput(
       {
@@ -146,6 +151,7 @@ export const expofpActions: ActionDefinition[] = [
   }),
   action({
     name: "add_exhibitor",
+    operationType: "write",
     description: "Create a new exhibitor in one ExpoFP expo.",
     inputSchema: s.actionInput(
       { eventId: positiveId("Expo identifier where the exhibitor should be created."), ...exhibitorWritableFields },
@@ -158,6 +164,7 @@ export const expofpActions: ActionDefinition[] = [
   }),
   action({
     name: "update_exhibitor",
+    operationType: "write",
     description: "Partially update an ExpoFP exhibitor by exhibitor ID.",
     inputSchema: s.actionInput(
       { id: positiveId("Exhibitor identifier that should be updated."), ...exhibitorWritableFields },
@@ -170,6 +177,7 @@ export const expofpActions: ActionDefinition[] = [
   }),
   action({
     name: "delete_exhibitor",
+    operationType: "destructive",
     description: "Delete an ExpoFP exhibitor by exhibitor ID.",
     inputSchema: s.actionInput({ id: positiveId("Exhibitor identifier that should be deleted.") }, ["id"]),
     outputSchema: s.actionOutput(

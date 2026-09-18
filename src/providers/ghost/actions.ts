@@ -54,6 +54,7 @@ function singleOutputSchema(description: string, key: string): JsonSchema {
 export const ghostActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_posts",
+    operationType: "read",
     description: "List published posts from the connected Ghost site.",
     requiredScopes: [],
     inputSchema: browseInputSchema,
@@ -61,6 +62,7 @@ export const ghostActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_post",
+    operationType: "read",
     description: "Get one published Ghost post by ID or slug.",
     requiredScopes: [],
     inputSchema: readInputSchema,
@@ -68,6 +70,7 @@ export const ghostActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pages",
+    operationType: "read",
     description: "List published pages from the connected Ghost site.",
     requiredScopes: [],
     inputSchema: browseInputSchema,
@@ -75,6 +78,7 @@ export const ghostActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_page",
+    operationType: "read",
     description: "Get one published Ghost page by ID or slug.",
     requiredScopes: [],
     inputSchema: readInputSchema,
@@ -82,6 +86,7 @@ export const ghostActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List public tags from the connected Ghost site.",
     requiredScopes: [],
     inputSchema: browseInputSchema,
@@ -89,6 +94,7 @@ export const ghostActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tag",
+    operationType: "read",
     description: "Get one public Ghost tag by ID or slug.",
     requiredScopes: [],
     inputSchema: readInputSchema,
@@ -96,6 +102,7 @@ export const ghostActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_authors",
+    operationType: "read",
     description: "List public authors from the connected Ghost site.",
     requiredScopes: [],
     inputSchema: browseInputSchema,
@@ -103,6 +110,7 @@ export const ghostActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_author",
+    operationType: "read",
     description: "Get one public Ghost author by ID or slug.",
     requiredScopes: [],
     inputSchema: readInputSchema,
@@ -110,6 +118,7 @@ export const ghostActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "read_settings",
+    operationType: "read",
     description: "Read public settings for the connected Ghost site.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to read Ghost settings.", {}),

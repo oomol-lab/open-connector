@@ -150,6 +150,7 @@ const deleteOutputSchema = s.object("Upsales delete response.", {
 export const upsalesActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Read the Upsales user associated with the authenticated API token.",
     requiredScopes: [],
     inputSchema: getCurrentUserInputSchema,
@@ -157,6 +158,7 @@ export const upsalesActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Upsales users with optional pagination and official query filters.",
     requiredScopes: [],
     inputSchema: listUsersInputSchema,
@@ -164,6 +166,7 @@ export const upsalesActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Read one Upsales user by ID.",
     requiredScopes: [],
     inputSchema: getUserInputSchema,
@@ -171,6 +174,7 @@ export const upsalesActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_companies",
+    operationType: "read",
     description: "List Upsales companies with optional pagination and official query filters.",
     requiredScopes: [],
     followUpActions: ["upsales.get_company", "upsales.create_contact"],
@@ -179,6 +183,7 @@ export const upsalesActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description: "Read one Upsales company by ID.",
     requiredScopes: [],
     followUpActions: ["upsales.update_company", "upsales.delete_company"],
@@ -187,6 +192,7 @@ export const upsalesActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_company",
+    operationType: "write",
     description: "Create an Upsales company using the official accounts endpoint.",
     requiredScopes: [],
     followUpActions: ["upsales.get_company"],
@@ -195,6 +201,7 @@ export const upsalesActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_company",
+    operationType: "write",
     description: "Update an Upsales company by ID using the official accounts endpoint.",
     requiredScopes: [],
     followUpActions: ["upsales.get_company"],
@@ -203,6 +210,7 @@ export const upsalesActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_company",
+    operationType: "destructive",
     description: "Delete an Upsales company by ID.",
     requiredScopes: [],
     inputSchema: deleteCompanyInputSchema,
@@ -210,6 +218,7 @@ export const upsalesActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Upsales contacts with optional pagination and official query filters.",
     requiredScopes: [],
     followUpActions: ["upsales.get_contact", "upsales.update_contact"],
@@ -218,6 +227,7 @@ export const upsalesActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Read one Upsales contact by ID.",
     requiredScopes: [],
     followUpActions: ["upsales.update_contact", "upsales.delete_contact"],
@@ -226,6 +236,7 @@ export const upsalesActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create an Upsales contact using the official contacts endpoint.",
     requiredScopes: [],
     followUpActions: ["upsales.get_contact"],
@@ -234,6 +245,7 @@ export const upsalesActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update an Upsales contact by ID using the official contacts endpoint.",
     requiredScopes: [],
     followUpActions: ["upsales.get_contact"],
@@ -242,6 +254,7 @@ export const upsalesActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete an Upsales contact by ID.",
     requiredScopes: [],
     inputSchema: deleteContactInputSchema,

@@ -49,6 +49,7 @@ const paginationFields = {
 export const freshstatusActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_services",
+    operationType: "read",
     description: "List the services configured on a Freshstatus status page.",
     inputSchema: s.object("Input for listing Freshstatus services.", {}),
     outputSchema: s.object("Paginated Freshstatus service list.", {
@@ -58,12 +59,14 @@ export const freshstatusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_service",
+    operationType: "read",
     description: "Get one Freshstatus service by identifier.",
     inputSchema: s.object("Input for reading a Freshstatus service.", { serviceId: idSchema }),
     outputSchema: s.object("Freshstatus service response.", { service: serviceSchema }),
   }),
   defineProviderAction(service, {
     name: "create_service",
+    operationType: "write",
     description: "Create a service on a Freshstatus status page.",
     inputSchema: s.object(
       "Input for creating a Freshstatus service.",
@@ -80,6 +83,7 @@ export const freshstatusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_service",
+    operationType: "write",
     description: "Update a Freshstatus service.",
     inputSchema: s.requireAnyProperty(
       s.object(
@@ -100,6 +104,7 @@ export const freshstatusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_service",
+    operationType: "destructive",
     description: "Delete a Freshstatus service.",
     inputSchema: s.object("Input for deleting a Freshstatus service.", { serviceId: idSchema }),
     outputSchema: s.object("Freshstatus service deletion acknowledgement.", {
@@ -109,6 +114,7 @@ export const freshstatusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List service groups configured on a Freshstatus status page.",
     inputSchema: s.object("Input for listing Freshstatus service groups.", {}),
     outputSchema: s.object("Paginated Freshstatus service group list.", {
@@ -118,12 +124,14 @@ export const freshstatusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_group",
+    operationType: "read",
     description: "Get one Freshstatus service group by identifier.",
     inputSchema: s.object("Input for reading a Freshstatus service group.", { groupId: idSchema }),
     outputSchema: s.object("Freshstatus service group response.", { group: groupSchema }),
   }),
   defineProviderAction(service, {
     name: "create_group",
+    operationType: "write",
     description: "Create a service group on a Freshstatus status page.",
     inputSchema: s.object(
       "Input for creating a Freshstatus service group.",
@@ -140,6 +148,7 @@ export const freshstatusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_group",
+    operationType: "write",
     description: "Update a Freshstatus service group.",
     inputSchema: s.requireAnyProperty(
       s.object(
@@ -160,6 +169,7 @@ export const freshstatusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_group",
+    operationType: "destructive",
     description: "Delete a Freshstatus service group.",
     inputSchema: s.object("Input for deleting a Freshstatus service group.", { groupId: idSchema }),
     outputSchema: s.object("Freshstatus service group deletion acknowledgement.", {

@@ -8,6 +8,7 @@ const service = "googleads";
 
 interface GoogleAdsActionSource {
   name: GoogleAdsActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
@@ -173,6 +174,7 @@ const campaignMutationResult = s.object(
 const actions: GoogleAdsActionSource[] = [
   action(
     "get_campaign_by_id",
+    "read",
     "Retrieve one Google Ads campaign by its campaign ID.",
     customerInput(
       {
@@ -186,6 +188,7 @@ const actions: GoogleAdsActionSource[] = [
   ),
   action(
     "get_campaign_by_name",
+    "read",
     "Retrieve all Google Ads campaigns that exactly match a campaign name.",
     customerInput(
       {
@@ -199,6 +202,7 @@ const actions: GoogleAdsActionSource[] = [
   ),
   action(
     "list_accessible_customers",
+    "read",
     "List Google Ads customer resource names accessible to the current OAuth credential.",
     input({
       developerToken: googleAdsDeveloperToken,
@@ -209,6 +213,7 @@ const actions: GoogleAdsActionSource[] = [
   ),
   action(
     "search_stream_gaql",
+    "read",
     "Execute a GAQL streaming query and return the aggregated result rows in one response.",
     customerInput(
       {
@@ -242,6 +247,7 @@ const actions: GoogleAdsActionSource[] = [
   ),
   action(
     "list_customer_lists",
+    "read",
     "List Google Ads customer lists available under the specified customer account.",
     customerInput({
       pageToken: s.nonEmptyString("The nextPageToken returned by a previous call."),
@@ -253,6 +259,7 @@ const actions: GoogleAdsActionSource[] = [
   ),
   action(
     "create_customer_list",
+    "write",
     "Create a new Google Ads CRM-based customer list for Customer Match uploads.",
     customerInput(
       {
@@ -267,6 +274,7 @@ const actions: GoogleAdsActionSource[] = [
   ),
   action(
     "add_or_remove_to_customer_list",
+    "destructive",
     "Submit Customer Match user identifiers to add users to or remove users from a Google Ads customer list.",
     customerInput(
       {
@@ -299,6 +307,7 @@ const actions: GoogleAdsActionSource[] = [
   ),
   action(
     "mutate_ad_groups",
+    "destructive",
     "Create, update, or remove Google Ads ad groups in a single mutate request.",
     customerInput(
       {
@@ -321,6 +330,7 @@ const actions: GoogleAdsActionSource[] = [
   ),
   action(
     "mutate_campaigns",
+    "destructive",
     "Create, update, or remove Google Ads campaigns in a single mutate request.",
     customerInput(
       {
@@ -369,12 +379,14 @@ export type GoogleAdsActionName =
 
 function action(
   name: GoogleAdsActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): GoogleAdsActionSource {
   return {
     name,
+    operationType,
     description,
     inputSchema,
     outputSchema,

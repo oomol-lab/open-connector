@@ -16,6 +16,7 @@ const perPageSchema = s.integer("The number of records to request per page.", { 
 export const mattermostActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the Mattermost user associated with the Personal Access Token.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("Output payload for the current Mattermost user.", {
@@ -25,6 +26,7 @@ export const mattermostActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_user_teams",
+    operationType: "read",
     description: "List Mattermost teams visible to the current user.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("Output payload for Mattermost teams.", {
@@ -34,6 +36,7 @@ export const mattermostActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_team",
+    operationType: "read",
     description: "Retrieve one Mattermost team by ID.",
     inputSchema: s.object("Input parameters for retrieving one Mattermost team.", {
       teamId: idSchema,
@@ -45,6 +48,7 @@ export const mattermostActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_team_channels",
+    operationType: "read",
     description: "List public Mattermost channels in a team.",
     inputSchema: s.object(
       "Query parameters for listing Mattermost channels in a team.",
@@ -62,6 +66,7 @@ export const mattermostActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_channel",
+    operationType: "read",
     description: "Retrieve one Mattermost channel by ID.",
     inputSchema: s.object("Input parameters for retrieving one Mattermost channel.", {
       channelId: idSchema,
@@ -73,6 +78,7 @@ export const mattermostActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_channel_posts",
+    operationType: "read",
     description: "List Mattermost posts in a channel.",
     inputSchema: s.object(
       "Query parameters for listing posts in a Mattermost channel. since cannot be used with page, perPage, beforePostId, or afterPostId.",
@@ -94,6 +100,7 @@ export const mattermostActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_post",
+    operationType: "write",
     description: "Create a Mattermost post in a channel.",
     inputSchema: s.object(
       "Input parameters for creating a Mattermost channel post.",

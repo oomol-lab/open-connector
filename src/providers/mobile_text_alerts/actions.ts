@@ -81,6 +81,7 @@ const subscriberOutputSchema = s.object("The normalized subscriber response.", {
 export const mobileTextAlertsActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_subscribers",
+    operationType: "read",
     description: "List and search subscribers in Mobile Text Alerts.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -106,6 +107,7 @@ export const mobileTextAlertsActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_subscriber",
+    operationType: "read",
     description: "Get a Mobile Text Alerts subscriber by id, phone number, or email address.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for getting a Mobile Text Alerts subscriber.", {
@@ -115,6 +117,7 @@ export const mobileTextAlertsActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_subscriber",
+    operationType: "write",
     description: "Create or update a Mobile Text Alerts subscriber by phone number or email.",
     requiredScopes: [],
     inputSchema: createSubscriberInputSchema,
@@ -122,6 +125,7 @@ export const mobileTextAlertsActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_subscriber",
+    operationType: "write",
     description: "Update a Mobile Text Alerts subscriber by id, phone number, or email address.",
     requiredScopes: [],
     inputSchema: updateSubscriberInputSchema,
@@ -129,6 +133,7 @@ export const mobileTextAlertsActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_subscriber",
+    operationType: "destructive",
     description: "Delete a Mobile Text Alerts subscriber by id, phone number, or email address.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for deleting a Mobile Text Alerts subscriber.", {

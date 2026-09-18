@@ -46,6 +46,7 @@ const sendSmsMessageSchema = s.looseRequiredObject(
 export const moceanActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_balance",
+    operationType: "read",
     description: "Retrieve the current Mocean account balance.",
     inputSchema: s.actionInput({}, [], "Input parameters for retrieving Mocean account balance."),
     outputSchema: s.requiredObject("Mocean account balance response.", {
@@ -55,6 +56,7 @@ export const moceanActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pricing",
+    operationType: "read",
     description: "Retrieve Mocean account pricing for SMS, number lookup, or verify services.",
     inputSchema: s.object(
       "Input parameters for retrieving Mocean account pricing.",
@@ -75,6 +77,7 @@ export const moceanActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_message_status",
+    operationType: "read",
     description: "Retrieve the delivery status for a Mocean SMS message.",
     inputSchema: s.requiredObject(
       "Input parameters for retrieving the delivery status of an outbound Mocean SMS message.",
@@ -93,6 +96,7 @@ export const moceanActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "lookup_number",
+    operationType: "read",
     description: "Look up carrier information for a phone number through Mocean.",
     inputSchema: s.requiredObject("Input parameters for performing a synchronous Mocean number lookup.", {
       to: s.nonEmptyString("Phone number to look up, including country code."),
@@ -112,6 +116,7 @@ export const moceanActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_sms",
+    operationType: "write",
     description: "Send an SMS message through Mocean.",
     inputSchema: s.object(
       "Input parameters for sending an SMS message with Mocean.",

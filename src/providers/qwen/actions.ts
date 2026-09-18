@@ -85,6 +85,7 @@ const translationLifecycle = {
 export const qwenActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "extract_text",
+    operationType: "read",
     description: "Extract text and structured information from an image with Qwen3.5-OCR.",
     inputSchema: s.actionInput(
       {
@@ -126,6 +127,7 @@ export const qwenActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "translate_text",
+    operationType: "read",
     description: "Translate text with Qwen-MT and optional terminology, translation memory, and domain guidance.",
     inputSchema: s.actionInput(
       {
@@ -164,6 +166,7 @@ export const qwenActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "generate_image",
+    operationType: "write",
     description: "Generate or edit images with the Qwen Image 3.0 family.",
     inputSchema: s.actionInput(
       {
@@ -203,6 +206,7 @@ export const qwenActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "generate_speech",
+    operationType: "write",
     description: "Generate speech with Qwen-Audio 3.0 TTS.",
     inputSchema: s.actionInput(
       {
@@ -274,6 +278,7 @@ export const qwenActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "analyze_document",
+    operationType: "read",
     description: "Analyze documents or text with Qwen-Doc-Turbo.",
     inputSchema: s.actionInput(
       {
@@ -309,6 +314,7 @@ export const qwenActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_voice_clone",
+    operationType: "write",
     description: "Create a Qwen-Audio custom voice from a public audio sample.",
     inputSchema: s.actionInput(
       {
@@ -358,6 +364,7 @@ export const qwenActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_designed_voice",
+    operationType: "write",
     description: "Create a Qwen-Audio custom voice from a text description.",
     inputSchema: s.actionInput(
       {
@@ -403,6 +410,7 @@ export const qwenActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_custom_voices",
+    operationType: "read",
     description: "List Qwen-Audio cloned and designed voices together.",
     inputSchema: s.actionInput(
       {
@@ -425,6 +433,7 @@ export const qwenActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_custom_voice",
+    operationType: "read",
     description: "Get one Qwen-Audio cloned or designed voice.",
     inputSchema: s.actionInput(
       { voiceId: s.nonEmptyString("The custom voice identifier.") },
@@ -451,6 +460,7 @@ export const qwenActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_custom_voice",
+    operationType: "destructive",
     description: "Delete one Qwen-Audio cloned or designed voice.",
     inputSchema: s.actionInput(
       { voiceId: s.nonEmptyString("The custom voice identifier to delete.") },
@@ -464,6 +474,7 @@ export const qwenActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_speech_recognition",
+    operationType: "write",
     description: "Submit a Qwen-Audio 3.0 asynchronous audio or video transcription task.",
     followUpActions: ["qwen.get_speech_recognition"],
     asyncLifecycle: {
@@ -525,6 +536,7 @@ export const qwenActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_speech_recognition",
+    operationType: "read",
     description: "Retrieve a Qwen-Audio 3.0 transcription task and its normalized result.",
     asyncLifecycle: {
       startActionId: "qwen.submit_speech_recognition",
@@ -573,6 +585,7 @@ export const qwenActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_image_translation",
+    operationType: "write",
     description: "Submit an asynchronous Qwen image translation task.",
     followUpActions: [translationLifecycle.statusActionId],
     asyncLifecycle: translationLifecycle,
@@ -634,6 +647,7 @@ export const qwenActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_image_translation",
+    operationType: "read",
     description: "Retrieve a Qwen image translation task state and output.",
     asyncLifecycle: translationLifecycle,
     inputSchema: s.actionInput({ taskId: translationTaskIdSchema }, ["taskId"], "An image translation task lookup."),

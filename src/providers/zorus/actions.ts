@@ -282,6 +282,7 @@ function searchOutputSchema(description: string, itemSchema: ReturnType<typeof s
 export const zorusActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_customers",
+    operationType: "read",
     description: "Search Zorus customers with documented filtering, pagination, and sorting.",
     requiredScopes: [],
     inputSchema: customerSearchInputSchema,
@@ -289,6 +290,7 @@ export const zorusActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_endpoints",
+    operationType: "read",
     description: "Search Zorus endpoints with documented filtering, pagination, and sorting.",
     requiredScopes: [],
     inputSchema: endpointSearchInputSchema,
@@ -296,6 +298,7 @@ export const zorusActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_groups",
+    operationType: "read",
     description: "Search Zorus groups with documented filtering, pagination, and sorting.",
     requiredScopes: [],
     inputSchema: groupSearchInputSchema,
@@ -303,6 +306,7 @@ export const zorusActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_policies",
+    operationType: "read",
     description: "Search Zorus policies with documented filtering, pagination, and sorting.",
     requiredScopes: [],
     inputSchema: policySearchInputSchema,
@@ -310,6 +314,7 @@ export const zorusActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_active_unblock_requests",
+    operationType: "read",
     description: "Search active Zorus unblock requests with documented filtering, pagination, and sorting.",
     requiredScopes: [],
     inputSchema: activeUnblockRequestSearchInputSchema,

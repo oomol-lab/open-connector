@@ -13,6 +13,7 @@ const service = "googlephotos";
 
 interface GooglePhotosActionSource {
   name: GooglePhotosActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -177,6 +178,7 @@ const transitDownloadOutput = {
 const actions: GooglePhotosActionSource[] = [
   action(
     "list_albums",
+    "read",
     "List Google Photos albums visible to the current application connection. If you need the user to choose from their existing Google Photos library, use the Picker actions instead.",
     [photosReadonlyAppCreatedScope],
     input({
@@ -196,6 +198,7 @@ const actions: GooglePhotosActionSource[] = [
   ),
   action(
     "get_album",
+    "read",
     "Fetch one Google Photos album by ID.",
     [photosReadonlyAppCreatedScope],
     input(
@@ -208,6 +211,7 @@ const actions: GooglePhotosActionSource[] = [
   ),
   action(
     "create_album",
+    "write",
     "Create a Google Photos album.",
     [photosAppendonlyScope],
     input(
@@ -220,6 +224,7 @@ const actions: GooglePhotosActionSource[] = [
   ),
   action(
     "update_album",
+    "write",
     "Update a Google Photos album title or cover photo.",
     [photosEditAppCreatedScope],
     input(
@@ -234,6 +239,7 @@ const actions: GooglePhotosActionSource[] = [
   ),
   action(
     "add_enrichment",
+    "write",
     "Add an enrichment item to a Google Photos album.",
     [photosAppendonlyScope],
     input(
@@ -254,6 +260,7 @@ const actions: GooglePhotosActionSource[] = [
   ),
   action(
     "list_media_items",
+    "read",
     "List Google Photos Library API media items created by this application.",
     [photosReadonlyAppCreatedScope],
     input({
@@ -270,6 +277,7 @@ const actions: GooglePhotosActionSource[] = [
   ),
   action(
     "search_media_items",
+    "read",
     "Search Google Photos Library API media items created by this application.",
     [photosReadonlyAppCreatedScope],
     input({
@@ -289,6 +297,7 @@ const actions: GooglePhotosActionSource[] = [
   ),
   action(
     "batch_get_media_items",
+    "read",
     "Fetch multiple Google Photos media items by ID.",
     [photosReadonlyAppCreatedScope],
     input(
@@ -303,6 +312,7 @@ const actions: GooglePhotosActionSource[] = [
   ),
   action(
     "get_media_item_download",
+    "read",
     "Download a Google Photos Library API media item created by this application through local file transit.",
     [photosReadonlyAppCreatedScope],
     input(
@@ -318,6 +328,7 @@ const actions: GooglePhotosActionSource[] = [
   ),
   action(
     "upload_media",
+    "write",
     "Upload one media item into Google Photos from a URL or base64 payload.",
     [photosAppendonlyScope],
     uploadMediaInput,
@@ -327,6 +338,7 @@ const actions: GooglePhotosActionSource[] = [
   ),
   action(
     "batch_create_media_items",
+    "write",
     "Batch create Google Photos media items from URLs or base64 payloads.",
     [photosAppendonlyScope],
     input({
@@ -347,6 +359,7 @@ const actions: GooglePhotosActionSource[] = [
   ),
   action(
     "batch_add_media_items",
+    "write",
     "Add existing Google Photos media items to an album.",
     [photosAppendonlyScope],
     input(
@@ -367,6 +380,7 @@ const actions: GooglePhotosActionSource[] = [
   ),
   action(
     "update_media_item",
+    "write",
     "Update a Google Photos media item description.",
     [photosEditAppCreatedScope],
     input(
@@ -383,6 +397,7 @@ const actions: GooglePhotosActionSource[] = [
   ),
   action(
     "create_picker_session",
+    "write",
     "Create a Google Photos Picker session for selecting items from the user's library.",
     [photosPickerReadonlyScope],
     input({
@@ -392,6 +407,7 @@ const actions: GooglePhotosActionSource[] = [
   ),
   action(
     "get_picker_session",
+    "read",
     "Get the current state of a Google Photos Picker session.",
     [photosPickerReadonlyScope],
     input(
@@ -404,6 +420,7 @@ const actions: GooglePhotosActionSource[] = [
   ),
   action(
     "delete_picker_session",
+    "destructive",
     "Delete a Google Photos Picker session.",
     [photosPickerReadonlyScope],
     input(
@@ -419,6 +436,7 @@ const actions: GooglePhotosActionSource[] = [
   ),
   action(
     "list_picked_media_items",
+    "read",
     "List media items selected from the user's Google Photos library in a picker session.",
     [photosPickerReadonlyScope],
     input(
@@ -436,6 +454,7 @@ const actions: GooglePhotosActionSource[] = [
   ),
   action(
     "get_picked_media_item_download",
+    "read",
     "Download a picked Google Photos media item through local file transit using its trusted temporary base URL.",
     [photosPickerReadonlyScope],
     input(
@@ -481,6 +500,7 @@ export type GooglePhotosActionName =
 
 function action(
   name: GooglePhotosActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   requiredScopes: string[],
   inputSchema: JsonSchema,
@@ -488,6 +508,7 @@ function action(
 ): GooglePhotosActionSource {
   return {
     name,
+    operationType,
     description,
     requiredScopes,
     inputSchema,

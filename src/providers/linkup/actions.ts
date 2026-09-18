@@ -105,6 +105,7 @@ function output(properties: Record<string, JsonSchema>, description: string, req
 
 function action(input: {
   name: LinkupActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
@@ -115,6 +116,7 @@ function action(input: {
 export const linkupActions: ActionDefinition[] = [
   action({
     name: "get_credits_balance",
+    operationType: "read",
     description: "Get the current Linkup credits balance for the connected API key.",
     inputSchema: s.object({}, { description: "The input payload for retrieving the Linkup credits balance." }),
     outputSchema: output(
@@ -126,6 +128,7 @@ export const linkupActions: ActionDefinition[] = [
   }),
   action({
     name: "search_results",
+    operationType: "read",
     description: "Search the web with Linkup and return raw grounded search results.",
     inputSchema: searchInput("The shared input payload for Linkup search actions."),
     outputSchema: output(
@@ -137,6 +140,7 @@ export const linkupActions: ActionDefinition[] = [
   }),
   action({
     name: "search_answer",
+    operationType: "read",
     description: "Search the web with Linkup and return a sourced natural-language answer.",
     inputSchema: searchInput("The input payload for the Linkup sourced-answer search action.", {
       includeInlineCitations: s.boolean("Whether Linkup should include inline citations in the answer."),
@@ -151,6 +155,7 @@ export const linkupActions: ActionDefinition[] = [
   }),
   action({
     name: "search_structured_data",
+    operationType: "read",
     description: "Search the web with Linkup and return data normalized to the provided JSON schema.",
     inputSchema: searchInput(
       "The input payload for the Linkup structured-data search action.",
@@ -176,6 +181,7 @@ export const linkupActions: ActionDefinition[] = [
   }),
   action({
     name: "fetch_webpage",
+    operationType: "read",
     description: "Fetch one webpage with Linkup and return markdown plus optional raw HTML and images.",
     inputSchema: s.object(
       "The input payload for the Linkup fetch action.",

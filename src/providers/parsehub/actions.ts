@@ -67,6 +67,7 @@ const projectDetailSchema = s.looseRequiredObject(
 export const parsehubActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List ParseHub projects accessible to the API key with optional offset pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -86,6 +87,7 @@ export const parsehubActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get one ParseHub project by project token from the API key's accessible project list.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for getting one ParseHub project.", {

@@ -48,6 +48,7 @@ const runItemSchema = s.object("One pipeline run request forwarded to VectorShif
 export const vectorshiftActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_pipelines",
+    operationType: "read",
     description: "List VectorShift pipelines that are accessible to the connected API key.",
     inputSchema: s.actionInput(
       {
@@ -74,6 +75,7 @@ export const vectorshiftActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_pipeline",
+    operationType: "read",
     description: "Fetch one VectorShift pipeline by pipeline ID or by pipeline name.",
     inputSchema: s.actionInput(
       {
@@ -95,6 +97,7 @@ export const vectorshiftActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_pipeline",
+    operationType: "write",
     description: "Run one VectorShift pipeline with JSON-safe inputs and return the resulting outputs.",
     inputSchema: s.actionInput(
       { pipeline_id: pipelineIdSchema, inputs: inputsSchema },
@@ -112,6 +115,7 @@ export const vectorshiftActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "bulk_run_pipeline",
+    operationType: "write",
     description: "Run multiple instances of the same VectorShift pipeline with JSON-safe inputs in one request.",
     inputSchema: s.actionInput(
       {

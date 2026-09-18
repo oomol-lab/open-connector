@@ -9,6 +9,7 @@ export const adminOperations: readonly DokployOperationDefinition[] = [
     operationId: "admin-setupMonitoring",
     tag: "admin",
     description: "Modify Dokploy state via POST /admin.setupMonitoring.",
+    operationType: "write",
     method: "POST",
     path: "/admin.setupMonitoring",
     pathFields: [],

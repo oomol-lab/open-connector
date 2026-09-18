@@ -545,6 +545,7 @@ const reportOutputSchema = s.object("TikTok GMV Max report response.", {
 
 interface TikTokBusinessActionSpec {
   name: TikTokBusinessActionName;
+  operationType: ProviderActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   providerPermissions: string[];
@@ -555,6 +556,7 @@ interface TikTokBusinessActionSpec {
 const actionDefinitions: TikTokBusinessActionSpec[] = [
   {
     name: "list_advertisers",
+    operationType: "read",
     description: "List TikTok advertisers authorized for the connected TikTok Business user.",
     requiredScopes: readScope,
     providerPermissions: businessReadPermissions,
@@ -563,6 +565,7 @@ const actionDefinitions: TikTokBusinessActionSpec[] = [
   },
   {
     name: "list_campaigns",
+    operationType: "read",
     description: "List TikTok campaigns for an advertiser so users can discover campaign IDs.",
     requiredScopes: readScope,
     providerPermissions: businessReadPermissions,
@@ -571,6 +574,7 @@ const actionDefinitions: TikTokBusinessActionSpec[] = [
   },
   {
     name: "list_gmv_max_stores",
+    operationType: "read",
     description: "List TikTok Shop stores available to a TikTok GMV Max advertiser.",
     requiredScopes: readScope,
     providerPermissions: businessReadPermissions,
@@ -579,6 +583,7 @@ const actionDefinitions: TikTokBusinessActionSpec[] = [
   },
   {
     name: "check_gmv_max_shop_ad_usage",
+    operationType: "read",
     description:
       "Check whether a TikTok Shop store is already using custom shop ads and can promote all products with GMV Max.",
     requiredScopes: readScope,
@@ -588,6 +593,7 @@ const actionDefinitions: TikTokBusinessActionSpec[] = [
   },
   {
     name: "get_gmv_max_exclusive_authorization",
+    operationType: "read",
     description: "Get TikTok GMV Max exclusive authorization status for a store.",
     requiredScopes: readScope,
     providerPermissions: businessReadPermissions,
@@ -596,6 +602,7 @@ const actionDefinitions: TikTokBusinessActionSpec[] = [
   },
   {
     name: "get_gmv_max_identities",
+    operationType: "read",
     description: "List TikTok identities available for a GMV Max store.",
     requiredScopes: readScope,
     providerPermissions: businessReadPermissions,
@@ -604,6 +611,7 @@ const actionDefinitions: TikTokBusinessActionSpec[] = [
   },
   {
     name: "get_gmv_max_videos",
+    operationType: "read",
     description: "Get TikTok GMV Max videos available for a store, identity, or SPU filter.",
     requiredScopes: readScope,
     providerPermissions: businessReadPermissions,
@@ -612,6 +620,7 @@ const actionDefinitions: TikTokBusinessActionSpec[] = [
   },
   {
     name: "list_gmv_max_occupied_custom_shop_ads",
+    operationType: "read",
     description: "List custom shop ads occupying TikTok assets before GMV Max setup.",
     requiredScopes: readScope,
     providerPermissions: businessReadPermissions,
@@ -620,6 +629,7 @@ const actionDefinitions: TikTokBusinessActionSpec[] = [
   },
   {
     name: "get_gmv_max_custom_anchor_video_list",
+    operationType: "read",
     description: "Get TikTok GMV Max custom anchor videos for campaign creation discovery.",
     requiredScopes: readScope,
     providerPermissions: businessReadPermissions,
@@ -628,6 +638,7 @@ const actionDefinitions: TikTokBusinessActionSpec[] = [
   },
   {
     name: "get_gmv_max_shop_video_anchors",
+    operationType: "read",
     description: "Get TikTok GMV Max shop video anchors for campaign creation discovery.",
     requiredScopes: readScope,
     providerPermissions: businessReadPermissions,
@@ -636,6 +647,7 @@ const actionDefinitions: TikTokBusinessActionSpec[] = [
   },
   {
     name: "get_gmv_max_campaign_info",
+    operationType: "read",
     description: "Get detailed information for a TikTok GMV Max campaign.",
     requiredScopes: readScope,
     providerPermissions: businessReadPermissions,
@@ -644,6 +656,7 @@ const actionDefinitions: TikTokBusinessActionSpec[] = [
   },
   {
     name: "list_gmv_max_sessions",
+    operationType: "read",
     description: "List TikTok GMV Max campaign sessions for a campaign.",
     requiredScopes: readScope,
     providerPermissions: businessReadPermissions,
@@ -652,6 +665,7 @@ const actionDefinitions: TikTokBusinessActionSpec[] = [
   },
   {
     name: "get_gmv_max_sessions",
+    operationType: "read",
     description: "Get TikTok GMV Max campaign session details by session ID.",
     requiredScopes: readScope,
     providerPermissions: businessReadPermissions,
@@ -660,6 +674,7 @@ const actionDefinitions: TikTokBusinessActionSpec[] = [
   },
   {
     name: "get_gmv_max_bid_recommendation",
+    operationType: "read",
     description: "Get TikTok GMV Max budget and bid recommendations before campaign changes.",
     requiredScopes: readScope,
     providerPermissions: businessReadPermissions,
@@ -668,6 +683,7 @@ const actionDefinitions: TikTokBusinessActionSpec[] = [
   },
   {
     name: "get_gmv_max_report",
+    operationType: "read",
     description: "Get TikTok GMV Max reporting rows for a store and date range.",
     requiredScopes: reportScope,
     providerPermissions: reportingReadPermissions,

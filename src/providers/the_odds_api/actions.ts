@@ -235,6 +235,7 @@ const participantsOutputSchema = s.object("Participants returned by The Odds API
 export const theOddsApiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_sports",
+    operationType: "read",
     description: "List sports supported by The Odds API.",
     requiredScopes: [],
     inputSchema: listSportsInputSchema,
@@ -242,6 +243,7 @@ export const theOddsApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_odds",
+    operationType: "read",
     description: "Get live and upcoming odds for a sport from The Odds API.",
     requiredScopes: [],
     inputSchema: getOddsInputSchema,
@@ -249,6 +251,7 @@ export const theOddsApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_scores",
+    operationType: "read",
     description: "Get live and recent completed scores for a sport from The Odds API.",
     requiredScopes: [],
     inputSchema: getScoresInputSchema,
@@ -256,6 +259,7 @@ export const theOddsApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_events",
+    operationType: "read",
     description: "List live and upcoming events for a sport from The Odds API.",
     requiredScopes: [],
     inputSchema: listEventsInputSchema,
@@ -263,6 +267,7 @@ export const theOddsApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_event_odds",
+    operationType: "read",
     description: "Get odds for one The Odds API event.",
     requiredScopes: [],
     inputSchema: getEventOddsInputSchema,
@@ -270,6 +275,7 @@ export const theOddsApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_event_markets",
+    operationType: "read",
     description: "List recently seen market keys for one The Odds API event.",
     requiredScopes: [],
     inputSchema: listEventMarketsInputSchema,
@@ -277,6 +283,7 @@ export const theOddsApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_participants",
+    operationType: "read",
     description: "List participants for a sport from The Odds API.",
     requiredScopes: [],
     inputSchema: listParticipantsInputSchema,

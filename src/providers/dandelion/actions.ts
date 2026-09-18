@@ -22,6 +22,7 @@ const languageResponseFields = {
 
 const extractEntitiesAction = defineProviderAction(service, {
   name: "extract_entities",
+  operationType: "read",
   description: "Extract linked entities and their positions from plain text with Dandelion.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -82,6 +83,7 @@ const extractEntitiesAction = defineProviderAction(service, {
 
 const analyzeSentimentAction = defineProviderAction(service, {
   name: "analyze_sentiment",
+  operationType: "read",
   description: "Analyze the sentiment expressed by plain text with Dandelion.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -100,6 +102,7 @@ const analyzeSentimentAction = defineProviderAction(service, {
 
 const detectLanguageAction = defineProviderAction(service, {
   name: "detect_language",
+  operationType: "read",
   description: "Detect the languages present in plain text with Dandelion.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -126,6 +129,7 @@ const detectLanguageAction = defineProviderAction(service, {
 
 const compareTextSimilarityAction = defineProviderAction(service, {
   name: "compare_text_similarity",
+  operationType: "read",
   description: "Compare the semantic similarity of two plain texts with Dandelion.",
   requiredScopes: [],
   inputSchema: s.object(

@@ -70,6 +70,7 @@ const statsBaseInput = {
 export const plausibleAnalyticsActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_stats",
+    operationType: "read",
     description: "Query historical or real-time analytics for a Plausible site using the Stats API v2.",
     followUpActions: ["plausible_analytics.get_breakdown_stats", "plausible_analytics.get_timeseries_stats"],
     inputSchema: s.actionInput(
@@ -83,6 +84,7 @@ export const plausibleAnalyticsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_timeseries_stats",
+    operationType: "read",
     description: "Query Plausible analytics as a timeseries grouped by a time dimension such as day or hour.",
     followUpActions: ["plausible_analytics.get_breakdown_stats"],
     inputSchema: s.actionInput(
@@ -101,6 +103,7 @@ export const plausibleAnalyticsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_breakdown_stats",
+    operationType: "read",
     description: "Query Plausible analytics grouped by a single dimension such as source, page, country, or browser.",
     inputSchema: s.actionInput(
       {
@@ -113,6 +116,7 @@ export const plausibleAnalyticsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "record_event",
+    operationType: "write",
     description: "Record a pageview or custom event through the Plausible Events API for server-side or app tracking.",
     followUpActions: ["plausible_analytics.query_stats"],
     inputSchema: s.actionInput(

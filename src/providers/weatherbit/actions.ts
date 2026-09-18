@@ -46,6 +46,7 @@ const forecastOutputSchema = s.actionOutput(
 export const weatherbitActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_weather",
+    operationType: "read",
     description: "Get current weather observations from Weatherbit for a location.",
     inputSchema: locationRequired(
       s.actionInput(
@@ -71,6 +72,7 @@ export const weatherbitActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_daily_forecast",
+    operationType: "read",
     description: "Get daily weather forecasts from Weatherbit for a location.",
     inputSchema: locationRequired(
       s.actionInput(
@@ -86,6 +88,7 @@ export const weatherbitActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_hourly_forecast",
+    operationType: "read",
     description: "Get hourly weather forecasts from Weatherbit for a location.",
     inputSchema: locationRequired(
       s.actionInput(

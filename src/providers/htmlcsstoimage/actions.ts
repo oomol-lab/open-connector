@@ -107,6 +107,7 @@ const billingPeriodUsageSchema = s.object("One billing-period usage summary retu
 export const htmlcsstoimageActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_image",
+    operationType: "write",
     description: "Create an image from either raw HTML/CSS or a public webpage URL with HTML/CSS to Image.",
     inputSchema: createImageInputSchema,
     outputSchema: s.actionOutput(
@@ -119,6 +120,7 @@ export const htmlcsstoimageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_batch_images",
+    operationType: "write",
     description:
       "Create up to 25 HTML/CSS to Image images in one batch using shared default options and per-image variations.",
     inputSchema: s.object(
@@ -141,6 +143,7 @@ export const htmlcsstoimageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_image",
+    operationType: "destructive",
     description: "Delete one generated image from HTML/CSS to Image and clear its CDN cache.",
     inputSchema: s.actionInput(
       {
@@ -159,6 +162,7 @@ export const htmlcsstoimageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_batch_images",
+    operationType: "destructive",
     description: "Delete multiple generated images from HTML/CSS to Image in one request.",
     inputSchema: s.actionInput(
       {
@@ -180,6 +184,7 @@ export const htmlcsstoimageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_usage",
+    operationType: "read",
     description: "Retrieve HTML/CSS to Image usage counts by hour, day, month, and billing period.",
     inputSchema: s.actionInput({}, [], "Input parameters for retrieving account usage."),
     outputSchema: s.actionOutput(

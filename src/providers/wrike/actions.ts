@@ -277,6 +277,7 @@ function wrikeSingleOutput(description: string, outputKey: string, itemSchema: J
 export const wrikeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Wrike contacts in the current account with optional filters.",
     requiredScopes: [],
     inputSchema: contactQuerySchema,
@@ -284,6 +285,7 @@ export const wrikeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_folders",
+    operationType: "read",
     description: "List Wrike folders and projects in the current account.",
     requiredScopes: [],
     inputSchema: listFoldersInputSchema,
@@ -291,6 +293,7 @@ export const wrikeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_folders",
+    operationType: "read",
     description: "Retrieve complete Wrike folder or project information by ID.",
     requiredScopes: [],
     inputSchema: getFoldersInputSchema,
@@ -298,6 +301,7 @@ export const wrikeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_folder",
+    operationType: "write",
     description: "Create a Wrike folder under a parent folder or root folder ID.",
     requiredScopes: [],
     inputSchema: createFolderInputSchema,
@@ -305,6 +309,7 @@ export const wrikeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "Search Wrike tasks in the current account with optional filters.",
     requiredScopes: [],
     inputSchema: listTasksInputSchema,
@@ -312,6 +317,7 @@ export const wrikeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tasks",
+    operationType: "read",
     description: "Retrieve complete Wrike task information by ID.",
     requiredScopes: [],
     inputSchema: getTasksInputSchema,
@@ -319,6 +325,7 @@ export const wrikeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_task",
+    operationType: "write",
     description: "Create a Wrike task in a folder using JSON-friendly task fields.",
     requiredScopes: [],
     inputSchema: createTaskInputSchema,

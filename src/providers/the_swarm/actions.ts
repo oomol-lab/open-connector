@@ -47,6 +47,7 @@ const companyFieldSchema = s.stringEnum("The company sections to include in fetc
 export const theSwarmActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_credit_usage",
+    operationType: "read",
     description: "Get the current The Swarm API credit usage for the authenticated team.",
     inputSchema: s.object("The input payload for getting The Swarm credit usage.", {}),
     outputSchema: s.object("The normalized The Swarm credit usage response.", {
@@ -56,6 +57,7 @@ export const theSwarmActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_profiles",
+    operationType: "read",
     description: "Search The Swarm profiles with an Elasticsearch Query DSL query and return profile IDs.",
     inputSchema: s.object(
       "The input payload for searching The Swarm profiles. When stablePagination is true, limit must be 1000.",
@@ -74,6 +76,7 @@ export const theSwarmActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "fetch_profiles",
+    operationType: "read",
     description: "Fetch The Swarm profile records by profile IDs or LinkedIn identifiers.",
     inputSchema: s.object(
       "The input payload for fetching The Swarm profiles. At least one profile identifier array is required.",
@@ -100,6 +103,7 @@ export const theSwarmActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_companies",
+    operationType: "read",
     description: "Search The Swarm companies with an Elasticsearch Query DSL query and return company IDs.",
     inputSchema: s.object(
       "The input payload for searching The Swarm companies. When stablePagination is true, limit must be 1000.",
@@ -117,6 +121,7 @@ export const theSwarmActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "fetch_companies",
+    operationType: "read",
     description: "Fetch The Swarm company records by company IDs or LinkedIn company identifiers.",
     inputSchema: s.object(
       "The input payload for fetching The Swarm companies. At least one company identifier array is required.",

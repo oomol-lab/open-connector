@@ -155,6 +155,7 @@ const autocompleteInputSchema = s.object(
 export const crustdataActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "identify_companies",
+    operationType: "read",
     description:
       "Resolve companies from domains, profile URLs, names, or Crustdata company IDs and return ranked matches.",
     inputSchema: identifyLikeInputSchema,
@@ -165,6 +166,7 @@ export const crustdataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "enrich_companies",
+    operationType: "read",
     description:
       "Enrich companies from one identifier family and optional field sections, returning ranked company matches with detailed profiles.",
     inputSchema: identifyLikeInputSchema,
@@ -175,6 +177,7 @@ export const crustdataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_companies",
+    operationType: "read",
     description: "Search companies with Crustdata filters, optional field selection, sorting, and cursor pagination.",
     inputSchema: searchInputSchema,
     outputSchema: s.object(
@@ -193,6 +196,7 @@ export const crustdataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "autocomplete_companies",
+    operationType: "read",
     description: "Return exact field values to reuse in Crustdata company search filters.",
     inputSchema: autocompleteInputSchema,
     outputSchema: s.object(

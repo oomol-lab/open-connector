@@ -103,6 +103,7 @@ const taskRunOutputSchema = s.looseObject("Output from a completed Parallel task
 
 const searchAction = defineProviderAction(service, {
   name: "search",
+  operationType: "read",
   description: "Search the web with Parallel and return ranked source excerpts.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -144,6 +145,7 @@ const searchAction = defineProviderAction(service, {
 
 const extractAction = defineProviderAction(service, {
   name: "extract",
+  operationType: "read",
   description: "Extract relevant markdown excerpts or full content from public URLs with Parallel.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -188,6 +190,7 @@ const extractAction = defineProviderAction(service, {
 
 const createTaskRunAction = defineProviderAction(service, {
   name: "create_task_run",
+  operationType: "write",
   description: "Create a Parallel task run for web research or structured data enrichment.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -231,6 +234,7 @@ const createTaskRunAction = defineProviderAction(service, {
 
 const retrieveTaskRunAction = defineProviderAction(service, {
   name: "retrieve_task_run",
+  operationType: "read",
   description: "Retrieve the current status of a Parallel task run.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for retrieving a Parallel task run.", {
@@ -243,6 +247,7 @@ const retrieveTaskRunAction = defineProviderAction(service, {
 
 const retrieveTaskRunResultAction = defineProviderAction(service, {
   name: "retrieve_task_run_result",
+  operationType: "read",
   description: "Retrieve the result of a Parallel task run, blocking until completion or timeout.",
   requiredScopes: [],
   inputSchema: s.object(

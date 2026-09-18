@@ -107,6 +107,7 @@ const triggerWorkflowInputSchema = s.object(
 export const knockActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Knock users with cursor pagination.",
     inputSchema: listUsersInputSchema,
     outputSchema: s.actionOutput(
@@ -119,6 +120,7 @@ export const knockActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Retrieve a Knock user by user ID.",
     inputSchema: getUserInputSchema,
     outputSchema: s.actionOutput(
@@ -130,6 +132,7 @@ export const knockActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "identify_user",
+    operationType: "write",
     description: "Create or update a Knock user with identification data.",
     inputSchema: identifyUserInputSchema,
     outputSchema: s.actionOutput(
@@ -141,6 +144,7 @@ export const knockActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_user",
+    operationType: "destructive",
     description: "Permanently delete a Knock user and associated data.",
     inputSchema: deleteUserInputSchema,
     outputSchema: s.actionOutput(
@@ -153,6 +157,7 @@ export const knockActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "trigger_workflow",
+    operationType: "write",
     description: "Trigger a Knock workflow for one or more recipients and return the workflow run request ID.",
     inputSchema: triggerWorkflowInputSchema,
     outputSchema: s.actionOutput(

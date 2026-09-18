@@ -108,6 +108,7 @@ const singleSubscriberOutputSchema = s.requiredObject("Moosend single subscriber
 export const moosendActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_mailing_lists",
+    operationType: "read",
     description: "List active mailing lists in the current Moosend account.",
     inputSchema: s.object(
       "Query parameters for retrieving Moosend active mailing lists.",
@@ -123,6 +124,7 @@ export const moosendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subscribers",
+    operationType: "read",
     description: "List subscribers in a Moosend mailing list filtered by subscriber status.",
     inputSchema: s.object(
       "Path and query parameters for retrieving subscribers in a Moosend mailing list.",
@@ -139,6 +141,7 @@ export const moosendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_subscriber_by_email",
+    operationType: "read",
     description: "Fetch one Moosend subscriber from a mailing list by email address.",
     inputSchema: s.object(
       "Path and query parameters for retrieving one Moosend subscriber by email address.",
@@ -153,6 +156,7 @@ export const moosendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_subscriber",
+    operationType: "write",
     description: "Add or update one subscriber in a Moosend mailing list.",
     inputSchema: s.object(
       "Path, query, and JSON body parameters for adding or updating a Moosend subscriber.",

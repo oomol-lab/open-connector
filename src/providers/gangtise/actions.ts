@@ -360,6 +360,7 @@ const companyIndicatorInputSchema = {
 export const gangtiseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_securities",
+    operationType: "read",
     description: "Search Gangtise securities by name, code, abbreviation, or pinyin before requesting market data.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -385,6 +386,7 @@ export const gangtiseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_realtime_quotes",
+    operationType: "read",
     description: "Get current Gangtise market snapshots for one or more exact security codes.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for retrieving real-time Gangtise quotes.", {
@@ -396,6 +398,7 @@ export const gangtiseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_daily_kline",
+    operationType: "read",
     description: "Get Gangtise unadjusted daily K-line market data for exact security codes in one supported market.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -424,6 +427,7 @@ export const gangtiseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_minute_kline",
+    operationType: "read",
     description: "Get historical minute K-line data for one or more exact A-share security codes.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -454,6 +458,7 @@ export const gangtiseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_financial_statements",
+    operationType: "read",
     description: "Get Gangtise income statements, balance sheets, or cash-flow statements for exact security codes.",
     requiredScopes: [],
     inputSchema: financialInputSchema,
@@ -466,6 +471,7 @@ export const gangtiseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_valuation_metrics",
+    operationType: "read",
     description: "Get Gangtise valuation metrics and their percentile ranks over a requested date range.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -506,6 +512,7 @@ export const gangtiseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_earnings_forecast",
+    operationType: "read",
     description: "Get Gangtise broker-consensus earnings forecasts for exact security codes.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -540,6 +547,7 @@ export const gangtiseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_main_business_breakdown",
+    operationType: "read",
     description: "Get a company's main-business revenue and profitability breakdown by product, industry, or region.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -559,6 +567,7 @@ export const gangtiseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_top_shareholders",
+    operationType: "read",
     description: "Get the top ten shareholders or top ten floating shareholders for exact security codes.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -590,6 +599,7 @@ export const gangtiseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_fund_flow",
+    operationType: "read",
     description: "Get historical A-share daily small, medium, large, extra-large, total, and main-fund net inflows.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -618,6 +628,7 @@ export const gangtiseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_company_indicators",
+    operationType: "read",
     description: "Search Gangtise A-share company indicators before requesting time-series or cross-section values.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -642,6 +653,7 @@ export const gangtiseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company_indicators",
+    operationType: "read",
     description: "Get Gangtise A-share company indicator values as a time series or a single-date cross section.",
     requiredScopes: [],
     inputSchema: companyIndicatorInputSchema,
@@ -656,6 +668,7 @@ export const gangtiseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_reports",
+    operationType: "read",
     description: "Search Gangtise domestic broker research reports without downloading report files.",
     requiredScopes: [],
     inputSchema: researchSearchInputSchema("Input parameters for searching Gangtise reports.", true),
@@ -663,6 +676,7 @@ export const gangtiseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_meeting_summaries",
+    operationType: "read",
     description: "Search Gangtise meeting and research summaries without downloading source files.",
     requiredScopes: [],
     inputSchema: researchSearchInputSchema("Input parameters for searching Gangtise meeting summaries.", false),
@@ -670,6 +684,7 @@ export const gangtiseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_announcements",
+    operationType: "read",
     description: "Search Gangtise company announcement indexes without downloading source files.",
     requiredScopes: [],
     inputSchema: s.object(

@@ -168,6 +168,7 @@ const matchCompanySchema = s.object(
 export const leadfeederActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_accounts",
+    operationType: "read",
     description:
       "List Leadfeeder accounts available to the API key, optionally including credit details for one account.",
     inputSchema: s.object(
@@ -181,12 +182,14 @@ export const leadfeederActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Retrieve the Leadfeeder user associated with the connected API key.",
     inputSchema: s.object("Request parameters for retrieving the current Leadfeeder user.", {}),
     outputSchema: objectOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description: "Fetch detailed Leadfeeder firmographic and hierarchy data for one company ID.",
     inputSchema: s.object(
       "Request parameters for retrieving one Leadfeeder company.",
@@ -197,6 +200,7 @@ export const leadfeederActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_companies",
+    operationType: "read",
     description: "Fetch detailed Leadfeeder firmographic data for up to 100 company IDs in one request.",
     inputSchema: s.object(
       "Request parameters for retrieving multiple Leadfeeder companies.",
@@ -211,6 +215,7 @@ export const leadfeederActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_companies",
+    operationType: "read",
     description:
       "Search Leadfeeder company intelligence using company terms, location, industry, size, revenue, ICP, and boolean filters.",
     inputSchema: s.object(
@@ -260,6 +265,7 @@ export const leadfeederActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "match_companies",
+    operationType: "read",
     description:
       "Match one or more company records to Leadfeeder companies and return ranked matches for each input record.",
     inputSchema: s.object(
@@ -284,6 +290,7 @@ export const leadfeederActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "enrich_ip",
+    operationType: "read",
     description: "Enrich one IPv4 or IPv6 address with Leadfeeder company or network intelligence.",
     inputSchema: s.object("Request parameters for enriching one IP address.", {
       accountId: accountIdSchema,

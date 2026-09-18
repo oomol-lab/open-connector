@@ -280,6 +280,7 @@ const playerSubmissionInputs = {
 export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_app_game_center_detail",
+    operationType: "read",
     description:
       "Read the Game Center configuration of one app, including the group it belongs to and the leaderboards shown by default. Returns null when the app has never been enabled for Game Center.",
     requiredScopes: [],
@@ -295,6 +296,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "create_game_center_detail",
+    operationType: "write",
     description:
       "Enable Game Center for an app by creating its Game Center detail. The detail owns the achievements, leaderboards and leaderboard sets of the app, and an app has at most one of them.",
     requiredScopes: [],
@@ -308,6 +310,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_game_center_detail",
+    operationType: "read",
     description:
       "Read one Game Center detail by its App Store Connect identifier, together with the group and the default leaderboards it links to.",
     requiredScopes: [],
@@ -322,6 +325,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "update_game_center_detail",
+    operationType: "destructive",
     description:
       "Move a Game Center detail into a group, or change the leaderboards shown by default in the Game Center dashboard. Overwrites the relationships you pass; pass at least one. App Store Connect does not echo the linked identifiers on this call, so read them back with get_game_center_detail.",
     requiredScopes: [],
@@ -344,6 +348,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_game_center_detail_group",
+    operationType: "read",
     description:
       "Read the Game Center group a Game Center detail belongs to. Returns null when the app does not share its achievements and leaderboards with other apps.",
     requiredScopes: [],
@@ -361,6 +366,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_game_center_detail_achievements",
+    operationType: "read",
     description:
       "List the achievements of one Game Center detail, optionally narrowed by reference name, archived state or identifier.",
     requiredScopes: [],
@@ -389,6 +395,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_game_center_detail_leaderboards",
+    operationType: "read",
     description:
       "List the leaderboards of one Game Center detail, optionally narrowed by reference name, archived state or identifier.",
     requiredScopes: [],
@@ -417,6 +424,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_game_center_detail_leaderboard_sets",
+    operationType: "read",
     description:
       "List the leaderboard sets of one Game Center detail, optionally narrowed by reference name or identifier.",
     requiredScopes: [],
@@ -443,6 +451,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_game_center_detail_app_versions",
+    operationType: "read",
     description:
       "List the App Store versions of the app together with their Game Center enablement, optionally narrowed to the enabled or the disabled ones.",
     requiredScopes: [],
@@ -466,6 +475,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "replace_game_center_detail_achievements",
+    operationType: "destructive",
     description:
       "Replace the achievements attached to a Game Center detail. The identifiers you pass become the complete set, so an achievement left out is detached from the app.",
     requiredScopes: [],
@@ -491,6 +501,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "replace_game_center_detail_leaderboards",
+    operationType: "destructive",
     description:
       "Replace the leaderboards attached to a Game Center detail. The identifiers you pass become the complete set, so a leaderboard left out is detached from the app.",
     requiredScopes: [],
@@ -516,6 +527,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "replace_game_center_detail_leaderboard_sets",
+    operationType: "destructive",
     description:
       "Replace the leaderboard sets attached to a Game Center detail. The identifiers you pass become the complete set, so a leaderboard set left out is detached from the app.",
     requiredScopes: [],
@@ -543,6 +555,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "replace_game_center_detail_challenges_minimum_platform_versions",
+    operationType: "destructive",
     description:
       "Replace the earliest App Store versions, one per platform, that may take part in Game Center challenges. The identifiers you pass become the complete set, so a platform left out no longer has a minimum version.",
     requiredScopes: [],
@@ -571,6 +584,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
 
   defineProviderAction(service, {
     name: "list_game_center_groups",
+    operationType: "read",
     description:
       "List the Game Center groups of the team. Apps in a group share their achievements, leaderboards and leaderboard sets, so players keep one progress across the apps.",
     requiredScopes: [],
@@ -591,6 +605,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "create_game_center_group",
+    operationType: "write",
     description:
       "Create a Game Center group. The group starts empty: an app joins it through its Game Center detail, and the achievements, leaderboards and leaderboard sets it shares are set with the replace actions.",
     requiredScopes: [],
@@ -606,6 +621,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_game_center_group",
+    operationType: "read",
     description: "Read one Game Center group by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -619,6 +635,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "update_game_center_group",
+    operationType: "write",
     description:
       "Rename a Game Center group. Overwrites the reference name; pass null to clear it. The apps and the shared records of the group are not touched.",
     requiredScopes: [],
@@ -635,6 +652,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "delete_game_center_group",
+    operationType: "destructive",
     description:
       "Delete a Game Center group. The apps that were in the group keep their own Game Center records and stop sharing progress with each other.",
     requiredScopes: [],
@@ -653,6 +671,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_game_center_group_details",
+    operationType: "read",
     description:
       "List the Game Center details of the apps that belong to one group, that is the apps sharing the achievements, leaderboards and leaderboard sets of the group.",
     requiredScopes: [],
@@ -676,6 +695,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_game_center_group_achievements",
+    operationType: "read",
     description:
       "List the achievements shared by one Game Center group, optionally narrowed by reference name, archived state or identifier.",
     requiredScopes: [],
@@ -704,6 +724,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_game_center_group_leaderboards",
+    operationType: "read",
     description:
       "List the leaderboards shared by one Game Center group, optionally narrowed by reference name, archived state or identifier.",
     requiredScopes: [],
@@ -732,6 +753,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_game_center_group_leaderboard_sets",
+    operationType: "read",
     description:
       "List the leaderboard sets shared by one Game Center group, optionally narrowed by reference name or identifier.",
     requiredScopes: [],
@@ -757,6 +779,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "replace_game_center_group_achievements",
+    operationType: "destructive",
     description:
       "Set which achievements one Game Center group shares. Pass the complete list: an achievement left out is no longer shared through the group.",
     requiredScopes: [],
@@ -780,6 +803,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "replace_game_center_group_leaderboards",
+    operationType: "destructive",
     description:
       "Set which leaderboards one Game Center group shares. Pass the complete list: a leaderboard left out is no longer shared through the group.",
     requiredScopes: [],
@@ -803,6 +827,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "replace_game_center_group_leaderboard_sets",
+    operationType: "destructive",
     description:
       "Set which leaderboard sets one Game Center group shares. Pass the complete list: a leaderboard set left out is no longer shared through the group.",
     requiredScopes: [],
@@ -827,6 +852,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
 
   defineProviderAction(service, {
     name: "create_game_center_app_version",
+    operationType: "write",
     description:
       "Turn Game Center on for one App Store version by creating its Game Center app version record. Everything Game Center knows about that release hangs off this record: use update_game_center_app_version to toggle it again, and add_compatibility_versions_to_game_center_app_version to keep earlier releases multiplayer compatible with it.",
     requiredScopes: [],
@@ -847,6 +873,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_game_center_app_version",
+    operationType: "read",
     description: "Read one Game Center app version by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -863,6 +890,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "update_game_center_app_version",
+    operationType: "destructive",
     description:
       "Enable or disable Game Center for the App Store version this record belongs to. Disabling it hides Game Center from players on that release without deleting its achievements or leaderboards.",
     requiredScopes: [],
@@ -882,6 +910,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_game_center_app_version_app_store_version",
+    operationType: "read",
     description:
       "Read the App Store version a Game Center app version belongs to, for example to learn its version string and review state.",
     requiredScopes: [],
@@ -899,6 +928,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_game_center_app_version_compatibility_versions",
+    operationType: "read",
     description:
       "List the earlier app versions that stay multiplayer compatible with this one, so players who have not updated yet can still be matched with players who have. Optionally narrowed to the compatible versions that have Game Center enabled.",
     requiredScopes: [],
@@ -922,6 +952,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "add_compatibility_versions_to_game_center_app_version",
+    operationType: "write",
     description:
       "Mark earlier Game Center app versions as multiplayer compatible with this one. Adds to the versions already listed instead of replacing them.",
     requiredScopes: [],
@@ -949,6 +980,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "remove_compatibility_versions_from_game_center_app_version",
+    operationType: "destructive",
     description:
       "Stop treating earlier Game Center app versions as multiplayer compatible with this one. Players still on a removed version can no longer be matched with players on this one.",
     requiredScopes: [],
@@ -976,6 +1008,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_app_store_version_game_center_app_version",
+    operationType: "read",
     description:
       "Read the Game Center app version of one App Store version. Returns null when Game Center was never enabled for that version.",
     requiredScopes: [],
@@ -993,6 +1026,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "submit_game_center_leaderboard_entry",
+    operationType: "write",
     description:
       "Post a score to a Game Center leaderboard on behalf of a player. This is how a server-authoritative game reports scores its own backend computed instead of letting the game client submit them.",
     requiredScopes: [],
@@ -1020,6 +1054,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "submit_game_center_player_achievement",
+    operationType: "write",
     description:
       "Report a player's progress towards a Game Center achievement from a server instead of from the game client. Submitting 100 marks the achievement earned.",
     requiredScopes: [],
@@ -1046,6 +1081,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
 
   defineProviderAction(service, {
     name: "create_game_center_achievement",
+    operationType: "write",
     description:
       "Create a Game Center achievement together with its first version. Pass gameCenterDetailId when the achievement belongs to a single app, or gameCenterGroupId when it is shared by every app of a Game Center group. The achievement has no player-facing text yet; read the first version with list_game_center_achievement_versions and add locales with create_game_center_achievement_localization.",
     requiredScopes: [],
@@ -1079,6 +1115,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_game_center_achievement",
+    operationType: "read",
     description: "Read one Game Center achievement by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -1095,6 +1132,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "update_game_center_achievement",
+    operationType: "destructive",
     description:
       "Change the configuration of a Game Center achievement, or archive it so it is no longer offered to players. Overwrites the given fields; pass at least one. The vendor identifier cannot be changed after the achievement was created.",
     requiredScopes: [],
@@ -1123,6 +1161,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "delete_game_center_achievement",
+    operationType: "destructive",
     description:
       "Delete a Game Center achievement together with all of its versions and localizations. Players lose the achievement and the progress recorded for it.",
     requiredScopes: [],
@@ -1141,6 +1180,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_game_center_achievement_versions",
+    operationType: "read",
     description:
       "List the versions of one Game Center achievement, each with the review and release state of the localizations it carries.",
     requiredScopes: [],
@@ -1161,6 +1201,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "set_game_center_achievement_activity",
+    operationType: "destructive",
     description:
       "Attach a Game Center achievement to a game activity, replacing the activity it was attached to before.",
     requiredScopes: [],
@@ -1186,6 +1227,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "create_game_center_achievement_version",
+    operationType: "write",
     description:
       "Create a new version of a Game Center achievement. Editing the player-facing text of an achievement that is already live goes through a new version: add or change its localizations, and the version carries them through App Review.",
     requiredScopes: [],
@@ -1204,6 +1246,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_game_center_achievement_version",
+    operationType: "read",
     description: "Read one Game Center achievement version by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -1220,6 +1263,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_game_center_achievement_version_localizations",
+    operationType: "read",
     description:
       "List the localizations of one Game Center achievement version, one per locale the achievement is shown in.",
     requiredScopes: [],
@@ -1240,6 +1284,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "create_game_center_achievement_localization",
+    operationType: "write",
     description:
       "Add a locale to a Game Center achievement version with the name and the two descriptions players see before and after they earn the achievement. The achievement image for the locale is uploaded separately. App Store Connect rejects a locale the version already has.",
     requiredScopes: [],
@@ -1272,6 +1317,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_game_center_achievement_localization",
+    operationType: "read",
     description: "Read one Game Center achievement localization by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -1290,6 +1336,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "update_game_center_achievement_localization",
+    operationType: "destructive",
     description:
       "Change the name or the descriptions of a Game Center achievement localization, or clear one of them with null. Overwrites the given fields; pass at least one. The locale cannot be changed; delete the localization and create it again instead.",
     requiredScopes: [],
@@ -1317,6 +1364,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "delete_game_center_achievement_localization",
+    operationType: "destructive",
     description:
       "Remove a locale from a Game Center achievement version, including the achievement image uploaded for it.",
     requiredScopes: [],
@@ -1337,6 +1385,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_game_center_achievement_localization_image",
+    operationType: "read",
     description:
       "Read the achievement image uploaded for one Game Center achievement localization, including its delivery state, or null when no image has been uploaded. Uploading an image is not covered by this connector; only the already uploaded image can be read.",
     requiredScopes: [],
@@ -1357,6 +1406,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
 
   defineProviderAction(service, {
     name: "create_game_center_leaderboard",
+    operationType: "write",
     description:
       "Create a Game Center leaderboard owned by one app or shared by a group. App Store Connect always creates the first leaderboard version alongside it, so the player-facing text is added with create_game_center_leaderboard_localization against that version. Give recurrenceStartDate, recurrenceDuration and recurrenceRule together to make the leaderboard recurring.",
     requiredScopes: [],
@@ -1404,6 +1454,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_game_center_leaderboard",
+    operationType: "read",
     description: "Read one Game Center leaderboard by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -1420,6 +1471,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "update_game_center_leaderboard",
+    operationType: "destructive",
     description:
       "Change the configuration of a Game Center leaderboard or archive it. Overwrites the given fields and clears the ones passed as null; pass at least one. The vendorIdentifier cannot be changed. Archiving retires the leaderboard so it stops accepting scores.",
     requiredScopes: [],
@@ -1472,6 +1524,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "delete_game_center_leaderboard",
+    operationType: "destructive",
     description:
       "Delete a Game Center leaderboard together with its versions, localizations and the scores players submitted to it.",
     requiredScopes: [],
@@ -1490,6 +1543,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_game_center_leaderboard_versions",
+    operationType: "read",
     description:
       "List the versions of one Game Center leaderboard. Each version carries its own localizations through App Review.",
     requiredScopes: [],
@@ -1510,6 +1564,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "set_game_center_leaderboard_activity",
+    operationType: "destructive",
     description:
       "Link a Game Center leaderboard to the game activity it belongs to, replacing any activity linked before. App Store Connect confirms the change without returning the leaderboard.",
     requiredScopes: [],
@@ -1535,6 +1590,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "set_game_center_leaderboard_challenge",
+    operationType: "destructive",
     description:
       "Link a Game Center leaderboard to the challenge that ranks players against it, replacing any challenge linked before. App Store Connect confirms the change without returning the leaderboard.",
     requiredScopes: [],
@@ -1560,6 +1616,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "create_game_center_leaderboard_version",
+    operationType: "write",
     description:
       "Create a new version of a Game Center leaderboard so its localized text can be edited and taken through App Review again. Add the text with create_game_center_leaderboard_localization against the new version.",
     requiredScopes: [],
@@ -1580,6 +1637,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_game_center_leaderboard_version",
+    operationType: "read",
     description: "Read one Game Center leaderboard version by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -1596,6 +1654,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_game_center_leaderboard_version_localizations",
+    operationType: "read",
     description:
       "List the locales of one Game Center leaderboard version, each with the name, score description and score formatting shown to players.",
     requiredScopes: [],
@@ -1616,6 +1675,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "create_game_center_leaderboard_localization",
+    operationType: "write",
     description:
       "Add a locale to a Game Center leaderboard version with the name and score text players see there. The image shown next to the leaderboard is uploaded separately and is not covered by this connector.",
     requiredScopes: [],
@@ -1645,6 +1705,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_game_center_leaderboard_localization",
+    operationType: "read",
     description: "Read one Game Center leaderboard localization by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -1663,6 +1724,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "update_game_center_leaderboard_localization",
+    operationType: "destructive",
     description:
       "Change the text or score formatting of a Game Center leaderboard localization. Overwrites the given fields and clears the ones passed as null; pass at least one. The locale cannot be changed.",
     requiredScopes: [],
@@ -1691,6 +1753,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "delete_game_center_leaderboard_localization",
+    operationType: "destructive",
     description: "Remove a locale from a Game Center leaderboard version, including the image uploaded for it.",
     requiredScopes: [],
     providerPermissions: [...configureGameCenterRoles],
@@ -1710,6 +1773,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_game_center_leaderboard_localization_image",
+    operationType: "read",
     description:
       "Read the image shown with a Game Center leaderboard localization, including its delivery state. Returns null when no image has been uploaded for the locale. Uploading an image is not covered by this connector, only reading the one already uploaded.",
     requiredScopes: [],
@@ -1730,6 +1794,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
 
   defineProviderAction(service, {
     name: "create_game_center_leaderboard_set",
+    operationType: "write",
     description:
       "Create a Game Center leaderboard set that groups related leaderboards under one entry in the Game Center dashboard, and optionally put existing leaderboards into it. App Store Connect always creates the first set version together with the set; add the localized set names with create_game_center_leaderboard_set_localization.",
     requiredScopes: [],
@@ -1756,6 +1821,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_game_center_leaderboard_set",
+    operationType: "read",
     description: "Read one Game Center leaderboard set by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -1772,6 +1838,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "update_game_center_leaderboard_set",
+    operationType: "write",
     description:
       "Rename a Game Center leaderboard set, or clear its reference name with null. The vendor identifier is fixed once the set exists and cannot be changed.",
     requiredScopes: [],
@@ -1791,6 +1858,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "delete_game_center_leaderboard_set",
+    operationType: "destructive",
     description:
       "Delete a Game Center leaderboard set together with its versions and localizations. The leaderboards that were in the set are kept and stay available on their own.",
     requiredScopes: [],
@@ -1809,6 +1877,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_game_center_leaderboard_set_leaderboards",
+    operationType: "read",
     description:
       "List the leaderboards that belong to one Game Center leaderboard set, optionally narrowed by reference name, by archived state, or to specific leaderboards.",
     requiredScopes: [],
@@ -1837,6 +1906,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "add_leaderboards_to_game_center_leaderboard_set",
+    operationType: "write",
     description:
       "Put more existing leaderboards into a Game Center leaderboard set. The leaderboards already in the set are kept.",
     requiredScopes: [],
@@ -1860,6 +1930,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "replace_game_center_leaderboard_set_leaderboards",
+    operationType: "destructive",
     description:
       "Replace the whole list of leaderboards in a Game Center leaderboard set. Leaderboards missing from the new list leave the set but are not deleted.",
     requiredScopes: [],
@@ -1883,6 +1954,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "remove_leaderboards_from_game_center_leaderboard_set",
+    operationType: "destructive",
     description:
       "Take leaderboards out of a Game Center leaderboard set. The leaderboards themselves are kept and stay available on their own.",
     requiredScopes: [],
@@ -1906,6 +1978,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_game_center_leaderboard_set_versions",
+    operationType: "read",
     description:
       "List the versions of one Game Center leaderboard set. Each version carries its own localized names through App Review.",
     requiredScopes: [],
@@ -1926,6 +1999,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "create_game_center_leaderboard_set_version",
+    operationType: "write",
     description:
       "Create a new editable version of a Game Center leaderboard set, for example to change its localized names after the current version went live.",
     requiredScopes: [],
@@ -1944,6 +2018,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_game_center_leaderboard_set_version",
+    operationType: "read",
     description:
       "Read one Game Center leaderboard set version by its App Store Connect identifier, including its review state.",
     requiredScopes: [],
@@ -1963,6 +2038,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_game_center_leaderboard_set_version_localizations",
+    operationType: "read",
     description: "List the locales one Game Center leaderboard set version is translated into.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -1984,6 +2060,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "create_game_center_leaderboard_set_localization",
+    operationType: "write",
     description:
       "Add a locale to a Game Center leaderboard set version with the set name players see in that locale. App Store Connect rejects a locale the version already has.",
     requiredScopes: [],
@@ -2006,6 +2083,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_game_center_leaderboard_set_localization",
+    operationType: "read",
     description: "Read one Game Center leaderboard set localization by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -2024,6 +2102,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "update_game_center_leaderboard_set_localization",
+    operationType: "destructive",
     description:
       "Replace the set name of a Game Center leaderboard set localization, or clear it with null. The locale is fixed once the localization exists; delete and recreate it to change the locale.",
     requiredScopes: [],
@@ -2045,6 +2124,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "delete_game_center_leaderboard_set_localization",
+    operationType: "destructive",
     description:
       "Remove a locale from a Game Center leaderboard set version, including the image uploaded for that locale.",
     requiredScopes: [],
@@ -2065,6 +2145,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_game_center_leaderboard_set_localization_image",
+    operationType: "read",
     description:
       "Read the image attached to one Game Center leaderboard set localization, with its delivery URL and upload state. Uploading an image is not covered by this connector; only an image that was already uploaded can be read.",
     requiredScopes: [],
@@ -2084,6 +2165,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_game_center_leaderboard_set_member_localizations",
+    operationType: "read",
     description:
       "List the member localizations of one leaderboard inside one leaderboard set. A member localization is the name a leaderboard is shown under while a player browses the set, which can differ from the name of the leaderboard on its own. App Store Connect requires both the set and the leaderboard.",
     requiredScopes: [],
@@ -2105,6 +2187,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "create_game_center_leaderboard_set_member_localization",
+    operationType: "write",
     description:
       "Give one leaderboard a name of its own inside one leaderboard set, for one locale. Without a member localization the leaderboard keeps its usual localized name inside the set.",
     requiredScopes: [],
@@ -2128,6 +2211,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "update_game_center_leaderboard_set_member_localization",
+    operationType: "destructive",
     description:
       "Replace the name a leaderboard is shown under inside a leaderboard set, or clear it with null so the leaderboard falls back to its usual localized name.",
     requiredScopes: [],
@@ -2151,6 +2235,7 @@ export const appStoreConnectGameCenterActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "delete_game_center_leaderboard_set_member_localization",
+    operationType: "destructive",
     description:
       "Delete the name a leaderboard is shown under inside a leaderboard set for one locale. The leaderboard stays in the set and falls back to its usual localized name.",
     requiredScopes: [],

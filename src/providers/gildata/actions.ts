@@ -119,6 +119,7 @@ export const gildataActions: readonly ActionDefinition[] = [
   defineProviderAction("gildata", {
     name: "query_financial_data",
 
+    operationType: "read",
     description:
       "Answer a natural-language financial data question across securities, funds, bonds, indices, market data, and company information.",
     requiredScopes: [],
@@ -128,6 +129,7 @@ export const gildataActions: readonly ActionDefinition[] = [
   defineProviderAction("gildata", {
     name: "screen_stocks",
 
+    operationType: "read",
     description:
       "Screen stocks or listed companies with natural-language conditions covering industries, trading metrics, financials, valuation, or technical patterns.",
     requiredScopes: [],
@@ -138,6 +140,7 @@ export const gildataActions: readonly ActionDefinition[] = [
   defineProviderAction("gildata", {
     name: "screen_funds",
 
+    operationType: "read",
     description:
       "Screen funds or ETFs with natural-language conditions covering returns, risk, holdings, fund managers, categories, or overall evaluation.",
     requiredScopes: [],
@@ -147,6 +150,7 @@ export const gildataActions: readonly ActionDefinition[] = [
   defineProviderAction("gildata", {
     name: "get_macro_data",
 
+    operationType: "read",
     description:
       "Find macroeconomic or industry indicators for China, local regions, or global economies and return the relevant time-series data.",
     requiredScopes: [],
@@ -156,6 +160,7 @@ export const gildataActions: readonly ActionDefinition[] = [
   defineProviderAction("gildata", {
     name: "search_research_reports",
 
+    operationType: "read",
     description:
       "Search brokerage research about macroeconomics, industries, listed companies, funds, or market trends.",
     requiredScopes: [],
@@ -165,6 +170,7 @@ export const gildataActions: readonly ActionDefinition[] = [
   defineProviderAction("gildata", {
     name: "get_stock_overview",
 
+    operationType: "read",
     description:
       "Get a user-oriented stock overview covering the company, core business, recent market data, financial performance, valuation, peers, and consensus expectations.",
     requiredScopes: [],
@@ -175,6 +181,7 @@ export const gildataActions: readonly ActionDefinition[] = [
   defineProviderAction("gildata", {
     name: "compare_stocks",
 
+    operationType: "read",
     description:
       "Compare two or more stocks across business fundamentals, growth, profitability, cash flow, valuation, industry position, and market performance.",
     requiredScopes: [],
@@ -185,6 +192,7 @@ export const gildataActions: readonly ActionDefinition[] = [
   defineProviderAction("gildata", {
     name: "get_company_news_and_announcements",
 
+    operationType: "read",
     description:
       "Find recent company news, exchange announcements, and earnings guidance with source and publication timestamps.",
     requiredScopes: [],
@@ -194,6 +202,7 @@ export const gildataActions: readonly ActionDefinition[] = [
   defineProviderAction("gildata", {
     name: "list_tools",
 
+    operationType: "read",
     description:
       "Discover the current Gildata Data Map financial tools and live input schemas from the high-level tool service or the detailed API service.",
     requiredScopes: [],
@@ -217,6 +226,7 @@ export const gildataActions: readonly ActionDefinition[] = [
   defineProviderAction("gildata", {
     name: "call_tool",
 
+    operationType: "read",
     description:
       "Call a current Gildata Data Map financial MCP tool with JSON arguments after checking its live schema with list_tools.",
     requiredScopes: [],

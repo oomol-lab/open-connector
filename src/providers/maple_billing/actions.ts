@@ -263,6 +263,7 @@ const checkoutSessionCreateInputSchema = s.object(
 export const mapleBillingActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_customer",
+    operationType: "write",
     description: "Create a Measure customer from JSON-friendly fields.",
     inputSchema: customerCreateInputSchema,
     outputSchema: s.object("The normalized Measure customer creation response.", {
@@ -271,6 +272,7 @@ export const mapleBillingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_customer",
+    operationType: "write",
     description: "Update common fields on a Measure customer.",
     inputSchema: customerUpdateInputSchema,
     outputSchema: s.object("The normalized Measure customer update response.", {
@@ -279,6 +281,7 @@ export const mapleBillingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_customers",
+    operationType: "read",
     description: "Search Measure customers with pagination and official query criteria.",
     inputSchema: findInputSchema,
     outputSchema: s.object("The normalized Measure customer search response.", {
@@ -288,6 +291,7 @@ export const mapleBillingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Retrieve a Measure customer by ID or external identifier.",
     inputSchema: s.object("Path parameters for retrieving a Measure customer.", {
       customerId: customerIdSchema,
@@ -298,6 +302,7 @@ export const mapleBillingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_products",
+    operationType: "read",
     description: "Search Measure products with pagination and official query criteria.",
     inputSchema: findInputSchema,
     outputSchema: s.object("The normalized Measure product search response.", {
@@ -307,6 +312,7 @@ export const mapleBillingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Retrieve a Measure product by ID or external identifier.",
     inputSchema: s.object("Path parameters for retrieving a Measure product.", {
       productId: idSchema,
@@ -317,6 +323,7 @@ export const mapleBillingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_product_pricing",
+    operationType: "read",
     description: "Search Measure product pricing records with official query criteria.",
     inputSchema: findInputSchema,
     outputSchema: s.object("The normalized Measure product pricing search response.", {
@@ -326,6 +333,7 @@ export const mapleBillingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product_pricing",
+    operationType: "read",
     description: "Retrieve a Measure product pricing record by ID or external identifier.",
     inputSchema: s.object("Path parameters for retrieving a Measure product pricing record.", {
       productPricingId: idSchema,
@@ -336,6 +344,7 @@ export const mapleBillingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_subscriptions",
+    operationType: "read",
     description: "Search Measure subscriptions with pagination and official query criteria.",
     inputSchema: subscriptionFindInputSchema,
     outputSchema: s.object("The normalized Measure subscription search response.", {
@@ -345,6 +354,7 @@ export const mapleBillingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_subscription",
+    operationType: "read",
     description: "Retrieve a Measure subscription by ID or external identifier.",
     inputSchema: s.object("Path parameters for retrieving a Measure subscription.", {
       subscriptionId: idSchema,
@@ -355,6 +365,7 @@ export const mapleBillingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_checkout_session",
+    operationType: "write",
     description: "Create a Measure hosted checkout session link.",
     inputSchema: checkoutSessionCreateInputSchema,
     outputSchema: s.object("The normalized Measure checkout session creation response.", {
@@ -363,6 +374,7 @@ export const mapleBillingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_checkout_session",
+    operationType: "read",
     description: "Retrieve a Measure checkout session by ID.",
     inputSchema: s.object("Path parameters for retrieving a Measure checkout session.", {
       checkoutSessionId: idSchema,

@@ -54,6 +54,7 @@ export const finchinaActions: readonly ActionDefinition[] = [
   defineProviderAction("finchina", {
     name: "list_tools",
 
+    operationType: "read",
     requiredScopes: [],
     description:
       "Discover FinChina financial and enterprise-risk navigation tools, the execution entry point, and metadata tools with their current input schemas.",
@@ -77,6 +78,7 @@ export const finchinaActions: readonly ActionDefinition[] = [
   defineProviderAction("finchina", {
     name: "discover_tools",
 
+    operationType: "read",
     requiredScopes: [],
     description:
       "Call a FinChina query_* or screen_* navigation tool with no arguments to obtain subTools and their parameter schemas. This returns definitions, not business records. Use execute_tool to query a discovered subtool.",
@@ -92,6 +94,7 @@ export const finchinaActions: readonly ActionDefinition[] = [
   defineProviderAction("finchina", {
     name: "get_metadata",
 
+    operationType: "read",
     requiredScopes: [],
     description:
       "Query FinChina indicator definitions, enumerations, or parameter metadata through caihui_mcp_metadata. Inspect its current schema using list_tools before supplying arguments.",
@@ -107,6 +110,7 @@ export const finchinaActions: readonly ActionDefinition[] = [
   defineProviderAction("finchina", {
     name: "execute_tool",
 
+    operationType: "read",
     requiredScopes: [],
     description:
       "Query a FinChina data subtool discovered with discover_tools. Pass its exact name and arguments. Queries consume account credits; this action executes one request without automatic pagination or business retries.",
@@ -125,7 +129,7 @@ export const finchinaActions: readonly ActionDefinition[] = [
   ...["get_company_basic_info", "get_company_financial_metrics"].map((name) =>
     defineProviderAction("finchina", {
       name,
-
+      operationType: "read",
       requiredScopes: [],
       description:
         name === "get_company_basic_info"

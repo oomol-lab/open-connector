@@ -8,6 +8,7 @@ const service = "komari";
 export const komariActions: ProviderActionDefinition[] = komariOperations.map((operation) =>
   defineProviderAction(service, {
     name: operation.name,
+    operationType: operation.operationType,
     description: operation.description,
     requiredScopes: [operation.rpcMethod],
     inputSchema: operation.inputSchema,

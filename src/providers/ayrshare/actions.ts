@@ -51,6 +51,7 @@ const youtubeOptionsSchema = s.object(
 export const ayrshareActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user_profile",
+    operationType: "read",
     description: "Get Ayrshare account or user profile details, including linked social accounts and usage metadata.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -71,6 +72,7 @@ export const ayrshareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_post_history",
+    operationType: "read",
     description: "List Ayrshare post history with optional filters for date range, status, type, and social platforms.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -104,6 +106,7 @@ export const ayrshareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "publish_post",
+    operationType: "write",
     description: "Publish or schedule a social media post through Ayrshare using a JSON-friendly first-pass field set.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -140,6 +143,7 @@ export const ayrshareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_post",
+    operationType: "read",
     description: "Get one Ayrshare post by top-level Ayrshare post ID, including status and per-platform results.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving one Ayrshare post.", {
@@ -151,6 +155,7 @@ export const ayrshareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_post",
+    operationType: "destructive",
     description:
       "Delete one or more Ayrshare posts, delete all pending scheduled posts, or mark a post as manually deleted.",
     requiredScopes: [],
@@ -176,6 +181,7 @@ export const ayrshareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_post",
+    operationType: "destructive",
     description:
       "Update mutable Ayrshare post metadata such as scheduleDate, approval status, notes, pause state, comments, or YouTube visibility.",
     requiredScopes: [],
@@ -200,6 +206,7 @@ export const ayrshareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "retry_post",
+    operationType: "write",
     description: "Retry an Ayrshare post whose previous publish attempt failed, returning the new pending post status.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrying an Ayrshare post.", {
@@ -213,6 +220,7 @@ export const ayrshareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_post_length",
+    operationType: "read",
     description: "Check weighted social post length and platform validity using Ayrshare's post length validator.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for checking Ayrshare post length.", {
@@ -230,6 +238,7 @@ export const ayrshareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "validate_post",
+    operationType: "read",
     description: "Validate an Ayrshare post payload before publishing, including platform and media URL checks.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -254,6 +263,7 @@ export const ayrshareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "verify_media_url",
+    operationType: "read",
     description: "Verify that a media URL exists and is accessible to Ayrshare.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for verifying an Ayrshare media URL.", {
@@ -270,6 +280,7 @@ export const ayrshareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_post_analytics",
+    operationType: "read",
     description: "Get real-time analytics for an Ayrshare post, optionally limited to selected social platforms.",
     requiredScopes: [],
     inputSchema: s.object(

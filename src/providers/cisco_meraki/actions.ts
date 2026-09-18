@@ -93,6 +93,7 @@ const deviceSchema = s.looseObject("One Meraki device.", {
 export const ciscoMerakiActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_organizations",
+    operationType: "read",
     description: "List the Meraki organizations available to the connected API key.",
     inputSchema: s.actionInput(
       {
@@ -116,6 +117,7 @@ export const ciscoMerakiActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_organization_networks",
+    operationType: "read",
     description: "List networks that the API key can access in a Meraki organization.",
     inputSchema: s.actionInput(
       {
@@ -147,6 +149,7 @@ export const ciscoMerakiActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_organization_inventory_devices",
+    operationType: "read",
     description: "List inventory devices in a Meraki organization with simple search filters.",
     inputSchema: s.actionInput(
       {
@@ -189,6 +192,7 @@ export const ciscoMerakiActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_device",
+    operationType: "read",
     description: "Retrieve one Meraki device by serial number.",
     inputSchema: s.actionInput(
       {

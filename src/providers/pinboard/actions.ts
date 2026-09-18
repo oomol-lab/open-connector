@@ -46,6 +46,7 @@ const resultOutputSchema = s.requiredObject("The Pinboard mutation result.", {
 export const pinboardActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_last_update",
+    operationType: "read",
     description: "Get the most recent time a Pinboard bookmark was added, updated, or deleted.",
     inputSchema: s.actionInput({}, [], "Input parameters for checking the Pinboard update timestamp."),
     outputSchema: s.actionOutput(
@@ -57,6 +58,7 @@ export const pinboardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_recent_bookmarks",
+    operationType: "read",
     description: "List the user's most recent Pinboard bookmarks, optionally filtered by one tag.",
     inputSchema: s.actionInput(
       {
@@ -73,6 +75,7 @@ export const pinboardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_bookmarks",
+    operationType: "read",
     description: "Get Pinboard bookmarks for a URL, date, or up to three tags using the posts/get endpoint.",
     inputSchema: s.actionInput(
       {
@@ -92,6 +95,7 @@ export const pinboardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_bookmark",
+    operationType: "destructive",
     description: "Add or replace a Pinboard bookmark.",
     inputSchema: s.actionInput(
       {
@@ -120,6 +124,7 @@ export const pinboardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_bookmark",
+    operationType: "destructive",
     description: "Delete a Pinboard bookmark by URL.",
     inputSchema: s.actionInput(
       { url: s.url("The bookmarked URL to delete.") },
@@ -130,6 +135,7 @@ export const pinboardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List the user's Pinboard tags and bookmark counts.",
     inputSchema: s.actionInput({}, [], "Input parameters for listing Pinboard tags."),
     outputSchema: s.actionOutput(

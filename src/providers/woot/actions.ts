@@ -122,6 +122,7 @@ const offerIdSchema = s.uuid("A Woot offer identifier obtained from a feed respo
 export const wootActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_feed",
+    operationType: "read",
     description: "List live, minified Woot offers from a supported category feed, optionally by page.",
     inputSchema: s.object(
       "The input for retrieving live offers from a named Woot feed.",
@@ -141,6 +142,7 @@ export const wootActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_offers",
+    operationType: "read",
     description: "Retrieve detailed Woot offers for up to 25 unique offer IDs.",
     inputSchema: s.object("The input for retrieving multiple detailed Woot offers.", {
       offerIds: s.array("The unique Woot offer identifiers to retrieve.", offerIdSchema, {
@@ -155,6 +157,7 @@ export const wootActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_offer",
+    operationType: "read",
     description: "Retrieve all available details for one Woot offer ID.",
     inputSchema: s.object("The input for retrieving one detailed Woot offer.", {
       offerId: offerIdSchema,

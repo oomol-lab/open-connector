@@ -495,12 +495,14 @@ const crawlInput = s.looseRequiredObject(
 export const firecrawlActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "scrape",
+    operationType: "read",
     description: "Scrape a single URL with Firecrawl and return the extracted page content in the requested formats.",
     inputSchema: scrapeInput,
     outputSchema: scrapeResultSchema,
   }),
   defineProviderAction(service, {
     name: "batch_scrape",
+    operationType: "write",
     description: "Start a Firecrawl batch scrape job for multiple URLs and return the async job ID.",
     inputSchema: s.looseRequiredObject(
       "The input payload for this action.",
@@ -556,66 +558,77 @@ export const firecrawlActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "batch_scrape_get",
+    operationType: "read",
     description: "Get the current status and paged results of a Firecrawl batch scrape job by job ID.",
     inputSchema: idInput,
     outputSchema: pagedJobStatusSchema,
   }),
   defineProviderAction(service, {
     name: "batch_scrape_get_errors",
+    operationType: "read",
     description: "Get the failed URLs and robots.txt blocks from a Firecrawl batch scrape job.",
     inputSchema: idInput,
     outputSchema: errorsSchema,
   }),
   defineProviderAction(service, {
     name: "batch_scrape_cancel",
+    operationType: "destructive",
     description: "Cancel a running Firecrawl batch scrape job by job ID.",
     inputSchema: idInput,
     outputSchema: cancelResultSchema,
   }),
   defineProviderAction(service, {
     name: "crawl",
+    operationType: "write",
     description: "Start a Firecrawl crawl job with compatibility input fields.",
     inputSchema: crawlInput,
     outputSchema: jobStartSchema,
   }),
   defineProviderAction(service, {
     name: "crawl_v2",
+    operationType: "write",
     description: "Start a Firecrawl crawl job with the official v2 crawl fields.",
     inputSchema: crawlInput,
     outputSchema: jobStartSchema,
   }),
   defineProviderAction(service, {
     name: "crawl_get",
+    operationType: "read",
     description: "Get the current status and paged results of a Firecrawl crawl job by job ID.",
     inputSchema: idInput,
     outputSchema: pagedJobStatusSchema,
   }),
   defineProviderAction(service, {
     name: "get_the_status_of_a_crawl_job",
+    operationType: "read",
     description: "Compatibility alias of crawl_get for the crawl status action name.",
     inputSchema: idInput,
     outputSchema: pagedJobStatusSchema,
   }),
   defineProviderAction(service, {
     name: "crawl_get_errors",
+    operationType: "read",
     description: "Get the failed URLs and robots.txt blocks from a Firecrawl crawl job.",
     inputSchema: idInput,
     outputSchema: errorsSchema,
   }),
   defineProviderAction(service, {
     name: "crawl_cancel",
+    operationType: "destructive",
     description: "Cancel a running Firecrawl crawl job by job ID.",
     inputSchema: idInput,
     outputSchema: cancelResultSchema,
   }),
   defineProviderAction(service, {
     name: "crawl_delete",
+    operationType: "destructive",
     description: "Compatibility alias of crawl_cancel for the crawl delete action name.",
     inputSchema: idInput,
     outputSchema: cancelResultSchema,
   }),
   defineProviderAction(service, {
     name: "crawl_list_active",
+    operationType: "read",
     description: "List the currently active Firecrawl crawl jobs for the authenticated team.",
     inputSchema: s.looseObject({}, { description: "The input payload for this action." }),
     outputSchema: s.requiredObject("The output payload for this action.", {
@@ -625,6 +638,7 @@ export const firecrawlActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "crawl_params_preview",
+    operationType: "read",
     description: "Preview the crawl parameters that Firecrawl would infer from a URL and prompt.",
     inputSchema: s.requiredObject("The input payload for this action.", {
       url: s.nonEmptyString("The seed URL for the crawl preview."),
@@ -634,6 +648,7 @@ export const firecrawlActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "extract",
+    operationType: "write",
     description: "Start a Firecrawl extract job that returns structured data for one or more URLs.",
     inputSchema: s.looseRequiredObject(
       "The input payload for this action.",
@@ -665,12 +680,14 @@ export const firecrawlActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "extract_get",
+    operationType: "read",
     description: "Get the current status and output of a Firecrawl extract job by job ID.",
     inputSchema: idInput,
     outputSchema: extractStatusSchema,
   }),
   defineProviderAction(service, {
     name: "search",
+    operationType: "read",
     description: "Search the web with Firecrawl and optionally scrape the top results in the requested formats.",
     inputSchema: s.looseRequiredObject(
       "The input payload for this action.",
@@ -689,6 +706,7 @@ export const firecrawlActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "map_multiple_urls_based_on_options",
+    operationType: "read",
     description: "Discover URLs from a website with Firecrawl's map endpoint using the legacy map action name.",
     inputSchema: s.looseRequiredObject(
       "The input payload for this action.",
@@ -720,6 +738,7 @@ export const firecrawlActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_agent",
+    operationType: "write",
     description: "Start a Firecrawl agent job for multi-page autonomous browsing and extraction.",
     inputSchema: s.looseRequiredObject(
       "The input payload for this action.",
@@ -739,18 +758,21 @@ export const firecrawlActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_agent_status",
+    operationType: "read",
     description: "Get the current status and output of a Firecrawl agent job by job ID.",
     inputSchema: idInput,
     outputSchema: agentStatusSchema,
   }),
   defineProviderAction(service, {
     name: "agent_cancel",
+    operationType: "destructive",
     description: "Cancel a running Firecrawl agent job by job ID.",
     inputSchema: idInput,
     outputSchema: cancelResultSchema,
   }),
   defineProviderAction(service, {
     name: "deep_research",
+    operationType: "write",
     description: "Start a Firecrawl deep research job.",
     inputSchema: s.looseRequiredObject(
       "The input payload for this action.",
@@ -782,12 +804,14 @@ export const firecrawlActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_deep_research_status",
+    operationType: "read",
     description: "Get the current status and output of a Firecrawl deep research job by job ID.",
     inputSchema: idInput,
     outputSchema: deepResearchStatusSchema,
   }),
   defineProviderAction(service, {
     name: "llms_txt_generate",
+    operationType: "write",
     description: "Start an LLMs.txt generation job for a website.",
     inputSchema: s.looseRequiredObject(
       "The input payload for this action.",
@@ -805,24 +829,28 @@ export const firecrawlActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "llms_txt_get",
+    operationType: "read",
     description: "Get the current status and generated content of an LLMs.txt job by job ID.",
     inputSchema: idInput,
     outputSchema: llmsTxtStatusSchema,
   }),
   defineProviderAction(service, {
     name: "queue_get",
+    operationType: "read",
     description: "Get the authenticated Firecrawl team's queue status and concurrency information.",
     inputSchema: s.looseObject({}, { description: "The input payload for this action." }),
     outputSchema: queueStatusSchema,
   }),
   defineProviderAction(service, {
     name: "credit_usage_get",
+    operationType: "read",
     description: "Get the authenticated Firecrawl team's current credit usage summary.",
     inputSchema: s.looseObject({}, { description: "The input payload for this action." }),
     outputSchema: usageSchema,
   }),
   defineProviderAction(service, {
     name: "credit_usage_get_historical",
+    operationType: "read",
     description: "Get the authenticated Firecrawl team's historical credit usage summary.",
     inputSchema: s.looseRequiredObject(
       "The input payload for this action.",
@@ -833,12 +861,14 @@ export const firecrawlActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "token_usage_get",
+    operationType: "read",
     description: "Get the authenticated Firecrawl team's current token usage summary.",
     inputSchema: s.looseObject({}, { description: "The input payload for this action." }),
     outputSchema: usageSchema,
   }),
   defineProviderAction(service, {
     name: "token_usage_get_historical",
+    operationType: "read",
     description: "Get the authenticated Firecrawl team's historical token usage summary.",
     inputSchema: s.looseRequiredObject(
       "The input payload for this action.",

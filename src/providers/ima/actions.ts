@@ -96,6 +96,7 @@ knowledgeBaseIdsSchema.uniqueItems = true;
 export const imaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_notes",
+    operationType: "read",
     description: "Search IMA notes by title or note body text.",
     inputSchema: s.object(
       "The input payload for searching IMA notes.",
@@ -117,6 +118,7 @@ export const imaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_notebooks",
+    operationType: "read",
     description: "List IMA note folders for the connected account.",
     inputSchema: s.object(
       "The input payload for listing IMA notebooks.",
@@ -134,6 +136,7 @@ export const imaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_notes",
+    operationType: "read",
     description: "List notes in one IMA notebook or across all notes.",
     inputSchema: s.object(
       "The input payload for listing IMA notes.",
@@ -153,6 +156,7 @@ export const imaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_note_content",
+    operationType: "read",
     description: "Fetch the plain-text or JSON content for one IMA note.",
     inputSchema: s.object(
       "The input payload for fetching IMA note content.",
@@ -169,6 +173,7 @@ export const imaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_note",
+    operationType: "write",
     description: "Create a new IMA note from Markdown content.",
     inputSchema: s.object(
       "The input payload for creating an IMA note.",
@@ -185,6 +190,7 @@ export const imaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "append_note",
+    operationType: "write",
     description: "Append Markdown content to an existing IMA note.",
     inputSchema: s.object("The input payload for appending to an IMA note.", {
       noteId: s.nonEmptyString("The target IMA note ID."),
@@ -196,6 +202,7 @@ export const imaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_knowledge_bases",
+    operationType: "read",
     description: "Search IMA knowledge bases by name, or pass an empty query to list accessible knowledge bases.",
     inputSchema: s.object(
       "The input payload for searching IMA knowledge bases.",
@@ -214,6 +221,7 @@ export const imaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_knowledge_bases",
+    operationType: "read",
     description: "Fetch metadata for one or more IMA knowledge bases.",
     inputSchema: s.object("The input payload for fetching IMA knowledge-base metadata.", {
       knowledgeBaseIds: knowledgeBaseIdsSchema,
@@ -224,6 +232,7 @@ export const imaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_addable_knowledge_bases",
+    operationType: "read",
     description: "List the IMA knowledge bases that accept new content.",
     inputSchema: s.object(
       "The input payload for listing addable IMA knowledge bases.",
@@ -241,6 +250,7 @@ export const imaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_knowledge_items",
+    operationType: "read",
     description: "List files and folders inside one IMA knowledge-base folder.",
     inputSchema: s.object(
       "The input payload for listing IMA knowledge-base items.",
@@ -261,6 +271,7 @@ export const imaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_knowledge_items",
+    operationType: "read",
     description: "Search files and folders inside one IMA knowledge base.",
     inputSchema: s.object(
       "The input payload for searching IMA knowledge-base items.",
@@ -279,6 +290,7 @@ export const imaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "import_urls",
+    operationType: "write",
     description: "Import webpages or WeChat article URLs into one IMA knowledge base.",
     inputSchema: s.object(
       "The input payload for importing URLs into an IMA knowledge base.",
@@ -302,6 +314,7 @@ export const imaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_note_to_knowledge_base",
+    operationType: "write",
     description: "Add an existing IMA note into one IMA knowledge base.",
     inputSchema: s.object(
       "The input payload for adding an IMA note into a knowledge base.",
@@ -319,6 +332,7 @@ export const imaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_repeated_names",
+    operationType: "read",
     description: "Check whether file names already exist in an IMA knowledge-base folder.",
     inputSchema: s.object(
       "The input payload for checking repeated IMA knowledge-base file names.",
@@ -342,6 +356,7 @@ export const imaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upload_file_to_knowledge_base",
+    operationType: "write",
     description:
       "Upload a file from an HTTP URL into one IMA knowledge base, including duplicate checks, COS upload, and add_knowledge.",
     inputSchema: s.object(
@@ -369,6 +384,7 @@ export const imaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_media_info",
+    operationType: "read",
     description: "Get IMA knowledge-base media access information for one media item.",
     inputSchema: s.object("The input payload for fetching IMA media information.", {
       mediaId: s.nonEmptyString("The IMA media ID."),
@@ -377,6 +393,7 @@ export const imaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_knowledge_item_original",
+    operationType: "read",
     description:
       "Fetch access information for a knowledge-base item and download URL-backed original content through local transit storage when available.",
     inputSchema: s.object(

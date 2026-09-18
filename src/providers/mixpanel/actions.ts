@@ -7,6 +7,7 @@ const service = "mixpanel";
 
 interface MixpanelActionSource {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
@@ -86,6 +87,7 @@ const rawOutput = (description: string): JsonSchema =>
 const actions: MixpanelActionSource[] = [
   {
     name: "list_saved_cohorts",
+    operationType: "read",
     description: "List saved cohorts available in a Mixpanel project.",
     followUpActions: ["mixpanel.query_profiles"],
     inputSchema: s.object("The input payload for listing saved cohorts.", projectInput),
@@ -99,6 +101,7 @@ const actions: MixpanelActionSource[] = [
   },
   {
     name: "list_funnels",
+    operationType: "read",
     description: "List saved funnels available in a Mixpanel project.",
     followUpActions: ["mixpanel.query_funnel"],
     inputSchema: s.object("The input payload for listing saved funnels.", {
@@ -115,6 +118,7 @@ const actions: MixpanelActionSource[] = [
   },
   {
     name: "query_funnel",
+    operationType: "read",
     description: "Query a saved Mixpanel funnel report over a date range.",
     followUpActions: ["mixpanel.query_retention_report"],
     inputSchema: s.object(
@@ -139,6 +143,7 @@ const actions: MixpanelActionSource[] = [
   },
   {
     name: "query_retention_report",
+    operationType: "read",
     description: "Query a Mixpanel retention report over a date range.",
     followUpActions: ["mixpanel.query_frequency_report"],
     inputSchema: s.object(
@@ -166,6 +171,7 @@ const actions: MixpanelActionSource[] = [
   },
   {
     name: "query_frequency_report",
+    operationType: "read",
     description: "Query how frequently users perform an event in Mixpanel.",
     inputSchema: s.object(
       "The input payload for querying a Mixpanel frequency report.",
@@ -187,6 +193,7 @@ const actions: MixpanelActionSource[] = [
   },
   {
     name: "query_numeric_sum",
+    operationType: "read",
     description: "Sum a numeric expression for a Mixpanel event over time.",
     followUpActions: ["mixpanel.query_numeric_average"],
     inputSchema: s.object(
@@ -215,6 +222,7 @@ const actions: MixpanelActionSource[] = [
   },
   {
     name: "query_numeric_average",
+    operationType: "read",
     description: "Average a numeric expression for a Mixpanel event over time.",
     followUpActions: ["mixpanel.query_top_events"],
     inputSchema: s.object(
@@ -243,6 +251,7 @@ const actions: MixpanelActionSource[] = [
   },
   {
     name: "query_top_events",
+    operationType: "read",
     description: "Get today's top Mixpanel events with counts and percent change from yesterday.",
     inputSchema: s.object(
       "The input payload for querying Mixpanel top events.",
@@ -265,6 +274,7 @@ const actions: MixpanelActionSource[] = [
   },
   {
     name: "query_segmentation_report",
+    operationType: "read",
     description: "Query a Mixpanel segmentation report for one event over a date range.",
     followUpActions: ["mixpanel.export_events"],
     inputSchema: s.object(
@@ -284,6 +294,7 @@ const actions: MixpanelActionSource[] = [
   },
   {
     name: "query_saved_report",
+    operationType: "read",
     description: "Query a saved Mixpanel report by bookmark ID.",
     followUpActions: ["mixpanel.export_events"],
     inputSchema: s.object(
@@ -299,6 +310,7 @@ const actions: MixpanelActionSource[] = [
   },
   {
     name: "query_profiles",
+    operationType: "read",
     description: "Query Mixpanel profiles with optional filters, paging, and selected properties.",
     followUpActions: ["mixpanel.profile_event_activity"],
     inputSchema: s.object("The input payload for querying Mixpanel profiles.", {
@@ -324,6 +336,7 @@ const actions: MixpanelActionSource[] = [
   },
   {
     name: "profile_event_activity",
+    operationType: "read",
     description: "Get event activity for one or more Mixpanel profiles over a date range.",
     inputSchema: s.object(
       "The input payload for querying Mixpanel profile event activity.",
@@ -347,6 +360,7 @@ const actions: MixpanelActionSource[] = [
   },
   {
     name: "export_events",
+    operationType: "write",
     description: "Export raw Mixpanel events for a project and date range.",
     inputSchema: s.object(
       "The input payload for exporting raw Mixpanel events.",
@@ -373,6 +387,7 @@ const actions: MixpanelActionSource[] = [
 export const mixpanelActions: ActionDefinition[] = actions.map((action) =>
   defineProviderAction(service, {
     name: action.name,
+    operationType: action.operationType,
     description: action.description,
     requiredScopes: [],
     inputSchema: action.inputSchema,

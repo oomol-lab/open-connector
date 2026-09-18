@@ -40,6 +40,7 @@ const registrantSchema = s.looseObject("A WebinarJam registrant or attendee obje
 export const webinarjamActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_webinars",
+    operationType: "read",
     description: "List WebinarJam webinars published in the authenticated account.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing WebinarJam webinars.", {}),
@@ -50,6 +51,7 @@ export const webinarjamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_webinar",
+    operationType: "read",
     description: "Get details for one WebinarJam webinar.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for getting a WebinarJam webinar.", {
@@ -62,6 +64,7 @@ export const webinarjamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_registrants",
+    operationType: "read",
     description: "List WebinarJam registrants or attendees for a webinar.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -111,6 +114,7 @@ export const webinarjamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "register_user",
+    operationType: "write",
     description: "Register one user for a WebinarJam webinar.",
     requiredScopes: [],
     inputSchema: s.object(

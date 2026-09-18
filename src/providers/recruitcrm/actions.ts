@@ -88,6 +88,7 @@ const getJobOutputSchema = s.object("A Recruit CRM job detail response.", {
 export const recruitcrmActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_candidates",
+    operationType: "read",
     description: "List candidates from Recruit CRM using the official Recruit CRM API with optional pagination.",
     requiredScopes: [],
     inputSchema: paginationInputSchema,
@@ -95,6 +96,7 @@ export const recruitcrmActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_candidate",
+    operationType: "read",
     description: "Fetch one Recruit CRM candidate by slug or path identifier.",
     requiredScopes: [],
     inputSchema: getCandidateInputSchema,
@@ -102,6 +104,7 @@ export const recruitcrmActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List contacts from Recruit CRM using the official Recruit CRM API with optional pagination.",
     requiredScopes: [],
     inputSchema: paginationInputSchema,
@@ -109,6 +112,7 @@ export const recruitcrmActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Fetch one Recruit CRM contact by slug or path identifier.",
     requiredScopes: [],
     inputSchema: getContactInputSchema,
@@ -116,6 +120,7 @@ export const recruitcrmActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_companies",
+    operationType: "read",
     description: "List companies from Recruit CRM using the official Recruit CRM API with optional pagination.",
     requiredScopes: [],
     inputSchema: paginationInputSchema,
@@ -123,6 +128,7 @@ export const recruitcrmActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description: "Fetch one Recruit CRM company by slug or path identifier.",
     requiredScopes: [],
     inputSchema: getCompanyInputSchema,
@@ -130,6 +136,7 @@ export const recruitcrmActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_jobs",
+    operationType: "read",
     description: "List jobs from Recruit CRM using the official Recruit CRM API with optional pagination.",
     requiredScopes: [],
     inputSchema: paginationInputSchema,
@@ -137,6 +144,7 @@ export const recruitcrmActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job",
+    operationType: "read",
     description: "Fetch one Recruit CRM job by slug or path identifier.",
     requiredScopes: [],
     inputSchema: getJobInputSchema,

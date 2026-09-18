@@ -164,6 +164,7 @@ const categorySchema = s.object("A normalized Adobe Commerce category.", {
 export const adobeCommerceActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List Adobe Commerce products with optional searchCriteria filters and pagination.",
     requiredScopes: [],
     inputSchema: listProductsInputSchema,
@@ -171,6 +172,7 @@ export const adobeCommerceActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Retrieve one Adobe Commerce product by SKU.",
     requiredScopes: [],
     inputSchema: getProductInputSchema,
@@ -180,6 +182,7 @@ export const adobeCommerceActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_categories",
+    operationType: "read",
     description: "Retrieve the Adobe Commerce category tree with optional root and depth limits.",
     requiredScopes: [],
     inputSchema: listCategoriesInputSchema,
@@ -189,6 +192,7 @@ export const adobeCommerceActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_category",
+    operationType: "read",
     description: "Retrieve one Adobe Commerce category by category ID.",
     requiredScopes: [],
     inputSchema: getCategoryInputSchema,

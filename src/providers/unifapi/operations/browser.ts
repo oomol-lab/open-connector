@@ -24,6 +24,7 @@ const timeoutMsField: JsonSchema = {
 export const browserOperations: readonly UnifapiOperationDefinition[] = [
   {
     name: "render_html",
+    operationType: "read",
     operationId: "postBrowserHtml",
     description: "Render a page to HTML.",
     method: "POST",
@@ -46,6 +47,7 @@ export const browserOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "extract_links",
+    operationType: "read",
     operationId: "postBrowserLinks",
     description: "Extract links from a page.",
     method: "POST",
@@ -76,6 +78,7 @@ export const browserOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "render_markdown",
+    operationType: "read",
     operationId: "postBrowserMarkdown",
     description: "Render a page to Markdown.",
     method: "POST",
@@ -98,6 +101,7 @@ export const browserOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "capture_screenshot",
+    operationType: "read",
     operationId: "postBrowserScreenshot",
     description: "Capture a page screenshot.",
     method: "POST",

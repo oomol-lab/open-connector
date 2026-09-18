@@ -262,6 +262,7 @@ const deleteOutputSchema = s.object("The output payload for deleting one Central
 const getUserAction = defineAction({
   service,
   name: "get_user",
+  operationType: "read",
   description: "Get the current CentralStationCRM API user.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for getting the current user.", {}),
@@ -274,6 +275,7 @@ const getUserAction = defineAction({
 const listPeopleAction = defineAction({
   service,
   name: "list_people",
+  operationType: "read",
   description: "List people in CentralStationCRM with optional paging and tag filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -295,6 +297,7 @@ const listPeopleAction = defineAction({
 const searchPeopleAction = defineAction({
   service,
   name: "search_people",
+  operationType: "read",
   description: "Search CentralStationCRM people by documented search fields.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -324,6 +327,7 @@ const searchPeopleAction = defineAction({
 const getPersonAction = defineAction({
   service,
   name: "get_person",
+  operationType: "read",
   description: "Get one CentralStationCRM person by identifier.",
   requiredScopes: [],
   inputSchema: getByIdInputSchema,
@@ -336,6 +340,7 @@ const getPersonAction = defineAction({
 const createPersonAction = defineAction({
   service,
   name: "create_person",
+  operationType: "write",
   description: "Create a person in CentralStationCRM.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -357,6 +362,7 @@ const createPersonAction = defineAction({
 const updatePersonAction = defineAction({
   service,
   name: "update_person",
+  operationType: "write",
   description: "Update a person in CentralStationCRM.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -377,6 +383,7 @@ const updatePersonAction = defineAction({
 const deletePersonAction = defineAction({
   service,
   name: "delete_person",
+  operationType: "destructive",
   description: "Delete a person from CentralStationCRM.",
   requiredScopes: [],
   inputSchema: deleteByIdInputSchema,
@@ -386,6 +393,7 @@ const deletePersonAction = defineAction({
 const listCompaniesAction = defineAction({
   service,
   name: "list_companies",
+  operationType: "read",
   description: "List companies in CentralStationCRM with optional paging and tag filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -407,6 +415,7 @@ const listCompaniesAction = defineAction({
 const searchCompaniesAction = defineAction({
   service,
   name: "search_companies",
+  operationType: "read",
   description: "Search CentralStationCRM companies by documented search fields.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -431,6 +440,7 @@ const searchCompaniesAction = defineAction({
 const getCompanyAction = defineAction({
   service,
   name: "get_company",
+  operationType: "read",
   description: "Get one CentralStationCRM company by identifier.",
   requiredScopes: [],
   inputSchema: getByIdInputSchema,
@@ -443,6 +453,7 @@ const getCompanyAction = defineAction({
 const createCompanyAction = defineAction({
   service,
   name: "create_company",
+  operationType: "write",
   description: "Create a company in CentralStationCRM.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -464,6 +475,7 @@ const createCompanyAction = defineAction({
 const updateCompanyAction = defineAction({
   service,
   name: "update_company",
+  operationType: "write",
   description: "Update a company in CentralStationCRM.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -484,6 +496,7 @@ const updateCompanyAction = defineAction({
 const deleteCompanyAction = defineAction({
   service,
   name: "delete_company",
+  operationType: "destructive",
   description: "Delete a company from CentralStationCRM.",
   requiredScopes: [],
   inputSchema: deleteByIdInputSchema,
@@ -493,6 +506,7 @@ const deleteCompanyAction = defineAction({
 const listDealsAction = defineAction({
   service,
   name: "list_deals",
+  operationType: "read",
   description: "List deals in CentralStationCRM with optional paging and tag filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -514,6 +528,7 @@ const listDealsAction = defineAction({
 const searchDealsAction = defineAction({
   service,
   name: "search_deals",
+  operationType: "read",
   description: "Search CentralStationCRM deals by documented search fields.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -538,6 +553,7 @@ const searchDealsAction = defineAction({
 const getDealAction = defineAction({
   service,
   name: "get_deal",
+  operationType: "read",
   description: "Get one CentralStationCRM deal by identifier.",
   requiredScopes: [],
   inputSchema: getByIdInputSchema,
@@ -550,6 +566,7 @@ const getDealAction = defineAction({
 const createDealAction = defineAction({
   service,
   name: "create_deal",
+  operationType: "write",
   description: "Create a deal in CentralStationCRM.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -571,6 +588,7 @@ const createDealAction = defineAction({
 const updateDealAction = defineAction({
   service,
   name: "update_deal",
+  operationType: "write",
   description: "Update a deal in CentralStationCRM.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -591,6 +609,7 @@ const updateDealAction = defineAction({
 const deleteDealAction = defineAction({
   service,
   name: "delete_deal",
+  operationType: "destructive",
   description: "Delete a deal from CentralStationCRM.",
   requiredScopes: [],
   inputSchema: deleteByIdInputSchema,

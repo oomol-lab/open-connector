@@ -198,6 +198,7 @@ const statsInput = (description: string): JsonSchema =>
 
 interface MailtrapActionSpec {
   name: MailtrapActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
@@ -206,6 +207,7 @@ interface MailtrapActionSpec {
 const specs: MailtrapActionSpec[] = [
   {
     name: "list_accounts",
+    operationType: "read",
     description: "List Mailtrap accounts accessible to the API token.",
     inputSchema: s.object("No input is required to list Mailtrap accounts.", {}),
     outputSchema: s.object("Mailtrap accounts response.", {
@@ -214,6 +216,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "list_projects",
+    operationType: "read",
     description: "List Mailtrap projects in an account.",
     inputSchema: accountScopedInput("Mailtrap account scope for listing projects."),
     outputSchema: s.object("Mailtrap projects response.", {
@@ -223,6 +226,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "get_project",
+    operationType: "read",
     description: "Retrieve one Mailtrap project.",
     inputSchema: idInput("Mailtrap project lookup input.", "projectId", projectIdSchema),
     outputSchema: s.object("Mailtrap project response.", {
@@ -232,6 +236,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "update_project",
+    operationType: "write",
     description: "Update one Mailtrap project name.",
     inputSchema: accountScopedInput("Mailtrap project update input.", {
       projectId: projectIdSchema,
@@ -244,12 +249,14 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "delete_project",
+    operationType: "destructive",
     description: "Delete one Mailtrap project.",
     inputSchema: idInput("Mailtrap project delete input.", "projectId", projectIdSchema),
     outputSchema: deletedOutput("projectId", projectIdSchema),
   },
   {
     name: "list_inboxes",
+    operationType: "read",
     description: "List Mailtrap sandboxes or inboxes in an account.",
     inputSchema: accountScopedInput("Mailtrap account scope for listing inboxes."),
     outputSchema: s.object("Mailtrap inboxes response.", {
@@ -259,6 +266,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "get_inbox",
+    operationType: "read",
     description: "Retrieve one Mailtrap inbox.",
     inputSchema: idInput("Mailtrap inbox lookup input.", "inboxId", inboxIdSchema),
     outputSchema: s.object("Mailtrap inbox response.", {
@@ -268,6 +276,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "update_inbox",
+    operationType: "write",
     description: "Update a Mailtrap inbox name or email username.",
     inputSchema: accountScopedInput("Mailtrap inbox update input.", {
       inboxId: inboxIdSchema,
@@ -280,6 +289,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "clean_inbox",
+    operationType: "destructive",
     description: "Clean all messages from a Mailtrap inbox.",
     inputSchema: idInput("Mailtrap inbox clean input.", "inboxId", inboxIdSchema),
     outputSchema: s.object("Mailtrap inbox clean response.", {
@@ -289,6 +299,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "mark_inbox_as_read",
+    operationType: "write",
     description: "Mark all messages in a Mailtrap inbox as read.",
     inputSchema: idInput("Mailtrap mark-inbox-as-read input.", "inboxId", inboxIdSchema),
     outputSchema: s.object("Mailtrap mark-inbox-as-read response.", {
@@ -298,6 +309,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "reset_inbox_credentials",
+    operationType: "destructive",
     description: "Reset SMTP credentials for a Mailtrap inbox.",
     inputSchema: idInput("Mailtrap inbox credential reset input.", "inboxId", inboxIdSchema),
     outputSchema: s.object("Mailtrap inbox credential reset response.", {
@@ -307,6 +319,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "list_messages",
+    operationType: "read",
     description: "List messages in a Mailtrap inbox.",
     inputSchema: accountScopedInput(
       "Mailtrap message list input.",
@@ -326,6 +339,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "get_message",
+    operationType: "read",
     description: "Retrieve one message from a Mailtrap inbox.",
     inputSchema: accountScopedInput("Mailtrap message lookup input.", {
       inboxId: inboxIdSchema,
@@ -339,6 +353,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "get_message_html_source",
+    operationType: "read",
     description: "Retrieve the HTML source body for one Mailtrap message.",
     inputSchema: accountScopedInput("Mailtrap message HTML-source input.", {
       inboxId: inboxIdSchema,
@@ -353,6 +368,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "create_contact",
+    operationType: "write",
     description: "Create a Mailtrap contact.",
     inputSchema: accountScopedInput("Mailtrap contact create input.", {
       contact: contactCreateSchema,
@@ -364,6 +380,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "get_contact",
+    operationType: "read",
     description: "Retrieve a Mailtrap contact by UUID or email address.",
     inputSchema: accountScopedInput("Mailtrap contact lookup input.", {
       contactIdentifier: contactIdentifierSchema,
@@ -375,6 +392,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "update_contact",
+    operationType: "write",
     description: "Update a Mailtrap contact.",
     inputSchema: accountScopedInput("Mailtrap contact update input.", {
       contactIdentifier: contactIdentifierSchema,
@@ -388,6 +406,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete a Mailtrap contact.",
     inputSchema: accountScopedInput("Mailtrap contact delete input.", {
       contactIdentifier: contactIdentifierSchema,
@@ -400,6 +419,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "list_contact_lists",
+    operationType: "read",
     description: "List Mailtrap contact lists.",
     inputSchema: accountScopedInput("Mailtrap contact-list list input."),
     outputSchema: s.object("Mailtrap contact lists response.", {
@@ -409,6 +429,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "get_contact_list",
+    operationType: "read",
     description: "Retrieve one Mailtrap contact list.",
     inputSchema: idInput("Mailtrap contact-list lookup input.", "listId", listIdSchema),
     outputSchema: s.object("Mailtrap contact-list response.", {
@@ -418,6 +439,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "create_contact_list",
+    operationType: "write",
     description: "Create a Mailtrap contact list.",
     inputSchema: accountScopedInput("Mailtrap contact-list create input.", {
       name: s.string("Mailtrap contact-list name.", { minLength: 1, maxLength: 255 }),
@@ -429,6 +451,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "update_contact_list",
+    operationType: "write",
     description: "Update a Mailtrap contact list name.",
     inputSchema: accountScopedInput("Mailtrap contact-list update input.", {
       listId: listIdSchema,
@@ -441,12 +464,14 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "delete_contact_list",
+    operationType: "destructive",
     description: "Delete one Mailtrap contact list.",
     inputSchema: idInput("Mailtrap contact-list delete input.", "listId", listIdSchema),
     outputSchema: deletedOutput("listId", listIdSchema),
   },
   {
     name: "list_contact_fields",
+    operationType: "read",
     description: "List Mailtrap contact fields.",
     inputSchema: accountScopedInput("Mailtrap contact-field list input."),
     outputSchema: s.object("Mailtrap contact fields response.", {
@@ -456,6 +481,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "get_contact_field",
+    operationType: "read",
     description: "Retrieve one Mailtrap contact field.",
     inputSchema: idInput("Mailtrap contact-field lookup input.", "fieldId", fieldIdSchema),
     outputSchema: s.object("Mailtrap contact-field response.", {
@@ -465,6 +491,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "create_contact_field",
+    operationType: "write",
     description: "Create a Mailtrap contact field.",
     inputSchema: accountScopedInput("Mailtrap contact-field create input.", {
       name: s.string("Contact field name.", { minLength: 1, maxLength: 80 }),
@@ -478,6 +505,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "update_contact_field",
+    operationType: "write",
     description: "Update a Mailtrap contact field.",
     inputSchema: accountScopedInput(
       "Mailtrap contact-field update input.",
@@ -495,12 +523,14 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "delete_contact_field",
+    operationType: "destructive",
     description: "Delete one Mailtrap contact field.",
     inputSchema: idInput("Mailtrap contact-field delete input.", "fieldId", fieldIdSchema),
     outputSchema: deletedOutput("fieldId", fieldIdSchema),
   },
   {
     name: "import_contacts",
+    operationType: "write",
     description: "Import contacts into Mailtrap.",
     inputSchema: accountScopedInput("Mailtrap contact import input.", {
       contacts: s.array("Contacts to import.", contactImportItemSchema, { minItems: 1 }),
@@ -512,6 +542,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "get_contact_import",
+    operationType: "read",
     description: "Retrieve one Mailtrap contact import job.",
     inputSchema: idInput("Mailtrap contact import lookup input.", "importId", importIdSchema),
     outputSchema: s.object("Mailtrap contact import response.", {
@@ -521,6 +552,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "create_contact_export",
+    operationType: "write",
     description: "Create a Mailtrap contact export job.",
     inputSchema: accountScopedInput(
       "Mailtrap contact export create input.",
@@ -536,6 +568,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "get_contact_export",
+    operationType: "read",
     description: "Retrieve one Mailtrap contact export job.",
     inputSchema: idInput("Mailtrap contact export lookup input.", "exportId", exportIdSchema),
     outputSchema: s.object("Mailtrap contact export response.", {
@@ -545,6 +578,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "create_contact_event",
+    operationType: "write",
     description: "Create a custom event for a Mailtrap contact.",
     inputSchema: accountScopedInput(
       "Mailtrap contact event create input.",
@@ -563,6 +597,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "list_email_templates",
+    operationType: "read",
     description: "List Mailtrap email templates.",
     inputSchema: accountScopedInput("Mailtrap email-template list input."),
     outputSchema: s.object("Mailtrap email templates response.", {
@@ -572,6 +607,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "get_email_template",
+    operationType: "read",
     description: "Retrieve one Mailtrap email template.",
     inputSchema: idInput("Mailtrap email-template lookup input.", "emailTemplateId", emailTemplateIdSchema),
     outputSchema: s.object("Mailtrap email-template response.", {
@@ -581,6 +617,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "create_email_template",
+    operationType: "write",
     description: "Create a Mailtrap email template.",
     inputSchema: accountScopedInput("Mailtrap email-template create input.", {
       emailTemplate: emailTemplateSchema,
@@ -592,6 +629,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "update_email_template",
+    operationType: "write",
     description: "Update a Mailtrap email template.",
     inputSchema: accountScopedInput("Mailtrap email-template update input.", {
       emailTemplateId: emailTemplateIdSchema,
@@ -604,12 +642,14 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "delete_email_template",
+    operationType: "destructive",
     description: "Delete one Mailtrap email template.",
     inputSchema: idInput("Mailtrap email-template delete input.", "emailTemplateId", emailTemplateIdSchema),
     outputSchema: deletedOutput("emailTemplateId", emailTemplateIdSchema),
   },
   {
     name: "list_sending_domains",
+    operationType: "read",
     description: "List Mailtrap sending domains.",
     inputSchema: accountScopedInput("Mailtrap sending-domain list input."),
     outputSchema: s.object("Mailtrap sending domains response.", {
@@ -619,6 +659,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "get_sending_domain",
+    operationType: "read",
     description: "Retrieve one Mailtrap sending domain.",
     inputSchema: idInput("Mailtrap sending-domain lookup input.", "sendingDomainId", sendingDomainIdSchema),
     outputSchema: s.object("Mailtrap sending-domain response.", {
@@ -628,6 +669,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "create_sending_domain",
+    operationType: "write",
     description: "Create a Mailtrap sending domain.",
     inputSchema: accountScopedInput("Mailtrap sending-domain create input.", {
       sendingDomain: sendingDomainSchema,
@@ -639,12 +681,14 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "delete_sending_domain",
+    operationType: "destructive",
     description: "Delete one Mailtrap sending domain.",
     inputSchema: idInput("Mailtrap sending-domain delete input.", "sendingDomainId", sendingDomainIdSchema),
     outputSchema: deletedOutput("sendingDomainId", sendingDomainIdSchema),
   },
   {
     name: "list_suppressions",
+    operationType: "read",
     description: "List Mailtrap suppressions with optional filters.",
     inputSchema: accountScopedInput(
       "Mailtrap suppressions list input.",
@@ -662,6 +706,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "get_sending_stats",
+    operationType: "read",
     description: "Get aggregate Mailtrap sending statistics.",
     inputSchema: statsInput("Mailtrap sending stats input."),
     outputSchema: s.object("Mailtrap sending stats response.", {
@@ -671,6 +716,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "get_sending_stats_by_date",
+    operationType: "read",
     description: "Get Mailtrap sending statistics grouped by date.",
     inputSchema: statsInput("Mailtrap sending stats-by-date input."),
     outputSchema: s.object("Mailtrap sending stats-by-date response.", {
@@ -680,6 +726,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "get_sending_stats_by_domains",
+    operationType: "read",
     description: "Get Mailtrap sending statistics grouped by sending domain.",
     inputSchema: statsInput("Mailtrap sending stats-by-domain input."),
     outputSchema: s.object("Mailtrap sending stats-by-domain response.", {
@@ -689,6 +736,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "get_sending_stats_by_categories",
+    operationType: "read",
     description: "Get Mailtrap sending statistics grouped by category.",
     inputSchema: statsInput("Mailtrap sending stats-by-category input."),
     outputSchema: s.object("Mailtrap sending stats-by-category response.", {
@@ -698,6 +746,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "get_sending_stats_by_esp",
+    operationType: "read",
     description: "Get Mailtrap sending statistics grouped by email service provider.",
     inputSchema: statsInput("Mailtrap sending stats-by-email-service-provider input."),
     outputSchema: s.object("Mailtrap sending stats-by-email-service-provider response.", {
@@ -710,6 +759,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "get_permission_resources",
+    operationType: "read",
     description: "List Mailtrap permission resources for an account.",
     inputSchema: accountScopedInput("Mailtrap permission resources input."),
     outputSchema: s.object("Mailtrap permission resources response.", {
@@ -719,6 +769,7 @@ const specs: MailtrapActionSpec[] = [
   },
   {
     name: "get_billing_usage",
+    operationType: "read",
     description: "Retrieve Mailtrap billing usage for an account.",
     inputSchema: accountScopedInput("Mailtrap billing usage input."),
     outputSchema: s.object("Mailtrap billing usage response.", {

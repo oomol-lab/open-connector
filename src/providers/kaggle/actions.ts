@@ -157,18 +157,21 @@ const modelsOutputSchema = s.object(
 export const kaggleActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_competitions",
+    operationType: "read",
     description: "List Kaggle competitions with optional group, category, search, and pagination filters.",
     inputSchema: competitionsInputSchema,
     outputSchema: competitionsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_datasets",
+    operationType: "read",
     description: "List Kaggle datasets with optional search, ownership, type, license, tag, and size filters.",
     inputSchema: datasetsInputSchema,
     outputSchema: datasetsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_kernels",
+    operationType: "read",
     description:
       "List Kaggle notebooks and scripts with optional search, source, language, type, and pagination filters.",
     inputSchema: kernelsInputSchema,
@@ -176,6 +179,7 @@ export const kaggleActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_models",
+    operationType: "read",
     description: "List Kaggle models with optional owner, search, sort, and pagination filters.",
     inputSchema: modelsInputSchema,
     outputSchema: modelsOutputSchema,

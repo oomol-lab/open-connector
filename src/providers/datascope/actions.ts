@@ -176,6 +176,7 @@ const listElementOptional = Object.keys(listElementWriteFields);
 export const datascopeActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_answers",
+    operationType: "read",
     description:
       "List DataScope answers from the v2 answers endpoint with stable top-level metadata and dynamic answer values grouped under answers.",
     inputSchema: s.object(
@@ -196,6 +197,7 @@ export const datascopeActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_answers_with_full_metadata",
+    operationType: "read",
     description:
       "List DataScope answers from the metadata-rich answers endpoint and normalize each question item into a stable questions array.",
     inputSchema: s.object({ ...answersFilterSchemaShape }, { optional: answersOptional }),
@@ -205,6 +207,7 @@ export const datascopeActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_locations",
+    operationType: "read",
     description: "List DataScope locations available to the authenticated account.",
     inputSchema: noInputSchema,
     outputSchema: s.actionOutput({
@@ -213,6 +216,7 @@ export const datascopeActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_location",
+    operationType: "write",
     description: "Create a DataScope location using the official locations endpoint.",
     inputSchema: s.object(
       {
@@ -226,6 +230,7 @@ export const datascopeActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_location",
+    operationType: "write",
     description: "Update one DataScope location by location ID.",
     inputSchema: s.object(
       { locationId: positiveInteger("The identifier of the DataScope location to update."), ...locationWriteFields },
@@ -235,6 +240,7 @@ export const datascopeActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_list_elements",
+    operationType: "read",
     description: "List all elements from one DataScope metadata list type.",
     inputSchema: s.actionInput(
       {
@@ -248,6 +254,7 @@ export const datascopeActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_list_element",
+    operationType: "read",
     description: "Get one DataScope metadata list element by metadata type and element ID.",
     inputSchema: s.actionInput(
       {
@@ -260,6 +267,7 @@ export const datascopeActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_list_element",
+    operationType: "write",
     description: "Create one DataScope metadata list element under a metadata list type.",
     inputSchema: s.object(
       {
@@ -276,6 +284,7 @@ export const datascopeActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_list_element",
+    operationType: "write",
     description: "Update one DataScope metadata list element by element ID.",
     inputSchema: s.object(
       {

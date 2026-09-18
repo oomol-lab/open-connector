@@ -32,6 +32,7 @@ const requestMetaSchema = s.object(
 
 const getAccountAction = defineProviderAction(service, {
   name: "get_account",
+  operationType: "read",
   description: "Get the Social Fetch user associated with the connected API key.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for reading the authenticated Social Fetch account.", {}),
@@ -47,6 +48,7 @@ const getAccountAction = defineProviderAction(service, {
 
 const getBalanceAction = defineProviderAction(service, {
   name: "get_balance",
+  operationType: "read",
   description: "Get the remaining Social Fetch credit balance and billing state.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for reading the Social Fetch credit balance.", {}),
@@ -83,6 +85,7 @@ const getBalanceAction = defineProviderAction(service, {
 
 const getProfileAction = defineProviderAction(service, {
   name: "get_profile",
+  operationType: "read",
   description: "Get a public profile or channel by handle from a supported social platform.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for a Social Fetch profile lookup.", {

@@ -584,6 +584,7 @@ const backlinksAnchorsInputSchema = s.object(
 export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user_data",
+    operationType: "read",
     description: "Retrieve DataForSEO account details, balance, rates, limits, and usage data.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving DataForSEO user data.", {}),
@@ -591,6 +592,7 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_amazon_products_task",
+    operationType: "write",
     description: "Submit one Standard DataForSEO Amazon Products task for asynchronous product listing research.",
     followUpActions: ["dataforseo.get_amazon_products_task"],
     asyncLifecycle: amazonLifecycle("submit_amazon_products_task", "get_amazon_products_task"),
@@ -599,6 +601,7 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_amazon_products_task",
+    operationType: "read",
     description: "Retrieve the status and Advanced results of one DataForSEO Amazon Products task.",
     asyncLifecycle: amazonLifecycle("submit_amazon_products_task", "get_amazon_products_task"),
     inputSchema: amazonTaskResultInputSchema,
@@ -606,6 +609,7 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_amazon_asins_task",
+    operationType: "write",
     description: "Submit one Standard DataForSEO Amazon ASIN task for asynchronous product variant research.",
     followUpActions: ["dataforseo.get_amazon_asins_task"],
     asyncLifecycle: amazonLifecycle("submit_amazon_asins_task", "get_amazon_asins_task"),
@@ -614,6 +618,7 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_amazon_asins_task",
+    operationType: "read",
     description: "Retrieve the status and Advanced results of one DataForSEO Amazon ASIN task.",
     asyncLifecycle: amazonLifecycle("submit_amazon_asins_task", "get_amazon_asins_task"),
     inputSchema: amazonTaskResultInputSchema,
@@ -621,6 +626,7 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_amazon_sellers_task",
+    operationType: "write",
     description: "Submit one Standard DataForSEO Amazon Sellers task for asynchronous offer and seller research.",
     followUpActions: ["dataforseo.get_amazon_sellers_task"],
     asyncLifecycle: amazonLifecycle("submit_amazon_sellers_task", "get_amazon_sellers_task"),
@@ -629,6 +635,7 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_amazon_sellers_task",
+    operationType: "read",
     description: "Retrieve the status and Advanced results of one DataForSEO Amazon Sellers task.",
     asyncLifecycle: amazonLifecycle("submit_amazon_sellers_task", "get_amazon_sellers_task"),
     inputSchema: amazonTaskResultInputSchema,
@@ -636,6 +643,7 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_amazon_tasks_ready",
+    operationType: "read",
     description: "List uncollected completed Amazon Products, ASIN, and Sellers tasks from DataForSEO Merchant API.",
     inputSchema: s.actionInput({}, [], "The input payload for listing ready Amazon Merchant tasks."),
     outputSchema: dataForSeoAsyncOutput(
@@ -644,6 +652,7 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_organic_live_advanced",
+    operationType: "read",
     description: "Run a DataForSEO Google Organic SERP Live Advanced request for one search keyword.",
     requiredScopes: [],
     inputSchema: serpInputSchema,
@@ -651,6 +660,7 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_ads_search_volume_live",
+    operationType: "read",
     description: "Retrieve Google Ads search volume metrics from DataForSEO for one batch of keywords.",
     requiredScopes: [],
     inputSchema: searchVolumeInputSchema,
@@ -658,6 +668,7 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_keyword_suggestions_live",
+    operationType: "read",
     description: "Retrieve DataForSEO Labs Google keyword suggestions for one seed keyword.",
     requiredScopes: [],
     inputSchema: keywordSuggestionsInputSchema,
@@ -665,6 +676,7 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_keyword_overview_live",
+    operationType: "read",
     description: "Retrieve DataForSEO Labs Google keyword overview metrics for a batch of keywords.",
     requiredScopes: [],
     inputSchema: keywordOverviewInputSchema,
@@ -672,6 +684,7 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_keyword_ideas_live",
+    operationType: "read",
     description: "Retrieve DataForSEO Labs Google keyword ideas for seed keywords.",
     requiredScopes: [],
     inputSchema: keywordIdeasInputSchema,
@@ -679,6 +692,7 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_keywords_for_site_live",
+    operationType: "read",
     description: "Retrieve DataForSEO Labs Google keyword ideas relevant to a target domain.",
     requiredScopes: [],
     inputSchema: keywordsForSiteInputSchema,
@@ -686,6 +700,7 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_serp_competitors_live",
+    operationType: "read",
     description: "Retrieve domains competing in Google SERPs for the specified keywords.",
     requiredScopes: [],
     inputSchema: serpCompetitorsInputSchema,
@@ -693,6 +708,7 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_domain_rank_overview_live",
+    operationType: "read",
     description: "Retrieve DataForSEO Labs Google ranking and traffic overview for a domain.",
     requiredScopes: [],
     inputSchema: domainRankOverviewInputSchema,
@@ -700,6 +716,7 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_relevant_pages_live",
+    operationType: "read",
     description: "Retrieve ranking and traffic metrics for the most relevant pages of a domain.",
     requiredScopes: [],
     inputSchema: relevantPagesInputSchema,
@@ -707,6 +724,7 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "backlinks_summary_live",
+    operationType: "read",
     description: "Retrieve DataForSEO Backlinks summary metrics for a domain, subdomain, or page.",
     requiredScopes: [],
     inputSchema: backlinksSummaryInputSchema,
@@ -714,6 +732,7 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "backlinks_list_live",
+    operationType: "read",
     description: "Retrieve DataForSEO Backlinks records for a domain, subdomain, or page.",
     requiredScopes: [],
     inputSchema: backlinksListInputSchema,
@@ -721,6 +740,7 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "backlinks_referring_domains_live",
+    operationType: "read",
     description: "Retrieve DataForSEO Backlinks referring domains for a domain, subdomain, or page.",
     requiredScopes: [],
     inputSchema: backlinksReferringDomainsInputSchema,
@@ -728,6 +748,7 @@ export const dataForSeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "backlinks_anchors_live",
+    operationType: "read",
     description: "Retrieve DataForSEO Backlinks anchor text metrics for a domain, subdomain, or page.",
     requiredScopes: [],
     inputSchema: backlinksAnchorsInputSchema,

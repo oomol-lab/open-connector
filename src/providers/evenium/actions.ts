@@ -39,6 +39,7 @@ const guestSchema = s.looseObject("One Evenium guest returned by the organizer A
 export const eveniumActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_events",
+    operationType: "read",
     description: "List Evenium events with optional title, status, date filters, and pagination.",
     inputSchema: s.object(
       "Input parameters for listing Evenium events.",
@@ -79,6 +80,7 @@ export const eveniumActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_event",
+    operationType: "read",
     description: "Get one Evenium event by event ID or external event ID.",
     inputSchema: s.object("Input parameters for retrieving one Evenium event.", {
       eventId: s.nonEmptyString("The Evenium event identifier or external event ID."),
@@ -89,6 +91,7 @@ export const eveniumActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_guests",
+    operationType: "read",
     description: "List guests for one Evenium event with optional attendee filters, expansions, and pagination.",
     inputSchema: s.object(
       "Input parameters for listing Evenium guests.",
@@ -130,6 +133,7 @@ export const eveniumActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_guest",
+    operationType: "read",
     description: "Get one Evenium guest by contact ID or guest code for a given event.",
     inputSchema: s.object(
       "Input parameters for retrieving one Evenium guest. Provide either contactId or guestCode.",
@@ -147,6 +151,7 @@ export const eveniumActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_guest_status",
+    operationType: "read",
     description: "Get the current RSVP status for one Evenium guest.",
     inputSchema: s.object("Input parameters for retrieving one Evenium guest status.", {
       eventId: s.nonEmptyString("The Evenium event identifier or external event ID."),
@@ -162,6 +167,7 @@ export const eveniumActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_guest_post_status",
+    operationType: "read",
     description: "Get the current post-event attendance status for one Evenium guest.",
     inputSchema: s.object("Input parameters for retrieving one Evenium guest post-event status.", {
       eventId: s.nonEmptyString("The Evenium event identifier or external event ID."),

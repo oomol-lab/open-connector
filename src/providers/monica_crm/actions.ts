@@ -31,6 +31,7 @@ const noteFavoritedSchema = s.boolean("Whether the note is favorited.");
 export const monicaCrmActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List or search contacts in the authenticated Monica account.",
     inputSchema: s.object(
       "Query parameters for listing Monica contacts.",
@@ -50,6 +51,7 @@ export const monicaCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get a Monica contact by ID.",
     inputSchema: s.requiredObject("Input for retrieving a Monica contact.", {
       contactId: resourceIdSchema("The Monica contact ID."),
@@ -60,6 +62,7 @@ export const monicaCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_notes",
+    operationType: "read",
     description: "List notes in the Monica account or for one contact.",
     inputSchema: s.object(
       "Query parameters for listing Monica notes.",
@@ -73,6 +76,7 @@ export const monicaCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_note",
+    operationType: "read",
     description: "Get a Monica note by ID.",
     inputSchema: s.requiredObject("Input for retrieving a Monica note.", {
       noteId: resourceIdSchema("The Monica note ID."),
@@ -83,6 +87,7 @@ export const monicaCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_note",
+    operationType: "write",
     description: "Create a note associated with a Monica contact.",
     inputSchema: s.requiredObject("Input for creating a Monica note.", {
       body: noteBodySchema,
@@ -95,6 +100,7 @@ export const monicaCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_note",
+    operationType: "destructive",
     description: "Replace a Monica note by ID.",
     inputSchema: s.requiredObject("Input for updating a Monica note.", {
       noteId: resourceIdSchema("The Monica note ID."),
@@ -108,6 +114,7 @@ export const monicaCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_note",
+    operationType: "destructive",
     description: "Delete a Monica note by ID.",
     inputSchema: s.requiredObject("Input for deleting a Monica note.", {
       noteId: resourceIdSchema("The Monica note ID."),

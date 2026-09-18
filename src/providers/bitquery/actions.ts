@@ -41,6 +41,7 @@ const graphqlEnvelopeSchema = s.looseObject(
 export const bitqueryActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "run_query",
+    operationType: "read",
     description:
       "Run a Bitquery V2 GraphQL HTTP query against the canonical streaming endpoint and return the GraphQL response envelope.",
     inputSchema: s.object(

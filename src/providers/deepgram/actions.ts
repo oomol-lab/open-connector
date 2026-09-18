@@ -91,6 +91,7 @@ const projectKeyStatusSchema = s.stringEnum("The Deepgram project API key status
 
 const listProjectsAction = defineProviderAction(service, {
   name: "list_projects",
+  operationType: "read",
   description: "List the Deepgram projects available to the current API key.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for listing Deepgram projects.", {}),
@@ -102,6 +103,7 @@ const listProjectsAction = defineProviderAction(service, {
 
 const getProjectAction = defineProviderAction(service, {
   name: "get_project",
+  operationType: "read",
   description: "Get details for one Deepgram project.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for retrieving a Deepgram project.", {
@@ -114,6 +116,7 @@ const getProjectAction = defineProviderAction(service, {
 
 const listProjectKeysAction = defineProviderAction(service, {
   name: "list_project_keys",
+  operationType: "read",
   description: "List the API keys associated with a Deepgram project.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -132,6 +135,7 @@ const listProjectKeysAction = defineProviderAction(service, {
 
 const listProjectBalancesAction = defineProviderAction(service, {
   name: "list_project_balances",
+  operationType: "read",
   description: "List the outstanding balances for a Deepgram project.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for listing Deepgram project balances.", {
@@ -145,6 +149,7 @@ const listProjectBalancesAction = defineProviderAction(service, {
 
 const listModelsAction = defineProviderAction(service, {
   name: "list_models",
+  operationType: "read",
   description: "List the latest public Deepgram models.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -163,6 +168,7 @@ const listModelsAction = defineProviderAction(service, {
 
 const getModelAction = defineProviderAction(service, {
   name: "get_model",
+  operationType: "read",
   description: "Get metadata for one public Deepgram model.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for retrieving a Deepgram model.", {
@@ -175,6 +181,7 @@ const getModelAction = defineProviderAction(service, {
 
 const listProjectModelsAction = defineProviderAction(service, {
   name: "list_project_models",
+  operationType: "read",
   description: "List the models available to a specific Deepgram project.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -194,6 +201,7 @@ const listProjectModelsAction = defineProviderAction(service, {
 
 const getProjectModelAction = defineProviderAction(service, {
   name: "get_project_model",
+  operationType: "read",
   description: "Get metadata for one model available to a Deepgram project.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for retrieving a model available to a Deepgram project.", {

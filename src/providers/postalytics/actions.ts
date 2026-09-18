@@ -128,12 +128,14 @@ const templateRecordSchema = s.object(
 export const postalyticsActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_campaigns",
+    operationType: "read",
     description: "List all direct-mail campaigns in the authenticated Postalytics account.",
     inputSchema: s.actionInput({}, [], "The input payload for listing Postalytics campaigns."),
     outputSchema: s.array("The campaign records returned directly by Postalytics.", campaignRecordSchema),
   }),
   defineProviderAction(service, {
     name: "get_campaign",
+    operationType: "read",
     description: "Get basic details for one Postalytics campaign.",
     inputSchema: s.actionInput(
       {
@@ -146,6 +148,7 @@ export const postalyticsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign_stats",
+    operationType: "read",
     description: "Get delivery and engagement statistics for one Postalytics campaign.",
     inputSchema: s.actionInput(
       {
@@ -158,12 +161,14 @@ export const postalyticsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contact_lists",
+    operationType: "read",
     description: "List all contact lists in the authenticated Postalytics account.",
     inputSchema: s.actionInput({}, [], "The input payload for listing Postalytics contact lists."),
     outputSchema: s.array("The contact list records returned directly by Postalytics.", contactListSchema),
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List a bounded page of contacts from one Postalytics contact list.",
     inputSchema: s.actionInput(
       {
@@ -181,6 +186,7 @@ export const postalyticsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get details for one Postalytics contact.",
     inputSchema: s.actionInput(
       {
@@ -193,12 +199,14 @@ export const postalyticsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List all direct-mail templates in the authenticated Postalytics account.",
     inputSchema: s.actionInput({}, [], "The input payload for listing Postalytics templates."),
     outputSchema: s.array("The template records returned directly by Postalytics.", templateRecordSchema),
   }),
   defineProviderAction(service, {
     name: "get_template",
+    operationType: "read",
     description: "Get details for one Postalytics direct-mail template.",
     inputSchema: s.actionInput(
       {

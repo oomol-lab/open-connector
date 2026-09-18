@@ -92,6 +92,7 @@ const mailboxSchema = s.object("A normalized Woodpecker mailbox.", {
 export const woodpeckerCoActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List active Woodpecker users in the authenticated account.",
     inputSchema: s.object(
       "The input payload for listing Woodpecker users.",
@@ -109,6 +110,7 @@ export const woodpeckerCoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_campaigns",
+    operationType: "read",
     description: "List Woodpecker campaigns, optionally filtered by campaign status.",
     inputSchema: s.object(
       "The input payload for listing Woodpecker campaigns.",
@@ -124,6 +126,7 @@ export const woodpeckerCoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign",
+    operationType: "read",
     description: "Get Woodpecker campaign settings and content by campaign ID.",
     inputSchema: s.object(
       "The input payload for getting one Woodpecker campaign.",
@@ -138,6 +141,7 @@ export const woodpeckerCoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign_statistics",
+    operationType: "read",
     description: "Get Woodpecker statistics for one campaign by campaign ID.",
     inputSchema: s.object(
       "The input payload for getting Woodpecker campaign statistics.",
@@ -153,6 +157,7 @@ export const woodpeckerCoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_prospects",
+    operationType: "read",
     description: "List prospects from the Woodpecker prospect database with optional filters.",
     inputSchema: s.object(
       "The input payload for listing Woodpecker prospects.",
@@ -184,6 +189,7 @@ export const woodpeckerCoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_mailboxes",
+    operationType: "read",
     description: "List Woodpecker mailboxes connected to the authenticated account.",
     inputSchema: s.object("The input payload for listing Woodpecker mailboxes.", {}),
     outputSchema: s.object("The response returned when listing Woodpecker mailboxes.", {
@@ -193,6 +199,7 @@ export const woodpeckerCoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_mailbox",
+    operationType: "read",
     description: "Get one Woodpecker mailbox by mailbox configuration ID.",
     inputSchema: s.object(
       "The input payload for getting one Woodpecker mailbox.",

@@ -135,6 +135,7 @@ const updateEventInputSchema = {
 export const fomoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_events",
+    operationType: "read",
     description: "List Fomo events with optional pagination and ordering.",
     inputSchema: s.object(
       "The filters and pagination options for listing Fomo events.",
@@ -154,6 +155,7 @@ export const fomoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_event",
+    operationType: "read",
     description: "Retrieve a single Fomo event by ID.",
     inputSchema: s.object("The input for retrieving a Fomo event.", {
       id: eventIdSchema,
@@ -164,6 +166,7 @@ export const fomoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_event",
+    operationType: "write",
     description: "Create a Fomo event for a configured event template.",
     inputSchema: createEventInputSchema,
     outputSchema: s.object("The connector-normalized Fomo event creation response.", {
@@ -172,6 +175,7 @@ export const fomoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_event",
+    operationType: "write",
     description: "Update an existing Fomo event by ID.",
     inputSchema: updateEventInputSchema,
     outputSchema: s.object("The connector-normalized Fomo event update response.", {
@@ -180,6 +184,7 @@ export const fomoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_event",
+    operationType: "destructive",
     description: "Delete an existing Fomo event by ID.",
     inputSchema: s.object("The input for deleting a Fomo event.", {
       id: eventIdSchema,

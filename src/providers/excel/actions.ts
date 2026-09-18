@@ -102,6 +102,7 @@ const address = s.nonEmptyString("Excel A1-style range address.");
 
 function action(input: {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -116,6 +117,7 @@ function action(input: {
 export const excelActions: ActionDefinition[] = [
   action({
     name: "create_workbook",
+    operationType: "write",
     description: "Create a new .xlsx workbook file and optionally populate worksheets and data.",
     requiredScopes: writeScope,
     inputSchema: s.actionInput(
@@ -136,6 +138,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "search_files",
+    operationType: "read",
     description: "Search workbook files in the current OneDrive drive and return matching drive items.",
     requiredScopes: readScope,
     inputSchema: s.actionInput(
@@ -154,6 +157,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "list_drive_item_children",
+    operationType: "read",
     description: "List direct child drive items for a folder or the drive root.",
     requiredScopes: readScope,
     inputSchema: s.actionInput({ driveId: workbookReference.driveId, itemId: workbookReference.itemId, top, select }),
@@ -164,6 +168,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "create_session",
+    operationType: "write",
     description: "Create an Excel workbook session for subsequent workbook operations.",
     requiredScopes: readScope,
     inputSchema: s.actionInput(
@@ -183,6 +188,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "get_workbook",
+    operationType: "read",
     description: "Read workbook metadata and optionally expand related workbook resources.",
     requiredScopes: readScope,
     inputSchema: s.actionInput(
@@ -201,6 +207,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "list_worksheets",
+    operationType: "read",
     description: "List worksheets in a workbook.",
     requiredScopes: readScope,
     inputSchema: s.object(workbookReference, {
@@ -215,6 +222,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "get_worksheet",
+    operationType: "read",
     description: "Read a single worksheet by worksheet name or worksheet ID.",
     requiredScopes: readScope,
     inputSchema: s.actionInput({ ...workbookReference, worksheetId }, ["itemId", "worksheetId"]),
@@ -222,6 +230,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "add_worksheet",
+    operationType: "write",
     description: "Add a new worksheet to a workbook.",
     requiredScopes: writeScope,
     inputSchema: s.actionInput({ ...workbookReference, name: s.nonEmptyString("Worksheet name to create.") }, [
@@ -231,6 +240,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "update_worksheet",
+    operationType: "write",
     description: "Update worksheet metadata such as the name, position, or visibility.",
     requiredScopes: writeScope,
     inputSchema: s.actionInput(
@@ -247,6 +257,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "delete_worksheet",
+    operationType: "destructive",
     description: "Delete one worksheet from a workbook.",
     requiredScopes: writeScope,
     inputSchema: s.actionInput({ ...workbookReference, worksheetId }, ["itemId", "worksheetId"]),
@@ -254,6 +265,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "get_range",
+    operationType: "read",
     description: "Read one worksheet range by A1-style address.",
     requiredScopes: readScope,
     inputSchema: s.actionInput({ ...workbookReference, worksheetId, address }, ["itemId", "worksheetId", "address"]),
@@ -261,6 +273,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "get_worksheet_used_range",
+    operationType: "read",
     description: "Read the used range for one worksheet.",
     requiredScopes: readScope,
     inputSchema: s.actionInput(
@@ -275,6 +288,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "update_range",
+    operationType: "destructive",
     description: "Update one worksheet range with values, formulas, formats, or visibility flags.",
     requiredScopes: writeScope,
     inputSchema: s.actionInput(
@@ -296,6 +310,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "clear_range",
+    operationType: "destructive",
     description: "Clear one worksheet range.",
     requiredScopes: writeScope,
     inputSchema: s.actionInput(
@@ -311,6 +326,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "insert_range",
+    operationType: "write",
     description: "Insert one worksheet range and shift existing cells to make space.",
     requiredScopes: writeScope,
     inputSchema: s.actionInput(
@@ -326,6 +342,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "merge_cells",
+    operationType: "write",
     description: "Merge cells inside one worksheet range.",
     requiredScopes: writeScope,
     inputSchema: s.actionInput(
@@ -341,6 +358,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "sort_range",
+    operationType: "destructive",
     description: "Apply a Microsoft Graph sort definition to one worksheet range.",
     requiredScopes: writeScope,
     inputSchema: s.actionInput(
@@ -364,6 +382,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "list_tables",
+    operationType: "read",
     description: "List workbook tables, optionally restricted to one worksheet.",
     requiredScopes: readScope,
     inputSchema: s.actionInput({ ...workbookReference, worksheetId }, ["itemId"]),
@@ -374,6 +393,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "add_table",
+    operationType: "write",
     description: "Create a new workbook table from an address range.",
     requiredScopes: writeScope,
     inputSchema: s.actionInput(
@@ -389,6 +409,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "update_table",
+    operationType: "write",
     description: "Update table metadata such as the name, style, or header flags.",
     requiredScopes: writeScope,
     inputSchema: s.actionInput(
@@ -406,6 +427,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "convert_table_to_range",
+    operationType: "destructive",
     description: "Convert a workbook table back into a plain worksheet range.",
     requiredScopes: writeScope,
     inputSchema: s.actionInput({ ...workbookReference, tableId }, ["itemId", "tableId"]),
@@ -413,6 +435,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "list_table_rows",
+    operationType: "read",
     description: "List rows for one workbook table.",
     requiredScopes: readScope,
     inputSchema: s.actionInput({ ...workbookReference, tableId }, ["itemId", "tableId"]),
@@ -423,6 +446,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "add_table_row",
+    operationType: "write",
     description: "Add one or more rows to a workbook table.",
     requiredScopes: writeScope,
     inputSchema: s.actionInput(
@@ -438,6 +462,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "delete_table_row",
+    operationType: "destructive",
     description: "Delete one row from a workbook table by row index.",
     requiredScopes: writeScope,
     inputSchema: s.actionInput(
@@ -448,6 +473,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "list_table_columns",
+    operationType: "read",
     description: "List columns for one workbook table.",
     requiredScopes: readScope,
     inputSchema: s.actionInput({ ...workbookReference, tableId }, ["itemId", "tableId"]),
@@ -458,6 +484,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "get_table_column",
+    operationType: "read",
     description: "Read one workbook table column by column name or column ID.",
     requiredScopes: readScope,
     inputSchema: s.actionInput({ ...workbookReference, tableId, columnId }, ["itemId", "tableId", "columnId"]),
@@ -465,6 +492,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "add_table_column",
+    operationType: "write",
     description: "Add one column to a workbook table.",
     requiredScopes: writeScope,
     inputSchema: s.actionInput(
@@ -480,6 +508,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "delete_table_column",
+    operationType: "destructive",
     description: "Delete one column from a workbook table.",
     requiredScopes: writeScope,
     inputSchema: s.actionInput({ ...workbookReference, tableId, columnId }, ["itemId", "tableId", "columnId"]),
@@ -487,6 +516,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "apply_table_filter",
+    operationType: "write",
     description: "Apply a Microsoft Graph filter criteria object to one table column.",
     requiredScopes: writeScope,
     inputSchema: s.actionInput(
@@ -502,6 +532,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "clear_table_filter",
+    operationType: "destructive",
     description: "Clear the current Microsoft Graph filter on one table column.",
     requiredScopes: writeScope,
     inputSchema: s.actionInput({ ...workbookReference, tableId, columnId }, ["itemId", "tableId", "columnId"]),
@@ -509,6 +540,7 @@ export const excelActions: ActionDefinition[] = [
   }),
   action({
     name: "apply_table_sort",
+    operationType: "destructive",
     description: "Apply a Microsoft Graph sort definition to one workbook table.",
     requiredScopes: writeScope,
     inputSchema: s.actionInput(

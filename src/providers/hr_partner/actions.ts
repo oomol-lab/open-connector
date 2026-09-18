@@ -197,6 +197,7 @@ const applicationOutputSchema = s.requiredObject("The HR Partner application res
 export const hrPartnerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description:
       "Retrieve basic HR Partner company information, optionally including custom fields and active modules.",
     requiredScopes: [],
@@ -205,6 +206,7 @@ export const hrPartnerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_employees",
+    operationType: "read",
     description:
       "List HR Partner employees with official filters such as search, department, location, status, tags, and employment dates.",
     requiredScopes: [],
@@ -213,6 +215,7 @@ export const hrPartnerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_employee",
+    operationType: "read",
     description:
       "Retrieve one HR Partner employee by employee code, including detailed contact, address, tag, and custom field data when available.",
     requiredScopes: [],
@@ -221,6 +224,7 @@ export const hrPartnerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_lookups",
+    operationType: "read",
     description:
       "Retrieve one HR Partner read-only lookup file such as departments, locations, positions, tags, stages, or training statuses.",
     requiredScopes: [],
@@ -229,6 +233,7 @@ export const hrPartnerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_job_listings",
+    operationType: "read",
     description:
       "List HR Partner recruitment job listings with official filters such as search, department, publish dates, active state, and response email.",
     requiredScopes: [],
@@ -237,6 +242,7 @@ export const hrPartnerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job_listing",
+    operationType: "read",
     description:
       "Retrieve one HR Partner recruitment job listing by job ID, including detailed content, custom form, scorecard, and stage data when available.",
     requiredScopes: [],
@@ -245,6 +251,7 @@ export const hrPartnerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_applicants",
+    operationType: "read",
     description: "List HR Partner recruitment applicants, optionally filtered by name or email search text.",
     requiredScopes: [],
     inputSchema: applicantListInputSchema,
@@ -252,6 +259,7 @@ export const hrPartnerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_applicant",
+    operationType: "read",
     description:
       "Retrieve one HR Partner recruitment applicant by applicant ID or email address, including their job applications when available.",
     requiredScopes: [],
@@ -260,6 +268,7 @@ export const hrPartnerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_applications",
+    operationType: "read",
     description:
       "List HR Partner recruitment applications for one job listing with official filters such as source, stage, submitted date, and read flags.",
     requiredScopes: [],
@@ -268,6 +277,7 @@ export const hrPartnerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_application",
+    operationType: "read",
     description:
       "Retrieve one HR Partner recruitment application by application ID, including applicant, job listing, scorecard, attachment metadata, interviews, and comments when available.",
     requiredScopes: [],

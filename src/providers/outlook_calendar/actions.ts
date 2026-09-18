@@ -8,6 +8,7 @@ const service = "outlook_calendar";
 
 interface OutlookCalendarActionSource {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   providerPermissions: string[];
@@ -215,6 +216,7 @@ const meetingTimeSuggestionsResult = s.looseObject(
 const actions: OutlookCalendarActionSource[] = [
   action(
     "get_current_user",
+    "read",
     "Get the profile for the connected Microsoft account.",
     outlookCalendarProfileScopes,
     user,
@@ -222,6 +224,7 @@ const actions: OutlookCalendarActionSource[] = [
   ),
   action(
     "list_calendars",
+    "read",
     "List calendars belonging to the connected Microsoft account.",
     outlookCalendarScopes,
     s.object(
@@ -235,6 +238,7 @@ const actions: OutlookCalendarActionSource[] = [
   ),
   action(
     "get_calendar",
+    "read",
     "Get one Outlook calendar by ID.",
     outlookCalendarScopes,
     calendar,
@@ -242,6 +246,7 @@ const actions: OutlookCalendarActionSource[] = [
   ),
   action(
     "list_events",
+    "read",
     "List events from the default calendar or a selected calendar.",
     outlookCalendarScopes,
     listEventsOutput,
@@ -249,6 +254,7 @@ const actions: OutlookCalendarActionSource[] = [
   ),
   action(
     "list_calendar_view",
+    "read",
     "List event occurrences and exceptions within a date-time range.",
     outlookCalendarScopes,
     listEventsOutput,
@@ -264,6 +270,7 @@ const actions: OutlookCalendarActionSource[] = [
   ),
   action(
     "get_event",
+    "read",
     "Get one Outlook event by ID.",
     outlookCalendarScopes,
     event,
@@ -271,6 +278,7 @@ const actions: OutlookCalendarActionSource[] = [
   ),
   action(
     "get_schedule",
+    "read",
     "Get free and busy availability for users, rooms, or resources.",
     outlookCalendarScopes,
     s.object(
@@ -294,6 +302,7 @@ const actions: OutlookCalendarActionSource[] = [
   ),
   action(
     "find_meeting_times",
+    "read",
     "Suggest meeting times that satisfy attendee, location, and time constraints.",
     outlookCalendarSharedScopes,
     meetingTimeSuggestionsResult,
@@ -317,6 +326,7 @@ const actions: OutlookCalendarActionSource[] = [
   ),
   action(
     "create_event",
+    "write",
     "Create an event in the default calendar or a selected calendar.",
     outlookCalendarScopes,
     event,
@@ -324,6 +334,7 @@ const actions: OutlookCalendarActionSource[] = [
   ),
   action(
     "update_event",
+    "destructive",
     "Update writable fields on an Outlook event.",
     outlookCalendarScopes,
     event,
@@ -331,6 +342,7 @@ const actions: OutlookCalendarActionSource[] = [
   ),
   action(
     "delete_event",
+    "destructive",
     "Delete an Outlook event; deleting an organized meeting sends a cancellation to attendees.",
     outlookCalendarScopes,
     success,
@@ -338,6 +350,7 @@ const actions: OutlookCalendarActionSource[] = [
   ),
   action(
     "cancel_event",
+    "destructive",
     "Cancel an organized event and notify its attendees.",
     outlookCalendarScopes,
     success,
@@ -345,6 +358,7 @@ const actions: OutlookCalendarActionSource[] = [
   ),
   action(
     "accept_event",
+    "write",
     "Accept an event invitation for the connected account.",
     outlookCalendarScopes,
     success,
@@ -352,6 +366,7 @@ const actions: OutlookCalendarActionSource[] = [
   ),
   action(
     "decline_event",
+    "write",
     "Decline an event invitation for the connected account.",
     outlookCalendarScopes,
     success,
@@ -359,6 +374,7 @@ const actions: OutlookCalendarActionSource[] = [
   ),
   action(
     "tentatively_accept_event",
+    "write",
     "Tentatively accept an event invitation for the connected account.",
     outlookCalendarScopes,
     success,
@@ -398,6 +414,7 @@ function responseInput(allowNewTimeProposal: boolean): JsonSchema {
 
 function action(
   name: string,
+  operationType: ActionDefinition["operationType"],
   description: string,
   scopes: string[],
   outputSchema: JsonSchema,
@@ -405,6 +422,7 @@ function action(
 ): OutlookCalendarActionSource {
   return {
     name,
+    operationType,
     description,
     requiredScopes: scopes,
     providerPermissions: scopes,

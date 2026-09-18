@@ -177,6 +177,7 @@ const updateBrowserSessionInputSchema = s.object(
 export const kernelActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_browser_sessions",
+    operationType: "read",
     description: "List Kernel browser sessions with pagination, search, status, and tag filters.",
     inputSchema: listBrowserSessionsInputSchema,
     outputSchema: s.object("The Kernel browser sessions returned by the API.", {
@@ -186,6 +187,7 @@ export const kernelActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_browser_session",
+    operationType: "write",
     description: "Create a Kernel browser session and return its connection URLs and metadata.",
     inputSchema: createBrowserSessionInputSchema,
     outputSchema: s.object("The Kernel browser session creation response.", {
@@ -194,6 +196,7 @@ export const kernelActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_browser_session",
+    operationType: "read",
     description: "Get one Kernel browser session by session ID or name.",
     inputSchema: getBrowserSessionInputSchema,
     outputSchema: s.object("The Kernel browser session lookup response.", {
@@ -202,6 +205,7 @@ export const kernelActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_browser_session",
+    operationType: "write",
     description: "Update mutable Kernel browser session metadata and settings.",
     inputSchema: updateBrowserSessionInputSchema,
     outputSchema: s.object("The Kernel browser session update response.", {
@@ -210,6 +214,7 @@ export const kernelActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_browser_session",
+    operationType: "destructive",
     description: "Delete a Kernel browser session by session ID or name.",
     inputSchema: idOrNameInputSchema,
     outputSchema: s.object("The normalized Kernel browser session deletion result.", {

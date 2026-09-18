@@ -39,6 +39,7 @@ const webFormFieldSchema = s.requiredObject("One visible field exposed by a Hell
 export const helloleadsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_web_form_definition",
+    operationType: "read",
     description:
       "Fetch the visible HelloLeads web form definition for the connected Web Form Key and report whether reCAPTCHA v2 is enabled.",
     inputSchema: s.actionInput(
@@ -60,6 +61,7 @@ export const helloleadsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_web_form",
+    operationType: "write",
     description:
       "Submit one HelloLeads web form lead with JSON field values, excluding reCAPTCHA and file-upload workflows.",
     inputSchema: s.actionInput(

@@ -70,6 +70,7 @@ const userOutputSchema = s.requiredObject("The normalized MX user result.", {
 export const mxActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List users created in the MX Platform API with pagination and simple filters.",
     requiredScopes: [],
     inputSchema: listUsersInputSchema,
@@ -81,6 +82,7 @@ export const mxActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_user",
+    operationType: "write",
     description: "Create an MX Platform API user and return the newly-created user.",
     requiredScopes: [],
     inputSchema: createUserInputSchema,
@@ -88,6 +90,7 @@ export const mxActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "read_user",
+    operationType: "read",
     description: "Read one MX Platform API user by MX guid or partner-defined id.",
     requiredScopes: [],
     inputSchema: readUserInputSchema,
@@ -95,6 +98,7 @@ export const mxActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_user",
+    operationType: "write",
     description: "Update an MX Platform API user by MX guid or partner-defined id.",
     requiredScopes: [],
     inputSchema: updateUserInputSchema,
@@ -102,6 +106,7 @@ export const mxActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_user",
+    operationType: "destructive",
     description: "Permanently delete one MX Platform API user by MX guid or partner-defined id.",
     requiredScopes: [],
     inputSchema: readUserInputSchema,

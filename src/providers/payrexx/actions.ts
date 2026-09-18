@@ -70,30 +70,35 @@ const createdGatewayOutputSchema = s.requiredObject("The created Payrexx gateway
 export const payrexxActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_payment_providers",
+    operationType: "read",
     description: "List payment providers configured for the connected Payrexx instance.",
     inputSchema: emptyInputSchema,
     outputSchema: paymentProvidersOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_transactions",
+    operationType: "read",
     description: "List transactions for the connected Payrexx instance.",
     inputSchema: listTransactionsInputSchema,
     outputSchema: transactionsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_transaction",
+    operationType: "read",
     description: "Retrieve one Payrexx transaction by its numeric identifier.",
     inputSchema: idInputSchema("The transaction to retrieve."),
     outputSchema: transactionOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_gateway",
+    operationType: "read",
     description: "Retrieve one Payrexx payment gateway by its numeric identifier.",
     inputSchema: idInputSchema("The payment gateway to retrieve."),
     outputSchema: gatewayOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_gateway",
+    operationType: "write",
     description: "Create a Payrexx payment gateway and return its hosted checkout link.",
     inputSchema: createGatewayInputSchema,
     outputSchema: createdGatewayOutputSchema,

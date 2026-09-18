@@ -163,6 +163,7 @@ const updateDraftFields = {
 
 const getCurrentUserAction = defineProviderAction(service, {
   name: "get_current_user",
+  operationType: "read",
   description: "Get the profile for the user authenticated by the connected Hashnode PAT.",
   requiredScopes: [],
   inputSchema: s.object("Input for fetching the authenticated Hashnode user.", {}),
@@ -173,6 +174,7 @@ const getCurrentUserAction = defineProviderAction(service, {
 
 const listMyPublicationsAction = defineProviderAction(service, {
   name: "list_my_publications",
+  operationType: "read",
   description: "List publications available to the authenticated Hashnode user.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -195,6 +197,7 @@ const listMyPublicationsAction = defineProviderAction(service, {
 
 const getPostAction = defineProviderAction(service, {
   name: "get_post",
+  operationType: "read",
   description: "Get one published Hashnode post by ID, including Markdown and rendered HTML.",
   requiredScopes: [],
   inputSchema: s.requiredObject("Input for fetching a published Hashnode post.", {
@@ -223,6 +226,7 @@ listPublicationPostsInputSchema.oneOf = [{ required: ["publicationId"] }, { requ
 
 const listPublicationPostsAction = defineProviderAction(service, {
   name: "list_publication_posts",
+  operationType: "read",
   description:
     "List posts from a Hashnode publication with cursor pagination; the publication must have an active Pro plan.",
   requiredScopes: [],
@@ -236,6 +240,7 @@ const listPublicationPostsAction = defineProviderAction(service, {
 
 const publishPostAction = defineProviderAction(service, {
   name: "publish_post",
+  operationType: "write",
   description: "Publish a Markdown post to a Hashnode publication with an active Pro plan.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -255,6 +260,7 @@ const publishPostAction = defineProviderAction(service, {
 
 const updatePostAction = defineProviderAction(service, {
   name: "update_post",
+  operationType: "write",
   description: "Update fields on an existing Hashnode post in a Pro publication.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -274,6 +280,7 @@ const updatePostAction = defineProviderAction(service, {
 
 const getDraftAction = defineProviderAction(service, {
   name: "get_draft",
+  operationType: "read",
   description: "Get one accessible Hashnode draft by ID from a Pro publication.",
   requiredScopes: [],
   inputSchema: s.requiredObject("Input for fetching a Hashnode draft.", {
@@ -286,6 +293,7 @@ const getDraftAction = defineProviderAction(service, {
 
 const createDraftAction = defineProviderAction(service, {
   name: "create_draft",
+  operationType: "write",
   description: "Create a draft in a Hashnode publication with an active Pro plan.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -303,6 +311,7 @@ const createDraftAction = defineProviderAction(service, {
 
 const updateDraftAction = defineProviderAction(service, {
   name: "update_draft",
+  operationType: "write",
   description: "Update fields on an existing Hashnode draft in a Pro publication.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -320,6 +329,7 @@ const updateDraftAction = defineProviderAction(service, {
 
 const publishDraftAction = defineProviderAction(service, {
   name: "publish_draft",
+  operationType: "write",
   description: "Publish an existing Hashnode draft from a Pro publication.",
   requiredScopes: [],
   inputSchema: s.requiredObject("Input for publishing a Hashnode draft.", {
@@ -332,6 +342,7 @@ const publishDraftAction = defineProviderAction(service, {
 
 const deleteDraftAction = defineProviderAction(service, {
   name: "delete_draft",
+  operationType: "destructive",
   description: "Soft-delete an accessible Hashnode draft from a Pro publication.",
   requiredScopes: [],
   inputSchema: s.requiredObject("Input for deleting a Hashnode draft.", {

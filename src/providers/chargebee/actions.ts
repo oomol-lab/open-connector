@@ -46,6 +46,7 @@ const singleOutput = (key: string): ReturnType<typeof s.object> => s.object({ [k
 export const chargebeeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List Chargebee customers with optional exact-match filters and pagination.",
     requiredScopes: [],
     inputSchema: listInput,
@@ -53,6 +54,7 @@ export const chargebeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Retrieve one Chargebee customer by ID.",
     requiredScopes: [],
     inputSchema: s.object({ customerId: id }, { required: ["customerId"], description: "Customer lookup input." }),
@@ -60,6 +62,7 @@ export const chargebeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_customer",
+    operationType: "write",
     description: "Create a basic Chargebee customer record from JSON-friendly fields.",
     requiredScopes: [],
     inputSchema: s.looseObject("Customer fields forwarded to Chargebee's create customer endpoint."),
@@ -67,6 +70,7 @@ export const chargebeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subscriptions",
+    operationType: "read",
     description: "List Chargebee subscriptions with optional exact-match filters and pagination.",
     requiredScopes: [],
     inputSchema: listInput,
@@ -74,6 +78,7 @@ export const chargebeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_subscription",
+    operationType: "read",
     description: "Retrieve one Chargebee subscription by ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -84,6 +89,7 @@ export const chargebeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_invoices",
+    operationType: "read",
     description: "List Chargebee invoices with optional exact-match filters and pagination.",
     requiredScopes: [],
     inputSchema: listInput,
@@ -91,6 +97,7 @@ export const chargebeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_invoice",
+    operationType: "read",
     description: "Retrieve one Chargebee invoice by ID.",
     requiredScopes: [],
     inputSchema: s.object({ invoiceId: id }, { required: ["invoiceId"], description: "Invoice lookup input." }),
@@ -98,6 +105,7 @@ export const chargebeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_item_prices",
+    operationType: "read",
     description: "List Chargebee item prices with optional exact-match filters and pagination.",
     requiredScopes: [],
     inputSchema: listInput,
@@ -105,6 +113,7 @@ export const chargebeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_item_price",
+    operationType: "read",
     description: "Retrieve one Chargebee item price by ID.",
     requiredScopes: [],
     inputSchema: s.object({ itemPriceId: id }, { required: ["itemPriceId"], description: "Item price lookup input." }),

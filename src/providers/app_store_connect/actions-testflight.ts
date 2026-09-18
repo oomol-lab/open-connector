@@ -21,6 +21,7 @@ import {
 export const appStoreConnectTestFlightActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_beta_groups",
+    operationType: "read",
     description: "List the TestFlight groups of one app, including the public invitation link of each group.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -43,6 +44,7 @@ export const appStoreConnectTestFlightActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "create_beta_group",
+    operationType: "write",
     description: "Create a TestFlight group for an app, optionally enabling its public invitation link.",
     requiredScopes: [],
     providerPermissions: [...manageTestFlightRoles],
@@ -66,6 +68,7 @@ export const appStoreConnectTestFlightActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "delete_beta_group",
+    operationType: "destructive",
     description: "Delete a TestFlight group. Testers who only belonged to that group lose access to its builds.",
     requiredScopes: [],
     providerPermissions: [...manageTestFlightRoles],
@@ -81,6 +84,7 @@ export const appStoreConnectTestFlightActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_beta_testers",
+    operationType: "read",
     description: "List TestFlight testers, optionally narrowed to one app, group, or build.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -131,6 +135,7 @@ export const appStoreConnectTestFlightActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "create_beta_tester",
+    operationType: "write",
     description:
       "Invite a TestFlight tester by email. App Store Connect only creates a tester that is assigned to something, so pass at least one of betaGroupIds or buildIds.",
     requiredScopes: [],
@@ -156,6 +161,7 @@ export const appStoreConnectTestFlightActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "delete_beta_tester",
+    operationType: "destructive",
     description: "Remove a TestFlight tester from the team, revoking their access to every build and group.",
     requiredScopes: [],
     providerPermissions: [...manageTestFlightRoles],
@@ -171,6 +177,7 @@ export const appStoreConnectTestFlightActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "add_beta_testers_to_group",
+    operationType: "write",
     description: "Add existing TestFlight testers to one group so they receive the builds that group can install.",
     requiredScopes: [],
     providerPermissions: [...manageTestFlightRoles],
@@ -198,6 +205,7 @@ export const appStoreConnectTestFlightActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "remove_beta_testers_from_group",
+    operationType: "destructive",
     description:
       "Remove testers from one TestFlight group. The testers stay on the team and keep access through their other groups.",
     requiredScopes: [],
@@ -226,6 +234,7 @@ export const appStoreConnectTestFlightActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "add_build_to_beta_groups",
+    operationType: "write",
     description: "Make one build available to TestFlight groups so their testers can install it.",
     requiredScopes: [],
     providerPermissions: [...manageTestFlightRoles],
@@ -253,6 +262,7 @@ export const appStoreConnectTestFlightActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "submit_build_for_beta_review",
+    operationType: "write",
     description: "Submit a build for TestFlight beta review, which external groups require before they can install it.",
     requiredScopes: [],
     providerPermissions: [...manageTestFlightBuildsRoles],
@@ -265,6 +275,7 @@ export const appStoreConnectTestFlightActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "update_build_test_notes",
+    operationType: "destructive",
     description:
       'Set the "What to Test" notes a build shows testers in one locale. Updates the existing notes for that locale, or creates them when the locale has none yet.',
     requiredScopes: [],

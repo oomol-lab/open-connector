@@ -109,6 +109,7 @@ const operateTimeSchema = s.nonEmptyString("The operation time in yyyy-MM-dd HH:
 export const sfExpressFreightInstallActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "freight_append_install_service",
+    operationType: "write",
     description:
       "Append an install service to an existing SF waybill. The append is only confirmed once the waybill is picked up; the final result arrives via the install status push. This endpoint requires SF sales onboarding (联系客户经理).",
     requiredScopes: [],
@@ -131,6 +132,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_create_install_order",
+    operationType: "write",
     description: "Create an SF install order (安装单下单): install-only, pickup-and-install, or repair.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -194,6 +196,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_update_install_order",
+    operationType: "write",
     description:
       "Update an install order's customer info, non-SF logistics info, or cargo images. Customer and logistics info can only change before a master is assigned; cargo images can change until the waybill is signed.",
     requiredScopes: [],
@@ -248,6 +251,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_cancel_install_order",
+    operationType: "destructive",
     description: "Cancel an appended install service; the waybill must not be picked up yet.",
     requiredScopes: [],
     inputSchema: s.requireAnyProperty(
@@ -268,6 +272,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_query_install_order",
+    operationType: "read",
     description: "Query an SF install order's status and fee breakdown by client order number.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The install order to query.", {
@@ -277,6 +282,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_create_recovery_order",
+    operationType: "write",
     description:
       "Create an SF recovery order (回收单下单) for door-to-door goods recycling. The pickup date must be within 3 days, the window whole hours between 08:00 and 21:00.",
     requiredScopes: [],
@@ -319,6 +325,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_notify_install_arrival",
+    operationType: "write",
     description:
       "Mark an install order's goods as arrived (到货通知), optionally completing the pickup address. Only the not-arrived to arrived transition is supported.",
     requiredScopes: [],
@@ -346,6 +353,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_cancel_recovery_order",
+    operationType: "destructive",
     description: "Cancel an SF recovery order; not possible once the master has arrived.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The recovery order to cancel.", {
@@ -358,6 +366,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_query_recovery_products",
+    operationType: "read",
     description:
       "Query the full SF recovery product catalog (回收品类). The list is large and returned in full; cache it instead of calling repeatedly.",
     requiredScopes: [],
@@ -384,6 +393,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_query_delivery_rules",
+    operationType: "read",
     description: "Query the home-delivery service rules (宅配规则) bound to one or more SF monthly cards.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The monthly cards to query.", {
@@ -402,6 +412,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_audit_value_added_service",
+    operationType: "write",
     description: "Audit a value-added service request (审核增值服务), for example the JZ17 好评返现 service.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -420,6 +431,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_supplier_report_operation_node",
+    operationType: "write",
     description:
       "Report an install-task operation node to SF as the supplier (操作节点回传): assign master, pickup, appointment, arrival check, completion, review, fault detection, and more. Required fields depend on operate_code; images are required for codes 3, 17, 20, 21.",
     requiredScopes: [],
@@ -497,6 +509,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_supplier_query_appointment_times",
+    operationType: "read",
     description: "Query the appointment times a supplier's master may offer for an install task (送装协同可预约时间).",
     requiredScopes: [],
     inputSchema: s.requiredObject("The install task to query.", {
@@ -521,6 +534,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_bid_submit_quote",
+    operationType: "write",
     description: "Submit a supplier master's quote for a bidding install order (回传报价).",
     requiredScopes: [],
     inputSchema: s.object(
@@ -560,6 +574,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_bid_report_operation_node",
+    operationType: "write",
     description:
       "Report an operation node for a bidding install order (供应商自主报价操作节点回传). operate_data's required keys depend on operate_code: OP000006 needs installMaster+installConcat, OP000004 needs appTime, OP000008/OP000001/OP000010 need imgUrl, OP000013 needs closeReason.",
     requiredScopes: [],
@@ -586,6 +601,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_bid_report_add_fee_result",
+    operationType: "write",
     description: "Report the master's decision on a bidding install order's add-fee request (增加费用结果回传).",
     requiredScopes: [],
     inputSchema: s.object(
@@ -605,6 +621,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_supplier_apply_add_fee",
+    operationType: "write",
     description: "Apply for an add-fee on a bidding install order as the supplier (供应商侧发起增加费用).",
     requiredScopes: [],
     inputSchema: s.object(
@@ -625,6 +642,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_supplier_query_add_fee_result",
+    operationType: "read",
     description:
       "Query the result of a supplier add-fee application (增加费用结果查询); the fallback when the result push or report fails.",
     requiredScopes: [],
@@ -641,6 +659,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_bid_report_refund_result",
+    operationType: "write",
     description: "Report the master's decision on a bidding install order's refund request (退款结果回传).",
     requiredScopes: [],
     inputSchema: s.object(
@@ -660,6 +679,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_bid_report_complaint_result",
+    operationType: "write",
     description: "Report the complaint handling result for a bidding install order (接收投诉结果).",
     requiredScopes: [],
     inputSchema: s.object(
@@ -688,6 +708,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_bid_send_evidence_notice",
+    operationType: "write",
     description:
       "Ask the customer for supplementary evidence while handling a complaint (通知用户补充举证). The deadline defaults to 12 hours after the notice time.",
     requiredScopes: [],
@@ -706,6 +727,7 @@ export const sfExpressFreightInstallActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_bid_submit_master_evidence",
+    operationType: "write",
     description: "Submit the master's evidence for a complaint on a bidding install order (师傅举证回传).",
     requiredScopes: [],
     inputSchema: s.object(

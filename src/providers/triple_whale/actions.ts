@@ -42,6 +42,7 @@ const todayHourSchema = s.nullable(
 export const tripleWhaleActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "validate_api_key",
+    operationType: "read",
     description: "Validate the connected Triple Whale API key and return its metadata when present.",
     inputSchema: s.actionInput({}),
     outputSchema: s.actionOutput({
@@ -51,6 +52,7 @@ export const tripleWhaleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_summary_page_data",
+    operationType: "read",
     description: "Retrieve Triple Whale Summary Page metrics for a store and date period.",
     providerPermissions: ["Summary Page: Read"],
     inputSchema: s.actionInput(
@@ -72,6 +74,7 @@ export const tripleWhaleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "execute_custom_sql_query",
+    operationType: "read",
     description: "Execute a Triple Whale Data-Out custom SQL query for a store and date period.",
     inputSchema: s.actionInput(
       {
@@ -99,6 +102,7 @@ export const tripleWhaleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer_journey_attribution_data",
+    operationType: "read",
     description: "Export Triple Whale customer journey attribution data for orders in a date period.",
     providerPermissions: ["Pixel Attribution: Read"],
     inputSchema: s.actionInput(

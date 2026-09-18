@@ -470,18 +470,21 @@ const vectorOutputSchema = s.actionOutput(
 export const perigonActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_articles",
+    operationType: "read",
     description: "Search Perigon news articles with keyword, date, entity, source, and category filters.",
     inputSchema: searchArticlesInputSchema,
     outputSchema: articlesOutputSchema,
   }),
   defineProviderAction(service, {
     name: "search_stories",
+    operationType: "read",
     description: "Search Perigon story clusters for evolving news narratives and grouped article coverage.",
     inputSchema: searchStoriesInputSchema,
     outputSchema: storiesOutputSchema,
   }),
   defineProviderAction(service, {
     name: "search_sources",
+    operationType: "read",
     description: "Search Perigon media sources by domain, source group, traffic, paywall, and geography filters.",
     inputSchema: searchSourcesInputSchema,
     outputSchema: resultsOutputSchema(
@@ -491,12 +494,14 @@ export const perigonActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_topics",
+    operationType: "read",
     description: "Browse or search Perigon topics used to classify news content.",
     inputSchema: searchTopicsInputSchema,
     outputSchema: topicsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "search_journalists",
+    operationType: "read",
     description: "Search Perigon journalist profiles by name, Twitter handle, post volume, and update date.",
     inputSchema: searchJournalistsInputSchema,
     outputSchema: resultsOutputSchema(
@@ -506,12 +511,14 @@ export const perigonActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_journalist",
+    operationType: "read",
     description: "Get one Perigon journalist profile by journalist ID.",
     inputSchema: getJournalistInputSchema,
     outputSchema: getJournalistOutputSchema,
   }),
   defineProviderAction(service, {
     name: "search_people",
+    operationType: "read",
     description: "Search Perigon people entities for Wikidata-backed profile metadata.",
     inputSchema: searchPeopleInputSchema,
     outputSchema: resultsOutputSchema(
@@ -521,6 +528,7 @@ export const perigonActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_companies",
+    operationType: "read",
     description: "Search Perigon company entities by name, domain, symbol, industry, country, and exchange.",
     inputSchema: searchCompaniesInputSchema,
     outputSchema: resultsOutputSchema(
@@ -530,6 +538,7 @@ export const perigonActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_wikipedia",
+    operationType: "read",
     description: "Search Perigon Wikipedia pages by text, identity, category, revision, and pageview filters.",
     inputSchema: searchWikipediaInputSchema,
     outputSchema: resultsOutputSchema(
@@ -539,18 +548,21 @@ export const perigonActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "summarize_news",
+    operationType: "read",
     description: "Generate an AI summary over Perigon news articles matching the supplied filters.",
     inputSchema: summarizeNewsInputSchema,
     outputSchema: summaryOutputSchema,
   }),
   defineProviderAction(service, {
     name: "vector_search_news",
+    operationType: "read",
     description: "Run semantic vector search over recent Perigon news articles with optional structured filters.",
     inputSchema: vectorSearchNewsInputSchema,
     outputSchema: vectorOutputSchema,
   }),
   defineProviderAction(service, {
     name: "vector_search_wikipedia",
+    operationType: "read",
     description: "Run semantic vector search over Perigon Wikipedia content with optional structured filters.",
     inputSchema: vectorSearchWikipediaInputSchema,
     outputSchema: vectorOutputSchema,

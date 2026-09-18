@@ -116,6 +116,7 @@ const listScorecardsInputFields = {
 export const chorusActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get details about the current Chorus API token user.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The current Chorus user response.", {
@@ -124,6 +125,7 @@ export const chorusActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_teams",
+    operationType: "read",
     description: "List Chorus teams visible to the connected API token user.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The Chorus teams response.", {
@@ -132,6 +134,7 @@ export const chorusActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_team",
+    operationType: "read",
     description: "Get a specific Chorus team by ID.",
     inputSchema: s.object("Input for getting a Chorus team.", {
       id: nonEmptyStringSchema("The Chorus team ID."),
@@ -142,6 +145,7 @@ export const chorusActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_engagements",
+    operationType: "read",
     description: "List Chorus engagements with documented v3 filters and continuation pagination.",
     inputSchema: s.object("Query parameters for listing Chorus engagements.", listEngagementsInputFields, {
       optional: optionalKeys(listEngagementsInputFields),
@@ -153,6 +157,7 @@ export const chorusActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_conversation",
+    operationType: "read",
     description: "Get a specific Chorus conversation with optional populated fields.",
     inputSchema: s.object("Input for getting a Chorus conversation.", getConversationInputFields, {
       optional: ["fields", "forceRegeneration", "skipSummaryGeneration", "includeMeetingMetadata"],
@@ -163,6 +168,7 @@ export const chorusActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_scorecards",
+    operationType: "read",
     description: "List Chorus scorecards with documented filters and page pagination.",
     inputSchema: s.object("Query parameters for listing Chorus scorecards.", listScorecardsInputFields, {
       optional: optionalKeys(listScorecardsInputFields),

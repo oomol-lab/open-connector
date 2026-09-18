@@ -42,6 +42,7 @@ const createTransactionSchema = s.object(
 export const rewiserActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_folders",
+    operationType: "read",
     description: "List the Rewiser folders available to the authenticated user.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list Rewiser folders.", {}),
@@ -57,6 +58,7 @@ export const rewiserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_recent_transactions",
+    operationType: "read",
     description: "Get recent Rewiser transactions, optionally filtered by transaction type or folder.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -77,6 +79,7 @@ export const rewiserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_multiple_transactions",
+    operationType: "write",
     description: "Create one or more Rewiser transactions in a single request.",
     requiredScopes: [],
     inputSchema: s.object("Transactions to create in Rewiser.", {

@@ -41,6 +41,7 @@ const grabItemSchema = s.object(
 export const harpaAiActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_web",
+    operationType: "read",
     description: "Search the web through a connected HARPA browser node.",
     inputSchema: s.object(
       "The web search to run through HARPA GRID.",
@@ -57,6 +58,7 @@ export const harpaAiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "scrape_web_page",
+    operationType: "read",
     description: "Scrape a web page as Markdown or extract selected elements through a connected HARPA browser node.",
     inputSchema: s.object(
       "The web page and optional element selectors to scrape through HARPA GRID.",
@@ -72,6 +74,7 @@ export const harpaAiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_ai_command",
+    operationType: "destructive",
     description: "Run a built-in or custom HARPA AI command in a connected browser node and return its result.",
     inputSchema: s.object(
       "The HARPA AI command to run in a browser node.",
@@ -95,6 +98,7 @@ export const harpaAiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_ai_prompt",
+    operationType: "read",
     description: "Run an AI prompt, optionally with a web page as context, in a connected HARPA browser node.",
     inputSchema: s.object(
       "The AI prompt and optional browser context to run through HARPA GRID.",

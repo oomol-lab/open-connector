@@ -71,6 +71,7 @@ const purgePullZoneCacheInputSchema = s.object(
 export const bunnycdnActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_pull_zones",
+    operationType: "read",
     description: "List Bunny Pull Zones with optional pagination, search, and certificate expansion.",
     inputSchema: listPullZonesInputSchema,
     outputSchema: s.object(
@@ -86,6 +87,7 @@ export const bunnycdnActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_pull_zone",
+    operationType: "read",
     description: "Get one Bunny Pull Zone by ID.",
     inputSchema: getPullZoneInputSchema,
     outputSchema: s.actionOutput(
@@ -97,6 +99,7 @@ export const bunnycdnActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "purge_pull_zone_cache",
+    operationType: "destructive",
     description: "Purge the cache for a Bunny Pull Zone, optionally restricted to one cache tag.",
     inputSchema: purgePullZoneCacheInputSchema,
     outputSchema: s.object(

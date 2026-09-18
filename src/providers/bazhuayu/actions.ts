@@ -116,6 +116,7 @@ const analyticsItemSchema = s.looseObject("Analytics for one Bazhuayu task and t
 export const bazhuayuActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_task_groups",
+    operationType: "read",
     description:
       "List the task groups available to the connected Bazhuayu account. Requires a Flagship, Flagship+, Enterprise, or Team plan.",
     requiredScopes: [],
@@ -127,6 +128,7 @@ export const bazhuayuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "List the Bazhuayu tasks in one task group. Requires a Flagship, Flagship+, Enterprise, or Team plan.",
     requiredScopes: [],
     inputSchema: s.object("The task group whose tasks should be listed.", {
@@ -139,6 +141,7 @@ export const bazhuayuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task_actions",
+    operationType: "read",
     description:
       "Get API-addressable steps from Bazhuayu tasks so their action IDs can be used in parameter updates. Requires a Flagship+, Enterprise, or Team plan.",
     requiredScopes: [],
@@ -156,6 +159,7 @@ export const bazhuayuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "copy_task",
+    operationType: "write",
     description:
       "Copy a Bazhuayu task into a task group and return the new task ID. Requires a Flagship+, Enterprise, or Team plan.",
     requiredScopes: [],
@@ -175,6 +179,7 @@ export const bazhuayuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_task_parameters",
+    operationType: "write",
     description:
       "Update supported properties and loop items in a Bazhuayu task. Requires a Flagship+, Enterprise, or Team plan.",
     requiredScopes: [],
@@ -191,6 +196,7 @@ export const bazhuayuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_loop_items",
+    operationType: "destructive",
     description:
       "Replace or append the text or URL items used by one Bazhuayu loop step. Requires a Flagship+, Enterprise, or Team plan.",
     requiredScopes: [],
@@ -211,6 +217,7 @@ export const bazhuayuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_task",
+    operationType: "write",
     description:
       "Start a Bazhuayu task on cloud workers and return its batch number. Requires a Flagship+, Enterprise, or Team plan.",
     requiredScopes: [],
@@ -223,6 +230,7 @@ export const bazhuayuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "stop_task",
+    operationType: "destructive",
     description: "Stop a running Bazhuayu cloud task. Requires a Flagship+, Enterprise, or Team plan.",
     requiredScopes: [],
     inputSchema: s.object("The Bazhuayu task to stop.", { taskId: taskIdSchema }),
@@ -232,6 +240,7 @@ export const bazhuayuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task_statuses",
+    operationType: "read",
     description: "Get the latest execution status for Bazhuayu tasks. Requires a Flagship+, Enterprise, or Team plan.",
     requiredScopes: [],
     inputSchema: s.object("The Bazhuayu tasks whose status should be returned.", {
@@ -244,6 +253,7 @@ export const bazhuayuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task_stats",
+    operationType: "read",
     description:
       "Get account-wide counts for waiting, extracting, and finished Bazhuayu cloud tasks and subtasks. Requires an Enterprise plan.",
     requiredScopes: [],
@@ -261,6 +271,7 @@ export const bazhuayuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subtask_statuses",
+    operationType: "read",
     description: "List the latest batch's Bazhuayu subtask statuses. Requires a Flagship+, Enterprise, or Team plan.",
     requiredScopes: [],
     inputSchema: s.object("The task and page of subtasks to return.", {
@@ -275,6 +286,7 @@ export const bazhuayuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_subtasks",
+    operationType: "write",
     description: "Start selected cloud subtasks for a Bazhuayu task. Requires a Flagship+, Enterprise, or Team plan.",
     requiredScopes: [],
     inputSchema: s.object("The Bazhuayu cloud subtasks to start.", {
@@ -287,6 +299,7 @@ export const bazhuayuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "stop_subtasks",
+    operationType: "destructive",
     description: "Stop selected cloud subtasks for a Bazhuayu task. Requires a Flagship+, Enterprise, or Team plan.",
     requiredScopes: [],
     inputSchema: s.object("The Bazhuayu cloud subtasks to stop.", {
@@ -299,6 +312,7 @@ export const bazhuayuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task_data",
+    operationType: "read",
     description:
       "Get a page of collected data from a Bazhuayu task using the offset returned by the previous page. Requires a Flagship, Flagship+, Enterprise, or Team plan.",
     requiredScopes: [],
@@ -311,6 +325,7 @@ export const bazhuayuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task_batch_data",
+    operationType: "read",
     description:
       "Get a page of collected data from one Bazhuayu task execution batch. Requires a Flagship, Flagship+, Enterprise, or Team plan.",
     requiredScopes: [],
@@ -324,6 +339,7 @@ export const bazhuayuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_unexported_data",
+    operationType: "read",
     description:
       "Get the next unexported records from a Bazhuayu task. Use this with mark_data_exported through only one sequential consumer per task because Bazhuayu acknowledgements are task-scoped. Requires a Flagship, Flagship+, Enterprise, or Team plan.",
     requiredScopes: [],
@@ -340,6 +356,7 @@ export const bazhuayuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "mark_data_exported",
+    operationType: "write",
     description:
       "Mark the current unexported data for a Bazhuayu task as exported. Call this only after a single sequential consumer has persisted the preceding get_unexported_data result. Requires a Flagship, Flagship+, Enterprise, or Team plan.",
     requiredScopes: [],
@@ -352,6 +369,7 @@ export const bazhuayuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_task_analytics",
+    operationType: "read",
     description:
       "Query Bazhuayu collection volume, execution, success-rate, and resource-usage metrics for the last three months. Requires a Flagship, Flagship+, Enterprise, or Team plan.",
     requiredScopes: [],

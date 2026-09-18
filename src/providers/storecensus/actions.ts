@@ -75,6 +75,7 @@ const appSchema = s.looseObject("A StoreCensus Shopify app record.", {
 export const storecensusActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_website",
+    operationType: "read",
     description: "Retrieve StoreCensus ecommerce intelligence for a website domain or lead ID.",
     inputSchema: s.object(
       "The input payload for retrieving one StoreCensus website.",
@@ -92,6 +93,7 @@ export const storecensusActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_stores",
+    operationType: "read",
     description: "Search StoreCensus ecommerce stores with filters and cursor pagination.",
     inputSchema: s.object(
       "The input payload for searching StoreCensus stores.",
@@ -126,6 +128,7 @@ export const storecensusActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_apps",
+    operationType: "read",
     description: "List or search StoreCensus Shopify apps with page pagination.",
     inputSchema: s.object(
       "The input payload for listing StoreCensus Shopify apps.",
@@ -150,6 +153,7 @@ export const storecensusActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_app_categories",
+    operationType: "read",
     description: "List StoreCensus Shopify app categories that have active apps.",
     inputSchema: s.object("The input payload for listing StoreCensus app categories.", {}),
     outputSchema: s.object("The response returned when listing StoreCensus app categories.", {

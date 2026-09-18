@@ -51,6 +51,7 @@ const newsItemSchema = s.looseRequiredObject(
 export const trawlingwebActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_news",
+    operationType: "read",
     description: "Search indexed news and blog publications through the TrawlingWeb News API.",
     inputSchema: s.object(
       "Input parameters for searching TrawlingWeb news and blog publications.",

@@ -66,6 +66,7 @@ const dataSourcePayloadSchema = s.looseObject(
 export const grafanaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_folders",
+    operationType: "read",
     description: "List Grafana folders in a namespace with optional pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -87,6 +88,7 @@ export const grafanaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_folder",
+    operationType: "read",
     description: "Retrieve one Grafana folder by UID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -103,6 +105,7 @@ export const grafanaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_folder",
+    operationType: "write",
     description: "Create a Grafana folder in a namespace.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -122,6 +125,7 @@ export const grafanaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_folder",
+    operationType: "write",
     description: "Update the title or parent folder for a Grafana folder.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -143,6 +147,7 @@ export const grafanaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_folder",
+    operationType: "destructive",
     description: "Delete a Grafana folder by UID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -160,6 +165,7 @@ export const grafanaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_dashboards",
+    operationType: "read",
     description: "Search Grafana folders and dashboards by query, tags, type, folder, and pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -185,6 +191,7 @@ export const grafanaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dashboard",
+    operationType: "read",
     description: "Retrieve one Grafana dashboard resource by UID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -201,6 +208,7 @@ export const grafanaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_dashboard",
+    operationType: "write",
     description: "Create a Grafana dashboard resource in a namespace.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -220,6 +228,7 @@ export const grafanaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_dashboard",
+    operationType: "write",
     description: "Replace a Grafana dashboard resource by UID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -241,6 +250,7 @@ export const grafanaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_dashboard",
+    operationType: "destructive",
     description: "Delete a Grafana dashboard resource by UID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -258,6 +268,7 @@ export const grafanaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_data_sources",
+    operationType: "read",
     description: "List Grafana data sources available to the service account token.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list Grafana data sources.", {}),
@@ -268,6 +279,7 @@ export const grafanaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_data_source",
+    operationType: "read",
     description: "Retrieve one Grafana data source by UID.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a Grafana data source.", {
@@ -279,6 +291,7 @@ export const grafanaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_data_source",
+    operationType: "write",
     description: "Create a Grafana data source using a JSON payload accepted by Grafana.",
     requiredScopes: [],
     inputSchema: s.object("Input for creating a Grafana data source.", {
@@ -291,6 +304,7 @@ export const grafanaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_data_source",
+    operationType: "write",
     description: "Update a Grafana data source by UID using fields accepted by Grafana.",
     requiredScopes: [],
     inputSchema: s.object("Input for updating a Grafana data source.", {
@@ -304,6 +318,7 @@ export const grafanaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_data_source",
+    operationType: "destructive",
     description: "Delete a Grafana data source by UID.",
     requiredScopes: [],
     inputSchema: s.object("Input for deleting a Grafana data source.", {
@@ -316,6 +331,7 @@ export const grafanaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_alert_rules",
+    operationType: "read",
     description: "List all Grafana-managed alert rules via the provisioning API.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list Grafana alert rules.", {}),
@@ -325,6 +341,7 @@ export const grafanaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_alert_rule",
+    operationType: "read",
     description: "Retrieve one Grafana-managed alert rule by UID via the provisioning API.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -338,6 +355,7 @@ export const grafanaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_alert_instances",
+    operationType: "read",
     description: "List currently firing or pending Grafana alert instances from the built-in Alertmanager.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -355,6 +373,7 @@ export const grafanaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contact_points",
+    operationType: "read",
     description: "List Grafana notification contact points via the provisioning API.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list Grafana contact points.", {}),

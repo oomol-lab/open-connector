@@ -231,24 +231,28 @@ const getServiceOutputSchema = s.object(
 export const northflankActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Northflank projects available to the authenticated token.",
     inputSchema: listProjectsInputSchema,
     outputSchema: listProjectsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Retrieve details for a Northflank project.",
     inputSchema: getProjectInputSchema,
     outputSchema: getProjectOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_services",
+    operationType: "read",
     description: "List Northflank services in a project.",
     inputSchema: listServicesInputSchema,
     outputSchema: listServicesOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_service",
+    operationType: "read",
     description: "Retrieve details for a Northflank service.",
     inputSchema: getServiceInputSchema,
     outputSchema: getServiceOutputSchema,

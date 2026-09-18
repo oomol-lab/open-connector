@@ -30,6 +30,7 @@ const mcpToolSummarySchema = s.object(
 export const xydcMcpActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tools",
+    operationType: "read",
     description:
       "Discover the current XYDC MCP tools, behavior annotations, and live input schemas before choosing a tool to call.",
     followUpActions: ["xydc_mcp.call_tool"],
@@ -40,6 +41,7 @@ export const xydcMcpActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "call_tool",
+    operationType: "write",
     description:
       "Call a current XYDC MCP tool with JSON arguments matching its live schema. Calls may consume Credits. Each successful generate_category_insight_resource call costs 500 Credits, including existing resources; reuse the returned resource and do not blindly retry generation. Connector waits at most 55 seconds for generation. A timeout does not confirm upstream cancellation or prevent charges; the result may be unknown. Do not automatically retry generation after a timeout.",
     followUpActions: ["xydc_mcp.list_tools"],
@@ -59,6 +61,7 @@ export const xydcMcpActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "read_category_insight_guide",
+    operationType: "read",
     description:
       "Read the official XYDC category insight workflow before a category analysis: marketplace and category confirmation, resource generation, reuse, reporting periods, pagination and Credits.",
     inputSchema: s.requiredObject("No input is required.", {}),

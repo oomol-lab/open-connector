@@ -13,6 +13,7 @@ const targetSchema = s.object("One Pushsafer delivery target.", {
 export const pushsaferActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send a push notification to one Pushsafer device, group, or all devices.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -80,6 +81,7 @@ export const pushsaferActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_devices",
+    operationType: "read",
     description: "List devices and device groups registered to the connected Pushsafer account.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Pushsafer devices.", {}),
@@ -89,6 +91,7 @@ export const pushsaferActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List delivery groups registered to the connected Pushsafer account.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Pushsafer groups.", {}),

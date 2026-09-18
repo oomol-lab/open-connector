@@ -7,6 +7,7 @@ import type { ActionDefinition, JsonSchema } from "./types.ts";
 export interface DefineProviderActionInput<TName extends string = string> {
   name: TName;
   description: string;
+  operationType: ActionDefinition["operationType"];
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
   requiredScopes?: readonly string[];
@@ -32,6 +33,7 @@ export function defineProviderAction<const TName extends string>(
     service,
     name: input.name,
     description: input.description,
+    operationType: input.operationType,
     requiredScopes: input.requiredScopes ? [...input.requiredScopes] : [],
     providerPermissions: input.providerPermissions ? [...input.providerPermissions] : [],
     inputSchema: input.inputSchema,

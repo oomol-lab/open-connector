@@ -155,6 +155,7 @@ const emptyInputSchema = s.object("The input payload for this incident.io list a
 export const incidentIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_incidents",
+    operationType: "read",
     description: "List incident.io incidents with optional stable filters and pagination.",
     inputSchema: listIncidentsInputSchema,
     outputSchema: s.object("The response returned when listing incident.io incidents.", {
@@ -164,6 +165,7 @@ export const incidentIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_incident",
+    operationType: "read",
     description: "Get a single incident.io incident by full ID or numeric reference.",
     inputSchema: getIncidentInputSchema,
     outputSchema: s.object("The response returned when loading an incident.io incident.", {
@@ -172,6 +174,7 @@ export const incidentIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_actions",
+    operationType: "read",
     description: "List incident.io actions with optional incident and mode filters.",
     inputSchema: listActionsInputSchema,
     outputSchema: s.object("The response returned when listing incident.io actions.", {
@@ -180,6 +183,7 @@ export const incidentIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_action",
+    operationType: "read",
     description: "Get a single incident.io action by ID.",
     inputSchema: getActionInputSchema,
     outputSchema: s.object("The response returned when loading an incident.io action.", {
@@ -188,6 +192,7 @@ export const incidentIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_severities",
+    operationType: "read",
     description: "List incident.io severities configured for the organization.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The response returned when listing incident.io severities.", {
@@ -196,6 +201,7 @@ export const incidentIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_incident_statuses",
+    operationType: "read",
     description: "List incident.io incident statuses configured for the organization.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The response returned when listing incident.io statuses.", {

@@ -12,6 +12,7 @@ import { patsnapServerNames } from "./servers.ts";
 const patsnapCoreActions: ProviderActionDefinition[] = [
   defineProviderAction("patsnap_mcp", {
     name: "transfer_data",
+    operationType: "read",
     description:
       "Retrieves Valuation Patent Transfer Data data so users can review the key information and continue with downstream analysis.",
     inputSchema: {
@@ -25,6 +26,7 @@ const patsnapCoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "search_patents",
+    operationType: "read",
     description:
       "Searches Patent Search By Query based on input criteria and returns matching results for screening, comparison, and follow-up analysis.",
     inputSchema: {
@@ -47,6 +49,7 @@ const patsnapCoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "reexamination_invalidation",
+    operationType: "read",
     description:
       "Retrieves Reexamination And Invalidation to assess status changes, patent stability, and potential legal risk.",
     inputSchema: {
@@ -60,6 +63,7 @@ const patsnapCoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "pledge_data",
+    operationType: "read",
     description:
       "Retrieves Valuation Patent Pledge Data data so users can review the key information and continue with downstream analysis.",
     inputSchema: {
@@ -73,6 +77,7 @@ const patsnapCoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "pdf",
+    operationType: "read",
     description: "Retrieves detailed Full-text PDF for verification, full-text review, and deeper analysis.",
     inputSchema: {
       ...s.requiredObject("Patsnap core patent tool arguments.", {
@@ -85,6 +90,7 @@ const patsnapCoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "license_data",
+    operationType: "read",
     description:
       "Retrieves Valuation Patent License Data data so users can review the key information and continue with downstream analysis.",
     inputSchema: {
@@ -98,6 +104,7 @@ const patsnapCoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "legal_data",
+    operationType: "read",
     description: "Retrieves detailed Legal Details for verification, full-text review, and deeper analysis.",
     inputSchema: {
       ...s.requiredObject("Patsnap core patent tool arguments.", {
@@ -110,6 +117,7 @@ const patsnapCoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "get_patent_legal_status",
+    operationType: "read",
     description: "Retrieves Simple Legal Status to assess status changes, patent stability, and potential legal risk.",
     inputSchema: {
       ...s.requiredObject("Patsnap core patent tool arguments.", {
@@ -122,6 +130,7 @@ const patsnapCoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "fulltext_image",
+    operationType: "read",
     description: "Retrieves detailed Full-text Images for verification, full-text review, and deeper analysis.",
     inputSchema: {
       ...s.requiredObject("Patsnap core patent tool arguments.", {
@@ -136,6 +145,7 @@ const patsnapCoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "forward_citation",
+    operationType: "read",
     description:
       "Retrieves Valuation Patent Forward Citation data so users can review the key information and continue with downstream analysis.",
     inputSchema: {
@@ -149,6 +159,7 @@ const patsnapCoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "family",
+    operationType: "read",
     description: "Retrieves Patent Family to review family relationships, jurisdictional coverage, and family breadth.",
     inputSchema: {
       ...s.requiredObject("Patsnap core patent tool arguments.", {
@@ -161,6 +172,7 @@ const patsnapCoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "description_translated",
+    operationType: "read",
     description: "Retrieves detailed Translated Description for verification, full-text review, and deeper analysis.",
     inputSchema: {
       ...s.requiredObject("Patsnap core patent tool arguments.", {
@@ -175,6 +187,7 @@ const patsnapCoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "description",
+    operationType: "read",
     description: "Retrieves detailed Description for verification, full-text review, and deeper analysis.",
     inputSchema: {
       ...s.requiredObject("Patsnap core patent tool arguments.", {
@@ -188,6 +201,7 @@ const patsnapCoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "customs_data",
+    operationType: "read",
     description: "Retrieves Customs Recordation to assess status changes, patent stability, and potential legal risk.",
     inputSchema: {
       ...s.requiredObject("Patsnap core patent tool arguments.", {
@@ -200,6 +214,7 @@ const patsnapCoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "claim_translated",
+    operationType: "read",
     description: "Retrieves detailed Translated Claims for verification, full-text review, and deeper analysis.",
     inputSchema: {
       ...s.requiredObject("Patsnap core patent tool arguments.", {
@@ -214,6 +229,7 @@ const patsnapCoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "claims",
+    operationType: "read",
     description: "Retrieves detailed Claims for verification, full-text review, and deeper analysis.",
     inputSchema: {
       ...s.requiredObject("Patsnap core patent tool arguments.", {
@@ -227,6 +243,7 @@ const patsnapCoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "bibliography",
+    operationType: "read",
     description: "Retrieves detailed Bibliography for verification, full-text review, and deeper analysis.",
     inputSchema: {
       ...s.requiredObject("Patsnap core patent tool arguments.", {
@@ -239,6 +256,7 @@ const patsnapCoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "award_data",
+    operationType: "read",
     description: "Retrieves Patent Awards to review honors, awards, and external recognition for a company or patent.",
     inputSchema: {
       ...s.requiredObject("Patsnap core patent tool arguments.", {
@@ -251,6 +269,7 @@ const patsnapCoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "abstract_translated",
+    operationType: "read",
     description:
       "Retrieves Patent Abstract Translated data so users can review the key information and continue with downstream analysis.",
     inputSchema: {
@@ -266,6 +285,7 @@ const patsnapCoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("patsnap_mcp", {
     name: "abstract_image",
+    operationType: "read",
     description:
       "Retrieves Valuation Patent Abstract Image data so users can review the key information and continue with downstream analysis.",
     inputSchema: {
@@ -304,6 +324,7 @@ export const patsnapMcpActions: ProviderActionDefinition[] = [
   ...patsnapDesignActions,
   defineProviderAction("patsnap_mcp", {
     name: "list_tools",
+    operationType: "read",
     description: "Discover current tools and live input schemas for one Patsnap MCP service. Defaults to core_patents.",
     inputSchema: s.requiredObject("Select one Patsnap MCP service to inspect.", {
       server: s.optional(s.stringEnum("MCP service to inspect; defaults to core_patents.", patsnapServerNames)),

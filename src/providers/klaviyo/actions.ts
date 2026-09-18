@@ -54,6 +54,7 @@ const profileIdentifierSchema = s.object(
 export const klaviyoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "validate_account",
+    operationType: "read",
     description: "Validate a Klaviyo private API key by reading account metadata.",
     requiredScopes: ["accounts:read"],
     inputSchema: s.object("No input is required to validate a Klaviyo account.", {}),
@@ -61,6 +62,7 @@ export const klaviyoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_profiles",
+    operationType: "read",
     description: "List Klaviyo profiles with optional filtering, sorting, and cursor pagination.",
     requiredScopes: ["profiles:read"],
     inputSchema: s.object("Input for listing Klaviyo profiles.", paginationInputSchema, {
@@ -70,6 +72,7 @@ export const klaviyoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_profile",
+    operationType: "read",
     description: "Get one Klaviyo profile by profile ID.",
     requiredScopes: ["profiles:read"],
     inputSchema: s.object("Input for retrieving one Klaviyo profile.", {
@@ -79,6 +82,7 @@ export const klaviyoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_campaigns",
+    operationType: "read",
     description: "List Klaviyo campaigns with the required channel filter plus optional sorting and cursor pagination.",
     requiredScopes: ["campaigns:read"],
     inputSchema: s.object(
@@ -98,6 +102,7 @@ export const klaviyoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign",
+    operationType: "read",
     description: "Get one Klaviyo campaign by campaign ID.",
     requiredScopes: ["campaigns:read"],
     inputSchema: s.object("Input for retrieving one Klaviyo campaign.", {
@@ -107,6 +112,7 @@ export const klaviyoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_events",
+    operationType: "read",
     description: "List Klaviyo events with optional filtering, sorting, and cursor pagination.",
     requiredScopes: ["events:read"],
     inputSchema: s.object("Input for listing Klaviyo events.", paginationInputSchema, {
@@ -116,6 +122,7 @@ export const klaviyoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_event",
+    operationType: "write",
     description: "Create a Klaviyo event for a profile using a metric name and JSON event properties.",
     requiredScopes: ["events:write", "profiles:write"],
     inputSchema: s.object(

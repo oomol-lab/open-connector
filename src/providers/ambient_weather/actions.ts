@@ -57,6 +57,7 @@ const deviceSummarySchema = s.object("An Ambient Weather device summary with its
 export const ambientWeatherActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_devices",
+    operationType: "read",
     description: "List Ambient Weather devices linked to the connected account.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -66,6 +67,7 @@ export const ambientWeatherActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_latest_device_data",
+    operationType: "read",
     description: "Get the latest observation record for an Ambient Weather device.",
     requiredScopes: [],
     inputSchema: latestDeviceInputSchema,
@@ -79,6 +81,7 @@ export const ambientWeatherActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_device_history",
+    operationType: "read",
     description: "Get recent historical observation records for an Ambient Weather device.",
     requiredScopes: [],
     inputSchema: deviceHistoryInputSchema,

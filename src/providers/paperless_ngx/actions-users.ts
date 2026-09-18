@@ -100,6 +100,7 @@ const profileWriteInputFields = {
 export const paperlessNgxUserActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description:
       "List Paperless-ngx user accounts with pagination and username filters, ordered by username. The built-in consumer and AnonymousUser accounts are never listed. Requires the view_user permission.",
     requiredScopes: [],
@@ -122,6 +123,7 @@ export const paperlessNgxUserActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description:
       "Get one Paperless-ngx user account by id, including group memberships, direct and inherited permission codenames and whether MFA is enabled. Requires the view_user permission.",
     requiredScopes: [],
@@ -130,6 +132,7 @@ export const paperlessNgxUserActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_user",
+    operationType: "write",
     description:
       "Create a Paperless-ngx user account. Only username is required; without a password the account cannot log in with a password until one is set. Granting is_staff or is_superuser requires the caller to be a superuser. Requires the add_user permission.",
     requiredScopes: [],
@@ -140,6 +143,7 @@ export const paperlessNgxUserActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_user",
+    operationType: "write",
     description:
       "Partially update a Paperless-ngx user account; only the provided fields change and groups or user_permissions replace the whole list. Changing is_staff or is_superuser, or modifying a superuser at all, requires the caller to be a superuser. Requires the change_user permission.",
     requiredScopes: [],
@@ -152,6 +156,7 @@ export const paperlessNgxUserActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_user",
+    operationType: "destructive",
     description:
       "Permanently delete a Paperless-ngx user account. Objects owned by the user become unowned. Deleting a superuser requires the caller to be a superuser. Requires the delete_user permission.",
     requiredScopes: [],
@@ -160,6 +165,7 @@ export const paperlessNgxUserActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "deactivate_user_totp",
+    operationType: "destructive",
     description:
       "Remove the TOTP multi-factor authenticator of a user so they can log in with a password only. Callers may deactivate their own TOTP; deactivating another user's requires the caller to be a superuser. Fails with 404 when the user has no TOTP authenticator.",
     requiredScopes: [],
@@ -172,6 +178,7 @@ export const paperlessNgxUserActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description:
       "List Paperless-ngx user groups with pagination and name filters, ordered by name. Requires the view_group permission.",
     requiredScopes: [],
@@ -194,6 +201,7 @@ export const paperlessNgxUserActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_group",
+    operationType: "read",
     description:
       "Get one Paperless-ngx user group by id with its permission codenames. Requires the view_group permission.",
     requiredScopes: [],
@@ -202,6 +210,7 @@ export const paperlessNgxUserActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_group",
+    operationType: "write",
     description:
       "Create a Paperless-ngx user group. Paperless-ngx requires the permissions list on create, so it is sent as an empty list when omitted. Requires the add_group permission.",
     requiredScopes: [],
@@ -212,6 +221,7 @@ export const paperlessNgxUserActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_group",
+    operationType: "write",
     description:
       "Partially update a Paperless-ngx user group; only the provided fields change and permissions replaces the whole list. Requires the change_group permission.",
     requiredScopes: [],
@@ -224,6 +234,7 @@ export const paperlessNgxUserActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_group",
+    operationType: "destructive",
     description:
       "Permanently delete a Paperless-ngx user group. Members lose the permissions inherited from it. Requires the delete_group permission.",
     requiredScopes: [],
@@ -232,6 +243,7 @@ export const paperlessNgxUserActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_profile",
+    operationType: "read",
     description:
       "Get the profile of the user that owns the API token: name, email, linked social accounts, whether a password and MFA are set, and the API token itself (redacted from logs).",
     requiredScopes: [],
@@ -240,6 +252,7 @@ export const paperlessNgxUserActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_profile",
+    operationType: "write",
     description:
       "Update the name, email or password of the user that owns the API token. Only the provided fields change; a password made only of asterisks is ignored. Returns the updated profile including the API token (redacted from logs).",
     requiredScopes: [],

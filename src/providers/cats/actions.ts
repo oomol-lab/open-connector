@@ -79,6 +79,7 @@ export const catsActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "get_site",
+    operationType: "read",
     description: "Get information about the CATS site associated with the API key.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to fetch the CATS site.", {}),
@@ -87,6 +88,7 @@ export const catsActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "list_candidates",
+    operationType: "read",
     description: "List CATS candidates with optional pagination.",
     requiredScopes: [],
     inputSchema: paginationInputSchema,
@@ -95,6 +97,7 @@ export const catsActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "get_candidate",
+    operationType: "read",
     description: "Fetch one CATS candidate by candidate ID.",
     requiredScopes: [],
     inputSchema: idInputSchema("candidate", "candidateId"),
@@ -103,6 +106,7 @@ export const catsActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "search_candidates",
+    operationType: "read",
     description: "Search CATS candidates by free-text query with optional pagination.",
     requiredScopes: [],
     inputSchema: searchInputSchema,
@@ -111,6 +115,7 @@ export const catsActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "list_companies",
+    operationType: "read",
     description: "List CATS companies with optional pagination.",
     requiredScopes: [],
     inputSchema: paginationInputSchema,
@@ -119,6 +124,7 @@ export const catsActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "get_company",
+    operationType: "read",
     description: "Fetch one CATS company by company ID.",
     requiredScopes: [],
     inputSchema: idInputSchema("company", "companyId"),
@@ -127,6 +133,7 @@ export const catsActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "search_companies",
+    operationType: "read",
     description: "Search CATS companies by free-text query with optional pagination.",
     requiredScopes: [],
     inputSchema: searchInputSchema,
@@ -135,6 +142,7 @@ export const catsActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "list_jobs",
+    operationType: "read",
     description: "List CATS jobs with optional pagination.",
     requiredScopes: [],
     inputSchema: paginationInputSchema,
@@ -143,6 +151,7 @@ export const catsActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "get_job",
+    operationType: "read",
     description: "Fetch one CATS job by job ID.",
     requiredScopes: [],
     inputSchema: idInputSchema("job", "jobId"),
@@ -151,6 +160,7 @@ export const catsActions: ProviderActionDefinition[] = [
   defineAction({
     service,
     name: "search_jobs",
+    operationType: "read",
     description: "Search CATS jobs by free-text query with optional pagination.",
     requiredScopes: [],
     inputSchema: searchInputSchema,

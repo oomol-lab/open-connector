@@ -113,6 +113,7 @@ for (const [path, pathItem] of Object.entries(paths)) {
       operationId,
       tag,
       description: operation.description ?? operation.summary ?? fallbackDescription(method, path, operationId),
+      operationType: operationType(method, operationId),
       method: method.toUpperCase(),
       path,
       pathFields,
@@ -152,11 +153,11 @@ const imports = moduleEntries
 const arrays = moduleEntries.map(({ exportName }) => `  ${exportName},`).join("\n");
 const indexSource =
   `// Generated in part by src/providers/dokploy/generate.ts.\n` +
-  `import type { JsonSchema } from "../../core/types.ts";\n\n${imports}\n\n` +
+  `import type { ActionOperationType, JsonSchema } from "../../core/types.ts";\n\n${imports}\n\n` +
   `export type DokployActionMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";\n` +
   `export type DokployOperationSupportStatus = "supported" | "unsupported";\n\n` +
   `export interface DokployOperationDefinition {\n` +
-  `  name: string;\n  operationId?: string;\n  tag?: string;\n  description: string;\n` +
+  `  name: string;\n  operationId?: string;\n  tag?: string;\n  description: string;\n  operationType: ActionOperationType;\n` +
   `  method: DokployActionMethod;\n  path: string;\n  pathFields: readonly string[];\n` +
   `  queryFields: readonly string[];\n  bodyFields: readonly string[];\n  fileFields?: readonly string[];\n` +
   `  contentType?: string | null;\n  supportStatus?: DokployOperationSupportStatus;\n` +
@@ -204,6 +205,15 @@ function fallbackDescription(method: string, path: string, operationId: string):
     return `Modify Dokploy state via ${upperMethod} ${path}. Warning: this operation can remove, stop, or otherwise disrupt resources.`;
   }
   return `Modify Dokploy state via ${upperMethod} ${path}.`;
+}
+
+function operationType(method: string, operationId: string): "read" | "write" | "destructive" {
+  if (operationId == "cluster-addManager" || operationId == "cluster-addWorker") return "write";
+  if (method == "get") return "read";
+  if (/(?:delete|remove|stop|kill|clean|drop|destroy|revoke|disconnect|rollback)/iu.test(operationId)) {
+    return "destructive";
+  }
+  return "write";
 }
 
 function dereference(value: JsonObject, seen = new Set<string>()): JsonObject {

@@ -235,6 +235,7 @@ const createSwapOutputSchema = s.actionOutput(
 export const uniswapApiActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_quote",
+    operationType: "read",
     description: "Request a Uniswap trade quote for one wallet, token pair, and amount.",
     inputSchema: getQuoteInputSchema,
     outputSchema: getQuoteOutputSchema,
@@ -242,12 +243,14 @@ export const uniswapApiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_approval",
+    operationType: "read",
     description: "Check whether the swapper wallet needs an ERC-20 approval transaction before swapping.",
     inputSchema: checkApprovalInputSchema,
     outputSchema: checkApprovalOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_swap",
+    operationType: "write",
     description: "Create the transaction calldata for a Uniswap swap from a prior quote and optional permit signature.",
     inputSchema: createSwapInputSchema,
     outputSchema: createSwapOutputSchema,

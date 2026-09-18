@@ -1,5 +1,5 @@
 import type { ProviderActionDefinition } from "../../core/provider-definition.ts";
-import type { JsonSchema } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
@@ -20,6 +20,7 @@ interface SeerfarOperation {
 }
 function operation<const TName extends string>(
   name: TName,
+  operationType: ActionDefinition["operationType"],
   path: string,
   usage: number,
   description: string,
@@ -29,7 +30,7 @@ function operation<const TName extends string>(
   return {
     path,
     usage,
-    action: defineProviderAction("linkfox", { name, description, inputSchema, outputSchema }),
+    action: defineProviderAction("linkfox", { name, operationType, description, inputSchema, outputSchema }),
   };
 }
 const pageSchema = s.object("Pagination and sorting.", {
@@ -160,6 +161,7 @@ const dailySalesSchema = s.number("Average daily sales units.");
 export const seerfarOperations: SeerfarOperation[] = [
   operation(
     "list_seerfar_ozon_category_products",
+    "read",
     "/seerfar/ozon/categorySearch",
     15,
     "List Ozon category products and aggregate statistics through LinkFox and Seerfar.",
@@ -199,6 +201,7 @@ export const seerfarOperations: SeerfarOperation[] = [
   ),
   operation(
     "reverse_search_seerfar_ozon_keywords",
+    "read",
     "/seerfar/ozon/keywordBackSearch",
     23,
     "Reverse-search Ozon keywords for SKU IDs through LinkFox and Seerfar.",
@@ -262,6 +265,7 @@ export const seerfarOperations: SeerfarOperation[] = [
   ),
   operation(
     "mine_seerfar_ozon_keywords",
+    "read",
     "/seerfar/ozon/keywordMining",
     23,
     "Mine Ozon keywords from a seed keyword through LinkFox and Seerfar.",
@@ -306,6 +310,7 @@ export const seerfarOperations: SeerfarOperation[] = [
   ),
   operation(
     "search_seerfar_ozon_market_keywords",
+    "read",
     "/seerfar/ozon/marketKeywordSearch",
     15,
     "Search Ozon market keywords through LinkFox and Seerfar.",
@@ -361,6 +366,7 @@ export const seerfarOperations: SeerfarOperation[] = [
   ),
   operation(
     "get_seerfar_ozon_product",
+    "read",
     "/seerfar/ozon/productDetailSearch",
     5,
     "Get an Ozon product snapshot and sales history through LinkFox and Seerfar.",
@@ -409,6 +415,7 @@ export const seerfarOperations: SeerfarOperation[] = [
   ),
   operation(
     "search_seerfar_ozon_product_reports",
+    "read",
     "/seerfar/ozon/productReportSearch",
     15,
     "Search Ozon product reports with commercial filters through LinkFox and Seerfar.",
@@ -529,6 +536,7 @@ export const seerfarOperations: SeerfarOperation[] = [
   ),
   operation(
     "list_seerfar_ozon_shop_products",
+    "read",
     "/seerfar/ozon/shopSearch",
     15,
     "List Ozon shop products and aggregate statistics through LinkFox and Seerfar.",

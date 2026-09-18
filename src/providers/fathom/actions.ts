@@ -273,12 +273,14 @@ const currentVisitorsOutputSchema = s.looseObject(
 export const fathomActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve the Fathom account that owns the API key.",
     inputSchema: s.object("No input is required to fetch the Fathom account.", {}),
     outputSchema: accountOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_sites",
+    operationType: "read",
     description: "List Fathom sites available to the API key.",
     inputSchema: paginatedInput("The input payload for listing Fathom sites."),
     outputSchema: listOutputSchema(
@@ -289,24 +291,28 @@ export const fathomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_site",
+    operationType: "read",
     description: "Retrieve a single Fathom site by site ID.",
     inputSchema: s.requiredObject("The input payload for fetching a Fathom site.", { site_id: siteId }),
     outputSchema: siteObjectSchema,
   }),
   defineProviderAction(service, {
     name: "create_site",
+    operationType: "write",
     description: "Create a Fathom site.",
     inputSchema: createSiteInputSchema,
     outputSchema: siteObjectSchema,
   }),
   defineProviderAction(service, {
     name: "update_site",
+    operationType: "write",
     description: "Update a Fathom site.",
     inputSchema: updateSiteInputSchema,
     outputSchema: siteObjectSchema,
   }),
   defineProviderAction(service, {
     name: "list_events",
+    operationType: "read",
     description: "List events for a Fathom site.",
     inputSchema: paginatedInput("The input payload for listing Fathom events.", {
       site_id: siteId,
@@ -319,6 +325,7 @@ export const fathomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_event",
+    operationType: "read",
     description: "Retrieve a single Fathom event by site ID and event ID.",
     inputSchema: s.requiredObject("The input payload for fetching a Fathom event.", {
       site_id: siteId,
@@ -328,18 +335,21 @@ export const fathomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_event",
+    operationType: "write",
     description: "Create a Fathom event for a site.",
     inputSchema: createEventInputSchema,
     outputSchema: eventObjectSchema,
   }),
   defineProviderAction(service, {
     name: "update_event",
+    operationType: "write",
     description: "Update a Fathom event.",
     inputSchema: updateEventInputSchema,
     outputSchema: eventObjectSchema,
   }),
   defineProviderAction(service, {
     name: "list_milestones",
+    operationType: "read",
     description: "List milestones for a Fathom site.",
     inputSchema: paginatedInput("The input payload for listing Fathom milestones.", {
       site_id: siteId,
@@ -352,6 +362,7 @@ export const fathomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_milestone",
+    operationType: "read",
     description: "Retrieve a single Fathom milestone by site ID and milestone ID.",
     inputSchema: s.requiredObject("The input payload for fetching a Fathom milestone.", {
       site_id: siteId,
@@ -361,24 +372,28 @@ export const fathomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_milestone",
+    operationType: "write",
     description: "Create a Fathom milestone for a site.",
     inputSchema: createMilestoneInputSchema,
     outputSchema: milestoneObjectSchema,
   }),
   defineProviderAction(service, {
     name: "update_milestone",
+    operationType: "write",
     description: "Update a Fathom milestone.",
     inputSchema: updateMilestoneInputSchema,
     outputSchema: milestoneObjectSchema,
   }),
   defineProviderAction(service, {
     name: "run_aggregation",
+    operationType: "read",
     description: "Generate a Fathom analytics aggregation report.",
     inputSchema: aggregationInputSchema,
     outputSchema: aggregationOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_current_visitors",
+    operationType: "read",
     description: "Fetch the current visitor count and optional detailed breakdown for a Fathom site.",
     inputSchema: currentVisitorsInputSchema,
     outputSchema: currentVisitorsOutputSchema,

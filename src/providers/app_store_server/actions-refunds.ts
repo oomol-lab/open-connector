@@ -33,6 +33,7 @@ const consumptionAcceptedOutput = s.actionOutput(
 export const appStoreServerRefundActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_refund_history",
+    operationType: "read",
     description:
       "List the in-app purchase transactions the App Store refunded for a customer in your app, newest first, decoded from the signed payloads Apple returns. Returns up to 20 transactions per page.",
     requiredScopes: [],
@@ -59,6 +60,7 @@ export const appStoreServerRefundActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_consumption_information",
+    operationType: "write",
     description:
       "Send consumption information for an in-app purchase after a CONSUMPTION_REQUEST notification, so the App Store can decide on the customer's refund request. Apple expects an answer within 12 hours of the notification. Use this for App Store in-app purchases that do not go through the Advanced Commerce API.",
     requiredScopes: [],
@@ -87,6 +89,7 @@ export const appStoreServerRefundActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_consumption_information_v1",
+    operationType: "write",
     description:
       "Send the version 1 consumption information for an in-app purchase after a CONSUMPTION_REQUEST notification. Apple documents this shape for purchases made through the Advanced Commerce API; use send_consumption_information for ordinary App Store in-app purchases.",
     requiredScopes: [],

@@ -100,24 +100,28 @@ const configurationOptional = Object.keys(configurationFilterFields);
 export const rootlyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the Rootly user associated with the API key.",
     inputSchema: emptyInputSchema,
     outputSchema: singleResourceOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_incidents",
+    operationType: "read",
     description: "List Rootly incidents with common filters and pagination.",
     inputSchema: s.object("Input for listing Rootly incidents.", incidentFilterFields, { optional: incidentOptional }),
     outputSchema: listResourceOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_incident",
+    operationType: "read",
     description: "Retrieve one Rootly incident by UUID or slug.",
     inputSchema: getResourceInputSchema,
     outputSchema: singleResourceOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_services",
+    operationType: "read",
     description: "List Rootly services with common filters and pagination.",
     inputSchema: s.object("Input for listing Rootly services.", configurationFilterFields, {
       optional: configurationOptional,
@@ -126,6 +130,7 @@ export const rootlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_teams",
+    operationType: "read",
     description: "List Rootly teams with common filters and pagination.",
     inputSchema: s.object(
       "Input for listing Rootly teams.",

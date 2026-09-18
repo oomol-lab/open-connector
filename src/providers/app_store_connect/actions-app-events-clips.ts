@@ -451,6 +451,7 @@ const nominationAttributeInputs = {
 export const appStoreConnectAppEventClipActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_app_events",
+    operationType: "read",
     description: "List the in-app events of an app, optionally narrowed to some review states or identifiers.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -479,6 +480,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_app_event",
+    operationType: "read",
     description: "Read one in-app event with its state, badge, purpose, and territory schedules.",
     requiredScopes: [],
     inputSchema: s.actionInput({ appEventId: appEventIdInput }, ["appEventId"], "Identifies the in-app event to read."),
@@ -486,6 +488,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_app_event",
+    operationType: "write",
     description:
       "Create a draft in-app event for an app. Add localizations with create_app_event_localization before submitting the event for review in App Store Connect.",
     requiredScopes: [],
@@ -504,6 +507,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "update_app_event",
+    operationType: "destructive",
     description:
       "Change the reference name, badge, deep link, purchase requirement, locale, priority, purpose, or territory schedules of an in-app event. Overwrites the given fields; pass null for deepLink or purchaseRequirement to clear it. Pass at least one field.",
     requiredScopes: [],
@@ -525,6 +529,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "delete_app_event",
+    operationType: "destructive",
     description:
       "Delete an in-app event together with its localizations. A published event is removed from the App Store.",
     requiredScopes: [],
@@ -541,6 +546,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "list_app_event_localizations",
+    operationType: "read",
     description: "List the localized name and descriptions of an in-app event for every locale.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -557,6 +563,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_app_event_localization",
+    operationType: "read",
     description: "Read one in-app event localization by its identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -571,6 +578,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_app_event_localization",
+    operationType: "write",
     description:
       "Add a locale to an in-app event with the name and descriptions shown in that locale. App Store Connect rejects a locale the event already has.",
     requiredScopes: [],
@@ -593,6 +601,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "update_app_event_localization",
+    operationType: "destructive",
     description:
       "Change the name or descriptions of an in-app event localization. Overwrites the given fields; pass null to clear a field. Pass at least one field.",
     requiredScopes: [],
@@ -614,6 +623,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "delete_app_event_localization",
+    operationType: "destructive",
     description: "Remove a locale from an in-app event together with the screenshots and video clips uploaded for it.",
     requiredScopes: [],
     providerPermissions: [...manageAppStoreRoles],
@@ -629,6 +639,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "list_app_clips",
+    operationType: "read",
     description: "List the App Clips of an app, optionally filtered by bundle identifier.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -647,6 +658,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_app_clip",
+    operationType: "read",
     description: "Read one App Clip by its identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput({ appClipId: appClipIdInput }, ["appClipId"], "Identifies the App Clip to read."),
@@ -654,6 +666,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "list_app_clip_default_experiences",
+    operationType: "read",
     description:
       "List the default experiences of an App Clip with the App Store version each one is released with. Optionally keep only experiences that are, or are not, attached to a version.",
     requiredScopes: [],
@@ -677,6 +690,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_app_clip_default_experience",
+    operationType: "read",
     description: "Read one default App Clip experience with its action and the App Store version it is released with.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -691,6 +705,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_app_clip_default_experience",
+    operationType: "write",
     description:
       "Create a default experience for an App Clip, optionally attached to the App Store version it ships with or copied from an existing experience.",
     requiredScopes: [],
@@ -716,6 +731,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "update_app_clip_default_experience",
+    operationType: "destructive",
     description:
       "Change the action of a default App Clip experience or the App Store version it is released with. Pass at least one field.",
     requiredScopes: [],
@@ -738,6 +754,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "delete_app_clip_default_experience",
+    operationType: "destructive",
     description: "Delete a default App Clip experience together with its localizations and review detail.",
     requiredScopes: [],
     providerPermissions: [...manageAppStoreRoles],
@@ -753,6 +770,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "set_app_clip_default_experience_release_version",
+    operationType: "destructive",
     description:
       "Attach a default App Clip experience to the App Store version it is released with, replacing any version attached before.",
     requiredScopes: [],
@@ -778,6 +796,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "list_app_clip_default_experience_localizations",
+    operationType: "read",
     description: "List the localized subtitles of a default App Clip experience, optionally narrowed to some locales.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -801,6 +820,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_app_clip_default_experience_localization",
+    operationType: "read",
     description: "Read one default App Clip experience localization by its identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -815,6 +835,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_app_clip_default_experience_localization",
+    operationType: "write",
     description:
       "Add a locale to a default App Clip experience with the subtitle shown on the App Clip card in that locale. The header image is uploaded separately in App Store Connect.",
     requiredScopes: [],
@@ -835,6 +856,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "update_app_clip_default_experience_localization",
+    operationType: "destructive",
     description: "Change the subtitle of a default App Clip experience localization, or pass null to remove it.",
     requiredScopes: [],
     providerPermissions: [...manageAppStoreRoles],
@@ -853,6 +875,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "delete_app_clip_default_experience_localization",
+    operationType: "destructive",
     description: "Remove a locale from a default App Clip experience together with its header image.",
     requiredScopes: [],
     providerPermissions: [...manageAppStoreRoles],
@@ -868,6 +891,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_app_clip_default_experience_review_detail",
+    operationType: "read",
     description:
       "Read the invocation URLs App Review uses to test a default App Clip experience, or null when none were provided yet.",
     requiredScopes: [],
@@ -883,6 +907,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_app_clip_app_store_review_detail",
+    operationType: "write",
     description:
       "Provide the invocation URLs App Review uses to test a default App Clip experience. Each experience has at most one review detail; use update_app_clip_app_store_review_detail to change it.",
     requiredScopes: [],
@@ -902,6 +927,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "update_app_clip_app_store_review_detail",
+    operationType: "destructive",
     description:
       "Replace the invocation URLs App Review uses to test a default App Clip experience. Pass an empty list to remove them all.",
     requiredScopes: [],
@@ -924,6 +950,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "list_app_clip_advanced_experiences",
+    operationType: "read",
     description:
       "List the advanced experiences of an App Clip with their localized card text. Filter by status, place match status, or action.",
     requiredScopes: [],
@@ -959,6 +986,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_app_clip_advanced_experience",
+    operationType: "read",
     description:
       "Read one advanced App Clip experience with its invocation URL, place, status, and localized card text.",
     requiredScopes: [],
@@ -974,6 +1002,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_app_clip_advanced_experience",
+    operationType: "write",
     description:
       "Create an advanced App Clip experience for an invocation URL with its localized card text and optional place. App Store Connect requires a header image reserved beforehand through the appClipAdvancedExperienceImages endpoint (a binary upload, available through the proxy); pass its identifier as headerImageId.",
     requiredScopes: [],
@@ -1009,6 +1038,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "update_app_clip_advanced_experience",
+    operationType: "destructive",
     description:
       "Change the action, business category, default language, place, header image, or localized card text of an advanced App Clip experience. Overwrites the given fields; a given localizations list is written inline and replaces the relationship. Pass at least one field.",
     requiredScopes: [],
@@ -1041,6 +1071,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "delete_app_clip_advanced_experience",
+    operationType: "destructive",
     description:
       "Delete an advanced App Clip experience. App Store Connect has no DELETE endpoint for it; the experience is removed by setting its documented removed flag, after which users can no longer invoke it.",
     requiredScopes: [],
@@ -1057,6 +1088,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "list_nominations",
+    operationType: "read",
     description:
       "List the featuring nominations of the team in the given states, optionally narrowed by type, related app, or whether they include in-app events.",
     requiredScopes: [],
@@ -1105,6 +1137,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_nomination",
+    operationType: "read",
     description: "Read one featuring nomination by its identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -1116,6 +1149,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_nomination",
+    operationType: "write",
     description:
       "Create a featuring nomination for one or more apps. With submitted false it stays a draft you can edit; with submitted true it is sent to Apple's editorial team right away.",
     requiredScopes: [],
@@ -1152,6 +1186,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "update_nomination",
+    operationType: "destructive",
     description:
       "Change a featuring nomination, submit a draft with submitted true, or archive it with archived true. Overwrites the given fields; a given list of apps, events, or territories replaces the current one. Pass null for publishEndDate or notes to clear it. Pass at least one field.",
     requiredScopes: [],
@@ -1188,6 +1223,7 @@ export const appStoreConnectAppEventClipActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "delete_nomination",
+    operationType: "destructive",
     description: "Delete a featuring nomination.",
     requiredScopes: [],
     providerPermissions: [...manageAppStoreRoles],

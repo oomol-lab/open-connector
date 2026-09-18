@@ -15,6 +15,7 @@ import {
 export const appStoreConnectUserActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List the members of the App Store Connect team, with the roles granted to each of them.",
     requiredScopes: [],
     providerPermissions: [...usersAndAccessRoles],
@@ -42,6 +43,7 @@ export const appStoreConnectUserActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Read one App Store Connect team member by identifier.",
     requiredScopes: [],
     providerPermissions: [...usersAndAccessRoles],

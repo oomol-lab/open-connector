@@ -181,6 +181,7 @@ const getComponentMeasuresInputSchema = forbidBranchAndPullRequest(
 export const sonarCloudActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List projects visible in a SonarQube Cloud organization.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -210,6 +211,7 @@ export const sonarCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_issues",
+    operationType: "read",
     description: "Search and filter code issues across SonarQube Cloud projects.",
     requiredScopes: [],
     inputSchema: searchIssuesInputSchema,
@@ -220,6 +222,7 @@ export const sonarCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_component_measures",
+    operationType: "read",
     description: "Read selected code-health measures for a SonarQube Cloud component.",
     requiredScopes: [],
     inputSchema: getComponentMeasuresInputSchema,

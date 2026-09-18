@@ -70,12 +70,14 @@ const hostedDomainsLookupOutputSchema = s.object("Hosted domains lookup result f
 export const ip2whoisActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "lookup_domain",
+    operationType: "read",
     description: "Look up WHOIS registration details for a domain.",
     inputSchema: domainLookupInputSchema,
     outputSchema: domainLookupOutputSchema,
   }),
   defineProviderAction(service, {
     name: "lookup_hosted_domains",
+    operationType: "read",
     description: "List hosted domains associated with an IP address.",
     inputSchema: hostedDomainsLookupInputSchema,
     outputSchema: hostedDomainsLookupOutputSchema,

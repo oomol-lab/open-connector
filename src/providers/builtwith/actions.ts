@@ -212,6 +212,7 @@ const builtwithRecommendationResultSchema = s.object(
 export const builtwithActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "lookup_domain_profile",
+    operationType: "read",
     description:
       "Retrieve a BuiltWith technology profile for a domain while excluding personally identifiable information by default.",
     inputSchema: s.object(
@@ -241,6 +242,7 @@ export const builtwithActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "lookup_domain_summary",
+    operationType: "read",
     description: "Retrieve the BuiltWith Free API technology group summary for a root domain.",
     inputSchema: s.object(
       "The input payload for looking up a BuiltWith domain summary.",
@@ -266,6 +268,7 @@ export const builtwithActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "lookup_redirect_history",
+    operationType: "read",
     description: "Retrieve the inbound and outbound redirect history for a root domain from BuiltWith.",
     inputSchema: s.object(
       "The input payload for looking up BuiltWith redirect history.",
@@ -290,6 +293,7 @@ export const builtwithActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "lookup_social_profiles",
+    operationType: "read",
     description: "Map one or more social profile URLs to BuiltWith root domain matches.",
     inputSchema: s.object(
       "The input payload for looking up social profiles in BuiltWith.",
@@ -312,6 +316,7 @@ export const builtwithActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_domain_recommendations",
+    operationType: "read",
     description: "Retrieve BuiltWith technology recommendations for one or more root domains.",
     inputSchema: s.object(
       "The input payload for retrieving BuiltWith recommendations.",

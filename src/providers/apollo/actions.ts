@@ -164,12 +164,14 @@ enrichPersonInputSchema.anyOf = [
 export const apolloActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_api_usage_stats",
+    operationType: "read",
     description: "Retrieve Apollo API usage statistics for the current team and key.",
     inputSchema: emptyInputSchema,
     outputSchema: usageOutputSchema,
   }),
   defineProviderAction(service, {
     name: "search_organizations",
+    operationType: "read",
     description: "Search Apollo organizations with the first-pass organization filters.",
     inputSchema: searchOrganizationsInputSchema,
     outputSchema: s.object(
@@ -184,6 +186,7 @@ export const apolloActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_people",
+    operationType: "read",
     description: "Search Apollo people with the first-pass prospecting filters.",
     inputSchema: searchPeopleInputSchema,
     outputSchema: s.object(
@@ -197,6 +200,7 @@ export const apolloActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "enrich_organization",
+    operationType: "read",
     description: "Enrich an Apollo organization by domain.",
     inputSchema: s.object("The input payload for the Apollo organization enrichment request.", {
       domain: s.nonEmptyString("The bare company domain used to enrich an Apollo organization."),
@@ -207,6 +211,7 @@ export const apolloActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "enrich_person",
+    operationType: "read",
     description: "Enrich an Apollo person with the first-pass matching inputs.",
     inputSchema: enrichPersonInputSchema,
     outputSchema: s.object("The output payload for the Apollo person enrichment request.", {

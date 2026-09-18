@@ -20,6 +20,7 @@ const environmentSchema = s.looseObject("A Voiceflow project environment.", {
 export const voiceflowActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "start_session",
+    operationType: "write",
     description:
       "Start a Voiceflow conversation session for one user and return the session key used by non-streaming interact calls.",
     providerPermissions: ["runtime:session"],
@@ -36,6 +37,7 @@ export const voiceflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "interact",
+    operationType: "write",
     description: "Send one non-streaming action to a Voiceflow conversation session.",
     providerPermissions: ["runtime:interact"],
     inputSchema: s.actionInput(
@@ -59,6 +61,7 @@ export const voiceflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_knowledge_base",
+    operationType: "read",
     description: "Query the Voiceflow knowledge base and return the synthesized answer and chunks.",
     providerPermissions: ["knowledge_base:query"],
     inputSchema: s.actionInput(
@@ -92,6 +95,7 @@ export const voiceflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_environments",
+    operationType: "read",
     description: "List environments for the connected Voiceflow project.",
     providerPermissions: ["environment:read"],
     inputSchema: s.actionInput({}),

@@ -17,6 +17,7 @@ const forecastDaySchema = s.looseObject("Single WeatherAPI forecast day payload.
 export const weatherapiActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_locations",
+    operationType: "read",
     description: "Search locations supported by WeatherAPI.",
     inputSchema: s.actionInput(
       {
@@ -37,6 +38,7 @@ export const weatherapiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_current_weather",
+    operationType: "read",
     description: "Get current weather conditions for a WeatherAPI location query.",
     inputSchema: s.actionInput(
       {
@@ -56,6 +58,7 @@ export const weatherapiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_forecast",
+    operationType: "read",
     description: "Get weather forecast data for a WeatherAPI location query.",
     inputSchema: s.actionInput(
       {
@@ -78,6 +81,7 @@ export const weatherapiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_astronomy",
+    operationType: "read",
     description: "Get astronomy information for a WeatherAPI location query and date.",
     inputSchema: s.actionInput(
       {
@@ -97,6 +101,7 @@ export const weatherapiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_timezone",
+    operationType: "read",
     description: "Get timezone information for a WeatherAPI location query.",
     inputSchema: s.actionInput(
       {

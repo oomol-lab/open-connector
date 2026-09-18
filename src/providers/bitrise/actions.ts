@@ -218,6 +218,7 @@ const triggerBuildOutputSchema = s.object("Triggered Bitrise build metadata.", {
 export const bitriseActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_apps",
+    operationType: "read",
     description: "List Bitrise apps available to the authenticated account.",
     requiredScopes: [],
     inputSchema: listAppsInputSchema,
@@ -225,6 +226,7 @@ export const bitriseActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_builds",
+    operationType: "read",
     description: "List builds for a Bitrise app with optional filters and pagination.",
     requiredScopes: [],
     inputSchema: listBuildsInputSchema,
@@ -232,6 +234,7 @@ export const bitriseActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_build",
+    operationType: "read",
     description: "Retrieve one Bitrise build by app slug and build slug.",
     requiredScopes: [],
     inputSchema: getBuildInputSchema,
@@ -239,6 +242,7 @@ export const bitriseActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "trigger_build",
+    operationType: "write",
     description: "Trigger a Bitrise build or pipeline for an app.",
     requiredScopes: [],
     inputSchema: triggerBuildInputSchema,

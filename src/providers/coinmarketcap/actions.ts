@@ -299,6 +299,7 @@ convertPriceInputSchema.allOf = [mutualExclusion("convert", "convert_id")];
 export const coinmarketcapActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_key_info",
+    operationType: "read",
     description: "Retrieve plan limits and usage details for the current CoinMarketCap API key.",
     inputSchema: s.object({}, { description: "Input parameters for retrieving API key information." }),
     outputSchema: s.object("CoinMarketCap API key information.", {
@@ -315,6 +316,7 @@ export const coinmarketcapActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_cryptocurrency_map",
+    operationType: "read",
     description: "Retrieve CoinMarketCap asset IDs, symbols, and slugs for cryptocurrency discovery.",
     inputSchema: mapInputSchema,
     outputSchema: s.object("Asset mapping response returned by CoinMarketCap.", {
@@ -324,6 +326,7 @@ export const coinmarketcapActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_latest_cryptocurrency_quotes",
+    operationType: "read",
     description: "Retrieve the latest quotes for one or more cryptocurrencies by id, symbol, or slug.",
     inputSchema: quotesLatestInputSchema,
     outputSchema: s.object("Latest quote response returned by CoinMarketCap.", {
@@ -333,6 +336,7 @@ export const coinmarketcapActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_latest_cryptocurrency_listings",
+    operationType: "read",
     description: "Retrieve the latest cryptocurrency listings ordered by CoinMarketCap ranking and filters.",
     inputSchema: listingsLatestInputSchema,
     outputSchema: s.object("Latest listings response returned by CoinMarketCap.", {
@@ -342,6 +346,7 @@ export const coinmarketcapActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_latest_global_metrics_quotes",
+    operationType: "read",
     description: "Retrieve the latest global cryptocurrency market metrics and quote aggregates.",
     inputSchema: globalMetricsInputSchema,
     outputSchema: s.object("Latest global market metrics response returned by CoinMarketCap.", {
@@ -351,6 +356,7 @@ export const coinmarketcapActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "convert_price",
+    operationType: "read",
     description: "Convert an asset amount into another fiat or cryptocurrency using CoinMarketCap pricing.",
     inputSchema: convertPriceInputSchema,
     outputSchema: s.object("Price conversion response returned by CoinMarketCap.", {

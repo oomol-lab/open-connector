@@ -478,6 +478,7 @@ const scopedListInput = (description: string, idField: string, idSchema: ReturnT
 export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_ci_products",
+    operationType: "read",
     description:
       "List the Xcode Cloud products of the team, optionally narrowed to one app or to app or framework products. A product holds the workflows and build runs of one app or framework.",
     requiredScopes: [],
@@ -499,6 +500,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_ci_product",
+    operationType: "read",
     description: "Read one Xcode Cloud product by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -510,6 +512,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "delete_ci_product",
+    operationType: "destructive",
     description:
       "Delete an Xcode Cloud product, which removes every workflow and build history of that app or framework from Xcode Cloud.",
     requiredScopes: [],
@@ -526,6 +529,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_ci_product_workflows",
+    operationType: "read",
     description: "List the workflows of one Xcode Cloud product.",
     requiredScopes: [],
     inputSchema: scopedListInput(
@@ -542,6 +546,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_ci_product_build_runs",
+    operationType: "read",
     description:
       "List the build runs of one Xcode Cloud product across all of its workflows, optionally narrowed to the run that produced one build.",
     requiredScopes: [],
@@ -564,6 +569,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_ci_product_primary_repositories",
+    operationType: "read",
     description:
       "List the primary repositories of one Xcode Cloud product, the repositories that hold the project or package its workflows build.",
     requiredScopes: [],
@@ -581,6 +587,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_ci_product_additional_repositories",
+    operationType: "read",
     description:
       "List the additional repositories of one Xcode Cloud product, such as Swift package dependencies Xcode Cloud has been granted access to.",
     requiredScopes: [],
@@ -598,6 +605,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_ci_workflow",
+    operationType: "read",
     description:
       "Read one Xcode Cloud workflow with its start conditions, actions, and the product, repository, Xcode version, and macOS version it uses.",
     requiredScopes: [],
@@ -610,6 +618,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "create_ci_workflow",
+    operationType: "write",
     description:
       "Create an Xcode Cloud workflow for a product. Give it at least one action and, for automatic builds, one or more start conditions; without start conditions it can only be started manually.",
     requiredScopes: [],
@@ -646,6 +655,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "update_ci_workflow",
+    operationType: "destructive",
     description:
       "Change an Xcode Cloud workflow. Every field given replaces the current value; a start condition or the actions array is replaced as a whole, so pass the complete new object. Give at least one field to change.",
     requiredScopes: [],
@@ -668,6 +678,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "delete_ci_workflow",
+    operationType: "destructive",
     description:
       "Delete an Xcode Cloud workflow together with its build history. Builds already delivered to TestFlight or App Store Connect are kept.",
     requiredScopes: [],
@@ -684,6 +695,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_ci_workflow_build_runs",
+    operationType: "read",
     description:
       "List the build runs of one Xcode Cloud workflow, optionally narrowed to the run that produced one build.",
     requiredScopes: [],
@@ -706,6 +718,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_ci_workflow_repository",
+    operationType: "read",
     description: "Read the source repository an Xcode Cloud workflow builds from.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -717,6 +730,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_ci_build_run",
+    operationType: "read",
     description:
       "Read one Xcode Cloud build run, including its progress, completion status, issue counts, and the commit it built. Poll it to follow a run started with start_ci_build_run.",
     requiredScopes: [],
@@ -729,6 +743,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "start_ci_build_run",
+    operationType: "write",
     description:
       "Start an Xcode Cloud build run for a workflow. Pass the Git reference of the branch or tag to build, or the pull request to build; the run is queued and progresses asynchronously, so read it back with get_ci_build_run.",
     requiredScopes: [],
@@ -751,6 +766,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_ci_build_run_actions",
+    operationType: "read",
     description:
       "List the actions (build, analyze, test, archive) of one build run with the progress and outcome of each.",
     requiredScopes: [],
@@ -764,6 +780,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_ci_build_run_builds",
+    operationType: "read",
     description:
       "List the App Store Connect builds an Xcode Cloud build run delivered, with the prerelease version each build belongs to. Use it to find the build to distribute after an archive action.",
     requiredScopes: [],
@@ -801,6 +818,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_ci_build_action",
+    operationType: "read",
     description: "Read one action of a build run, with its progress, outcome, and issue counts.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -812,6 +830,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_ci_build_action_artifacts",
+    operationType: "read",
     description:
       "List the artifacts a build action produced, such as archives, log bundles, and result bundles, each with a time-limited download URL.",
     requiredScopes: [],
@@ -829,6 +848,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_ci_build_action_issues",
+    operationType: "read",
     description: "List the errors, warnings, analyzer warnings, and test failures a build action reported.",
     requiredScopes: [],
     inputSchema: scopedListInput(
@@ -840,6 +860,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_ci_build_action_test_results",
+    operationType: "read",
     description: "List the per-test results of a test action, with the outcome on each destination.",
     requiredScopes: [],
     inputSchema: scopedListInput(
@@ -856,6 +877,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_ci_build_action_build_run",
+    operationType: "read",
     description: "Read the build run a build action belongs to.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -867,6 +889,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_ci_artifact",
+    operationType: "read",
     description: "Read one build artifact, including a fresh time-limited download URL for its file.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -878,6 +901,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_ci_issue",
+    operationType: "read",
     description: "Read one issue a build action reported, with the file and line it points at.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -889,6 +913,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_ci_test_result",
+    operationType: "read",
     description: "Read the result of one test method across the destinations it ran on.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -900,6 +925,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_ci_mac_os_versions",
+    operationType: "read",
     description: "List the macOS versions Xcode Cloud can build on.",
     requiredScopes: [],
     inputSchema: paginationOnlyInput("Pagination for browsing macOS versions."),
@@ -912,6 +938,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_ci_mac_os_version",
+    operationType: "read",
     description: "Read one macOS version available in Xcode Cloud.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -923,6 +950,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_ci_mac_os_version_xcode_versions",
+    operationType: "read",
     description: "List the Xcode versions that can run on one macOS version in Xcode Cloud.",
     requiredScopes: [],
     inputSchema: scopedListInput(
@@ -939,6 +967,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_ci_xcode_versions",
+    operationType: "read",
     description:
       "List the Xcode versions Xcode Cloud can build with, each with the simulators and Macs available for tests.",
     requiredScopes: [],
@@ -952,6 +981,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_ci_xcode_version",
+    operationType: "read",
     description: "Read one Xcode version available in Xcode Cloud, with the simulators and Macs available for tests.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -963,6 +993,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_ci_xcode_version_mac_os_versions",
+    operationType: "read",
     description: "List the macOS versions one Xcode version can run on in Xcode Cloud.",
     requiredScopes: [],
     inputSchema: scopedListInput(
@@ -979,6 +1010,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_scm_providers",
+    operationType: "read",
     description: "List the source control providers (GitHub, GitLab, Bitbucket) connected to Xcode Cloud for the team.",
     requiredScopes: [],
     inputSchema: paginationOnlyInput("Pagination for browsing source control providers."),
@@ -991,6 +1023,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_scm_provider",
+    operationType: "read",
     description: "Read one source control provider connected to Xcode Cloud.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -1004,6 +1037,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_scm_provider_repositories",
+    operationType: "read",
     description: "List the repositories Xcode Cloud can access on one source control provider.",
     requiredScopes: [],
     inputSchema: scopedListInput(
@@ -1020,6 +1054,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_scm_repositories",
+    operationType: "read",
     description:
       "List every source repository Xcode Cloud can access across all connected providers, optionally narrowed to specific repository identifiers.",
     requiredScopes: [],
@@ -1043,6 +1078,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_scm_repository",
+    operationType: "read",
     description: "Read one source repository, with its provider and default branch identifiers.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -1054,6 +1090,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_scm_repository_git_references",
+    operationType: "read",
     description:
       "List the branches and tags of one repository as Xcode Cloud sees them. Their identifiers are what start_ci_build_run takes as sourceBranchOrTagId.",
     requiredScopes: [],
@@ -1071,6 +1108,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "list_scm_repository_pull_requests",
+    operationType: "read",
     description:
       "List the pull requests of one repository as Xcode Cloud sees them. Their identifiers are what start_ci_build_run takes as scmPullRequestId.",
     requiredScopes: [],
@@ -1088,6 +1126,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_scm_git_reference",
+    operationType: "read",
     description: "Read one branch or tag of a repository as Xcode Cloud sees it.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -1101,6 +1140,7 @@ export const appStoreConnectXcodeCloudActions: readonly ProviderActionDefinition
   }),
   defineProviderAction(service, {
     name: "get_scm_pull_request",
+    operationType: "read",
     description: "Read one pull request of a repository as Xcode Cloud sees it.",
     requiredScopes: [],
     inputSchema: s.actionInput(

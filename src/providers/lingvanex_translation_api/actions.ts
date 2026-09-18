@@ -56,6 +56,7 @@ const languageSchema = s.actionOutput(
 export const lingvanexTranslationApiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "translate_text",
+    operationType: "read",
     description: "Translate one text value or a bounded list of text values with Lingvanex.",
     inputSchema: s.actionInput(
       {
@@ -78,6 +79,7 @@ export const lingvanexTranslationApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "detect_language",
+    operationType: "read",
     description: "Detect the language of one text value or a list of text values.",
     inputSchema: s.actionInput(
       {
@@ -99,6 +101,7 @@ export const lingvanexTranslationApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_languages",
+    operationType: "read",
     description: "List languages supported by the Lingvanex Translation API.",
     inputSchema: s.actionInput(
       {

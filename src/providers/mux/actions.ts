@@ -96,6 +96,7 @@ const assetLifecycle = {
 export const muxActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_asset",
+    operationType: "write",
     description:
       "Create a Mux on-demand video asset from a publicly accessible media URL and return its initial processing state.",
     providerPermissions: [videoWritePermission],
@@ -130,6 +131,7 @@ export const muxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_assets",
+    operationType: "read",
     description: "List Mux video assets with cursor or page-based pagination and optional source filters.",
     providerPermissions: [videoReadPermission],
     followUpActions: ["mux.get_asset"],
@@ -154,6 +156,7 @@ export const muxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_asset",
+    operationType: "read",
     description: "Retrieve the latest processing state and media details for one Mux video asset.",
     providerPermissions: [videoReadPermission],
     followUpActions: ["mux.create_playback_id", "mux.delete_asset"],
@@ -163,6 +166,7 @@ export const muxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_asset",
+    operationType: "destructive",
     description: "Update the passthrough value or customer metadata for an existing Mux video asset.",
     providerPermissions: [videoWritePermission],
     followUpActions: ["mux.get_asset"],
@@ -182,6 +186,7 @@ export const muxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_asset",
+    operationType: "destructive",
     description: "Permanently delete a Mux video asset and all of its data.",
     providerPermissions: [videoWritePermission],
     inputSchema: s.actionInput({ assetId }, ["assetId"], "The Mux asset to delete."),
@@ -195,6 +200,7 @@ export const muxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_playback_id",
+    operationType: "write",
     description: "Create a public, signed, or DRM playback ID for an existing Mux video asset.",
     providerPermissions: [videoWritePermission],
     inputSchema: s.oneOf(
@@ -223,6 +229,7 @@ export const muxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_direct_upload",
+    operationType: "write",
     description:
       "Create a signed Mux Direct Upload URL for client-side or server-side media ingest without proxying video bytes through the connector.",
     providerPermissions: [videoWritePermission],
@@ -244,6 +251,7 @@ export const muxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_direct_upload",
+    operationType: "read",
     description: "Retrieve the status, signed URL, and resulting asset ID for a Mux Direct Upload.",
     providerPermissions: [videoReadPermission],
     followUpActions: ["mux.get_asset"],
@@ -256,6 +264,7 @@ export const muxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_direct_uploads",
+    operationType: "read",
     description: "List Mux Direct Uploads in the current environment, including waiting and completed uploads.",
     providerPermissions: [videoReadPermission],
     followUpActions: ["mux.get_direct_upload", "mux.get_asset"],
@@ -274,6 +283,7 @@ export const muxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "cancel_direct_upload",
+    operationType: "destructive",
     description: "Cancel a waiting Mux Direct Upload so that a later upload cannot create an asset.",
     providerPermissions: [videoWritePermission],
     inputSchema: s.actionInput(
@@ -285,6 +295,7 @@ export const muxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_playback_id",
+    operationType: "read",
     description: "Resolve a Mux playback ID to the asset or live stream it belongs to and its access policy.",
     providerPermissions: [videoReadPermission],
     inputSchema: s.actionInput(

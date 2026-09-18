@@ -22,6 +22,7 @@ const pagination = s.object("The Prospeo pagination summary returned for a searc
 export const prospeoActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_information",
+    operationType: "read",
     description: "Get Prospeo account credits and subscription information for the API key.",
     inputSchema: s.object("No input is required for Prospeo account information.", {}),
     outputSchema: s.object("The normalized Prospeo account information response.", {
@@ -33,6 +34,7 @@ export const prospeoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "enrich_person",
+    operationType: "read",
     description: "Enrich one person from a LinkedIn URL or identifying person and company fields.",
     inputSchema: s.looseObject("Input for Prospeo person enrichment."),
     outputSchema: s.object("The normalized Prospeo person enrichment response.", {
@@ -42,6 +44,7 @@ export const prospeoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "enrich_company",
+    operationType: "read",
     description: "Enrich one company from a domain, LinkedIn URL, or identifying company fields.",
     inputSchema: s.looseObject("Input for Prospeo company enrichment."),
     outputSchema: s.object("The normalized Prospeo company enrichment response.", {
@@ -51,6 +54,7 @@ export const prospeoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_people",
+    operationType: "read",
     description: "Search Prospeo people with official Prospeo search filters.",
     inputSchema: searchInput,
     outputSchema: s.object("The normalized Prospeo people search response.", {
@@ -61,6 +65,7 @@ export const prospeoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_companies",
+    operationType: "read",
     description: "Search Prospeo companies with official Prospeo search filters.",
     inputSchema: searchInput,
     outputSchema: s.object("The normalized Prospeo company search response.", {
@@ -71,6 +76,7 @@ export const prospeoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_suggestions",
+    operationType: "read",
     description: "Get Prospeo autocomplete suggestions for supported search filter types.",
     inputSchema: s.looseObject("Input for Prospeo search suggestions. Provide exactly one supported suggestion field."),
     outputSchema: s.looseObject("The normalized Prospeo search suggestions response.", { raw }),

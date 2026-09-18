@@ -31,6 +31,7 @@ export const sellerspriteMcpActions: readonly ActionDefinition[] = [
   ...sellerSpriteMcpOfficialActions,
   defineProviderAction(service, {
     name: "list_tools",
+    operationType: "read",
     description:
       "Discover the current SellerSprite Amazon research and market-data MCP tools with their live input schemas and behavior annotations.",
     requiredScopes: [],
@@ -42,6 +43,7 @@ export const sellerspriteMcpActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "call_tool",
+    operationType: "write",
     description:
       "Call a current SellerSprite MCP tool with JSON arguments after inspecting its live schema and behavior annotations with list_tools.",
     requiredScopes: [],

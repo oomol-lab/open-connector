@@ -160,6 +160,7 @@ export const territoryAvailabilityResource: JsonSchema = resourceObject(
 export const appStoreConnectPricingActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_app_price_schedule",
+    operationType: "read",
     description:
       "Read the price schedule of an app, including the base territory its automatic prices derive from. Returns null when App Store Connect has no price schedule for the app yet. Use list_app_price_schedule_manual_prices and list_app_price_schedule_automatic_prices for the individual prices.",
     requiredScopes: [],
@@ -175,6 +176,7 @@ export const appStoreConnectPricingActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "create_app_price_schedule",
+    operationType: "destructive",
     description:
       "Set the price schedule of an app: the base territory plus the manual prices, each a price point (which already encodes its territory) with an optional date range. App Store Connect derives the prices of every other territory from the base territory price. The new schedule replaces the current prices and any scheduled price changes of the app. Find price point identifiers with list_app_price_points.",
     requiredScopes: [],
@@ -210,6 +212,7 @@ export const appStoreConnectPricingActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_app_price_schedule_manual_prices",
+    operationType: "read",
     description:
       "List the manual prices of a price schedule, each with the price point it uses, the territory it applies to and the customer price and proceeds of that price point.",
     requiredScopes: [],
@@ -233,6 +236,7 @@ export const appStoreConnectPricingActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_app_price_schedule_automatic_prices",
+    operationType: "read",
     description:
       "List the automatic prices of a price schedule, which App Store Connect derives from the base territory price for every territory without a manual price. Each entry carries its price point, territory, customer price and proceeds.",
     requiredScopes: [],
@@ -256,6 +260,7 @@ export const appStoreConnectPricingActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_app_price_schedule_base_territory",
+    operationType: "read",
     description:
       "Read the base territory of a price schedule, the territory whose price the automatic prices of the other territories are derived from.",
     requiredScopes: [],
@@ -268,6 +273,7 @@ export const appStoreConnectPricingActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_app_price_points",
+    operationType: "read",
     description:
       "List the price points an app can be sold at, optionally narrowed to some territories. Each price point carries the customer price and developer proceeds in the territory currency; pass its identifier to create_app_price_schedule.",
     requiredScopes: [],
@@ -289,6 +295,7 @@ export const appStoreConnectPricingActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_app_price_point",
+    operationType: "read",
     description: "Read one price point by its App Store Connect identifier, including the territory it belongs to.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -300,6 +307,7 @@ export const appStoreConnectPricingActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_app_price_point_equalizations",
+    operationType: "read",
     description:
       "List the price points in other territories that App Store Connect considers equivalent to one price point, optionally narrowed to some territories. Use it to pick matching manual prices across territories.",
     requiredScopes: [],
@@ -321,6 +329,7 @@ export const appStoreConnectPricingActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_app_availability",
+    operationType: "read",
     description:
       "Read the availability configuration of an app, which says whether it is automatically offered in new territories. Returns null when App Store Connect has no availability record for the app yet. Use list_territory_availabilities for the per-territory settings.",
     requiredScopes: [],
@@ -336,6 +345,7 @@ export const appStoreConnectPricingActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "create_app_availability",
+    operationType: "destructive",
     description:
       "Set the territory availability of an app: whether it is offered in new territories automatically, and for each listed territory whether it is available, its release date and whether pre-orders are enabled. The new configuration replaces the current availability of the app in every territory, so list every territory the app should stay available in.",
     requiredScopes: [],
@@ -371,6 +381,7 @@ export const appStoreConnectPricingActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_territory_availabilities",
+    operationType: "read",
     description:
       "List the per-territory availability of an app availability configuration: whether the app is on sale in each territory, its release date, pre-order settings and the content statuses that explain why it is or is not available.",
     requiredScopes: [],
@@ -393,6 +404,7 @@ export const appStoreConnectPricingActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "update_territory_availability",
+    operationType: "destructive",
     description:
       "Change the availability of an app in one territory: toggle whether it is available, set or clear its release date, or enable pre-orders. Pass at least one field; the others keep their current values.",
     requiredScopes: [],
@@ -420,6 +432,7 @@ export const appStoreConnectPricingActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "create_end_app_availability_pre_order",
+    operationType: "destructive",
     description:
       "End the pre-order of an app in the given territories and release it there immediately. This is how a pre-order for the whole app is ended: pass the territory availabilities of every territory the app is on pre-order in. The pre-order cannot be resumed afterwards.",
     requiredScopes: [],

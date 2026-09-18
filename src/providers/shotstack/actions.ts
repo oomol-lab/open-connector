@@ -64,6 +64,7 @@ const renderSchema = s.looseRequiredObject(
 export const shotstackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "render_edit",
+    operationType: "write",
     description:
       "Submit a Shotstack edit JSON payload for asynchronous video, image, or audio rendering and return its render ID.",
     inputSchema: s.actionInput(
@@ -92,6 +93,7 @@ export const shotstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_render",
+    operationType: "read",
     description: "Get the status and output URL for one Shotstack render, optionally including its original edit JSON.",
     inputSchema: s.actionInput(
       {

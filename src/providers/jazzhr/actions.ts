@@ -120,36 +120,42 @@ function singleOutputSchema(description: string, key: string): JsonSchema {
 export const jazzhrActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_jobs",
+    operationType: "read",
     description: "List JazzHR jobs with optional title, owner, location, date, and status filters.",
     inputSchema: listJobsInputSchema,
     outputSchema: listOutputSchema("JazzHR job list.", "jobs"),
   }),
   defineProviderAction(service, {
     name: "get_job",
+    operationType: "read",
     description: "Get a single JazzHR job by ID.",
     inputSchema: getJobInputSchema,
     outputSchema: singleOutputSchema("JazzHR job lookup result.", "job"),
   }),
   defineProviderAction(service, {
     name: "list_applicants",
+    operationType: "read",
     description: "List JazzHR applicants with optional name, job, date, workflow status, and rating filters.",
     inputSchema: listApplicantsInputSchema,
     outputSchema: listOutputSchema("JazzHR applicant list.", "applicants"),
   }),
   defineProviderAction(service, {
     name: "get_applicant",
+    operationType: "read",
     description: "Get a single JazzHR applicant by ID.",
     inputSchema: getApplicantInputSchema,
     outputSchema: singleOutputSchema("JazzHR applicant lookup result.", "applicant"),
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List JazzHR users with optional name, email, and type filters.",
     inputSchema: listUsersInputSchema,
     outputSchema: listOutputSchema("JazzHR user list.", "users"),
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get a single JazzHR user by ID.",
     inputSchema: getUserInputSchema,
     outputSchema: singleOutputSchema("JazzHR user lookup result.", "user"),

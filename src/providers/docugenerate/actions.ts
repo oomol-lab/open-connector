@@ -88,6 +88,7 @@ const documentSchema = s.actionOutput(
 export const docugenerateActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List DocuGenerate templates, optionally filtered by an exact folder path.",
     inputSchema: s.actionInput(
       {
@@ -107,6 +108,7 @@ export const docugenerateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_template",
+    operationType: "read",
     description: "Retrieve one DocuGenerate template by template ID.",
     inputSchema: s.actionInput(
       {
@@ -124,6 +126,7 @@ export const docugenerateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "generate_document",
+    operationType: "write",
     description:
       "Generate and store a DocuGenerate document from a template and JSON merge data, returning a download URL.",
     inputSchema: s.actionInput(
@@ -152,6 +155,7 @@ export const docugenerateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_documents",
+    operationType: "read",
     description: "List all DocuGenerate documents generated from one template.",
     inputSchema: s.actionInput(
       {
@@ -169,6 +173,7 @@ export const docugenerateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document",
+    operationType: "read",
     description: "Retrieve one generated DocuGenerate document by document ID.",
     inputSchema: s.actionInput(
       {
@@ -186,6 +191,7 @@ export const docugenerateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_document",
+    operationType: "write",
     description: "Rename one generated DocuGenerate document by document ID.",
     inputSchema: s.actionInput(
       {
@@ -204,6 +210,7 @@ export const docugenerateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_document",
+    operationType: "destructive",
     description: "Permanently delete one generated DocuGenerate document by document ID.",
     inputSchema: s.actionInput(
       {

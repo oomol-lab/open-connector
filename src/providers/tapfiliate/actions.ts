@@ -306,6 +306,7 @@ const createClickInputSchema = s.actionInput(
 export const tapfiliateActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_affiliates",
+    operationType: "read",
     description: "List Tapfiliate affiliates with optional id, email, referral, and group filters.",
     inputSchema: listAffiliatesInputSchema,
     outputSchema: s.actionOutput(
@@ -318,6 +319,7 @@ export const tapfiliateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_affiliate",
+    operationType: "read",
     description: "Retrieve a single Tapfiliate affiliate by affiliate id.",
     inputSchema: s.actionInput(
       { affiliate_id: trimmedString("The Tapfiliate affiliate id.") },
@@ -328,12 +330,14 @@ export const tapfiliateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_affiliate",
+    operationType: "write",
     description: "Create a Tapfiliate affiliate with contact, company, address, and custom field data.",
     inputSchema: createAffiliateInputSchema,
     outputSchema: s.actionOutput({ affiliate: affiliateOutputSchema }, "The Tapfiliate create affiliate response."),
   }),
   defineProviderAction(service, {
     name: "list_conversions",
+    operationType: "read",
     description: "List Tapfiliate conversions with optional program, external id, affiliate, date, and status filters.",
     inputSchema: listConversionsInputSchema,
     outputSchema: s.actionOutput(
@@ -346,6 +350,7 @@ export const tapfiliateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_conversion",
+    operationType: "write",
     description:
       "Create a Tapfiliate conversion using a documented referral, customer, click, coupon, tracking, or asset-source matcher.",
     inputSchema: createConversionInputSchema,
@@ -353,6 +358,7 @@ export const tapfiliateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_commissions",
+    operationType: "read",
     description: "List Tapfiliate commissions with optional affiliate, approval status, and paid filters.",
     inputSchema: listCommissionsInputSchema,
     outputSchema: s.actionOutput(
@@ -365,6 +371,7 @@ export const tapfiliateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_programs",
+    operationType: "read",
     description: "List Tapfiliate programs with an optional asset filter.",
     inputSchema: listProgramsInputSchema,
     outputSchema: s.actionOutput(
@@ -377,6 +384,7 @@ export const tapfiliateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_affiliate_groups",
+    operationType: "read",
     description: "List Tapfiliate affiliate groups.",
     inputSchema: s.actionInput({ page: pageSchema }, [], "The input payload for listing Tapfiliate affiliate groups."),
     outputSchema: s.actionOutput(
@@ -389,6 +397,7 @@ export const tapfiliateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_affiliate_group",
+    operationType: "write",
     description: "Create a Tapfiliate affiliate group.",
     inputSchema: s.actionInput(
       { title: trimmedString("The affiliate group title.") },
@@ -404,6 +413,7 @@ export const tapfiliateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_clicks",
+    operationType: "read",
     description: "List Tapfiliate Enterprise click records with optional program, affiliate, and date filters.",
     inputSchema: listClicksInputSchema,
     outputSchema: s.actionOutput(
@@ -416,6 +426,7 @@ export const tapfiliateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_click",
+    operationType: "write",
     description: "Create a Tapfiliate REST-only tracking click and return its click id for later conversion creation.",
     inputSchema: createClickInputSchema,
     outputSchema: s.actionOutput({ click: clickCreationOutputSchema }, "The Tapfiliate create click response."),

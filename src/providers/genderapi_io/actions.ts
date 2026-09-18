@@ -48,6 +48,7 @@ const genderInferenceOutputSchema = s.object(
 export const genderapiIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_gender_by_first_name",
+    operationType: "read",
     description: "Infer the likely gender for one first name with optional country and AI fallback hints.",
     inputSchema: s.actionInput(
       {
@@ -65,6 +66,7 @@ export const genderapiIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_gender_by_email_address",
+    operationType: "read",
     description: "Infer the likely gender for one email address after GenderAPI.io extracts a name from it.",
     inputSchema: s.actionInput(
       {
@@ -81,6 +83,7 @@ export const genderapiIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_gender_by_username",
+    operationType: "read",
     description: "Infer the likely gender for one username or nickname with optional country and AI fallback hints.",
     inputSchema: s.actionInput(
       {

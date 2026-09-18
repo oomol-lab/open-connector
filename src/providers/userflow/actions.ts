@@ -37,6 +37,7 @@ const expandSchema = s.stringArray("Expandable Userflow fields to include in the
 export const userflowActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Userflow users with optional cursor pagination and filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -61,6 +62,7 @@ export const userflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Fetch one Userflow user by ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -72,6 +74,7 @@ export const userflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_user",
+    operationType: "write",
     description: "Create or update one Userflow user.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -90,6 +93,7 @@ export const userflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_user",
+    operationType: "destructive",
     description: "Delete one Userflow user by ID.",
     requiredScopes: [],
     inputSchema: s.object("Path parameters for deleting one Userflow user.", {
@@ -103,6 +107,7 @@ export const userflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_group",
+    operationType: "write",
     description: "Create or update one Userflow group.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -118,6 +123,7 @@ export const userflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_group",
+    operationType: "read",
     description: "Fetch one Userflow group by ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -129,6 +135,7 @@ export const userflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_group",
+    operationType: "destructive",
     description: "Delete one Userflow group by ID.",
     requiredScopes: [],
     inputSchema: s.object("Path parameters for deleting one Userflow group.", {
@@ -142,6 +149,7 @@ export const userflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "track_event",
+    operationType: "write",
     description: "Track one Userflow event for a user.",
     requiredScopes: [],
     inputSchema: s.object(

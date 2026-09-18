@@ -365,6 +365,7 @@ const cursorPaginationSchema = {
 export const beehiivActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_publications",
+    operationType: "read",
     description: "List Beehiiv publications associated with the API key, with optional sorting and expansion.",
     inputSchema: listPublicationsInputSchema,
     outputSchema: s.looseRequiredObject("Paginated Beehiiv publications response.", {
@@ -374,6 +375,7 @@ export const beehiivActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_publication",
+    operationType: "read",
     description: "Fetch one Beehiiv publication by ID with optional statistics expansion.",
     inputSchema: getPublicationInputSchema,
     outputSchema: s.looseRequiredObject("Beehiiv publication response.", {
@@ -382,6 +384,7 @@ export const beehiivActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_posts",
+    operationType: "read",
     description: "List Beehiiv posts for a publication with documented filters and optional expansions.",
     inputSchema: postListInputSchema,
     outputSchema: s.looseRequiredObject("Paginated Beehiiv posts response.", {
@@ -391,6 +394,7 @@ export const beehiivActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_post",
+    operationType: "read",
     description: "Fetch one Beehiiv post by ID with optional statistics or content expansion.",
     inputSchema: getPostInputSchema,
     outputSchema: s.looseRequiredObject("Beehiiv post response.", {
@@ -399,6 +403,7 @@ export const beehiivActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subscriptions",
+    operationType: "read",
     description: "List Beehiiv subscriptions for a publication with cursor pagination and documented filters.",
     inputSchema: listSubscriptionsInputSchema,
     outputSchema: s.looseRequiredObject("Paginated Beehiiv subscriptions response.", {
@@ -408,6 +413,7 @@ export const beehiivActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_subscription",
+    operationType: "read",
     description: "Fetch one Beehiiv subscription by ID with optional expansions.",
     inputSchema: getSubscriptionInputSchema,
     outputSchema: s.looseRequiredObject("Beehiiv subscription response.", {

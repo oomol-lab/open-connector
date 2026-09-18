@@ -105,6 +105,7 @@ const conversationLifecycle = {
 export const openHandsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "start_conversation",
+    operationType: "write",
     description: "Start an OpenHands Cloud conversation for a repository task.",
     followUpActions: ["open_hands.get_start_task"],
     asyncLifecycle: conversationLifecycle,
@@ -125,6 +126,7 @@ export const openHandsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_start_task",
+    operationType: "read",
     description: "Get the status of an OpenHands Cloud conversation start task.",
     asyncLifecycle: conversationLifecycle,
     inputSchema: s.actionInput(
@@ -138,6 +140,7 @@ export const openHandsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_conversation",
+    operationType: "read",
     description: "Get an OpenHands Cloud conversation by ID.",
     inputSchema: s.actionInput(
       {
@@ -150,6 +153,7 @@ export const openHandsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_conversations",
+    operationType: "read",
     description: "List OpenHands Cloud conversations with optional filters.",
     inputSchema: s.object(
       "Input parameters for listing OpenHands conversations.",
@@ -189,6 +193,7 @@ export const openHandsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send a follow-up user message to an existing OpenHands Cloud conversation.",
     inputSchema: s.object(
       "Input parameters for sending an OpenHands follow-up message.",

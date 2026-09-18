@@ -110,6 +110,7 @@ const updateCheckInputSchema = {
 export const healthchecksIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_checks",
+    operationType: "read",
     description: "List Healthchecks.io checks in the current project.",
     inputSchema: s.actionInput(
       { slug: s.nonEmptyString("Only return checks with this slug.") },
@@ -123,6 +124,7 @@ export const healthchecksIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_check",
+    operationType: "read",
     description: "Get a Healthchecks.io check by UUID or unique key.",
     inputSchema: s.actionInput(
       { check_id: checkIdSchema },
@@ -133,30 +135,35 @@ export const healthchecksIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_check",
+    operationType: "write",
     description: "Create a Healthchecks.io simple or cron check.",
     inputSchema: createCheckInputSchema,
     outputSchema: s.actionOutput({ check: checkSchema }, "The response returned when creating a check."),
   }),
   defineProviderAction(service, {
     name: "update_check",
+    operationType: "write",
     description: "Update a Healthchecks.io check by UUID.",
     inputSchema: updateCheckInputSchema,
     outputSchema: s.actionOutput({ check: checkSchema }, "The response returned when updating a check."),
   }),
   defineProviderAction(service, {
     name: "pause_check",
+    operationType: "destructive",
     description: "Pause monitoring for a Healthchecks.io check by UUID.",
     inputSchema: uuidInput("The input payload for pausing a Healthchecks.io check."),
     outputSchema: s.actionOutput({ check: checkSchema }, "The response returned when pausing a check."),
   }),
   defineProviderAction(service, {
     name: "resume_check",
+    operationType: "write",
     description: "Resume monitoring for a Healthchecks.io check by UUID.",
     inputSchema: uuidInput("The input payload for resuming a Healthchecks.io check."),
     outputSchema: s.actionOutput({ check: checkSchema }, "The response returned when resuming a check."),
   }),
   defineProviderAction(service, {
     name: "delete_check",
+    operationType: "destructive",
     description: "Delete a Healthchecks.io check by UUID.",
     inputSchema: uuidInput("The input payload for deleting a Healthchecks.io check."),
     outputSchema: s.actionOutput(
@@ -169,6 +176,7 @@ export const healthchecksIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pings",
+    operationType: "read",
     description: "List recent Healthchecks.io pings for a check by UUID.",
     inputSchema: uuidInput("The input payload for listing Healthchecks.io pings."),
     outputSchema: s.actionOutput(
@@ -178,6 +186,7 @@ export const healthchecksIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_flips",
+    operationType: "read",
     description: "List Healthchecks.io status flips for a check by UUID or unique key.",
     inputSchema: s.actionInput(
       {
@@ -196,6 +205,7 @@ export const healthchecksIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_channels",
+    operationType: "read",
     description: "List notification integrations in the current Healthchecks.io project.",
     inputSchema: s.actionInput({}, [], "The input payload for listing Healthchecks.io channels."),
     outputSchema: s.actionOutput(
@@ -205,6 +215,7 @@ export const healthchecksIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_badges",
+    operationType: "read",
     description: "List badge metadata in the current Healthchecks.io project.",
     inputSchema: s.actionInput({}, [], "The input payload for listing Healthchecks.io badges."),
     outputSchema: s.actionOutput(

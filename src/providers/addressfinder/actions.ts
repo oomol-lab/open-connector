@@ -235,6 +235,7 @@ function verificationOutputSchema(countryDescription: string): JsonSchema {
 export const addressfinderActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "find_au_addresses",
+    operationType: "read",
     description: "Search Australian addresses with Addressfinder autocomplete and return matching address completions.",
     followUpActions: ["addressfinder.get_au_address_metadata"],
     inputSchema: auAddressAutocompleteInputSchema,
@@ -242,18 +243,21 @@ export const addressfinderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_au_address_metadata",
+    operationType: "read",
     description: "Retrieve full metadata for an Australian address selected from Addressfinder autocomplete.",
     inputSchema: auAddressMetadataInputSchema,
     outputSchema: metadataOutputSchema("Australian address"),
   }),
   defineProviderAction(service, {
     name: "verify_au_address",
+    operationType: "read",
     description: "Verify and enrich an Australian address with Addressfinder address verification.",
     inputSchema: auAddressVerificationInputSchema,
     outputSchema: verificationOutputSchema("Australian address"),
   }),
   defineProviderAction(service, {
     name: "find_nz_addresses",
+    operationType: "read",
     description:
       "Search New Zealand addresses with Addressfinder autocomplete and return matching address completions.",
     followUpActions: ["addressfinder.get_nz_address_metadata"],
@@ -262,12 +266,14 @@ export const addressfinderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_nz_address_metadata",
+    operationType: "read",
     description: "Retrieve full metadata for a New Zealand address selected from Addressfinder autocomplete.",
     inputSchema: nzAddressMetadataInputSchema,
     outputSchema: metadataOutputSchema("New Zealand address"),
   }),
   defineProviderAction(service, {
     name: "verify_nz_address",
+    operationType: "read",
     description: "Verify and enrich a New Zealand address with Addressfinder address verification.",
     inputSchema: nzAddressVerificationInputSchema,
     outputSchema: verificationOutputSchema("New Zealand address"),

@@ -15,6 +15,7 @@ export function createFeishuWhiteboardActions(service: string): readonly ActionD
   return [
     defineProviderAction(service, {
       name: "list_whiteboard_nodes",
+      operationType: "read",
       description: "List the raw nodes in a Feishu whiteboard, including Mermaid or PlantUML source metadata.",
       requiredScopes: [feishuWhiteboardProviderScopes.read],
       providerPermissions: [feishuWhiteboardProviderScopes.read],
@@ -39,6 +40,7 @@ export function createFeishuWhiteboardActions(service: string): readonly ActionD
     }),
     defineProviderAction(service, {
       name: "create_whiteboard_nodes",
+      operationType: "write",
       description: "Create raw OpenAPI nodes in a Feishu whiteboard, optionally replacing all existing content.",
       requiredScopes: [feishuWhiteboardProviderScopes.create],
       providerPermissions: [feishuWhiteboardProviderScopes.create],
@@ -68,6 +70,7 @@ export function createFeishuWhiteboardActions(service: string): readonly ActionD
     }),
     defineProviderAction(service, {
       name: "create_whiteboard_diagram",
+      operationType: "write",
       description: "Create a Mermaid, PlantUML, or SVG diagram node in a Feishu whiteboard.",
       requiredScopes: [feishuWhiteboardProviderScopes.create],
       providerPermissions: [feishuWhiteboardProviderScopes.create],
@@ -96,6 +99,7 @@ export function createFeishuWhiteboardActions(service: string): readonly ActionD
     }),
     defineProviderAction(service, {
       name: "export_whiteboard_svg",
+      operationType: "read",
       description:
         "Export a Feishu whiteboard as SVG and return the API's Base64 payload without writing a local file.",
       requiredScopes: [feishuWhiteboardProviderScopes.read],

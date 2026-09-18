@@ -34,6 +34,7 @@ const objectSchema = s.looseObject("One Weaviate object.", {
 export const weaviateActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_instance_metadata",
+    operationType: "read",
     description: "Get Weaviate instance metadata, including version, hostname, loaded modules, and GRPC message size.",
     inputSchema: s.actionInput({}, [], "Input parameters for retrieving Weaviate instance metadata."),
     outputSchema: s.actionOutput(
@@ -46,6 +47,7 @@ export const weaviateActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_collections",
+    operationType: "read",
     description: "List all Weaviate collection definitions currently registered in the instance schema.",
     inputSchema: s.actionInput(
       {
@@ -68,6 +70,7 @@ export const weaviateActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_collection",
+    operationType: "read",
     description:
       "Get one Weaviate collection definition by collection name, including properties and vectorizer settings.",
     inputSchema: s.actionInput(
@@ -90,6 +93,7 @@ export const weaviateActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_objects",
+    operationType: "read",
     description:
       "List objects from one Weaviate collection with optional paging, sorting, include flags, and tenant selection.",
     inputSchema: s.actionInput(
@@ -119,6 +123,7 @@ export const weaviateActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_object",
+    operationType: "read",
     description:
       "Get one Weaviate object by collection name and UUID with optional include flags, consistency, node, and tenant routing.",
     inputSchema: s.actionInput(

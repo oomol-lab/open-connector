@@ -157,6 +157,7 @@ const channelSchema = s.looseRequiredObject(
 export const heyyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Heyy contacts with optional pagination, sorting, and search.",
     inputSchema: listContactsInputSchema,
     outputSchema: s.actionOutput(
@@ -166,24 +167,28 @@ export const heyyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Retrieve one Heyy contact by ID.",
     inputSchema: getContactInputSchema,
     outputSchema: s.actionOutput({ contact: contactSchema }, "The Heyy contact output."),
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a Heyy contact with profile fields, labels, and custom attributes.",
     inputSchema: createContactInputSchema,
     outputSchema: s.actionOutput({ contact: contactSchema }, "The Heyy contact output."),
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update a Heyy contact's profile fields, labels, or custom attributes.",
     inputSchema: updateContactInputSchema,
     outputSchema: s.actionOutput({ contact: contactSchema }, "The Heyy contact output."),
   }),
   defineProviderAction(service, {
     name: "list_labels",
+    operationType: "read",
     description: "List Heyy labels.",
     inputSchema: s.actionInput({}, [], "The input payload for this action."),
     outputSchema: s.actionOutput(
@@ -193,12 +198,14 @@ export const heyyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_label",
+    operationType: "write",
     description: "Create a Heyy label.",
     inputSchema: createLabelInputSchema,
     outputSchema: s.actionOutput({ label: labelSchema }, "The Heyy label output."),
   }),
   defineProviderAction(service, {
     name: "list_attributes",
+    operationType: "read",
     description: "List Heyy contact attribute definitions.",
     inputSchema: s.actionInput({}, [], "The input payload for this action."),
     outputSchema: s.actionOutput(
@@ -208,12 +215,14 @@ export const heyyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_attribute",
+    operationType: "write",
     description: "Create a Heyy contact attribute definition.",
     inputSchema: createAttributeInputSchema,
     outputSchema: s.actionOutput({ attribute: attributeSchema }, "The Heyy attribute output."),
   }),
   defineProviderAction(service, {
     name: "list_channels",
+    operationType: "read",
     description: "List Heyy communication channels.",
     inputSchema: s.actionInput({}, [], "The input payload for this action."),
     outputSchema: s.actionOutput(

@@ -241,6 +241,7 @@ const provideValidationFeedbackInputSchema = s.object("The input payload for sen
 export const googleAddressValidationActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "validate_address",
+    operationType: "read",
     description:
       "Validate and standardize a postal address with Google Address Validation and return verdict, parsed address, and geocode details.",
     requiredScopes: [],
@@ -250,6 +251,7 @@ export const googleAddressValidationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "provide_validation_feedback",
+    operationType: "write",
     description:
       "Send the final outcome of a completed Google address validation sequence using the first responseId from that sequence.",
     requiredScopes: [],

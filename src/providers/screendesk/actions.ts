@@ -74,6 +74,7 @@ const userSchema = s.object(
 export const screendeskActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_recordings",
+    operationType: "read",
     description: "List Screendesk recordings visible to the authenticated user.",
     inputSchema: s.object(
       "Input parameters for listing Screendesk recordings.",
@@ -102,6 +103,7 @@ export const screendeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_recording",
+    operationType: "read",
     description: "Get one Screendesk recording by UUID.",
     inputSchema: s.object("Input parameters for retrieving a Screendesk recording.", {
       recordingUuid: recordingUuidSchema,
@@ -110,6 +112,7 @@ export const screendeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_recording",
+    operationType: "write",
     description: "Update the title, summary, or description of a Screendesk recording.",
     inputSchema: s.requireAnyProperty(
       s.object(
@@ -128,6 +131,7 @@ export const screendeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_recording_transcript",
+    operationType: "read",
     description: "Get one page of the timestamped transcript for a Screendesk recording.",
     inputSchema: s.object(
       "Input parameters for retrieving a Screendesk recording transcript.",
@@ -167,6 +171,7 @@ export const screendeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Screendesk workspace users. This action requires an admin token.",
     inputSchema: s.object(
       "Input parameters for listing Screendesk workspace users.",
@@ -181,6 +186,7 @@ export const screendeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_user",
+    operationType: "read",
     description: "Find a Screendesk workspace user by email. This action requires an admin token.",
     inputSchema: s.object("Input parameters for finding a Screendesk user.", {
       email: s.email("The exact email address to search for."),

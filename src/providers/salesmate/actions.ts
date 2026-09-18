@@ -50,6 +50,7 @@ const productFields = {
 export const salesmateActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_company",
+    operationType: "write",
     description: "Create a company record in Salesmate CRM.",
     inputSchema: s.object(
       "Fields for creating a Salesmate company.",
@@ -88,6 +89,7 @@ export const salesmateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description: "Get a Salesmate company record by company ID.",
     inputSchema: s.object("Input for retrieving a Salesmate company.", {
       companyId: positiveId("Unique identifier of the Salesmate company to retrieve."),
@@ -99,6 +101,7 @@ export const salesmateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_product",
+    operationType: "write",
     description: "Create a product in Salesmate.",
     inputSchema: s.object("Fields for creating a Salesmate product.", productFields, {
       optional: ["sku", "description", "isActive", "tags", "owner", "costPerUnit", "directCost"],
@@ -110,6 +113,7 @@ export const salesmateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_product",
+    operationType: "destructive",
     description: "Delete a Salesmate product by product ID.",
     inputSchema: s.object("Input for deleting a Salesmate product.", {
       productId: positiveId("Unique identifier of the Salesmate product to delete."),
@@ -121,6 +125,7 @@ export const salesmateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_modules",
+    operationType: "read",
     description: "List Salesmate internal module identifiers.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The Salesmate module list response.", {
@@ -130,6 +135,7 @@ export const salesmateActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_active_users",
+    operationType: "read",
     description: "List active Salesmate users.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The Salesmate active users response.", {

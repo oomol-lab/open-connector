@@ -81,6 +81,7 @@ const tag = s.object("A tag summary returned by Linkhut.", {
 
 function action(input: {
   name: LinkhutActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -95,6 +96,7 @@ function action(input: {
 export const linkhutActions: ActionDefinition[] = [
   action({
     name: "add_bookmark",
+    operationType: "write",
     description: "Create a new bookmark in Linkhut without replacing an existing bookmark.",
     requiredScopes: ["posts:write"],
     inputSchema: bookmarkMutationInput,
@@ -102,6 +104,7 @@ export const linkhutActions: ActionDefinition[] = [
   }),
   action({
     name: "update_bookmark",
+    operationType: "write",
     description: "Update an existing Linkhut bookmark by URL.",
     requiredScopes: ["posts:write"],
     inputSchema: bookmarkMutationInput,
@@ -109,6 +112,7 @@ export const linkhutActions: ActionDefinition[] = [
   }),
   action({
     name: "delete_bookmark",
+    operationType: "destructive",
     description: "Delete a Linkhut bookmark by URL.",
     requiredScopes: ["posts:write"],
     inputSchema: s.object("The input payload for this action.", {
@@ -118,6 +122,7 @@ export const linkhutActions: ActionDefinition[] = [
   }),
   action({
     name: "get_bookmarks",
+    operationType: "read",
     description: "List Linkhut bookmarks using the official bookmark filters.",
     requiredScopes: ["posts:read"],
     inputSchema: bookmarkFilterInput,
@@ -127,6 +132,7 @@ export const linkhutActions: ActionDefinition[] = [
   }),
   action({
     name: "get_all_tags",
+    operationType: "read",
     description: "List all Linkhut tags with their bookmark counts.",
     requiredScopes: ["tags:read"],
     inputSchema: s.object({}, { description: "The input payload for this action." }),

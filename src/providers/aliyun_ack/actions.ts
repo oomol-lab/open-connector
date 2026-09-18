@@ -8,6 +8,7 @@ const service = "aliyun_ack";
 export const aliyunAckActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_temporary_kubeconfig",
+    operationType: "read",
     description:
       "Generate a short-lived kubeconfig for an Alibaba Cloud Container Service for Kubernetes (ACK) cluster.",
     providerPermissions: ["cs:DescribeClusterUserKubeconfig"],

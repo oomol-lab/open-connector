@@ -49,6 +49,7 @@ const workflowEmitSchema = s.object("A normalized Pipedream workflow emitted eve
 export const pipedreamActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Retrieve the authenticated Pipedream user profile and accessible workspaces.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving the authenticated Pipedream user.", {}),
@@ -64,6 +65,7 @@ export const pipedreamActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_apps",
+    operationType: "read",
     description: "Search or list apps available in the Pipedream integration catalog.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -86,6 +88,7 @@ export const pipedreamActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_app",
+    operationType: "read",
     description: "Retrieve metadata for one Pipedream app by app ID or name slug.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving one Pipedream app.", {
@@ -95,6 +98,7 @@ export const pipedreamActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workflow",
+    operationType: "read",
     description: "Retrieve one Pipedream workflow by workflow ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -109,6 +113,7 @@ export const pipedreamActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workflow_emits",
+    operationType: "read",
     description: "Retrieve recent emitted event summaries for one Pipedream workflow.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -129,6 +134,7 @@ export const pipedreamActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workspace",
+    operationType: "read",
     description: "Retrieve one Pipedream workspace and its current usage metadata.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving one Pipedream workspace.", {

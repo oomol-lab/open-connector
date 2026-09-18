@@ -210,6 +210,9 @@ export type ProviderAuthDefinition =
   | CustomCredentialAuthDefinition
   | OAuth2AuthDefinition;
 
+/** How an action affects provider state. */
+export type ActionOperationType = "read" | "write" | "destructive";
+
 /**
  * Public metadata and schema contract for one action.
  *
@@ -225,6 +228,8 @@ export type ActionDefinition = {
   name: string;
   /** Human-readable action summary for catalogs, docs, and tool descriptions. */
   description: string;
+  /** Whether the action reads, changes, or destructively changes provider state. */
+  operationType: ActionOperationType;
   /** Provider-native OAuth scopes, permission names, or capability strings needed for this action. */
   requiredScopes: string[];
   /** Provider-native permissions or scopes users must grant. */

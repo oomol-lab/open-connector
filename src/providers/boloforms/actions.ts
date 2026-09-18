@@ -211,24 +211,28 @@ const getFormResponsesOutputSchema = s.object(
 export const boloformsActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_documents",
+    operationType: "read",
     description: "List documents and form statistics from the current BoloForms workspace.",
     inputSchema: listDocumentsInputSchema,
     outputSchema: listDocumentsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "send_template_for_signing",
+    operationType: "write",
     description: "Start a signing request for a group of participants by using an existing template.",
     inputSchema: sendTemplateInputSchema,
     outputSchema: sendTemplateOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_template_respondents",
+    operationType: "read",
     description: "List the current signing participants and their statuses for a specific template.",
     inputSchema: listTemplateRespondentsInputSchema,
     outputSchema: listTemplateRespondentsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_form_responses",
+    operationType: "read",
     description: "List response records for a specific form so they can be used in follow-up automations.",
     inputSchema: getFormResponsesInputSchema,
     outputSchema: getFormResponsesOutputSchema,

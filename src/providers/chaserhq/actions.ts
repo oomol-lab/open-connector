@@ -48,6 +48,7 @@ const idInput = (key: string, description: string): ReturnType<typeof s.object> 
 export const chaserhqActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_status",
+    operationType: "read",
     description: "Get ChaserHQ API status.",
     requiredScopes: [],
     inputSchema: s.object({}, { description: "Input for reading Chaser status." }),
@@ -55,6 +56,7 @@ export const chaserhqActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_organisation",
+    operationType: "read",
     description: "Get the Chaser organisation attached to the API credentials.",
     requiredScopes: [],
     inputSchema: s.object({}, { description: "Input for reading the organisation." }),
@@ -62,6 +64,7 @@ export const chaserhqActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List Chaser customers with optional filters and pagination.",
     requiredScopes: [],
     inputSchema: listInput,
@@ -69,6 +72,7 @@ export const chaserhqActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Get one Chaser customer by ID or ext_ external ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -82,6 +86,7 @@ export const chaserhqActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_invoices",
+    operationType: "read",
     description: "List Chaser invoices with optional filters and pagination.",
     requiredScopes: [],
     inputSchema: listInput,
@@ -89,6 +94,7 @@ export const chaserhqActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_invoice",
+    operationType: "read",
     description: "Get one Chaser invoice by ID.",
     requiredScopes: [],
     inputSchema: idInput("invoiceId", "The Chaser invoice identifier."),
@@ -96,6 +102,7 @@ export const chaserhqActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_invoice_history",
+    operationType: "read",
     description: "List Chaser invoice history records with optional filters and pagination.",
     requiredScopes: [],
     inputSchema: listInput,
@@ -106,6 +113,7 @@ export const chaserhqActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_invoice_history",
+    operationType: "read",
     description: "Get history for one Chaser invoice.",
     requiredScopes: [],
     inputSchema: idInput("invoiceId", "The Chaser invoice identifier."),

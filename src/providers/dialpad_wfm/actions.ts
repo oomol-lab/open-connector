@@ -88,6 +88,7 @@ function metricsOutput(description: string, itemDescription: string): JsonSchema
 export const dialpadWfmActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_schedule",
+    operationType: "read",
     description: "Retrieve one page of Dialpad WFM schedule entries for an RFC 3339 time interval.",
     inputSchema: s.object(
       {
@@ -108,6 +109,7 @@ export const dialpadWfmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_agent_metrics",
+    operationType: "read",
     description: "Retrieve one cursor page of Dialpad WFM agent metrics for an RFC 3339 interval.",
     inputSchema: metricsInput("Filters and pagination options for Dialpad WFM agent metrics."),
     outputSchema: metricsOutput(
@@ -117,6 +119,7 @@ export const dialpadWfmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_activity_metrics",
+    operationType: "read",
     description: "Retrieve one cursor page of Dialpad WFM activity metrics for an RFC 3339 interval.",
     inputSchema: metricsInput("Filters and pagination options for Dialpad WFM activity metrics."),
     outputSchema: metricsOutput(

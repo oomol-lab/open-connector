@@ -70,6 +70,7 @@ const pagedCollectionOutput = (name: string, fieldName: string) =>
 export const helpscoutActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_inboxes",
+    operationType: "read",
     description: "List the Help Scout inboxes available to the connected user.",
     requiredScopes: [readScope],
     inputSchema: s.object(
@@ -81,6 +82,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_inbox_folders",
+    operationType: "read",
     description: "List the folders and conversation counts in a Help Scout inbox.",
     requiredScopes: [readScope],
     inputSchema: s.object("Input parameters for listing Help Scout inbox folders.", {
@@ -90,6 +92,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_inbox_custom_fields",
+    operationType: "read",
     description: "List the custom field definitions and dropdown options for a Help Scout inbox.",
     requiredScopes: [readScope],
     inputSchema: s.object("Input parameters for listing Help Scout inbox custom fields.", {
@@ -99,6 +102,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_saved_replies",
+    operationType: "read",
     description: "List the approved saved reply templates available in a Help Scout inbox.",
     requiredScopes: [readScope],
     inputSchema: s.object(
@@ -118,6 +122,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_saved_reply",
+    operationType: "read",
     description: "Get the complete email and chat content of a Help Scout saved reply.",
     requiredScopes: [readScope],
     inputSchema: s.object("Input parameters for getting a Help Scout saved reply.", {
@@ -130,6 +135,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Help Scout users, optionally filtered by email or inbox.",
     requiredScopes: [readScope],
     inputSchema: s.object(
@@ -145,6 +151,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List tags used across the connected Help Scout account.",
     requiredScopes: [readScope],
     inputSchema: s.object(
@@ -156,6 +163,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workflows",
+    operationType: "read",
     description: "List Help Scout workflows, including the manual automations that can be run.",
     requiredScopes: [readScope],
     inputSchema: s.object(
@@ -171,6 +179,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_conversations",
+    operationType: "read",
     description: "List and filter conversations in the connected Help Scout account.",
     requiredScopes: [readScope],
     inputSchema: s.object(
@@ -228,6 +237,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_conversation",
+    operationType: "read",
     description: "Get one Help Scout conversation by ID.",
     requiredScopes: [readScope],
     inputSchema: s.object(
@@ -244,6 +254,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_threads",
+    operationType: "read",
     description: "List the complete threads belonging to a Help Scout conversation.",
     requiredScopes: [readScope],
     inputSchema: s.object(
@@ -258,6 +269,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List and filter customers in the connected Help Scout account.",
     requiredScopes: [readScope],
     inputSchema: s.object(
@@ -285,6 +297,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Get one Help Scout customer by ID.",
     requiredScopes: [readScope],
     inputSchema: s.object("Input parameters for getting a Help Scout customer.", {
@@ -296,6 +309,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_customer",
+    operationType: "write",
     description: "Create a Help Scout customer with a primary email address.",
     requiredScopes: [writeScope],
     inputSchema: s.object(
@@ -339,6 +353,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_conversation",
+    operationType: "write",
     description: "Create a Help Scout conversation with one initial text thread.",
     requiredScopes: [writeScope],
     inputSchema: s.object(
@@ -394,6 +409,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_reply",
+    operationType: "write",
     description: "Add a published reply or draft reply to a Help Scout conversation.",
     requiredScopes: [writeScope],
     inputSchema: s.object(
@@ -416,6 +432,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_note",
+    operationType: "write",
     description: "Add an internal note to a Help Scout conversation.",
     requiredScopes: [writeScope],
     inputSchema: s.object(
@@ -434,6 +451,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_manual_workflow",
+    operationType: "destructive",
     description: "Run a configured Help Scout manual workflow on up to 50 conversations.",
     requiredScopes: [writeScope],
     inputSchema: s.object("Input parameters for running a Help Scout manual workflow.", {
@@ -455,6 +473,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "replace_conversation_custom_fields",
+    operationType: "destructive",
     description: "Replace the complete custom field state of a Help Scout conversation.",
     requiredScopes: [writeScope],
     inputSchema: s.object("Input parameters for replacing conversation custom fields.", {
@@ -469,6 +488,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "snooze_conversation",
+    operationType: "destructive",
     description: "Snooze a Help Scout conversation until a specific future time.",
     requiredScopes: [writeScope],
     inputSchema: s.object("Input parameters for snoozing a Help Scout conversation.", {
@@ -485,6 +505,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "unsnooze_conversation",
+    operationType: "destructive",
     description: "Remove the snooze from a Help Scout conversation and return it to its queue.",
     requiredScopes: [writeScope],
     inputSchema: s.object("Input parameters for unsnoozing a Help Scout conversation.", {
@@ -497,6 +518,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_conversation_status",
+    operationType: "destructive",
     description: "Replace the status of a Help Scout conversation.",
     requiredScopes: [writeScope],
     inputSchema: s.object("Input parameters for replacing a conversation status.", {
@@ -511,6 +533,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "assign_conversation",
+    operationType: "destructive",
     description: "Assign a Help Scout conversation to a user or leave it unassigned.",
     requiredScopes: [writeScope],
     inputSchema: s.object("Input parameters for assigning a Help Scout conversation.", {
@@ -525,6 +548,7 @@ export const helpscoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "replace_conversation_tags",
+    operationType: "destructive",
     description: "Replace the complete tag list on a Help Scout conversation.",
     requiredScopes: [writeScope],
     inputSchema: s.object("Input parameters for replacing conversation tags.", {

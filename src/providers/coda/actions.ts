@@ -201,6 +201,7 @@ const rowEditSchema = s.object(
 export const codaActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current Coda user associated with the authenticated API token.",
     inputSchema: s.object("The input payload for this action.", {}),
     outputSchema: s.object("The output payload for this action.", {
@@ -209,6 +210,7 @@ export const codaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_docs",
+    operationType: "read",
     description:
       "List Coda docs accessible to the authenticated user with optional ownership, publication, workspace, and pagination filters.",
     inputSchema: s.object("The input payload for this action.", {
@@ -227,6 +229,7 @@ export const codaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_doc",
+    operationType: "read",
     description: "Get metadata for a specific Coda doc by doc ID.",
     inputSchema: s.object(
       "The input payload for this action.",
@@ -241,6 +244,7 @@ export const codaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pages",
+    operationType: "read",
     description: "List pages in a Coda doc with pagination.",
     inputSchema: s.object(
       "The input payload for this action.",
@@ -255,6 +259,7 @@ export const codaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_page",
+    operationType: "write",
     description:
       "Create a new page in a Coda doc, with optional subtitle, icon, image, parent page, and structured page content.",
     inputSchema: s.object(
@@ -277,6 +282,7 @@ export const codaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tables",
+    operationType: "read",
     description: "List tables in a Coda doc with pagination, optional sort order, and optional table-type filtering.",
     inputSchema: s.object(
       "The input payload for this action.",
@@ -293,6 +299,7 @@ export const codaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_table",
+    operationType: "read",
     description: "Get details about a specific Coda table or view.",
     inputSchema: s.object(
       "The input payload for this action.",
@@ -309,6 +316,7 @@ export const codaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_columns",
+    operationType: "read",
     description: "List columns in a Coda table with pagination and optional visibility filtering.",
     inputSchema: s.object(
       "The input payload for this action.",
@@ -325,6 +333,7 @@ export const codaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_rows",
+    operationType: "read",
     description:
       "List rows in a Coda table with filtering, sorting, pagination, optional sync tokens, and configurable cell value formats.",
     inputSchema: s.object(
@@ -360,6 +369,7 @@ export const codaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_rows",
+    operationType: "write",
     description: "Insert rows into a Coda table, optionally updating existing rows when key columns are provided.",
     inputSchema: s.object(
       "The input payload for this action.",
@@ -379,6 +389,7 @@ export const codaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_mutation_status",
+    operationType: "read",
     description: "Get the completion status for an asynchronous Coda mutation using a previously returned request ID.",
     inputSchema: s.object(
       "The input payload for this action.",

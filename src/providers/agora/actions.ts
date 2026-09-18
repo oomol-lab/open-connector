@@ -54,6 +54,7 @@ const projectOutputSchema = s.object("The normalized Agora project response.", {
 export const agoraActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Agora Console projects for the connected account.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list Agora projects.", {}),
@@ -63,6 +64,7 @@ export const agoraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Retrieve one Agora Console project by project ID and name.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving one Agora Console project.", {
@@ -73,6 +75,7 @@ export const agoraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create an Agora Console project.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -87,6 +90,7 @@ export const agoraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_project_status",
+    operationType: "destructive",
     description: "Enable or disable an Agora Console project.",
     requiredScopes: [],
     inputSchema: s.object("Input for updating an Agora project status.", {
@@ -97,6 +101,7 @@ export const agoraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_primary_certificate",
+    operationType: "destructive",
     description: "Enable or disable the primary App Certificate for an Agora Console project.",
     requiredScopes: [],
     inputSchema: s.object("Input for setting an Agora primary App Certificate state.", {
@@ -107,6 +112,7 @@ export const agoraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reset_primary_certificate",
+    operationType: "destructive",
     description: "Reset the primary App Certificate for an Agora Console project.",
     requiredScopes: [],
     inputSchema: s.object("Input for resetting an Agora primary App Certificate.", {
@@ -116,6 +122,7 @@ export const agoraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project_usage",
+    operationType: "read",
     description: "Retrieve usage data for one Agora Console project and business type.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving Agora project usage.", {

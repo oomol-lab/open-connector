@@ -15,6 +15,7 @@ const queryMetaSchema = s.looseObject("Turbot Pipes query metadata returned by t
 export const turbotPipesActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "execute_query",
+    operationType: "read",
     description: "Execute a SQL query with the Turbot Pipes Query API and return rows plus query metadata.",
     requiredScopes: [],
     inputSchema: s.actionInput(

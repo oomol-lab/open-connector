@@ -22,6 +22,7 @@ const phoneTypeSchema = s.nullableString(
 export const realPhoneValidationActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "validate_phone_standard",
+    operationType: "read",
     description: "Validate one 10-digit phone number with the RealPhoneValidation Turbo Standard endpoint.",
     inputSchema: s.object("The input payload for the Turbo Standard phone validation request.", {
       phone: tenDigitPhoneSchema,
@@ -34,6 +35,7 @@ export const realPhoneValidationActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "validate_phone_v3",
+    operationType: "read",
     description:
       "Validate one 10-digit phone number with the RealPhoneValidation Turbo v3 endpoint and return caller enrichment fields when available.",
     inputSchema: s.object("The input payload for the Turbo v3 phone validation request.", {

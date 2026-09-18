@@ -50,6 +50,7 @@ const createTestRunInputSchema: JsonSchema = {
 export const tuskrActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Tuskr projects with optional filters.",
     inputSchema: s.object(
       "The input payload for listing Tuskr projects.",
@@ -64,6 +65,7 @@ export const tuskrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create a Tuskr project.",
     inputSchema: s.object(
       "The input payload for creating a Tuskr project.",
@@ -93,6 +95,7 @@ export const tuskrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_test_cases",
+    operationType: "read",
     description: "List Tuskr test cases for a project.",
     inputSchema: s.object(
       "The input payload for listing Tuskr test cases.",
@@ -114,6 +117,7 @@ export const tuskrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_test_case",
+    operationType: "write",
     description: "Create a Tuskr test case in a project suite section.",
     inputSchema: s.object(
       "The input payload for creating a Tuskr test case.",
@@ -135,6 +139,7 @@ export const tuskrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_test_runs",
+    operationType: "read",
     description: "List Tuskr test runs for a project.",
     inputSchema: s.object(
       "The input payload for listing Tuskr test runs.",
@@ -152,12 +157,14 @@ export const tuskrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_test_run",
+    operationType: "write",
     description: "Create a Tuskr test run.",
     inputSchema: createTestRunInputSchema,
     outputSchema: rawOutputSchema,
   }),
   defineProviderAction(service, {
     name: "add_test_run_results",
+    operationType: "write",
     description: "Add the same Tuskr result to multiple test cases in a test run.",
     inputSchema: s.object(
       "The input payload for adding Tuskr results to test cases in a test run.",

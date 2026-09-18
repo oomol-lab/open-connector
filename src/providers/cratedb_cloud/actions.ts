@@ -79,6 +79,7 @@ const productSchema = s.requiredObject("A normalized CrateDB Cloud product.", {
 
 const getCurrentUserAction = defineProviderAction(service, {
   name: "get_current_user",
+  operationType: "read",
   description: "Return the CrateDB Cloud user associated with the connected API key.",
   inputSchema: s.object("Input parameters for reading the current CrateDB Cloud user.", {}),
   outputSchema: s.requiredObject("The current CrateDB Cloud user response.", {
@@ -88,6 +89,7 @@ const getCurrentUserAction = defineProviderAction(service, {
 
 const listOrganizationsAction = defineProviderAction(service, {
   name: "list_organizations",
+  operationType: "read",
   description: "List CrateDB Cloud organizations visible to the connected API key.",
   inputSchema: s.object("Input parameters for listing CrateDB Cloud organizations.", {}),
   outputSchema: s.requiredObject("The CrateDB Cloud organization list response.", {
@@ -97,6 +99,7 @@ const listOrganizationsAction = defineProviderAction(service, {
 
 const getOrganizationAction = defineProviderAction(service, {
   name: "get_organization",
+  operationType: "read",
   description: "Return one CrateDB Cloud organization by ID.",
   inputSchema: s.requiredObject("Input parameters for reading one CrateDB Cloud organization.", {
     id: organizationIdSchema,
@@ -108,6 +111,7 @@ const getOrganizationAction = defineProviderAction(service, {
 
 const listProjectsAction = defineProviderAction(service, {
   name: "list_projects",
+  operationType: "read",
   description: "List CrateDB Cloud projects, optionally scoped to one organization.",
   inputSchema: s.object(
     "Input parameters for listing CrateDB Cloud projects.",
@@ -123,6 +127,7 @@ const listProjectsAction = defineProviderAction(service, {
 
 const getProjectAction = defineProviderAction(service, {
   name: "get_project",
+  operationType: "read",
   description: "Return one CrateDB Cloud project by ID.",
   inputSchema: s.requiredObject("Input parameters for reading one CrateDB Cloud project.", {
     id: projectIdSchema,
@@ -134,6 +139,7 @@ const getProjectAction = defineProviderAction(service, {
 
 const listClustersAction = defineProviderAction(service, {
   name: "list_clusters",
+  operationType: "read",
   description: "List CrateDB Cloud clusters, optionally scoped to one organization or filtered by project.",
   inputSchema: s.object(
     "Input parameters for listing CrateDB Cloud clusters.",
@@ -150,6 +156,7 @@ const listClustersAction = defineProviderAction(service, {
 
 const getClusterAction = defineProviderAction(service, {
   name: "get_cluster",
+  operationType: "read",
   description: "Return one CrateDB Cloud cluster by ID.",
   inputSchema: s.requiredObject("Input parameters for reading one CrateDB Cloud cluster.", {
     id: idSchema,
@@ -161,6 +168,7 @@ const getClusterAction = defineProviderAction(service, {
 
 const listRegionsAction = defineProviderAction(service, {
   name: "list_regions",
+  operationType: "read",
   description: "List CrateDB Cloud regions, optionally scoped to one organization.",
   inputSchema: s.object(
     "Input parameters for listing CrateDB Cloud regions.",
@@ -176,6 +184,7 @@ const listRegionsAction = defineProviderAction(service, {
 
 const listProductsAction = defineProviderAction(service, {
   name: "list_products",
+  operationType: "read",
   description: "List available CrateDB Cloud products, optionally filtered by product kind.",
   inputSchema: s.object(
     "Input parameters for listing CrateDB Cloud products.",

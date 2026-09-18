@@ -98,6 +98,7 @@ const allowPartialSuccessInput = s.boolean(
 export const appleAdsNegativeKeywordActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_negative_keywords",
+    operationType: "read",
     description:
       "Search the negative keywords of one ad account with filters, sorting and offset pagination. Apple Ads requires an adGroupId filter on every query except one filtered by id: combine adGroupId IS_NULL with campaignId EQUALS to list a campaign's own exclusions, adGroupId IS_NOT_NULL with campaignId EQUALS to list the ad-group-level ones across that campaign, or adGroupId EQUALS or IN to scope the query to specific ad groups.",
     requiredScopes: [],
@@ -125,6 +126,7 @@ export const appleAdsNegativeKeywordActions: readonly ProviderActionDefinition[]
   }),
   defineProviderAction(service, {
     name: "get_negative_keyword",
+    operationType: "read",
     description:
       "Read one negative keyword by identifier. Apple Ads returns the record regardless of its deleted state, and an absent or null adGroupId marks it as a campaign-level exclusion.",
     requiredScopes: [],
@@ -141,6 +143,7 @@ export const appleAdsNegativeKeywordActions: readonly ProviderActionDefinition[]
   }),
   defineProviderAction(service, {
     name: "create_negative_keyword",
+    operationType: "write",
     description:
       "Create one negative keyword. Scope it either to a campaign, by passing campaignId alone, or to a single ad group, by passing adGroupId alone: Apple Ads rejects a payload that carries both or neither. text and matchType are fixed at creation, so changing them means deleting this record and creating another.",
     requiredScopes: [],
@@ -165,6 +168,7 @@ export const appleAdsNegativeKeywordActions: readonly ProviderActionDefinition[]
   }),
   defineProviderAction(service, {
     name: "update_negative_keyword",
+    operationType: "destructive",
     description:
       "Pause or resume one negative keyword. status is the only field Apple Ads allows changing: PAUSED lets the excluded term reach the auction again, ENABLED restores the exclusion. Apple Ads answers a request for a deleted negative keyword with 404.",
     requiredScopes: [],
@@ -182,6 +186,7 @@ export const appleAdsNegativeKeywordActions: readonly ProviderActionDefinition[]
   }),
   defineProviderAction(service, {
     name: "delete_negative_keyword",
+    operationType: "destructive",
     description:
       "Soft-delete one negative keyword. The excluded term stops being suppressed right away, across every ad group of the campaign for a campaign-level record. Use update_negative_keyword with status PAUSED instead when the exclusion should come back later.",
     requiredScopes: [],
@@ -201,6 +206,7 @@ export const appleAdsNegativeKeywordActions: readonly ProviderActionDefinition[]
   }),
   defineProviderAction(service, {
     name: "bulk_create_negative_keywords",
+    operationType: "write",
     description:
       "Create many negative keywords in one request, mixing campaign-level and ad-group-level exclusions freely. The whole batch counts as a single call against the rate limit. Each outcome carries the zero-based index of the payload it belongs to.",
     requiredScopes: [],
@@ -236,6 +242,7 @@ export const appleAdsNegativeKeywordActions: readonly ProviderActionDefinition[]
   }),
   defineProviderAction(service, {
     name: "bulk_update_negative_keywords",
+    operationType: "destructive",
     description:
       "Pause or resume many negative keywords in one request. status is the only field Apple Ads allows changing, and every payload identifies its record by id. Each outcome carries the zero-based index of the payload it belongs to.",
     requiredScopes: [],

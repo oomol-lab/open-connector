@@ -84,6 +84,7 @@ const campaignLeadSchema = s.looseRequiredObject("A Smartlead lead inside a camp
 export const smartleadAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_campaigns",
+    operationType: "read",
     description: "List Smartlead campaigns with optional client and tag filters.",
     inputSchema: s.object(
       "The input payload for listing Smartlead campaigns.",
@@ -100,6 +101,7 @@ export const smartleadAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign",
+    operationType: "read",
     description: "Get one Smartlead campaign by ID.",
     inputSchema: s.object(
       "The input payload for retrieving a Smartlead campaign.",
@@ -116,6 +118,7 @@ export const smartleadAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_email_accounts",
+    operationType: "read",
     description: "List Smartlead email accounts with optional connection and warmup filters.",
     inputSchema: s.object(
       "The input payload for listing Smartlead email accounts.",
@@ -153,6 +156,7 @@ export const smartleadAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_campaign_leads",
+    operationType: "read",
     description: "List Smartlead leads in a campaign with optional status and engagement filters.",
     inputSchema: s.object(
       "The input payload for listing Smartlead campaign leads.",

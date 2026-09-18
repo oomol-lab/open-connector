@@ -286,24 +286,28 @@ const successOutputSchema = s.object("A Salesflare success response.", {
 export const salesflareActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Retrieve the current Salesflare API user.",
     inputSchema: s.object("No input is required to retrieve the current Salesflare user.", {}),
     outputSchema: userOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_accounts",
+    operationType: "read",
     description: "List Salesflare accounts with optional search, pagination, and filters.",
     inputSchema: accountListInputSchema,
     outputSchema: accountsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_account",
+    operationType: "write",
     description: "Create a Salesflare account.",
     inputSchema: accountCreateInputSchema,
     outputSchema: accountOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve one Salesflare account by ID.",
     inputSchema: getByIdInputSchema(
       "Input parameters for retrieving a Salesflare account.",
@@ -313,24 +317,28 @@ export const salesflareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_account",
+    operationType: "write",
     description: "Update a Salesflare account by ID.",
     inputSchema: accountUpdateInputSchema,
     outputSchema: accountOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Salesflare contacts with optional search, pagination, and filters.",
     inputSchema: contactListInputSchema,
     outputSchema: contactsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a Salesflare contact.",
     inputSchema: contactCreateInputSchema,
     outputSchema: contactOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Retrieve one Salesflare contact by ID.",
     inputSchema: getByIdInputSchema(
       "Input parameters for retrieving a Salesflare contact.",
@@ -340,18 +348,21 @@ export const salesflareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update a Salesflare contact by ID.",
     inputSchema: contactUpdateInputSchema,
     outputSchema: contactOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_opportunities",
+    operationType: "read",
     description: "List Salesflare opportunities with optional search, pagination, and filters.",
     inputSchema: opportunityListInputSchema,
     outputSchema: opportunitiesOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_opportunity",
+    operationType: "read",
     description: "Retrieve one Salesflare opportunity by ID.",
     inputSchema: getByIdInputSchema(
       "Input parameters for retrieving a Salesflare opportunity.",
@@ -361,30 +372,35 @@ export const salesflareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_opportunity",
+    operationType: "write",
     description: "Create a Salesflare opportunity.",
     inputSchema: opportunityCreateInputSchema,
     outputSchema: opportunityOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_opportunity",
+    operationType: "write",
     description: "Update a Salesflare opportunity by ID.",
     inputSchema: opportunityUpdateInputSchema,
     outputSchema: opportunityOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "List Salesflare tasks with optional search, pagination, and filters.",
     inputSchema: taskListInputSchema,
     outputSchema: tasksOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_task",
+    operationType: "write",
     description: "Create a Salesflare task.",
     inputSchema: taskCreateInputSchema,
     outputSchema: successOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_task",
+    operationType: "write",
     description: "Update a Salesflare task by ID.",
     inputSchema: taskUpdateInputSchema,
     outputSchema: successOutputSchema,

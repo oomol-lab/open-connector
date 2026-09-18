@@ -260,6 +260,7 @@ const createTimeEntryInputSchema = s.object(
 export const clockifyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the currently authenticated Clockify user.",
     followUpActions: ["clockify.list_workspaces", "clockify.list_time_entries"],
     inputSchema: s.object("No input is required.", {}),
@@ -269,6 +270,7 @@ export const clockifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workspaces",
+    operationType: "read",
     description: "List the Clockify workspaces available to the authenticated user.",
     inputSchema: listWorkspacesInputSchema,
     outputSchema: s.object("The Clockify workspace list.", {
@@ -277,6 +279,7 @@ export const clockifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workspace",
+    operationType: "read",
     description: "Get a single Clockify workspace by ID.",
     followUpActions: ["clockify.list_projects"],
     inputSchema: getWorkspaceInputSchema,
@@ -286,6 +289,7 @@ export const clockifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Clockify projects in a workspace.",
     inputSchema: listProjectsInputSchema,
     outputSchema: paginatedOutput(
@@ -297,6 +301,7 @@ export const clockifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get a single Clockify project by ID.",
     followUpActions: ["clockify.update_project", "clockify.delete_project", "clockify.list_tasks"],
     inputSchema: getProjectInputSchema,
@@ -306,6 +311,7 @@ export const clockifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create a new Clockify project in a workspace.",
     followUpActions: ["clockify.get_project"],
     inputSchema: createProjectInputSchema,
@@ -315,6 +321,7 @@ export const clockifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_project",
+    operationType: "write",
     description: "Update an existing Clockify project.",
     inputSchema: updateProjectInputSchema,
     outputSchema: s.object("The updated Clockify project.", {
@@ -323,6 +330,7 @@ export const clockifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_project",
+    operationType: "destructive",
     description: "Delete a Clockify project by ID.",
     inputSchema: deleteProjectInputSchema,
     outputSchema: s.object("The Clockify project deletion result.", {
@@ -331,12 +339,14 @@ export const clockifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "List Clockify tasks for a project.",
     inputSchema: listTasksInputSchema,
     outputSchema: paginatedOutput("The Clockify task list.", "tasks", "The tasks returned by Clockify.", taskSchema),
   }),
   defineProviderAction(service, {
     name: "create_task",
+    operationType: "write",
     description: "Create a new Clockify task inside a project.",
     inputSchema: createTaskInputSchema,
     outputSchema: s.object("The newly created Clockify task.", {
@@ -345,6 +355,7 @@ export const clockifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_time_entries",
+    operationType: "read",
     description: "List Clockify time entries for a user in a workspace.",
     inputSchema: listTimeEntriesInputSchema,
     outputSchema: paginatedOutput(
@@ -356,6 +367,7 @@ export const clockifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_time_entry",
+    operationType: "write",
     description: "Create a new Clockify time entry for a user.",
     followUpActions: ["clockify.list_time_entries"],
     inputSchema: createTimeEntryInputSchema,

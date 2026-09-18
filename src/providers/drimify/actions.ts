@@ -77,6 +77,7 @@ const listInputSchema = s.object(
 export const drimifyActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_app_data_collections",
+    operationType: "read",
     description:
       "List Drimify app data collection records, optionally filtered by app, session ID, or creation datetime.",
     requiredScopes: [],
@@ -90,6 +91,7 @@ export const drimifyActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_app_data_collection",
+    operationType: "read",
     description: "Retrieve a single Drimify app data collection record by ID.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Input parameters for retrieving a Drimify data collection record.", {

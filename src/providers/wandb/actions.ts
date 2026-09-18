@@ -32,6 +32,7 @@ const artifactDiffOutput = s.looseObject("A comparison of two W&B artifact versi
 export const wandbActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_weave_traces",
+    operationType: "read",
     description:
       "Query classic Weave traces with filters, ordering, selected columns, cost data, feedback, and detail-level controls.",
     inputSchema: s.object(
@@ -61,6 +62,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "count_weave_traces",
+    operationType: "read",
     description: "Count matching classic Weave traces and root traces without returning trace payloads.",
     inputSchema: s.object(
       "Input for counting Weave traces.",
@@ -77,6 +79,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "resolve_trace_roots",
+    operationType: "read",
     description: "Resolve the root spans for a batch of classic Weave trace IDs.",
     inputSchema: s.requiredObject("Input for resolving Weave trace roots.", {
       entity_name: entityName,
@@ -91,6 +94,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_wandb",
+    operationType: "read",
     description: "Run a read-only GraphQL query against W&B experiment data with bounded pagination.",
     inputSchema: s.object(
       "Input for querying W&B GraphQL data.",
@@ -106,6 +110,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_report",
+    operationType: "write",
     description: "Create a W&B report with narrative text, plots, and configurable panels.",
     inputSchema: s.object(
       "Input for creating a W&B report.",
@@ -127,6 +132,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "log_analysis",
+    operationType: "write",
     description: "Log analysis rows, charts, and scalar metrics to W&B as a new run.",
     inputSchema: s.object(
       "Input for logging an analysis run to W&B.",
@@ -150,6 +156,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_entities",
+    operationType: "read",
     description: "List W&B user and team entities accessible with the configured API key.",
     inputSchema: s.actionInput({}, [], "No input is required."),
     outputSchema: s.looseObject("Accessible W&B entities.", {
@@ -165,6 +172,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List W&B projects for one entity or for all entities accessible with the configured API key.",
     inputSchema: s.object(
       "Input for listing W&B projects.",
@@ -182,6 +190,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_automations",
+    operationType: "read",
     description: "List W&B Automations that trigger on artifact, run-state, or run-metric events.",
     inputSchema: s.object(
       "Input for listing W&B Automations.",
@@ -201,6 +210,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_integrations",
+    operationType: "read",
     description: "List Slack and webhook integrations available as W&B Automation targets.",
     inputSchema: s.object(
       "Input for listing W&B integrations.",
@@ -221,6 +231,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "infer_trace_schema",
+    operationType: "write",
     description: "Sample classic Weave traces to discover field paths, types, and frequent values.",
     inputSchema: s.object(
       "Input for inferring a Weave trace schema.",
@@ -241,6 +252,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_docs",
+    operationType: "read",
     description: "Search the official W&B documentation for relevant guidance and examples.",
     inputSchema: s.requiredObject("Input for searching W&B documentation.", {
       query: s.nonWhitespaceString("The W&B documentation search query."),
@@ -249,6 +261,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_run_history",
+    operationType: "read",
     description: "Retrieve sampled time-series metric history for a W&B run.",
     inputSchema: s.object(
       "Input for retrieving W&B run history.",
@@ -274,6 +287,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_registries",
+    operationType: "read",
     description: "List W&B model registries for an organization.",
     inputSchema: s.object(
       "Input for listing W&B registries.",
@@ -292,6 +306,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_registry_collections",
+    operationType: "read",
     description: "List artifact collections within a W&B model registry.",
     inputSchema: s.object(
       "Input for listing W&B registry collections.",
@@ -312,6 +327,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_artifact_versions",
+    operationType: "read",
     description: "List versions of a W&B project artifact or registry collection.",
     inputSchema: s.object(
       "Input for listing W&B artifact versions.",
@@ -337,6 +353,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_artifact_details",
+    operationType: "read",
     description: "Get metadata, lineage, and optionally files for a W&B artifact version.",
     inputSchema: s.object(
       "Input for reading a W&B artifact version.",
@@ -356,6 +373,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "compare_artifact_versions",
+    operationType: "read",
     description: "Compare metadata, aliases, tags, lineage, sizes, and optionally files for two W&B artifact versions.",
     inputSchema: s.object(
       "Input for comparing W&B artifact versions.",
@@ -372,6 +390,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "compare_runs",
+    operationType: "read",
     description: "Compare configuration, summary metrics, metadata, and optionally metric history for two W&B runs.",
     inputSchema: s.object(
       "Input for comparing W&B runs.",
@@ -400,6 +419,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "summarize_evaluation",
+    operationType: "read",
     description: "Aggregate classic Weave evaluation results for a project or named evaluation.",
     inputSchema: s.object(
       "Input for summarizing Weave evaluations.",
@@ -420,6 +440,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "diagnose_run",
+    operationType: "write",
     description: "Inspect loss metrics and run state to diagnose the training health of a W&B run.",
     inputSchema: s.object(
       "Input for diagnosing a W&B run.",
@@ -442,6 +463,7 @@ export const wandbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "probe_project",
+    operationType: "write",
     description: "Sample W&B runs to discover a project's metrics, configuration keys, tags, groups, and structure.",
     inputSchema: s.object(
       "Input for probing a W&B project.",

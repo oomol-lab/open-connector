@@ -58,6 +58,7 @@ createAttachmentInputSchema.oneOf = [
 export const asanaAttachmentActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_attachment",
+    operationType: "read",
     description: "Get an Asana attachment by gid.",
     requiredScopes: ["attachments:read"],
     inputSchema: resourceInput("attachmentId", "The attachment gid."),
@@ -65,6 +66,7 @@ export const asanaAttachmentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_attachment",
+    operationType: "destructive",
     description: "Delete an Asana attachment.",
     requiredScopes: ["attachments:delete"],
     inputSchema: s.object(
@@ -76,6 +78,7 @@ export const asanaAttachmentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_attachments",
+    operationType: "read",
     description: "List attachments on an Asana task, project, or project brief.",
     requiredScopes: ["attachments:read"],
     inputSchema: s.object(
@@ -91,6 +94,7 @@ export const asanaAttachmentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_attachment",
+    operationType: "write",
     description: "Attach a public external URL or local transit file to an Asana object.",
     requiredScopes: ["attachments:write"],
     inputSchema: createAttachmentInputSchema,

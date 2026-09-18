@@ -63,6 +63,7 @@ function getInputSchema(description: string, key: string, idDescription: string)
 export const givebutterActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_campaigns",
+    operationType: "read",
     description: "List Givebutter campaigns with pagination and optional official filters.",
     requiredScopes: [],
     inputSchema: listInputSchema,
@@ -70,6 +71,7 @@ export const givebutterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign",
+    operationType: "read",
     description: "Retrieve one Givebutter campaign by ID.",
     requiredScopes: [],
     inputSchema: getInputSchema(
@@ -81,6 +83,7 @@ export const givebutterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Givebutter contacts with pagination and optional official filters.",
     requiredScopes: [],
     inputSchema: listInputSchema,
@@ -88,6 +91,7 @@ export const givebutterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Retrieve one Givebutter contact by ID.",
     requiredScopes: [],
     inputSchema: getInputSchema(
@@ -99,6 +103,7 @@ export const givebutterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_transactions",
+    operationType: "read",
     description: "List Givebutter transactions with pagination and optional official filters.",
     requiredScopes: [],
     inputSchema: listInputSchema,
@@ -106,6 +111,7 @@ export const givebutterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_transaction",
+    operationType: "read",
     description: "Retrieve one Givebutter transaction by ID.",
     requiredScopes: [],
     inputSchema: getInputSchema(
@@ -117,6 +123,7 @@ export const givebutterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_funds",
+    operationType: "read",
     description: "List Givebutter funds with pagination and optional official filters.",
     requiredScopes: [],
     inputSchema: listInputSchema,
@@ -124,6 +131,7 @@ export const givebutterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_fund",
+    operationType: "read",
     description: "Retrieve one Givebutter fund by ID.",
     requiredScopes: [],
     inputSchema: getInputSchema("Input for retrieving one Givebutter fund.", "fundId", "The Givebutter fund ID."),
@@ -131,6 +139,7 @@ export const givebutterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_recurring_plans",
+    operationType: "read",
     description: "List Givebutter recurring plans with pagination and optional official filters.",
     requiredScopes: [],
     inputSchema: listInputSchema,
@@ -138,6 +147,7 @@ export const givebutterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_recurring_plan",
+    operationType: "read",
     description: "Retrieve one Givebutter recurring plan by ID.",
     requiredScopes: [],
     inputSchema: getInputSchema(
@@ -149,6 +159,7 @@ export const givebutterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_chapters",
+    operationType: "read",
     description: "List Givebutter chapters with pagination and optional official filters.",
     requiredScopes: [],
     inputSchema: listInputSchema,
@@ -156,6 +167,7 @@ export const givebutterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_chapter",
+    operationType: "read",
     description: "Retrieve one Givebutter chapter by ID.",
     requiredScopes: [],
     inputSchema: getInputSchema(

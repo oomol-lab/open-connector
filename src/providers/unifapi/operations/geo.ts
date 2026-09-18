@@ -62,6 +62,7 @@ const geoMatchedMentionFiltersSchema = createDataForSeoFilterSchema(
 export const geoOperations: readonly UnifapiOperationDefinition[] = [
   {
     name: "get_geo_keyword_search_volume",
+    operationType: "read",
     operationId: "postGeoKeywordsSearchVolume",
     description: "Get AI search volume for keywords.",
     method: "POST",
@@ -116,6 +117,7 @@ export const geoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "aggregate_geo_mentions",
+    operationType: "read",
     operationId: "postGeoMentionsAggregatedMetrics",
     description: "Aggregate LLM mention metrics by dimension.",
     method: "POST",
@@ -181,6 +183,7 @@ export const geoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "compare_geo_mention_groups",
+    operationType: "read",
     operationId: "postGeoMentionsCrossAggregatedMetrics",
     description: "Compare LLM mentions across labeled groups.",
     method: "POST",
@@ -265,6 +268,7 @@ export const geoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_geo_mentions",
+    operationType: "read",
     operationId: "postGeoMentionsSearch",
     description: "Search LLM mentions of a domain or keyword.",
     method: "POST",
@@ -383,6 +387,7 @@ export const geoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_geo_top_mentioned_domains",
+    operationType: "read",
     operationId: "postGeoMentionsTopDomains",
     description: "List domains most cited in LLM answers.",
     method: "POST",
@@ -468,6 +473,7 @@ export const geoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_geo_top_mentioned_pages",
+    operationType: "read",
     operationId: "postGeoMentionsTopPages",
     description: "List pages most cited in LLM answers.",
     method: "POST",
@@ -553,6 +559,7 @@ export const geoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_geo_ai_mode",
+    operationType: "read",
     operationId: "postGeoSerp",
     description: "Search AI Mode generative results.",
     method: "POST",

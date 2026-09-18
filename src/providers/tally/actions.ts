@@ -36,6 +36,7 @@ const submissionSchema = s.looseObject("Tally form submission.", {
 export const tallyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_forms",
+    operationType: "read",
     description: "List Tally forms with optional pagination and workspace filters.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -57,6 +58,7 @@ export const tallyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form",
+    operationType: "read",
     description: "Fetch a single Tally form by ID with its blocks and settings.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -72,6 +74,7 @@ export const tallyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_submissions",
+    operationType: "read",
     description: "List submissions for a Tally form with pagination and documented completion/date filters.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -98,6 +101,7 @@ export const tallyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_submission",
+    operationType: "read",
     description: "Fetch a single Tally form submission by ID with its responses and questions.",
     requiredScopes: [],
     inputSchema: s.actionInput(

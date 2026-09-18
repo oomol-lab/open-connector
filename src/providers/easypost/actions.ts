@@ -80,6 +80,7 @@ const trackerListInputSchema = s.object(
 export const easypostActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_address",
+    operationType: "write",
     description: "Create an immutable EasyPost address for shipping workflows.",
     inputSchema: addressInputSchema,
     outputSchema: s.object("The response returned after creating an EasyPost address.", {
@@ -88,6 +89,7 @@ export const easypostActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_address",
+    operationType: "read",
     description: "Retrieve an EasyPost address by ID.",
     inputSchema: s.object("The input for retrieving an EasyPost address.", {
       address_id: easypostIdSchema,
@@ -98,6 +100,7 @@ export const easypostActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_tracker",
+    operationType: "write",
     description: "Create an EasyPost standalone tracker from a carrier tracking code.",
     inputSchema: trackerCreateInputSchema,
     outputSchema: s.object("The response returned after creating an EasyPost tracker.", {
@@ -106,6 +109,7 @@ export const easypostActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tracker",
+    operationType: "read",
     description: "Retrieve an EasyPost tracker by ID.",
     inputSchema: s.object("The input for retrieving an EasyPost tracker.", {
       tracker_id: easypostIdSchema,
@@ -116,6 +120,7 @@ export const easypostActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_trackers",
+    operationType: "read",
     description: "List EasyPost trackers with pagination and optional carrier filters.",
     inputSchema: trackerListInputSchema,
     outputSchema: s.object("The response returned when listing EasyPost trackers.", {
@@ -126,6 +131,7 @@ export const easypostActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_carrier_types",
+    operationType: "read",
     description: "List carrier types available to the EasyPost account.",
     inputSchema: s.object("The input for listing EasyPost carrier types.", {}),
     outputSchema: s.object("The response returned when listing EasyPost carrier types.", {

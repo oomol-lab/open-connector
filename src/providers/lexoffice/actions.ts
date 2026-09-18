@@ -356,12 +356,14 @@ const output = (
 
 function action(
   name: LexofficeActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     inputSchema,
     outputSchema,
@@ -371,12 +373,14 @@ function action(
 export const lexofficeActions: ActionDefinition[] = [
   action(
     "get_profile",
+    "read",
     "Retrieve the current Lexoffice connection profile and organization metadata.",
     input({}, [], "The input payload for retrieving the current Lexoffice profile."),
     profile,
   ),
   action(
     "list_contacts",
+    "read",
     "List Lexoffice contacts with optional filters and page navigation.",
     input(
       {
@@ -401,18 +405,21 @@ export const lexofficeActions: ActionDefinition[] = [
   ),
   action(
     "get_contact",
+    "read",
     "Retrieve one Lexoffice contact by ID.",
     input({ id: uuid("The Lexoffice contact identifier.") }, ["id"]),
     output({ contact }, ["contact"], "The response returned when retrieving one Lexoffice contact."),
   ),
   action(
     "create_contact",
+    "write",
     "Create one Lexoffice contact using either a company or person payload.",
     input({ data: contactMutation }, ["data"], "The input payload for creating a Lexoffice contact."),
     output({ result: actionResult }, ["result"], "The response returned when creating a Lexoffice contact."),
   ),
   action(
     "update_contact",
+    "write",
     "Update one Lexoffice contact by ID using the latest optimistic-locking version.",
     input(
       {
@@ -426,6 +433,7 @@ export const lexofficeActions: ActionDefinition[] = [
   ),
   action(
     "list_articles",
+    "read",
     "List Lexoffice articles with optional articleNumber, GTIN, or type filters.",
     input(
       {
@@ -442,18 +450,21 @@ export const lexofficeActions: ActionDefinition[] = [
   ),
   action(
     "get_article",
+    "read",
     "Retrieve one Lexoffice article by ID.",
     input({ id: uuid("The Lexoffice article identifier.") }, ["id"]),
     output({ article }, ["article"], "The response returned when retrieving one Lexoffice article."),
   ),
   action(
     "create_article",
+    "write",
     "Create one Lexoffice article with a NET or GROSS leading price payload.",
     input({ data: articleMutation }, ["data"], "The input payload for creating a Lexoffice article."),
     output({ result: actionResult }, ["result"], "The response returned when creating a Lexoffice article."),
   ),
   action(
     "update_article",
+    "write",
     "Update one Lexoffice article by ID using the latest optimistic-locking version.",
     input(
       {
@@ -467,6 +478,7 @@ export const lexofficeActions: ActionDefinition[] = [
   ),
   action(
     "list_voucherlist",
+    "read",
     "List Lexoffice voucher metadata using the official voucherlist filters and paging.",
     input(
       {

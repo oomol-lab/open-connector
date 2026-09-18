@@ -145,6 +145,7 @@ const lookupCityStateOutputSchema = s.object("The postal lookup response from Po
 export const postgridVerifyActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "verify_address",
+    operationType: "read",
     description:
       "Verify and standardize a US or Canadian address with PostGrid Verify using either freeform or structured address input.",
     requiredScopes: [],
@@ -153,6 +154,7 @@ export const postgridVerifyActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "autocomplete_address",
+    operationType: "read",
     description: "Autocomplete a partially specified US or Canadian address with optional location filters.",
     requiredScopes: [],
     inputSchema: autocompleteAddressInputSchema,
@@ -160,6 +162,7 @@ export const postgridVerifyActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "parse_address",
+    operationType: "read",
     description: "Parse a single-line address into component fields with PostGrid Verify.",
     requiredScopes: [],
     inputSchema: parseAddressInputSchema,
@@ -167,6 +170,7 @@ export const postgridVerifyActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "lookup_city_state_from_postal",
+    operationType: "read",
     description: "Look up city and state or province matches for a postal or ZIP code with PostGrid Verify.",
     requiredScopes: [],
     inputSchema: lookupCityStateInputSchema,

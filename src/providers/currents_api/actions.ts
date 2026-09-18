@@ -94,18 +94,21 @@ const taxonomyDescriptionSchema = nonEmptyString(
 export const currentsApiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_latest_news",
+    operationType: "read",
     description: "Retrieve the latest Currents news feed with optional language and region filters.",
     inputSchema: latestNewsInputSchema,
     outputSchema: newsCollectionOutputSchema,
   }),
   defineProviderAction(service, {
     name: "search_news",
+    operationType: "read",
     description: "Search Currents news articles with keyword, taxonomy, and time-range filters.",
     inputSchema: searchNewsInputSchema,
     outputSchema: newsCollectionOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_available_languages",
+    operationType: "read",
     description: "List the language codes currently supported by Currents.",
     inputSchema: s.object({}, { description: "No input is required for listing Currents languages." }),
     outputSchema: s.object(
@@ -126,6 +129,7 @@ export const currentsApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_available_regions",
+    operationType: "read",
     description: "List the region codes currently supported by Currents.",
     inputSchema: s.object({}, { description: "No input is required for listing Currents regions." }),
     outputSchema: s.object(
@@ -146,6 +150,7 @@ export const currentsApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_available_categories",
+    operationType: "read",
     description: "List the news categories currently supported by Currents.",
     inputSchema: s.object({}, { description: "No input is required for listing Currents categories." }),
     outputSchema: s.object(

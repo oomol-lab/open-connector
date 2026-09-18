@@ -86,6 +86,7 @@ const userSchema = s.object("A normalized 7shifts user.", {
 
 const retrieveIdentityAction = defineProviderAction(service, {
   name: "retrieve_identity",
+  operationType: "read",
   description: "Retrieve the 7shifts identity associated with the access token.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for retrieving a 7shifts identity.", commonInputFields, {
@@ -98,6 +99,7 @@ const retrieveIdentityAction = defineProviderAction(service, {
 
 const listCompaniesAction = defineProviderAction(service, {
   name: "list_companies",
+  operationType: "read",
   description: "List 7shifts companies available to the access token.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -115,6 +117,7 @@ const listCompaniesAction = defineProviderAction(service, {
 
 const getCompanyAction = defineProviderAction(service, {
   name: "get_company",
+  operationType: "read",
   description: "Retrieve one 7shifts company by ID.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -132,6 +135,7 @@ const getCompanyAction = defineProviderAction(service, {
 
 const listLocationsAction = defineProviderAction(service, {
   name: "list_locations",
+  operationType: "read",
   description: "List 7shifts locations for a company.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -154,6 +158,7 @@ const listLocationsAction = defineProviderAction(service, {
 
 const listDepartmentsAction = defineProviderAction(service, {
   name: "list_departments",
+  operationType: "read",
   description: "List 7shifts departments for a company.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -178,6 +183,7 @@ const listDepartmentsAction = defineProviderAction(service, {
 
 const listRolesAction = defineProviderAction(service, {
   name: "list_roles",
+  operationType: "read",
   description: "List 7shifts roles for a company.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -213,6 +219,7 @@ const listRolesAction = defineProviderAction(service, {
 
 const listUsersAction = defineProviderAction(service, {
   name: "list_users",
+  operationType: "read",
   description: "List 7shifts users for a company.",
   requiredScopes: [],
   inputSchema: s.object(

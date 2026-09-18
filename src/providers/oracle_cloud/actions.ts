@@ -59,6 +59,7 @@ const pagination = { limit, page };
 export const oracleCloudActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_instances",
+    operationType: "read",
     description: "List OCI compute instances in a compartment.",
     inputSchema: input(
       "Instance filters.",
@@ -84,6 +85,7 @@ export const oracleCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_instance",
+    operationType: "read",
     description: "Get a compute instance by OCID.",
     inputSchema: s.requiredObject("Instance lookup.", { instanceId }),
     outputSchema: entityOutput("instance"),
@@ -91,6 +93,7 @@ export const oracleCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "launch_instance",
+    operationType: "write",
     description: "Launch a compute instance from an image in a subnet.",
     inputSchema: input(
       "Instance launch details.",
@@ -111,12 +114,14 @@ export const oracleCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "terminate_instance",
+    operationType: "destructive",
     description: "Permanently terminate a compute instance. This destructive operation cannot be undone.",
     inputSchema: s.requiredObject("Instance termination.", { instanceId }),
     outputSchema: responseOutput("Instance termination response."),
   }),
   defineProviderAction(service, {
     name: "update_instance",
+    operationType: "write",
     description: "Update flexible shape resources for an instance; OCI may restart the instance.",
     inputSchema: input(
       "Instance shape update.",
@@ -131,6 +136,7 @@ export const oracleCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_images",
+    operationType: "read",
     description: "List compute images, optionally filtered by operating system.",
     inputSchema: input(
       "Image filters.",
@@ -146,12 +152,14 @@ export const oracleCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_image",
+    operationType: "read",
     description: "Get a compute image by OCID.",
     inputSchema: s.requiredObject("Image lookup.", { imageId: ocid("Image OCID.") }),
     outputSchema: entityOutput("image"),
   }),
   defineProviderAction(service, {
     name: "instance_action",
+    operationType: "read",
     description: "Perform one of the instance actions exposed by Oracle's official Compute MCP server.",
     inputSchema: s.requiredObject("Instance action.", {
       instanceId,
@@ -162,6 +170,7 @@ export const oracleCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_vnic_attachments",
+    operationType: "read",
     description: "List VNIC attachments in a compartment, optionally for one instance.",
     inputSchema: input("VNIC attachment filters.", { compartmentId, instanceId, ...pagination }, [
       "compartmentId",
@@ -174,6 +183,7 @@ export const oracleCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_vnic_attachment",
+    operationType: "read",
     description: "Get a VNIC attachment by OCID.",
     inputSchema: s.requiredObject("VNIC attachment lookup.", {
       vnicAttachmentId: ocid("VNIC attachment OCID."),
@@ -183,6 +193,7 @@ export const oracleCloudActions: ActionDefinition[] = [
 
   defineProviderAction(service, {
     name: "list_vcns",
+    operationType: "read",
     description: "List virtual cloud networks in a compartment.",
     inputSchema: input("VCN filters.", { compartmentId, ...pagination }, ["compartmentId", "limit", "page"]),
     outputSchema: listOutput("vcns"),
@@ -190,18 +201,21 @@ export const oracleCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_vcn",
+    operationType: "read",
     description: "Get a virtual cloud network by OCID.",
     inputSchema: s.requiredObject("VCN lookup.", { vcnId: ocid("VCN OCID.") }),
     outputSchema: entityOutput("vcn"),
   }),
   defineProviderAction(service, {
     name: "delete_vcn",
+    operationType: "destructive",
     description: "Permanently delete an empty VCN. This is destructive.",
     inputSchema: s.requiredObject("VCN deletion.", { vcnId: ocid("VCN OCID.") }),
     outputSchema: responseOutput("VCN deletion response."),
   }),
   defineProviderAction(service, {
     name: "create_vcn",
+    operationType: "write",
     description: "Create a virtual cloud network.",
     inputSchema: input(
       "VCN creation.",
@@ -216,6 +230,7 @@ export const oracleCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subnets",
+    operationType: "read",
     description: "List subnets in a compartment, optionally filtered by VCN.",
     inputSchema: input("Subnet filters.", { compartmentId, vcnId: ocid("VCN OCID."), ...pagination }, [
       "compartmentId",
@@ -227,12 +242,14 @@ export const oracleCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_subnet",
+    operationType: "read",
     description: "Get a subnet by OCID.",
     inputSchema: s.requiredObject("Subnet lookup.", { subnetId: ocid("Subnet OCID.") }),
     outputSchema: entityOutput("subnet"),
   }),
   defineProviderAction(service, {
     name: "create_subnet",
+    operationType: "write",
     description: "Create a subnet in a VCN.",
     inputSchema: input(
       "Subnet creation.",
@@ -248,6 +265,7 @@ export const oracleCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_security_lists",
+    operationType: "read",
     description: "List security lists in a compartment, optionally filtered by VCN.",
     inputSchema: input("Security list filters.", { compartmentId, vcnId: ocid("VCN OCID."), ...pagination }, [
       "compartmentId",
@@ -259,6 +277,7 @@ export const oracleCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_security_list",
+    operationType: "read",
     description: "Get a security list by OCID.",
     inputSchema: s.requiredObject("Security list lookup.", {
       securityListId: ocid("Security list OCID."),
@@ -267,6 +286,7 @@ export const oracleCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_network_security_groups",
+    operationType: "read",
     description: "List network security groups, optionally filtered by VCN or VLAN.",
     inputSchema: input(
       "Network security group filters.",
@@ -282,6 +302,7 @@ export const oracleCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_network_security_group",
+    operationType: "read",
     description: "Get a network security group by OCID.",
     inputSchema: s.requiredObject("Network security group lookup.", {
       networkSecurityGroupId: ocid("Network security group OCID."),
@@ -290,6 +311,7 @@ export const oracleCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_vnic",
+    operationType: "read",
     description: "Get a VNIC and its assigned IP addresses by OCID.",
     inputSchema: s.requiredObject("VNIC lookup.", { vnicId: ocid("VNIC OCID.") }),
     outputSchema: entityOutput("vnic"),
@@ -297,12 +319,14 @@ export const oracleCloudActions: ActionDefinition[] = [
 
   defineProviderAction(service, {
     name: "list_alarms",
+    operationType: "read",
     description: "List Monitoring alarms in a compartment.",
     inputSchema: input("Alarm filters.", { compartmentId, ...pagination }, ["compartmentId", "limit", "page"]),
     outputSchema: listOutput("alarms"),
   }),
   defineProviderAction(service, {
     name: "list_metric_definitions",
+    operationType: "read",
     description: "List available OCI Monitoring metric definitions.",
     inputSchema: input(
       "Metric definition filters.",
@@ -330,6 +354,7 @@ export const oracleCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_metrics_data",
+    operationType: "read",
     description: "Retrieve aggregated OCI Monitoring metric data using an MQL expression.",
     inputSchema: input(
       "Metric query.",
@@ -350,6 +375,7 @@ export const oracleCloudActions: ActionDefinition[] = [
 
   defineProviderAction(service, {
     name: "list_compartments",
+    operationType: "read",
     description: "List child compartments, optionally traversing the tenancy subtree.",
     inputSchema: input(
       "Compartment filters.",
@@ -370,30 +396,35 @@ export const oracleCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tenancy",
+    operationType: "read",
     description: "Get a tenancy by OCID.",
     inputSchema: s.requiredObject("Tenancy lookup.", { tenancyId: ocid("Tenancy OCID.") }),
     outputSchema: entityOutput("tenancy"),
   }),
   defineProviderAction(service, {
     name: "list_availability_domains",
+    operationType: "read",
     description: "List availability domains accessible from a compartment or tenancy.",
     inputSchema: input("Availability domain lookup.", { compartmentId }, ["compartmentId"]),
     outputSchema: listOutput("availabilityDomains"),
   }),
   defineProviderAction(service, {
     name: "get_current_tenancy",
+    operationType: "read",
     description: "Get the tenancy configured on this connection.",
     inputSchema: s.object("No input.", {}),
     outputSchema: entityOutput("tenancy"),
   }),
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the IAM user configured on this connection.",
     inputSchema: s.object("No input.", {}),
     outputSchema: entityOutput("user"),
   }),
   defineProviderAction(service, {
     name: "get_compartment_by_name",
+    operationType: "read",
     description: "Find a direct child compartment by exact name.",
     inputSchema: s.requiredObject("Compartment name lookup.", {
       name: s.nonEmptyString("Exact compartment name."),
@@ -406,6 +437,7 @@ export const oracleCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subscribed_regions",
+    operationType: "read",
     description: "List regions to which a tenancy is subscribed.",
     inputSchema: input("Region subscription lookup.", { tenancyId: ocid("Tenancy OCID.") }, ["tenancyId"]),
     outputSchema: listOutput("regions"),
@@ -413,6 +445,7 @@ export const oracleCloudActions: ActionDefinition[] = [
 
   defineProviderAction(service, {
     name: "run_instance_agent_command",
+    operationType: "write",
     description:
       "Run a shell or batch script through Oracle Cloud Agent. The script executes on the target host with the agent service account's privileges.",
     inputSchema: input(
@@ -434,6 +467,7 @@ export const oracleCloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_instance_agent_command_executions",
+    operationType: "read",
     description: "List Oracle Cloud Agent command executions for a compute instance.",
     inputSchema: input("Agent command execution filters.", { compartmentId, instanceId, ...pagination }, [
       "compartmentId",

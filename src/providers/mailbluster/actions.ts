@@ -124,12 +124,14 @@ function leadMutationOutputSchema(description: string) {
 export const mailblusterActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_fields",
+    operationType: "read",
     description: "List all MailBluster custom fields configured for the current brand.",
     inputSchema: s.object("This action does not require input.", {}),
     outputSchema: listFieldsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_lead",
+    operationType: "write",
     description:
       "Create a MailBluster lead with optional custom fields, metadata, tags, subscription state, and double opt-in settings.",
     inputSchema: createLeadInputSchema,
@@ -137,12 +139,14 @@ export const mailblusterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_lead",
+    operationType: "read",
     description: "Get one MailBluster lead by the MD5 hash of the lead email address.",
     inputSchema: leadHashInputSchema,
     outputSchema: leadSchema,
   }),
   defineProviderAction(service, {
     name: "update_lead",
+    operationType: "write",
     description:
       "Update one MailBluster lead by lead hash, including custom fields, metadata, subscription state, and tag changes.",
     inputSchema: updateLeadInputSchema,
@@ -150,6 +154,7 @@ export const mailblusterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_lead",
+    operationType: "destructive",
     description: "Delete one MailBluster lead by the MD5 hash of the lead email address.",
     inputSchema: leadHashInputSchema,
     outputSchema: deleteLeadOutputSchema,

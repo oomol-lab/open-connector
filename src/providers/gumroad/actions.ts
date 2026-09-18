@@ -65,18 +65,21 @@ const subscribersOutputSchema = s.actionOutput(
 export const gumroadActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Retrieve the authenticated Gumroad user.",
     inputSchema: s.actionInput({}, [], "No input is required to retrieve the authenticated Gumroad user."),
     outputSchema: userOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List products owned by the authenticated Gumroad user.",
     inputSchema: s.actionInput({}, [], "No input is required to list Gumroad products."),
     outputSchema: productsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Retrieve one Gumroad product by ID.",
     inputSchema: s.actionInput(
       {
@@ -89,6 +92,7 @@ export const gumroadActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sales",
+    operationType: "read",
     description: "List successful Gumroad sales with optional filters and pagination.",
     inputSchema: s.actionInput(
       {
@@ -108,6 +112,7 @@ export const gumroadActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_sale",
+    operationType: "read",
     description: "Retrieve one Gumroad sale by ID.",
     inputSchema: s.actionInput(
       {
@@ -120,6 +125,7 @@ export const gumroadActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_product_subscribers",
+    operationType: "read",
     description: "List active subscribers for one Gumroad product.",
     inputSchema: s.actionInput(
       {
@@ -135,6 +141,7 @@ export const gumroadActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "mark_sale_as_shipped",
+    operationType: "write",
     description: "Mark a Gumroad sale as shipped, optionally including a tracking URL.",
     inputSchema: s.actionInput(
       {
@@ -148,6 +155,7 @@ export const gumroadActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "refund_sale",
+    operationType: "write",
     description: "Refund a Gumroad sale, optionally as a partial refund in cents.",
     inputSchema: s.actionInput(
       {
@@ -161,6 +169,7 @@ export const gumroadActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "resend_sale_receipt",
+    operationType: "write",
     description: "Resend a Gumroad sale receipt to the buyer.",
     inputSchema: s.actionInput(
       {

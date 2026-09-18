@@ -1,5 +1,5 @@
 import type { ProviderActionDefinition } from "../../core/provider-definition.ts";
-import type { JsonSchema } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
@@ -65,6 +65,7 @@ interface ZhihuiyaOperation {
 }
 function operation<const T extends string>(
   name: T,
+  operationType: ActionDefinition["operationType"],
   path: string,
   description: string,
   inputSchema: JsonSchema,
@@ -75,7 +76,13 @@ function operation<const T extends string>(
     path: `/zhihuiya/${path}`,
     usage,
     perRecord,
-    action: defineProviderAction("linkfox", { name, description, inputSchema, outputSchema: patentOutput }),
+    action: defineProviderAction("linkfox", {
+      name,
+      operationType,
+      description,
+      inputSchema,
+      outputSchema: patentOutput,
+    }),
   };
 }
 const imageInput = strictObject(
@@ -198,6 +205,7 @@ const queryInput = strictObject(
 export const zhihuiyaOperations: ZhihuiyaOperation[] = [
   operation(
     "translate_zhihuiya_patent_abstracts",
+    "read",
     "abstractDataTranslated",
     "Get translated patent titles and abstracts through LinkFox and Patsnap.",
     patentInput({ replaceByRelated: replacement, lang: translationLanguage }, 60000),
@@ -205,6 +213,7 @@ export const zhihuiyaOperations: ZhihuiyaOperation[] = [
   ),
   operation(
     "get_zhihuiya_patent_abstract_images",
+    "read",
     "abstractImage",
     "Get patent abstract image URLs through LinkFox and Patsnap.",
     patentInput({}, 60000),
@@ -212,6 +221,7 @@ export const zhihuiyaOperations: ZhihuiyaOperation[] = [
   ),
   operation(
     "get_zhihuiya_patent_bibliography",
+    "read",
     "bibliography",
     "Get detailed patent bibliographic records through LinkFox and Patsnap.",
     patentInput({}, 60000),
@@ -219,6 +229,7 @@ export const zhihuiyaOperations: ZhihuiyaOperation[] = [
   ),
   operation(
     "get_zhihuiya_patent_claims",
+    "read",
     "claimData",
     "Get original patent claims through LinkFox and Patsnap.",
     patentInput({ replaceByRelated: stringReplacement }, 60000),
@@ -226,6 +237,7 @@ export const zhihuiyaOperations: ZhihuiyaOperation[] = [
   ),
   operation(
     "translate_zhihuiya_patent_claims",
+    "read",
     "claimDataTranslated",
     "Get translated patent claims through LinkFox and Patsnap.",
     patentInput({ replaceByRelated: replacement, lang: translationLanguage }, 60000),
@@ -233,6 +245,7 @@ export const zhihuiyaOperations: ZhihuiyaOperation[] = [
   ),
   operation(
     "get_zhihuiya_patent_descriptions",
+    "read",
     "descriptionData",
     "Get original patent description sections through LinkFox and Patsnap.",
     patentInput({ replaceByRelated: stringReplacement }, 60000),
@@ -240,6 +253,7 @@ export const zhihuiyaOperations: ZhihuiyaOperation[] = [
   ),
   operation(
     "translate_zhihuiya_patent_descriptions",
+    "read",
     "descriptionDataTranslated",
     "Get translated patent descriptions through LinkFox and Patsnap.",
     patentInput({ replaceByRelated: replacement, lang: translationLanguage }, 60000),
@@ -247,6 +261,7 @@ export const zhihuiyaOperations: ZhihuiyaOperation[] = [
   ),
   operation(
     "get_zhihuiya_patent_fulltext_images",
+    "read",
     "fulltextImage",
     "Get patent full-text image URLs through LinkFox and Patsnap.",
     patentInput(
@@ -265,6 +280,7 @@ export const zhihuiyaOperations: ZhihuiyaOperation[] = [
   ),
   operation(
     "get_zhihuiya_patent_legal_status",
+    "read",
     "legalStatus",
     "Get patent legal statuses and events through LinkFox and Patsnap.",
     patentInput({}, 60000),
@@ -272,6 +288,7 @@ export const zhihuiyaOperations: ZhihuiyaOperation[] = [
   ),
   operation(
     "get_zhihuiya_patent_cited_by",
+    "read",
     "patentCited",
     "Get patents that cite the specified patents and citation counts through LinkFox and Patsnap.",
     patentInput({}, 60000),
@@ -279,6 +296,7 @@ export const zhihuiyaOperations: ZhihuiyaOperation[] = [
   ),
   operation(
     "get_zhihuiya_patent_families",
+    "read",
     "patentFamily",
     "Get simple, INPADOC, and Patsnap patent families through LinkFox.",
     patentInput({}, 60000),
@@ -286,6 +304,7 @@ export const zhihuiyaOperations: ZhihuiyaOperation[] = [
   ),
   operation(
     "get_zhihuiya_patent_citations",
+    "read",
     "patentForwardCitation",
     "Get patent and non-patent documents cited by the specified patents through LinkFox and Patsnap.",
     patentInput({}, 60000),
@@ -293,6 +312,7 @@ export const zhihuiyaOperations: ZhihuiyaOperation[] = [
   ),
   operation(
     "search_zhihuiya_patents_by_image",
+    "read",
     "patentImageSearch",
     "Search design and utility patents by image with filters and pagination through LinkFox and Patsnap.",
     imageInput,
@@ -301,6 +321,7 @@ export const zhihuiyaOperations: ZhihuiyaOperation[] = [
   ),
   operation(
     "get_zhihuiya_patent_pdfs",
+    "read",
     "pdfData",
     "Get patent PDF download URLs through LinkFox and Patsnap.",
     patentInput({ replaceByRelated: stringReplacement }),
@@ -308,6 +329,7 @@ export const zhihuiyaOperations: ZhihuiyaOperation[] = [
   ),
   operation(
     "search_zhihuiya_patents",
+    "read",
     "querySearchPatent",
     "Search patents with Analytics expressions, deduplication, sorting, and pagination through LinkFox and Patsnap.",
     queryInput,
@@ -315,6 +337,7 @@ export const zhihuiyaOperations: ZhihuiyaOperation[] = [
   ),
   operation(
     "get_zhihuiya_patent_simple_bibliography",
+    "read",
     "simpleBibliography",
     "Get compact patent bibliographic records through LinkFox and Patsnap.",
     patentInput(),

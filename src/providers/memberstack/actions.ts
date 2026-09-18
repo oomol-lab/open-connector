@@ -184,12 +184,14 @@ const verifyMemberTokenOutputSchema = s.object("The decoded Memberstack member t
 export const memberstackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_members",
+    operationType: "read",
     description: "List Memberstack members with cursor pagination and optional JSON-field inclusion.",
     inputSchema: listMembersInputSchema,
     outputSchema: listMembersOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_member",
+    operationType: "read",
     description:
       "Retrieve one Memberstack member by member ID or email address, optionally embedding team memberships.",
     inputSchema: getMemberInputSchema,
@@ -197,6 +199,7 @@ export const memberstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_member",
+    operationType: "write",
     description:
       "Create a Memberstack member with email, optional password, free plans, custom fields, metadata, JSON data, and login redirect.",
     inputSchema: createMemberInputSchema,
@@ -204,6 +207,7 @@ export const memberstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_member",
+    operationType: "destructive",
     description:
       "Partially update a Memberstack member's email, custom fields, metadata, JSON data, login redirect, verified status, or profile image.",
     inputSchema: updateMemberInputSchema,
@@ -211,6 +215,7 @@ export const memberstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_member",
+    operationType: "destructive",
     description:
       "Permanently delete a Memberstack member with optional Stripe customer and subscription cleanup flags.",
     inputSchema: deleteMemberInputSchema,
@@ -222,18 +227,21 @@ export const memberstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_free_plan",
+    operationType: "write",
     description: "Add a free Memberstack plan to an existing member.",
     inputSchema: freePlanInputSchema,
     outputSchema: successOutputSchema,
   }),
   defineProviderAction(service, {
     name: "remove_free_plan",
+    operationType: "destructive",
     description: "Remove a free Memberstack plan from an existing member.",
     inputSchema: freePlanInputSchema,
     outputSchema: successOutputSchema,
   }),
   defineProviderAction(service, {
     name: "verify_member_token",
+    operationType: "read",
     description: "Verify a Memberstack member JWT and return the decoded token payload.",
     inputSchema: verifyMemberTokenInputSchema,
     outputSchema: verifyMemberTokenOutputSchema,

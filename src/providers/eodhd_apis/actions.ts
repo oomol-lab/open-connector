@@ -197,6 +197,7 @@ const getIdMappingInputSchema = s.object(
 export const eodhdApisActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_instruments",
+    operationType: "read",
     description: "Search EODHD instruments by ticker, company name, or ISIN.",
     inputSchema: s.object(
       "Input parameters for searching EODHD instruments.",
@@ -215,6 +216,7 @@ export const eodhdApisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_exchanges",
+    operationType: "read",
     description: "List exchanges supported by EODHD.",
     inputSchema: s.object("Input parameters for listing EODHD exchanges.", {}),
     outputSchema: s.object("Supported exchanges returned by EODHD.", {
@@ -223,6 +225,7 @@ export const eodhdApisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_real_time_quote",
+    operationType: "read",
     description: "Get delayed real-time quote data for one or more EODHD symbols.",
     inputSchema: s.object(
       "Input parameters for retrieving delayed real-time EODHD quote data.",
@@ -242,6 +245,7 @@ export const eodhdApisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_eod",
+    operationType: "read",
     description: "Get historical end-of-day price data for an EODHD ticker.",
     inputSchema: s.object(
       "Input parameters for retrieving EODHD historical end-of-day price rows.",
@@ -267,6 +271,7 @@ export const eodhdApisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_id_mapping",
+    operationType: "read",
     description: "Map between EODHD ticker symbols and security identifiers.",
     inputSchema: getIdMappingInputSchema,
     outputSchema: s.object("Identifier mappings returned by EODHD.", {
@@ -275,6 +280,7 @@ export const eodhdApisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_macro_indicators",
+    operationType: "read",
     description: "Get macroeconomic indicator time series for a country from EODHD.",
     inputSchema: s.object(
       "Input parameters for retrieving EODHD macro indicator data.",
@@ -294,6 +300,7 @@ export const eodhdApisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ust_yield_rates",
+    operationType: "read",
     description: "Get US Treasury yield curve rates from EODHD.",
     inputSchema: s.object(
       "Input parameters for retrieving EODHD US Treasury yield rates.",
@@ -312,6 +319,7 @@ export const eodhdApisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_info",
+    operationType: "read",
     description: "Get EODHD account details and API usage for the authenticated user.",
     inputSchema: s.object("Input parameters for retrieving the EODHD authenticated user.", {}),
     outputSchema: s.object("Authenticated user details returned by EODHD.", {

@@ -9,6 +9,7 @@ const certificateSchema = s.looseObject("A certificate returned by Venafi TLS Pr
 export const venafiTlsProtectDatacenterActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_certificate",
+    operationType: "read",
     description: "Retrieve a certificate by GUID from Venafi TLS Protect Datacenter.",
     requiredScopes: [],
     inputSchema: s.object("The certificate to retrieve.", {
@@ -18,6 +19,7 @@ export const venafiTlsProtectDatacenterActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_certificates",
+    operationType: "read",
     description: "List certificates visible to the Venafi TLS Protect Datacenter integration.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -35,6 +37,7 @@ export const venafiTlsProtectDatacenterActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_policy",
+    operationType: "read",
     description: "Check the effective certificate policy for a policy distinguished name.",
     requiredScopes: [],
     inputSchema: s.object("The policy folder to inspect.", {

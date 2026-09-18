@@ -252,6 +252,7 @@ const getCreditsOutputSchema = s.object("The current Torii credit balance.", {
 export const toriiImageTranslatorActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "translate_image",
+    operationType: "read",
     description:
       "Translate text in a manga, comic, or other public image with Torii, remove the source text, re-typeset the translation, and return the downloadable translated image.",
     requiredScopes: [],
@@ -260,6 +261,7 @@ export const toriiImageTranslatorActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "extract_text",
+    operationType: "read",
     description:
       "Extract structured OCR text, geometry, orientation, colors, and confidence data from a public image with Torii.",
     requiredScopes: [],
@@ -268,6 +270,7 @@ export const toriiImageTranslatorActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "inpaint_image",
+    operationType: "read",
     description:
       "Remove masked text or objects from a public image with Torii inpainting and return the cleaned PNG through transit storage.",
     requiredScopes: [],
@@ -276,6 +279,7 @@ export const toriiImageTranslatorActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "typeset_image",
+    operationType: "write",
     description:
       "Render translated text boxes over a pre-cleaned public image with Torii and return the typeset PNG through transit storage.",
     requiredScopes: [],
@@ -284,6 +288,7 @@ export const toriiImageTranslatorActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_credits",
+    operationType: "read",
     description: "Retrieve the credit balance remaining for the connected Torii API key.",
     requiredScopes: [],
     inputSchema: getCreditsInputSchema,

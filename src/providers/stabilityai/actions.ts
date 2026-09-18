@@ -22,6 +22,7 @@ const generatedFileSchema = s.requiredObject("A generated audio file stored in l
 export const stabilityaiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "text_to_audio",
+    operationType: "write",
     description: "Generate audio from a text prompt with Stability AI and store the generated file locally.",
     requiredScopes: [],
     inputSchema: s.actionInput(

@@ -16,6 +16,7 @@ export type PagerDutyActionName =
 
 interface PagerDutyActionDefinition {
   name: PagerDutyActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
@@ -140,6 +141,7 @@ const onCallSchema = s.looseObject("PagerDuty on-call entry.", {
 const actionDefinitions: PagerDutyActionDefinition[] = [
   {
     name: "list_incidents",
+    operationType: "read",
     description: "List PagerDuty incidents with status, service, assignment, and paging filters.",
     inputSchema: s.object(
       "Incident list filters.",
@@ -191,6 +193,7 @@ const actionDefinitions: PagerDutyActionDefinition[] = [
   },
   {
     name: "get_incident",
+    operationType: "read",
     description: "Get a PagerDuty incident by ID.",
     inputSchema: s.object(
       "Incident lookup request.",
@@ -216,12 +219,14 @@ const actionDefinitions: PagerDutyActionDefinition[] = [
   },
   {
     name: "update_incident",
+    operationType: "write",
     description: "Update mutable PagerDuty incident fields such as title, urgency, or status.",
     inputSchema: incidentMutationInputSchema,
     outputSchema: updateIncidentOutputSchema,
   },
   {
     name: "acknowledge_incident",
+    operationType: "destructive",
     description: "Acknowledge a PagerDuty incident as the specified user.",
     inputSchema: s.object("Incident acknowledgement request.", {
       incident_id: idField,
@@ -233,6 +238,7 @@ const actionDefinitions: PagerDutyActionDefinition[] = [
   },
   {
     name: "resolve_incident",
+    operationType: "read",
     description: "Resolve a PagerDuty incident as the specified user.",
     inputSchema: s.object(
       "Incident resolution request.",
@@ -249,6 +255,7 @@ const actionDefinitions: PagerDutyActionDefinition[] = [
   },
   {
     name: "list_on_calls",
+    operationType: "read",
     description: "List PagerDuty on-call assignments by user, schedule, or escalation policy.",
     inputSchema: s.object(
       "On-call list filters.",
@@ -287,6 +294,7 @@ const actionDefinitions: PagerDutyActionDefinition[] = [
   },
   {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the PagerDuty user associated with the API token.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("PagerDuty current user lookup result.", {
@@ -298,6 +306,7 @@ const actionDefinitions: PagerDutyActionDefinition[] = [
 export const pagerDutyActions: ActionDefinition[] = actionDefinitions.map((definition) =>
   defineProviderAction(service, {
     name: definition.name,
+    operationType: definition.operationType,
     description: definition.description,
     requiredScopes: [],
     inputSchema: definition.inputSchema,

@@ -112,6 +112,7 @@ const optionalMutationFields = [
 export const cronitorActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_monitors",
+    operationType: "read",
     description: "List Cronitor monitors in the current account.",
     inputSchema: s.object({}, { description: "The input payload for listing Cronitor monitors." }),
     outputSchema: s.object(
@@ -121,6 +122,7 @@ export const cronitorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_monitor",
+    operationType: "read",
     description: "Get a Cronitor monitor by key.",
     inputSchema: s.object(
       { key: monitorKeySchema },
@@ -133,6 +135,7 @@ export const cronitorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_monitor",
+    operationType: "write",
     description: "Create one Cronitor monitor.",
     inputSchema: s.object(monitorMutationFields, {
       optional: optionalMutationFields,
@@ -145,6 +148,7 @@ export const cronitorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_monitor",
+    operationType: "write",
     description: "Update one Cronitor monitor by key.",
     inputSchema: s.object(monitorMutationFields, {
       optional: optionalMutationFields,
@@ -158,6 +162,7 @@ export const cronitorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_monitor",
+    operationType: "destructive",
     description: "Delete a Cronitor monitor by key.",
     inputSchema: s.object(
       { key: monitorKeySchema },

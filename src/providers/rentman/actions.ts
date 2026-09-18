@@ -50,6 +50,7 @@ export type RentmanActionName =
 function listAction(name: RentmanActionName, description: string): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType: "read",
     description,
     inputSchema: listInputSchema,
     outputSchema: listOutputSchema,
@@ -59,6 +60,7 @@ function listAction(name: RentmanActionName, description: string): ActionDefinit
 function getAction(name: RentmanActionName, description: string): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType: "read",
     description,
     inputSchema: idInputSchema,
     outputSchema: itemOutputSchema,

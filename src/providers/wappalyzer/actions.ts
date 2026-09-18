@@ -32,6 +32,7 @@ const creditHeadersSchema = s.object("The Wappalyzer credit headers returned wit
 export const wappalyzerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_credits_balance",
+    operationType: "read",
     description: "Get the current Wappalyzer API credit balance for the connected account.",
     inputSchema: s.actionInput({}),
     outputSchema: s.actionOutput({
@@ -41,6 +42,7 @@ export const wappalyzerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "lookup_technologies",
+    operationType: "read",
     description: "Look up website technologies and related intelligence with Wappalyzer.",
     inputSchema: s.actionInput(
       {
@@ -83,6 +85,7 @@ export const wappalyzerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_subdomains",
+    operationType: "read",
     description: "Discover website-serving subdomains for one or more domains with Wappalyzer.",
     inputSchema: s.actionInput(
       {
@@ -118,6 +121,7 @@ export const wappalyzerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "verify_email",
+    operationType: "read",
     description: "Verify an email address with Wappalyzer deliverability signals.",
     inputSchema: s.actionInput(
       {

@@ -23,6 +23,7 @@ const mcpToolSummarySchema = s.object(
 export const helium10Actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tools",
+    operationType: "read",
     description:
       "Discover Helium 10 MCP tools that are both in the official V1 read-only catalog and currently available to the connected account.",
     requiredScopes: actionScopes,
@@ -34,6 +35,7 @@ export const helium10Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "call_tool",
+    operationType: "read",
     description:
       "Call a Helium 10 MCP tool after verifying it against the official V1 read-only catalog and the connected account's live tool list.",
     requiredScopes: actionScopes,

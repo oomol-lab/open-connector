@@ -29,6 +29,7 @@ const businessSchema = s.looseObject("One Mindbody Business Directory business."
 export const mindbodyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_businesses",
+    operationType: "read",
     description:
       "List businesses from the Mindbody Consumer API Business Directory, optionally filtered by business IDs.",
     inputSchema: s.object(

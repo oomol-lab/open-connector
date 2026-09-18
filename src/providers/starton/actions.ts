@@ -70,6 +70,7 @@ const pinIdInput = (description: string): JsonSchema =>
 export const startonActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_pins",
+    operationType: "read",
     description: "List IPFS pins from the current Starton project.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -93,6 +94,7 @@ export const startonActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_pin",
+    operationType: "read",
     description: "Read one IPFS pin from Starton by pin identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -109,6 +111,7 @@ export const startonActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_json_pin",
+    operationType: "write",
     description: "Upload JSON content to Starton IPFS and create a new pin.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -126,6 +129,7 @@ export const startonActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "pin_existing_file",
+    operationType: "write",
     description: "Create a Starton pin for an existing IPFS CID.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -143,6 +147,7 @@ export const startonActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_pin",
+    operationType: "destructive",
     description: "Delete a Starton pin by pin identifier.",
     requiredScopes: [],
     inputSchema: pinIdInput("Input for actions that target a single Starton pin."),

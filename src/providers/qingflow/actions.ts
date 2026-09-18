@@ -119,6 +119,7 @@ function pageOutputSchema(description: string, itemDescription: string): JsonSch
 export const qingflowActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_apps",
+    operationType: "read",
     description: "List Qingflow applications visible to the workspace or one specified member.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -139,6 +140,7 @@ export const qingflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form",
+    operationType: "read",
     description: "Get the current form fields, options, and field metadata for a Qingflow application.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -159,6 +161,7 @@ export const qingflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_records",
+    operationType: "read",
     description: "List and filter business-data records from one Qingflow application.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -199,6 +202,7 @@ export const qingflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_record",
+    operationType: "read",
     description: "Get one Qingflow business-data record and its current field answers.",
     requiredScopes: [],
     inputSchema: s.object("The Qingflow application and business-data record to retrieve.", {
@@ -211,6 +215,7 @@ export const qingflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_record",
+    operationType: "write",
     description: "Create one business-data record in a Qingflow application and return its asynchronous request ID.",
     requiredScopes: [],
     followUpActions: ["qingflow.get_operation_result"],
@@ -240,6 +245,7 @@ export const qingflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_record",
+    operationType: "write",
     description: "Update selected field answers on one Qingflow record and return its asynchronous request ID.",
     requiredScopes: [],
     followUpActions: ["qingflow.get_operation_result"],
@@ -256,6 +262,7 @@ export const qingflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_operation_result",
+    operationType: "read",
     description: "Get Qingflow's processing result for a create, update, or other asynchronous request.",
     requiredScopes: [],
     inputSchema: s.object("The Qingflow asynchronous request to inspect.", {
@@ -280,6 +287,7 @@ export const qingflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_members",
+    operationType: "read",
     description: "List members in the connected Qingflow workspace.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -294,6 +302,7 @@ export const qingflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_member",
+    operationType: "read",
     description: "Get one Qingflow workspace member by external user ID.",
     requiredScopes: [],
     inputSchema: s.object("The Qingflow member to retrieve.", { userId: userIdSchema }),
@@ -303,6 +312,7 @@ export const qingflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_members",
+    operationType: "read",
     description: "Find Qingflow workspace member IDs by email address or mobile number.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -323,6 +333,7 @@ export const qingflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_departments",
+    operationType: "read",
     description: "List Qingflow departments, optionally rooted at one department.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -340,6 +351,7 @@ export const qingflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_department",
+    operationType: "read",
     description: "Get one Qingflow department by department ID.",
     requiredScopes: [],
     inputSchema: s.object("The Qingflow department to retrieve.", {
@@ -351,6 +363,7 @@ export const qingflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_roles",
+    operationType: "read",
     description: "List roles in the connected Qingflow workspace.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list Qingflow roles.", {}),
@@ -361,6 +374,7 @@ export const qingflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_record_comments",
+    operationType: "read",
     description: "List comments attached to one Qingflow business-data record.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -380,6 +394,7 @@ export const qingflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_record_comment",
+    operationType: "write",
     description: "Add a comment to one Qingflow business-data record.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -399,6 +414,7 @@ export const qingflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workflow_logs",
+    operationType: "read",
     description: "List workflow-node processing logs for one Qingflow record.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -418,6 +434,7 @@ export const qingflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_record_change_logs",
+    operationType: "read",
     description: "List data-change logs for one Qingflow record, optionally filtered by field.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -438,6 +455,7 @@ export const qingflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "process_record",
+    operationType: "write",
     description: "Submit, approve, reject, complete, or copy a Qingflow workflow node.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -464,6 +482,7 @@ export const qingflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "urge_record",
+    operationType: "write",
     description: "Send a Qingflow reminder for one in-progress business-data record.",
     requiredScopes: [],
     inputSchema: s.object("The record and applicant identity used to send a reminder.", {
@@ -477,6 +496,7 @@ export const qingflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reassign_record",
+    operationType: "write",
     description: "Reassign active approval or fill-in nodes on one Qingflow record.",
     requiredScopes: [],
     inputSchema: s.object("The record and workflow-node reassignments to apply.", {
@@ -499,6 +519,7 @@ export const qingflowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "rollback_record",
+    operationType: "destructive",
     description: "Roll one Qingflow record back to an allowed earlier workflow node.",
     requiredScopes: [],
     inputSchema: s.object(

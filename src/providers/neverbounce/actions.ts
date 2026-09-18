@@ -238,12 +238,14 @@ const jobResultsOutputSchema = s.requiredObject("The NeverBounce paginated job r
 export const neverbounceActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_info",
+    operationType: "read",
     description: "Get the current NeverBounce account credit summary and bulk job counters.",
     inputSchema: emptyInputSchema,
     outputSchema: accountInfoOutputSchema,
   }),
   defineProviderAction(service, {
     name: "single_check",
+    operationType: "read",
     description: "Verify a single email address with NeverBounce and return the verification result.",
     inputSchema: s.object(
       "Input parameters for verifying a single email with NeverBounce.",
@@ -259,12 +261,14 @@ export const neverbounceActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_job",
+    operationType: "write",
     description: "Create a NeverBounce bulk verification job from a remote file or supplied rows.",
     inputSchema: createJobInputSchema,
     outputSchema: createJobOutputSchema,
   }),
   defineProviderAction(service, {
     name: "parse_job",
+    operationType: "read",
     description: "Parse a NeverBounce bulk job created without auto_parse enabled.",
     inputSchema: s.object(
       "Input parameters for parsing a NeverBounce bulk job.",
@@ -278,6 +282,7 @@ export const neverbounceActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_job",
+    operationType: "write",
     description: "Start a parsed NeverBounce bulk job.",
     inputSchema: s.object(
       "Input parameters for starting a parsed NeverBounce bulk job.",
@@ -291,6 +296,7 @@ export const neverbounceActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job_status",
+    operationType: "read",
     description: "Retrieve the current processing status and aggregate counts for a NeverBounce job.",
     inputSchema: s.requiredObject("Input parameters for retrieving a NeverBounce job status.", {
       job_id: jobIdField,
@@ -299,6 +305,7 @@ export const neverbounceActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job_results",
+    operationType: "read",
     description: "Retrieve paginated NeverBounce verification results for a completed bulk job.",
     inputSchema: s.object(
       "Input parameters for retrieving paginated NeverBounce job results.",
@@ -313,6 +320,7 @@ export const neverbounceActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "download_job_results",
+    operationType: "read",
     description: "Download a NeverBounce bulk job as CSV with optional result filters and extra columns.",
     inputSchema: s.object(
       "Input parameters for downloading NeverBounce job results as CSV.",

@@ -68,6 +68,7 @@ const looseObjectArray = (itemDescription: string, description: string) =>
 export const braveSearchActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "web_search",
+    operationType: "read",
     description: "Search the Brave Search web index and return the selected result families.",
     inputSchema: s.object(
       "Input parameters for a Brave Search web search request.",
@@ -145,6 +146,7 @@ export const braveSearchActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "news_search",
+    operationType: "read",
     description: "Search Brave's news index for recent articles related to a query.",
     inputSchema: s.object(
       "Input parameters for a Brave Search news request.",
@@ -196,6 +198,7 @@ export const braveSearchActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "video_search",
+    operationType: "read",
     description: "Search Brave's video index for videos related to a query.",
     inputSchema: s.object(
       "Input parameters for a Brave Search video request.",
@@ -244,6 +247,7 @@ export const braveSearchActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "image_search",
+    operationType: "read",
     description: "Search Brave's image index for images related to a query.",
     inputSchema: s.object(
       "Input parameters for a Brave Search image request.",

@@ -324,6 +324,7 @@ const askOwlbotInputSchema = s.object("The ReadMe Owlbot question payload.", {
 export const readmeActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get metadata for the ReadMe project associated with the API key.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -331,6 +332,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_versions",
+    operationType: "read",
     description: "List the versions configured for the ReadMe project.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -338,6 +340,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_version",
+    operationType: "read",
     description: "Get one ReadMe project version by semver identifier.",
     requiredScopes: [],
     inputSchema: getVersionInputSchema,
@@ -345,6 +348,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_version",
+    operationType: "write",
     description: "Create a new ReadMe project version from an existing base version.",
     requiredScopes: [],
     inputSchema: createVersionInputSchema,
@@ -352,6 +356,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_version",
+    operationType: "write",
     description: "Update one ReadMe project version by semver identifier.",
     requiredScopes: [],
     inputSchema: updateVersionInputSchema,
@@ -359,6 +364,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_version",
+    operationType: "destructive",
     description: "Delete one ReadMe project version by semver identifier.",
     requiredScopes: [],
     inputSchema: deleteVersionInputSchema,
@@ -366,6 +372,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_categories",
+    operationType: "read",
     description: "List ReadMe guide and reference categories with optional version and pagination.",
     requiredScopes: [],
     inputSchema: versionedPaginationInputSchema,
@@ -373,6 +380,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_category",
+    operationType: "write",
     description: "Create a ReadMe guide or reference category.",
     requiredScopes: [],
     inputSchema: createCategoryInputSchema,
@@ -380,6 +388,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_category",
+    operationType: "read",
     description: "Get one ReadMe category by slug.",
     requiredScopes: [],
     inputSchema: slugInputSchema,
@@ -387,6 +396,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_category",
+    operationType: "write",
     description: "Update one ReadMe category by slug.",
     requiredScopes: [],
     inputSchema: updateCategoryInputSchema,
@@ -394,6 +404,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_category",
+    operationType: "destructive",
     description: "Delete one ReadMe category by slug.",
     requiredScopes: [],
     inputSchema: deleteCategoryInputSchema,
@@ -401,6 +412,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_category_docs",
+    operationType: "read",
     description: "List the ReadMe docs that belong to a category slug.",
     requiredScopes: [],
     inputSchema: slugInputSchema,
@@ -408,6 +420,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_docs",
+    operationType: "read",
     description: "Search ReadMe docs by text query.",
     requiredScopes: [],
     inputSchema: searchDocsInputSchema,
@@ -415,6 +428,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_doc",
+    operationType: "write",
     description: "Create a ReadMe doc page using a category ID or category slug.",
     requiredScopes: [],
     inputSchema: createDocInputSchema,
@@ -422,6 +436,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_doc",
+    operationType: "read",
     description: "Get one ReadMe doc by slug, optionally requesting the production doc version.",
     requiredScopes: [],
     inputSchema: getDocInputSchema,
@@ -429,6 +444,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_doc",
+    operationType: "write",
     description: "Update one ReadMe doc page by slug.",
     requiredScopes: [],
     inputSchema: updateDocInputSchema,
@@ -436,6 +452,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_doc",
+    operationType: "destructive",
     description: "Delete one ReadMe doc page by slug.",
     requiredScopes: [],
     inputSchema: deleteDocInputSchema,
@@ -443,6 +460,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_custom_pages",
+    operationType: "read",
     description: "List ReadMe custom pages with optional pagination.",
     requiredScopes: [],
     inputSchema: customPagesInputSchema,
@@ -457,6 +475,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_custom_page",
+    operationType: "write",
     description: "Create a ReadMe custom page.",
     requiredScopes: [],
     inputSchema: createCustomPageInputSchema,
@@ -466,6 +485,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_custom_page",
+    operationType: "read",
     description: "Get one ReadMe custom page by slug.",
     requiredScopes: [],
     inputSchema: s.object("The ReadMe custom page slug to request.", {
@@ -477,6 +497,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_custom_page",
+    operationType: "write",
     description: "Update one ReadMe custom page by slug.",
     requiredScopes: [],
     inputSchema: updateCustomPageInputSchema,
@@ -486,6 +507,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_custom_page",
+    operationType: "destructive",
     description: "Delete one ReadMe custom page by slug.",
     requiredScopes: [],
     inputSchema: s.object("The ReadMe custom page slug to delete.", {
@@ -495,6 +517,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_changelogs",
+    operationType: "read",
     description: "List ReadMe changelog entries with optional pagination.",
     requiredScopes: [],
     inputSchema: s.object("Optional ReadMe changelog pagination parameters.", paginationInput, {
@@ -504,6 +527,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_changelog",
+    operationType: "write",
     description: "Create a ReadMe changelog entry.",
     requiredScopes: [],
     inputSchema: createChangelogInputSchema,
@@ -511,6 +535,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_changelog",
+    operationType: "read",
     description: "Get one ReadMe changelog entry by slug.",
     requiredScopes: [],
     inputSchema: s.object("The ReadMe changelog slug to request.", {
@@ -520,6 +545,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_changelog",
+    operationType: "write",
     description: "Update one ReadMe changelog entry by slug.",
     requiredScopes: [],
     inputSchema: updateChangelogInputSchema,
@@ -527,6 +553,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_changelog",
+    operationType: "destructive",
     description: "Delete one ReadMe changelog entry by slug.",
     requiredScopes: [],
     inputSchema: deleteChangelogInputSchema,
@@ -534,6 +561,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_api_specifications",
+    operationType: "read",
     description: "List ReadMe API specification metadata with optional version and pagination.",
     requiredScopes: [],
     inputSchema: apiSpecificationListInputSchema,
@@ -541,6 +569,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_api_specification",
+    operationType: "destructive",
     description: "Delete one ReadMe API specification by ID.",
     requiredScopes: [],
     inputSchema: apiSpecificationIdInputSchema,
@@ -548,6 +577,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_api_registry",
+    operationType: "read",
     description: "Retrieve one ReadMe API Registry entry by UUID.",
     requiredScopes: [],
     inputSchema: apiRegistryInputSchema,
@@ -555,6 +585,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_openapi_schema",
+    operationType: "read",
     description: "Get the OpenAPI definition for the ReadMe project.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -562,6 +593,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_outbound_ips",
+    operationType: "read",
     description: "List ReadMe outbound IP addresses used for webhook and Try It proxy requests.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -569,6 +601,7 @@ export const readmeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "ask_owlbot",
+    operationType: "read",
     description: "Ask ReadMe Owlbot a non-streaming question and return its answer with sources.",
     requiredScopes: [],
     inputSchema: askOwlbotInputSchema,

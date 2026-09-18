@@ -22,6 +22,7 @@ const dataExportRecordSchema = s.looseObject("One Jam data-export record.");
 export const wejamAiActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "export_data",
+    operationType: "read",
     description: "Export one page of Jam training data for reporting or BI workflows.",
     inputSchema: s.actionInput(
       {

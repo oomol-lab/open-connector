@@ -95,18 +95,21 @@ const projectScopedInput = s.actionInput(
 export const planeActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Retrieve the authenticated Plane user's profile.",
     inputSchema: s.actionInput({}),
     outputSchema: singleItemOutput,
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Plane projects in a workspace.",
     inputSchema: s.actionInput({ workspace_slug: workspaceSlug, ...paginationFields }, ["workspace_slug"]),
     outputSchema: paginatedOutput,
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Retrieve a Plane project by ID.",
     inputSchema: s.actionInput({ workspace_slug: workspaceSlug, project_id: projectId }, [
       "workspace_slug",
@@ -116,6 +119,7 @@ export const planeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_work_items",
+    operationType: "read",
     description: "List Plane work items in a project with pagination and optional filters.",
     inputSchema: s.actionInput(
       {
@@ -131,6 +135,7 @@ export const planeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_work_item",
+    operationType: "read",
     description: "Retrieve a Plane work item by ID.",
     inputSchema: s.actionInput(
       {
@@ -149,6 +154,7 @@ export const planeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_work_item",
+    operationType: "write",
     description: "Create a Plane work item in a project.",
     inputSchema: s.actionInput({ workspace_slug: workspaceSlug, project_id: projectId, ...workItemFields }, [
       "workspace_slug",
@@ -159,6 +165,7 @@ export const planeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_work_item",
+    operationType: "write",
     description: "Update a Plane work item by ID.",
     inputSchema: s.actionInput(
       { workspace_slug: workspaceSlug, project_id: projectId, work_item_id: resourceId, ...workItemFields },
@@ -168,6 +175,7 @@ export const planeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_work_item",
+    operationType: "destructive",
     description: "Delete a Plane work item by ID.",
     inputSchema: s.actionInput({ workspace_slug: workspaceSlug, project_id: projectId, work_item_id: resourceId }, [
       "workspace_slug",
@@ -178,18 +186,21 @@ export const planeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_states",
+    operationType: "read",
     description: "List workflow states for a Plane project.",
     inputSchema: projectScopedInput,
     outputSchema: paginatedOutput,
   }),
   defineProviderAction(service, {
     name: "list_labels",
+    operationType: "read",
     description: "List labels for a Plane project.",
     inputSchema: projectScopedInput,
     outputSchema: paginatedOutput,
   }),
   defineProviderAction(service, {
     name: "list_project_members",
+    operationType: "read",
     description: "List members of a Plane project.",
     inputSchema: projectScopedInput,
     outputSchema: s.actionOutput({ members: s.array("Plane project members.", looseItem) }),

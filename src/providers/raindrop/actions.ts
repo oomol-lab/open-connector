@@ -37,6 +37,7 @@ const raindropFields = {
 export const raindropActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get the authenticated Raindrop.io user profile.",
     requiredScopes: [],
     inputSchema: s.object("The input for getting the authenticated user.", {}),
@@ -47,6 +48,7 @@ export const raindropActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_collections",
+    operationType: "read",
     description: "List root collections and optionally include nested child collections.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -61,6 +63,7 @@ export const raindropActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_collection",
+    operationType: "read",
     description: "Get one Raindrop.io collection by ID.",
     requiredScopes: [],
     inputSchema: s.object("The input for getting a collection.", {
@@ -70,6 +73,7 @@ export const raindropActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_collection",
+    operationType: "write",
     description: "Create a Raindrop.io bookmark collection.",
     requiredScopes: [],
     inputSchema: s.object("The input for creating a collection.", collectionFields, {
@@ -79,6 +83,7 @@ export const raindropActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_collection",
+    operationType: "write",
     description: "Update an existing Raindrop.io collection.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -94,6 +99,7 @@ export const raindropActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_collection",
+    operationType: "destructive",
     description: "Delete a collection and move its bookmarks to Trash.",
     requiredScopes: [],
     inputSchema: s.object("The input for deleting a collection.", {
@@ -103,6 +109,7 @@ export const raindropActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_raindrops",
+    operationType: "read",
     description: "List or search bookmarks in a collection or across all collections.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -137,6 +144,7 @@ export const raindropActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_raindrop",
+    operationType: "read",
     description: "Get one Raindrop.io bookmark by ID.",
     requiredScopes: [],
     inputSchema: s.object("The input for getting a bookmark.", {
@@ -146,6 +154,7 @@ export const raindropActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_raindrop",
+    operationType: "write",
     description: "Create a bookmark from a URL in Raindrop.io.",
     requiredScopes: [],
     inputSchema: s.object("The input for creating a bookmark.", raindropFields, {
@@ -155,6 +164,7 @@ export const raindropActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_raindrop",
+    operationType: "write",
     description: "Update an existing Raindrop.io bookmark.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -168,6 +178,7 @@ export const raindropActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_raindrop",
+    operationType: "destructive",
     description: "Move a bookmark to Trash, or permanently delete it when already in Trash.",
     requiredScopes: [],
     inputSchema: s.object("The input for deleting a bookmark.", {
@@ -177,6 +188,7 @@ export const raindropActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List tags across all bookmarks or within one collection.",
     requiredScopes: [],
     inputSchema: s.object(

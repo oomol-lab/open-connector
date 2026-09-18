@@ -64,6 +64,7 @@ const deliveryOrderOutputSchema = s.looseRequiredObject("The delivery-order resp
 export const dachserActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_shipment_status",
+    operationType: "read",
     description: "Retrieve the current DACHSER status for shipments matching a tracking reference.",
     requiredScopes: [],
     inputSchema: trackingInputSchema,
@@ -71,6 +72,7 @@ export const dachserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_shipment_history",
+    operationType: "read",
     description: "Retrieve the full DACHSER event history for shipments matching a tracking reference.",
     requiredScopes: [],
     inputSchema: trackingInputSchema,
@@ -78,6 +80,7 @@ export const dachserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_delivery_order_status",
+    operationType: "read",
     description: "Retrieve DACHSER delivery-order status using order references and filters.",
     requiredScopes: [],
     inputSchema: deliveryOrderInputSchema,

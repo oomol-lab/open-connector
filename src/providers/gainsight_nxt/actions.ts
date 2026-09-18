@@ -132,6 +132,7 @@ const deleteCompanyOutputSchema = s.requiredObject("Normalized response for a Ga
 export const gainsightNxtActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "insert_companies",
+    operationType: "write",
     description:
       "Insert up to 50 records into the Gainsight NXT Company object using field names from your tenant's Data Management schema.",
     inputSchema: insertCompaniesInputSchema,
@@ -139,12 +140,14 @@ export const gainsightNxtActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_companies",
+    operationType: "write",
     description: "Update up to 50 Gainsight NXT Company records identified by one to three Company key fields.",
     inputSchema: updateCompaniesInputSchema,
     outputSchema: mutationOutputSchema,
   }),
   defineProviderAction(service, {
     name: "query_companies",
+    operationType: "read",
     description:
       "Query Gainsight NXT Company records with selected fields, optional where conditions, sorting, limit, and offset.",
     inputSchema: queryCompaniesInputSchema,
@@ -152,6 +155,7 @@ export const gainsightNxtActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_company",
+    operationType: "destructive",
     description: "Delete one Gainsight NXT Company record by its GSID.",
     inputSchema: deleteCompanyInputSchema,
     outputSchema: deleteCompanyOutputSchema,

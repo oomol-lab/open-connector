@@ -47,6 +47,7 @@ const workspaceSchema = s.object("A normalized Moesif workspace.", {
 export const moesifActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_apps",
+    operationType: "read",
     description: "List apps in the selected Moesif organization.",
     requiredScopes: ["read:apps"],
     inputSchema: s.actionInput(
@@ -67,6 +68,7 @@ export const moesifActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workspaces",
+    operationType: "read",
     description: "List Moesif workspaces for an app with access filters.",
     requiredScopes: ["read:workspaces"],
     inputSchema: s.actionInput(
@@ -89,6 +91,7 @@ export const moesifActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workspace",
+    operationType: "read",
     description: "Get a Moesif workspace by ID.",
     requiredScopes: ["read:workspaces"],
     inputSchema: s.actionInput(
@@ -109,6 +112,7 @@ export const moesifActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workspace_templates",
+    operationType: "read",
     description: "List Moesif workspace templates for an app.",
     requiredScopes: ["read:workspaces"],
     inputSchema: s.actionInput(

@@ -67,6 +67,7 @@ const mediaList = s.object(
 export const pexelsActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_photos",
+    operationType: "read",
     description:
       "Search Pexels photos by query with optional orientation, size, color, locale, and pagination filters.",
     inputSchema: s.object(
@@ -86,6 +87,7 @@ export const pexelsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "curated_photos",
+    operationType: "read",
     description: "Retrieve the current curated photo feed from Pexels with pagination controls.",
     inputSchema: s.object(
       "Input parameters for retrieving curated photos from Pexels.",
@@ -96,6 +98,7 @@ export const pexelsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_photo",
+    operationType: "read",
     description: "Retrieve the full metadata for a single Pexels photo by photo id.",
     inputSchema: s.object("Input parameters for retrieving a single Pexels photo.", {
       photoId: s.integer("The unique identifier of the photo to retrieve.", { minimum: 1 }),
@@ -104,6 +107,7 @@ export const pexelsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "featured_collections",
+    operationType: "read",
     description: "Retrieve featured Pexels collections with pagination controls.",
     inputSchema: s.object(
       "Input parameters for retrieving featured Pexels collections.",
@@ -114,6 +118,7 @@ export const pexelsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "my_collections",
+    operationType: "read",
     description: "Retrieve collections owned by the authenticated Pexels account.",
     inputSchema: s.object(
       "Input parameters for retrieving authenticated Pexels collections.",
@@ -124,6 +129,7 @@ export const pexelsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "collection_media",
+    operationType: "read",
     description: "Retrieve photos and videos from a Pexels collection with pagination, type, and sort controls.",
     inputSchema: s.object(
       "Input parameters for retrieving media in a Pexels collection.",
@@ -140,6 +146,7 @@ export const pexelsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_videos",
+    operationType: "read",
     description: "Search Pexels videos by query with optional orientation, size, locale, and pagination filters.",
     inputSchema: s.object(
       "Input parameters for searching videos on Pexels.",
@@ -157,6 +164,7 @@ export const pexelsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "popular_videos",
+    operationType: "read",
     description: "Retrieve popular Pexels videos with optional dimension, duration, and pagination filters.",
     inputSchema: s.object(
       "Input parameters for retrieving popular Pexels videos.",
@@ -174,6 +182,7 @@ export const pexelsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_video",
+    operationType: "read",
     description: "Retrieve the full metadata for a single Pexels video by video id.",
     inputSchema: s.object("Input parameters for retrieving a single Pexels video.", {
       videoId: s.integer("The unique identifier of the video to retrieve.", { minimum: 1 }),

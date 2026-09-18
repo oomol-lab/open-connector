@@ -48,6 +48,7 @@ const cloudflareR2QueueNotificationConfigSchema = s.object(
 export const cloudflareR2EventNotificationActions: ActionDefinition[] = [
   defineProviderAction("cloudflare_r2", {
     name: "list_event_notification_rules",
+    operationType: "read",
     description: "List every event notification rule of an R2 bucket grouped by target queue.",
     requiredScopes: [],
     providerPermissions: [...cloudflareR2ReadPermissions, ...cloudflareR2QueuesReadPermissions],
@@ -66,6 +67,7 @@ export const cloudflareR2EventNotificationActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "get_event_notification_rules",
+    operationType: "read",
     description: "Get the event notification rules that send R2 bucket events to one queue.",
     requiredScopes: [],
     providerPermissions: [...cloudflareR2ReadPermissions, ...cloudflareR2QueuesReadPermissions],
@@ -82,6 +84,7 @@ export const cloudflareR2EventNotificationActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "create_event_notification_rules",
+    operationType: "write",
     description: "Add event notification rules that send R2 bucket events to a Cloudflare Queue.",
     requiredScopes: [],
     providerPermissions: [...cloudflareR2WritePermissions, ...cloudflareR2QueuesWritePermissions],
@@ -118,6 +121,7 @@ export const cloudflareR2EventNotificationActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "delete_event_notification_rules",
+    operationType: "destructive",
     description:
       "Delete event notification rules bound to one queue. Deletes every rule for the queue when ruleIds is omitted.",
     requiredScopes: [],

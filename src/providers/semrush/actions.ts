@@ -44,6 +44,7 @@ const semrushCsvReportOutputSchema = s.object("The normalized Semrush CSV report
 
 const domainRankAction = defineProviderAction(service, {
   name: "get_domain_overview",
+  operationType: "read",
   description: "Get Semrush domain overview metrics from a regional SEO database.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for requesting a Semrush domain overview report.", {
@@ -55,6 +56,7 @@ const domainRankAction = defineProviderAction(service, {
 
 const domainOrganicKeywordsAction = defineProviderAction(service, {
   name: "list_domain_organic_keywords",
+  operationType: "read",
   description: "List organic search keywords for a domain from a Semrush regional database.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -73,6 +75,7 @@ const domainOrganicKeywordsAction = defineProviderAction(service, {
 
 const organicCompetitorsAction = defineProviderAction(service, {
   name: "list_organic_competitors",
+  operationType: "read",
   description: "List organic search competitors for a domain from a Semrush regional database.",
   requiredScopes: [],
   inputSchema: s.object(

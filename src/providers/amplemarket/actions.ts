@@ -149,6 +149,7 @@ const taskIdInputSchema = s.object("Path parameters for updating an Amplemarket 
 export const amplemarketActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_details",
+    operationType: "read",
     description: "Get account details for the authenticated Amplemarket API key.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -158,6 +159,7 @@ export const amplemarketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Retrieve an Amplemarket contact by contact ID.",
     requiredScopes: [],
     inputSchema: contactIdInputSchema,
@@ -165,6 +167,7 @@ export const amplemarketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact_by_email",
+    operationType: "read",
     description: "Retrieve an Amplemarket contact by email address.",
     requiredScopes: [],
     inputSchema: contactEmailInputSchema,
@@ -172,6 +175,7 @@ export const amplemarketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "Retrieve Amplemarket contacts by one or more contact IDs.",
     requiredScopes: [],
     inputSchema: listContactsInputSchema,
@@ -181,6 +185,7 @@ export const amplemarketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_lead_lists",
+    operationType: "read",
     description: "List Amplemarket lead lists with cursor pagination and owner filters.",
     requiredScopes: [],
     inputSchema: listLeadListsInputSchema,
@@ -188,6 +193,7 @@ export const amplemarketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_lead_list",
+    operationType: "read",
     description: "Retrieve an Amplemarket lead list by ID.",
     requiredScopes: [],
     inputSchema: leadListIdInputSchema,
@@ -197,6 +203,7 @@ export const amplemarketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "List Amplemarket tasks with cursor pagination and status, type, or user filters.",
     requiredScopes: [],
     inputSchema: listTasksInputSchema,
@@ -204,6 +211,7 @@ export const amplemarketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "complete_task",
+    operationType: "write",
     description: "Mark an Amplemarket task as completed.",
     requiredScopes: [],
     inputSchema: taskIdInputSchema,
@@ -211,6 +219,7 @@ export const amplemarketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "skip_task",
+    operationType: "write",
     description: "Skip an Amplemarket task.",
     requiredScopes: [],
     inputSchema: taskIdInputSchema,
@@ -218,6 +227,7 @@ export const amplemarketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_task_statuses",
+    operationType: "read",
     description: "List task statuses supported by Amplemarket.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -227,6 +237,7 @@ export const amplemarketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_task_types",
+    operationType: "read",
     description: "List task types supported by Amplemarket.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,

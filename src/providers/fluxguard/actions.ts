@@ -53,6 +53,7 @@ const categoryIdsSchema = s.array(
 export const fluxguardActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Get account attributes for the authenticated Fluxguard organization.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for getting a Fluxguard account.", {}),
@@ -62,6 +63,7 @@ export const fluxguardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_page",
+    operationType: "write",
     description: "Add a URL as a monitored Fluxguard page.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -81,6 +83,7 @@ export const fluxguardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "initiate_crawl",
+    operationType: "write",
     description: "Initiate a Fluxguard crawl for a monitored session.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for initiating a Fluxguard crawl.", {
@@ -93,6 +96,7 @@ export const fluxguardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_page",
+    operationType: "read",
     description: "Get Fluxguard data for a monitored page.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for getting a Fluxguard monitored page.", {
@@ -106,6 +110,7 @@ export const fluxguardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_sample_webhook",
+    operationType: "read",
     description: "Get a sample Fluxguard webhook payload for the authenticated account.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for getting a Fluxguard sample webhook.", {}),
@@ -115,6 +120,7 @@ export const fluxguardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_webhooks",
+    operationType: "read",
     description: "List Fluxguard webhooks configured for the authenticated account.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Fluxguard webhooks.", {}),
@@ -124,6 +130,7 @@ export const fluxguardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_webhook",
+    operationType: "write",
     description: "Create or replace the Fluxguard account webhook.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -144,6 +151,7 @@ export const fluxguardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_webhook",
+    operationType: "destructive",
     description: "Delete the Fluxguard account webhook.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for deleting a Fluxguard webhook.", {}),
@@ -153,6 +161,7 @@ export const fluxguardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_categories",
+    operationType: "read",
     description: "List Fluxguard account categories.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Fluxguard categories.", {}),
@@ -163,6 +172,7 @@ export const fluxguardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_category",
+    operationType: "write",
     description: "Create a Fluxguard site category.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for creating a Fluxguard site category.", {
@@ -174,6 +184,7 @@ export const fluxguardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_site",
+    operationType: "destructive",
     description: "Delete a Fluxguard monitored site and its associated data.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for deleting a Fluxguard site.", {
@@ -185,6 +196,7 @@ export const fluxguardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_page",
+    operationType: "destructive",
     description: "Delete a Fluxguard monitored page and its captured versions.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for deleting a Fluxguard monitored page.", {

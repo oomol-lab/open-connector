@@ -407,6 +407,7 @@ const mcpToolOutputSchema = s.object("HubSpot MCP tool response.", {
 export const hubspotActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_crm_objects",
+    operationType: "read",
     description: "Search and filter HubSpot CRM records for any object type supported by the MCP server.",
     requiredScopes: [hubspotConnectorScopes.crmRead],
     inputSchema: searchCrmObjectsInputSchema,
@@ -414,6 +415,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_crm_objects",
+    operationType: "read",
     description: "Fetch one or more HubSpot CRM objects by ID through the MCP server.",
     requiredScopes: [hubspotConnectorScopes.crmRead],
     inputSchema: getCrmObjectsInputSchema,
@@ -421,6 +423,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "manage_crm_objects",
+    operationType: "write",
     description: "Create or update HubSpot CRM records or activities through the MCP server.",
     requiredScopes: [hubspotConnectorScopes.crmWrite],
     inputSchema: manageCrmObjectsInputSchema,
@@ -428,6 +431,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_contacts",
+    operationType: "read",
     description: "Search HubSpot contacts with optional filters, sorting, and selected properties.",
     requiredScopes: [hubspotConnectorScopes.contactsRead],
     inputSchema: searchInputSchema,
@@ -435,6 +439,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get a HubSpot contact by record ID or by a custom idProperty value.",
     requiredScopes: [hubspotConnectorScopes.contactsRead],
     inputSchema: getRecordInputSchema,
@@ -442,6 +447,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a HubSpot contact with the provided properties and optional associations.",
     requiredScopes: [hubspotConnectorScopes.contactsWrite],
     inputSchema: createRecordInputSchema,
@@ -449,6 +455,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update a HubSpot contact by record ID or by a custom idProperty value.",
     requiredScopes: [hubspotConnectorScopes.contactsWrite],
     inputSchema: updateRecordInputSchema,
@@ -456,6 +463,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_companies",
+    operationType: "read",
     description: "Search HubSpot companies with optional filters, sorting, and selected properties.",
     requiredScopes: [hubspotConnectorScopes.companiesRead],
     inputSchema: searchInputSchema,
@@ -463,6 +471,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description: "Get a HubSpot company by record ID or by a custom idProperty value.",
     requiredScopes: [hubspotConnectorScopes.companiesRead],
     inputSchema: getRecordInputSchema,
@@ -470,6 +479,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_company",
+    operationType: "write",
     description: "Create a HubSpot company with the provided properties and optional associations.",
     requiredScopes: [hubspotConnectorScopes.companiesWrite],
     inputSchema: createRecordInputSchema,
@@ -477,6 +487,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_company",
+    operationType: "write",
     description: "Update a HubSpot company by record ID or by a custom idProperty value.",
     requiredScopes: [hubspotConnectorScopes.companiesWrite],
     inputSchema: updateRecordInputSchema,
@@ -484,6 +495,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_deals",
+    operationType: "read",
     description: "Search HubSpot deals with optional filters, sorting, and selected properties.",
     requiredScopes: [hubspotConnectorScopes.dealsRead],
     inputSchema: searchInputSchema,
@@ -491,6 +503,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_deal",
+    operationType: "read",
     description: "Get a HubSpot deal by record ID or by a custom idProperty value.",
     requiredScopes: [hubspotConnectorScopes.dealsRead],
     inputSchema: getRecordInputSchema,
@@ -498,6 +511,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_deal",
+    operationType: "write",
     description: "Create a HubSpot deal with the provided properties and optional associations.",
     requiredScopes: [hubspotConnectorScopes.dealsWrite],
     inputSchema: createRecordInputSchema,
@@ -505,6 +519,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_deal",
+    operationType: "write",
     description: "Update a HubSpot deal by record ID or by a custom idProperty value.",
     requiredScopes: [hubspotConnectorScopes.dealsWrite],
     inputSchema: updateRecordInputSchema,
@@ -512,6 +527,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_properties",
+    operationType: "read",
     description: "List or search HubSpot property definitions for an MCP-supported object type.",
     requiredScopes: [hubspotConnectorScopes.schemasRead],
     inputSchema: listPropertiesInputSchema,
@@ -519,6 +535,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_property",
+    operationType: "read",
     description: "Get a single HubSpot property definition for an MCP-supported object type.",
     requiredScopes: [hubspotConnectorScopes.schemasRead],
     inputSchema: getPropertyInputSchema,
@@ -526,6 +543,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_properties",
+    operationType: "read",
     description: "Find HubSpot property definitions for an object type using keyword search.",
     requiredScopes: [hubspotConnectorScopes.schemasRead],
     inputSchema: searchPropertiesInputSchema,
@@ -533,6 +551,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_properties",
+    operationType: "read",
     description: "Get full HubSpot property definitions for an object type.",
     requiredScopes: [hubspotConnectorScopes.schemasRead],
     inputSchema: getPropertiesInputSchema,
@@ -540,6 +559,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_owners",
+    operationType: "read",
     description: "Find HubSpot CRM record owners by name, email, or owner ID.",
     requiredScopes: [hubspotConnectorScopes.ownersRead],
     inputSchema: searchOwnersInputSchema,
@@ -547,6 +567,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign_contacts_by_type",
+    operationType: "read",
     description: "Fetch paginated HubSpot contact IDs for a campaign filtered by attribution type.",
     requiredScopes: [hubspotConnectorScopes.campaignsRead],
     inputSchema: getCampaignContactsByTypeInputSchema,
@@ -554,6 +575,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign_analytics",
+    operationType: "read",
     description: "Get HubSpot campaign analytics for one or more campaigns.",
     requiredScopes: [hubspotConnectorScopes.campaignsRead],
     inputSchema: getCampaignAnalyticsInputSchema,
@@ -561,6 +583,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign_asset_types",
+    operationType: "read",
     description: "List HubSpot asset type names available as campaign assets.",
     requiredScopes: [hubspotConnectorScopes.campaignsRead],
     inputSchema: getCampaignAssetTypesInputSchema,
@@ -568,6 +591,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign_asset_metrics",
+    operationType: "read",
     description: "Get metrics and properties for CRM objects associated with a HubSpot campaign.",
     requiredScopes: [hubspotConnectorScopes.campaignsRead],
     inputSchema: getCampaignAssetMetricsInputSchema,
@@ -575,6 +599,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_feedback",
+    operationType: "write",
     description: "Send feedback about the HubSpot MCP server experience to HubSpot.",
     requiredScopes: [],
     inputSchema: submitFeedbackInputSchema,
@@ -582,6 +607,7 @@ export const hubspotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_details",
+    operationType: "read",
     description: "Get the authenticated HubSpot MCP user's account and access details.",
     requiredScopes: [],
     inputSchema: getUserDetailsInputSchema,

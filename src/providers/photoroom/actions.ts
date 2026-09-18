@@ -200,6 +200,7 @@ const editProductImageInputSchema: JsonSchema = {
 export const photoroomActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "edit_product_image",
+    operationType: "write",
     description:
       "Apply a controlled combination of Photoroom product-image edits to an imageUrl and upload the binary result to local transit storage. This action is for composed ecommerce edits rather than simple background removal; outputs that use relighting, text removal, or beautification should be reviewed by a human before publishing.",
     inputSchema: editProductImageInputSchema,

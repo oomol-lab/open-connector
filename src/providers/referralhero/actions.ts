@@ -64,6 +64,7 @@ const oneIdentifier = (schema: JsonSchema): JsonSchema => ({
 export const referralheroActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_list",
+    operationType: "write",
     description: "Create a ReferralHero referral campaign with a name and default referral URL.",
     requiredScopes: [],
     inputSchema: s.object("Parameters for creating a campaign.", {
@@ -74,6 +75,7 @@ export const referralheroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_lists",
+    operationType: "read",
     description: "List active ReferralHero referral campaigns in the connected account.",
     requiredScopes: [],
     inputSchema: s.object("Pagination for listing campaigns.", { page }, { optional: ["page"] }),
@@ -85,6 +87,7 @@ export const referralheroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_leaderboard",
+    operationType: "read",
     description: "Get the highest-ranked subscribers in a ReferralHero campaign.",
     requiredScopes: [],
     inputSchema: s.object("Parameters for a campaign leaderboard.", {
@@ -98,6 +101,7 @@ export const referralheroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_rewards",
+    operationType: "read",
     description: "List the rewards configured for a ReferralHero campaign.",
     requiredScopes: [],
     inputSchema: campaign,
@@ -108,6 +112,7 @@ export const referralheroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_subscriber",
+    operationType: "write",
     description: "Add a subscriber to a ReferralHero campaign using its configured identifier.",
     requiredScopes: [],
     inputSchema: oneIdentifier(
@@ -148,6 +153,7 @@ export const referralheroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subscribers",
+    operationType: "read",
     description: "List subscribers in a ReferralHero campaign with pagination and optional sorting.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -184,6 +190,7 @@ export const referralheroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_subscriber",
+    operationType: "read",
     description: "Retrieve one verified ReferralHero subscriber by ID.",
     requiredScopes: [],
     inputSchema: subscriber,
@@ -191,6 +198,7 @@ export const referralheroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_subscriber",
+    operationType: "write",
     description: "Update fields on one verified ReferralHero subscriber.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -202,6 +210,7 @@ export const referralheroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_subscriber",
+    operationType: "destructive",
     description: "Delete one subscriber from a ReferralHero campaign.",
     requiredScopes: [],
     inputSchema: subscriber,
@@ -209,6 +218,7 @@ export const referralheroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "track_conversion",
+    operationType: "write",
     description: "Track the second conversion event for a two-step or three-step referral campaign.",
     requiredScopes: [],
     inputSchema: oneIdentifier(
@@ -241,6 +251,7 @@ export const referralheroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "confirm_referral",
+    operationType: "write",
     description: "Confirm the third conversion event for a verified ReferralHero subscriber.",
     requiredScopes: [],
     inputSchema: subscriber,

@@ -161,24 +161,28 @@ const sourcesInput = s.object(
 export const newsdataIoActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_latest_news",
+    operationType: "read",
     description: "Retrieve the latest and breaking news from NewsData.io with optional filters.",
     inputSchema: latestNewsInput,
     outputSchema: newsCollectionOutput,
   }),
   defineProviderAction(service, {
     name: "search_news_archive",
+    operationType: "read",
     description: "Search historical NewsData.io archive articles with keyword, taxonomy, and date filters.",
     inputSchema: archiveInput,
     outputSchema: newsCollectionOutput,
   }),
   defineProviderAction(service, {
     name: "list_crypto_news",
+    operationType: "read",
     description: "Retrieve cryptocurrency-related news articles from NewsData.io.",
     inputSchema: cryptoInput,
     outputSchema: newsCollectionOutput,
   }),
   defineProviderAction(service, {
     name: "list_news_sources",
+    operationType: "read",
     description: "List NewsData.io source domains with optional country, category, and language filters.",
     inputSchema: sourcesInput,
     outputSchema: sourcesOutput,

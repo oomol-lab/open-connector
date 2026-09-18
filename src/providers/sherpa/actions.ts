@@ -71,6 +71,7 @@ const summaryResponseSchema = s.object("Token-efficient Sherpa travel requiremen
 export const sherpaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_trip_details",
+    operationType: "read",
     description: "Retrieve comprehensive personalized travel restrictions and document requirements for an itinerary.",
     requiredScopes: [],
     inputSchema: tripInputSchema,
@@ -78,6 +79,7 @@ export const sherpaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_trip_summary",
+    operationType: "read",
     description: "Retrieve a concise Markdown summary of personalized travel and visa requirements for an itinerary.",
     requiredScopes: [],
     inputSchema: tripInputSchema,

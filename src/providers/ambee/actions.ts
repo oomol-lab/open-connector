@@ -143,6 +143,7 @@ const airQualityHistoryOutputSchema = s.object(
 export const ambeeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "geocode_by_place",
+    operationType: "read",
     description: "Convert a place name or address into latitude and longitude with Ambee.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for geocoding a place with Ambee.", {
@@ -152,6 +153,7 @@ export const ambeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reverse_geocode_by_lat_lng",
+    operationType: "read",
     description: "Convert latitude and longitude into location details with Ambee.",
     requiredScopes: [],
     inputSchema: coordinateInputSchema,
@@ -159,6 +161,7 @@ export const ambeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_air_quality_by_lat_lng",
+    operationType: "read",
     description: "Get the latest air quality station readings for one coordinate from Ambee.",
     requiredScopes: [],
     inputSchema: coordinateInputSchema,
@@ -166,6 +169,7 @@ export const ambeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_air_quality_forecast_by_lat_lng",
+    operationType: "read",
     description: "Get the air quality forecast for one coordinate from Ambee.",
     requiredScopes: [],
     inputSchema: coordinateInputSchema,
@@ -173,6 +177,7 @@ export const ambeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_air_quality_history_by_lat_lng",
+    operationType: "read",
     description: "Get historical air quality readings for one coordinate from Ambee.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for reading historical air quality from Ambee.", {

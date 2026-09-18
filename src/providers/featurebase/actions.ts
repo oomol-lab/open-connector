@@ -81,12 +81,14 @@ const deleteOutputSchema = s.requiredObject("A Featurebase deletion confirmation
 export const featurebaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_boards",
+    operationType: "read",
     description: "List all Featurebase boards for the authenticated organization.",
     inputSchema: s.object("The input payload for listing Featurebase boards.", {}),
     outputSchema: listOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_board",
+    operationType: "read",
     description: "Get one Featurebase board by ID.",
     inputSchema: s.requiredObject("The input payload for retrieving a Featurebase board.", {
       id: idSchema,
@@ -95,6 +97,7 @@ export const featurebaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_posts",
+    operationType: "read",
     description: "List Featurebase posts with cursor pagination and optional filters.",
     inputSchema: s.object(
       "The input payload for listing Featurebase posts.",
@@ -118,6 +121,7 @@ export const featurebaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_post",
+    operationType: "write",
     description: "Create a Featurebase feedback post in a board.",
     inputSchema: s.object(
       "The input payload for creating a Featurebase post.",
@@ -158,6 +162,7 @@ export const featurebaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_post",
+    operationType: "read",
     description: "Get one Featurebase post by ID.",
     inputSchema: s.requiredObject("The input payload for retrieving a Featurebase post.", {
       id: idSchema,
@@ -166,6 +171,7 @@ export const featurebaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_post",
+    operationType: "write",
     description: "Update mutable fields on an existing Featurebase post.",
     inputSchema: s.object(
       "The input payload for updating a Featurebase post.",
@@ -211,6 +217,7 @@ export const featurebaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_post",
+    operationType: "destructive",
     description: "Delete one Featurebase post by ID.",
     inputSchema: s.requiredObject("The input payload for deleting a Featurebase post.", {
       id: idSchema,
@@ -219,6 +226,7 @@ export const featurebaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Featurebase contacts with cursor pagination and contact type filtering.",
     inputSchema: s.object(
       "The input payload for listing Featurebase contacts.",
@@ -233,6 +241,7 @@ export const featurebaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_contact",
+    operationType: "write",
     description: "Create or update a Featurebase contact by email or external user ID.",
     inputSchema: s.object(
       "The input payload for upserting a Featurebase contact.",
@@ -273,6 +282,7 @@ export const featurebaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get one Featurebase contact by ID.",
     inputSchema: s.requiredObject("The input payload for retrieving a Featurebase contact.", {
       id: idSchema,
@@ -281,6 +291,7 @@ export const featurebaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete one Featurebase contact by ID.",
     inputSchema: s.requiredObject("The input payload for deleting a Featurebase contact.", {
       id: idSchema,

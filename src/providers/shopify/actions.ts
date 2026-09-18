@@ -102,6 +102,7 @@ const dateFilterInput = {
 export const shopifyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_shop",
+    operationType: "read",
     description: "Retrieve the connected Shopify REST Admin shop configuration.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to retrieve the Shopify shop.", {}),
@@ -111,6 +112,7 @@ export const shopifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_blogs",
+    operationType: "read",
     description: "List Shopify REST blogs with optional handle filtering and pagination.",
     requiredScopes: [shopifyReadContentScope],
     providerPermissions: [shopifyReadContentScope],
@@ -131,6 +133,7 @@ export const shopifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_blog",
+    operationType: "read",
     description: "Retrieve one Shopify REST blog by numeric ID.",
     requiredScopes: [shopifyReadContentScope],
     providerPermissions: [shopifyReadContentScope],
@@ -143,6 +146,7 @@ export const shopifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "count_blogs",
+    operationType: "read",
     description: "Count Shopify REST blogs in the connected shop.",
     requiredScopes: [shopifyReadContentScope],
     providerPermissions: [shopifyReadContentScope],
@@ -153,6 +157,7 @@ export const shopifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pages",
+    operationType: "read",
     description: "List Shopify REST pages with optional filters and pagination.",
     requiredScopes: [shopifyReadContentScope],
     providerPermissions: [shopifyReadContentScope],
@@ -191,6 +196,7 @@ export const shopifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_page",
+    operationType: "read",
     description: "Retrieve one Shopify REST page by numeric ID.",
     requiredScopes: [shopifyReadContentScope],
     providerPermissions: [shopifyReadContentScope],
@@ -203,6 +209,7 @@ export const shopifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "count_pages",
+    operationType: "read",
     description: "Count Shopify REST pages with optional filters.",
     requiredScopes: [shopifyReadContentScope],
     providerPermissions: [shopifyReadContentScope],
@@ -232,6 +239,7 @@ export const shopifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_articles",
+    operationType: "read",
     description: "List Shopify REST articles in a blog with optional filters and pagination.",
     requiredScopes: [shopifyReadContentScope],
     providerPermissions: [shopifyReadContentScope],
@@ -273,6 +281,7 @@ export const shopifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_article",
+    operationType: "read",
     description: "Retrieve one Shopify REST article by blog ID and article ID.",
     requiredScopes: [shopifyReadContentScope],
     providerPermissions: [shopifyReadContentScope],
@@ -286,6 +295,7 @@ export const shopifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "count_articles",
+    operationType: "read",
     description: "Count Shopify REST articles in a blog with optional filters.",
     requiredScopes: [shopifyReadContentScope],
     providerPermissions: [shopifyReadContentScope],
@@ -314,6 +324,7 @@ export const shopifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_article_tags",
+    operationType: "read",
     description: "List Shopify REST article tags across all articles in the connected shop.",
     requiredScopes: [shopifyReadContentScope],
     providerPermissions: [shopifyReadContentScope],
@@ -331,6 +342,7 @@ export const shopifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_blog_article_tags",
+    operationType: "read",
     description: "List Shopify REST article tags for one blog.",
     requiredScopes: [shopifyReadContentScope],
     providerPermissions: [shopifyReadContentScope],
@@ -349,6 +361,7 @@ export const shopifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_article_authors",
+    operationType: "read",
     description: "List Shopify REST article authors across the connected shop.",
     requiredScopes: [shopifyReadContentScope],
     providerPermissions: [shopifyReadContentScope],

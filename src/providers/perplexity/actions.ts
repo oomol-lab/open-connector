@@ -53,6 +53,7 @@ const stringOrStringArray = (description: string, itemDescription: string, optio
 export const perplexityActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",
+    operationType: "read",
     description: "List the models currently available from Perplexity.",
     requiredScopes: [],
     inputSchema: s.object("No input parameters are required for this action.", {}),
@@ -67,6 +68,7 @@ export const perplexityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search",
+    operationType: "read",
     description: "Search the web and return ranked raw results from Perplexity without LLM synthesis.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -104,6 +106,7 @@ export const perplexityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_chat_completion",
+    operationType: "read",
     description: "Create a Perplexity Sonar chat completion grounded by web search when enabled.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -174,6 +177,7 @@ export const perplexityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_embeddings",
+    operationType: "write",
     description: "Generate vector embeddings for one or more input strings with Perplexity.",
     requiredScopes: [],
     inputSchema: s.object(

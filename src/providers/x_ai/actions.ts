@@ -154,12 +154,14 @@ const chatCompletionOutputSchema = s.looseRequiredObject(
 export const xAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",
+    operationType: "read",
     description: "List the xAI models available to the current API key.",
     inputSchema: noInputSchema,
     outputSchema: listModelsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_model",
+    operationType: "read",
     description: "Fetch metadata for one xAI model.",
     inputSchema: s.actionInput(
       { model: s.string("The exact xAI model identifier to retrieve.", { minLength: 1 }) },
@@ -170,6 +172,7 @@ export const xAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_chat_completion",
+    operationType: "read",
     description: "Create a non-streaming xAI OpenAI-compatible chat completion.",
     inputSchema: chatCompletionInputSchema,
     outputSchema: chatCompletionOutputSchema,

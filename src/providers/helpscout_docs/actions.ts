@@ -39,18 +39,21 @@ function pagedOutputSchema(
 export const helpscoutDocsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_sites",
+    operationType: "read",
     description: "List Help Scout Docs sites available to the API key.",
     inputSchema: s.actionInput(pageInputFields, [], "Input parameters for listing Help Scout Docs sites."),
     outputSchema: pagedOutputSchema("site", siteSchema),
   }),
   defineProviderAction(service, {
     name: "list_collections",
+    operationType: "read",
     description: "List Help Scout Docs collections available to the API key.",
     inputSchema: s.actionInput(pageInputFields, [], "Input parameters for listing Help Scout Docs collections."),
     outputSchema: pagedOutputSchema("collection", collectionSchema),
   }),
   defineProviderAction(service, {
     name: "list_categories",
+    operationType: "read",
     description: "List Help Scout Docs categories in a collection.",
     inputSchema: s.actionInput(
       {
@@ -64,6 +67,7 @@ export const helpscoutDocsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_articles",
+    operationType: "read",
     description: "List Help Scout Docs articles in a collection or category.",
     inputSchema: s.actionInput(
       {
@@ -78,6 +82,7 @@ export const helpscoutDocsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_articles",
+    operationType: "read",
     description: "Search Help Scout Docs articles by query with optional collection and site filters.",
     inputSchema: s.actionInput(
       {
@@ -94,6 +99,7 @@ export const helpscoutDocsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_article",
+    operationType: "read",
     description: "Get a Help Scout Docs article by ID or article number.",
     inputSchema: s.actionInput(
       {

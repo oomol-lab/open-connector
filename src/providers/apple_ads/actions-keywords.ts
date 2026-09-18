@@ -112,6 +112,7 @@ const allowPartialSuccessInput = s.boolean(
 export const appleAdsKeywordActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_keywords",
+    operationType: "read",
     description:
       "Search the keywords of one ad account with filters, sorting and offset pagination. Apple Ads requires a filter on adGroupId or campaignId unless you filter on id, and soft-deleted keywords are excluded unless a filter on deleted asks for them.",
     requiredScopes: [],
@@ -139,6 +140,7 @@ export const appleAdsKeywordActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_keyword",
+    operationType: "read",
     description:
       "Read one keyword by identifier. Apple Ads returns a soft-deleted keyword with deleted set to true rather than 404.",
     requiredScopes: [],
@@ -155,6 +157,7 @@ export const appleAdsKeywordActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_keyword",
+    operationType: "write",
     description:
       "Add one keyword to an ad group. adGroupId, text and matchType are fixed at creation: to change them, delete the keyword and create a new one.",
     requiredScopes: [],
@@ -175,6 +178,7 @@ export const appleAdsKeywordActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_keyword",
+    operationType: "destructive",
     description:
       "Change the bid or the status of one keyword. Apple Ads accepts nothing else on an update, and returns 404 for a keyword that has already been deleted.",
     requiredScopes: [],
@@ -193,6 +197,7 @@ export const appleAdsKeywordActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_keyword",
+    operationType: "destructive",
     description:
       "Soft-delete one keyword. Apple Ads keeps the record and stops bidding on the term, and leaves the parent ad group and campaign untouched. To pause the term temporarily, update its status to PAUSED instead.",
     requiredScopes: [],
@@ -212,6 +217,7 @@ export const appleAdsKeywordActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "bulk_create_keywords",
+    operationType: "write",
     description:
       "Create many keywords in one request, spanning as many ad groups as you like. The whole batch counts as a single call against the rate limit, which makes it the way to seed a keyword list.",
     requiredScopes: [],
@@ -251,6 +257,7 @@ export const appleAdsKeywordActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "bulk_update_keywords",
+    operationType: "destructive",
     description:
       "Change the bid or the status of many keywords in one request, for example to reprice a set of high performers or pause a set of weak ones. Apple Ads accepts nothing else on an update.",
     requiredScopes: [],

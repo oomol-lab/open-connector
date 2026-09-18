@@ -172,6 +172,7 @@ const companyIdentifierInputSchema = withAnyOfRequired(
 export const nyneAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_usage",
+    operationType: "read",
     description: "Get Nyne.ai credit usage, monthly allocation, remaining balance, and per-API breakdown.",
     inputSchema: s.object(
       "Optional month and year filters for Nyne.ai usage statistics.",
@@ -200,6 +201,7 @@ export const nyneAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_person_search",
+    operationType: "write",
     description: "Submit an asynchronous Nyne.ai people search using a natural-language query or structured filters.",
     followUpActions: ["nyne_ai.get_person_search"],
     asyncLifecycle: {
@@ -211,6 +213,7 @@ export const nyneAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_person_search",
+    operationType: "read",
     description: "Poll a Nyne.ai person search request and return its status plus completed result page.",
     asyncLifecycle: {
       startActionId: "nyne_ai.submit_person_search",
@@ -227,6 +230,7 @@ export const nyneAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_person_enrichment",
+    operationType: "write",
     description: "Submit an asynchronous Nyne.ai person enrichment request from email, phone, social URL, or name.",
     followUpActions: ["nyne_ai.get_person_enrichment"],
     asyncLifecycle: {
@@ -238,6 +242,7 @@ export const nyneAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_person_enrichment",
+    operationType: "read",
     description: "Poll a Nyne.ai person enrichment request and return its status plus completed profile result.",
     asyncLifecycle: {
       startActionId: "nyne_ai.submit_person_enrichment",
@@ -254,6 +259,7 @@ export const nyneAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_company_search",
+    operationType: "write",
     description: "Submit an asynchronous Nyne.ai company search using a natural-language query.",
     followUpActions: ["nyne_ai.get_company_search"],
     asyncLifecycle: {
@@ -282,6 +288,7 @@ export const nyneAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company_search",
+    operationType: "read",
     description: "Poll a Nyne.ai company search request and return its status plus completed result page.",
     asyncLifecycle: {
       startActionId: "nyne_ai.submit_company_search",
@@ -298,6 +305,7 @@ export const nyneAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_company_enrichment",
+    operationType: "write",
     description: "Submit an asynchronous Nyne.ai company enrichment request from domain, email, phone, or social URL.",
     followUpActions: ["nyne_ai.get_company_enrichment"],
     asyncLifecycle: {
@@ -309,6 +317,7 @@ export const nyneAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company_enrichment",
+    operationType: "read",
     description: "Poll a Nyne.ai company enrichment request and return its status plus completed company result.",
     asyncLifecycle: {
       startActionId: "nyne_ai.submit_company_enrichment",

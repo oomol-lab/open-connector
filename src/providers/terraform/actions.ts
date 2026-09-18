@@ -60,6 +60,7 @@ const paginationInputFields = {
 
 const getAccountDetailsAction = defineProviderAction(service, {
   name: "get_account_details",
+  operationType: "read",
   description: "Get details for the user or service user associated with the Terraform API token.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for getting Terraform account details.", {}),
@@ -70,6 +71,7 @@ const getAccountDetailsAction = defineProviderAction(service, {
 
 const listOrganizationsAction = defineProviderAction(service, {
   name: "list_organizations",
+  operationType: "read",
   description: "List HCP Terraform organizations visible to the authenticated token.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for listing Terraform organizations.", paginationInputFields, {
@@ -83,6 +85,7 @@ const listOrganizationsAction = defineProviderAction(service, {
 
 const getOrganizationAction = defineProviderAction(service, {
   name: "get_organization",
+  operationType: "read",
   description: "Get details for a single HCP Terraform organization by name.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for getting a Terraform organization.", {
@@ -96,6 +99,7 @@ const getOrganizationAction = defineProviderAction(service, {
 
 const listWorkspacesAction = defineProviderAction(service, {
   name: "list_workspaces",
+  operationType: "read",
   description: "List HCP Terraform workspaces in an organization with optional pagination.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -114,6 +118,7 @@ const listWorkspacesAction = defineProviderAction(service, {
 
 const getWorkspaceByIdAction = defineProviderAction(service, {
   name: "get_workspace_by_id",
+  operationType: "read",
   description: "Get HCP Terraform workspace details by workspace ID.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for getting a Terraform workspace by ID.", {
@@ -127,6 +132,7 @@ const getWorkspaceByIdAction = defineProviderAction(service, {
 
 const getWorkspaceByNameAction = defineProviderAction(service, {
   name: "get_workspace_by_name",
+  operationType: "read",
   description: "Get HCP Terraform workspace details by organization and workspace name.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for getting a Terraform workspace by name.", {
@@ -141,6 +147,7 @@ const getWorkspaceByNameAction = defineProviderAction(service, {
 
 const listWorkspaceRunsAction = defineProviderAction(service, {
   name: "list_workspace_runs",
+  operationType: "read",
   description: "List HCP Terraform runs for a workspace with optional filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -168,6 +175,7 @@ const listWorkspaceRunsAction = defineProviderAction(service, {
 
 const getRunAction = defineProviderAction(service, {
   name: "get_run",
+  operationType: "read",
   description: "Get HCP Terraform run details by run ID.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for getting a Terraform run.", {

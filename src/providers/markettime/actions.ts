@@ -28,6 +28,7 @@ const filterOperation = s.stringEnum("The comparison operation for this filter."
 export const markettimeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_items",
+    operationType: "read",
     description: "List MarketTime catalog items with offset pagination and modification filters.",
     inputSchema: s.actionInput(
       {
@@ -45,6 +46,7 @@ export const markettimeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_manufacturers",
+    operationType: "read",
     description: "List manufacturers available to the connected MarketTime account.",
     inputSchema: s.actionInput(
       {
@@ -61,6 +63,7 @@ export const markettimeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_orders",
+    operationType: "read",
     description: "Search MarketTime orders with documented filters, sorting, and pagination.",
     inputSchema: s.actionInput(
       {

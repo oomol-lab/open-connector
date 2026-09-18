@@ -163,6 +163,7 @@ const serverSchema = s.looseRequiredObject("An Ookla speedtest server.", {
 export const speedtestTrackerActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_results",
+    operationType: "read",
     description:
       "List speedtest results with optional filters, sorting, and pagination. Requires a token with the Read Results ability.",
     requiredScopes: [],
@@ -199,6 +200,7 @@ export const speedtestTrackerActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_result",
+    operationType: "read",
     description:
       "Retrieve one speedtest result by ID. Use it to poll a test queued by run_speedtest until its status leaves the in-progress states. Requires a token with the Read Results ability.",
     requiredScopes: [],
@@ -216,6 +218,7 @@ export const speedtestTrackerActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_latest_result",
+    operationType: "read",
     description:
       "Retrieve the most recent speedtest result, optionally narrowed by the same filters as list_results, for example status `completed` for the last successful test. Requires a token with the Read Results ability.",
     requiredScopes: [],
@@ -230,6 +233,7 @@ export const speedtestTrackerActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_speedtest",
+    operationType: "write",
     description:
       "Queue a new Ookla speedtest on the instance and return the queued result immediately. Poll get_result with the returned ID until the status is completed, failed, or skipped. Requires a token with the Run Speedtest ability.",
     requiredScopes: [],
@@ -253,6 +257,7 @@ export const speedtestTrackerActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_stats",
+    operationType: "read",
     description:
       "Retrieve aggregated ping, download, and upload statistics, optionally limited to a date range. Requires a token with the Read Results ability.",
     requiredScopes: [],
@@ -267,6 +272,7 @@ export const speedtestTrackerActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_servers",
+    operationType: "read",
     description:
       "List nearby Ookla speedtest servers as seen by the instance, for choosing a serverId for run_speedtest. Requires a token with the List Servers ability.",
     requiredScopes: [],
@@ -279,6 +285,7 @@ export const speedtestTrackerActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_health",
+    operationType: "read",
     description:
       "Check that the Speedtest Tracker instance is reachable and running through its unauthenticated health check endpoint.",
     requiredScopes: [],

@@ -109,6 +109,7 @@ const sharedKeywordOptionalFields = [
 export const spyfuActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_monthly_usage",
+    operationType: "read",
     description: "Retrieve SpyFu API usage and cost totals for one calendar month.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -131,6 +132,7 @@ export const spyfuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_usage_breakdown",
+    operationType: "read",
     description: "Retrieve SpyFu API usage broken down by day or API method for one month.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -155,6 +157,7 @@ export const spyfuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_latest_domain_stats",
+    operationType: "read",
     description: "Retrieve the latest SEO and PPC statistics for a domain.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -175,6 +178,7 @@ export const spyfuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_bulk_domain_stats",
+    operationType: "read",
     description: "Retrieve current or historical SEO and PPC statistics for multiple domains.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -194,6 +198,7 @@ export const spyfuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_matching_domains",
+    operationType: "read",
     description:
       "Discover domains matching a wildcard pattern and optional traffic, budget, rank, or strength criteria.",
     requiredScopes: [],
@@ -292,6 +297,7 @@ export const spyfuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_seo_keywords",
+    operationType: "read",
     description: "Retrieve SEO keywords for a domain by value, ranking change, click change, or page-one movement.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -323,6 +329,7 @@ export const spyfuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_top_pages",
+    operationType: "read",
     description: "Retrieve a domain's highest-traffic or newly successful organic pages and their top keywords.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -363,6 +370,7 @@ export const spyfuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_serp_analysis",
+    operationType: "read",
     description:
       "Analyze the current organic search result landscape for a keyword, including ranks and competing pages.",
     requiredScopes: [],
@@ -382,6 +390,7 @@ export const spyfuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_live_seo_stats",
+    operationType: "read",
     description:
       "Retrieve live aggregate organic visibility, click, value, and search-volume metrics for a domain or URL.",
     requiredScopes: [],
@@ -426,6 +435,7 @@ export const spyfuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_domain_ranking_history",
+    operationType: "read",
     description: "Retrieve historical keyword ranks and aggregate click changes for a domain across a month range.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -514,6 +524,7 @@ export const spyfuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_keyword_domain_rankings",
+    operationType: "read",
     description: "Compare one keyword's historical organic rankings across multiple domains.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -537,6 +548,7 @@ export const spyfuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_domain_keyword_rankings",
+    operationType: "read",
     description: "Compare one domain's historical organic rankings across selected keywords.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -564,6 +576,7 @@ export const spyfuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_competitors",
+    operationType: "read",
     description: "Retrieve a domain's top SEO, PPC, or combined search competitors.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -606,6 +619,7 @@ export const spyfuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_competing_keywords",
+    operationType: "read",
     description: "Find SEO or PPC keywords shared by selected domains with optional exclusions.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -633,6 +647,7 @@ export const spyfuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_keyword_information",
+    operationType: "read",
     description: "Retrieve search, difficulty, click, cost, and intent metrics for exact keywords.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -653,6 +668,7 @@ export const spyfuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_keyword_expansions",
+    operationType: "read",
     description: "Expand a seed keyword into related, question, transactional, co-ranking, or co-advertised terms.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -676,6 +692,7 @@ export const spyfuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ppc_keywords",
+    operationType: "read",
     description: "Retrieve current ads, most successful paid keywords, or newly acquired paid keywords for a domain.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -698,6 +715,7 @@ export const spyfuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_domain_ad_history",
+    operationType: "read",
     description: "Retrieve historical advertising copy and keywords for a domain.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -755,6 +773,7 @@ export const spyfuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_keyword_ad_history",
+    operationType: "read",
     description: "Retrieve historical advertisers and ad copy for a keyword.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -771,6 +790,7 @@ export const spyfuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_keyword_ad_history_with_stats",
+    operationType: "read",
     description: "Retrieve keyword ad history enriched with advertiser budgets, coverage, and top-ad statistics.",
     requiredScopes: [],
     inputSchema: s.object(

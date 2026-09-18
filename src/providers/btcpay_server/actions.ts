@@ -51,6 +51,7 @@ const storeSchema = s.looseObject("BTCPay Server store data.", {
 export const btcpayServerActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_stores",
+    operationType: "read",
     description: "List BTCPay Server stores available to the API key.",
     providerPermissions: ["btcpay.store.canviewstoresettings"],
     inputSchema: s.actionInput({}, [], "No input is required for listing stores."),
@@ -63,6 +64,7 @@ export const btcpayServerActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_store",
+    operationType: "read",
     description: "Get details for a single BTCPay Server store.",
     providerPermissions: ["btcpay.store.canviewstoresettings"],
     inputSchema: s.actionInput(
@@ -81,6 +83,7 @@ export const btcpayServerActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_invoices",
+    operationType: "read",
     description: "List invoices for a BTCPay Server store with optional filters.",
     providerPermissions: ["btcpay.store.canviewinvoices"],
     inputSchema: s.actionInput(
@@ -110,6 +113,7 @@ export const btcpayServerActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_invoice",
+    operationType: "read",
     description: "Get details for a single BTCPay Server invoice.",
     providerPermissions: ["btcpay.store.canviewinvoices"],
     inputSchema: s.actionInput(
@@ -129,6 +133,7 @@ export const btcpayServerActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_invoice",
+    operationType: "write",
     description: "Create a BTCPay Server invoice and return its checkout link and invoice data.",
     providerPermissions: ["btcpay.store.cancreateinvoice"],
     inputSchema: s.actionInput(
@@ -154,6 +159,7 @@ export const btcpayServerActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_invoice_metadata",
+    operationType: "write",
     description: "Update metadata for an existing BTCPay Server invoice.",
     providerPermissions: ["btcpay.store.canmodifyinvoices"],
     inputSchema: s.actionInput(
@@ -174,6 +180,7 @@ export const btcpayServerActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "mark_invoice_status",
+    operationType: "write",
     description: "Manually mark a BTCPay Server invoice as invalid or settled.",
     providerPermissions: ["btcpay.store.canmodifyinvoices"],
     inputSchema: s.actionInput(

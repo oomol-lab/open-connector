@@ -163,12 +163,14 @@ const trackingOutputSchema = s.actionOutput(
 export const aftershipActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_tracking",
+    operationType: "write",
     description: "Create an AfterShip tracking record for a shipment.",
     inputSchema: createTrackingInputSchema,
     outputSchema: trackingOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_tracking",
+    operationType: "read",
     description: "Retrieve one AfterShip tracking record by tracking ID.",
     inputSchema: s.object(
       "The input for retrieving one AfterShip tracking.",
@@ -183,12 +185,14 @@ export const aftershipActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_tracking",
+    operationType: "write",
     description: "Update editable fields on an AfterShip tracking record.",
     inputSchema: updateTrackingInputSchema,
     outputSchema: trackingOutputSchema,
   }),
   defineProviderAction(service, {
     name: "delete_tracking",
+    operationType: "destructive",
     description: "Delete an AfterShip tracking record by tracking ID.",
     inputSchema: s.object("The input for deleting one AfterShip tracking.", {
       id: aftershipIdSchema,
@@ -197,6 +201,7 @@ export const aftershipActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_trackings",
+    operationType: "read",
     description: "List AfterShip trackings with cursor pagination and shipment filters.",
     inputSchema: s.object(
       "The filters and pagination parameters for listing AfterShip trackings.",
@@ -262,6 +267,7 @@ export const aftershipActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "retrack_tracking",
+    operationType: "write",
     description: "Ask AfterShip to retrack an expired tracking record by ID.",
     inputSchema: s.object("The input for retracking an expired AfterShip tracking.", {
       id: aftershipIdSchema,
@@ -270,6 +276,7 @@ export const aftershipActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "mark_tracking_completed",
+    operationType: "write",
     description: "Mark an AfterShip tracking record as completed by ID.",
     inputSchema: s.object(
       "The input for marking an AfterShip tracking as completed.",
@@ -284,6 +291,7 @@ export const aftershipActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_couriers",
+    operationType: "read",
     description: "List AfterShip couriers, optionally limited to active couriers or slugs.",
     inputSchema: s.object(
       "The filters for listing AfterShip couriers.",
@@ -305,6 +313,7 @@ export const aftershipActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "detect_couriers",
+    operationType: "read",
     description: "Detect possible AfterShip couriers for a tracking number.",
     inputSchema: s.object(
       "The shipment fields used to detect possible couriers.",

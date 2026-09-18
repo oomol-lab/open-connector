@@ -118,6 +118,7 @@ const cloudFileId = s.anyOf("The cloud drive file ID, not a form or detail row I
 export const iyunbiaoActions = [
   defineProviderAction("iyunbiao", {
     name: "list_templates",
+    operationType: "read",
     description: "List available Yunbiao templates. Requires Yunbiao server 3.3.45.43 or later.",
     inputSchema: s.object("No input is required.", {}),
     outputSchema: s.looseRequiredObject(
@@ -141,6 +142,7 @@ export const iyunbiaoActions = [
   }),
   defineProviderAction("iyunbiao", {
     name: "get_template_structure",
+    operationType: "read",
     description: "Get Yunbiao template fields and detail table definitions. Requires server 3.3.45.43 or later.",
     inputSchema: s.object("The template to inspect.", { templateName }),
     outputSchema: s.looseRequiredObject(
@@ -161,6 +163,7 @@ export const iyunbiaoActions = [
   }),
   defineProviderAction("iyunbiao", {
     name: "query_forms",
+    operationType: "read",
     description:
       "Find Yunbiao forms with filters, sorting and pagination. Use get_form to retrieve full detail rows before editing.",
     inputSchema: s.object("The template and optional query.", { templateName, query }, { optional: ["query"] }),
@@ -168,12 +171,14 @@ export const iyunbiaoActions = [
   }),
   defineProviderAction("iyunbiao", {
     name: "get_form",
+    operationType: "read",
     description: "Read a Yunbiao form with its current version, detail rows and attachment references.",
     inputSchema: s.object("The form to read.", { templateName, objectId }),
     outputSchema: formOutput,
   }),
   defineProviderAction("iyunbiao", {
     name: "save_form",
+    operationType: "destructive",
     description:
       "Create or update a Yunbiao form. Before updating, read the complete form and preserve its objectId and current objectVersion.",
     inputSchema: s.object("The template and complete form to save.", { templateName, form }),
@@ -181,6 +186,7 @@ export const iyunbiaoActions = [
   }),
   defineProviderAction("iyunbiao", {
     name: "batch_save_forms",
+    operationType: "destructive",
     description:
       "Create or update multiple Yunbiao forms. Inspect errorFormList for individual failures even when the request succeeds.",
     inputSchema: s.object("The forms to save in one template.", {
@@ -197,6 +203,7 @@ export const iyunbiaoActions = [
   }),
   defineProviderAction("iyunbiao", {
     name: "query_detail_rows",
+    operationType: "read",
     description: "Query rows in a Yunbiao detail table across forms. Requires server 3.3.45.43 or later.",
     inputSchema: s.object(
       "The detail table and query.",
@@ -207,6 +214,7 @@ export const iyunbiaoActions = [
   }),
   defineProviderAction("iyunbiao", {
     name: "query_template_interface",
+    operationType: "destructive",
     description:
       "Call a data interface configured on a Yunbiao template. Its configured business logic may modify data.",
     inputSchema: s.object(
@@ -224,6 +232,7 @@ export const iyunbiaoActions = [
   }),
   defineProviderAction("iyunbiao", {
     name: "query_global_interface",
+    operationType: "destructive",
     description: "Call a global Yunbiao data interface. Its configured business logic may modify data.",
     inputSchema: s.object(
       "The global interface to call.",
@@ -236,6 +245,7 @@ export const iyunbiaoActions = [
   }),
   defineProviderAction("iyunbiao", {
     name: "upload_attachment",
+    operationType: "write",
     description:
       "Upload a file from a URL to Yunbiao, returning an attachment entry to include in save_form. Upload alone does not attach it to a form. Connector upload limit: 64 MiB.",
     inputSchema: s.object("The file and destination template.", {
@@ -254,6 +264,7 @@ export const iyunbiaoActions = [
   }),
   defineProviderAction("iyunbiao", {
     name: "download_attachment",
+    operationType: "read",
     description:
       "Download a Yunbiao attachment to a usable file transit URL. Use the attachment file ID from get_form.",
     inputSchema: s.object("The attachment to download.", {
@@ -275,12 +286,14 @@ export const iyunbiaoActions = [
   }),
   defineProviderAction("iyunbiao", {
     name: "list_users",
+    operationType: "read",
     description: "List Yunbiao users, optionally with filtering, sorting and pagination.",
     inputSchema: s.object("Optional user query.", { query }, { optional: ["query"] }),
     outputSchema: queryOutput,
   }),
   defineProviderAction("iyunbiao", {
     name: "get_user",
+    operationType: "read",
     description: "Read a complete Yunbiao user record, including roles and posts.",
     inputSchema: s.object("The user to read.", {
       objectId: s.integer("The user object ID returned by list_users.", { minimum: 1 }),
@@ -289,6 +302,7 @@ export const iyunbiaoActions = [
   }),
   defineProviderAction("iyunbiao", {
     name: "save_user",
+    operationType: "destructive",
     description:
       "Create or update a Yunbiao user. Read get_user before updating and preserve its fields. Passwords in the user record must already be MD5-encoded.",
     inputSchema: s.object("The complete user record to save.", { user: userRecord }),
@@ -296,12 +310,14 @@ export const iyunbiaoActions = [
   }),
   defineProviderAction("iyunbiao", {
     name: "list_roles",
+    operationType: "read",
     description: "List Yunbiao roles, optionally with filtering, sorting and pagination.",
     inputSchema: s.object("Optional role query.", { query }, { optional: ["query"] }),
     outputSchema: queryOutput,
   }),
   defineProviderAction("iyunbiao", {
     name: "get_role",
+    operationType: "read",
     description: "Read a complete Yunbiao role record.",
     inputSchema: s.object("The role to read.", {
       objectId: s.integer("The role object ID returned by list_roles.", { minimum: 1 }),
@@ -310,12 +326,14 @@ export const iyunbiaoActions = [
   }),
   defineProviderAction("iyunbiao", {
     name: "save_role",
+    operationType: "destructive",
     description: "Create or update a Yunbiao role. Read get_role before updating and preserve its fields.",
     inputSchema: s.object("The complete role record to save.", { role: roleRecord }),
     outputSchema: roleOutput,
   }),
   defineProviderAction("iyunbiao", {
     name: "upload_cloud_file",
+    operationType: "write",
     description:
       "Upload a file from a URL to the Yunbiao enterprise cloud drive. Upload alone does not associate it with a form. Connector upload limit: 64 MiB.",
     inputSchema: s.object(
@@ -339,6 +357,7 @@ export const iyunbiaoActions = [
   }),
   defineProviderAction("iyunbiao", {
     name: "download_cloud_file",
+    operationType: "read",
     description: "Download a Yunbiao enterprise cloud drive file to a usable file transit URL.",
     inputSchema: s.object("The cloud drive file to download.", {
       templateName,

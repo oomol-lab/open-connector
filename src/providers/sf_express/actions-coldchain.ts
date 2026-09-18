@@ -123,6 +123,7 @@ const flowSideInfoSchema = s.object("The service info for one side of the flow."
 export const sfExpressColdchainActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "coldchain_check_transport_flow",
+    operationType: "read",
     description:
       "Check whether SF Cold Chain can serve a given origin-destination flow with a product, returning the serving points' business hours and the available temperature levels.",
     requiredScopes: [],
@@ -158,6 +159,7 @@ export const sfExpressColdchainActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "coldchain_estimate_transport_fee",
+    operationType: "read",
     description:
       "Estimate the SF Cold Chain transport fee for a flow and one or more products, returning the per-product fee breakdown.",
     requiredScopes: [],
@@ -194,6 +196,7 @@ export const sfExpressColdchainActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "coldchain_estimate_delivery_time",
+    operationType: "read",
     description:
       "Estimate the SF Cold Chain delivery time for a flow and one or more products, including pickup and delivery transit times.",
     requiredScopes: [],
@@ -231,6 +234,7 @@ export const sfExpressColdchainActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "coldchain_create_order",
+    operationType: "write",
     description:
       "Create an SF Cold Chain transport order (陆运运输). The monthly account is required for monthly-settlement payment (PR_ACCOUNT).",
     requiredScopes: [],
@@ -301,6 +305,7 @@ export const sfExpressColdchainActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "coldchain_cancel_order",
+    operationType: "destructive",
     description: "Cancel an SF Cold Chain transport order that has not been accepted yet.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -316,6 +321,7 @@ export const sfExpressColdchainActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "coldchain_query_waybill_no",
+    operationType: "read",
     description:
       "Query the waybill numbers (master waybill, sign-back receipt number, child waybills) generated for an SF Cold Chain order.",
     requiredScopes: [],
@@ -343,6 +349,7 @@ export const sfExpressColdchainActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "coldchain_query_route",
+    operationType: "read",
     description:
       "Query SF Cold Chain route events by waybill number, SF order number, or client order number, combined with the order source code.",
     requiredScopes: [],
@@ -382,6 +389,7 @@ export const sfExpressColdchainActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "coldchain_query_order_info",
+    operationType: "read",
     description:
       "Query the full details of an SF Cold Chain order, including parties, weights, goods lines, value-added services, and the sign-back receipt.",
     requiredScopes: [],

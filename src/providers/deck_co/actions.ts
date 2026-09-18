@@ -108,6 +108,7 @@ const getSourceOutputSchema = s.object("Deck.co source response.", {
 export const deckCoActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "test_api_key",
+    operationType: "read",
     description: "Verify that a Deck.co secret key can authenticate with the v2 API.",
     requiredScopes: [],
     inputSchema: testApiKeyInputSchema,
@@ -115,6 +116,7 @@ export const deckCoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_agents",
+    operationType: "read",
     description: "List Deck.co agents with cursor pagination.",
     requiredScopes: [],
     inputSchema: paginatedInputSchema,
@@ -122,6 +124,7 @@ export const deckCoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_agent",
+    operationType: "read",
     description: "Retrieve a Deck.co agent by ID, including its task summaries.",
     requiredScopes: [],
     inputSchema: getAgentInputSchema,
@@ -129,6 +132,7 @@ export const deckCoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sources",
+    operationType: "read",
     description: "List Deck.co sources with cursor pagination.",
     requiredScopes: [],
     inputSchema: paginatedInputSchema,
@@ -136,6 +140,7 @@ export const deckCoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_source",
+    operationType: "read",
     description: "Retrieve a Deck.co source by ID.",
     requiredScopes: [],
     inputSchema: getSourceInputSchema,
@@ -143,6 +148,7 @@ export const deckCoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_source",
+    operationType: "write",
     description: "Create a Deck.co website source from a URL and optional display name.",
     requiredScopes: [],
     inputSchema: createSourceInputSchema,

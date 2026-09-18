@@ -104,6 +104,7 @@ const nodeSchema = s.object("A single updown.io monitoring node.", {
 export const updownIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_checks",
+    operationType: "read",
     description: "List all monitoring checks available in the updown.io account.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing updown.io checks.", {}),
@@ -111,6 +112,7 @@ export const updownIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_check",
+    operationType: "read",
     description: "Get a single monitoring check from updown.io by token.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for getting an updown.io check.", { token: checkTokenSchema }),
@@ -118,6 +120,7 @@ export const updownIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_check",
+    operationType: "write",
     description: "Create a new monitoring check in the updown.io account.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for creating an updown.io check.", createOrUpdateCheckFields, {
@@ -127,6 +130,7 @@ export const updownIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_check",
+    operationType: "write",
     description: "Update an existing monitoring check in the updown.io account.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -138,6 +142,7 @@ export const updownIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_check",
+    operationType: "destructive",
     description: "Delete a monitoring check from the updown.io account.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for deleting an updown.io check.", { token: checkTokenSchema }),
@@ -147,6 +152,7 @@ export const updownIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_nodes",
+    operationType: "read",
     description: "List all updown.io monitoring nodes and their network metadata.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing updown.io nodes.", {}),
@@ -154,6 +160,7 @@ export const updownIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_node_ips",
+    operationType: "read",
     description: "List all updown.io monitoring node IP addresses.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing updown.io node IP addresses.", {}),
@@ -161,6 +168,7 @@ export const updownIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_node_ipv4",
+    operationType: "read",
     description: "List all updown.io monitoring node IPv4 addresses.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing updown.io node IPv4 addresses.", {}),
@@ -168,6 +176,7 @@ export const updownIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_node_ipv6",
+    operationType: "read",
     description: "List all updown.io monitoring node IPv6 addresses.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing updown.io node IPv6 addresses.", {}),

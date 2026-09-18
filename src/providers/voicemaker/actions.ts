@@ -18,6 +18,7 @@ const voiceSchema = s.looseRequiredObject("A voice returned by Voicemaker.", {
 export const voicemakerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_voices",
+    operationType: "read",
     description: "List Voicemaker text-to-speech voices, optionally filtered by language.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -33,6 +34,7 @@ export const voicemakerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "generate_tts",
+    operationType: "write",
     description: "Convert text to speech and return the generated audio URL and usage details.",
     requiredScopes: [],
     inputSchema: s.object(

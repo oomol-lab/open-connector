@@ -21,6 +21,7 @@ const translationSchema = s.looseObject("A published Cochrane review translation
 export const cochraneActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_review_metadata",
+    operationType: "read",
     description: "Get JSON metadata for a Cochrane review.",
     inputSchema: reviewIdInputSchema,
     outputSchema: s.object("The Cochrane review metadata response.", {
@@ -29,6 +30,7 @@ export const cochraneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_review_versions",
+    operationType: "read",
     description: "List JSON metadata for all versions of a Cochrane review.",
     inputSchema: reviewIdInputSchema,
     outputSchema: s.object("The Cochrane review versions response.", {
@@ -37,6 +39,7 @@ export const cochraneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_review_roles",
+    operationType: "read",
     description: "Get the document roles associated with a Cochrane review.",
     inputSchema: reviewIdInputSchema,
     outputSchema: s.object("The Cochrane review roles response.", {
@@ -45,6 +48,7 @@ export const cochraneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_review_translations",
+    operationType: "read",
     description: "List published translations for a Cochrane review or one of its versions.",
     inputSchema: s.object(
       "A Cochrane review and optional published version.",

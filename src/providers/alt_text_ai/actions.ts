@@ -131,6 +131,7 @@ const pageScrapeOutputSchema = s.object(
 export const altTextAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve AltText.ai account settings and usage details for the API key.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to retrieve account settings.", {}),
@@ -138,6 +139,7 @@ export const altTextAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_image",
+    operationType: "write",
     description: "Add a publicly accessible image URL to AltText.ai and generate alt text.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -197,6 +199,7 @@ export const altTextAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_images",
+    operationType: "read",
     description: "List image records in the AltText.ai library with optional URL filtering.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -212,6 +215,7 @@ export const altTextAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_image",
+    operationType: "read",
     description: "Retrieve a single AltText.ai image record by asset ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a specific image by asset ID.", {
@@ -221,6 +225,7 @@ export const altTextAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_images",
+    operationType: "read",
     description: "Search the AltText.ai image library by URL, asset ID, or alt text content.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -242,6 +247,7 @@ export const altTextAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_image",
+    operationType: "destructive",
     description: "Delete an image from the AltText.ai library by asset ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for deleting a specific image by asset ID.", {
@@ -251,6 +257,7 @@ export const altTextAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "scrape_page",
+    operationType: "read",
     description: "Scrape a web page or raw HTML document and queue discovered images for alt text generation.",
     requiredScopes: [],
     inputSchema: s.object(

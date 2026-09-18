@@ -108,6 +108,7 @@ const enigmaObjectOutput = s.looseObject("The Enigma response payload.");
 export const enigmaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description:
       "Retrieve the current Enigma account metadata available to the connected API key, including customer, billing, and auto-recharge details.",
     inputSchema: s.object("This action does not require any input fields.", {}),
@@ -115,6 +116,7 @@ export const enigmaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_graphql",
+    operationType: "read",
     description:
       "Search Enigma entities through the official GraphQL search query, supporting direct lookups, structured filters, natural-language prompts, and asynchronous output generation.",
     inputSchema: searchInputSchema,
@@ -126,6 +128,7 @@ export const enigmaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_business",
+    operationType: "read",
     description:
       "Retrieve a single Enigma entity by GraphQL entity ID and entity type, returning the provider entity payload.",
     inputSchema: s.object("Input parameters for retrieving a single Enigma entity by ID.", {
@@ -138,6 +141,7 @@ export const enigmaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_aggregate_counts",
+    operationType: "read",
     description:
       "Run the official Enigma GraphQL aggregate query to count matching entities or related entities for a search request.",
     inputSchema: s.looseObject("Input parameters for the Enigma GraphQL aggregate count query.", {
@@ -152,6 +156,7 @@ export const enigmaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_lists",
+    operationType: "read",
     description:
       "Query user-created Enigma lists with optional name or ID filters and Relay-style pagination controls.",
     inputSchema: s.looseObject("Input parameters for querying Enigma user-created lists.", {
@@ -167,6 +172,7 @@ export const enigmaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_list",
+    operationType: "write",
     description:
       "Create a user-managed Enigma list from a search definition or input file, with optional aliases, column ordering, and column mapping.",
     inputSchema: s.looseObject(
@@ -190,6 +196,7 @@ export const enigmaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_list",
+    operationType: "destructive",
     description: "Delete a user-managed Enigma list by ID.",
     inputSchema: s.object("Input parameters for deleting a user-managed Enigma list.", {
       id: s.nonEmptyString("The Enigma list ID to delete."),
@@ -200,6 +207,7 @@ export const enigmaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_background_task",
+    operationType: "read",
     description:
       "Retrieve the latest status for an Enigma background task created by an asynchronous GraphQL search or export workflow.",
     inputSchema: s.object("Input parameters for retrieving an Enigma background task.", {
@@ -209,6 +217,7 @@ export const enigmaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_list_materialization",
+    operationType: "read",
     description:
       "Retrieve an Enigma list materialization by ID, including progress, generated resource URI, metrics, and billing details.",
     inputSchema: s.object("Input parameters for retrieving a list materialization.", {
@@ -218,6 +227,7 @@ export const enigmaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_graphql_schema_extended",
+    operationType: "read",
     description:
       "Retrieve Enigma's extended GraphQL schema metadata, including types, projections, and data-asset descriptors.",
     inputSchema: s.object("This action does not require any input fields.", {}),
@@ -225,6 +235,7 @@ export const enigmaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_suggestion",
+    operationType: "write",
     description:
       "Submit a suggestion to Enigma for data correction or enrichment feedback using the official GraphQL suggestion mutation.",
     inputSchema: s.looseObject("Input parameters for submitting an Enigma suggestion.", {
@@ -243,6 +254,7 @@ export const enigmaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "verify_business_v2",
+    operationType: "read",
     description:
       "Verify a business with Enigma's KYB v2 API, returning a normalized risk summary and the raw verification payload.",
     inputSchema: s.looseObject("Input parameters for Enigma's KYB v2 business verification API.", {

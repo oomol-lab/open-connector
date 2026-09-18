@@ -47,6 +47,7 @@ const leadSearchBodyOptionalFields = [
 export const aimfoxActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_campaigns",
+    operationType: "read",
     description: "List Aimfox campaigns, optionally filtering by outreach type or profile inserts.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -66,6 +67,7 @@ export const aimfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign",
+    operationType: "read",
     description: "Fetch one Aimfox campaign by campaign ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -82,6 +84,7 @@ export const aimfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign_metrics",
+    operationType: "read",
     description: "Fetch interaction metrics for one Aimfox campaign.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -98,6 +101,7 @@ export const aimfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_profile_to_campaign",
+    operationType: "write",
     description: "Add one LinkedIn profile URL to an Aimfox campaign audience.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -114,6 +118,7 @@ export const aimfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_profile_from_campaign",
+    operationType: "destructive",
     description: "Remove one LinkedIn profile from an Aimfox campaign audience by URN or public ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -130,6 +135,7 @@ export const aimfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_lead",
+    operationType: "read",
     description: "Fetch one Aimfox lead by lead ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -146,6 +152,7 @@ export const aimfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_leads",
+    operationType: "read",
     description: "Search Aimfox leads with documented facet filters and offset pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -164,6 +171,7 @@ export const aimfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_total_leads_count",
+    operationType: "read",
     description: "Count Aimfox leads that match the documented lead search filters.",
     requiredScopes: [],
     inputSchema: s.object("Input for counting Aimfox leads.", leadSearchBodySchema, {
@@ -178,6 +186,7 @@ export const aimfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_recent_leads",
+    operationType: "read",
     description: "List recent Aimfox lead transition events for the workspace.",
     requiredScopes: [],
     inputSchema: s.object("Input for listing Aimfox recent leads.", {}),
@@ -188,6 +197,7 @@ export const aimfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_interactions",
+    operationType: "read",
     description: "List Aimfox interaction buckets for a timestamp range.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -211,6 +221,7 @@ export const aimfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workspace_labels",
+    operationType: "read",
     description: "List labels configured in the Aimfox workspace.",
     requiredScopes: [],
     inputSchema: s.object("Input for listing Aimfox workspace labels.", {}),

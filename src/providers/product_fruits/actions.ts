@@ -57,6 +57,7 @@ const conversionResultSchema = s.looseObject(
 export const productFruitsActions: ProviderActionDefinition[] = [
   defineProviderAction("product_fruits", {
     name: "list_knowledge_base_categories",
+    operationType: "read",
     description: "List all Product Fruits knowledge-base categories and localized content.",
     inputSchema: s.requiredObject("This action does not require any input fields.", {}),
     outputSchema: s.requiredObject("Product Fruits knowledge-base category list.", {
@@ -65,6 +66,7 @@ export const productFruitsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("product_fruits", {
     name: "get_knowledge_base_category",
+    operationType: "read",
     description: "Get a Product Fruits knowledge-base category by correlation ID.",
     inputSchema: s.requiredObject("Category lookup parameters.", {
       correlationId: s.nonEmptyString("Custom category correlation ID or internal ID prefixed with pf_."),
@@ -73,6 +75,7 @@ export const productFruitsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("product_fruits", {
     name: "list_knowledge_base_articles",
+    operationType: "read",
     description: "List Product Fruits knowledge-base articles, optionally filtered by category.",
     inputSchema: s.object(
       "Article list filters.",
@@ -89,6 +92,7 @@ export const productFruitsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("product_fruits", {
     name: "get_knowledge_base_article_content",
+    operationType: "read",
     description: "Get localized Product Fruits knowledge-base article content as Markdown or HTML.",
     inputSchema: s.object(
       "Article content lookup parameters.",

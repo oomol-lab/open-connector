@@ -350,6 +350,7 @@ const downloadableFileSchema = s.requiredObject("A downloadable file uploaded to
 export const feishuAppBotActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_app_info",
+    operationType: "read",
     description: "Get the Feishu custom app profile and configured scopes for this connection.",
     requiredScopes: [feishuAppBotScopes.applicationRead],
     providerPermissions: [feishuAppBotScopes.applicationRead],
@@ -360,6 +361,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_app_permissions",
+    operationType: "read",
     description: "Get the currently published Feishu app version, tenant scopes, and subscribed events.",
     requiredScopes: [feishuAppBotScopes.applicationVersionRead],
     providerPermissions: [feishuAppBotScopes.applicationVersionRead],
@@ -374,6 +376,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upload_image",
+    operationType: "write",
     description: "Upload one public image URL to Feishu/Lark and return the image key for message sending.",
     requiredScopes: [feishuAppBotScopes.resource],
     providerPermissions: [feishuAppBotScopes.resource],
@@ -384,6 +387,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "download_image",
+    operationType: "read",
     description: "Download one Feishu/Lark image by image key and upload it to transit storage.",
     inputSchema: s.object(
       "Input for downloading one Feishu image.",
@@ -401,6 +405,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upload_file",
+    operationType: "write",
     description: "Upload one public file URL to Feishu/Lark and return the file key for message sending.",
     requiredScopes: [feishuAppBotScopes.resource],
     providerPermissions: [feishuAppBotScopes.resource],
@@ -420,6 +425,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "download_file",
+    operationType: "read",
     description: "Download one Feishu/Lark file by file key and upload it to transit storage.",
     inputSchema: s.object(
       "Input for downloading one Feishu file.",
@@ -437,6 +443,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send a Feishu/Lark app bot message to a user or chat.",
     requiredScopes: [feishuAppBotScopes.sendMessage],
     providerPermissions: [feishuAppBotScopes.sendMessage],
@@ -455,6 +462,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reply_message",
+    operationType: "write",
     description: "Reply to an existing Feishu/Lark message as the app bot.",
     requiredScopes: [feishuAppBotScopes.sendMessage],
     providerPermissions: [feishuAppBotScopes.sendMessage],
@@ -473,6 +481,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_message",
+    operationType: "read",
     description: "Fetch one Feishu/Lark message by message_id.",
     requiredScopes: [feishuAppBotScopes.readMessage, feishuAppBotScopes.groupMessage],
     providerPermissions: [feishuAppBotScopes.readMessage, feishuAppBotScopes.groupMessage],
@@ -489,6 +498,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_messages",
+    operationType: "read",
     description: "List Feishu/Lark history messages from a chat or thread.",
     requiredScopes: [feishuAppBotScopes.readMessage, feishuAppBotScopes.groupMessage],
     providerPermissions: [feishuAppBotScopes.readMessage, feishuAppBotScopes.groupMessage],
@@ -513,6 +523,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_chats",
+    operationType: "read",
     description: "List chats that the Feishu/Lark app bot currently belongs to.",
     requiredScopes: [feishuAppBotScopes.chatRead],
     providerPermissions: [feishuAppBotScopes.chatRead],
@@ -530,6 +541,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_chats",
+    operationType: "read",
     description: "Search chats visible to the Feishu/Lark app bot by keyword.",
     requiredScopes: [feishuAppBotScopes.chatRead],
     providerPermissions: [feishuAppBotScopes.chatRead],
@@ -547,6 +559,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_chat",
+    operationType: "read",
     description: "Fetch one Feishu/Lark chat by chat_id.",
     requiredScopes: [feishuAppBotScopes.chatRead],
     providerPermissions: [feishuAppBotScopes.chatRead],
@@ -562,6 +575,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_chat_members",
+    operationType: "read",
     description: "List visible members in one Feishu/Lark chat.",
     requiredScopes: [feishuAppBotScopes.chatMembersRead],
     providerPermissions: [feishuAppBotScopes.chatMembersRead],
@@ -579,6 +593,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "recall_message",
+    operationType: "write",
     description: "Recall one Feishu/Lark message that the app bot sent.",
     requiredScopes: [feishuAppBotScopes.recallMessage],
     providerPermissions: [feishuAppBotScopes.recallMessage],
@@ -589,6 +604,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "edit_message",
+    operationType: "write",
     description: "Edit a Feishu/Lark text or post message sent by the app bot.",
     requiredScopes: [feishuAppBotScopes.updateMessage],
     providerPermissions: [feishuAppBotScopes.updateMessage],
@@ -601,6 +617,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_message_reaction",
+    operationType: "write",
     description: "Add one emoji reaction to a Feishu/Lark message.",
     requiredScopes: [feishuAppBotScopes.reactionWrite],
     providerPermissions: [feishuAppBotScopes.reactionWrite],
@@ -612,6 +629,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_message_reactions",
+    operationType: "read",
     description: "List emoji reactions on one Feishu/Lark message.",
     requiredScopes: [feishuAppBotScopes.reactionRead],
     providerPermissions: [feishuAppBotScopes.reactionRead],
@@ -630,6 +648,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_message_reaction",
+    operationType: "destructive",
     description: "Remove one Feishu/Lark message reaction by reaction_id.",
     requiredScopes: [feishuAppBotScopes.reactionWrite],
     providerPermissions: [feishuAppBotScopes.reactionWrite],
@@ -641,6 +660,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "pin_message",
+    operationType: "write",
     description: "Pin one Feishu/Lark message inside its chat.",
     requiredScopes: [feishuAppBotScopes.pinWrite],
     providerPermissions: [feishuAppBotScopes.pinWrite],
@@ -651,6 +671,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pins",
+    operationType: "read",
     description: "List pin records in one Feishu/Lark chat and time window.",
     requiredScopes: [feishuAppBotScopes.pinRead],
     providerPermissions: [feishuAppBotScopes.pinRead],
@@ -669,6 +690,7 @@ export const feishuAppBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_pin",
+    operationType: "destructive",
     description: "Remove the pin state from one Feishu/Lark message.",
     requiredScopes: [feishuAppBotScopes.pinWrite],
     providerPermissions: [feishuAppBotScopes.pinWrite],

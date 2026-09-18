@@ -49,6 +49,7 @@ const geokeoResponseSchema = s.object(
 export const geokeoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "geocode_forward",
+    operationType: "read",
     description: "Convert an address or place query into Geokeo geocoding results.",
     inputSchema: s.actionInput(
       {
@@ -66,6 +67,7 @@ export const geokeoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "geocode_reverse",
+    operationType: "read",
     description: "Convert coordinates into Geokeo reverse geocoding results.",
     inputSchema: s.actionInput(
       {

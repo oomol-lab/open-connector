@@ -38,12 +38,14 @@ const project = s.object(
 export const desktimeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description: "Retrieve DeskTime company account settings and timezone information.",
     inputSchema: s.actionInput({}, [], "The input payload for retrieving DeskTime company data."),
     outputSchema: s.actionOutput({ data: rawData }, "The response returned when retrieving DeskTime company data."),
   }),
   defineProviderAction(service, {
     name: "list_employees",
+    operationType: "read",
     description: "Retrieve all DeskTime company employees with optional day or month tracking data.",
     inputSchema: s.object(
       {
@@ -59,6 +61,7 @@ export const desktimeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_employee",
+    operationType: "read",
     description: "Retrieve DeskTime tracking data for one employee or the API key owner.",
     inputSchema: s.object(
       {
@@ -71,6 +74,7 @@ export const desktimeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List active DeskTime projects and their related tasks.",
     inputSchema: s.actionInput({}, [], "The input payload for listing DeskTime projects."),
     outputSchema: s.actionOutput(
@@ -83,6 +87,7 @@ export const desktimeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create a DeskTime project and optionally create an associated task.",
     inputSchema: s.object(
       {

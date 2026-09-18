@@ -368,12 +368,14 @@ const updateDatabaseInputSchema = {
 export const neonActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the currently authenticated Neon user profile.",
     inputSchema: s.actionInput({}),
     outputSchema: currentUserSchema,
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Neon projects available to the authenticated account.",
     inputSchema: s.actionInput({
       cursor: cursorSchema,
@@ -386,12 +388,14 @@ export const neonActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get detailed metadata for a Neon project.",
     inputSchema: s.actionInput({ projectId: projectIdSchema }, ["projectId"]),
     outputSchema: s.actionOutput({ project: projectSchema }),
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create a Neon project with an optional default branch configuration.",
     inputSchema: s.actionInput(
       {
@@ -411,6 +415,7 @@ export const neonActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_project",
+    operationType: "write",
     description: "Update a Neon project name or history retention period.",
     inputSchema: updateProjectInputSchema,
     outputSchema: s.actionOutput({
@@ -420,6 +425,7 @@ export const neonActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_project",
+    operationType: "destructive",
     description: "Delete a Neon project.",
     inputSchema: s.actionInput({ projectId: projectIdSchema }, ["projectId"]),
     outputSchema: s.actionOutput(
@@ -432,6 +438,7 @@ export const neonActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_branches",
+    operationType: "read",
     description: "List branches for a Neon project.",
     inputSchema: s.actionInput(
       {
@@ -448,6 +455,7 @@ export const neonActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_branch",
+    operationType: "read",
     description: "Get detailed metadata for a Neon branch.",
     inputSchema: s.actionInput({ projectId: projectIdSchema, branchId: branchIdSchema }, ["projectId", "branchId"]),
     outputSchema: s.actionOutput({
@@ -457,30 +465,35 @@ export const neonActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_branch",
+    operationType: "write",
     description: "Create a branch in a Neon project.",
     inputSchema: createBranchInputSchema,
     outputSchema: branchMutationOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_branch",
+    operationType: "write",
     description: "Update a Neon branch name or protection status.",
     inputSchema: updateBranchInputSchema,
     outputSchema: branchMutationOutputSchema,
   }),
   defineProviderAction(service, {
     name: "delete_branch",
+    operationType: "destructive",
     description: "Delete a branch from a Neon project.",
     inputSchema: s.actionInput({ projectId: projectIdSchema, branchId: branchIdSchema }, ["projectId", "branchId"]),
     outputSchema: deleteBranchOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_databases",
+    operationType: "read",
     description: "List databases for a Neon branch.",
     inputSchema: s.actionInput({ projectId: projectIdSchema, branchId: branchIdSchema }, ["projectId", "branchId"]),
     outputSchema: s.actionOutput({ databases: s.array("Databases returned by Neon.", databaseSchema) }),
   }),
   defineProviderAction(service, {
     name: "get_database",
+    operationType: "read",
     description: "Get detailed metadata for a Neon database.",
     inputSchema: s.actionInput(
       {
@@ -494,6 +507,7 @@ export const neonActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_database",
+    operationType: "write",
     description: "Create a database in a Neon branch.",
     inputSchema: s.actionInput(
       {
@@ -508,12 +522,14 @@ export const neonActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_database",
+    operationType: "write",
     description: "Update a Neon database name or owner.",
     inputSchema: updateDatabaseInputSchema,
     outputSchema: databaseMutationOutputSchema,
   }),
   defineProviderAction(service, {
     name: "delete_database",
+    operationType: "destructive",
     description: "Delete a database from a Neon branch.",
     inputSchema: s.actionInput(
       {
@@ -527,6 +543,7 @@ export const neonActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_operations",
+    operationType: "read",
     description: "List operations for a Neon project.",
     inputSchema: s.actionInput(
       {
@@ -546,6 +563,7 @@ export const neonActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_operation",
+    operationType: "read",
     description: "Get detailed metadata for a Neon operation.",
     inputSchema: s.actionInput(
       {

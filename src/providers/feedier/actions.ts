@@ -32,6 +32,7 @@ const reportMutationFields: Record<string, JsonSchema> = {
 export const feedierActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_reports",
+    operationType: "read",
     description: "List Feedier reports with pagination, filters, and sorting.",
     inputSchema: s.actionInput(
       {
@@ -67,12 +68,14 @@ export const feedierActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_report",
+    operationType: "read",
     description: "Get a Feedier report by ID.",
     inputSchema: s.actionInput({ report_id: reportId }, ["report_id"]),
     outputSchema: s.actionOutput({ report }),
   }),
   defineProviderAction(service, {
     name: "create_report",
+    operationType: "write",
     description: "Create a Feedier analytical report.",
     inputSchema: s.actionInput(
       {
@@ -88,18 +91,21 @@ export const feedierActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_report",
+    operationType: "write",
     description: "Update editable fields on a Feedier report.",
     inputSchema: s.actionInput({ report_id: reportId, ...reportMutationFields }, ["report_id"]),
     outputSchema: s.actionOutput({ report }),
   }),
   defineProviderAction(service, {
     name: "delete_report",
+    operationType: "destructive",
     description: "Delete a Feedier report by ID.",
     inputSchema: s.actionInput({ report_id: reportId }, ["report_id"]),
     outputSchema: s.actionOutput({ deleted: s.boolean("Whether the report deletion succeeded.") }),
   }),
   defineProviderAction(service, {
     name: "create_report_share_link",
+    operationType: "write",
     description: "Generate a new expiring share link for a Feedier report.",
     inputSchema: s.actionInput(
       {

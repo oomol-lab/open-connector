@@ -168,6 +168,7 @@ const saveRecordInputSchema = s.object(
 export const ninoxActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_workspaces",
+    operationType: "read",
     description: "List Ninox workspaces available to the authenticated Personal Access Token.",
     inputSchema: s.object({}, { description: "The input payload for listing Ninox workspaces." }),
     outputSchema: s.actionOutput(
@@ -179,6 +180,7 @@ export const ninoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workspace",
+    operationType: "read",
     description: "Get one Ninox workspace by workspace ID.",
     inputSchema: teamOnlyInputSchema,
     outputSchema: s.actionOutput(
@@ -190,6 +192,7 @@ export const ninoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_databases",
+    operationType: "read",
     description: "List Ninox databases inside one workspace.",
     inputSchema: teamOnlyInputSchema,
     outputSchema: s.actionOutput(
@@ -201,6 +204,7 @@ export const ninoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_database",
+    operationType: "read",
     description: "Get Ninox schema metadata for one database.",
     inputSchema: databaseInputSchema,
     outputSchema: s.actionOutput(
@@ -212,6 +216,7 @@ export const ninoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tables",
+    operationType: "read",
     description: "List Ninox tables for one database.",
     inputSchema: databaseInputSchema,
     outputSchema: s.actionOutput(
@@ -223,6 +228,7 @@ export const ninoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_table",
+    operationType: "read",
     description: "Get Ninox schema metadata for one table.",
     inputSchema: tableInputSchema,
     outputSchema: s.actionOutput(
@@ -234,6 +240,7 @@ export const ninoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_records",
+    operationType: "read",
     description: "List records from one Ninox table.",
     inputSchema: s.object(
       {
@@ -257,6 +264,7 @@ export const ninoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_record",
+    operationType: "read",
     description: "Get one Ninox record by record ID.",
     inputSchema: s.object(
       {
@@ -282,6 +290,7 @@ export const ninoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_record",
+    operationType: "read",
     description: "Find a single Ninox record by filters in one table.",
     inputSchema: s.object(
       {
@@ -308,6 +317,7 @@ export const ninoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "save_records",
+    operationType: "write",
     description:
       "Create new Ninox records or update existing ones in the same table using the native POST /records endpoint.",
     inputSchema: s.object(
@@ -333,6 +343,7 @@ export const ninoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_record",
+    operationType: "destructive",
     description: "Delete one Ninox record by record ID.",
     inputSchema: s.object(
       {
@@ -355,6 +366,7 @@ export const ninoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_records",
+    operationType: "destructive",
     description: "Delete multiple Ninox records from the same table.",
     inputSchema: s.object(
       {

@@ -1,4 +1,4 @@
-import type { ActionDefinition, JsonSchema } from "../../../core/types.ts";
+import type { ActionDefinition, ActionOperationType, JsonSchema } from "../../../core/types.ts";
 
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
@@ -57,6 +57,7 @@ export function createFeishuSheetsAdvancedActions(service: string): readonly Act
     actions.push(
       defineProviderAction(service, {
         name,
+        operationType: sheetOperationType(name, write),
         description,
         requiredScopes: [write ? "sheets:spreadsheet:write_only" : "sheets:spreadsheet:read"],
         providerPermissions: [write ? "sheets:spreadsheet:write_only" : "sheets:spreadsheet:read"],
@@ -345,4 +346,10 @@ export function createFeishuSheetsAdvancedActions(service: string): readonly Act
     ),
   );
   return actions;
+}
+
+function sheetOperationType(name: string, write: boolean): ActionOperationType {
+  if (!write) return "read";
+  if (/^(?:insert|unhide|group|merge|resize|copy|create)_/u.test(name)) return "write";
+  return "destructive";
 }

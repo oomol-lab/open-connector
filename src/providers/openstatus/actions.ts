@@ -328,36 +328,42 @@ updateHttpMonitorInputSchema.anyOf = updateHttpMonitorFieldNames.map((field) => 
 export const openstatusActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_monitors",
+    operationType: "read",
     description: "List OpenStatus HTTP, TCP, and DNS monitors in the authenticated workspace.",
     inputSchema: listMonitorsInputSchema,
     outputSchema: listMonitorsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_monitor",
+    operationType: "read",
     description: "Retrieve one OpenStatus monitor configuration by ID.",
     inputSchema: getMonitorInputSchema,
     outputSchema: getMonitorOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_monitor_status",
+    operationType: "read",
     description: "Retrieve the current OpenStatus monitor status for each configured region.",
     inputSchema: getMonitorInputSchema,
     outputSchema: getMonitorStatusOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_monitor_summary",
+    operationType: "read",
     description: "Retrieve aggregated OpenStatus monitor metrics for a time range and regions.",
     inputSchema: getMonitorSummaryInputSchema,
     outputSchema: getMonitorSummaryOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_http_response_logs",
+    operationType: "read",
     description: "List recent OpenStatus HTTP response logs for a monitor.",
     inputSchema: listHttpResponseLogsInputSchema,
     outputSchema: listHttpResponseLogsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "trigger_monitor",
+    operationType: "write",
     description: "Trigger an immediate OpenStatus monitor check across configured regions.",
     requiredScopes: ["write"],
     inputSchema: getMonitorInputSchema,
@@ -365,6 +371,7 @@ export const openstatusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_http_monitor",
+    operationType: "write",
     description: "Create a new OpenStatus HTTP monitor.",
     requiredScopes: ["write"],
     inputSchema: createHttpMonitorInputSchema,
@@ -372,6 +379,7 @@ export const openstatusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_http_monitor",
+    operationType: "write",
     description: "Partially update an existing OpenStatus HTTP monitor.",
     requiredScopes: ["write"],
     inputSchema: updateHttpMonitorInputSchema,
@@ -379,6 +387,7 @@ export const openstatusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_monitor",
+    operationType: "destructive",
     description: "Delete an OpenStatus monitor by ID.",
     requiredScopes: ["write"],
     inputSchema: getMonitorInputSchema,

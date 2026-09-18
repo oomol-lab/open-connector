@@ -48,6 +48,7 @@ const creditsSchema = s.looseObject("Credit and quota information returned by Pi
 export const pingdomActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_checks",
+    operationType: "read",
     description: "List Pingdom uptime checks with optional pagination and tag filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -69,6 +70,7 @@ export const pingdomActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_check",
+    operationType: "read",
     description: "Retrieve a detailed Pingdom uptime check by ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -83,6 +85,7 @@ export const pingdomActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_probes",
+    operationType: "read",
     description: "List Pingdom probe servers and their location details.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -101,6 +104,7 @@ export const pingdomActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_credits",
+    operationType: "read",
     description: "Retrieve Pingdom account check and SMS credit information.",
     requiredScopes: [],
     inputSchema: s.object("This Pingdom action does not require input.", {}),

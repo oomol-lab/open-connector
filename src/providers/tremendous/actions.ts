@@ -124,6 +124,7 @@ createOrderInput.anyOf = [{ required: ["campaignId"] }, { required: ["products"]
 export const tremendousActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List Tremendous products with optional country, currency, and subcategory filters.",
     requiredScopes: [],
     inputSchema: productsInput,
@@ -134,6 +135,7 @@ export const tremendousActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Retrieve one Tremendous product by ID.",
     requiredScopes: [],
     inputSchema: idInput("product"),
@@ -144,6 +146,7 @@ export const tremendousActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_campaigns",
+    operationType: "read",
     description: "List Tremendous campaigns in the current organization.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list Tremendous campaigns.", {}),
@@ -154,6 +157,7 @@ export const tremendousActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign",
+    operationType: "read",
     description: "Retrieve one Tremendous campaign by ID.",
     requiredScopes: [],
     inputSchema: idInput("campaign"),
@@ -164,6 +168,7 @@ export const tremendousActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_funding_sources",
+    operationType: "read",
     description: "List funding sources in the current Tremendous organization.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list Tremendous funding sources.", {}),
@@ -177,6 +182,7 @@ export const tremendousActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_funding_source",
+    operationType: "read",
     description: "Retrieve one Tremendous funding source by ID, including the special BALANCE value.",
     requiredScopes: [],
     inputSchema: idInput("funding source"),
@@ -187,6 +193,7 @@ export const tremendousActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_organizations",
+    operationType: "read",
     description: "List the Tremendous organization tied to the current API key.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list Tremendous organizations.", {}),
@@ -200,6 +207,7 @@ export const tremendousActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description: "List Tremendous orders with optional pagination and order filters.",
     requiredScopes: [],
     inputSchema: ordersInput,
@@ -211,6 +219,7 @@ export const tremendousActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_order",
+    operationType: "read",
     description: "Retrieve one Tremendous order by ID or external ID.",
     requiredScopes: [],
     inputSchema: idInput("order or external order"),
@@ -221,6 +230,7 @@ export const tremendousActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_order",
+    operationType: "write",
     description: "Create a Tremendous reward order with an optional external ID for idempotent retries.",
     requiredScopes: [],
     inputSchema: createOrderInput,
@@ -231,6 +241,7 @@ export const tremendousActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_rewards",
+    operationType: "read",
     description: "List Tremendous rewards with optional offset pagination.",
     requiredScopes: [],
     inputSchema: rewardsInput,
@@ -242,6 +253,7 @@ export const tremendousActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_reward",
+    operationType: "read",
     description: "Retrieve one Tremendous reward by ID.",
     requiredScopes: [],
     inputSchema: idInput("reward"),
@@ -252,6 +264,7 @@ export const tremendousActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "generate_reward_link",
+    operationType: "write",
     description: "Generate a redemption link for an existing Tremendous reward.",
     requiredScopes: [],
     inputSchema: idInput("reward"),

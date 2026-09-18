@@ -72,6 +72,7 @@ const lifecycle = { startActionId: "bigml.create_prediction", statusActionId: "b
 export const bigmlActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",
+    operationType: "read",
     description: "List existing BigML supervised models with compact status details.",
     inputSchema: listInput,
     outputSchema: s.actionOutput(
@@ -81,6 +82,7 @@ export const bigmlActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_model",
+    operationType: "read",
     description: "Retrieve compact BigML model metadata and field definitions needed for prediction input.",
     inputSchema: s.actionInput(
       {
@@ -114,6 +116,7 @@ export const bigmlActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_prediction",
+    operationType: "write",
     description: "Submit a JSON prediction against an existing BigML model.",
     followUpActions: ["bigml.get_prediction"],
     asyncLifecycle: lifecycle,
@@ -136,6 +139,7 @@ export const bigmlActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_prediction",
+    operationType: "read",
     description: "Retrieve the status and result of one BigML prediction.",
     asyncLifecycle: lifecycle,
     inputSchema: s.actionInput(
@@ -147,6 +151,7 @@ export const bigmlActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_predictions",
+    operationType: "read",
     description: "List stored BigML prediction resources.",
     inputSchema: listInput,
     outputSchema: s.actionOutput(
@@ -156,6 +161,7 @@ export const bigmlActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_prediction",
+    operationType: "destructive",
     description: "Permanently delete one stored BigML prediction resource.",
     inputSchema: s.actionInput(
       { predictionId: text("A prediction identifier.") },

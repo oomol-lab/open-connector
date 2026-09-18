@@ -49,12 +49,14 @@ const checkDisposableEmailOutputSchema = s.object("The disposable-email lookup r
 export const kickboxActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "verify_email",
+    operationType: "read",
     description: "Verify whether a single email address is deliverable and retrieve Kickbox risk signals.",
     inputSchema: verifyEmailInputSchema,
     outputSchema: verifyEmailOutputSchema,
   }),
   defineProviderAction(service, {
     name: "check_disposable_email",
+    operationType: "read",
     description: "Check whether an email address or domain belongs to a disposable email provider.",
     inputSchema: checkDisposableEmailInputSchema,
     outputSchema: checkDisposableEmailOutputSchema,

@@ -78,6 +78,7 @@ const eventSchema = s.looseObject(
 export const heartbeatActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List all users in the connected Heartbeat community.",
     inputSchema: s.actionInput({}, [], "No input is required to list Heartbeat users."),
     outputSchema: s.actionOutput({
@@ -86,6 +87,7 @@ export const heartbeatActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Retrieve one Heartbeat community user by user ID.",
     inputSchema: s.actionInput(
       {
@@ -100,6 +102,7 @@ export const heartbeatActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_users_by_email",
+    operationType: "read",
     description: "Find Heartbeat community users whose email matches exactly.",
     inputSchema: s.actionInput(
       {
@@ -114,6 +117,7 @@ export const heartbeatActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List all access groups in the connected Heartbeat community.",
     inputSchema: s.actionInput({}, [], "No input is required to list Heartbeat groups."),
     outputSchema: s.actionOutput({
@@ -122,6 +126,7 @@ export const heartbeatActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_group",
+    operationType: "read",
     description: "Retrieve one Heartbeat access group by group ID.",
     inputSchema: s.actionInput(
       {
@@ -136,6 +141,7 @@ export const heartbeatActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_channels",
+    operationType: "read",
     description: "List all channels in the connected Heartbeat community.",
     inputSchema: s.actionInput({}, [], "No input is required to list Heartbeat channels."),
     outputSchema: s.actionOutput({
@@ -144,6 +150,7 @@ export const heartbeatActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_events",
+    operationType: "read",
     description: "List Heartbeat community events, optionally filtered by access group.",
     inputSchema: s.object(
       "The optional group filter for Heartbeat events.",

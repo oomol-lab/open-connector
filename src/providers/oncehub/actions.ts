@@ -53,6 +53,7 @@ function paginatedInputSchema(description: string, properties: Record<string, Js
 export const oncehubActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_bookings",
+    operationType: "read",
     description: "List OnceHub bookings, optionally filtered by last update time.",
     inputSchema: paginatedInputSchema("The input payload for listing OnceHub bookings.", {
       lastUpdatedTimeGt: s.dateTime("Only return bookings whose last_updated_time is greater than this timestamp."),
@@ -61,12 +62,14 @@ export const oncehubActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_booking_pages",
+    operationType: "read",
     description: "List OnceHub Booking Pages.",
     inputSchema: paginatedInputSchema("The input payload for listing OnceHub Booking Pages."),
     outputSchema: listOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_event_types",
+    operationType: "read",
     description: "List OnceHub event types.",
     inputSchema: paginatedInputSchema("The input payload for listing OnceHub event types."),
     outputSchema: listOutputSchema,

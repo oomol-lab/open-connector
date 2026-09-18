@@ -49,6 +49,7 @@ describe("runtime action metadata", () => {
         service: "example",
         name: "echo",
         description: "Echo the provided value.",
+        operationType: "write",
         requiredScopes: [],
         providerPermissions: [],
         inputSchema: { type: "object" },

@@ -190,6 +190,7 @@ const createSubmissionInputSchema = s.object(
 export const jotformActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current Jotform account associated with the authenticated API key.",
     requiredScopes: [],
     inputSchema: noInputSchema,
@@ -199,6 +200,7 @@ export const jotformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_forms",
+    operationType: "read",
     description: "List forms available to the authenticated Jotform account.",
     requiredScopes: [],
     inputSchema: listFormsInputSchema,
@@ -213,6 +215,7 @@ export const jotformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form",
+    operationType: "read",
     description: "Get one Jotform form by form ID.",
     requiredScopes: [],
     inputSchema: getFormInputSchema,
@@ -222,6 +225,7 @@ export const jotformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_form_questions",
+    operationType: "read",
     description: "List the question definitions configured on one Jotform form.",
     requiredScopes: [],
     inputSchema: listFormQuestionsInputSchema,
@@ -231,6 +235,7 @@ export const jotformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_form_submissions",
+    operationType: "read",
     description: "List submissions for one Jotform form.",
     requiredScopes: [],
     inputSchema: listFormSubmissionsInputSchema,
@@ -240,6 +245,7 @@ export const jotformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_submission",
+    operationType: "read",
     description: "Get one Jotform submission by submission ID.",
     requiredScopes: [],
     inputSchema: getSubmissionInputSchema,
@@ -249,6 +255,7 @@ export const jotformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_submission",
+    operationType: "write",
     description: "Create a submission on a Jotform form using question IDs and answer values.",
     requiredScopes: [],
     inputSchema: createSubmissionInputSchema,

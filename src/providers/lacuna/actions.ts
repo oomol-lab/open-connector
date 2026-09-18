@@ -180,6 +180,7 @@ const contextViewSchema = s.stringEnum("The Lacuna response view.", ["context", 
 export const lacunaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search",
+    operationType: "read",
     description:
       "Search Lacuna's machine-learning research map for papers, research directions, authors, venues, institutions, or generated hypotheses.",
     inputSchema: s.object(
@@ -230,6 +231,7 @@ export const lacunaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_paper",
+    operationType: "read",
     description: "Get a Lacuna paper by artifact ID or Lacuna paper URL.",
     inputSchema: s.object(
       "Input parameters for getting a Lacuna paper.",
@@ -252,6 +254,7 @@ export const lacunaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_direction",
+    operationType: "read",
     description: "Get a Lacuna research direction by numeric ID or Lacuna direction URL.",
     inputSchema: s.object(
       "Input parameters for getting a Lacuna research direction.",
@@ -271,6 +274,7 @@ export const lacunaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_direction_papers",
+    operationType: "read",
     description: "List papers attached to a Lacuna research direction.",
     inputSchema: s.object(
       "Input parameters for listing papers in a Lacuna research direction.",
@@ -292,6 +296,7 @@ export const lacunaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_author_context",
+    operationType: "read",
     description: "Get a source-linked Lacuna research context for an author.",
     inputSchema: s.object(
       "Input parameters for getting a Lacuna author context.",
@@ -306,6 +311,7 @@ export const lacunaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_hypothesis",
+    operationType: "read",
     description: "Get a generated Lacuna research hypothesis by ID or Lacuna hypothesis URL.",
     inputSchema: s.object(
       "Input parameters for getting a Lacuna research hypothesis.",

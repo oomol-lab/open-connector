@@ -174,6 +174,7 @@ const domainPayloadSchema = s.object(
 export const mailcheckActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_status",
+    operationType: "read",
     description: "Retrieve UserCheck account information, plan details, and current API usage.",
     inputSchema: s.object("Input payload for retrieving UserCheck account status and usage.", {}),
     outputSchema: s.object(
@@ -186,6 +187,7 @@ export const mailcheckActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "verify_email",
+    operationType: "read",
     description: "Validate a single email address and return UserCheck deliverability and risk signals.",
     inputSchema: s.object(
       "Input payload for validating a single email address with UserCheck.",
@@ -204,6 +206,7 @@ export const mailcheckActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "validate_domain",
+    operationType: "read",
     description: "Validate a domain and return UserCheck domain-level risk and MX signals.",
     inputSchema: s.object(
       "Input payload for validating a domain with UserCheck.",

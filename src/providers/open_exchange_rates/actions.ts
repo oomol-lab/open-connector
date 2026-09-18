@@ -126,6 +126,7 @@ const convertCurrencyOutputSchema = s.looseRequiredObject(
 export const openExchangeRatesActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_currencies",
+    operationType: "read",
     description: "Retrieve all currencies supported by Open Exchange Rates.",
     requiredScopes: [],
     inputSchema: currenciesInputSchema,
@@ -133,6 +134,7 @@ export const openExchangeRatesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_latest_rates",
+    operationType: "read",
     description: "Retrieve the latest Open Exchange Rates exchange rates.",
     requiredScopes: [],
     inputSchema: latestRatesInputSchema,
@@ -140,6 +142,7 @@ export const openExchangeRatesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_historical_rates",
+    operationType: "read",
     description: "Retrieve historical Open Exchange Rates exchange rates for a specific date.",
     requiredScopes: [],
     inputSchema: historicalRatesInputSchema,
@@ -147,6 +150,7 @@ export const openExchangeRatesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_timeseries_rates",
+    operationType: "read",
     description: "Retrieve Open Exchange Rates exchange rates across a date range.",
     requiredScopes: [],
     inputSchema: timeseriesRatesInputSchema,
@@ -154,6 +158,7 @@ export const openExchangeRatesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "convert_currency",
+    operationType: "read",
     description: "Convert an amount between two currencies using Open Exchange Rates.",
     requiredScopes: [],
     inputSchema: convertCurrencyInputSchema,

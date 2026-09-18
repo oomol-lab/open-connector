@@ -206,6 +206,7 @@ const ownedListOptionalFields = ["page", "page_size", "full_perms", "additional_
 export const paperlessNgxMailActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_mail_accounts",
+    operationType: "read",
     description: `List the mail accounts Paperless-ngx fetches documents from, ordered by id. ${mailAccountPermissionNote} Passwords are returned as an asterisk placeholder. The endpoint supports no ordering or field filters beyond paging.`,
     requiredScopes: [],
     inputSchema: s.object("Paging and permission options.", ownedListInputFields, {
@@ -215,6 +216,7 @@ export const paperlessNgxMailActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_mail_account",
+    operationType: "read",
     description: `Get one mail account by id. ${mailAccountPermissionNote} The password is returned as an asterisk placeholder.`,
     requiredScopes: [],
     inputSchema: s.object(
@@ -226,6 +228,7 @@ export const paperlessNgxMailActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_mail_account",
+    operationType: "write",
     description:
       "Create an IMAP mail account that Paperless-ngx can fetch documents from. Requires the add_mailaccount permission. The account only becomes useful once a mail rule references it; use test_mail_account to verify the credentials first.",
     requiredScopes: [],
@@ -236,6 +239,7 @@ export const paperlessNgxMailActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_mail_account",
+    operationType: "write",
     description:
       "Partially update a mail account. Only the provided fields are sent; pass null to clear nullable fields. A password consisting only of asterisks (the placeholder returned by reads) is ignored and leaves the stored password unchanged. Requires change permission on the account.",
     requiredScopes: [],
@@ -248,6 +252,7 @@ export const paperlessNgxMailActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_mail_account",
+    operationType: "destructive",
     description:
       "Delete a mail account together with every mail rule and processed mail record that belongs to it. Requires delete permission on the account.",
     requiredScopes: [],
@@ -256,6 +261,7 @@ export const paperlessNgxMailActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "test_mail_account",
+    operationType: "read",
     description:
       "Test whether Paperless-ngx can log in to a mailbox with the given IMAP settings without saving anything. Pass id of an existing account together with the asterisk password placeholder to test the stored credentials (including OAuth tokens, which are refreshed when expired); this requires change permission on that account, while testing new settings requires the add_mailaccount permission. A failed login is reported as an error with status 400 and the message Unable to connect to server.",
     requiredScopes: [],
@@ -287,6 +293,7 @@ export const paperlessNgxMailActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "process_mail_account",
+    operationType: "write",
     description:
       "Queue an immediate fetch of one mail account instead of waiting for the scheduled mail check. Paperless-ngx starts a mail_fetch background task and answers OK without a task id; inspect the tasks list (task_type mail_fetch) or list_processed_mail to see the outcome. Requires view permission on the account.",
     requiredScopes: [],
@@ -295,6 +302,7 @@ export const paperlessNgxMailActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_mail_rules",
+    operationType: "read",
     description: `List mail rules ordered by their order field. ${mailRulePermissionNote} The endpoint supports no ordering or field filters beyond paging.`,
     requiredScopes: [],
     inputSchema: s.object("Paging and permission options.", ownedListInputFields, {
@@ -304,6 +312,7 @@ export const paperlessNgxMailActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_mail_rule",
+    operationType: "read",
     description: `Get one mail rule by id. ${mailRulePermissionNote}`,
     requiredScopes: [],
     inputSchema: s.object(
@@ -315,6 +324,7 @@ export const paperlessNgxMailActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_mail_rule",
+    operationType: "write",
     description:
       "Create a mail rule that tells Paperless-ngx which mails of an account to consume and how to file the resulting documents. Requires the add_mailrule permission and change permission on the referenced account. Actions 2 (move) and 5 (tag) need action_parameter.",
     requiredScopes: [],
@@ -325,6 +335,7 @@ export const paperlessNgxMailActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_mail_rule",
+    operationType: "write",
     description:
       "Partially update a mail rule. Only the provided fields are sent; pass null to clear nullable fields. When changing action to 2 (move) or 5 (tag), send action_parameter in the same request because Paperless-ngx validates the pair together. Requires change permission on the rule.",
     requiredScopes: [],
@@ -337,6 +348,7 @@ export const paperlessNgxMailActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_mail_rule",
+    operationType: "destructive",
     description: "Delete a mail rule together with its processed mail records. Requires delete permission on the rule.",
     requiredScopes: [],
     inputSchema: s.object("The mail rule to delete.", { id: mailRuleIdField }),
@@ -344,6 +356,7 @@ export const paperlessNgxMailActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_processed_mail",
+    operationType: "read",
     description:
       "List the mails that mail rules have already processed, newest processed first by default, optionally filtered by rule or status. Only records the connected user owns, that are unowned, or that were shared with the user are returned.",
     requiredScopes: [],
@@ -363,6 +376,7 @@ export const paperlessNgxMailActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_processed_mail",
+    operationType: "read",
     description:
       "Get one processed mail record by id. Only records the connected user owns, that are unowned, or that were shared with the user are visible.",
     requiredScopes: [],
@@ -373,6 +387,7 @@ export const paperlessNgxMailActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "bulk_delete_processed_mail",
+    operationType: "destructive",
     description:
       "Delete several processed mail records at once so the corresponding mails can be fetched again on the next run. Paperless-ngx checks delete permission on every record first and rejects the whole request with status 403 if any is not permitted; ids that do not exist are silently skipped.",
     requiredScopes: [],

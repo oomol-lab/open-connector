@@ -27,6 +27,7 @@ const looseRecordSchema = s.looseObject("The raw Contentstack JSON object.");
 export const contentstackContentManagementActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_content_types",
+    operationType: "read",
     description: "List content types available in a Contentstack stack.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -50,6 +51,7 @@ export const contentstackContentManagementActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_content_type",
+    operationType: "read",
     description: "Retrieve one Contentstack content type schema by UID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -69,6 +71,7 @@ export const contentstackContentManagementActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_entries",
+    operationType: "read",
     description: "List Contentstack entries for a content type.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -93,6 +96,7 @@ export const contentstackContentManagementActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_entry",
+    operationType: "read",
     description: "Retrieve one Contentstack entry for a content type.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -113,6 +117,7 @@ export const contentstackContentManagementActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_entry",
+    operationType: "write",
     description: "Create one Contentstack entry for a content type.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -132,6 +137,7 @@ export const contentstackContentManagementActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_entry",
+    operationType: "write",
     description: "Update one Contentstack entry for a content type.",
     requiredScopes: [],
     inputSchema: s.object(

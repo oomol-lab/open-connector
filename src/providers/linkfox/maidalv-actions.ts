@@ -5,6 +5,7 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 export const maidalvAction: ProviderActionDefinition = defineProviderAction("linkfox", {
   name: "check_product_tro_risk",
+  operationType: "read",
   description:
     "Check product images and text for TRO, trademark, copyright, and patent risk through LinkFox and Maidalv.",
   inputSchema: s.object("Product TRO and intellectual-property risk detection parameters.", {

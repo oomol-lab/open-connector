@@ -80,6 +80,7 @@ const dateRangeInputSchema = s.object(
 export const biorxivMedrxivActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_preprints",
+    operationType: "read",
     description: "List bioRxiv or medRxiv preprint versions posted within a date range.",
     inputSchema: s.object(
       "Input parameters for listing preprints.",
@@ -99,6 +100,7 @@ export const biorxivMedrxivActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_preprint",
+    operationType: "read",
     description: "Get all versions of one bioRxiv or medRxiv preprint by DOI.",
     inputSchema: s.object("Input parameters for getting a preprint.", {
       server: serverSchema,
@@ -111,6 +113,7 @@ export const biorxivMedrxivActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_published_articles",
+    operationType: "read",
     description: "List bioRxiv preprints linked to journal publications within a date range.",
     inputSchema: dateRangeInputSchema,
     outputSchema: s.object("A page of preprint-to-publication mappings.", {
@@ -120,6 +123,7 @@ export const biorxivMedrxivActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_publisher_articles",
+    operationType: "read",
     description: "List published bioRxiv papers for a publisher DOI prefix and date range.",
     inputSchema: s.object(
       "A publisher DOI prefix, date range, and page offset.",
@@ -138,6 +142,7 @@ export const biorxivMedrxivActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_content_statistics",
+    operationType: "read",
     description: "Get monthly or yearly bioRxiv content submission statistics.",
     inputSchema: s.object("Input parameters for content statistics.", {
       interval: intervalSchema,
@@ -148,6 +153,7 @@ export const biorxivMedrxivActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_usage_statistics",
+    operationType: "read",
     description: "Get monthly or yearly usage statistics for bioRxiv or medRxiv.",
     inputSchema: s.object("Input parameters for usage statistics.", {
       server: serverSchema,

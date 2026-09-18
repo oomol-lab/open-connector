@@ -150,6 +150,7 @@ const reactionItemSchema = s.unknownObject("A Slack item with reactions.");
 export const slackActions: ActionDefinition[] = [
   action({
     name: "list_channels",
+    operationType: "read",
     description: "List Slack public channels visible to the connected Slack identity.",
     requiredScopes: ["channels:read"],
     inputSchema: s.object(
@@ -165,6 +166,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "get_channel_messages",
+    operationType: "read",
     description: "Get recent messages from a Slack conversation.",
     requiredScopes: ["channels:history", "groups:history", "im:history", "mpim:history"],
     inputSchema: s.object(
@@ -184,6 +186,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "search_messages",
+    operationType: "read",
     description:
       "Search Slack messages visible to the connected user. Supports Slack search modifiers such as in:channel_name and from:<@UserID>.",
     requiredScopes: ["search:read"],
@@ -223,6 +226,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "search_context",
+    operationType: "read",
     description: "Search Slack messages with the granular Real-time Search API.",
     requiredScopes: ["search:read.public"],
     inputSchema: s.object(
@@ -267,6 +271,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "post_message",
+    operationType: "write",
     description:
       "Post a Slack message. Use text for plain messages, or blocks for rich Block Kit layouts with text as fallback.",
     requiredScopes: ["chat:write"],
@@ -275,6 +280,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "reply_message",
+    operationType: "write",
     description: "Reply to a Slack thread. Use text, blocks, or attachments for the reply content.",
     requiredScopes: ["chat:write"],
     inputSchema: messageInputSchema(
@@ -289,6 +295,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "get_thread",
+    operationType: "read",
     description: "Get messages in a Slack thread.",
     requiredScopes: ["channels:history", "groups:history", "im:history", "mpim:history"],
     inputSchema: s.object(
@@ -308,6 +315,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "list_conversations",
+    operationType: "read",
     description: "List Slack conversations visible to the connected Slack identity.",
     requiredScopes: ["channels:read", "groups:read", "im:read", "mpim:read"],
     inputSchema: s.object(
@@ -329,6 +337,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "get_conversation",
+    operationType: "read",
     description: "Get metadata for a Slack conversation.",
     requiredScopes: ["channels:read", "groups:read", "im:read", "mpim:read"],
     inputSchema: s.object(
@@ -346,6 +355,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "open_conversation",
+    operationType: "write",
     description: "Open or resume a direct message with one Slack user.",
     requiredScopes: ["im:write"],
     inputSchema: s.object(
@@ -369,6 +379,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "list_users",
+    operationType: "read",
     description: "List Slack users visible to the connected Slack identity.",
     requiredScopes: ["users:read"],
     inputSchema: s.object(
@@ -389,6 +400,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "get_user",
+    operationType: "read",
     description: "Get metadata for a Slack user.",
     requiredScopes: ["users:read"],
     inputSchema: s.object(
@@ -405,6 +417,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "post_ephemeral_message",
+    operationType: "write",
     description: "Post an ephemeral Slack message visible only to one user in a conversation.",
     requiredScopes: ["chat:write"],
     inputSchema: messageInputSchema(
@@ -422,6 +435,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "get_message_permalink",
+    operationType: "read",
     description: "Get a permalink for a Slack message.",
     requiredScopes: ["channels:history", "groups:history", "im:history", "mpim:history"],
     inputSchema: s.object(
@@ -442,6 +456,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "update_message",
+    operationType: "write",
     description:
       "Update a Slack message posted through this connection. Provide text, blocks, or attachments as the new message content.",
     requiredScopes: ["chat:write"],
@@ -452,6 +467,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "delete_message",
+    operationType: "destructive",
     description: "Delete a Slack message posted through this connection.",
     requiredScopes: ["chat:write"],
     inputSchema: s.object(
@@ -465,6 +481,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "schedule_message",
+    operationType: "write",
     description: "Schedule a Slack message to be posted later. Use text or blocks for the scheduled content.",
     requiredScopes: ["chat:write"],
     inputSchema: messageInputSchema(
@@ -483,6 +500,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "add_reaction",
+    operationType: "write",
     description: "Add an emoji reaction to a Slack message.",
     requiredScopes: ["reactions:write"],
     inputSchema: reactionInputSchema("Input parameters for adding a Slack reaction."),
@@ -490,6 +508,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "remove_reaction",
+    operationType: "destructive",
     description: "Remove an emoji reaction from a Slack message.",
     requiredScopes: ["reactions:write"],
     inputSchema: reactionInputSchema("Input parameters for removing a Slack reaction."),
@@ -497,6 +516,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "get_reactions",
+    operationType: "read",
     description: "Get reactions for a Slack message.",
     requiredScopes: ["reactions:read"],
     inputSchema: s.object(
@@ -514,6 +534,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "upload_file",
+    operationType: "write",
     description:
       "Upload a file to Slack using the current external upload flow. Provide fileUrl; binary content is fetched by the connector runtime.",
     requiredScopes: ["files:write"],
@@ -541,6 +562,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "list_files",
+    operationType: "read",
     description: "List Slack files visible to the connected Slack identity, optionally filtered by channel or user.",
     requiredScopes: ["files:read"],
     inputSchema: s.object(
@@ -563,6 +585,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "get_file",
+    operationType: "read",
     description: "Get metadata for a Slack file.",
     requiredScopes: ["files:read"],
     inputSchema: s.object(
@@ -576,6 +599,7 @@ export const slackActions: ActionDefinition[] = [
   }),
   action({
     name: "delete_file",
+    operationType: "destructive",
     description: "Delete a Slack file.",
     requiredScopes: ["files:write"],
     inputSchema: s.object(

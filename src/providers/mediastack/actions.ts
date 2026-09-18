@@ -44,6 +44,7 @@ const articleSchema = s.object("Normalized news article returned by Mediastack."
 export const mediastackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_news_sources",
+    operationType: "read",
     description: "Search Mediastack news sources with language, country, category, and pagination filters.",
     inputSchema: s.object(
       "Input parameters for searching Mediastack news sources.",
@@ -64,6 +65,7 @@ export const mediastackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_live_news",
+    operationType: "read",
     description: "Search live Mediastack news articles with optional keyword, source, location, and sorting filters.",
     inputSchema: s.object(
       "Input parameters for searching Mediastack live news.",

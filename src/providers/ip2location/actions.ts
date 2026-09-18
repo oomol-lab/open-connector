@@ -137,18 +137,21 @@ const hostedDomainsOutputSchema = s.object("The hosted domains lookup payload re
 export const ip2locationActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_ip_geolocation",
+    operationType: "read",
     description: "Retrieve geolocation and network metadata for one IPv4 or IPv6 address.",
     inputSchema: ipInputSchema,
     outputSchema: ipGeolocationOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_domain_whois",
+    operationType: "read",
     description: "Retrieve WHOIS registration details for one domain.",
     inputSchema: domainInputSchema,
     outputSchema: domainWhoisOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_hosted_domains",
+    operationType: "read",
     description: "List the hosted domains associated with one IPv4 or IPv6 address.",
     inputSchema: hostedDomainsInputSchema,
     outputSchema: hostedDomainsOutputSchema,

@@ -10,6 +10,7 @@ const publicImageUrlSchema = s.url("The publicly reachable HTTP or HTTPS URL of 
 export const altTextGeneratorAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "generate_alt_text",
+    operationType: "read",
     description: "Generate concise, accessibility-friendly alt text for a publicly reachable image URL.",
     requiredScopes: [],
     inputSchema: s.object("Input for generating alt text from a public image URL.", {

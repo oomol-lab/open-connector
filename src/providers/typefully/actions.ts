@@ -172,48 +172,56 @@ const deleteDraftInputSchema = s.object("The input payload for deleting a Typefu
 export const typefullyActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Retrieve the Typefully user associated with the current API key.",
     inputSchema: s.object("This action does not require input.", {}),
     outputSchema: looseResponseSchema,
   }),
   defineProviderAction(service, {
     name: "list_social_sets",
+    operationType: "read",
     description: "List Typefully social sets available to the current API key.",
     inputSchema: listInputSchema,
     outputSchema: paginatedResponseSchema,
   }),
   defineProviderAction(service, {
     name: "get_social_set",
+    operationType: "read",
     description: "Retrieve details for a Typefully social set.",
     inputSchema: getSocialSetInputSchema,
     outputSchema: looseResponseSchema,
   }),
   defineProviderAction(service, {
     name: "list_drafts",
+    operationType: "read",
     description: "List Typefully drafts for a social set with optional filters.",
     inputSchema: listDraftsInputSchema,
     outputSchema: paginatedResponseSchema,
   }),
   defineProviderAction(service, {
     name: "create_draft",
+    operationType: "write",
     description: "Create a Typefully draft for a social set.",
     inputSchema: createDraftInputSchema,
     outputSchema: looseResponseSchema,
   }),
   defineProviderAction(service, {
     name: "get_draft",
+    operationType: "read",
     description: "Retrieve a Typefully draft by ID.",
     inputSchema: getDraftInputSchema,
     outputSchema: looseResponseSchema,
   }),
   defineProviderAction(service, {
     name: "update_draft",
+    operationType: "write",
     description: "Update a Typefully draft by ID.",
     inputSchema: updateDraftInputSchema,
     outputSchema: looseResponseSchema,
   }),
   defineProviderAction(service, {
     name: "delete_draft",
+    operationType: "destructive",
     description: "Delete a Typefully draft by ID.",
     inputSchema: deleteDraftInputSchema,
     outputSchema: s.object("The result returned after deleting a Typefully draft.", {

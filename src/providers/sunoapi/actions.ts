@@ -194,6 +194,7 @@ function inputSchema(description: string, fields: Record<string, JsonSchema>, op
 export const sunoapiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_remaining_credits",
+    operationType: "read",
     description: "Get remaining SunoAPI generation credits.",
     inputSchema: s.object("No input parameters are required.", {}),
     outputSchema: s.object("Remaining SunoAPI credits.", {
@@ -202,6 +203,7 @@ export const sunoapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "generate_music",
+    operationType: "write",
     description: "Submit a SunoAPI music generation task.",
     followUpActions: ["sunoapi.get_music_generation_details"],
     asyncLifecycle: {
@@ -237,6 +239,7 @@ export const sunoapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_music_generation_details",
+    operationType: "read",
     description: "Fetch SunoAPI music generation task details.",
     asyncLifecycle: {
       startActionId: "sunoapi.generate_music",
@@ -247,6 +250,7 @@ export const sunoapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "generate_lyrics",
+    operationType: "write",
     description: "Submit a SunoAPI lyrics generation task.",
     followUpActions: ["sunoapi.get_lyrics_generation_details"],
     asyncLifecycle: {
@@ -261,6 +265,7 @@ export const sunoapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_lyrics_generation_details",
+    operationType: "read",
     description: "Fetch SunoAPI lyrics generation task details.",
     asyncLifecycle: {
       startActionId: "sunoapi.generate_lyrics",
@@ -271,12 +276,14 @@ export const sunoapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_timestamped_lyrics",
+    operationType: "read",
     description: "Fetch timestamped lyrics for one generated audio item.",
     inputSchema: taskAudioInputSchema,
     outputSchema: objectOutputSchema,
   }),
   defineProviderAction(service, {
     name: "generate_persona",
+    operationType: "write",
     description: "Submit a SunoAPI persona generation request.",
     inputSchema: inputSchema(
       "The input payload for submitting a SunoAPI persona generation task.",
@@ -295,6 +302,7 @@ export const sunoapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "separate_vocals_from_music",
+    operationType: "read",
     description: "Submit a SunoAPI vocal separation task.",
     inputSchema: inputSchema("The input payload for submitting a SunoAPI vocal removal task.", {
       taskId: taskIdSchema,
@@ -306,12 +314,14 @@ export const sunoapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_vocal_separation_details",
+    operationType: "read",
     description: "Fetch SunoAPI vocal separation task details.",
     inputSchema: taskIdInputSchema,
     outputSchema: detailsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "extend_music",
+    operationType: "write",
     description: "Submit a SunoAPI music extension task.",
     inputSchema: inputSchema(
       "The input payload for submitting a SunoAPI music extension task.",
@@ -340,6 +350,7 @@ export const sunoapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upload_and_cover_audio",
+    operationType: "write",
     description: "Submit an uploaded audio cover generation task.",
     followUpActions: ["sunoapi.get_music_generation_details"],
     asyncLifecycle: {
@@ -376,6 +387,7 @@ export const sunoapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upload_and_extend_audio",
+    operationType: "write",
     description: "Submit an uploaded audio extension task.",
     followUpActions: ["sunoapi.get_music_generation_details"],
     asyncLifecycle: {
@@ -412,6 +424,7 @@ export const sunoapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_vocals",
+    operationType: "write",
     description: "Add vocals to uploaded audio through SunoAPI.",
     followUpActions: ["sunoapi.get_music_generation_details"],
     asyncLifecycle: { startActionId: "sunoapi.add_vocals", statusActionId: "sunoapi.get_music_generation_details" },
@@ -436,6 +449,7 @@ export const sunoapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_instrumental",
+    operationType: "write",
     description: "Add instrumental backing to uploaded audio through SunoAPI.",
     followUpActions: ["sunoapi.get_music_generation_details"],
     asyncLifecycle: {
@@ -462,6 +476,7 @@ export const sunoapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "boost_music_style",
+    operationType: "read",
     description: "Boost or expand a music style prompt.",
     inputSchema: inputSchema("The input payload for boosting a music style prompt.", {
       content: s.nonEmptyString("The style description."),
@@ -496,6 +511,7 @@ export const sunoapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "replace_music_section",
+    operationType: "destructive",
     description: "Replace a section of generated SunoAPI music.",
     inputSchema: inputSchema(
       "The input payload for replacing a SunoAPI music section.",
@@ -516,6 +532,7 @@ export const sunoapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "generate_mashup",
+    operationType: "write",
     description: "Submit a SunoAPI mashup task.",
     inputSchema: inputSchema(
       "The input payload for submitting a SunoAPI mashup task.",
@@ -539,6 +556,7 @@ export const sunoapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "generate_sounds",
+    operationType: "write",
     description: "Submit a SunoAPI sounds generation task.",
     followUpActions: ["sunoapi.get_music_generation_details"],
     asyncLifecycle: {
@@ -591,6 +609,7 @@ export const sunoapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "generate_music_cover",
+    operationType: "write",
     description: "Submit a SunoAPI music cover image task.",
     inputSchema: inputSchema("The input payload for submitting a SunoAPI music cover task.", {
       taskId: taskIdSchema,
@@ -600,12 +619,14 @@ export const sunoapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_music_cover_details",
+    operationType: "read",
     description: "Fetch SunoAPI music cover task details.",
     inputSchema: taskIdInputSchema,
     outputSchema: detailsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_music_video",
+    operationType: "write",
     description: "Submit a SunoAPI music video task.",
     inputSchema: inputSchema(
       "The input payload for submitting a SunoAPI music video task.",
@@ -622,12 +643,14 @@ export const sunoapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_music_video_details",
+    operationType: "read",
     description: "Fetch SunoAPI music video task details.",
     inputSchema: taskIdInputSchema,
     outputSchema: detailsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "convert_to_wav_format",
+    operationType: "write",
     description: "Submit a SunoAPI WAV conversion task.",
     inputSchema: inputSchema("The input payload for submitting a SunoAPI WAV conversion task.", {
       taskId: taskIdSchema,
@@ -638,12 +661,14 @@ export const sunoapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_wav_conversion_details",
+    operationType: "read",
     description: "Fetch SunoAPI WAV conversion task details.",
     inputSchema: taskIdInputSchema,
     outputSchema: detailsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "generate_midi",
+    operationType: "write",
     description: "Submit a SunoAPI MIDI generation task.",
     inputSchema: inputSchema("The input payload for submitting a SunoAPI MIDI generation task.", {
       taskId: taskIdSchema,
@@ -654,6 +679,7 @@ export const sunoapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_midi_generation_details",
+    operationType: "read",
     description: "Fetch SunoAPI MIDI generation task details.",
     inputSchema: taskIdInputSchema,
     outputSchema: detailsOutputSchema,

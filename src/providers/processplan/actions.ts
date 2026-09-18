@@ -16,6 +16,7 @@ const listFields = {
 export const processplanActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_process_templates",
+    operationType: "read",
     description: "List ProcessPlan process templates that the current user can start.",
     inputSchema: s.object("Pagination and filtering options for process templates.", listFields),
     outputSchema: s.requiredObject("The ProcessPlan process template list.", {
@@ -24,6 +25,7 @@ export const processplanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_process",
+    operationType: "write",
     description: "Start a ProcessPlan process from a template and optionally populate its fields.",
     inputSchema: s.object(
       "The template and optional initial field values for a new process.",
@@ -42,6 +44,7 @@ export const processplanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_process_instances",
+    operationType: "read",
     description: "List ProcessPlan process instances, optionally limited to one template and status.",
     inputSchema: s.object("Filters for ProcessPlan process instances.", {
       processTemplateId: s.nonEmptyString("The process template ID whose instances should be listed."),
@@ -58,6 +61,7 @@ export const processplanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_my_pending_tasks",
+    operationType: "read",
     description: "List pending ProcessPlan tasks assigned to the current API token user.",
     inputSchema: s.object("Pagination and filtering options for pending tasks.", listFields),
     outputSchema: s.requiredObject("The current user's pending ProcessPlan task list.", {

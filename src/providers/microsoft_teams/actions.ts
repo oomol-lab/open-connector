@@ -16,6 +16,7 @@ const service = "microsoft_teams";
 
 interface MicrosoftTeamsActionSource {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   providerPermissions: string[];
@@ -151,6 +152,7 @@ function paginated(itemName: string, itemSchema: JsonSchema): JsonSchema {
 const actions: MicrosoftTeamsActionSource[] = [
   action(
     "get_current_user",
+    "read",
     "Get the profile for the connected Microsoft work or school account.",
     microsoftTeamsProfileScopes,
     input({}),
@@ -158,6 +160,7 @@ const actions: MicrosoftTeamsActionSource[] = [
   ),
   action(
     "list_joined_teams",
+    "read",
     "List teams that the connected account has joined.",
     microsoftTeamsTeamScopes,
     input({ nextLink }),
@@ -165,6 +168,7 @@ const actions: MicrosoftTeamsActionSource[] = [
   ),
   action(
     "get_team",
+    "read",
     "Get one Microsoft team by ID.",
     microsoftTeamsTeamScopes,
     input({ teamId, select }, ["teamId"]),
@@ -172,6 +176,7 @@ const actions: MicrosoftTeamsActionSource[] = [
   ),
   action(
     "list_team_channels",
+    "read",
     "List channels visible to the connected account in a team.",
     microsoftTeamsChannelScopes,
     input({ teamId, select, filter: s.string("OData filter expression."), nextLink }, ["teamId"]),
@@ -179,6 +184,7 @@ const actions: MicrosoftTeamsActionSource[] = [
   ),
   action(
     "get_channel",
+    "read",
     "Get one channel in a Microsoft team.",
     microsoftTeamsChannelScopes,
     input({ teamId, channelId, select }, ["teamId", "channelId"]),
@@ -186,6 +192,7 @@ const actions: MicrosoftTeamsActionSource[] = [
   ),
   action(
     "list_channel_messages",
+    "read",
     "List channel posts with optionally expanded replies, or continue root-message or reply pagination.",
     microsoftTeamsChannelMessageReadScopes,
     input(
@@ -202,6 +209,7 @@ const actions: MicrosoftTeamsActionSource[] = [
   ),
   action(
     "list_chats",
+    "read",
     "List chats that include the connected account.",
     microsoftTeamsChatReadScopes,
     input({
@@ -217,6 +225,7 @@ const actions: MicrosoftTeamsActionSource[] = [
   ),
   action(
     "list_chat_messages",
+    "read",
     "List messages from an existing one-on-one, group, or meeting chat.",
     microsoftTeamsChatReadScopes,
     input(
@@ -233,6 +242,7 @@ const actions: MicrosoftTeamsActionSource[] = [
   ),
   action(
     "send_channel_message",
+    "write",
     "Send a new root message to a Microsoft Teams channel.",
     microsoftTeamsChannelMessageSendScopes,
     input({ teamId, channelId, ...messageWriteFields }, ["teamId", "channelId", "body"]),
@@ -240,6 +250,7 @@ const actions: MicrosoftTeamsActionSource[] = [
   ),
   action(
     "reply_to_channel_message",
+    "write",
     "Reply to an existing root message in a Microsoft Teams channel.",
     microsoftTeamsChannelMessageSendScopes,
     input({ teamId, channelId, messageId, ...messageWriteFields }, ["teamId", "channelId", "messageId", "body"]),
@@ -247,6 +258,7 @@ const actions: MicrosoftTeamsActionSource[] = [
   ),
   action(
     "send_chat_message",
+    "write",
     "Send a message to an existing one-on-one, group, or meeting chat.",
     microsoftTeamsChatMessageSendScopes,
     input({ chatId, ...messageWriteFields }, ["chatId", "body"]),
@@ -258,6 +270,7 @@ export const microsoftTeamsActions: ActionDefinition[] = actions.map((source) =>
 
 function action(
   name: string,
+  operationType: ActionDefinition["operationType"],
   description: string,
   scopes: string[],
   inputSchema: JsonSchema,
@@ -265,6 +278,7 @@ function action(
 ): MicrosoftTeamsActionSource {
   return {
     name,
+    operationType,
     description,
     requiredScopes: scopes,
     providerPermissions: scopes,

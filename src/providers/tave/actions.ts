@@ -72,6 +72,7 @@ const studioSchema = s.object("The current Táve studio profile returned by the 
 export const taveActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List contacts in the current Táve studio with official pagination, hidden, email, and sort filters.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -105,6 +106,7 @@ export const taveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Fetch one Táve contact by its official ULID identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -118,6 +120,7 @@ export const taveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_my_studio",
+    operationType: "read",
     description: "Fetch the current Táve studio profile for the connected API key.",
     requiredScopes: [],
     inputSchema: s.actionInput({}, [], "The input payload for fetching the current Táve studio."),

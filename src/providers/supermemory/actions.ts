@@ -129,6 +129,7 @@ const documentSchema = s.looseRequiredObject(
 export const supermemoryActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_memories",
+    operationType: "write",
     description: "Store one or more already-known facts directly as immediately searchable Supermemory memories.",
     inputSchema: s.requiredObject("The facts and tenant boundary for direct memory creation.", {
       memories: s.array("The exact facts to store.", memoryInputSchema, {
@@ -147,6 +148,7 @@ export const supermemoryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_document",
+    operationType: "write",
     description:
       "Submit raw text, a transcript, or a public URL for asynchronous memory extraction or managed RAG indexing.",
     asyncLifecycle: {
@@ -182,6 +184,7 @@ export const supermemoryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document",
+    operationType: "read",
     description:
       "Get a Supermemory document and its current processing status, including the final extracted content when available.",
     asyncLifecycle: {
@@ -195,6 +198,7 @@ export const supermemoryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search",
+    operationType: "read",
     description: "Recall relevant memories, document chunks, or both for a question within one tenant container.",
     inputSchema: s.requiredObject("The recall query, tenant boundary, and optional ranking controls.", {
       q: s.nonEmptyString("The question or semantic search query."),
@@ -222,6 +226,7 @@ export const supermemoryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_profile",
+    operationType: "read",
     description: "Retrieve long-term, recent, and bucketed profile context for one user or tenant container.",
     inputSchema: s.requiredObject("The tenant boundary and optional profile search controls.", {
       containerTag: containerTagSchema,
@@ -260,6 +265,7 @@ export const supermemoryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_memory",
+    operationType: "write",
     description: "Correct one memory by ID, creating a new version while preserving its prior version history.",
     inputSchema: s.requiredObject("The memory correction and tenant boundary.", {
       memoryId: s.nonEmptyString("The identifier of the memory to update."),
@@ -286,6 +292,7 @@ export const supermemoryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "forget_memory",
+    operationType: "destructive",
     description: "Soft-delete one memory by ID so it is excluded from normal recall while remaining auditable.",
     inputSchema: s.requiredObject("The memory to forget and its tenant boundary.", {
       memoryId: s.nonEmptyString("The identifier of the memory to forget."),
@@ -299,6 +306,7 @@ export const supermemoryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_document",
+    operationType: "destructive",
     description: "Permanently delete one source document by its Supermemory ID or caller-provided custom ID.",
     inputSchema: s.requiredObject("The source document to delete.", {
       id: s.nonEmptyString("The Supermemory document ID or caller-provided custom ID."),

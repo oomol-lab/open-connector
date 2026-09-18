@@ -121,6 +121,7 @@ export type DocsumoActionName =
 export const docsumoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_info",
+    operationType: "read",
     description: "Get Docsumo account details, monthly document quota usage, and the currently enabled document types.",
     requiredScopes: [],
     inputSchema: s.object("No input parameters are required for retrieving account info.", {}),
@@ -138,6 +139,7 @@ export const docsumoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upload_document_from_url",
+    operationType: "write",
     description:
       "Upload one public file URL to Docsumo for a chosen document type and return the queued document metadata.",
     requiredScopes: [],
@@ -163,6 +165,7 @@ export const docsumoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_documents",
+    operationType: "read",
     description:
       "List Docsumo documents with optional folder, type, status, search, sorting, and created-date filters.",
     requiredScopes: [],
@@ -213,6 +216,7 @@ export const docsumoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document_detail",
+    operationType: "read",
     description:
       "Get Docsumo document detail metadata for one document, including page information and preview assets.",
     requiredScopes: [],
@@ -225,6 +229,7 @@ export const docsumoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_extracted_data",
+    operationType: "read",
     description:
       "Get the simplified extracted Docsumo data for one document and preserve the dynamic section and field structure.",
     requiredScopes: [],
@@ -239,6 +244,7 @@ export const docsumoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_documents_summary",
+    operationType: "read",
     description:
       "Get the Docsumo documents summary grouped by document type, including disabled types and status counts.",
     requiredScopes: [],

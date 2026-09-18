@@ -211,6 +211,7 @@ const listAppEventsInputSchema = s.object(
 export const shopifyPartnerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_app",
+    operationType: "read",
     description: "Retrieve one Shopify Partner app by GraphQL global ID.",
     inputSchema: s.object("The Shopify Partner app lookup input.", { id: graphQlIdSchema }, { required: ["id"] }),
     outputSchema: s.object("The Shopify Partner app response.", {
@@ -219,6 +220,7 @@ export const shopifyPartnerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_app_events",
+    operationType: "read",
     description: "List app events for a Shopify Partner app.",
     inputSchema: listAppEventsInputSchema,
     outputSchema: s.object("The Shopify Partner app events response.", {
@@ -229,6 +231,7 @@ export const shopifyPartnerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_partner_events",
+    operationType: "read",
     description: "List historical Shopify Partner events for the authenticated organization.",
     inputSchema: listPartnerEventsInputSchema,
     outputSchema: s.object("The Shopify Partner historical events response.", {
@@ -238,6 +241,7 @@ export const shopifyPartnerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_transactions",
+    operationType: "read",
     description: "List transactions that impact Shopify Partner earnings.",
     inputSchema: listTransactionsInputSchema,
     outputSchema: s.object("The Shopify Partner transactions response.", {
@@ -247,6 +251,7 @@ export const shopifyPartnerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "execute_graphql",
+    operationType: "write",
     description:
       "Execute a JSON-friendly Shopify Partner GraphQL query or mutation against the connected organization.",
     inputSchema: s.object(

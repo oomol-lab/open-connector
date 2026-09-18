@@ -37,6 +37,7 @@ const getDetailsFromLinkedinUrlOutputSchema = s.object(
 export const aeroleadsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_details_from_linkedin_url",
+    operationType: "read",
     description:
       "Retrieve prospect details, emails, phone numbers, company, education, skills, and related profile data from a public LinkedIn profile URL using AeroLeads.",
     inputSchema: getDetailsFromLinkedinUrlInputSchema,

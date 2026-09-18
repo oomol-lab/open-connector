@@ -148,6 +148,7 @@ const displayOptionsSchema: Record<string, JsonSchema> = {
 export const apiBibleActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_bibles",
+    operationType: "read",
     description: "List Bible versions from API.Bible with optional language, abbreviation, or name filters.",
     inputSchema: s.object(
       "Input parameters for listing Bible versions from API.Bible.",
@@ -164,6 +165,7 @@ export const apiBibleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_books",
+    operationType: "read",
     description: "List books for one Bible version from API.Bible.",
     inputSchema: s.object(
       "Input parameters for listing books from one Bible version.",
@@ -178,6 +180,7 @@ export const apiBibleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_chapters",
+    operationType: "read",
     description: "List chapters for one book in one Bible version from API.Bible.",
     inputSchema: s.object(
       "Input parameters for listing chapters from one book.",
@@ -193,6 +196,7 @@ export const apiBibleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_chapter",
+    operationType: "read",
     description: "Retrieve one chapter with configurable display options from API.Bible.",
     inputSchema: displayInput("Input parameters for retrieving one chapter from API.Bible.", {
       bibleId: s.nonEmptyString("The Bible identifier used to retrieve the chapter."),
@@ -209,6 +213,7 @@ export const apiBibleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_verses",
+    operationType: "read",
     description: "List verses for one chapter in one Bible version from API.Bible.",
     inputSchema: s.object(
       "Input parameters for listing verses from one chapter.",
@@ -224,6 +229,7 @@ export const apiBibleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_verse",
+    operationType: "read",
     description: "Retrieve one verse with configurable display options from API.Bible.",
     inputSchema: displayInput("Input parameters for retrieving one verse from API.Bible.", {
       bibleId: s.nonEmptyString("The Bible identifier used to retrieve the verse."),
@@ -240,6 +246,7 @@ export const apiBibleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_passage",
+    operationType: "read",
     description: "Retrieve one passage with configurable display options from API.Bible.",
     inputSchema: displayInput("Input parameters for retrieving one passage from API.Bible.", {
       bibleId: s.nonEmptyString("The Bible identifier used to retrieve the passage."),
@@ -256,6 +263,7 @@ export const apiBibleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_scripture",
+    operationType: "read",
     description:
       "Search scripture within one Bible version from API.Bible and preserve whether the result is verse-based or passage-based.",
     inputSchema: s.object(

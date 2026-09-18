@@ -38,6 +38,7 @@ const paperSchema = s.looseObject("A research paper returned by Consensus.", {
 
 const searchPapersAction = defineProviderAction(service, {
   name: "search_papers",
+  operationType: "read",
   description: "Search Consensus for relevance-ranked academic papers with publication, study, and quality filters.",
   requiredScopes: [],
   inputSchema: s.object(

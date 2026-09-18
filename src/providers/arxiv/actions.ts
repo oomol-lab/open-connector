@@ -84,6 +84,7 @@ allFieldsInputSchema.anyOf = [
 export const arxivActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_papers",
+    operationType: "read",
     description: "Search arXiv papers using the official arXiv API query syntax.",
     inputSchema: s.object(
       "Input parameters for searching arXiv papers.",
@@ -97,6 +98,7 @@ export const arxivActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_by_author",
+    operationType: "read",
     description: "Search arXiv papers by author name.",
     inputSchema: s.object(
       "Input parameters for searching arXiv papers by author.",
@@ -110,6 +112,7 @@ export const arxivActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_by_title",
+    operationType: "read",
     description: "Search arXiv papers by title text.",
     inputSchema: s.object(
       "Input parameters for searching arXiv papers by title.",
@@ -123,6 +126,7 @@ export const arxivActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_by_abstract",
+    operationType: "read",
     description: "Search arXiv papers by abstract text.",
     inputSchema: s.object(
       "Input parameters for searching arXiv papers by abstract.",
@@ -136,12 +140,14 @@ export const arxivActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_by_all_fields",
+    operationType: "read",
     description: "Search arXiv papers by combining optional all-field, author, title, abstract, and category filters.",
     inputSchema: allFieldsInputSchema,
     outputSchema: searchOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_paper",
+    operationType: "read",
     description: "Get one arXiv paper by arXiv identifier.",
     inputSchema: s.object("Input parameters for getting one arXiv paper.", {
       id: arxivIdSchema,
@@ -153,6 +159,7 @@ export const arxivActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_papers",
+    operationType: "read",
     description: "Get multiple arXiv papers by arXiv identifiers.",
     inputSchema: s.object(
       "Input parameters for getting multiple arXiv papers.",
@@ -169,6 +176,7 @@ export const arxivActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_recent_papers",
+    operationType: "read",
     description: "List recent arXiv papers for one category sorted by submission date.",
     inputSchema: s.object(
       "Input parameters for listing recent arXiv papers in a category.",

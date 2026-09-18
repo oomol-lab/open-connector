@@ -264,6 +264,7 @@ const sendMessageInputSchema = {
 export const manusActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_task",
+    operationType: "write",
     description:
       "Create a new asynchronous Manus task from a message and optional project, connector, skill, sharing, or structured-output settings.",
     followUpActions: ["manus.list_task_messages", "manus.get_task"],
@@ -272,6 +273,7 @@ export const manusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task",
+    operationType: "read",
     description: "Retrieve a Manus task's current status and metadata.",
     inputSchema: s.object("Input parameters for retrieving a Manus task.", {
       task_id: nonEmptyString("The task ID to retrieve, including supported Manus shortcuts."),
@@ -280,6 +282,7 @@ export const manusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "List Manus tasks with optional scope filters and cursor pagination.",
     inputSchema: s.object(
       "Input parameters for listing Manus tasks.",
@@ -297,6 +300,7 @@ export const manusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_task_messages",
+    operationType: "read",
     description: "List Manus task event messages with cursor pagination.",
     inputSchema: s.object(
       "Input parameters for listing Manus task messages.",
@@ -314,6 +318,7 @@ export const manusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send a follow-up message to an existing Manus task.",
     followUpActions: ["manus.list_task_messages"],
     inputSchema: sendMessageInputSchema,
@@ -321,6 +326,7 @@ export const manusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "stop_task",
+    operationType: "destructive",
     description: "Stop a running Manus task.",
     inputSchema: s.object("Input parameters for stopping a Manus task.", {
       task_id: nonEmptyString("The running task ID to stop."),
@@ -329,6 +335,7 @@ export const manusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_task",
+    operationType: "destructive",
     description: "Permanently delete a stopped Manus task. Stop a running task before deleting it.",
     inputSchema: s.object("Input parameters for deleting a Manus task.", {
       task_id: nonEmptyString("The task ID to delete."),
@@ -337,6 +344,7 @@ export const manusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_task",
+    operationType: "write",
     description: "Update a Manus task title, sharing visibility, or task-list visibility.",
     inputSchema: s.object(
       "Input parameters for updating Manus task metadata.",
@@ -352,6 +360,7 @@ export const manusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "confirm_task_action",
+    operationType: "write",
     description:
       "Confirm a pending Manus task action from a waiting status event. Use send_message instead for messageAskUser events.",
     followUpActions: ["manus.list_task_messages"],
@@ -368,6 +377,7 @@ export const manusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create a Manus project for grouping tasks under shared instructions.",
     inputSchema: s.object(
       "Input parameters for creating a Manus project.",
@@ -381,18 +391,21 @@ export const manusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Manus projects available to the current account.",
     inputSchema: s.object("Input parameters for listing Manus projects.", {}),
     outputSchema: projectListOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_connectors",
+    operationType: "read",
     description: "List Manus connectors installed in the current account.",
     inputSchema: s.object("Input parameters for listing Manus connectors.", {}),
     outputSchema: connectorListOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_skills",
+    operationType: "read",
     description: "List Manus skills available to the current account or project.",
     inputSchema: s.object(
       "Input parameters for listing Manus skills.",
@@ -405,12 +418,14 @@ export const manusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_agents",
+    operationType: "read",
     description: "List Manus custom agents in the current account.",
     inputSchema: s.object("Input parameters for listing Manus agents.", {}),
     outputSchema: agentListOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_agent",
+    operationType: "read",
     description: "Retrieve a Manus custom agent by ID.",
     inputSchema: s.object("Input parameters for retrieving a Manus agent.", {
       agent_id: nonEmptyString("The agent ID to retrieve."),
@@ -419,6 +434,7 @@ export const manusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_agent",
+    operationType: "write",
     description: "Update a Manus custom agent's display name or description.",
     inputSchema: s.object(
       "Input parameters for updating a Manus agent.",
@@ -433,6 +449,7 @@ export const manusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_online_browser_clients",
+    operationType: "read",
     description: "List online Manus browser clients that can be selected when confirming browser connection events.",
     inputSchema: s.object("Input parameters for listing online Manus browser clients.", {}),
     outputSchema: browserClientListOutputSchema,

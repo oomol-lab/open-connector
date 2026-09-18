@@ -34,6 +34,7 @@ const submissionSchema = s.looseRequiredObject(
 export const formspreeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_submissions",
+    operationType: "read",
     description: "List submissions for a Formspree form with optional filters.",
     requiredScopes: [],
     inputSchema: s.object(

@@ -23,6 +23,7 @@ const pagination = { page, perPage };
 export const ticketSourceActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_events",
+    operationType: "read",
     description: "List events in the connected TicketSource account.",
     requiredScopes: [],
     inputSchema: s.object("Pagination for listing TicketSource events.", pagination, {
@@ -36,6 +37,7 @@ export const ticketSourceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_event",
+    operationType: "read",
     description: "Get one TicketSource event by its case-sensitive identifier.",
     requiredScopes: [],
     inputSchema: s.object("Input for getting a TicketSource event.", { eventId: resourceId }),
@@ -43,6 +45,7 @@ export const ticketSourceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_event_venues",
+    operationType: "read",
     description: "List venues associated with a TicketSource event.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -60,6 +63,7 @@ export const ticketSourceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_event_dates",
+    operationType: "read",
     description: "List performance dates associated with a TicketSource event.",
     requiredScopes: [],
     inputSchema: s.object(

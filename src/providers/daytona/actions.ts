@@ -31,6 +31,7 @@ const sandboxOutputSchema = s.object("A Daytona sandbox result.", {
 export const daytonaActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_sandboxes",
+    operationType: "read",
     description: "List Daytona sandboxes with cursor pagination and common filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -56,6 +57,7 @@ export const daytonaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_sandbox",
+    operationType: "read",
     description: "Get one Daytona sandbox by ID or name.",
     requiredScopes: [],
     inputSchema: sandboxIdInputSchema,
@@ -63,6 +65,7 @@ export const daytonaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_sandbox",
+    operationType: "write",
     description: "Create a Daytona sandbox from a snapshot with optional resource and lifecycle settings.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -111,6 +114,7 @@ export const daytonaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_sandbox",
+    operationType: "write",
     description: "Start, restore, or resume a Daytona sandbox according to its current state.",
     requiredScopes: [],
     inputSchema: sandboxIdInputSchema,
@@ -118,6 +122,7 @@ export const daytonaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "stop_sandbox",
+    operationType: "destructive",
     description: "Stop a Daytona sandbox, optionally forcing an immediate stop.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -132,6 +137,7 @@ export const daytonaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_sandbox",
+    operationType: "destructive",
     description: "Delete a Daytona sandbox by ID or name.",
     requiredScopes: [],
     inputSchema: sandboxIdInputSchema,

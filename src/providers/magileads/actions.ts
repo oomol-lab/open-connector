@@ -37,6 +37,7 @@ const stateOutput = s.looseRequiredObject("A successful Magileads mutation respo
 export const magileadsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contact_lists",
+    operationType: "read",
     description: "List all Magileads contact lists available to the authenticated account, including shared lists.",
     inputSchema: s.object("This action does not require any input.", {}),
     outputSchema: s.looseRequiredObject("The Magileads contact list collection response.", {
@@ -46,6 +47,7 @@ export const magileadsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact_list",
+    operationType: "read",
     description: "Get the profile and metadata of one Magileads contact list by identifier.",
     inputSchema: idInput,
     outputSchema: s.looseRequiredObject("The Magileads contact list profile response.", {
@@ -55,6 +57,7 @@ export const magileadsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact_list",
+    operationType: "write",
     description: "Create a Magileads contact list with optional tags, folder, language, and country metadata.",
     inputSchema: s.object("The contact list attributes to create.", mutationFields, { required: ["name"] }),
     outputSchema: s.looseRequiredObject("The Magileads contact list creation response.", {
@@ -64,12 +67,14 @@ export const magileadsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact_list",
+    operationType: "write",
     description: "Update the metadata of one Magileads contact list by identifier.",
     inputSchema: updateInputSchema,
     outputSchema: stateOutput,
   }),
   defineProviderAction(service, {
     name: "delete_contact_list",
+    operationType: "destructive",
     description: "Delete one Magileads contact list by identifier.",
     inputSchema: idInput,
     outputSchema: stateOutput,

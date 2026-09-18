@@ -3,6 +3,7 @@ import type { UnifapiOperationDefinition } from "../operations.ts";
 export const tiktokOperations: readonly UnifapiOperationDefinition[] = [
   {
     name: "get_tiktok_recommended_feed",
+    operationType: "read",
     operationId: "postTiktokFeedRecommended",
     description: "Get TikTok recommendation videos.",
     method: "POST",
@@ -39,6 +40,7 @@ export const tiktokOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_tiktok_hashtag",
+    operationType: "read",
     operationId: "getTiktokHashtagsById",
     description: "Get a TikTok hashtag by ID.",
     method: "GET",
@@ -63,6 +65,7 @@ export const tiktokOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_tiktok_hashtag_videos",
+    operationType: "read",
     operationId: "getTiktokHashtagsByIdVideos",
     description: "List videos tagged with a TikTok hashtag.",
     method: "GET",
@@ -98,6 +101,7 @@ export const tiktokOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_tiktok_music",
+    operationType: "read",
     operationId: "getTiktokMusicById",
     description: "Get a TikTok music track by ID.",
     method: "GET",
@@ -122,6 +126,7 @@ export const tiktokOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_tiktok_music_videos",
+    operationType: "read",
     operationId: "getTiktokMusicByIdVideos",
     description: "List videos using a TikTok music track.",
     method: "GET",
@@ -157,6 +162,7 @@ export const tiktokOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_tiktok_hashtags",
+    operationType: "read",
     operationId: "getTiktokSearchHashtags",
     description: "Search TikTok hashtags by keyword.",
     method: "GET",
@@ -192,6 +198,7 @@ export const tiktokOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_tiktok",
+    operationType: "read",
     operationId: "getTiktokSearch",
     description: "General TikTok search (returns videos).",
     method: "GET",
@@ -227,6 +234,7 @@ export const tiktokOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_tiktok_users",
+    operationType: "read",
     operationId: "getTiktokSearchUsers",
     description: "Search TikTok users by keyword.",
     method: "GET",
@@ -262,6 +270,7 @@ export const tiktokOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_tiktok_videos",
+    operationType: "read",
     operationId: "getTiktokSearchVideos",
     description: "Search TikTok videos by keyword.",
     method: "GET",
@@ -297,6 +306,7 @@ export const tiktokOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_tiktok_user_followers",
+    operationType: "read",
     operationId: "getTiktokUsersByIdFollowers",
     description: "List a TikTok user's followers.",
     method: "GET",
@@ -332,6 +342,7 @@ export const tiktokOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_tiktok_user_following",
+    operationType: "read",
     operationId: "getTiktokUsersByIdFollowing",
     description: "List users a TikTok user is following.",
     method: "GET",
@@ -367,6 +378,7 @@ export const tiktokOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_tiktok_user_likes",
+    operationType: "read",
     operationId: "getTiktokUsersByIdLikes",
     description: "List videos liked by a TikTok user.",
     method: "GET",
@@ -402,6 +414,7 @@ export const tiktokOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_tiktok_user",
+    operationType: "read",
     operationId: "getTiktokUsersById",
     description: "Get a TikTok user profile.",
     method: "GET",
@@ -426,6 +439,7 @@ export const tiktokOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_tiktok_user_videos",
+    operationType: "read",
     operationId: "getTiktokUsersByIdVideos",
     description: "List videos posted by a TikTok user.",
     method: "GET",
@@ -461,6 +475,7 @@ export const tiktokOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "resolve_tiktok_user",
+    operationType: "read",
     operationId: "getTiktokUsersResolve",
     description: "Resolve a TikTok username to a user id.",
     method: "GET",
@@ -485,6 +500,7 @@ export const tiktokOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_tiktok_video_comment_replies",
+    operationType: "read",
     operationId: "getTiktokVideosByIdCommentsByCommentIdReplies",
     description: "List replies to a TikTok comment.",
     method: "GET",
@@ -525,6 +541,7 @@ export const tiktokOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_tiktok_video_comments",
+    operationType: "read",
     operationId: "getTiktokVideosByIdComments",
     description: "List top-level comments on a TikTok video.",
     method: "GET",
@@ -560,6 +577,7 @@ export const tiktokOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_tiktok_video",
+    operationType: "read",
     operationId: "getTiktokVideosById",
     description: "Get a TikTok video by ID.",
     method: "GET",
@@ -584,6 +602,7 @@ export const tiktokOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "batch_get_tiktok_videos",
+    operationType: "read",
     operationId: "postTiktokVideosBatch",
     description: "Batch-fetch TikTok videos by ID.",
     method: "POST",
@@ -614,6 +633,7 @@ export const tiktokOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "resolve_tiktok_video",
+    operationType: "read",
     operationId: "getTiktokVideosResolve",
     description: "Resolve a TikTok share URL to a video.",
     method: "GET",

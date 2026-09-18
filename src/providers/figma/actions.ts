@@ -132,6 +132,7 @@ const devResourceUpdateSchema: JsonSchema = {
 
 interface FigmaActionSource {
   name: FigmaActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   providerPermissions: string[];
@@ -170,6 +171,7 @@ export type FigmaActionName =
 const figmaActionSources: FigmaActionSource[] = [
   {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current Figma user associated with the credential.",
     requiredScopes: ["current_user:read"],
     providerPermissions: ["current_user:read"],
@@ -178,6 +180,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "get_file_metadata",
+    operationType: "read",
     description: "Get lightweight metadata for a Figma file without fetching its full document.",
     requiredScopes: ["file_metadata:read"],
     providerPermissions: ["file_metadata:read"],
@@ -188,6 +191,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "get_file",
+    operationType: "read",
     description: "Get the JSON document for a Figma file or branch.",
     requiredScopes: ["file_content:read"],
     providerPermissions: ["file_content:read"],
@@ -208,6 +212,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "get_file_nodes",
+    operationType: "read",
     description: "Get JSON for selected node IDs from a Figma file or branch.",
     requiredScopes: ["file_content:read"],
     providerPermissions: ["file_content:read"],
@@ -227,6 +232,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "render_images",
+    operationType: "read",
     description: "Render selected Figma file nodes and return temporary image URLs.",
     requiredScopes: ["file_content:read"],
     providerPermissions: ["file_content:read"],
@@ -251,6 +257,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "get_image_fills",
+    operationType: "read",
     description: "Get temporary download URLs for image fills used in a Figma file.",
     requiredScopes: ["file_content:read"],
     providerPermissions: ["file_content:read"],
@@ -261,6 +268,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "list_file_versions",
+    operationType: "read",
     description: "List version history records for a Figma file.",
     requiredScopes: ["file_versions:read"],
     providerPermissions: ["file_versions:read"],
@@ -278,6 +286,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "list_comments",
+    operationType: "read",
     description: "List comments on a Figma file or branch.",
     requiredScopes: ["file_comments:read"],
     providerPermissions: ["file_comments:read"],
@@ -288,6 +297,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "post_comment",
+    operationType: "write",
     description: "Post a comment on a Figma file or branch.",
     requiredScopes: ["file_comments:write"],
     providerPermissions: ["file_comments:write"],
@@ -305,6 +315,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "delete_comment",
+    operationType: "destructive",
     description: "Delete a Figma comment created by the authenticated user.",
     requiredScopes: ["file_comments:write"],
     providerPermissions: ["file_comments:write"],
@@ -316,6 +327,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "list_comment_reactions",
+    operationType: "read",
     description: "List emoji reactions on a Figma file comment.",
     requiredScopes: ["file_comments:read"],
     providerPermissions: ["file_comments:read"],
@@ -332,6 +344,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "post_comment_reaction",
+    operationType: "write",
     description: "Add an emoji reaction to a Figma file comment.",
     requiredScopes: ["file_comments:write"],
     providerPermissions: ["file_comments:write"],
@@ -344,6 +357,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "delete_comment_reaction",
+    operationType: "destructive",
     description: "Delete an emoji reaction created by the authenticated user.",
     requiredScopes: ["file_comments:write"],
     providerPermissions: ["file_comments:write"],
@@ -356,6 +370,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "list_team_projects",
+    operationType: "read",
     description: "List projects visible to the authenticated user in a Figma team.",
     requiredScopes: ["projects:read"],
     providerPermissions: ["projects:read"],
@@ -366,6 +381,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "get_project_metadata",
+    operationType: "read",
     description: "Get metadata for a Figma project.",
     requiredScopes: ["project_metadata:read"],
     providerPermissions: ["project_metadata:read"],
@@ -376,6 +392,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "list_project_files",
+    operationType: "read",
     description: "List files in a Figma project.",
     requiredScopes: ["projects:read"],
     providerPermissions: ["projects:read"],
@@ -391,6 +408,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "list_file_components",
+    operationType: "read",
     description: "List published components in a Figma main file library.",
     requiredScopes: ["library_content:read"],
     providerPermissions: ["library_content:read"],
@@ -401,6 +419,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "list_file_component_sets",
+    operationType: "read",
     description: "List published component sets in a Figma main file library.",
     requiredScopes: ["library_content:read"],
     providerPermissions: ["library_content:read"],
@@ -411,6 +430,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "list_file_styles",
+    operationType: "read",
     description: "List published styles in a Figma main file library.",
     requiredScopes: ["library_content:read"],
     providerPermissions: ["library_content:read"],
@@ -421,6 +441,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "get_component",
+    operationType: "read",
     description: "Get metadata for a published Figma component by key.",
     requiredScopes: ["library_assets:read"],
     providerPermissions: ["library_assets:read"],
@@ -431,6 +452,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "get_component_set",
+    operationType: "read",
     description: "Get metadata for a published Figma component set by key.",
     requiredScopes: ["library_assets:read"],
     providerPermissions: ["library_assets:read"],
@@ -441,6 +463,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "get_style",
+    operationType: "read",
     description: "Get metadata for a published Figma style by key.",
     requiredScopes: ["library_assets:read"],
     providerPermissions: ["library_assets:read"],
@@ -451,6 +474,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "get_dev_resources",
+    operationType: "read",
     description: "Get dev resources attached to a Figma main file.",
     requiredScopes: ["file_dev_resources:read"],
     providerPermissions: ["file_dev_resources:read"],
@@ -466,6 +490,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "create_dev_resources",
+    operationType: "write",
     description: "Create dev resources and attach them to Figma file nodes.",
     requiredScopes: ["file_dev_resources:write"],
     providerPermissions: ["file_dev_resources:write"],
@@ -476,6 +501,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "update_dev_resources",
+    operationType: "write",
     description: "Update existing Figma dev resources.",
     requiredScopes: ["file_dev_resources:write"],
     providerPermissions: ["file_dev_resources:write"],
@@ -486,6 +512,7 @@ const figmaActionSources: FigmaActionSource[] = [
   },
   {
     name: "delete_dev_resource",
+    operationType: "destructive",
     description: "Delete a Figma dev resource from a main file.",
     requiredScopes: ["file_dev_resources:write"],
     providerPermissions: ["file_dev_resources:write"],
@@ -500,6 +527,7 @@ const figmaActionSources: FigmaActionSource[] = [
 export const figmaActions: ActionDefinition[] = figmaActionSources.map((action) =>
   defineProviderAction(service, {
     name: action.name,
+    operationType: action.operationType,
     description: action.description,
     requiredScopes: action.requiredScopes,
     providerPermissions: action.providerPermissions,

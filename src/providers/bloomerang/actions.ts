@@ -28,6 +28,7 @@ const listOutputSchema = s.requiredObject("A page of records returned by Bloomer
 
 const listConstituentsAction = defineProviderAction(service, {
   name: "list_constituents",
+  operationType: "read",
   description: "List Bloomerang constituents with pagination, identity, and modification filters.",
   inputSchema: s.object(
     "Filters and pagination for listing Bloomerang constituents.",
@@ -66,6 +67,7 @@ const listConstituentsAction = defineProviderAction(service, {
 
 const searchConstituentsAction = defineProviderAction(service, {
   name: "search_constituents",
+  operationType: "read",
   description: "Search Bloomerang constituents and households by text.",
   inputSchema: s.object(
     "Text, type filter, and pagination for searching Bloomerang records.",
@@ -81,6 +83,7 @@ const searchConstituentsAction = defineProviderAction(service, {
 
 const getConstituentAction = defineProviderAction(service, {
   name: "get_constituent",
+  operationType: "read",
   description: "Get one Bloomerang constituent by its API ID.",
   inputSchema: s.requiredObject("The identifier of the Bloomerang constituent to retrieve.", {
     constituentId: s.positiveInteger("The constituent ID used by the Bloomerang API."),

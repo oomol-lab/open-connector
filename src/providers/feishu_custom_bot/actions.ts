@@ -45,6 +45,7 @@ const sendResultSchema = s.object(
 export const feishuCustomBotActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_text_message",
+    operationType: "write",
     description: "Send a text message through the Feishu/Lark custom bot webhook.",
     inputSchema: s.requiredObject("Input for sending a Feishu text message.", {
       text: s.string("The text message content. You can include Feishu <at ...> tags inline.", {
@@ -55,6 +56,7 @@ export const feishuCustomBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_post_message",
+    operationType: "write",
     description: "Send a post rich-text message through the Feishu/Lark custom bot webhook.",
     inputSchema: s.requiredObject("Input for sending a Feishu post rich-text message.", {
       post: postPayloadSchema,
@@ -63,6 +65,7 @@ export const feishuCustomBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_image_message",
+    operationType: "write",
     description: "Send an image message through the Feishu/Lark custom bot webhook.",
     inputSchema: s.requiredObject("Input for sending a Feishu image message.", {
       imageKey: s.string("The Feishu image_key obtained from the image upload API.", { minLength: 1 }),
@@ -71,6 +74,7 @@ export const feishuCustomBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_share_chat_message",
+    operationType: "write",
     description: "Send a shared-chat card through the Feishu/Lark custom bot webhook.",
     inputSchema: s.requiredObject("Input for sending a Feishu shared-chat message.", {
       shareChatId: s.string("The Feishu chat ID used in the share_chat message payload.", { minLength: 1 }),
@@ -79,6 +83,7 @@ export const feishuCustomBotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_interactive_message",
+    operationType: "write",
     description: "Send an interactive card message through the Feishu/Lark custom bot webhook.",
     inputSchema: s.requiredObject("Input for sending a Feishu interactive card message.", {
       card: s.looseObject(

@@ -101,6 +101,7 @@ const edgeListOutputSchema = s.object("A Semantic Scholar paper edge list respon
 
 const getPaperAction = defineProviderAction(service, {
   name: "get_paper",
+  operationType: "read",
   description: "Get details for a Semantic Scholar paper by paper ID or external identifier.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -118,6 +119,7 @@ const getPaperAction = defineProviderAction(service, {
 
 const getPapersAction = defineProviderAction(service, {
   name: "get_papers",
+  operationType: "read",
   description: "Get details for multiple Semantic Scholar papers at once.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -135,6 +137,7 @@ const getPapersAction = defineProviderAction(service, {
 
 const searchPapersAction = defineProviderAction(service, {
   name: "search_papers",
+  operationType: "read",
   description: "Search Semantic Scholar papers by relevance with optional publication filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -172,6 +175,7 @@ const searchPapersAction = defineProviderAction(service, {
 
 const bulkSearchPapersAction = defineProviderAction(service, {
   name: "bulk_search_papers",
+  operationType: "read",
   description: "Bulk-search Semantic Scholar papers and page through large result sets with tokens.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -209,6 +213,7 @@ const bulkSearchPapersAction = defineProviderAction(service, {
 
 const matchPaperTitleAction = defineProviderAction(service, {
   name: "match_paper_title",
+  operationType: "read",
   description: "Find the best Semantic Scholar paper match for a paper title.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -227,6 +232,7 @@ const matchPaperTitleAction = defineProviderAction(service, {
 
 const autocompletePapersAction = defineProviderAction(service, {
   name: "autocomplete_papers",
+  operationType: "read",
   description: "Suggest Semantic Scholar paper query completions.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -248,6 +254,7 @@ const autocompletePapersAction = defineProviderAction(service, {
 
 const getPaperAuthorsAction = defineProviderAction(service, {
   name: "get_paper_authors",
+  operationType: "read",
   description: "List authors for a Semantic Scholar paper.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -265,6 +272,7 @@ const getPaperAuthorsAction = defineProviderAction(service, {
 
 const getPaperCitationsAction = defineProviderAction(service, {
   name: "get_paper_citations",
+  operationType: "read",
   description: "List papers that cite a Semantic Scholar paper.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -282,6 +290,7 @@ const getPaperCitationsAction = defineProviderAction(service, {
 
 const getPaperReferencesAction = defineProviderAction(service, {
   name: "get_paper_references",
+  operationType: "read",
   description: "List papers referenced by a Semantic Scholar paper.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -299,6 +308,7 @@ const getPaperReferencesAction = defineProviderAction(service, {
 
 const searchAuthorsAction = defineProviderAction(service, {
   name: "search_authors",
+  operationType: "read",
   description: "Search Semantic Scholar authors by name.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -316,6 +326,7 @@ const searchAuthorsAction = defineProviderAction(service, {
 
 const getAuthorAction = defineProviderAction(service, {
   name: "get_author",
+  operationType: "read",
   description: "Get details for a Semantic Scholar author.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -333,6 +344,7 @@ const getAuthorAction = defineProviderAction(service, {
 
 const getAuthorsAction = defineProviderAction(service, {
   name: "get_authors",
+  operationType: "read",
   description: "Get details for multiple Semantic Scholar authors at once.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -350,6 +362,7 @@ const getAuthorsAction = defineProviderAction(service, {
 
 const getAuthorPapersAction = defineProviderAction(service, {
   name: "get_author_papers",
+  operationType: "read",
   description: "List papers written by a Semantic Scholar author.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -367,6 +380,7 @@ const getAuthorPapersAction = defineProviderAction(service, {
 
 const searchSnippetsAction = defineProviderAction(service, {
   name: "search_snippets",
+  operationType: "read",
   description: "Search text snippets in Semantic Scholar papers.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -388,6 +402,7 @@ const searchSnippetsAction = defineProviderAction(service, {
 
 const recommendForPaperAction = defineProviderAction(service, {
   name: "recommend_for_paper",
+  operationType: "read",
   description: "Get recommended Semantic Scholar papers for one positive example paper.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -404,6 +419,7 @@ const recommendForPaperAction = defineProviderAction(service, {
 
 const recommendPapersAction = defineProviderAction(service, {
   name: "recommend_papers",
+  operationType: "read",
   description: "Get recommended Semantic Scholar papers from positive and optional negative examples.",
   requiredScopes: [],
   inputSchema: s.object(

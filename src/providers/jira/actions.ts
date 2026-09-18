@@ -8,6 +8,7 @@ const service = "jira";
 
 interface JiraActionSource {
   name: JiraActionName;
+  readonly operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -83,6 +84,7 @@ const comment = s.object(
 const actions: JiraActionSource[] = [
   action(
     "list_projects",
+    "read",
     "List Jira projects available to the connected Jira site.",
     jiraReadScopes,
     input({
@@ -94,6 +96,7 @@ const actions: JiraActionSource[] = [
   ),
   action(
     "get_project",
+    "read",
     "Get one Jira project by project ID or key.",
     jiraReadScopes,
     input(
@@ -107,6 +110,7 @@ const actions: JiraActionSource[] = [
   ),
   action(
     "search_issues",
+    "read",
     "Search Jira issues with JQL on the connected Jira site.",
     jiraReadScopes,
     input(
@@ -123,6 +127,7 @@ const actions: JiraActionSource[] = [
   ),
   action(
     "get_issue",
+    "read",
     "Get one Jira issue by issue ID or key.",
     jiraReadScopes,
     input(
@@ -137,6 +142,7 @@ const actions: JiraActionSource[] = [
   ),
   action(
     "create_issue",
+    "write",
     "Create a Jira issue and return the normalized issue detail.",
     jiraWriteScopes,
     input(
@@ -167,6 +173,7 @@ const actions: JiraActionSource[] = [
   ),
   action(
     "list_issue_comments",
+    "read",
     "List comments for one Jira issue.",
     jiraReadScopes,
     input(
@@ -182,6 +189,7 @@ const actions: JiraActionSource[] = [
   ),
   action(
     "add_comment",
+    "write",
     "Add a comment to one Jira issue.",
     jiraWriteScopes,
     input(
@@ -211,6 +219,7 @@ export type JiraActionName =
 export const jiraActions: ActionDefinition[] = actions.map((source) =>
   defineProviderAction(service, {
     name: source.name,
+    operationType: source.operationType,
     description: source.description,
     requiredScopes: source.requiredScopes,
     providerPermissions: source.requiredScopes,
@@ -221,12 +230,13 @@ export const jiraActions: ActionDefinition[] = actions.map((source) =>
 
 function action(
   name: JiraActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   requiredScopes: string[],
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): JiraActionSource {
-  return { name, description, requiredScopes, inputSchema, outputSchema };
+  return { name, operationType, description, requiredScopes, inputSchema, outputSchema };
 }
 
 function input(properties: Record<string, JsonSchema>, required: string[] = []): JsonSchema {

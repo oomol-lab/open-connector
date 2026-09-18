@@ -109,6 +109,7 @@ function transcriptFormatSchema(description: string) {
 export const speechmaticsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "submit_transcription",
+    operationType: "write",
     description:
       "Submit media by URL to the Speechmatics Batch API and return a job ID for status polling and transcript retrieval.",
     inputSchema: s.object(
@@ -158,6 +159,7 @@ export const speechmaticsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_transcription_job",
+    operationType: "read",
     description: "Get the current status, metadata, and errors for a Speechmatics Batch job.",
     inputSchema: s.object(
       "A Speechmatics Batch job status request.",
@@ -178,6 +180,7 @@ export const speechmaticsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_transcript",
+    operationType: "read",
     description: "Retrieve a completed Speechmatics transcript as JSON, plain text, or SRT subtitles.",
     inputSchema: s.object(
       "A Speechmatics transcript retrieval request.",
@@ -201,6 +204,7 @@ export const speechmaticsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_service_capabilities",
+    operationType: "read",
     description:
       "Query the Speechmatics Discovery API for current Batch transcription, translation, language identification, and language metadata capabilities in a cloud region.",
     inputSchema: s.object(
@@ -221,6 +225,7 @@ export const speechmaticsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_deployments",
+    operationType: "read",
     description:
       "List the Speechmatics Batch and Realtime SaaS production deployments documented for general and enterprise customers.",
     inputSchema: s.object(

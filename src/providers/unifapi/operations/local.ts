@@ -3,6 +3,7 @@ import type { UnifapiOperationDefinition } from "../operations.ts";
 export const localOperations: readonly UnifapiOperationDefinition[] = [
   {
     name: "search_local",
+    operationType: "read",
     operationId: "postLocalSearch",
     description: "Search Local Finder.",
     method: "POST",

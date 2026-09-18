@@ -152,6 +152,7 @@ const orderOutput = (kind: string) =>
 const list = (name: string, description: string, key: string, item: string) =>
   defineProviderAction(service, {
     name,
+    operationType: "read",
     description,
     requiredScopes: [],
     inputSchema: listInput,
@@ -166,6 +167,7 @@ export const megaventoryActions: ActionDefinition[] = [
   ),
   defineProviderAction(service, {
     name: "upsert_product",
+    operationType: "write",
     description: "Insert a new Megaventory product or update its non-empty fields by SKU.",
     requiredScopes: [],
     inputSchema: product,
@@ -200,6 +202,7 @@ export const megaventoryActions: ActionDefinition[] = [
   ),
   defineProviderAction(service, {
     name: "upsert_sales_order",
+    operationType: "write",
     description: "Insert or update a Megaventory sales order with one or more order lines.",
     requiredScopes: [],
     inputSchema: order("sales"),
@@ -213,6 +216,7 @@ export const megaventoryActions: ActionDefinition[] = [
   ),
   defineProviderAction(service, {
     name: "upsert_purchase_order",
+    operationType: "write",
     description: "Insert or update a Megaventory purchase order with one or more order lines.",
     requiredScopes: [],
     inputSchema: order("purchase"),

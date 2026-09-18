@@ -25,6 +25,7 @@ const recordWriteOutput = s.requiredObject("Records returned by AITable.", {
 export const aitableAiActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_spaces",
+    operationType: "read",
     description: "List the AITable spaces accessible to the authenticated user.",
     inputSchema: s.object("Input for listing accessible AITable spaces.", {}),
     outputSchema: s.requiredObject("Accessible AITable spaces.", {
@@ -39,6 +40,7 @@ export const aitableAiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_nodes",
+    operationType: "read",
     description: "List the top-level file nodes in an AITable space.",
     inputSchema: s.requiredObject("Input for listing top-level AITable nodes.", { spaceId }),
     outputSchema: s.requiredObject("Top-level AITable nodes.", {
@@ -54,6 +56,7 @@ export const aitableAiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_fields",
+    operationType: "read",
     description: "List field definitions for an AITable datasheet.",
     inputSchema: s.requiredObject("Input for listing AITable datasheet fields.", { datasheetId }),
     outputSchema: s.requiredObject("AITable datasheet fields.", {
@@ -69,6 +72,7 @@ export const aitableAiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_views",
+    operationType: "read",
     description: "List views configured for an AITable datasheet.",
     inputSchema: s.requiredObject("Input for listing AITable datasheet views.", { datasheetId }),
     outputSchema: s.requiredObject("AITable datasheet views.", {
@@ -84,6 +88,7 @@ export const aitableAiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_records",
+    operationType: "read",
     description: "List a page of records from an AITable datasheet.",
     inputSchema: s.object(
       "Input for listing a page of AITable records.",
@@ -108,6 +113,7 @@ export const aitableAiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_records",
+    operationType: "write",
     description: "Create up to 10 records in an AITable datasheet.",
     inputSchema: s.object(
       "Input for creating AITable records.",
@@ -125,6 +131,7 @@ export const aitableAiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_records",
+    operationType: "write",
     description: "Update up to 10 existing records in an AITable datasheet.",
     inputSchema: s.object(
       "Input for updating AITable records.",
@@ -142,6 +149,7 @@ export const aitableAiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_records",
+    operationType: "destructive",
     description: "Delete up to 10 records from an AITable datasheet.",
     inputSchema: s.requiredObject("Input for deleting AITable records.", {
       datasheetId,

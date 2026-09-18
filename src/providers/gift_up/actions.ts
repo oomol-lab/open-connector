@@ -220,12 +220,14 @@ const successResultSchema = s.object("The Gift Up operation result.", {
 export const giftUpActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description: "Get the Gift Up company associated with the API key.",
     inputSchema: s.object("Input parameters for getting the Gift Up company.", {}),
     outputSchema: s.object("The Gift Up company response.", { company: companySchema }),
   }),
   defineProviderAction(service, {
     name: "list_gift_cards",
+    operationType: "read",
     description: "List Gift Up gift cards with optional filters.",
     inputSchema: s.object(
       "Input parameters for listing Gift Up gift cards.",
@@ -266,36 +268,42 @@ export const giftUpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_gift_card",
+    operationType: "read",
     description: "Get one Gift Up gift card by code.",
     inputSchema: s.object("Input parameters for getting a Gift Up gift card.", { code: codeSchema }),
     outputSchema: s.object("The Gift Up gift card response.", { giftCard: giftCardSchema }),
   }),
   defineProviderAction(service, {
     name: "reactivate_gift_card",
+    operationType: "write",
     description: "Reactivate a voided Gift Up gift card.",
     inputSchema: optionalEventInputSchema,
     outputSchema: successResultSchema,
   }),
   defineProviderAction(service, {
     name: "void_gift_card",
+    operationType: "destructive",
     description: "Void a Gift Up gift card so it can no longer be redeemed.",
     inputSchema: optionalEventInputSchema,
     outputSchema: successResultSchema,
   }),
   defineProviderAction(service, {
     name: "top_up_gift_card",
+    operationType: "write",
     description: "Add currency amount or units to a Gift Up gift card.",
     inputSchema: topUpBalanceOperationInputSchema,
     outputSchema: transactionResultSchema,
   }),
   defineProviderAction(service, {
     name: "redeem_gift_card",
+    operationType: "destructive",
     description: "Redeem a currency amount or units from a Gift Up gift card.",
     inputSchema: redeemBalanceOperationInputSchema,
     outputSchema: transactionResultSchema,
   }),
   defineProviderAction(service, {
     name: "redeem_gift_card_in_full",
+    operationType: "destructive",
     description: "Redeem all remaining balance from a Gift Up gift card.",
     inputSchema: s.object(
       "Input parameters for redeeming a Gift Up gift card in full.",
@@ -310,6 +318,7 @@ export const giftUpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "undo_gift_card_redemption",
+    operationType: "write",
     description: "Undo a previous Gift Up gift card redemption transaction.",
     inputSchema: s.object(
       "Input parameters for undoing a Gift Up gift card redemption.",
@@ -325,6 +334,7 @@ export const giftUpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_items",
+    operationType: "read",
     description: "List Gift Up items, optionally filtered by item group.",
     inputSchema: s.object(
       "Input parameters for listing Gift Up items.",
@@ -338,12 +348,14 @@ export const giftUpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_item",
+    operationType: "read",
     description: "Get one Gift Up item by ID.",
     inputSchema: s.object("Input parameters for getting a Gift Up item.", { id: idSchema }),
     outputSchema: s.object("The Gift Up item response.", { item: itemSchema }),
   }),
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description: "List Gift Up orders with optional filters.",
     inputSchema: s.object(
       "Input parameters for listing Gift Up orders.",
@@ -372,6 +384,7 @@ export const giftUpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_order",
+    operationType: "read",
     description: "Get one Gift Up order by ID or order number.",
     inputSchema: s.object("Input parameters for getting a Gift Up order.", {
       id: nonEmptyStringSchema("The Gift Up order ID or order number."),
@@ -380,6 +393,7 @@ export const giftUpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_locations",
+    operationType: "read",
     description: "List Gift Up account locations.",
     inputSchema: s.object("Input parameters for listing Gift Up locations.", {}),
     outputSchema: s.object("The Gift Up location list response.", {
@@ -389,6 +403,7 @@ export const giftUpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_promotions",
+    operationType: "read",
     description: "List Gift Up promotions.",
     inputSchema: s.object("Input parameters for listing Gift Up promotions.", {}),
     outputSchema: s.object("The Gift Up promotion list response.", {
@@ -398,6 +413,7 @@ export const giftUpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_report_transactions",
+    operationType: "read",
     description: "List Gift Up report transactions with optional filters.",
     inputSchema: s.object(
       "Input parameters for listing Gift Up report transactions.",
@@ -448,6 +464,7 @@ export const giftUpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_report_transaction",
+    operationType: "read",
     description: "Get one Gift Up report transaction by ID.",
     inputSchema: s.object("Input parameters for getting a Gift Up report transaction.", { id: idSchema }),
     outputSchema: s.object("The Gift Up report transaction response.", { transaction: transactionSchema }),

@@ -210,6 +210,7 @@ const topicPageInput = s.object(
 export const getnoteActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "save_note",
+    operationType: "write",
     description:
       "Save a plain-text, link, or image-URL note to Getnote. Plain text and Getnote share links are synchronous; regular links and image notes may return tasks.",
     requiredScopes: [],
@@ -223,6 +224,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_save_task",
+    operationType: "read",
     description: "Check the progress of an asynchronous Getnote link or image save task.",
     requiredScopes: [],
     providerPermissions: ["note.content.write"],
@@ -237,6 +239,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_notes",
+    operationType: "read",
     description: "List recent Getnote notes using the official cursor pagination endpoint.",
     requiredScopes: [],
     providerPermissions: ["note.content.read"],
@@ -251,6 +254,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_note",
+    operationType: "read",
     description: "Get one Getnote note detail, including fields that are not present in lists.",
     requiredScopes: [],
     providerPermissions: ["note.content.read"],
@@ -266,6 +270,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_note",
+    operationType: "write",
     description: "Update a Getnote note title, plain-text content, or tags. Tags replace the existing tag list.",
     requiredScopes: [],
     providerPermissions: ["note.content.write"],
@@ -283,6 +288,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_note",
+    operationType: "destructive",
     description: "Move a Getnote note to trash.",
     requiredScopes: [],
     providerPermissions: ["note.content.trash"],
@@ -291,6 +297,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "share_note",
+    operationType: "write",
     description: "Generate or retrieve the idempotent public share link for a Getnote note.",
     requiredScopes: [],
     providerPermissions: ["note.content.read"],
@@ -306,6 +313,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_note_tags",
+    operationType: "read",
     description: "List tags attached to one Getnote note.",
     requiredScopes: [],
     providerPermissions: ["note.tag.read", "note.content.read"],
@@ -314,6 +322,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_note_tags",
+    operationType: "write",
     description: "Add one or more tags to a Getnote note.",
     requiredScopes: [],
     providerPermissions: ["note.tag.write"],
@@ -325,6 +334,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_note_tag",
+    operationType: "destructive",
     description: "Remove one Getnote tag by tag ID. System tags cannot be deleted upstream.",
     requiredScopes: [],
     providerPermissions: ["note.tag.write"],
@@ -338,6 +348,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_notes",
+    operationType: "read",
     description: "Run Getnote semantic search globally, or within one knowledge base when topicId is provided.",
     requiredScopes: [],
     providerPermissions: ["note.recall.read", "note.topic.recall.read"],
@@ -358,6 +369,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_knowledge_bases",
+    operationType: "read",
     description: "List knowledge bases owned by the authenticated Getnote account.",
     requiredScopes: [],
     providerPermissions: ["topic.read"],
@@ -366,6 +378,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subscribed_knowledge_bases",
+    operationType: "read",
     description:
       "List knowledge bases subscribed by the authenticated Getnote account. These are read-only unless the user is an admin.",
     requiredScopes: [],
@@ -375,6 +388,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_knowledge_base",
+    operationType: "write",
     description: "Create a Getnote knowledge base. Upstream limits creation to 50 per day.",
     requiredScopes: [],
     providerPermissions: ["topic.write"],
@@ -396,6 +410,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_knowledge_base_notes",
+    operationType: "read",
     description: "List notes in one Getnote knowledge base.",
     requiredScopes: [],
     providerPermissions: ["note.topic.read"],
@@ -404,6 +419,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_notes_to_knowledge_base",
+    operationType: "write",
     description:
       "Add up to 20 notes to one Getnote knowledge base. Subscribed knowledge bases are read-only unless the user is an admin.",
     requiredScopes: [],
@@ -416,6 +432,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_notes_from_knowledge_base",
+    operationType: "destructive",
     description: "Remove notes from one Getnote knowledge base.",
     requiredScopes: [],
     providerPermissions: ["note.topic.write"],
@@ -427,6 +444,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_knowledge_base_bloggers",
+    operationType: "read",
     description: "List bloggers subscribed in one Getnote knowledge base.",
     requiredScopes: [],
     providerPermissions: ["topic.blogger.read"],
@@ -435,6 +453,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_blogger_contents",
+    operationType: "read",
     description: "List content items for a subscribed blogger in a Getnote knowledge base.",
     requiredScopes: [],
     providerPermissions: ["topic.blogger.read"],
@@ -453,6 +472,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_blogger_content",
+    operationType: "read",
     description: "Get one Getnote blogger content detail, including original text when returned.",
     requiredScopes: [],
     providerPermissions: ["topic.blogger.read"],
@@ -466,6 +486,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_knowledge_base_lives",
+    operationType: "read",
     description: "List completed live sessions in one Getnote knowledge base.",
     requiredScopes: [],
     providerPermissions: ["topic.live.read"],
@@ -474,6 +495,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_live_detail",
+    operationType: "read",
     description: "Get one Getnote live detail, including AI summary and transcript when returned.",
     requiredScopes: [],
     providerPermissions: ["topic.live.read"],
@@ -487,6 +509,7 @@ export const getnoteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "follow_live",
+    operationType: "write",
     description:
       "Subscribe a Dedao live channel link into one Getnote knowledge base. Upstream currently supports Dedao App live links.",
     requiredScopes: [],

@@ -21,6 +21,7 @@ const listPaginationFields = {
 export const namelyActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_profiles",
+    operationType: "read",
     description: "List Namely employee profiles visible to the personal access token.",
     inputSchema: s.object("The input payload for listing Namely profiles.", listPaginationFields, {
       optional: ["page", "perPage"],
@@ -39,6 +40,7 @@ export const namelyActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_profile",
+    operationType: "read",
     description: "Get one Namely employee profile by profile ID.",
     inputSchema: s.object(
       "The input payload for getting a Namely profile.",
@@ -59,6 +61,7 @@ export const namelyActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_current_profile",
+    operationType: "read",
     description: "Get the Namely profile associated with the personal access token.",
     inputSchema: s.object("The input payload for getting the current Namely profile.", {}),
     outputSchema: s.object(
@@ -73,6 +76,7 @@ export const namelyActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_profile_fields",
+    operationType: "read",
     description: "List Namely profile fields configured for the company.",
     inputSchema: s.object("The input payload for listing Namely profile fields.", {}),
     outputSchema: s.object(

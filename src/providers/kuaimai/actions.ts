@@ -128,6 +128,7 @@ const tradeInputSchema = {
 export const kuaimaiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "refresh_session",
+    operationType: "write",
     description: "Extend the Kuaimai Open Platform session validity by another 30 days.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to refresh the configured Kuaimai session.", {}),
@@ -137,6 +138,7 @@ export const kuaimaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_warehouses",
+    operationType: "read",
     description: "List warehouses configured for the connected Kuaimai ERP company.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -157,6 +159,7 @@ export const kuaimaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_shops",
+    operationType: "read",
     description: "List shops configured for the connected Kuaimai ERP company.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -176,6 +179,7 @@ export const kuaimaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List products and their SKU records from Kuaimai ERP.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -217,6 +221,7 @@ export const kuaimaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Get one Kuaimai ERP product by system ID or merchant product code.",
     requiredScopes: [],
     inputSchema: {
@@ -237,6 +242,7 @@ export const kuaimaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_inventory",
+    operationType: "read",
     description: "List warehouse inventory for a Kuaimai merchant product or SKU code.",
     requiredScopes: [],
     inputSchema: {
@@ -260,6 +266,7 @@ export const kuaimaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description:
       "List Kuaimai ERP orders, excluding Taobao/Tmall and Pinduoduo orders that require separate platform credentials.",
     requiredScopes: [],
@@ -272,6 +279,7 @@ export const kuaimaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sales_stockouts",
+    operationType: "read",
     description: "List Kuaimai ERP sales stockout records and their order details.",
     requiredScopes: [],
     inputSchema: tradeInputSchema,

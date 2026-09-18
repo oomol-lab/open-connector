@@ -7,6 +7,7 @@ const service = "monday";
 
 interface MondayActionSource {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   providerPermissions: string[];
   inputSchema: JsonSchema;
@@ -127,6 +128,7 @@ function output(
 const actions: MondayActionSource[] = [
   {
     name: "get_current_user",
+    operationType: "read",
     description: "Retrieve the Monday user associated with the current personal API token.",
     providerPermissions: ["me:read", "account:read"],
     inputSchema: emptyInputSchema,
@@ -134,6 +136,7 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "list_workspaces",
+    operationType: "read",
     description: "List Monday workspaces with official filters and pagination.",
     providerPermissions: ["workspaces:read"],
     inputSchema: input("The input payload for listing Monday workspaces.", {
@@ -150,6 +153,7 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "create_workspace",
+    operationType: "write",
     description: "Create a Monday workspace with the official create_workspace mutation.",
     providerPermissions: ["workspaces:write"],
     inputSchema: input(
@@ -168,6 +172,7 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "update_workspace",
+    operationType: "write",
     description: "Update a Monday workspace with the official update_workspace mutation.",
     providerPermissions: ["workspaces:write"],
     inputSchema: {
@@ -190,6 +195,7 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "delete_workspace",
+    operationType: "destructive",
     description: "Delete a Monday workspace with the official delete_workspace mutation.",
     providerPermissions: ["workspaces:write"],
     inputSchema: input("The input payload for deleting a Monday workspace.", { workspace_id: idSchema }, [
@@ -201,6 +207,7 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "list_boards",
+    operationType: "read",
     description: "List Monday boards with official pagination and board-level filters.",
     providerPermissions: ["boards:read"],
     inputSchema: input("The input payload for listing Monday boards.", {
@@ -217,6 +224,7 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "list_groups",
+    operationType: "read",
     description: "List the groups for a specific Monday board.",
     providerPermissions: ["boards:read"],
     inputSchema: input(
@@ -233,6 +241,7 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "list_board_columns",
+    operationType: "read",
     description: "List the columns for a specific Monday board.",
     providerPermissions: ["boards:read"],
     inputSchema: input("The input payload for listing board columns.", { board_id: idSchema }, ["board_id"]),
@@ -242,6 +251,7 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "list_users",
+    operationType: "read",
     description: "List Monday users with official root-level filters and pagination.",
     providerPermissions: ["users:read", "account:read"],
     inputSchema: input("The input payload for listing Monday users.", {
@@ -257,6 +267,7 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "list_teams",
+    operationType: "read",
     description: "List Monday teams, optionally filtering by team IDs.",
     providerPermissions: ["teams:read"],
     inputSchema: input("The input payload for listing Monday teams.", {
@@ -268,6 +279,7 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "list_team_members",
+    operationType: "read",
     description: "List the members of a specific Monday team.",
     providerPermissions: ["teams:read"],
     inputSchema: input("The input payload for listing Monday team members.", { team_id: idSchema }, ["team_id"]),
@@ -277,6 +289,7 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "create_group",
+    operationType: "write",
     description: "Create a Monday group on an existing board.",
     providerPermissions: ["boards:write"],
     inputSchema: input(
@@ -291,6 +304,7 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "update_group",
+    operationType: "write",
     description: "Update an existing Monday group attribute.",
     providerPermissions: ["boards:write"],
     inputSchema: input(
@@ -313,6 +327,7 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "delete_group",
+    operationType: "destructive",
     description: "Delete a Monday group from an existing board.",
     providerPermissions: ["boards:write"],
     inputSchema: input(
@@ -329,6 +344,7 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "create_board",
+    operationType: "write",
     description: "Create a Monday board with the official create_board mutation.",
     providerPermissions: ["boards:write"],
     inputSchema: input(
@@ -345,6 +361,7 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "update_board",
+    operationType: "destructive",
     description: "Update a Monday board attribute with the official update_board mutation.",
     providerPermissions: ["boards:write"],
     inputSchema: input(
@@ -365,6 +382,7 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "archive_board",
+    operationType: "destructive",
     description: "Archive a Monday board.",
     providerPermissions: ["boards:write"],
     inputSchema: input("The input payload for archiving a Monday board.", { board_id: idSchema }, ["board_id"]),
@@ -374,6 +392,7 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "delete_board",
+    operationType: "destructive",
     description: "Delete a Monday board.",
     providerPermissions: ["boards:write"],
     inputSchema: input("The input payload for deleting a Monday board.", { board_id: idSchema }, ["board_id"]),
@@ -383,6 +402,7 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "create_column",
+    operationType: "write",
     description: "Create a Monday column on an existing board.",
     providerPermissions: ["boards:write"],
     inputSchema: input(
@@ -400,6 +420,7 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "update_column",
+    operationType: "write",
     description: "Update a Monday column with the official update_column mutation.",
     providerPermissions: ["boards:write"],
     inputSchema: input(
@@ -419,6 +440,7 @@ const actions: MondayActionSource[] = [
   },
   {
     name: "delete_column",
+    operationType: "destructive",
     description: "Delete a Monday column from an existing board.",
     providerPermissions: ["boards:write"],
     inputSchema: input(
@@ -439,6 +461,7 @@ actions.push(
   ...[
     action(
       "get_items",
+      "read",
       "Retrieve specific Monday items by ID.",
       ["boards:read"],
       input("The input payload for retrieving Monday items.", { ids: idArraySchema }, ["ids"]),
@@ -446,6 +469,7 @@ actions.push(
     ),
     action(
       "get_items_page",
+      "read",
       "Retrieve a filtered page of Monday board items using the official items_page query.",
       ["boards:read"],
       input(
@@ -460,6 +484,7 @@ actions.push(
     ),
     action(
       "get_next_items_page",
+      "read",
       "Retrieve the next page of Monday items from an items_page cursor.",
       ["boards:read"],
       input(
@@ -474,6 +499,7 @@ actions.push(
     ),
     action(
       "find_items_by_column_values",
+      "read",
       "Find Monday items on a board by matching explicit column values.",
       ["boards:read"],
       input(
@@ -490,6 +516,7 @@ actions.push(
     ),
     action(
       "list_subitems_by_parent",
+      "read",
       "List Monday subitems for one or more parent items.",
       ["boards:read"],
       input("The input payload for listing Monday subitems.", { parent_item_ids: idArraySchema }, ["parent_item_ids"]),
@@ -497,6 +524,7 @@ actions.push(
     ),
     action(
       "create_item",
+      "write",
       "Create a Monday item on a board, optionally setting column values and position.",
       ["boards:write"],
       input(
@@ -516,6 +544,7 @@ actions.push(
     ),
     action(
       "create_subitem",
+      "write",
       "Create a Monday subitem under an existing parent item.",
       ["boards:write"],
       input(
@@ -532,6 +561,7 @@ actions.push(
     ),
     action(
       "set_item_description_content",
+      "destructive",
       "Replace a Monday item description using markdown content.",
       ["boards:write"],
       input(
@@ -547,6 +577,7 @@ actions.push(
     ),
     action(
       "change_simple_column_value",
+      "write",
       "Change a Monday column value using the official simple string mutation.",
       ["boards:write"],
       input(
@@ -564,6 +595,7 @@ actions.push(
     ),
     action(
       "change_multiple_column_values",
+      "write",
       "Change multiple Monday column values in one mutation using the official JSON payload shape.",
       ["boards:write"],
       input(
@@ -580,6 +612,7 @@ actions.push(
     ),
     action(
       "move_item_to_group",
+      "write",
       "Move a Monday item to another group on the same board.",
       ["boards:write"],
       input(
@@ -591,6 +624,7 @@ actions.push(
     ),
     action(
       "move_item_to_board",
+      "destructive",
       "Move a Monday item to another board and target group.",
       ["boards:write"],
       input(
@@ -608,6 +642,7 @@ actions.push(
     ),
     action(
       "change_item_position",
+      "write",
       "Change a Monday item's position on the same board.",
       ["boards:write"],
       input(
@@ -625,6 +660,7 @@ actions.push(
     ),
     action(
       "duplicate_item",
+      "write",
       "Duplicate a Monday item.",
       ["boards:write"],
       input(
@@ -636,6 +672,7 @@ actions.push(
     ),
     action(
       "archive_item",
+      "destructive",
       "Archive a Monday item.",
       ["boards:write"],
       input("The input payload for archiving a Monday item.", { item_id: idSchema }, ["item_id"]),
@@ -643,6 +680,7 @@ actions.push(
     ),
     action(
       "delete_item",
+      "destructive",
       "Delete a Monday item.",
       ["boards:write"],
       input("The input payload for deleting a Monday item.", { item_id: idSchema }, ["item_id"]),
@@ -650,6 +688,7 @@ actions.push(
     ),
     action(
       "list_updates",
+      "read",
       "List Monday updates with optional date filtering.",
       ["updates:read"],
       input("The input payload for listing Monday updates.", {
@@ -662,6 +701,7 @@ actions.push(
     ),
     action(
       "list_update_replies",
+      "read",
       "List Monday replies for updates on one or more boards.",
       ["updates:read"],
       input(
@@ -677,6 +717,7 @@ actions.push(
     ),
     action(
       "create_update",
+      "write",
       "Create a Monday update on an item or as a reply to an existing update.",
       ["updates:write"],
       input(
@@ -688,6 +729,7 @@ actions.push(
     ),
     action(
       "edit_update",
+      "write",
       "Edit an existing Monday update.",
       ["updates:write"],
       input(
@@ -699,6 +741,7 @@ actions.push(
     ),
     action(
       "delete_update",
+      "destructive",
       "Delete an existing Monday update.",
       ["updates:write"],
       input("The input payload for deleting a Monday update.", { update_id: idSchema }, ["update_id"]),
@@ -706,6 +749,7 @@ actions.push(
     ),
     action(
       "list_docs",
+      "read",
       "List Monday docs by document, object, or workspace identifiers.",
       ["docs:read"],
       input("The input payload for listing Monday docs.", {
@@ -720,6 +764,7 @@ actions.push(
     ),
     action(
       "create_doc",
+      "write",
       "Create a Monday doc in a workspace or document column location.",
       ["docs:write"],
       input(
@@ -731,6 +776,7 @@ actions.push(
     ),
     action(
       "update_doc_name",
+      "write",
       "Update the name of an existing Monday doc.",
       ["docs:write"],
       input(
@@ -742,6 +788,7 @@ actions.push(
     ),
     action(
       "delete_doc",
+      "destructive",
       "Delete an existing Monday doc.",
       ["docs:write"],
       input("The input payload for deleting a Monday doc.", { doc_id: idSchema }, ["doc_id"]),
@@ -749,6 +796,7 @@ actions.push(
     ),
     action(
       "list_assets",
+      "read",
       "Retrieve one or more Monday assets by asset ID.",
       ["assets:read"],
       input("The input payload for listing Monday assets.", { ids: idArraySchema }, ["ids"]),
@@ -761,6 +809,7 @@ actions.push(
   ...[
     action(
       "get_board_memberships",
+      "read",
       "Retrieve Monday board user and team memberships.",
       ["boards:read"],
       input(
@@ -778,6 +827,7 @@ actions.push(
     ),
     action(
       "add_users_to_board",
+      "write",
       "Add users to a Monday board.",
       ["boards:write"],
       input(
@@ -793,6 +843,7 @@ actions.push(
     ),
     action(
       "delete_subscribers_from_board",
+      "destructive",
       "Remove user subscribers from a Monday board.",
       ["boards:write"],
       input(
@@ -804,6 +855,7 @@ actions.push(
     ),
     action(
       "add_teams_to_board",
+      "write",
       "Add teams to a Monday board.",
       ["boards:write"],
       input(
@@ -819,6 +871,7 @@ actions.push(
     ),
     action(
       "delete_teams_from_board",
+      "destructive",
       "Remove team subscribers from a Monday board.",
       ["boards:write"],
       input(
@@ -830,6 +883,7 @@ actions.push(
     ),
     action(
       "create_dashboard",
+      "write",
       "Create a Monday dashboard.",
       ["boards:write"],
       input(
@@ -847,6 +901,7 @@ actions.push(
     ),
     action(
       "update_dashboard",
+      "write",
       "Update a Monday dashboard.",
       ["boards:write"],
       input(
@@ -864,6 +919,7 @@ actions.push(
     ),
     action(
       "delete_dashboard",
+      "destructive",
       "Delete a Monday dashboard.",
       ["boards:write"],
       input("The input payload for deleting a Monday dashboard.", { id: idSchema }, ["id"]),
@@ -874,6 +930,7 @@ actions.push(
     ),
     action(
       "list_activity_logs",
+      "read",
       "List Monday board activity logs.",
       ["boards:read"],
       input(
@@ -891,6 +948,7 @@ actions.push(
     ),
     action(
       "list_audit_logs",
+      "read",
       "List Monday audit logs.",
       ["manage_account_security"],
       input("The input payload for listing Monday audit logs.", {
@@ -903,6 +961,7 @@ actions.push(
     ),
     action(
       "get_form",
+      "read",
       "Retrieve a Monday Workform by its unique form token.",
       ["boards:read"],
       input(
@@ -914,6 +973,7 @@ actions.push(
     ),
     action(
       "create_form",
+      "write",
       "Create a Monday Workform and its destination responses board.",
       ["forms:write", "boards:write", "workspaces:write"],
       input(
@@ -935,6 +995,7 @@ actions.push(
     ),
     action(
       "activate_form",
+      "write",
       "Activate a Monday Workform so it starts accepting submissions.",
       ["forms:write"],
       input(
@@ -946,6 +1007,7 @@ actions.push(
     ),
     action(
       "deactivate_form",
+      "destructive",
       "Deactivate a Monday Workform so it stops accepting submissions.",
       ["forms:write"],
       input(
@@ -957,6 +1019,7 @@ actions.push(
     ),
     action(
       "list_departments",
+      "read",
       "List Monday departments on enterprise accounts.",
       ["departments:read"],
       input("The input payload for listing Monday departments.", { ids: idArraySchema }),
@@ -964,6 +1027,7 @@ actions.push(
     ),
     action(
       "create_department",
+      "write",
       "Create a Monday department on an enterprise account.",
       ["departments:write"],
       input("The input payload for creating a Monday department.", { data: looseObjectSchema }, ["data"]),
@@ -971,6 +1035,7 @@ actions.push(
     ),
     action(
       "update_department",
+      "write",
       "Update a Monday department on an enterprise account.",
       ["departments:write"],
       input(
@@ -982,6 +1047,7 @@ actions.push(
     ),
     action(
       "delete_department",
+      "destructive",
       "Delete a Monday department on an enterprise account.",
       ["departments:write"],
       input("The input payload for deleting a Monday department.", { department_id: idSchema }, ["department_id"]),
@@ -989,6 +1055,7 @@ actions.push(
     ),
     action(
       "assign_department_members",
+      "write",
       "Assign users to a Monday department on an enterprise account.",
       ["departments:write"],
       input(
@@ -1003,6 +1070,7 @@ actions.push(
     ),
     action(
       "clear_users_department",
+      "destructive",
       "Clear department assignments from Monday users on an enterprise account.",
       ["departments:write"],
       input("The input payload for clearing Monday user department assignments.", { user_ids: idArraySchema }, [
@@ -1015,6 +1083,7 @@ actions.push(
 
 function action(
   name: string,
+  operationType: ActionDefinition["operationType"],
   description: string,
   providerPermissions: string[],
   inputSchema: JsonSchema,
@@ -1022,6 +1091,7 @@ function action(
 ): MondayActionSource {
   return {
     name,
+    operationType,
     description,
     providerPermissions,
     inputSchema,
@@ -1032,6 +1102,7 @@ function action(
 export const mondayActions: ActionDefinition[] = actions.map((actionSource) =>
   defineProviderAction(service, {
     name: actionSource.name,
+    operationType: actionSource.operationType,
     description: actionSource.description,
     requiredScopes: actionSource.providerPermissions,
     providerPermissions: actionSource.providerPermissions,

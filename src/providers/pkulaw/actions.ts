@@ -47,6 +47,7 @@ const optionalSearchFields = {
 export const pkulawActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tools",
+    operationType: "read",
     description: "Discover the current legal research tools and live input schemas exposed by one PKULaw MCP service.",
     requiredScopes: [],
     followUpActions: ["pkulaw.call_tool"],
@@ -59,6 +60,7 @@ export const pkulawActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "call_tool",
+    operationType: "read",
     description: "Call a current PKULaw legal data tool with JSON arguments after checking its live schema.",
     requiredScopes: [],
     followUpActions: ["pkulaw.list_tools"],
@@ -77,6 +79,7 @@ export const pkulawActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_law_articles",
+    operationType: "read",
     description: "Search authoritative PKULaw provisions using a natural-language legal question or fact pattern.",
     requiredScopes: [],
     followUpActions: ["pkulaw.get_law_article"],
@@ -89,6 +92,7 @@ export const pkulawActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_law_article",
+    operationType: "read",
     description: "Retrieve the authoritative text of a specific provision by law title and article number.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving one specific legal provision.", {
@@ -99,6 +103,7 @@ export const pkulawActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_laws",
+    operationType: "read",
     description: "Search PKULaw laws and regulations by title or full-text keywords.",
     requiredScopes: [],
     followUpActions: ["pkulaw.get_law_article"],
@@ -109,6 +114,7 @@ export const pkulawActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_cases",
+    operationType: "read",
     description: "Search authoritative PKULaw judicial cases using a natural-language fact pattern.",
     requiredScopes: [],
     followUpActions: ["pkulaw.search_case_documents"],
@@ -121,6 +127,7 @@ export const pkulawActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_case_documents",
+    operationType: "read",
     description: "Search detailed PKULaw judicial case records by title or full-text keywords.",
     requiredScopes: [],
     inputSchema: s.object("Input for searching detailed judicial case records.", optionalSearchFields),

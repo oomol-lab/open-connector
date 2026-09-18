@@ -108,6 +108,7 @@ const id = (description: string) => s.nonWhitespaceString(description);
 export const typebotActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_workspaces",
+    operationType: "read",
     description: "List the Typebot workspaces accessible to the configured API token.",
     inputSchema: s.object("An empty Typebot action input.", {}),
     outputSchema: s.looseRequiredObject("The accessible Typebot workspaces.", {
@@ -116,6 +117,7 @@ export const typebotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workspace",
+    operationType: "read",
     description: "Retrieve detailed information for one Typebot workspace.",
     inputSchema: s.requiredObject("The Typebot workspace to retrieve.", {
       workspaceId: id("The Typebot workspace identifier."),
@@ -127,6 +129,7 @@ export const typebotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_typebots",
+    operationType: "read",
     description: "List Typebot bots in a workspace, optionally restricted to one folder.",
     inputSchema: s.object(
       "Filters for listing Typebot bots.",
@@ -142,6 +145,7 @@ export const typebotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_typebot",
+    operationType: "read",
     description: "Retrieve one Typebot definition and its graph configuration.",
     inputSchema: s.object(
       "The Typebot bot to retrieve.",
@@ -160,6 +164,7 @@ export const typebotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_results",
+    operationType: "read",
     description: "List collected results for one Typebot bot with cursor and time filtering.",
     inputSchema: s.object(
       "Filters for listing Typebot results.",
@@ -191,6 +196,7 @@ export const typebotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_result",
+    operationType: "read",
     description: "Retrieve one collected Typebot result by bot and result identifier.",
     inputSchema: s.requiredObject("The Typebot result to retrieve.", {
       typebotId: id("The Typebot bot identifier."),

@@ -149,24 +149,28 @@ const identifyIdentityInputSchema = s.object(
 export const flagsmithActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_flags",
+    operationType: "read",
     description: "List feature flags for the connected Flagsmith environment.",
     inputSchema: listFlagsInputSchema,
     outputSchema: listFlagsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_feature_flag",
+    operationType: "read",
     description: "Retrieve one feature flag by feature name from the connected environment.",
     inputSchema: getFeatureFlagInputSchema,
     outputSchema: getFeatureFlagOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_identity_flags",
+    operationType: "read",
     description: "Retrieve evaluated flags and traits for a Flagsmith identity.",
     inputSchema: getIdentityFlagsInputSchema,
     outputSchema: identityOutputSchema,
   }),
   defineProviderAction(service, {
     name: "identify_identity",
+    operationType: "write",
     description: "Identify a Flagsmith user, optionally set traits, and return evaluated flags.",
     inputSchema: identifyIdentityInputSchema,
     outputSchema: identityOutputSchema,

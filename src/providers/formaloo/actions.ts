@@ -41,6 +41,7 @@ const updateRowInputSchema = {
 export const formalooActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_forms",
+    operationType: "read",
     description: "List forms created by or shared with the current Formaloo account.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -62,6 +63,7 @@ export const formalooActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form",
+    operationType: "read",
     description: "Retrieve Formaloo form settings, metadata, and field definitions by slug.",
     requiredScopes: [],
     inputSchema: s.object("The Formaloo form to retrieve.", {
@@ -72,6 +74,7 @@ export const formalooActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_rows",
+    operationType: "read",
     description: "List submitted rows for a Formaloo form with filters and pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -109,6 +112,7 @@ export const formalooActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_row",
+    operationType: "read",
     description: "Retrieve one submitted Formaloo row by slug.",
     requiredScopes: [],
     inputSchema: s.object("The Formaloo row to retrieve.", {
@@ -118,6 +122,7 @@ export const formalooActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_row",
+    operationType: "write",
     description: "Submit JSON field values as a new row on a Formaloo form.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -136,6 +141,7 @@ export const formalooActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_row",
+    operationType: "write",
     description: "Update JSON field values or tags on an existing Formaloo row.",
     requiredScopes: [],
     inputSchema: updateRowInputSchema,
@@ -143,6 +149,7 @@ export const formalooActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_row",
+    operationType: "destructive",
     description: "Permanently delete a submitted Formaloo row.",
     requiredScopes: [],
     inputSchema: s.object("The Formaloo row to delete.", {

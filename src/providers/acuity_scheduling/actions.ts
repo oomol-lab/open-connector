@@ -208,6 +208,7 @@ const cancelAppointmentInputSchema: JsonSchema = {
 export const acuitySchedulingActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve the Acuity Scheduling account associated with the credential.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving the Acuity account.", {}),
@@ -215,6 +216,7 @@ export const acuitySchedulingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_calendars",
+    operationType: "read",
     description: "List calendars configured in the Acuity Scheduling account.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Acuity calendars.", {}),
@@ -224,6 +226,7 @@ export const acuitySchedulingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_appointment_types",
+    operationType: "read",
     description: "List appointment types configured in Acuity Scheduling.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -239,6 +242,7 @@ export const acuitySchedulingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_intake_forms",
+    operationType: "read",
     description: "List intake forms configured in Acuity Scheduling.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Acuity intake forms.", {}),
@@ -248,6 +252,7 @@ export const acuitySchedulingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_available_dates",
+    operationType: "read",
     description: "List available Acuity Scheduling dates for a month and appointment type.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -267,6 +272,7 @@ export const acuitySchedulingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_available_times",
+    operationType: "read",
     description: "List available Acuity Scheduling times for a date and appointment type.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -290,6 +296,7 @@ export const acuitySchedulingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_appointments",
+    operationType: "read",
     description: "List Acuity Scheduling appointments with optional client and date filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -333,6 +340,7 @@ export const acuitySchedulingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_appointment",
+    operationType: "read",
     description: "Retrieve one Acuity Scheduling appointment by ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -349,6 +357,7 @@ export const acuitySchedulingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_appointment",
+    operationType: "write",
     description: "Create an appointment in Acuity Scheduling.",
     requiredScopes: [],
     inputSchema: createAppointmentInputSchema,
@@ -358,6 +367,7 @@ export const acuitySchedulingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_appointment",
+    operationType: "write",
     description: "Update client details, forms, notes, or labels on an Acuity appointment.",
     requiredScopes: [],
     inputSchema: updateAppointmentInputSchema,
@@ -367,6 +377,7 @@ export const acuitySchedulingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reschedule_appointment",
+    operationType: "write",
     description: "Reschedule an Acuity appointment to a new date and time.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -388,6 +399,7 @@ export const acuitySchedulingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "cancel_appointment",
+    operationType: "destructive",
     description: "Cancel an Acuity Scheduling appointment.",
     requiredScopes: [],
     inputSchema: cancelAppointmentInputSchema,

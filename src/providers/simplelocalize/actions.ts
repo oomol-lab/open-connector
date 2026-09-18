@@ -17,6 +17,7 @@ const pageDetailsSchema = s.looseObject("The pagination details returned by Simp
 
 const getProjectAction = defineProviderAction(service, {
   name: "get_project",
+  operationType: "read",
   description: "Get details and localization statistics for the authenticated SimpleLocalize project.",
   requiredScopes: [],
   inputSchema: emptyInputSchema,
@@ -25,6 +26,7 @@ const getProjectAction = defineProviderAction(service, {
 
 const listTranslationsAction = defineProviderAction(service, {
   name: "list_translations",
+  operationType: "read",
   description: "List and filter translations in the authenticated SimpleLocalize project.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -73,6 +75,7 @@ const listTranslationsAction = defineProviderAction(service, {
 
 const updateTranslationAction = defineProviderAction(service, {
   name: "update_translation",
+  operationType: "write",
   description: "Update the text or review state of one SimpleLocalize translation.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -92,6 +95,7 @@ const updateTranslationAction = defineProviderAction(service, {
 
 const listTranslationKeysAction = defineProviderAction(service, {
   name: "list_translation_keys",
+  operationType: "read",
   description: "List translation keys and their metadata in the authenticated project.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -124,6 +128,7 @@ const listTranslationKeysAction = defineProviderAction(service, {
 
 const createTranslationKeyAction = defineProviderAction(service, {
   name: "create_translation_key",
+  operationType: "write",
   description: "Create a translation key in the authenticated SimpleLocalize project.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -162,6 +167,7 @@ const createTranslationKeyAction = defineProviderAction(service, {
 
 const listLanguagesAction = defineProviderAction(service, {
   name: "list_languages",
+  operationType: "read",
   description: "List languages configured in the authenticated SimpleLocalize project.",
   requiredScopes: [],
   inputSchema: emptyInputSchema,
@@ -175,6 +181,7 @@ const listLanguagesAction = defineProviderAction(service, {
 
 const createLanguageAction = defineProviderAction(service, {
   name: "create_language",
+  operationType: "write",
   description: "Create a language in the authenticated SimpleLocalize project.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -202,6 +209,7 @@ const updateLanguageInputSchema = s.object(
 
 const updateLanguageAction = defineProviderAction(service, {
   name: "update_language",
+  operationType: "write",
   description: "Update a language in the authenticated SimpleLocalize project.",
   requiredScopes: [],
   inputSchema: updateLanguageInputSchema,
@@ -210,6 +218,7 @@ const updateLanguageAction = defineProviderAction(service, {
 
 const deleteLanguageAction = defineProviderAction(service, {
   name: "delete_language",
+  operationType: "destructive",
   description: "Delete a language from the authenticated SimpleLocalize project.",
   requiredScopes: [],
   inputSchema: s.object("The SimpleLocalize language to delete.", {

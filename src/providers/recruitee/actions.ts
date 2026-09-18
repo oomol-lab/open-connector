@@ -121,6 +121,7 @@ const createCandidateOutputSchema = s.object("A Recruitee create candidate respo
 export const recruiteeActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_offers",
+    operationType: "read",
     description:
       "List Recruitee company offers using the official ATS API, optionally filtered by scope and view mode.",
     requiredScopes: [],
@@ -129,6 +130,7 @@ export const recruiteeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_offer",
+    operationType: "read",
     description: "Fetch one Recruitee offer by ID using the official ATS API.",
     requiredScopes: [],
     inputSchema: getOfferInputSchema,
@@ -136,6 +138,7 @@ export const recruiteeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_candidates",
+    operationType: "read",
     description: "Search Recruitee candidates with pagination, sorting, and official filters_json filters.",
     requiredScopes: [],
     inputSchema: searchCandidatesInputSchema,
@@ -143,6 +146,7 @@ export const recruiteeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_candidate",
+    operationType: "write",
     description: "Manually create a Recruitee candidate with JSON fields and optional remote CV URL.",
     requiredScopes: [],
     inputSchema: createCandidateInputSchema,

@@ -29,6 +29,7 @@ const paginationFields = {
 export const printifyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_shops",
+    operationType: "read",
     description: "List all Printify shops associated with the authenticated merchant account.",
     requiredScopes: [],
     inputSchema: s.object("Parameters for listing Printify shops.", {}),
@@ -38,6 +39,7 @@ export const printifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List products created in a Printify shop with page-based pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -56,6 +58,7 @@ export const printifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Retrieve one product from a Printify shop by its product ID.",
     requiredScopes: [],
     inputSchema: s.object("Parameters for retrieving a Printify product.", {
@@ -68,6 +71,7 @@ export const printifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description: "List orders in a Printify shop with optional status and SKU filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -91,6 +95,7 @@ export const printifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_order",
+    operationType: "read",
     description: "Retrieve one order from a Printify shop by its order ID.",
     requiredScopes: [],
     inputSchema: s.object("Parameters for retrieving a Printify order.", {

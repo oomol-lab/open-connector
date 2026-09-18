@@ -69,6 +69,7 @@ const getPersonInputSchema = s.requiredObject("The Humaans person to retrieve.",
 export const humaansActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_token_info",
+    operationType: "read",
     description: "Retrieve the scopes granted to the current Humaans API access token.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to retrieve Humaans token information.", {}),
@@ -76,6 +77,7 @@ export const humaansActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_current_person",
+    operationType: "read",
     description:
       "Retrieve the Humaans person record that owns the current API access token using public:read or private:read access.",
     requiredScopes: [],
@@ -84,6 +86,7 @@ export const humaansActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_people",
+    operationType: "read",
     description:
       "List Humaans people with common exact-match filters and offset pagination using public:read or private:read access.",
     requiredScopes: [],
@@ -92,6 +95,7 @@ export const humaansActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_person",
+    operationType: "read",
     description: "Retrieve one Humaans person by identifier using public:read or private:read access.",
     requiredScopes: [],
     inputSchema: getPersonInputSchema,

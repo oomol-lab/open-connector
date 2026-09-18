@@ -97,6 +97,7 @@ const lifecycleResultSchema = (action: string, description: string) =>
 export const runpodActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_pods",
+    operationType: "read",
     description: "List Runpod Pods with optional official filter parameters.",
     inputSchema: s.object(
       "The input payload for listing Runpod Pods.",
@@ -150,36 +151,42 @@ export const runpodActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_pod",
+    operationType: "read",
     description: "Get one Runpod Pod by ID.",
     inputSchema: podDetailInputSchema,
     outputSchema: s.object("The response returned when fetching one Runpod Pod.", { pod: podSchema }),
   }),
   defineProviderAction(service, {
     name: "start_pod",
+    operationType: "write",
     description: "Start or resume a Runpod Pod.",
     inputSchema: lifecycleInputSchema,
     outputSchema: lifecycleResultSchema("start", "The lifecycle operation that was requested."),
   }),
   defineProviderAction(service, {
     name: "stop_pod",
+    operationType: "destructive",
     description: "Stop a Runpod Pod.",
     inputSchema: lifecycleInputSchema,
     outputSchema: lifecycleResultSchema("stop", "The lifecycle operation that was requested."),
   }),
   defineProviderAction(service, {
     name: "restart_pod",
+    operationType: "write",
     description: "Restart a Runpod Pod.",
     inputSchema: lifecycleInputSchema,
     outputSchema: lifecycleResultSchema("restart", "The lifecycle operation that was requested."),
   }),
   defineProviderAction(service, {
     name: "reset_pod",
+    operationType: "destructive",
     description: "Reset a Runpod Pod.",
     inputSchema: lifecycleInputSchema,
     outputSchema: lifecycleResultSchema("reset", "The lifecycle operation that was requested."),
   }),
   defineProviderAction(service, {
     name: "delete_pod",
+    operationType: "destructive",
     description: "Delete a Runpod Pod.",
     inputSchema: lifecycleInputSchema,
     outputSchema: lifecycleResultSchema("delete", "The lifecycle operation that was requested."),

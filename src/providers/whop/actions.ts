@@ -184,6 +184,7 @@ const stringArraySchema = (description: string, itemDescription: string) =>
 export const whopActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_companies",
+    operationType: "read",
     description:
       "List Whop companies accessible to the credential, optionally filtering connected accounts by parent company.",
     inputSchema: s.object(
@@ -212,6 +213,7 @@ export const whopActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description: "Retrieve a Whop company by ID or route slug.",
     inputSchema: idInputSchema(
       "Path parameters for retrieving a Whop company.",
@@ -221,6 +223,7 @@ export const whopActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List Whop products belonging to a company with optional visibility, type, sort, and cursor filters.",
     inputSchema: s.object(
       "Query parameters for listing Whop products.",
@@ -246,12 +249,14 @@ export const whopActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Retrieve a Whop product by ID.",
     inputSchema: idInputSchema("Path parameters for retrieving a Whop product.", "The unique Whop product identifier."),
     outputSchema: productSummarySchema,
   }),
   defineProviderAction(service, {
     name: "list_memberships",
+    operationType: "read",
     description: "List Whop memberships for a company with optional product, plan, user, status, and cursor filters.",
     inputSchema: s.object(
       "Query parameters for listing Whop memberships.",
@@ -297,6 +302,7 @@ export const whopActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_membership",
+    operationType: "read",
     description: "Retrieve a Whop membership by membership ID or license key.",
     inputSchema: idInputSchema(
       "Path parameters for retrieving a Whop membership.",
@@ -306,6 +312,7 @@ export const whopActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_authorized_users",
+    operationType: "read",
     description: "List authorized Whop team members with optional company, user, role, date, and cursor filters.",
     inputSchema: s.object(
       "Query parameters for listing Whop authorized users.",
@@ -335,6 +342,7 @@ export const whopActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_authorized_user",
+    operationType: "read",
     description: "Retrieve a Whop authorized user by ID.",
     inputSchema: idInputSchema(
       "Path parameters for retrieving a Whop authorized user.",

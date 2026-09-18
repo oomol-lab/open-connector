@@ -43,6 +43,7 @@ const articleSchema = s.looseObject(
 export const diffbotActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "extract_article",
+    operationType: "read",
     description: "Extract article content and metadata from a public URL using Diffbot Article API.",
     inputSchema: s.object(
       "The input payload for extracting one article from a public URL with Diffbot.",

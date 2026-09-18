@@ -585,6 +585,7 @@ export type CalActionName =
 
 function action(
   name: CalActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
@@ -592,6 +593,7 @@ function action(
 ): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     requiredScopes,
     inputSchema,
@@ -602,6 +604,7 @@ function action(
 export const calActions: ActionDefinition[] = [
   action(
     "get_my_profile",
+    "read",
     "Get the current Cal.com user profile from the authenticated OAuth account.",
     emptyInputSchema,
     profileOutputSchema,
@@ -609,6 +612,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "retrieve_my_information",
+    "read",
     "Compatibility alias for retrieving the authenticated Cal.com user's profile.",
     emptyInputSchema,
     profileOutputSchema,
@@ -616,6 +620,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "update_my_profile",
+    "write",
     "Update the current Cal.com user's profile fields.",
     updateMyProfileInputSchema,
     profileOutputSchema,
@@ -623,6 +628,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "update_user_profile_details",
+    "write",
     "Compatibility alias for updating the authenticated Cal.com user's profile.",
     updateMyProfileInputSchema,
     profileOutputSchema,
@@ -630,6 +636,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "list_event_types",
+    "read",
     "List Cal.com event types for the authenticated user.",
     listEventTypesInputSchema,
     eventTypesOutputSchema,
@@ -637,6 +644,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "get_event_type",
+    "read",
     "Get a single Cal.com event type by numeric ID.",
     eventTypeLookupInputSchema,
     eventTypeOutputSchema,
@@ -644,6 +652,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "retrieve_event_type_by_id",
+    "read",
     "Compatibility alias for retrieving a Cal.com event type by ID.",
     looseEventTypeLookupInputSchema,
     eventTypeOutputSchema,
@@ -651,6 +660,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "fetch_event_type_details",
+    "read",
     "Compatibility alias for fetching a Cal.com event type by ID.",
     looseEventTypeLookupInputSchema,
     eventTypeOutputSchema,
@@ -658,6 +668,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "create_event_type",
+    "write",
     "Create a Cal.com event type for the authenticated user.",
     createEventTypeInputSchema,
     eventTypeOutputSchema,
@@ -665,6 +676,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "update_event_type",
+    "write",
     "Update a Cal.com event type by numeric ID.",
     updateEventTypeInputSchema,
     eventTypeOutputSchema,
@@ -672,6 +684,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "delete_event_type",
+    "destructive",
     "Delete a Cal.com event type by numeric ID.",
     eventTypeIdInputSchema,
     eventTypeOutputSchema,
@@ -679,6 +692,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "delete_event_type_by_id",
+    "destructive",
     "Compatibility alias for deleting a Cal.com event type by ID.",
     eventTypeIdInputSchema,
     eventTypeOutputSchema,
@@ -686,6 +700,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "get_event_type_private_links",
+    "read",
     "List private links configured for a Cal.com event type.",
     eventTypeIdInputSchema,
     privateLinksOutputSchema,
@@ -693,6 +708,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "get_available_slots_info",
+    "read",
     "Compatibility action returning available slots for a user, team, or event type.",
     slotsInputSchema,
     slotsOutputSchema,
@@ -700,6 +716,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "retrieve_calendar_list",
+    "read",
     "Compatibility alias for listing connected calendars and the selected destination calendar.",
     emptyInputSchema,
     calendarListOutputSchema,
@@ -707,6 +724,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "retrieve_calendar_busy_times",
+    "read",
     "Compatibility alias for returning busy ranges for specific calendars.",
     busyTimesInputSchema,
     busyTimesOutputSchema,
@@ -714,6 +732,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "update_destination_calendar_integration",
+    "write",
     "Compatibility alias for updating the destination calendar used for created events.",
     destinationCalendarInputSchema,
     destinationCalendarOutputSchema,
@@ -721,6 +740,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "list_bookings",
+    "read",
     "List bookings for the authenticated Cal.com user.",
     bookingListInputSchema,
     bookingsOutputSchema,
@@ -728,6 +748,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "fetch_all_bookings",
+    "read",
     "Compatibility alias for listing bookings with optional filters and pagination.",
     fetchAllBookingsInputSchema,
     bookingsOutputSchema,
@@ -735,6 +756,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "get_booking",
+    "read",
     "Get a Cal.com booking by booking UID.",
     bookingUidInputSchema,
     bookingOutputSchema,
@@ -742,14 +764,23 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "retrieve_booking_details_by_uid",
+    "read",
     "Compatibility alias for getting a Cal.com booking by UID.",
     bookingUidInputSchema,
     bookingOutputSchema,
     bookingRead,
   ),
-  action("create_booking", "Create a Cal.com booking.", createBookingInputSchema, bookingOutputSchema, bookingWrite),
+  action(
+    "create_booking",
+    "write",
+    "Create a Cal.com booking.",
+    createBookingInputSchema,
+    bookingOutputSchema,
+    bookingWrite,
+  ),
   action(
     "post_new_booking_request",
+    "write",
     "Compatibility alias for creating a Cal.com booking.",
     createBookingInputSchema,
     bookingOutputSchema,
@@ -757,6 +788,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "list_attendees",
+    "read",
     "List attendees for a Cal.com booking by booking UID.",
     bookingUidInputSchema,
     attendeesOutputSchema,
@@ -764,6 +796,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "add_attendee",
+    "write",
     "Add an attendee to a Cal.com booking.",
     attendeeInputSchema,
     attendeeOutputSchema,
@@ -771,6 +804,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "list_booking_references",
+    "read",
     "List booking references for a Cal.com booking.",
     bookingReferencesInputSchema,
     referencesOutputSchema,
@@ -778,6 +812,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "get_booking_references",
+    "read",
     "Compatibility alias for listing booking references.",
     bookingReferencesInputSchema,
     referencesOutputSchema,
@@ -785,6 +820,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "confirm_booking_by_uid",
+    "write",
     "Confirm a Cal.com booking by UID.",
     bookingUidInputSchema,
     bookingOutputSchema,
@@ -792,6 +828,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "decline_booking_with_reason",
+    "destructive",
     "Decline a Cal.com booking by UID with an optional reason.",
     declineBookingInputSchema,
     bookingOutputSchema,
@@ -799,6 +836,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "mark_booking_absent_for_uid",
+    "write",
     "Mark a Cal.com booking host or attendees absent.",
     markAbsentInputSchema,
     bookingOutputSchema,
@@ -806,6 +844,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "reassign_booking_with_uid",
+    "write",
     "Reassign a round-robin booking to a specific host user ID.",
     reassignBookingInputSchema,
     resultOutputSchema,
@@ -813,6 +852,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "cancel_booking",
+    "destructive",
     "Cancel a Cal.com booking by UID, optionally providing a cancellation reason.",
     cancelBookingInputSchema,
     bookingOutputSchema,
@@ -820,6 +860,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "cancel_booking_via_uid",
+    "destructive",
     "Compatibility alias for cancelling a Cal.com booking by UID.",
     cancelBookingInputSchema,
     bookingOutputSchema,
@@ -827,6 +868,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "reschedule_booking",
+    "write",
     "Reschedule a Cal.com booking by UID to a new start time.",
     rescheduleBookingInputSchema,
     bookingOutputSchema,
@@ -834,6 +876,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "reschedule_booking_by_uid",
+    "write",
     "Compatibility alias for rescheduling a Cal.com booking by UID.",
     rescheduleBookingInputSchema,
     bookingOutputSchema,
@@ -841,6 +884,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "list_schedules",
+    "read",
     "List schedules available to the authenticated Cal.com user.",
     listSchedulesInputSchema,
     schedulesOutputSchema,
@@ -848,6 +892,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "retrieve_schedules_list",
+    "read",
     "Compatibility alias for listing schedules for the authenticated user.",
     emptyInputSchema,
     schedulesOutputSchema,
@@ -855,6 +900,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "get_schedule",
+    "read",
     "Get a Cal.com schedule by numeric schedule ID.",
     scheduleIdInputSchema,
     scheduleOutputSchema,
@@ -862,6 +908,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "fetch_schedule_by_id",
+    "read",
     "Compatibility alias for getting a Cal.com schedule by numeric ID.",
     scheduleIdInputSchema,
     scheduleOutputSchema,
@@ -869,6 +916,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "create_schedule",
+    "write",
     "Create a schedule for the authenticated Cal.com user.",
     createScheduleInputSchema,
     scheduleOutputSchema,
@@ -876,6 +924,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "create_user_availability_schedule",
+    "write",
     "Compatibility alias for creating a Cal.com user availability schedule.",
     createScheduleInputSchema,
     scheduleOutputSchema,
@@ -883,6 +932,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "update_schedule",
+    "write",
     "Update a schedule for the authenticated Cal.com user.",
     updateScheduleInputSchema,
     scheduleOutputSchema,
@@ -890,6 +940,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "update_schedule_by_id",
+    "write",
     "Compatibility alias for updating a Cal.com schedule by ID.",
     updateScheduleInputSchema,
     scheduleOutputSchema,
@@ -897,6 +948,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "delete_schedule",
+    "destructive",
     "Delete a schedule for the authenticated Cal.com user.",
     scheduleIdInputSchema,
     successOutputSchema,
@@ -904,6 +956,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "delete_schedule_by_id",
+    "destructive",
     "Compatibility alias for deleting a Cal.com schedule by ID.",
     scheduleIdInputSchema,
     successOutputSchema,
@@ -911,6 +964,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "get_default_schedule",
+    "read",
     "Get the default schedule for the authenticated Cal.com user.",
     emptyInputSchema,
     scheduleOutputSchema,
@@ -918,6 +972,7 @@ export const calActions: ActionDefinition[] = [
   ),
   action(
     "get_default_schedule_details",
+    "read",
     "Compatibility alias for getting the authenticated user's default schedule.",
     emptyInputSchema,
     scheduleOutputSchema,

@@ -28,6 +28,7 @@ const entryOutputSchema = s.requiredObject("A Zenkit entry response.", {
 
 const listWorkspacesAndLists = defineProviderAction(service, {
   name: "list_workspaces_and_lists",
+  operationType: "read",
   description: "List all Zenkit workspaces and collections accessible to the connected user.",
   inputSchema: s.requiredObject("Parameters for listing Zenkit workspaces and collections.", {}),
   outputSchema: listWorkspacesOutputSchema,
@@ -35,6 +36,7 @@ const listWorkspacesAndLists = defineProviderAction(service, {
 
 const getWorkspace = defineProviderAction(service, {
   name: "get_workspace",
+  operationType: "read",
   description: "Get a Zenkit workspace by its numeric ID, short ID, UUID, or name.",
   inputSchema: s.requiredObject("Parameters for retrieving a Zenkit workspace.", {
     workspaceId: allIdSchema("The workspace numeric ID, short ID, UUID, or name."),
@@ -44,6 +46,7 @@ const getWorkspace = defineProviderAction(service, {
 
 const getList = defineProviderAction(service, {
   name: "get_list",
+  operationType: "read",
   description: "Get a Zenkit collection by its numeric ID, short ID, UUID, or name.",
   inputSchema: s.requiredObject("Parameters for retrieving a Zenkit collection.", {
     listId: allIdSchema("The collection numeric ID, short ID, UUID, or name."),
@@ -53,6 +56,7 @@ const getList = defineProviderAction(service, {
 
 const getEntry = defineProviderAction(service, {
   name: "get_entry",
+  operationType: "read",
   description: "Get one entry from a Zenkit collection.",
   inputSchema: s.requiredObject("Parameters for retrieving a Zenkit entry.", {
     listId: allIdSchema("The collection numeric ID, short ID, UUID, or name."),
@@ -63,6 +67,7 @@ const getEntry = defineProviderAction(service, {
 
 const searchEntries = defineProviderAction(service, {
   name: "search_entries",
+  operationType: "read",
   description: "Search entries across the connected user's Zenkit collections.",
   inputSchema: s.object(
     "Parameters for searching Zenkit entries.",
@@ -101,6 +106,7 @@ const searchEntries = defineProviderAction(service, {
 
 const createEntry = defineProviderAction(service, {
   name: "create_entry",
+  operationType: "write",
   description: "Create an entry in a Zenkit collection with collection-defined field values.",
   inputSchema: s.object(
     "Parameters for creating a Zenkit entry.",
@@ -119,6 +125,7 @@ const createEntry = defineProviderAction(service, {
 
 const updateEntry = defineProviderAction(service, {
   name: "update_entry",
+  operationType: "write",
   description: "Update collection-defined field values on a Zenkit entry.",
   inputSchema: s.object(
     "Parameters for updating a Zenkit entry.",
@@ -135,6 +142,7 @@ const updateEntry = defineProviderAction(service, {
 
 const deleteEntry = defineProviderAction(service, {
   name: "delete_entry",
+  operationType: "destructive",
   description: "Delete an entry from a Zenkit collection.",
   inputSchema: s.requiredObject("Parameters for deleting a Zenkit entry.", {
     listId: allIdSchema("The collection numeric ID, short ID, UUID, or name."),

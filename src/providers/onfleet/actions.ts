@@ -49,6 +49,7 @@ const additionalQuantitiesSchema = s.object(
 
 const createTaskAction = defineProviderAction(service, {
   name: "create_task",
+  operationType: "write",
   description: "Create a pickup or delivery task in Onfleet.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -125,6 +126,7 @@ const createTaskAction = defineProviderAction(service, {
 
 const listTasksAction = defineProviderAction(service, {
   name: "list_tasks",
+  operationType: "read",
   description: "List Onfleet tasks in a time range with cursor pagination and task filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -170,6 +172,7 @@ const listTasksAction = defineProviderAction(service, {
 
 const getTaskAction = defineProviderAction(service, {
   name: "get_task",
+  operationType: "read",
   description: "Get one Onfleet task by ID.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for retrieving an Onfleet task.", {
@@ -180,6 +183,7 @@ const getTaskAction = defineProviderAction(service, {
 
 const updateTaskAction = defineProviderAction(service, {
   name: "update_task",
+  operationType: "destructive",
   description: "Update supported fields on an Onfleet task.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -199,6 +203,7 @@ const updateTaskAction = defineProviderAction(service, {
 
 const cloneTaskAction = defineProviderAction(service, {
   name: "clone_task",
+  operationType: "write",
   description: "Clone an existing Onfleet task with optional metadata and field overrides.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -249,6 +254,7 @@ const cloneTaskAction = defineProviderAction(service, {
 
 const completeTaskAction = defineProviderAction(service, {
   name: "complete_task",
+  operationType: "destructive",
   description: "Force complete an active Onfleet task as successful or failed.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for completing an Onfleet task.", {
@@ -269,6 +275,7 @@ const completeTaskAction = defineProviderAction(service, {
 
 const deleteTaskAction = defineProviderAction(service, {
   name: "delete_task",
+  operationType: "destructive",
   description: "Delete an unstarted Onfleet task.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for deleting an Onfleet task.", {

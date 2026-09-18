@@ -8,6 +8,7 @@ const service = "googleforms";
 
 interface GoogleFormsActionSource {
   name: GoogleFormsActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -141,6 +142,7 @@ const watch = s.object(
 const actions: GoogleFormsActionSource[] = [
   action(
     "create_form",
+    "write",
     "Create a Google Form with a simple title-based input and optionally initialize the description and unpublished state.",
     [googleFormsWriteScope],
     input(
@@ -156,6 +158,7 @@ const actions: GoogleFormsActionSource[] = [
   ),
   action(
     "get_form",
+    "read",
     "Retrieve the current structure, settings, publish state, and items of a Google Form.",
     [googleFormsReadScope],
     input(
@@ -168,6 +171,7 @@ const actions: GoogleFormsActionSource[] = [
   ),
   action(
     "batch_update_form",
+    "write",
     "Apply a batch of Google Forms update requests with optional revision controls and an optional updated form payload.",
     [googleFormsWriteScope],
     input(
@@ -184,6 +188,7 @@ const actions: GoogleFormsActionSource[] = [
   ),
   action(
     "set_publish_settings",
+    "write",
     "Update whether a Google Form is published and whether it is accepting responses.",
     [googleFormsWriteScope],
     input(
@@ -202,6 +207,7 @@ const actions: GoogleFormsActionSource[] = [
   ),
   action(
     "list_responses",
+    "read",
     "List responses for a Google Form with optional filtering and pagination.",
     [googleFormsResponsesReadScope],
     input(
@@ -220,6 +226,7 @@ const actions: GoogleFormsActionSource[] = [
   ),
   action(
     "get_response",
+    "read",
     "Retrieve a single Google Forms response by its response ID.",
     [googleFormsResponsesReadScope],
     input(
@@ -233,6 +240,7 @@ const actions: GoogleFormsActionSource[] = [
   ),
   action(
     "list_watches",
+    "read",
     "List watches configured for a Google Form.",
     [googleFormsReadScope, googleFormsResponsesReadScope],
     input(
@@ -265,6 +273,7 @@ export type GoogleFormsActionName =
 
 function action(
   name: GoogleFormsActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   requiredScopes: string[],
   inputSchema: JsonSchema,
@@ -272,6 +281,7 @@ function action(
 ): GoogleFormsActionSource {
   return {
     name,
+    operationType,
     description,
     requiredScopes,
     inputSchema,

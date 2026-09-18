@@ -161,6 +161,7 @@ const listFoldersOutputSchema = s.object("Paginated Granola folders response.", 
 export const granolaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_notes",
+    operationType: "read",
     description:
       "List Granola notes with OAuth or an API key. MCP lists meetings from the last 30 days and supports folder filtering and local cursor pagination. Creation and update filters require an API key.",
     requiredScopes: [],
@@ -169,6 +170,7 @@ export const granolaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_note",
+    operationType: "read",
     description:
       "Get a Granola note and summary by ID with OAuth or an API key, optionally including the transcript on eligible paid plans. Use an ID returned for the same connection.",
     requiredScopes: [],
@@ -177,6 +179,7 @@ export const granolaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_folders",
+    operationType: "read",
     description:
       "List accessible Granola folders with OAuth or an API key and cursor pagination. MCP folder access requires a paid plan and uses local pagination of the returned list.",
     requiredScopes: [],
@@ -185,6 +188,7 @@ export const granolaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_meetings",
+    operationType: "read",
     description:
       "List recent Granola meetings with OAuth or an API key. OAuth uses MCP's last-30-days window; API keys list notes created in the last 30 days. Use get_meetings to read summaries.",
     requiredScopes: [],
@@ -196,6 +200,7 @@ export const granolaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_meetings",
+    operationType: "read",
     description:
       "Read Granola meeting details and summaries by ID with OAuth or an API key. Use IDs returned for the same connection. Free-plan OAuth access covers personal notes from the last 30 days.",
     requiredScopes: [],
@@ -212,6 +217,7 @@ export const granolaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_meeting_transcript",
+    operationType: "read",
     description: "Read a Granola meeting transcript with OAuth or an API key. Requires an eligible paid Granola plan.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Meeting whose transcript to retrieve.", {

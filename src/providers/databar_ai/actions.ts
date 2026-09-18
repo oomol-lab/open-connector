@@ -28,6 +28,7 @@ const task = s.looseRequiredObject("A Databar task status response.", {
 export const databarAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user_info",
+    operationType: "read",
     description: "Get the current Databar account information for the API key.",
     inputSchema: s.actionInput({}),
     outputSchema: s.actionOutput({
@@ -40,6 +41,7 @@ export const databarAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tables",
+    operationType: "read",
     description: "List Databar tables in the current workspace.",
     inputSchema: s.actionInput({}),
     outputSchema: s.actionOutput({
@@ -48,6 +50,7 @@ export const databarAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_table",
+    operationType: "write",
     description: "Create a Databar table with optional columns and empty rows.",
     inputSchema: s.object(
       {
@@ -61,6 +64,7 @@ export const databarAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_table_columns",
+    operationType: "read",
     description: "List columns for a Databar table.",
     inputSchema: s.actionInput({ table_uuid: tableUuid }, ["table_uuid"]),
     outputSchema: s.actionOutput({
@@ -69,6 +73,7 @@ export const databarAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_table_rows",
+    operationType: "read",
     description: "Get Databar table rows with pagination and optional column filters.",
     inputSchema: s.object(
       {
@@ -83,6 +88,7 @@ export const databarAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "insert_rows",
+    operationType: "write",
     description: "Insert up to 50 rows into a Databar table using human-readable column names.",
     inputSchema: s.actionInput(
       {
@@ -106,6 +112,7 @@ export const databarAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_enrichments",
+    operationType: "read",
     description: "List Databar enrichments with optional search and pagination.",
     inputSchema: s.object(
       {
@@ -121,6 +128,7 @@ export const databarAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_enrichment",
+    operationType: "read",
     description: "Get detailed Databar enrichment metadata by ID.",
     inputSchema: s.actionInput({ enrichment_id: s.positiveInteger("The numeric Databar enrichment ID.") }, [
       "enrichment_id",
@@ -129,6 +137,7 @@ export const databarAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_enrichment",
+    operationType: "write",
     description: "Submit a Databar enrichment task and return the task ID for later status polling.",
     inputSchema: s.actionInput(
       {
@@ -145,12 +154,14 @@ export const databarAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task_status",
+    operationType: "read",
     description: "Get the status and result data for a Databar enrichment or waterfall task.",
     inputSchema: s.actionInput({ task_id: s.nonEmptyString("The Databar task identifier.") }, ["task_id"]),
     outputSchema: s.actionOutput({ task }),
   }),
   defineProviderAction(service, {
     name: "run_waterfall",
+    operationType: "write",
     description: "Submit a Databar waterfall task and return the task ID for later status polling.",
     inputSchema: s.actionInput(
       {

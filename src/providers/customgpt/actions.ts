@@ -68,6 +68,7 @@ const documentListOutputSchema = s.object("A page of indexed CustomGPT documents
 export const customgptActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_agents",
+    operationType: "read",
     description: "List CustomGPT agents in the authenticated account with optional pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -87,6 +88,7 @@ export const customgptActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_agent",
+    operationType: "read",
     description: "Get details and current status for a CustomGPT agent.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -102,6 +104,7 @@ export const customgptActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_conversations",
+    operationType: "read",
     description: "List conversations for a CustomGPT agent.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -124,6 +127,7 @@ export const customgptActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_conversation",
+    operationType: "write",
     description: "Create a CustomGPT conversation for an agent and return its session ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -138,6 +142,7 @@ export const customgptActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send a non-streaming text prompt to a CustomGPT conversation and return the agent response.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -189,6 +194,7 @@ export const customgptActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_messages",
+    operationType: "read",
     description: "List messages in a CustomGPT conversation.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -206,6 +212,7 @@ export const customgptActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_documents",
+    operationType: "read",
     description: "List indexed documents in a CustomGPT agent knowledge base.",
     requiredScopes: [],
     inputSchema: s.object(

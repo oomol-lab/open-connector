@@ -55,6 +55,7 @@ const profileSchema = s.looseObject("A Stormboard profile object.", {
 export const stormboardActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_profile",
+    operationType: "read",
     description: "Get the Stormboard profile associated with the provided API key.",
     inputSchema: s.object({}, { description: "No input parameters are required." }),
     outputSchema: s.object(
@@ -64,6 +65,7 @@ export const stormboardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_storms",
+    operationType: "read",
     description:
       "List Stormboard Storms visible to the current account with optional team, folder, status, title, ordering, and pagination filters.",
     inputSchema: s.object(
@@ -91,6 +93,7 @@ export const stormboardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_storm",
+    operationType: "read",
     description: "Get the details and setup for one Stormboard Storm.",
     inputSchema: stormIdInputSchema,
     outputSchema: s.object(
@@ -100,6 +103,7 @@ export const stormboardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_storm_access",
+    operationType: "read",
     description: "Check the current account's access level for one Stormboard Storm.",
     inputSchema: stormIdInputSchema,
     outputSchema: s.object(
@@ -117,6 +121,7 @@ export const stormboardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_storm_ideas",
+    operationType: "read",
     description: "List ideas in one Stormboard Storm, optionally filtering by last modified timestamp.",
     inputSchema: s.object(
       {
@@ -132,6 +137,7 @@ export const stormboardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_storm_users",
+    operationType: "read",
     description: "List participants in one Stormboard Storm.",
     inputSchema: stormIdInputSchema,
     outputSchema: s.object(
@@ -141,6 +147,7 @@ export const stormboardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_storm_connectors",
+    operationType: "read",
     description: "List line connectors in one Stormboard Storm.",
     inputSchema: stormIdInputSchema,
     outputSchema: s.object(
@@ -150,6 +157,7 @@ export const stormboardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_storm_tags",
+    operationType: "read",
     description: "List tags that have been created in one Stormboard Storm.",
     inputSchema: stormIdInputSchema,
     outputSchema: s.object(
@@ -159,6 +167,7 @@ export const stormboardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_template_categories",
+    operationType: "read",
     description: "List Stormboard template categories.",
     inputSchema: s.object({}, { description: "No input parameters are required." }),
     outputSchema: s.object(
@@ -168,6 +177,7 @@ export const stormboardActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List Stormboard templates, optionally limited to one template category.",
     inputSchema: s.object(
       { category: s.nonEmptyString("The Stormboard template category ID.") },

@@ -53,6 +53,7 @@ export type DadataRuActionName = "suggest_address" | "suggest_party" | "suggest_
 export const dadataRuActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "suggest_address",
+    operationType: "read",
     description: "Suggest Russian postal addresses from partial text using DaData's Suggestions API.",
     requiredScopes: [],
     inputSchema: addressSuggestionInputSchema,
@@ -60,6 +61,7 @@ export const dadataRuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "suggest_party",
+    operationType: "read",
     description:
       "Suggest Russian organizations and individual entrepreneurs from partial text using DaData's Suggestions API.",
     requiredScopes: [],
@@ -68,6 +70,7 @@ export const dadataRuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "suggest_bank",
+    operationType: "read",
     description: "Suggest Russian banks from partial text using DaData's Suggestions API.",
     requiredScopes: [],
     inputSchema: commonSuggestionInputSchema,
@@ -75,6 +78,7 @@ export const dadataRuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "suggest_fio",
+    operationType: "read",
     description: "Suggest Russian full names from partial text using DaData's Suggestions API.",
     requiredScopes: [],
     inputSchema: commonSuggestionInputSchema,
@@ -82,6 +86,7 @@ export const dadataRuActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "suggest_email",
+    operationType: "read",
     description: "Suggest email addresses from partial text using DaData's Suggestions API.",
     requiredScopes: [],
     inputSchema: commonSuggestionInputSchema,

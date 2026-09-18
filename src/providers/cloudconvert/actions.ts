@@ -105,6 +105,7 @@ const urlConversionJobInputSchema = s.object(
 export const cloudconvertActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current CloudConvert user and remaining credits for the API token.",
     requiredScopes: userReadPermission,
     inputSchema: s.object("No input is required.", {}),
@@ -112,6 +113,7 @@ export const cloudconvertActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_conversion_types",
+    operationType: "read",
     description: "List possible CloudConvert conversion types for the requested input and output formats.",
     inputSchema: s.object(
       "Filters for listing CloudConvert conversion types.",
@@ -140,6 +142,7 @@ export const cloudconvertActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_url_conversion_job",
+    operationType: "write",
     description:
       "Create a CloudConvert job that imports a remote file URL, converts it, and exports the result via `export/url`.",
     requiredScopes: taskWritePermission,
@@ -149,6 +152,7 @@ export const cloudconvertActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_url_conversion_job_and_wait",
+    operationType: "write",
     description: "Create a URL-based CloudConvert conversion job and wait synchronously until the job finishes.",
     requiredScopes: [...taskReadPermission, ...taskWritePermission],
     followUpActions: ["cloudconvert.get_job"],
@@ -157,6 +161,7 @@ export const cloudconvertActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job",
+    operationType: "read",
     description: "Get a single CloudConvert job and include its tasks.",
     requiredScopes: taskReadPermission,
     followUpActions: ["cloudconvert.wait_for_job"],
@@ -165,6 +170,7 @@ export const cloudconvertActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "wait_for_job",
+    operationType: "write",
     description:
       "Wait synchronously for a CloudConvert job to finish and return the finished or failed job with tasks.",
     requiredScopes: taskReadPermission,
@@ -173,6 +179,7 @@ export const cloudconvertActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_jobs",
+    operationType: "read",
     description: "List CloudConvert jobs for the current account.",
     requiredScopes: taskReadPermission,
     inputSchema: s.object(
@@ -189,6 +196,7 @@ export const cloudconvertActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_job",
+    operationType: "destructive",
     description: "Delete a CloudConvert job, including all tasks and related data.",
     requiredScopes: taskWritePermission,
     inputSchema: idInput("Input payload for deleting a CloudConvert job.", "jobId", jobId),
@@ -196,6 +204,7 @@ export const cloudconvertActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task",
+    operationType: "read",
     description: "Get a single CloudConvert task by ID.",
     requiredScopes: taskReadPermission,
     followUpActions: ["cloudconvert.wait_for_task"],
@@ -204,6 +213,7 @@ export const cloudconvertActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "wait_for_task",
+    operationType: "write",
     description: "Wait synchronously for a CloudConvert task to finish and return the finished or failed task.",
     requiredScopes: taskReadPermission,
     inputSchema: idInput("Input payload for waiting on a CloudConvert task.", "taskId", taskId),
@@ -211,6 +221,7 @@ export const cloudconvertActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "List CloudConvert tasks for the current account.",
     requiredScopes: taskReadPermission,
     inputSchema: s.object(
@@ -228,6 +239,7 @@ export const cloudconvertActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "cancel_task",
+    operationType: "destructive",
     description: "Cancel a CloudConvert task that is still waiting or processing.",
     requiredScopes: taskWritePermission,
     inputSchema: idInput("Input payload for canceling a CloudConvert task.", "taskId", taskId),
@@ -235,6 +247,7 @@ export const cloudconvertActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "retry_task",
+    operationType: "write",
     description: "Retry a CloudConvert task by creating a new task from the original payload.",
     requiredScopes: taskWritePermission,
     inputSchema: idInput("Input payload for retrying a CloudConvert task.", "taskId", taskId),
@@ -242,6 +255,7 @@ export const cloudconvertActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_task",
+    operationType: "destructive",
     description: "Delete a CloudConvert task, including all related data.",
     requiredScopes: taskWritePermission,
     inputSchema: idInput("Input payload for deleting a CloudConvert task.", "taskId", taskId),

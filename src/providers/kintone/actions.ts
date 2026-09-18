@@ -68,6 +68,7 @@ const userServices = s.object("A normalized Kintone user's service assignments."
 
 function action(input: {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: ReturnType<typeof s.actionInput>;
   outputSchema: ReturnType<typeof s.actionOutput>;
@@ -82,6 +83,7 @@ function action(input: {
 export const kintoneActions: ActionDefinition[] = [
   action({
     name: "list_users",
+    operationType: "read",
     description: "List Kintone users with optional ID, code, and pagination filters.",
     inputSchema: listInput,
     outputSchema: s.actionOutput(
@@ -91,6 +93,7 @@ export const kintoneActions: ActionDefinition[] = [
   }),
   action({
     name: "list_departments",
+    operationType: "read",
     description: "List Kintone departments with optional ID, code, and pagination filters.",
     inputSchema: listInput,
     outputSchema: s.actionOutput(
@@ -100,6 +103,7 @@ export const kintoneActions: ActionDefinition[] = [
   }),
   action({
     name: "list_groups",
+    operationType: "read",
     description: "List Kintone groups with optional ID, code, and pagination filters.",
     inputSchema: listInput,
     outputSchema: s.actionOutput(
@@ -109,6 +113,7 @@ export const kintoneActions: ActionDefinition[] = [
   }),
   action({
     name: "get_user_departments",
+    operationType: "read",
     description: "Get the departments assigned to a Kintone user by user code.",
     inputSchema: s.actionInput({ code }, ["code"], "The input payload for querying a Kintone user's directory links."),
     outputSchema: s.actionOutput(
@@ -118,6 +123,7 @@ export const kintoneActions: ActionDefinition[] = [
   }),
   action({
     name: "get_user_groups",
+    operationType: "read",
     description: "Get the groups assigned to a Kintone user by user code.",
     inputSchema: s.actionInput({ code }, ["code"], "The input payload for querying a Kintone user's directory links."),
     outputSchema: s.actionOutput(
@@ -127,6 +133,7 @@ export const kintoneActions: ActionDefinition[] = [
   }),
   action({
     name: "get_user_services",
+    operationType: "read",
     description: "Get services assigned to Kintone users with optional user code filters.",
     inputSchema: s.actionInput(
       { codes, offset, size },

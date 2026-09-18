@@ -146,12 +146,14 @@ const searchResultSchema = s.looseRequiredObject("Mailsoftly contact search resu
 export const mailsoftlyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_contacts",
+    operationType: "read",
     description: "List all contacts in the authenticated Mailsoftly account.",
     inputSchema: emptyInputSchema,
     outputSchema: s.array("Contacts in the Mailsoftly account.", contactSummarySchema),
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Retrieve one Mailsoftly contact by ID, optionally with detailed fields.",
     inputSchema: s.object(
       "Parameters for retrieving a Mailsoftly contact.",
@@ -165,18 +167,21 @@ export const mailsoftlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a Mailsoftly contact with a unique email address.",
     inputSchema: createContactInputSchema,
     outputSchema: contactSchema,
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update selected fields on an existing Mailsoftly contact.",
     inputSchema: updateContactInputSchema,
     outputSchema: contactSchema,
   }),
   defineProviderAction(service, {
     name: "search_contacts",
+    operationType: "read",
     description: "Search Mailsoftly contacts by exact email, first name, or last name.",
     inputSchema: s.object(
       "Exact-match criteria for searching Mailsoftly contacts.",
@@ -191,12 +196,14 @@ export const mailsoftlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact_lists",
+    operationType: "read",
     description: "List general Mailsoftly contact lists and their contact counts.",
     inputSchema: emptyInputSchema,
     outputSchema: s.array("General contact lists in the Mailsoftly account.", contactListSchema),
   }),
   defineProviderAction(service, {
     name: "get_contact_list",
+    operationType: "read",
     description: "Retrieve one Mailsoftly contact list by ID.",
     inputSchema: s.requiredObject("Parameters for retrieving a Mailsoftly contact list.", {
       contact_list_id: contactListIdSchema,
@@ -211,6 +218,7 @@ export const mailsoftlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact_list_contacts",
+    operationType: "read",
     description: "List contacts belonging to a Mailsoftly contact list.",
     inputSchema: s.requiredObject("Parameters for listing contacts in a Mailsoftly contact list.", {
       contact_list_id: contactListIdSchema,
@@ -219,6 +227,7 @@ export const mailsoftlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact_list",
+    operationType: "write",
     description: "Create an empty Mailsoftly contact list.",
     inputSchema: s.requiredObject("Fields for creating a Mailsoftly contact list.", {
       name: s.nonEmptyString("The contact list name."),
@@ -232,6 +241,7 @@ export const mailsoftlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_contact_to_contact_list",
+    operationType: "write",
     description: "Add an existing Mailsoftly contact to a contact list.",
     inputSchema: s.requiredObject("IDs for adding a contact to a Mailsoftly list.", {
       contact_list_id: contactListIdSchema,
@@ -244,6 +254,7 @@ export const mailsoftlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_contacts_to_contact_list",
+    operationType: "write",
     description: "Add contacts to a Mailsoftly list by email, creating contacts that do not already exist.",
     inputSchema: s.requiredObject("Contacts to add to a Mailsoftly contact list.", {
       contact_list_id: contactListIdSchema,

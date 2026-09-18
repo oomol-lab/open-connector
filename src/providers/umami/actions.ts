@@ -92,6 +92,7 @@ const eventRowSchema = s.looseObject("Umami event row.", {
 export const umamiActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current Umami user for the configured API token.",
     inputSchema: s.actionInput({}, [], "No input is required to get the current Umami user."),
     outputSchema: s.actionOutput(
@@ -104,6 +105,7 @@ export const umamiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_websites",
+    operationType: "read",
     description: "List Umami websites available to the configured API token.",
     inputSchema: s.actionInput(
       {
@@ -127,6 +129,7 @@ export const umamiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_website",
+    operationType: "read",
     description: "Get metadata for a single Umami website.",
     inputSchema: s.actionInput(
       { websiteId: websiteIdSchema },
@@ -143,6 +146,7 @@ export const umamiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_website_stats",
+    operationType: "read",
     description: "Get aggregate pageview, visitor, visit, bounce, and time statistics for a website.",
     inputSchema: s.actionInput(
       dateRangeInput,
@@ -159,6 +163,7 @@ export const umamiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_pageviews",
+    operationType: "read",
     description: "Get Umami pageview and session timeseries for a website.",
     inputSchema: s.actionInput(
       {
@@ -178,6 +183,7 @@ export const umamiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_metrics",
+    operationType: "read",
     description: "Get grouped Umami website metrics such as URLs, referrers, browsers, or countries.",
     inputSchema: s.actionInput(
       {
@@ -198,6 +204,7 @@ export const umamiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_realtime",
+    operationType: "read",
     description: "Get realtime active visitor data for an Umami website.",
     inputSchema: s.actionInput(
       { websiteId: websiteIdSchema },
@@ -214,6 +221,7 @@ export const umamiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_events",
+    operationType: "read",
     description: "List tracked Umami events for a website within a time range.",
     inputSchema: s.actionInput(
       {

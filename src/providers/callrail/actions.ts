@@ -90,6 +90,7 @@ const formSubmissionSchema = s.object("A CallRail form submission.", {
 export const callrailActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_accounts",
+    operationType: "read",
     description: "List CallRail accounts visible to the API key.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -108,6 +109,7 @@ export const callrailActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_companies",
+    operationType: "read",
     description: "List CallRail companies for one account.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -126,6 +128,7 @@ export const callrailActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_calls",
+    operationType: "read",
     description: "List CallRail calls for one account with optional company, tracker, date, and field filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -152,6 +155,7 @@ export const callrailActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_call",
+    operationType: "read",
     description: "Retrieve one CallRail call by account ID and call ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -170,6 +174,7 @@ export const callrailActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_form_submissions",
+    operationType: "read",
     description: "List CallRail form submissions for one account with optional company, date, and field filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -192,6 +197,7 @@ export const callrailActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form_submission",
+    operationType: "read",
     description: "Retrieve one CallRail form submission by account ID and form submission ID.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving one CallRail form submission.", {

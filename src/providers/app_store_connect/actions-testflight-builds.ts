@@ -153,6 +153,7 @@ const confirmed = (description: string) =>
 export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "update_build",
+    operationType: "destructive",
     description:
       "Change the TestFlight flags of one build: expire it so testers can no longer install it, or record whether it uses non-exempt encryption. Expiring a build cannot be undone. Pass at least one field.",
     requiredScopes: [],
@@ -172,6 +173,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "list_build_individual_testers",
+    operationType: "read",
     description: "List the TestFlight testers who were assigned one build individually, outside of any group.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -188,6 +190,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "add_individual_testers_to_build",
+    operationType: "write",
     description:
       "Assign existing TestFlight testers to one build individually so they can install it without belonging to a group.",
     requiredScopes: [],
@@ -213,6 +216,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "remove_individual_testers_from_build",
+    operationType: "destructive",
     description:
       "Remove the individual assignment of TestFlight testers from one build. Testers keep access through any group that has the build.",
     requiredScopes: [],
@@ -238,6 +242,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "remove_build_from_beta_groups",
+    operationType: "destructive",
     description: "Withdraw one build from TestFlight groups so their testers can no longer install it.",
     requiredScopes: [],
     providerPermissions: [...manageTestFlightRoles],
@@ -262,6 +267,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "list_build_beta_groups",
+    operationType: "read",
     description: "List the TestFlight groups that can install one build.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -278,6 +284,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "get_build_beta_detail",
+    operationType: "read",
     description:
       "Read the TestFlight distribution details of one build: its internal and external testing states and whether testers are notified automatically.",
     requiredScopes: [],
@@ -293,6 +300,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "update_build_beta_detail",
+    operationType: "destructive",
     description:
       "Turn automatic tester notifications on or off for one build. The build beta detail identifier comes from get_build_beta_detail.",
     requiredScopes: [],
@@ -312,6 +320,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "notify_build_testers",
+    operationType: "write",
     description:
       "Send the TestFlight availability notification for one build to every tester who can install it. The notification cannot be recalled, so use it only when automatic notifications were off.",
     requiredScopes: [],
@@ -328,6 +337,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "list_beta_build_localizations",
+    operationType: "read",
     description:
       'List the "What to Test" notes of one build, one record per locale, optionally narrowed to a single locale.',
     requiredScopes: [],
@@ -349,6 +359,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "get_beta_build_localization",
+    operationType: "read",
     description: 'Read the "What to Test" notes record of one build and locale by its identifier.',
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -365,6 +376,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "create_beta_build_localization",
+    operationType: "write",
     description:
       'Create the "What to Test" notes of one build for a locale that has none yet. App Store Connect rejects a second record for the same locale; use update_build_test_notes to change existing notes.',
     requiredScopes: [],
@@ -385,6 +397,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "update_beta_build_localization",
+    operationType: "destructive",
     description:
       'Replace the "What to Test" notes of one existing build localization. The previous text is overwritten.',
     requiredScopes: [],
@@ -404,6 +417,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "delete_beta_build_localization",
+    operationType: "destructive",
     description:
       'Delete the "What to Test" notes of one build in one locale. Testers in that locale fall back to the notes of the primary locale.',
     requiredScopes: [],
@@ -422,6 +436,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "get_beta_app_review_detail",
+    operationType: "read",
     description:
       "Read the contact person, demo account, and notes Apple uses when reviewing an app for TestFlight external testing.",
     requiredScopes: [],
@@ -437,6 +452,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "update_beta_app_review_detail",
+    operationType: "destructive",
     description:
       "Change the contact person, demo account, or notes Apple uses when reviewing an app for TestFlight. Each field given replaces the stored value; pass at least one. The identifier comes from get_beta_app_review_detail.",
     requiredScopes: [],
@@ -463,6 +479,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "list_beta_app_localizations",
+    operationType: "read",
     description:
       "List the TestFlight test information of one app, one record per locale, optionally narrowed to a single locale.",
     requiredScopes: [],
@@ -484,6 +501,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "get_beta_app_localization",
+    operationType: "read",
     description: "Read the TestFlight test information of one app and locale by its identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -500,6 +518,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "create_beta_app_localization",
+    operationType: "write",
     description:
       "Create the TestFlight test information of an app for a locale that has none yet: the description, feedback email, and URLs testers see in TestFlight.",
     requiredScopes: [],
@@ -524,6 +543,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "update_beta_app_localization",
+    operationType: "destructive",
     description:
       "Change the TestFlight test information of one app localization. Each field given replaces the stored value; pass at least one.",
     requiredScopes: [],
@@ -547,6 +567,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "delete_beta_app_localization",
+    operationType: "destructive",
     description:
       "Delete the TestFlight test information of an app in one locale. Testers in that locale fall back to the primary locale.",
     requiredScopes: [],
@@ -565,6 +586,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "get_beta_license_agreement",
+    operationType: "read",
     description: "Read the license agreement TestFlight testers of an app must accept.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -579,6 +601,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "update_beta_license_agreement",
+    operationType: "destructive",
     description:
       "Replace the license agreement text TestFlight testers of an app must accept. The identifier comes from get_beta_license_agreement.",
     requiredScopes: [],
@@ -598,6 +621,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "resend_beta_tester_invitation",
+    operationType: "write",
     description:
       "Send the TestFlight invitation email again to a tester who has not accepted the invitation for one app.",
     requiredScopes: [],
@@ -622,6 +646,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "get_beta_group",
+    operationType: "read",
     description: "Read one TestFlight group by its identifier, including its public link settings.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -633,6 +658,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "update_beta_group",
+    operationType: "destructive",
     description:
       "Change the name, public link, feedback, or Apple silicon and Apple Vision availability settings of one TestFlight group. Each field given replaces the stored value; pass at least one.",
     requiredScopes: [],
@@ -658,6 +684,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "list_beta_group_builds",
+    operationType: "read",
     description: "List the builds one TestFlight group can install, with the prerelease version each build belongs to.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -674,6 +701,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "add_builds_to_beta_group",
+    operationType: "write",
     description: "Make several builds available to one TestFlight group so its testers can install them.",
     requiredScopes: [],
     providerPermissions: [...manageTestFlightRoles],
@@ -698,6 +726,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "remove_builds_from_beta_group",
+    operationType: "destructive",
     description: "Withdraw several builds from one TestFlight group so its testers can no longer install them.",
     requiredScopes: [],
     providerPermissions: [...manageTestFlightRoles],
@@ -722,6 +751,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "get_beta_tester",
+    operationType: "read",
     description:
       "Read one TestFlight tester by its identifier, including the invitation state and the devices the app is installed on.",
     requiredScopes: [],
@@ -734,6 +764,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "list_beta_tester_apps",
+    operationType: "read",
     description: "List the apps one TestFlight tester has access to.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -750,6 +781,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "remove_beta_tester_from_apps",
+    operationType: "destructive",
     description:
       "Revoke a TestFlight tester's access to specific apps, removing them from every group and build of those apps while keeping them on the team.",
     requiredScopes: [],
@@ -778,6 +810,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "list_beta_tester_beta_groups",
+    operationType: "read",
     description: "List the TestFlight groups one tester belongs to.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -794,6 +827,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "get_pre_release_version",
+    operationType: "read",
     description: "Read one prerelease version by its identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -807,6 +841,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "list_beta_app_review_submissions",
+    operationType: "read",
     description: "List the TestFlight beta review submissions of one build, optionally narrowed to one review state.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -827,6 +862,7 @@ export const appStoreConnectTestFlightBuildActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "get_beta_app_review_submission",
+    operationType: "read",
     description: "Read one TestFlight beta review submission by its identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(

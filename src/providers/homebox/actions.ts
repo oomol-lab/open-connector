@@ -56,6 +56,7 @@ const dateSchema = s.string("A date in YYYY-MM-DD format.", { pattern: "^\\d{4}-
 export const homeBoxActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_status",
+    operationType: "read",
     description: "Fetch the HomeBox instance status: health, version, and whether registration is open.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -65,6 +66,7 @@ export const homeBoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_entities",
+    operationType: "read",
     description: "Search HomeBox entities with optional text search, pagination, and tag/parent filters.",
     inputSchema: s.actionInput(
       {
@@ -92,12 +94,14 @@ export const homeBoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_entity",
+    operationType: "read",
     description: "Fetch one HomeBox entity with its full details, including attachments and custom fields.",
     inputSchema: s.actionInput(entityIdInput, ["entityId"], "Input parameters for fetching one entity."),
     outputSchema: s.actionOutput({ entity: entityOutput }, "The requested HomeBox entity."),
   }),
   defineProviderAction(service, {
     name: "create_entity",
+    operationType: "write",
     description: "Create a new HomeBox entity with a name and optional type, parent, description, and tags.",
     inputSchema: s.actionInput(
       {
@@ -117,6 +121,7 @@ export const homeBoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_entity",
+    operationType: "write",
     description:
       "Update one HomeBox entity. Only the provided fields change; all other entity data (serial number, warranty, custom fields, ...) is preserved. Custom fields are replaced as a whole when fields is provided.",
     inputSchema: s.actionInput(
@@ -154,12 +159,14 @@ export const homeBoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_entity",
+    operationType: "destructive",
     description: "Delete one HomeBox entity.",
     inputSchema: s.actionInput(entityIdInput, ["entityId"], "Input parameters for deleting one entity."),
     outputSchema: s.actionOutput({ deleted: s.boolean("Whether the entity was deleted.") }, "The deletion result."),
   }),
   defineProviderAction(service, {
     name: "list_entity_types",
+    operationType: "read",
     description: "List all HomeBox entity types, including location-flagged types.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -171,6 +178,7 @@ export const homeBoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_entity_type",
+    operationType: "write",
     description: "Create a new HomeBox entity type, optionally flagged as a location.",
     inputSchema: s.actionInput(
       {
@@ -189,6 +197,7 @@ export const homeBoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_entity_type",
+    operationType: "destructive",
     description: "Delete one HomeBox entity type.",
     inputSchema: s.actionInput(
       { entityTypeId: s.nonEmptyString("The entity type UUID to delete.") },
@@ -202,6 +211,7 @@ export const homeBoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List all HomeBox tags.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -211,6 +221,7 @@ export const homeBoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_tag",
+    operationType: "write",
     description: "Create a new HomeBox tag.",
     inputSchema: s.actionInput(
       {
@@ -227,6 +238,7 @@ export const homeBoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_tag",
+    operationType: "destructive",
     description: "Delete one HomeBox tag.",
     inputSchema: s.actionInput(
       { tagId: s.nonEmptyString("The tag UUID to delete.") },
@@ -237,6 +249,7 @@ export const homeBoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_group_statistics",
+    operationType: "read",
     description:
       "Fetch the HomeBox group dashboard statistics: total entities, locations, tags, price, and warranties.",
     inputSchema: emptyInputSchema,
@@ -247,6 +260,7 @@ export const homeBoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_entity_attachment",
+    operationType: "write",
     description:
       "Attach a file (photo or document) to one HomeBox entity. The file type is detected from the extension when omitted.",
     inputSchema: s.actionInput(
@@ -264,6 +278,7 @@ export const homeBoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_maintenance_log",
+    operationType: "read",
     description: "Fetch the maintenance log of one HomeBox entity, optionally filtered by status.",
     inputSchema: s.actionInput(
       {
@@ -280,6 +295,7 @@ export const homeBoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_maintenance_entry",
+    operationType: "write",
     description:
       "Add a maintenance entry (repair, inspection, scheduled service) to one HomeBox entity. Provide completedDate, scheduledDate, or both.",
     inputSchema: s.actionInput(
@@ -301,6 +317,7 @@ export const homeBoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_custom_field_names",
+    operationType: "read",
     description: "List the custom field names in use across the HomeBox group.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -310,6 +327,7 @@ export const homeBoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_custom_field_values",
+    operationType: "read",
     description: "List the values in use for one custom field name across the HomeBox group.",
     inputSchema: s.actionInput(
       { field: s.nonEmptyString("The custom field name, for example Color.") },

@@ -56,6 +56,7 @@ const optionalNotificationFields = [
 export const barkActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_notification",
+    operationType: "write",
     description: "Send a notification to the connected Bark device through the REST push endpoint.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for sending one Bark notification.", notificationFields, {
@@ -65,6 +66,7 @@ export const barkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_batch_notifications",
+    operationType: "write",
     description: "Send the same notification to multiple explicit Bark device keys through the REST push endpoint.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -82,6 +84,7 @@ export const barkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_encrypted_notification",
+    operationType: "write",
     description: "Send a pre-encrypted Bark notification ciphertext to the connected Bark device.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for sending one encrypted Bark notification.", {
@@ -91,6 +94,7 @@ export const barkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_server_info",
+    operationType: "read",
     description: "Fetch raw server information from the connected Bark server.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for fetching Bark server information.", {}),

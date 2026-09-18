@@ -17,6 +17,7 @@ const limitSchema = s.integer("The number of records to return. Cin7 Core allows
 export const cin7CoreActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_account",
+    operationType: "read",
     description: "Retrieve the Cin7 Core company and account settings for the connected account.",
     inputSchema: s.actionInput({}, [], "No input is required to retrieve the connected Cin7 Core account."),
     outputSchema: s.actionOutput(
@@ -28,6 +29,7 @@ export const cin7CoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List Cin7 Core customers with optional official filters and page pagination.",
     inputSchema: s.object(
       "The filters used to list Cin7 Core customers.",
@@ -68,6 +70,7 @@ export const cin7CoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Retrieve one Cin7 Core customer by customer ID.",
     inputSchema: s.object(
       "The Cin7 Core customer to retrieve.",
@@ -86,6 +89,7 @@ export const cin7CoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List Cin7 Core products with optional official filters and page pagination.",
     inputSchema: s.object(
       "The filters used to list Cin7 Core products.",
@@ -134,6 +138,7 @@ export const cin7CoreActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Retrieve one Cin7 Core product by product ID.",
     inputSchema: s.object(
       "The Cin7 Core product to retrieve.",

@@ -78,6 +78,7 @@ const sourceCountsSchema = s.object(
 export const valyuActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search",
+    operationType: "read",
     description: "Search web, academic, financial, and proprietary data sources with Valyu.",
     inputSchema: s.object(
       "The input payload for a Valyu Search request.",

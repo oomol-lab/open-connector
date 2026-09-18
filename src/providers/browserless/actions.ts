@@ -209,18 +209,21 @@ const fileOutputSchema = s.actionOutput(
 export const browserlessActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "fetch_content",
+    operationType: "read",
     description: "Fetch fully rendered HTML content from Browserless.",
     inputSchema: contentInputSchema,
     outputSchema: htmlOutputSchema,
   }),
   defineProviderAction(service, {
     name: "take_screenshot",
+    operationType: "read",
     description: "Generate a Browserless screenshot and store it in local transit storage.",
     inputSchema: screenshotInputSchema,
     outputSchema: fileOutputSchema,
   }),
   defineProviderAction(service, {
     name: "generate_pdf",
+    operationType: "read",
     description: "Generate a Browserless PDF file and store it in local transit storage.",
     inputSchema: pdfInputSchema,
     outputSchema: fileOutputSchema,

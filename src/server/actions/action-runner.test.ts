@@ -15,6 +15,7 @@ const echoAction: ActionDefinition = {
   service: "example",
   name: "echo",
   description: "Echo input.",
+  operationType: "read",
   requiredScopes: [],
   providerPermissions: [],
   inputSchema: { type: "object" },

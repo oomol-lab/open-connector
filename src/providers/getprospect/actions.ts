@@ -282,6 +282,7 @@ const searchCompaniesOutputSchema = s.object("The GetProspect company search res
 export const getprospectActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "find_email",
+    operationType: "read",
     description: "Find a prospect's business email address from a person name and a company domain or company name.",
     requiredScopes: [],
     inputSchema: findEmailInputSchema,
@@ -289,6 +290,7 @@ export const getprospectActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "verify_email",
+    operationType: "read",
     description: "Verify a single email address and return its deliverability status from GetProspect.",
     requiredScopes: [],
     inputSchema: verifyEmailInputSchema,
@@ -296,6 +298,7 @@ export const getprospectActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "lookup_email",
+    operationType: "read",
     description:
       "Look up a saved GetProspect contact profile by email address and return the normalized contact details.",
     requiredScopes: [],
@@ -304,6 +307,7 @@ export const getprospectActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_leads",
+    operationType: "read",
     description: "Search GetProspect's B2B lead database with structured lead filters and paginated results.",
     requiredScopes: [],
     inputSchema: searchLeadsInputSchema,
@@ -311,6 +315,7 @@ export const getprospectActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_companies",
+    operationType: "read",
     description: "Search GetProspect's company database with structured company filters and paginated results.",
     requiredScopes: [],
     inputSchema: searchCompaniesInputSchema,

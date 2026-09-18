@@ -307,6 +307,7 @@ const singleOutput = (key: string, resource: JsonSchema, description: string) =>
 export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_bundle_ids",
+    operationType: "read",
     description:
       "List the bundle IDs (App IDs) registered with the team, optionally filtered by identifier, name, platform, or seed ID.",
     requiredScopes: [],
@@ -345,6 +346,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_bundle_id",
+    operationType: "read",
     description: "Read one bundle ID record by its App Store Connect identifier.",
     requiredScopes: [],
     providerPermissions: [...manageProvisioningRoles],
@@ -353,6 +355,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "create_bundle_id",
+    operationType: "write",
     description:
       "Register a new bundle ID (App ID) with the team. Capabilities are added afterwards with enable_bundle_id_capability.",
     requiredScopes: [],
@@ -375,6 +378,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "update_bundle_id",
+    operationType: "write",
     description:
       "Rename a bundle ID. The name is the only attribute App Store Connect lets you change; the identifier string and platform are fixed once registered.",
     requiredScopes: [],
@@ -391,6 +395,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "delete_bundle_id",
+    operationType: "destructive",
     description:
       "Delete a bundle ID from the team. App Store Connect refuses to delete a bundle ID that an app record still uses.",
     requiredScopes: [],
@@ -403,6 +408,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_bundle_id_profiles",
+    operationType: "read",
     description: "List the provisioning profiles that were created for one bundle ID.",
     requiredScopes: [],
     providerPermissions: [...manageProvisioningRoles],
@@ -420,6 +426,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_bundle_id_app",
+    operationType: "read",
     description:
       "Read the App Store Connect app that uses one bundle ID. Returns null when no app has been created for the bundle ID yet.",
     requiredScopes: [],
@@ -433,6 +440,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
 
   defineProviderAction(service, {
     name: "list_bundle_id_capabilities",
+    operationType: "read",
     description: "List the capabilities enabled on one bundle ID, with their configured settings.",
     requiredScopes: [],
     providerPermissions: [...manageProvisioningRoles],
@@ -450,6 +458,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "enable_bundle_id_capability",
+    operationType: "write",
     description:
       "Enable a capability such as push notifications or associated domains on a bundle ID. Provisioning profiles created for the bundle ID before the change may need to be regenerated to carry the new entitlement.",
     requiredScopes: [],
@@ -467,6 +476,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "update_bundle_id_capability",
+    operationType: "destructive",
     description:
       "Replace the configuration of a capability that is already enabled on a bundle ID, for example the iCloud version or data protection level. Provide at least one of capabilityType or settings; the settings given replace the current ones.",
     requiredScopes: [],
@@ -484,6 +494,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "disable_bundle_id_capability",
+    operationType: "destructive",
     description:
       "Disable a capability on a bundle ID and discard its configuration. Provisioning profiles that relied on the capability become invalid.",
     requiredScopes: [],
@@ -501,6 +512,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
 
   defineProviderAction(service, {
     name: "list_certificates",
+    operationType: "read",
     description:
       "List the signing certificates of the team, including their base64 DER content, optionally filtered by type, display name, or serial number.",
     requiredScopes: [],
@@ -512,6 +524,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_certificate",
+    operationType: "read",
     description: "Read one certificate by its App Store Connect identifier, including its base64 DER content.",
     requiredScopes: [],
     providerPermissions: [...manageProvisioningRoles],
@@ -520,6 +533,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "create_certificate",
+    operationType: "write",
     description:
       "Issue a new signing certificate from a certificate signing request (CSR). Apple Pay and pass type certificates also take the merchant ID or pass type ID they belong to. Developer ID certificates for macOS can only be created in the Apple Developer website or Xcode, and Apple caps how many certificates of each type a team may hold.",
     requiredScopes: [],
@@ -544,6 +558,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "update_certificate",
+    operationType: "destructive",
     description:
       "Activate or deactivate a certificate. App Store Connect only exposes the activation state, which applies to Apple Pay payment processing certificates; a deactivated certificate stops being used for payment processing until it is activated again.",
     requiredScopes: [],
@@ -560,6 +575,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "revoke_certificate",
+    operationType: "destructive",
     description:
       "Revoke a certificate that was lost, stolen, compromised, or is expiring. Revocation is permanent and cannot be undone: apps signed with the certificate can no longer be re-signed with it, every provisioning profile that contains it becomes invalid, and Developer ID or Apple Pay certificates may need Apple to restore service. Issue a replacement with create_certificate first when the certificate is still in use.",
     requiredScopes: [],
@@ -573,6 +589,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
 
   defineProviderAction(service, {
     name: "list_profiles",
+    operationType: "read",
     description:
       "List the provisioning profiles of the team, including their base64 content, optionally filtered by name, profile type, or validity state.",
     requiredScopes: [],
@@ -606,6 +623,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_profile",
+    operationType: "read",
     description: "Read one provisioning profile by its App Store Connect identifier, including its base64 content.",
     requiredScopes: [],
     providerPermissions: [...manageProvisioningRoles],
@@ -614,6 +632,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "create_profile",
+    operationType: "write",
     description:
       "Create a provisioning profile for one bundle ID from the given certificates and, for development and ad hoc profiles, the devices allowed to install the app. App Store and in-house profile types take no devices.",
     requiredScopes: [],
@@ -643,6 +662,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "delete_profile",
+    operationType: "destructive",
     description:
       "Delete a provisioning profile so it can no longer be downloaded or used to sign new builds. Create a replacement with create_profile when the bundle ID still needs one.",
     requiredScopes: [],
@@ -655,6 +675,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_profile_certificates",
+    operationType: "read",
     description: "List the certificates embedded in one provisioning profile.",
     requiredScopes: [],
     providerPermissions: [...manageProvisioningRoles],
@@ -667,6 +688,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_profile_devices",
+    operationType: "read",
     description: "List the devices a development or ad hoc provisioning profile allows.",
     requiredScopes: [],
     providerPermissions: [...manageProvisioningRoles],
@@ -680,6 +702,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_profile_bundle_id",
+    operationType: "read",
     description: "Read the bundle ID a provisioning profile was created for.",
     requiredScopes: [],
     providerPermissions: [...manageProvisioningRoles],
@@ -689,6 +712,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
 
   defineProviderAction(service, {
     name: "list_devices",
+    operationType: "read",
     description: "List the devices registered with the team, optionally filtered by name, platform, UDID, or status.",
     requiredScopes: [],
     providerPermissions: [...manageProvisioningRoles],
@@ -724,6 +748,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_device",
+    operationType: "read",
     description: "Read one registered device by its App Store Connect identifier.",
     requiredScopes: [],
     providerPermissions: [...manageProvisioningRoles],
@@ -732,6 +757,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "register_device",
+    operationType: "write",
     description:
       "Register a device with the team so development and ad hoc profiles can include it. Apple limits how many devices a team registers per membership year, and registered devices can only be removed in the Apple Developer website; use update_device to disable one instead.",
     requiredScopes: [],
@@ -749,6 +775,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "update_device",
+    operationType: "destructive",
     description:
       "Rename a registered device or change its status. Provide at least one of name or status. Disabling a device invalidates the development and ad hoc profiles that include it, while the device keeps counting toward the yearly device limit; re-enabling it keeps the same record.",
     requiredScopes: [],
@@ -767,6 +794,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
 
   defineProviderAction(service, {
     name: "list_merchant_ids",
+    operationType: "read",
     description: "List the Apple Pay merchant IDs registered with the team, optionally filtered by name or identifier.",
     requiredScopes: [],
     providerPermissions: [...manageProvisioningRoles],
@@ -791,6 +819,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_merchant_id",
+    operationType: "read",
     description: "Read one Apple Pay merchant ID record by its App Store Connect identifier.",
     requiredScopes: [],
     providerPermissions: [...manageProvisioningRoles],
@@ -799,6 +828,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "create_merchant_id",
+    operationType: "write",
     description:
       "Register an Apple Pay merchant ID with the team. Payment processing and merchant identity certificates are issued for it afterwards with create_certificate.",
     requiredScopes: [],
@@ -817,6 +847,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "update_merchant_id",
+    operationType: "write",
     description: "Rename an Apple Pay merchant ID. The name is the only attribute App Store Connect lets you change.",
     requiredScopes: [],
     providerPermissions: [...manageProvisioningRoles],
@@ -832,6 +863,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "delete_merchant_id",
+    operationType: "destructive",
     description:
       "Delete an Apple Pay merchant ID from the team. Apple Pay transactions and certificates that reference it stop working.",
     requiredScopes: [],
@@ -844,6 +876,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_merchant_id_certificates",
+    operationType: "read",
     description:
       "List the Apple Pay certificates issued for one merchant ID, optionally filtered by type, display name, or serial number.",
     requiredScopes: [],
@@ -858,6 +891,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
 
   defineProviderAction(service, {
     name: "list_pass_type_ids",
+    operationType: "read",
     description: "List the Wallet pass type IDs registered with the team, optionally filtered by name or identifier.",
     requiredScopes: [],
     providerPermissions: [...manageProvisioningRoles],
@@ -889,6 +923,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_pass_type_id",
+    operationType: "read",
     description: "Read one Wallet pass type ID record by its App Store Connect identifier.",
     requiredScopes: [],
     providerPermissions: [...manageProvisioningRoles],
@@ -897,6 +932,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "create_pass_type_id",
+    operationType: "write",
     description:
       "Register a Wallet pass type ID with the team. Pass signing certificates are issued for it afterwards with create_certificate.",
     requiredScopes: [],
@@ -915,6 +951,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "update_pass_type_id",
+    operationType: "write",
     description: "Rename a Wallet pass type ID. The name is the only attribute App Store Connect lets you change.",
     requiredScopes: [],
     providerPermissions: [...manageProvisioningRoles],
@@ -930,6 +967,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "delete_pass_type_id",
+    operationType: "destructive",
     description:
       "Delete a Wallet pass type ID from the team. Passes signed for it can no longer be updated and its certificates stop working.",
     requiredScopes: [],
@@ -942,6 +980,7 @@ export const appStoreConnectSigningActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_pass_type_id_certificates",
+    operationType: "read",
     description:
       "List the pass signing certificates issued for one pass type ID, optionally filtered by type, display name, or serial number.",
     requiredScopes: [],

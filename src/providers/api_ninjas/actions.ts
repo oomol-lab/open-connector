@@ -98,6 +98,7 @@ timezoneInputSchema.anyOf = [{ required: ["timezone"] }, { required: ["lat", "lo
 export const apiNinjasActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "geocode",
+    operationType: "read",
     description: "Convert a city name into geographic coordinates and country information.",
     inputSchema: s.object(
       "Input parameters for converting a named location into coordinates.",
@@ -115,6 +116,7 @@ export const apiNinjasActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reverse_geocode",
+    operationType: "read",
     description: "Resolve latitude and longitude coordinates into place metadata.",
     inputSchema: s.object(
       "Input parameters for resolving coordinates into location metadata.",
@@ -130,12 +132,14 @@ export const apiNinjasActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "weather",
+    operationType: "read",
     description: "Fetch the current weather conditions for a set of coordinates.",
     inputSchema: weatherCoordinateInputSchema,
     outputSchema: weatherMetricsSchema,
   }),
   defineProviderAction(service, {
     name: "weather_forecast",
+    operationType: "read",
     description: "Fetch forecast weather readings for a set of coordinates.",
     inputSchema: weatherCoordinateInputSchema,
     outputSchema: s.object("Forecast weather data returned by the weather_forecast action.", {
@@ -144,6 +148,7 @@ export const apiNinjasActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "air_quality",
+    operationType: "read",
     description: "Fetch current air quality metrics for coordinates or a city-based lookup.",
     inputSchema: airQualityInputSchema,
     outputSchema: s.object("Normalized air quality metrics returned by the air_quality action.", {
@@ -158,6 +163,7 @@ export const apiNinjasActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "timezone",
+    operationType: "read",
     description: "Fetch timezone metadata by timezone name or premium location lookup fields.",
     inputSchema: timezoneInputSchema,
     outputSchema: s.object(

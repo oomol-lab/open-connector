@@ -113,6 +113,7 @@ function configReadOutput(description: string): JsonSchema {
 export const homeAssistantActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_config",
+    operationType: "read",
     description: "Fetch the Home Assistant instance configuration.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -122,6 +123,7 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_states",
+    operationType: "read",
     description: "List all current Home Assistant entity states.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -131,12 +133,14 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_state",
+    operationType: "read",
     description: "Fetch the current state for one Home Assistant entity.",
     inputSchema: entityInputSchema,
     outputSchema: s.actionOutput({ state: stateSchema }, "The selected Home Assistant entity state."),
   }),
   defineProviderAction(service, {
     name: "list_services",
+    operationType: "read",
     description: "List Home Assistant service domains and their available services.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -151,6 +155,7 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "call_service",
+    operationType: "destructive",
     description: "Call a Home Assistant service to control entities, such as light.turn_on or switch.turn_off.",
     inputSchema: s.actionInput(
       {
@@ -174,6 +179,7 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_events",
+    operationType: "read",
     description: "List Home Assistant event types currently known by the instance.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -188,6 +194,7 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "fire_event",
+    operationType: "destructive",
     description: "Fire one Home Assistant event with optional event data.",
     inputSchema: s.actionInput(
       {
@@ -204,6 +211,7 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "render_template",
+    operationType: "read",
     description: "Render a Home Assistant template against the connected instance.",
     inputSchema: s.actionInput(
       {
@@ -220,6 +228,7 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_history",
+    operationType: "read",
     description:
       "Fetch recorded state history for one or more Home Assistant entities over a time period, for answering questions about how a value changed.",
     followUpActions: ["home_assistant.get_logbook"],
@@ -256,6 +265,7 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_logbook",
+    operationType: "read",
     description:
       "Fetch the Home Assistant logbook: the human-readable timeline of what happened and what triggered it, for diagnosing why something changed.",
     inputSchema: s.actionInput(
@@ -283,6 +293,7 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_calendars",
+    operationType: "read",
     description: "List the calendar entities exposed by Home Assistant.",
     followUpActions: ["home_assistant.list_calendar_events"],
     inputSchema: emptyInputSchema,
@@ -305,6 +316,7 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_calendar_events",
+    operationType: "read",
     description: "List the events on one Home Assistant calendar between a start and end time.",
     inputSchema: s.actionInput(
       {
@@ -329,6 +341,7 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_error_log",
+    operationType: "read",
     description:
       "Fetch the Home Assistant error log for the current session as plain text. Home Assistant serves this only when the instance runs with file logging enabled, so it can report not found on an otherwise healthy instance.",
     inputSchema: emptyInputSchema,
@@ -339,6 +352,7 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_registries",
+    operationType: "read",
     description:
       "List the Home Assistant entity, device, area, floor, and label registries in one call. These registries expose the device and room structure behind entity ids, which the REST API does not serve.",
     inputSchema: s.actionInput(
@@ -366,6 +380,7 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_related",
+    operationType: "read",
     description:
       "Find the Home Assistant items related to one entity, device, area, automation, or config entry, such as the automations that reference a given light.",
     inputSchema: s.actionInput(
@@ -387,6 +402,7 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_device_automations",
+    operationType: "read",
     description:
       "List the triggers, conditions, and actions one Home Assistant device supports, for building automations against that device.",
     followUpActions: ["home_assistant.validate_config"],
@@ -408,6 +424,7 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "execute_script",
+    operationType: "write",
     description:
       "Run a Home Assistant script sequence, which can chain several service calls, delays, and conditions in one request instead of one service call at a time.",
     inputSchema: s.actionInput(
@@ -431,6 +448,7 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "validate_config",
+    operationType: "read",
     description:
       "Validate Home Assistant trigger, condition, and action configurations before storing them in an automation.",
     followUpActions: ["home_assistant.save_automation_config", "home_assistant.save_script_config"],
@@ -457,6 +475,7 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_automation_config",
+    operationType: "read",
     description: `Fetch the stored configuration for one Home Assistant automation. ${configAdminNote}`,
     followUpActions: ["home_assistant.save_automation_config"],
     inputSchema: configKeyInput("automationId", "The automation id, which is the id field inside the automation."),
@@ -464,6 +483,7 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "save_automation_config",
+    operationType: "destructive",
     description: `Create or replace one Home Assistant automation. Posting to an unused id creates the automation. ${configAdminNote}`,
     followUpActions: ["home_assistant.get_automation_config", "home_assistant.get_logbook"],
     inputSchema: configSaveInput(
@@ -475,12 +495,14 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_automation_config",
+    operationType: "destructive",
     description: `Delete one Home Assistant automation. ${configAdminNote}`,
     inputSchema: configKeyInput("automationId", "The automation id to delete."),
     outputSchema: configWriteResultSchema,
   }),
   defineProviderAction(service, {
     name: "get_script_config",
+    operationType: "read",
     description: `Fetch the stored configuration for one Home Assistant script. ${configAdminNote}`,
     followUpActions: ["home_assistant.save_script_config"],
     inputSchema: configKeyInput("scriptKey", "The script key, the slug after script. in the entity id."),
@@ -488,6 +510,7 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "save_script_config",
+    operationType: "destructive",
     description: `Create or replace one Home Assistant script. Posting to an unused key creates the script. ${configAdminNote}`,
     followUpActions: ["home_assistant.get_script_config"],
     inputSchema: configSaveInput(
@@ -499,12 +522,14 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_script_config",
+    operationType: "destructive",
     description: `Delete one Home Assistant script. ${configAdminNote}`,
     inputSchema: configKeyInput("scriptKey", "The script key to delete."),
     outputSchema: configWriteResultSchema,
   }),
   defineProviderAction(service, {
     name: "get_scene_config",
+    operationType: "read",
     description: `Fetch the stored configuration for one Home Assistant scene. ${configAdminNote}`,
     followUpActions: ["home_assistant.save_scene_config"],
     inputSchema: configKeyInput("sceneId", "The scene id, which is the id field inside the scene."),
@@ -512,6 +537,7 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "save_scene_config",
+    operationType: "destructive",
     description: `Create or replace one Home Assistant scene. Posting to an unused id creates the scene. ${configAdminNote}`,
     followUpActions: ["home_assistant.get_scene_config"],
     inputSchema: configSaveInput(
@@ -523,12 +549,14 @@ export const homeAssistantActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_scene_config",
+    operationType: "destructive",
     description: `Delete one Home Assistant scene. ${configAdminNote}`,
     inputSchema: configKeyInput("sceneId", "The scene id to delete."),
     outputSchema: configWriteResultSchema,
   }),
   defineProviderAction(service, {
     name: "check_config",
+    operationType: "read",
     description:
       "Ask Home Assistant to validate its own configuration files and report errors and warnings. Requires an admin access token.",
     inputSchema: emptyInputSchema,

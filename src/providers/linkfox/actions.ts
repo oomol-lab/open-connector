@@ -1,5 +1,5 @@
 import type { ProviderActionDefinition } from "../../core/provider-definition.ts";
-import type { JsonSchema } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
@@ -128,12 +128,12 @@ const pageSizeMultipleOfTen = (schema: JsonSchema) => schema;
 
 function action<const TName extends string>(
   name: TName,
-  _operationType: "read" | "write" | "destructive",
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ) {
-  return defineProviderAction(service, { name, description, inputSchema, outputSchema });
+  return defineProviderAction(service, { name, operationType, description, inputSchema, outputSchema });
 }
 
 const emptyInput = s.object("No input is required for this LinkFox action.", {});
@@ -1440,7 +1440,7 @@ export const linkfoxActions: ProviderActionDefinition[] = [
   ),
   action(
     "get_amazon_store_report",
-    "read",
+    "write",
     "Create or resume an Amazon Selling Partner report and wait for a download URL.",
     storeReportInput,
     reportOutput,
@@ -1475,7 +1475,7 @@ export const linkfoxActions: ProviderActionDefinition[] = [
   ),
   action(
     "get_amazon_ads_report",
-    "read",
+    "write",
     "Create or resume an Amazon Ads report and wait for a download URL.",
     adsReportInput,
     reportOutput,

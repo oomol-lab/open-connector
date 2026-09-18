@@ -27,6 +27,7 @@ const emailListSummarySchema = s.object("A SurveyMethods email list summary.", {
 
 const getAccountAction = defineProviderAction(service, {
   name: "get_account",
+  operationType: "read",
   description: "Get subscription and license information for the authenticated SurveyMethods account.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for getting the SurveyMethods account.", {}),
@@ -50,6 +51,7 @@ const getAccountAction = defineProviderAction(service, {
 
 const listSurveysAction = defineProviderAction(service, {
   name: "list_surveys",
+  operationType: "read",
   description: "List surveys and their deployment metadata from the SurveyMethods account.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -72,6 +74,7 @@ const listSurveysAction = defineProviderAction(service, {
 
 const getSurveyAction = defineProviderAction(service, {
   name: "get_survey",
+  operationType: "read",
   description: "Get detailed metadata for one SurveyMethods survey.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for getting a SurveyMethods survey.", {
@@ -106,6 +109,7 @@ const getSurveyAction = defineProviderAction(service, {
 
 const listEmailListsAction = defineProviderAction(service, {
   name: "list_email_lists",
+  operationType: "read",
   description: "List email lists in the authenticated SurveyMethods account.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for listing SurveyMethods email lists.", {}),
@@ -118,6 +122,7 @@ const listEmailListsAction = defineProviderAction(service, {
 
 const createEmailListAction = defineProviderAction(service, {
   name: "create_email_list",
+  operationType: "write",
   description: "Create a Basic or Advanced email list in SurveyMethods.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -147,6 +152,7 @@ const createEmailListAction = defineProviderAction(service, {
 
 const addEmailListContactAction = defineProviderAction(service, {
   name: "add_email_list_contact",
+  operationType: "write",
   description: "Add one contact to a Basic or Advanced SurveyMethods email list.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -169,6 +175,7 @@ const addEmailListContactAction = defineProviderAction(service, {
 
 const listEmailListContactsAction = defineProviderAction(service, {
   name: "list_email_list_contacts",
+  operationType: "read",
   description: "List contacts and custom field values from a SurveyMethods email list.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for listing SurveyMethods email list contacts.", {

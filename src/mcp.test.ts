@@ -19,6 +19,7 @@ const echoAction: ActionDefinition = {
   service: "example",
   name: "echo",
   description: "Echo input.",
+  operationType: "write",
   requiredScopes: [],
   providerPermissions: [],
   inputSchema: {
@@ -46,6 +47,7 @@ const getAccountAction: ActionDefinition = {
   service: "example_auth",
   name: "get_account",
   description: "Return the connected account.",
+  operationType: "read",
   requiredScopes: ["records:read"],
   providerPermissions: [],
   inputSchema: {
@@ -101,6 +103,13 @@ describe("MCP server", () => {
         "get_action_guide",
         "execute_action",
       ]);
+      expect(result.tools.map((tool) => tool.annotations)).toEqual([
+        { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+        { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+        { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+        { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+        { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
+      ]);
     });
   });
 
@@ -142,6 +151,7 @@ describe("MCP server", () => {
           {
             id: "example.echo",
             service: "example",
+            operationType: "write",
           },
         ],
       });
@@ -170,6 +180,9 @@ describe("MCP server", () => {
       expect(guide.structuredContent).toMatchObject({
         ok: true,
         data: {
+          capability: {
+            operationType: "write",
+          },
           markdown: expect.stringContaining("Call the `execute_action` tool with these arguments:"),
         },
       });

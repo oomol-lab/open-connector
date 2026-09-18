@@ -217,6 +217,7 @@ const memberMutationOutputSchema = s.looseRequiredObject("The Brevo list members
 export const brevoActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve the current Brevo account profile and plan information.",
     inputSchema: s.actionInput({}, [], "The empty input payload for retrieving the current Brevo account."),
     outputSchema: s.looseRequiredObject("The account payload returned by the official Brevo account endpoint.", {
@@ -231,54 +232,63 @@ export const brevoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Brevo contacts with pagination and timestamp filters.",
     inputSchema: listContactsInputSchema,
     outputSchema: listContactsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Retrieve one Brevo contact by identifier and optional identifier type.",
     inputSchema: getContactInputSchema,
     outputSchema: contactSchema,
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create one Brevo contact with the official contact creation payload.",
     inputSchema: createContactInputSchema,
     outputSchema: createEntityOutputSchema,
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete one Brevo contact by identifier and optional identifier type.",
     inputSchema: getContactInputSchema,
     outputSchema: successOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_contact_folders",
+    operationType: "read",
     description: "List Brevo contact folders with the official pagination parameters.",
     inputSchema: listContactFoldersInputSchema,
     outputSchema: listContactFoldersOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_contact_lists",
+    operationType: "read",
     description: "List Brevo contact lists with the official pagination parameters.",
     inputSchema: listContactListsInputSchema,
     outputSchema: listContactListsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_contact_list",
+    operationType: "write",
     description: "Create one Brevo contact list inside the specified Brevo folder.",
     inputSchema: createContactListInputSchema,
     outputSchema: createEntityOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_contact_list",
+    operationType: "write",
     description: "Update one Brevo contact list by ID.",
     inputSchema: updateContactListInputSchema,
     outputSchema: successOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_contacts_in_list",
+    operationType: "read",
     description: "List the Brevo contacts currently linked to one Brevo contact list.",
     inputSchema: listContactsInListInputSchema,
     outputSchema: s.looseRequiredObject("The paginated list-member response returned by Brevo.", {
@@ -288,12 +298,14 @@ export const brevoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_contacts_to_list",
+    operationType: "write",
     description: "Add contacts to one Brevo contact list using exactly one official selector.",
     inputSchema: listSelectorSchema,
     outputSchema: memberMutationOutputSchema,
   }),
   defineProviderAction(service, {
     name: "remove_contacts_from_list",
+    operationType: "destructive",
     description: "Remove contacts from one Brevo contact list using exactly one official selector.",
     inputSchema: listSelectorSchema,
     outputSchema: memberMutationOutputSchema,

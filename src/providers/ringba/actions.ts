@@ -38,6 +38,7 @@ const numberSchema = s.looseObject("A Ringba phone number object.", {
 
 const getAccountAction = defineProviderAction(service, {
   name: "get_account",
+  operationType: "read",
   description: "Get the Ringba account information available to the connected API token.",
   requiredScopes: [],
   inputSchema: emptyInputSchema,
@@ -49,6 +50,7 @@ const getAccountAction = defineProviderAction(service, {
 
 const listCampaignsAction = defineProviderAction(service, {
   name: "list_campaigns",
+  operationType: "read",
   description: "List active campaigns in the connected Ringba account.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -64,6 +66,7 @@ const listCampaignsAction = defineProviderAction(service, {
 
 const getCampaignAction = defineProviderAction(service, {
   name: "get_campaign",
+  operationType: "read",
   description: "Get a Ringba campaign by ID.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -82,6 +85,7 @@ const getCampaignAction = defineProviderAction(service, {
 
 const listPublishersAction = defineProviderAction(service, {
   name: "list_publishers",
+  operationType: "read",
   description: "List publishers in the connected Ringba account.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -97,6 +101,7 @@ const listPublishersAction = defineProviderAction(service, {
 
 const getPublisherAction = defineProviderAction(service, {
   name: "get_publisher",
+  operationType: "read",
   description: "Get a Ringba publisher by ID.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -115,6 +120,7 @@ const getPublisherAction = defineProviderAction(service, {
 
 const listNumbersAction = defineProviderAction(service, {
   name: "list_numbers",
+  operationType: "read",
   description: "List phone numbers in the connected Ringba account.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -130,6 +136,7 @@ const listNumbersAction = defineProviderAction(service, {
 
 const getNumberAction = defineProviderAction(service, {
   name: "get_number",
+  operationType: "read",
   description: "Get a Ringba phone number by ID.",
   requiredScopes: [],
   inputSchema: s.object(

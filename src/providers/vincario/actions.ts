@@ -76,30 +76,35 @@ const vehicleMarketValueOutputSchema = s.looseRequiredObject(
 export const vincarioActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_balance",
+    operationType: "read",
     description: "Get the remaining Vincario credits for each API service.",
     inputSchema: emptyInputSchema,
     outputSchema: balanceOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_vin_decode_info",
+    operationType: "read",
     description: "List the vehicle fields Vincario can decode for a VIN without charging credits.",
     inputSchema: vinInputSchema,
     outputSchema: vinDecodeInfoOutputSchema,
   }),
   defineProviderAction(service, {
     name: "decode_vin",
+    operationType: "read",
     description: "Decode a VIN into detailed vehicle specifications with Vincario.",
     inputSchema: vinInputSchema,
     outputSchema: decodeVinOutputSchema,
   }),
   defineProviderAction(service, {
     name: "check_stolen",
+    operationType: "read",
     description: "Check a VIN against the stolen-vehicle sources available through Vincario.",
     inputSchema: vinInputSchema,
     outputSchema: stolenCheckOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_vehicle_market_value",
+    operationType: "read",
     description: "Estimate a vehicle's market price and odometer statistics from its VIN.",
     inputSchema: vehicleMarketValueInputSchema,
     outputSchema: vehicleMarketValueOutputSchema,

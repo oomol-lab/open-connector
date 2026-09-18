@@ -225,6 +225,7 @@ const refundInputSchema = s.object(
 export const wangdianActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_shops",
+    operationType: "read",
     description: "List shop records configured in Wangdian ERP Enterprise Edition.",
     inputSchema: s.object(
       "The input payload for listing Wangdian ERP shops.",
@@ -250,6 +251,7 @@ export const wangdianActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_warehouses",
+    operationType: "read",
     description: "List warehouse records configured in Wangdian ERP Enterprise Edition.",
     inputSchema: s.object(
       "The input payload for listing Wangdian ERP warehouses.",
@@ -279,6 +281,7 @@ export const wangdianActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_goods",
+    operationType: "read",
     description: "List goods and SKU records from Wangdian ERP Enterprise Edition.",
     inputSchema: goodsInputSchema,
     outputSchema: pagedOutputSchema(
@@ -289,6 +292,7 @@ export const wangdianActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_inventory",
+    operationType: "read",
     description: "List physical stock and inventory allocation records from Wangdian ERP.",
     inputSchema: inventoryInputSchema,
     outputSchema: pagedOutputSchema(
@@ -299,6 +303,7 @@ export const wangdianActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description: "List sales orders from Wangdian ERP Enterprise Edition.",
     inputSchema: orderInputSchema,
     outputSchema: pagedOutputSchema(
@@ -309,6 +314,7 @@ export const wangdianActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sales_stockouts",
+    operationType: "read",
     description: "List sales stockout records from Wangdian ERP Enterprise Edition.",
     inputSchema: salesStockoutInputSchema,
     outputSchema: pagedOutputSchema(
@@ -319,6 +325,7 @@ export const wangdianActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_refunds",
+    operationType: "read",
     description: "List refund and exchange records from Wangdian ERP Enterprise Edition.",
     inputSchema: refundInputSchema,
     outputSchema: pagedOutputSchema(

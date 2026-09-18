@@ -19,6 +19,7 @@ const inventoryOutputSchema = s.object("Inventory state returned by Walmart Mark
 export const walmartMarketplaceActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_items",
+    operationType: "read",
     description: "List items in the connected Walmart Marketplace seller catalog.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -53,6 +54,7 @@ export const walmartMarketplaceActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_item",
+    operationType: "read",
     description: "Get one Walmart Marketplace seller item by product identifier.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -76,6 +78,7 @@ export const walmartMarketplaceActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description: "List recent Walmart Marketplace purchase orders with optional filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -125,6 +128,7 @@ export const walmartMarketplaceActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_order",
+    operationType: "read",
     description: "Get one Walmart Marketplace purchase order by purchase order ID.",
     requiredScopes: [],
     inputSchema: s.object("The Walmart Marketplace purchase order to retrieve.", {
@@ -136,6 +140,7 @@ export const walmartMarketplaceActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_inventory",
+    operationType: "read",
     description: "Get the current Walmart Marketplace inventory for one seller SKU.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -150,6 +155,7 @@ export const walmartMarketplaceActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_inventory",
+    operationType: "destructive",
     description: "Replace the Walmart Marketplace inventory amount for one seller SKU.",
     requiredScopes: [],
     inputSchema: s.object(

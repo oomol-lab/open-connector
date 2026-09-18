@@ -13,6 +13,7 @@ const variablesSchema = s.looseObject("Process variables keyed by the variable n
 export const loyjoyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_processes",
+    operationType: "read",
     description: "List the published LoyJoy processes (agents) available in the tenant.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list LoyJoy processes.", {}),
@@ -22,6 +23,7 @@ export const loyjoyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_process",
+    operationType: "read",
     description: "Retrieve a published LoyJoy process (agent) as JSON by its ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a LoyJoy process.", {
@@ -33,6 +35,7 @@ export const loyjoyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_process",
+    operationType: "write",
     description:
       "Start a published LoyJoy process and return the variables produced before it completes or requests user input.",
     requiredScopes: [],
@@ -50,6 +53,7 @@ export const loyjoyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_views",
+    operationType: "read",
     description: "List the LoyJoy home views available in the tenant.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list LoyJoy home views.", {}),
@@ -59,6 +63,7 @@ export const loyjoyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_view",
+    operationType: "read",
     description: "Retrieve a LoyJoy home view as JSON by its ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a LoyJoy home view.", {
@@ -70,6 +75,7 @@ export const loyjoyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_chunks",
+    operationType: "read",
     description: "Search the tenant knowledge base for up to 100 relevant chunks.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -90,6 +96,7 @@ export const loyjoyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_completion",
+    operationType: "write",
     description: "Generate completion text with a published LoyJoy process (agent).",
     requiredScopes: [],
     inputSchema: s.object(

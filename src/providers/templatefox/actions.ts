@@ -161,18 +161,21 @@ const rotatePdfInputSchema: JsonSchema = {
 export const templatefoxActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_pdf",
+    operationType: "write",
     description: "Generate a PDF from a TemplateFox template and return a signed download URL.",
     inputSchema: createPdfInputSchema,
     outputSchema: pdfResultSchema,
   }),
   defineProviderAction(service, {
     name: "create_image",
+    operationType: "write",
     description: "Generate an image from a TemplateFox image template and return a signed download URL.",
     inputSchema: createImageInputSchema,
     outputSchema: imageResultSchema,
   }),
   defineProviderAction(service, {
     name: "merge_pdfs",
+    operationType: "write",
     description: "Merge multiple PDF URLs with TemplateFox and return a signed download URL for the result.",
     inputSchema: s.object(
       "Input for merging PDF URLs.",
@@ -186,6 +189,7 @@ export const templatefoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "extract_pdf_pages",
+    operationType: "read",
     description: "Extract selected pages from a PDF URL with TemplateFox and return a signed download URL.",
     inputSchema: s.object(
       "Input for extracting pages from a PDF.",
@@ -200,12 +204,14 @@ export const templatefoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "rotate_pdf",
+    operationType: "read",
     description: "Rotate all pages or selected pages in a PDF URL with TemplateFox and return a signed download URL.",
     inputSchema: rotatePdfInputSchema,
     outputSchema: pdfResultSchema,
   }),
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List TemplateFox templates visible to the API key.",
     inputSchema: s.object(
       "Input for listing TemplateFox templates.",
@@ -220,6 +226,7 @@ export const templatefoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_template_fields",
+    operationType: "read",
     description: "Get dynamic field definitions for a TemplateFox template.",
     inputSchema: s.requiredObject("Input for reading TemplateFox template fields.", {
       templateId: templateIdSchema,
@@ -230,6 +237,7 @@ export const templatefoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Get TemplateFox account information including remaining credits.",
     inputSchema: s.object("No input is required.", {}),
     outputSchema: s.requiredObject("TemplateFox account output.", {

@@ -76,6 +76,7 @@ const metadataSchema = s.record(
 export const simpleAnalyticsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_websites",
+    operationType: "read",
     description: "List websites available to the authenticated Simple Analytics account.",
     inputSchema: s.object("The input payload for listing tracked websites.", {}),
     outputSchema: s.object("The website list returned by the Simple Analytics Admin API.", {
@@ -85,6 +86,7 @@ export const simpleAnalyticsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_aggregated_stats",
+    operationType: "read",
     description: "Get aggregated website statistics from the Simple Analytics Stats API.",
     inputSchema: s.object(
       "The input payload for the Stats API request.",
@@ -159,6 +161,7 @@ export const simpleAnalyticsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "export_data_points",
+    operationType: "write",
     description: "Export raw datapoints from the Simple Analytics Export API.",
     inputSchema: s.object(
       "The input payload for exporting raw datapoints.",
@@ -190,6 +193,7 @@ export const simpleAnalyticsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_event",
+    operationType: "write",
     description: "Send a server-side event or pageview to Simple Analytics.",
     inputSchema: s.object(
       "The input payload for submitting a server-side event.",

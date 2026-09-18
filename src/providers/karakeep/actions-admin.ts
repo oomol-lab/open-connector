@@ -24,6 +24,7 @@ const adminJobResultSchema = s.looseRequiredObject("The result of triggering an 
 export const karakeepAdminActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "admin_update_user",
+    operationType: "destructive",
     description: `Update another Karakeep user's role, bookmark quota, storage quota or browser crawling setting. Only the provided fields are changed, and at least one of them must be present. Karakeep rejects updating the user that owns the API key with a 400. ${adminAccessNote}`,
     requiredScopes: adminUserWriteScopes,
     inputSchema: s.object(
@@ -51,6 +52,7 @@ export const karakeepAdminActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "admin_trigger_recrawl",
+    operationType: "write",
     description: `Trigger a recrawl of link bookmarks across the whole Karakeep instance. Filter by crawl status to target specific bookmarks, for example only the failed ones, and by how recently they were modified. The crawls are queued and run asynchronously. ${adminAccessNote}`,
     requiredScopes: adminBookmarkWriteScopes,
     inputSchema: s.object(
@@ -75,6 +77,7 @@ export const karakeepAdminActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "admin_trigger_reindex",
+    operationType: "destructive",
     description: `Trigger a reindex of bookmarks in the Karakeep search engine. Without modifiedWithinSeconds Karakeep clears the whole search index first and then re-queues every bookmark, so search results across the instance stay incomplete until the queue drains; with it only the bookmarks modified inside that window are re-queued and the existing index is preserved. The reindex runs asynchronously. ${adminAccessNote}`,
     requiredScopes: adminBookmarkWriteScopes,
     inputSchema: s.object(
@@ -86,6 +89,7 @@ export const karakeepAdminActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "admin_trigger_inference",
+    operationType: "write",
     description: `Trigger AI inference, either tagging or summarization, on bookmarks across the whole Karakeep instance. Filter by inference status and by how recently the bookmarks were modified. The inference jobs are queued and run asynchronously. ${adminAccessNote}`,
     requiredScopes: adminBookmarkWriteScopes,
     inputSchema: s.object(

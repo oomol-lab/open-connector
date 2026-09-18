@@ -93,6 +93,7 @@ const downloadLimitsOutputSchema = s.requiredObject(
 export const zlibraryActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_books",
+    operationType: "read",
     description: "Search books on Z-Library by keyword with optional year, language, format, and sort filters.",
     requiredScopes: [],
     inputSchema: bookSearchInputSchema,
@@ -100,6 +101,7 @@ export const zlibraryActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_book_metadata",
+    operationType: "read",
     description: "Retrieve the full metadata record for one Z-Library book by id and hash.",
     requiredScopes: [],
     inputSchema: bookIdentityInputSchema,
@@ -107,6 +109,7 @@ export const zlibraryActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "download_book_to_file",
+    operationType: "read",
     description: "Download one book file from Z-Library and upload it to connector transit storage.",
     requiredScopes: [],
     inputSchema: bookIdentityInputSchema,
@@ -114,6 +117,7 @@ export const zlibraryActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_download_limits",
+    operationType: "read",
     description: "Retrieve the daily download quota for the authenticated Z-Library account.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving download limits.", {}),
@@ -121,6 +125,7 @@ export const zlibraryActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_recent_books",
+    operationType: "read",
     description: "List the most recently added books on Z-Library.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing recent books.", {}),

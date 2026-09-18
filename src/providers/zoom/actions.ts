@@ -156,6 +156,7 @@ const meetingWriteProperties = {
 export const zoomActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Fetch one Zoom user by user ID, email address, or me when supported by the app.",
     requiredScopes: [zoomUserReadScope],
     inputSchema: s.object("The input payload for fetching one Zoom user.", {
@@ -167,6 +168,7 @@ export const zoomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_meetings",
+    operationType: "read",
     description: "List scheduled, live, upcoming, or previous meetings for a Zoom user using official pagination.",
     requiredScopes: [zoomMeetingListScope],
     inputSchema: s.object(
@@ -191,6 +193,7 @@ export const zoomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_meeting",
+    operationType: "write",
     description: "Create a Zoom meeting for a user with the core official scheduling fields and first-pass settings.",
     requiredScopes: [zoomMeetingWriteScope],
     inputSchema: s.object(
@@ -221,6 +224,7 @@ export const zoomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_meeting",
+    operationType: "write",
     description:
       "Update a Zoom meeting by meeting ID with the core official scheduling fields and first-pass settings.",
     requiredScopes: [zoomMeetingUpdateScope],

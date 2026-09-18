@@ -140,6 +140,7 @@ const jobChangeInputSchema = requireAtLeastOneFieldSet(
 export const waterfallActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "verify_email",
+    operationType: "read",
     description: "Verify one email address with Waterfall and return deliverability status.",
     inputSchema: s.actionInput(
       {
@@ -161,36 +162,42 @@ export const waterfallActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "launch_contact_enrichment",
+    operationType: "write",
     description: "Launch a Waterfall contact enrichment job and return the job envelope.",
     inputSchema: contactEnrichmentInputSchema,
     outputSchema: jobEnvelopeSchema,
   }),
   defineProviderAction(service, {
     name: "get_contact_enrichment",
+    operationType: "read",
     description: "Retrieve Waterfall contact enrichment job state and output by job ID.",
     inputSchema: jobIdInputSchema,
     outputSchema: jobEnvelopeSchema,
   }),
   defineProviderAction(service, {
     name: "launch_company_enrichment",
+    operationType: "write",
     description: "Launch a Waterfall company enrichment job and return the job envelope.",
     inputSchema: companyEnrichmentInputSchema,
     outputSchema: jobEnvelopeSchema,
   }),
   defineProviderAction(service, {
     name: "get_company_enrichment",
+    operationType: "read",
     description: "Retrieve Waterfall company enrichment job state and output by job ID.",
     inputSchema: jobIdInputSchema,
     outputSchema: jobEnvelopeSchema,
   }),
   defineProviderAction(service, {
     name: "check_job_change",
+    operationType: "read",
     description: "Check whether a contact changed jobs using Waterfall job change detection.",
     inputSchema: jobChangeInputSchema,
     outputSchema: jobEnvelopeSchema,
   }),
   defineProviderAction(service, {
     name: "get_account_usage",
+    operationType: "read",
     description: "Get Waterfall usage metrics for the authenticated API key and full account.",
     inputSchema: s.actionInput(
       {

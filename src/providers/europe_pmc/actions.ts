@@ -247,6 +247,7 @@ function nullableNumber(description: string) {
 export const europePmcActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_publications",
+    operationType: "read",
     description: "Search Europe PMC literature and preprints with its official query syntax and cursor pagination.",
     inputSchema: s.object(
       "Input parameters for searching Europe PMC publications.",
@@ -277,6 +278,7 @@ export const europePmcActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_publication",
+    operationType: "read",
     description: "Get one Europe PMC publication by its source code and identifier.",
     inputSchema: s.object(
       "Input parameters for getting one Europe PMC publication.",
@@ -296,6 +298,7 @@ export const europePmcActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_references",
+    operationType: "read",
     description: "Get publications referenced by one Europe PMC publication.",
     inputSchema: s.object(
       "Input parameters for getting a publication reference list.",
@@ -309,6 +312,7 @@ export const europePmcActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_citations",
+    operationType: "read",
     description: "Get publications that cite one Europe PMC publication.",
     inputSchema: s.object(
       "Input parameters for getting publications that cite a source publication.",
@@ -322,6 +326,7 @@ export const europePmcActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_data_links",
+    operationType: "read",
     description: "Get consolidated data, text-mined, and external links associated with one Europe PMC publication.",
     inputSchema: s.object(
       "Input parameters for getting Scholix-compatible Europe PMC data links.",
@@ -362,6 +367,7 @@ export const europePmcActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_full_text_xml",
+    operationType: "read",
     description: "Get JATS XML full text for a PubMed Central article in the Europe PMC open-access subset.",
     inputSchema: s.object("Input parameters for getting open-access full text XML.", {
       pmcid: s.nonEmptyString("The PubMed Central identifier, including the PMC prefix.", {
@@ -377,6 +383,7 @@ export const europePmcActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_evaluations",
+    operationType: "read",
     description: "Get linked peer reviews and evaluations for one Europe PMC publication version.",
     inputSchema: s.object("Input parameters for getting publication evaluations.", {
       source: linkedPublicationSourceSchema,
@@ -390,6 +397,7 @@ export const europePmcActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_article_status",
+    operationType: "read",
     description:
       "Check a batch of Europe PMC articles or preprints for publication, version, withdrawal, removal, and retraction updates.",
     inputSchema: s.object("Input parameters for checking publication status updates.", {
@@ -410,6 +418,7 @@ export const europePmcActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_annotations_by_articles",
+    operationType: "read",
     description: "Get text-mined entities and relationships for up to eight Europe PMC articles in one request.",
     inputSchema: s.object(
       "Input parameters for retrieving annotations by article identifiers.",
@@ -433,6 +442,7 @@ export const europePmcActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_annotations_by_entity",
+    operationType: "read",
     description: "Find Europe PMC articles containing annotations for a named biological entity.",
     inputSchema: s.object(
       "Input parameters for searching annotations by entity.",
@@ -449,6 +459,7 @@ export const europePmcActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_annotations_by_relationship",
+    operationType: "read",
     description: "Find Europe PMC articles containing a text-mined relationship between two named entities.",
     inputSchema: s.object(
       "Input parameters for searching annotations by entity relationship.",
@@ -466,6 +477,7 @@ export const europePmcActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_annotations_by_provider",
+    operationType: "read",
     description: "Find Europe PMC articles containing annotations from a named provider.",
     inputSchema: s.object(
       "Input parameters for searching annotations by provider.",
@@ -482,6 +494,7 @@ export const europePmcActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_annotations_by_section_or_type",
+    operationType: "read",
     description: "Find Europe PMC articles by annotation type, article section, or both in one cursor search.",
     inputSchema: s.object(
       "Input parameters for searching annotations by type or article section.",
@@ -502,6 +515,7 @@ export const europePmcActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_grants",
+    operationType: "read",
     description:
       "Search Europe PMC research grants by funder, investigator, institution, topic, date, or other official GRIST fields.",
     inputSchema: s.object(

@@ -90,6 +90,7 @@ const organizationCardProperties = {
 export const crunchbaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "autocomplete_entities",
+    operationType: "read",
     description: "Suggest Crunchbase entities that match a text query.",
     inputSchema: s.object(
       {
@@ -119,6 +120,7 @@ export const crunchbaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_organization",
+    operationType: "read",
     description: "Look up one Crunchbase organization by UUID or permalink.",
     inputSchema: s.object(
       {
@@ -138,6 +140,7 @@ export const crunchbaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_organizations",
+    operationType: "read",
     description: "Search Crunchbase organizations using the official Search API query structure.",
     inputSchema: s.object(
       {
@@ -163,6 +166,7 @@ export const crunchbaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_acquisitions",
+    operationType: "read",
     description: "Search Crunchbase acquisitions using the official Search API query structure.",
     inputSchema: s.object(
       {
@@ -189,6 +193,7 @@ export const crunchbaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_acquisition",
+    operationType: "read",
     description: "Look up one Crunchbase acquisition by UUID or permalink.",
     inputSchema: s.object(
       {
@@ -205,6 +210,7 @@ export const crunchbaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_organization_acquisitions",
+    operationType: "read",
     description: "List acquisitions where an organization is the acquiree or acquirer.",
     inputSchema: s.object(
       {
@@ -220,6 +226,7 @@ export const crunchbaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_organization_ipos",
+    operationType: "read",
     description: "List IPO records linked to a Crunchbase organization.",
     inputSchema: s.object(organizationCardProperties, { required: ["organizationId"] }),
     outputSchema: s.object(

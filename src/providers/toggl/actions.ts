@@ -75,24 +75,28 @@ const optionalTimeEntryFields = Object.keys(timeEntryFields);
 export const togglActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current Toggl Track user profile.",
     inputSchema: noInput,
     outputSchema: s.object({ user: rawObject }),
   }),
   defineProviderAction(service, {
     name: "list_workspaces",
+    operationType: "read",
     description: "List Toggl Track workspaces for the current user.",
     inputSchema: noInput,
     outputSchema: s.object({ workspaces: s.array("The Toggl Track workspaces.", rawObject) }),
   }),
   defineProviderAction(service, {
     name: "get_workspace",
+    operationType: "read",
     description: "Get one Toggl Track workspace.",
     inputSchema: workspaceLookup,
     outputSchema: s.object({ workspace: rawObject }),
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Toggl Track projects in a workspace.",
     inputSchema: s.object(
       "Input parameters for listing Toggl Track projects in a workspace.",
@@ -114,12 +118,14 @@ export const togglActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get one Toggl Track project.",
     inputSchema: projectLookup,
     outputSchema: s.object({ project: rawObject }),
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create a Toggl Track project.",
     inputSchema: s.object(
       "Input parameters for creating a Toggl Track project.",
@@ -130,6 +136,7 @@ export const togglActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_project",
+    operationType: "write",
     description: "Update a Toggl Track project.",
     inputSchema: s.object(
       "Input parameters for updating a Toggl Track project.",
@@ -140,12 +147,14 @@ export const togglActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_project",
+    operationType: "destructive",
     description: "Delete a Toggl Track project.",
     inputSchema: projectLookup,
     outputSchema: s.object({ deleted: s.literal(true) }),
   }),
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "List Toggl Track tasks in a project.",
     inputSchema: s.object(
       "Input parameters for listing tasks in a Toggl Track project.",
@@ -160,12 +169,14 @@ export const togglActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task",
+    operationType: "read",
     description: "Get one Toggl Track task.",
     inputSchema: taskLookup,
     outputSchema: s.object({ task: rawObject }),
   }),
   defineProviderAction(service, {
     name: "create_task",
+    operationType: "write",
     description: "Create a Toggl Track task.",
     inputSchema: s.object(
       "Input parameters for creating a Toggl Track task.",
@@ -176,6 +187,7 @@ export const togglActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_task",
+    operationType: "write",
     description: "Update a Toggl Track task.",
     inputSchema: s.object(
       "Input parameters for updating a Toggl Track task.",
@@ -186,12 +198,14 @@ export const togglActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_task",
+    operationType: "destructive",
     description: "Delete a Toggl Track task.",
     inputSchema: taskLookup,
     outputSchema: s.object({ deleted: s.literal(true) }),
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List Toggl Track tags in a workspace.",
     inputSchema: s.object(
       "Input parameters for listing Toggl Track tags in a workspace.",
@@ -207,6 +221,7 @@ export const togglActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_tag",
+    operationType: "write",
     description: "Create a Toggl Track tag.",
     inputSchema: s.object("Input parameters for creating a Toggl Track tag.", {
       workspaceId,
@@ -216,6 +231,7 @@ export const togglActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_tag",
+    operationType: "write",
     description: "Update a Toggl Track tag.",
     inputSchema: s.object("Input parameters for updating a Toggl Track tag.", {
       workspaceId,
@@ -226,12 +242,14 @@ export const togglActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_tag",
+    operationType: "destructive",
     description: "Delete a Toggl Track tag.",
     inputSchema: tagLookup,
     outputSchema: s.object({ deleted: s.literal(true) }),
   }),
   defineProviderAction(service, {
     name: "list_time_entries",
+    operationType: "read",
     description: "List Toggl Track time entries for the current user.",
     inputSchema: s.object(
       "Input parameters for listing Toggl Track time entries.",
@@ -247,18 +265,21 @@ export const togglActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_current_time_entry",
+    operationType: "read",
     description: "Get the currently running Toggl Track time entry, if any.",
     inputSchema: noInput,
     outputSchema: s.object({ time_entry: s.nullable(rawObject) }),
   }),
   defineProviderAction(service, {
     name: "get_time_entry",
+    operationType: "read",
     description: "Get one Toggl Track time entry.",
     inputSchema: s.object("Input parameters for getting a Toggl Track time entry.", { timeEntryId }),
     outputSchema: s.object({ time_entry: rawObject }),
   }),
   defineProviderAction(service, {
     name: "create_time_entry",
+    operationType: "write",
     description: "Create a Toggl Track time entry.",
     inputSchema: s.object(
       "Input parameters for creating a Toggl Track time entry.",
@@ -269,6 +290,7 @@ export const togglActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_time_entry",
+    operationType: "write",
     description: "Update a Toggl Track time entry.",
     inputSchema: s.object(
       "Input parameters for updating a Toggl Track time entry.",
@@ -279,12 +301,14 @@ export const togglActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "stop_time_entry",
+    operationType: "destructive",
     description: "Stop a running Toggl Track time entry.",
     inputSchema: timeEntryLookup,
     outputSchema: s.object({ time_entry: rawObject }),
   }),
   defineProviderAction(service, {
     name: "delete_time_entry",
+    operationType: "destructive",
     description: "Delete a Toggl Track time entry.",
     inputSchema: timeEntryLookup,
     outputSchema: s.object({ deleted: s.literal(true) }),

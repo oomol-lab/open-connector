@@ -403,6 +403,7 @@ const followerMutationInputSchema = s.object(
 export const asanaTaskActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "List tasks matching Asana's general task filters.",
     inputSchema: genericListInputSchema,
     outputSchema: tasksOutputSchema,
@@ -410,6 +411,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_project_tasks",
+    operationType: "read",
     description: "List tasks within an Asana project.",
     inputSchema: paginatedListInput("projectId", "The Asana project gid.", true),
     outputSchema: tasksOutputSchema,
@@ -417,6 +419,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task",
+    operationType: "read",
     description: "Get a single Asana task by gid.",
     inputSchema: taskIdInput("Get a task."),
     outputSchema: taskOutputSchema,
@@ -424,6 +427,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_task",
+    operationType: "write",
     description: "Create an Asana task in a project, workspace, or parent task.",
     inputSchema: createTaskInputSchema,
     outputSchema: taskOutputSchema,
@@ -431,6 +435,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_task",
+    operationType: "write",
     description: "Update an existing Asana task.",
     inputSchema: updateTaskInputSchema,
     outputSchema: taskOutputSchema,
@@ -438,6 +443,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_task",
+    operationType: "destructive",
     description: "Delete an Asana task.",
     inputSchema: taskIdOnlyInputSchema,
     outputSchema: successOutputSchema,
@@ -445,6 +451,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "duplicate_task",
+    operationType: "write",
     description: "Duplicate an Asana task and selected associations.",
     inputSchema: duplicateTaskInputSchema,
     outputSchema: jobOutputSchema,
@@ -452,6 +459,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_section_tasks",
+    operationType: "read",
     description: "List tasks in an Asana section.",
     inputSchema: paginatedListInput("sectionId", "The Asana section gid.", true),
     outputSchema: tasksOutputSchema,
@@ -459,6 +467,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tag_tasks",
+    operationType: "read",
     description: "List tasks carrying an Asana tag.",
     inputSchema: paginatedListInput("tagId", "The Asana tag gid."),
     outputSchema: tasksOutputSchema,
@@ -466,6 +475,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_user_task_list_tasks",
+    operationType: "read",
     description: "List tasks in an Asana user task list.",
     inputSchema: paginatedListInput("userTaskListId", "The Asana user task list gid.", true),
     outputSchema: tasksOutputSchema,
@@ -473,6 +483,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subtasks",
+    operationType: "read",
     description: "List direct subtasks of an Asana task.",
     inputSchema: paginatedListInput("taskId", "The parent task gid."),
     outputSchema: tasksOutputSchema,
@@ -480,6 +491,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_subtask",
+    operationType: "write",
     description: "Create a direct subtask under an Asana task.",
     inputSchema: addTaskMutationExclusions(
       s.object(
@@ -499,6 +511,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_task_parent",
+    operationType: "destructive",
     description: "Set, change, or remove an Asana task's parent.",
     inputSchema: setTaskParentInputSchema,
     outputSchema: taskOutputSchema,
@@ -506,6 +519,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_task_dependencies",
+    operationType: "read",
     description: "List tasks that an Asana task depends on.",
     inputSchema: paginatedListInput("taskId", "The Asana task gid."),
     outputSchema: tasksOutputSchema,
@@ -513,6 +527,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_task_dependencies",
+    operationType: "write",
     description: "Add dependencies to an Asana task.",
     inputSchema: taskIdArrayInput("dependencyIds", "Task gids to add as dependencies."),
     outputSchema: successOutputSchema,
@@ -520,6 +535,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_task_dependencies",
+    operationType: "destructive",
     description: "Remove dependencies from an Asana task.",
     inputSchema: taskIdArrayInput("dependencyIds", "Task gids to remove as dependencies."),
     outputSchema: successOutputSchema,
@@ -527,6 +543,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_task_dependents",
+    operationType: "read",
     description: "List tasks that depend on an Asana task.",
     inputSchema: paginatedListInput("taskId", "The Asana task gid."),
     outputSchema: tasksOutputSchema,
@@ -534,6 +551,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_task_dependents",
+    operationType: "write",
     description: "Add dependent tasks to an Asana task.",
     inputSchema: taskIdArrayInput("dependentIds", "Task gids to add as dependents."),
     outputSchema: successOutputSchema,
@@ -541,6 +559,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_task_dependents",
+    operationType: "destructive",
     description: "Remove dependent tasks from an Asana task.",
     inputSchema: taskIdArrayInput("dependentIds", "Task gids to remove as dependents."),
     outputSchema: successOutputSchema,
@@ -548,6 +567,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_task_project",
+    operationType: "write",
     description: "Add an Asana task to a project with optional section placement.",
     inputSchema: addTaskProjectInputSchema,
     outputSchema: successOutputSchema,
@@ -555,6 +575,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_task_project",
+    operationType: "destructive",
     description: "Remove an Asana task from a project.",
     inputSchema: taskAssociationInput("projectId", "The project gid."),
     outputSchema: successOutputSchema,
@@ -562,6 +583,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_task_tag",
+    operationType: "write",
     description: "Add a tag to an Asana task.",
     inputSchema: taskAssociationInput("tagId", "The tag gid."),
     outputSchema: successOutputSchema,
@@ -569,6 +591,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_task_tag",
+    operationType: "destructive",
     description: "Remove a tag from an Asana task.",
     inputSchema: taskAssociationInput("tagId", "The tag gid."),
     outputSchema: successOutputSchema,
@@ -576,6 +599,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_task_followers",
+    operationType: "write",
     description: "Add followers to an Asana task.",
     inputSchema: followerMutationInputSchema,
     outputSchema: taskOutputSchema,
@@ -583,6 +607,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_task_followers",
+    operationType: "destructive",
     description: "Remove followers from an Asana task.",
     inputSchema: followerMutationInputSchema,
     outputSchema: taskOutputSchema,
@@ -590,6 +615,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task_by_custom_id",
+    operationType: "read",
     description: "Get an Asana task by workspace and custom ID.",
     inputSchema: s.object(
       "The input payload for this action.",
@@ -604,6 +630,7 @@ export const asanaTaskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_workspace_tasks",
+    operationType: "read",
     description: "Search tasks in an Asana workspace using advanced filters.",
     inputSchema: searchTaskInputSchema,
     outputSchema: searchTasksOutputSchema,

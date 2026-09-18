@@ -61,6 +61,7 @@ const orderSchema = s.looseObject("One Luno order.", {
 
 const getTickerAction = defineProviderAction(service, {
   name: "get_ticker",
+  operationType: "read",
   description: "Get the latest Luno ticker indicators for one currency pair.",
   requiredScopes: [],
   inputSchema: s.object("Input for retrieving one Luno ticker.", {
@@ -71,6 +72,7 @@ const getTickerAction = defineProviderAction(service, {
 
 const listTickersAction = defineProviderAction(service, {
   name: "list_tickers",
+  operationType: "read",
   description: "List latest Luno ticker indicators for active currency pairs.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -89,6 +91,7 @@ const listTickersAction = defineProviderAction(service, {
 
 const listRecentTradesAction = defineProviderAction(service, {
   name: "list_recent_trades",
+  operationType: "read",
   description: "List up to 100 recent public Luno trades for one currency pair.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -108,6 +111,7 @@ const listRecentTradesAction = defineProviderAction(service, {
 
 const getTopOrderBookAction = defineProviderAction(service, {
   name: "get_top_order_book",
+  operationType: "read",
   description: "Get the best 100 aggregated Luno bid and ask levels for one currency pair.",
   requiredScopes: [],
   inputSchema: s.object("Input for retrieving the top Luno order book.", {
@@ -122,6 +126,7 @@ const getTopOrderBookAction = defineProviderAction(service, {
 
 const getBalancesAction = defineProviderAction(service, {
   name: "get_balances",
+  operationType: "read",
   description: "List Luno account balances, optionally filtered by asset code.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -140,6 +145,7 @@ const getBalancesAction = defineProviderAction(service, {
 
 const listOrdersAction = defineProviderAction(service, {
   name: "list_orders",
+  operationType: "read",
   description: "List recently placed Luno orders with optional state, pair, and time filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -159,6 +165,7 @@ const listOrdersAction = defineProviderAction(service, {
 
 const getOrderAction = defineProviderAction(service, {
   name: "get_order",
+  operationType: "read",
   description: "Get one Luno order by its order identifier.",
   requiredScopes: [],
   inputSchema: s.object("Input for retrieving one Luno order.", {

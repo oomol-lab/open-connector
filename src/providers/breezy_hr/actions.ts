@@ -129,6 +129,7 @@ const searchedCandidateSchema = s.looseObject("A lightweight Breezy HR candidate
 export const breezyHrActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Retrieve the currently authenticated Breezy HR user profile.",
     inputSchema: s.object("No input is required for this Breezy HR action.", {}),
     outputSchema: s.requiredObject("Breezy HR current user output.", {
@@ -138,6 +139,7 @@ export const breezyHrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_companies",
+    operationType: "read",
     description: "List Breezy HR companies available to the connected account.",
     inputSchema: s.object("No input is required for this Breezy HR action.", {}),
     outputSchema: s.requiredObject("Breezy HR company list output.", {
@@ -147,6 +149,7 @@ export const breezyHrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description: "Retrieve one Breezy HR company by ID.",
     inputSchema: companyIdInputSchema,
     outputSchema: s.requiredObject("Breezy HR company output.", {
@@ -156,6 +159,7 @@ export const breezyHrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_positions",
+    operationType: "read",
     description: "List Breezy HR positions for a company with optional state and page filters.",
     inputSchema: listPositionsInputSchema,
     outputSchema: s.requiredObject("Breezy HR position list output.", {
@@ -165,6 +169,7 @@ export const breezyHrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_position",
+    operationType: "read",
     description: "Retrieve one Breezy HR position by company and position ID.",
     inputSchema: positionIdInputSchema,
     outputSchema: s.requiredObject("Breezy HR position output.", {
@@ -174,6 +179,7 @@ export const breezyHrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_position_candidates",
+    operationType: "read",
     description: "List candidates on one Breezy HR position with optional page filters.",
     inputSchema: listPositionCandidatesInputSchema,
     outputSchema: s.requiredObject("Breezy HR candidate list output.", {
@@ -183,6 +189,7 @@ export const breezyHrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_candidate",
+    operationType: "read",
     description: "Retrieve one Breezy HR candidate by company, position, and candidate ID.",
     inputSchema: candidateIdInputSchema,
     outputSchema: s.requiredObject("Breezy HR candidate output.", {
@@ -192,6 +199,7 @@ export const breezyHrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_candidates_by_email",
+    operationType: "read",
     description: "Search company-wide Breezy HR candidates by exact normalized email address.",
     inputSchema: searchCandidatesByEmailInputSchema,
     outputSchema: s.requiredObject("Breezy HR candidate email search output.", {

@@ -34,6 +34,7 @@ const stsCredentialOutputSchema = s.object(
 export const aliyunStsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "assume_role",
+    operationType: "write",
     description:
       "Use a connected Alibaba Cloud RAM AccessKey pair to call STS AssumeRole and return temporary credentials.",
     inputSchema: s.object(

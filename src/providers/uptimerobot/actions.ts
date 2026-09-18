@@ -103,6 +103,7 @@ const createOrUpdateMonitorFields: Record<string, JsonSchema> = {
 export const uptimerobotActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_details",
+    operationType: "read",
     description: "Get account-level monitor usage and profile details from the connected UptimeRobot account.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for getting UptimeRobot account details.", {}),
@@ -110,6 +111,7 @@ export const uptimerobotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_alert_contacts",
+    operationType: "read",
     description: "List the alert contacts configured in the connected UptimeRobot account.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing UptimeRobot alert contacts.", {}),
@@ -120,6 +122,7 @@ export const uptimerobotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_monitors",
+    operationType: "read",
     description: "List monitors available in the connected UptimeRobot account.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -159,6 +162,7 @@ export const uptimerobotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_monitor",
+    operationType: "read",
     description: "Get the full configuration and current status of a single UptimeRobot monitor.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -174,6 +178,7 @@ export const uptimerobotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_monitor",
+    operationType: "write",
     description: "Create a new monitor in the connected UptimeRobot account.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for creating a UptimeRobot monitor.", createOrUpdateMonitorFields, {
@@ -194,6 +199,7 @@ export const uptimerobotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_monitor",
+    operationType: "write",
     description: "Update an existing monitor in the connected UptimeRobot account.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -205,6 +211,7 @@ export const uptimerobotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_monitor",
+    operationType: "destructive",
     description: "Delete a monitor from the connected UptimeRobot account.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for deleting a UptimeRobot monitor.", { monitor_id: monitorIdSchema }),

@@ -14,6 +14,7 @@ const roleSchema = s.stringEnum("The TalentHR role to assign to the employee.", 
 export const talenthrActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "change_employee_role",
+    operationType: "write",
     description:
       "Change a TalentHR employee's user role to Employee or HR-Manager using the official employee role endpoints.",
     requiredScopes: [],

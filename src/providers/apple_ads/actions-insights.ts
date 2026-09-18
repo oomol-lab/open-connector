@@ -432,6 +432,7 @@ const historyOutput = (items: JsonSchema, description: string) =>
 export const appleAdsInsightActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_impression_share",
+    operationType: "read",
     description:
       "Measure what share of the available impressions one App Store app captured for each search term and country or region. Apple Maps brand campaigns have no impression share equivalent.",
     requiredScopes: [],
@@ -472,6 +473,7 @@ export const appleAdsInsightActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_search_term_popularity",
+    operationType: "read",
     description:
       "Rank App Store search terms by relative search volume within a country or region and genre, to discover high-volume terms worth targeting.",
     requiredScopes: [],
@@ -531,6 +533,7 @@ export const appleAdsInsightActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_target_cpa_recommendations",
+    operationType: "read",
     description:
       "List the target CPA adjustments Apple Ads recommends for one promoted object. Only campaigns on a Maximize Conversions bid strategy receive them, and a target CPA is a goal the auto-bidder optimizes toward rather than a bid.",
     requiredScopes: [],
@@ -562,6 +565,7 @@ export const appleAdsInsightActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "apply_target_cpa_recommendations",
+    operationType: "destructive",
     description:
       "Accept one or more target CPA recommendations. Apple Ads changes the target the campaign's Maximize Conversions bidding optimizes toward and moves each recommendation to the terminal APPLIED state.",
     requiredScopes: [],
@@ -582,6 +586,7 @@ export const appleAdsInsightActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "dismiss_target_cpa_recommendations",
+    operationType: "destructive",
     description:
       "Reject one or more target CPA recommendations. The campaign keeps its current target, but each recommendation moves to the terminal DISMISSED state and never returns to AVAILABLE.",
     requiredScopes: [],
@@ -602,6 +607,7 @@ export const appleAdsInsightActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_daily_budget_recommendations",
+    operationType: "read",
     description:
       "List the daily budget increases Apple Ads recommends for one promoted object, with the historical and projected performance behind each one. This is the only recommendation type available for Apple Maps brand campaigns.",
     requiredScopes: [],
@@ -637,6 +643,7 @@ export const appleAdsInsightActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "apply_daily_budget_recommendations",
+    operationType: "destructive",
     description:
       "Accept one or more daily budget recommendations. Apple Ads raises each campaign's daily budget and moves the recommendation to the terminal APPLIED state.",
     requiredScopes: [],
@@ -657,6 +664,7 @@ export const appleAdsInsightActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "dismiss_daily_budget_recommendations",
+    operationType: "destructive",
     description:
       "Reject one or more daily budget recommendations. Each campaign keeps its current daily budget, but the recommendation moves to the terminal DISMISSED state and never returns to AVAILABLE.",
     requiredScopes: [],
@@ -677,6 +685,7 @@ export const appleAdsInsightActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_keyword_suggestions",
+    operationType: "read",
     description:
       "Discover keywords worth targeting for one promoted object, ranked by relative popularity. Suggestions are stateless: turn one into a live keyword with create_keyword.",
     requiredScopes: [],
@@ -711,6 +720,7 @@ export const appleAdsInsightActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_phrase_suggestions",
+    operationType: "read",
     description:
       "Discover natural-language search phrases for one promoted object, or look up how popular known phrases are. Pick exactly one route: SUGGESTION needs the promoted object, SEARCH needs phrases or phraseLike.",
     requiredScopes: [],
@@ -756,6 +766,7 @@ export const appleAdsInsightActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_category_suggestions",
+    operationType: "read",
     description:
       "Discover the categories associated with one promoted object, or look up how popular known category names are. Pick exactly one route: SUGGESTION needs the promoted object, SEARCH needs categories or categoryLike.",
     requiredScopes: [],
@@ -801,6 +812,7 @@ export const appleAdsInsightActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_target_cpa_suggestion",
+    operationType: "read",
     description:
       "Read the target CPA Apple Ads suggests as the starting point for a new Maximize Conversions campaign, computed from the app's tap-install CPI over the last 28 days. It applies to App Store apps only, so the request always asks for promotedObjectType APPSTORE_APP.",
     requiredScopes: [],

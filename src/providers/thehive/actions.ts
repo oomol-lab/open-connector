@@ -32,6 +32,7 @@ const listMetadata = {
 export const theHiveActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_alert",
+    operationType: "write",
     description: "Create a JSON alert in a TheHive 4 instance.",
     inputSchema: s.object(
       "The input for creating a TheHive 4 alert.",
@@ -51,12 +52,14 @@ export const theHiveActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_alert",
+    operationType: "read",
     description: "Retrieve one TheHive 4 alert by ID.",
     inputSchema: s.object("The input for retrieving a TheHive 4 alert.", { alertId: entityId }),
     outputSchema: s.object("The TheHive 4 alert response.", { alert }),
   }),
   defineProviderAction(service, {
     name: "list_alerts",
+    operationType: "read",
     description: "List alerts visible to the connected TheHive 4 user.",
     inputSchema: s.object(
       "The input for listing TheHive 4 alerts.",
@@ -70,6 +73,7 @@ export const theHiveActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_case",
+    operationType: "write",
     description: "Create a case in a TheHive 4 instance.",
     inputSchema: s.object(
       "The input for creating a TheHive 4 case.",
@@ -87,12 +91,14 @@ export const theHiveActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_case",
+    operationType: "read",
     description: "Retrieve one TheHive 4 case by ID or numeric reference.",
     inputSchema: s.object("The input for retrieving a TheHive 4 case.", { caseId: entityId }),
     outputSchema: s.object("The TheHive 4 case response.", { case: caze }),
   }),
   defineProviderAction(service, {
     name: "list_cases",
+    operationType: "read",
     description: "List cases visible to the connected TheHive 4 user.",
     inputSchema: s.object(
       "The input for listing TheHive 4 cases.",

@@ -84,6 +84,7 @@ const contactBodySchema = s.object(
 export const frontActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Front company contacts with optional cursor pagination and sorting.",
     requiredScopes: [],
     providerPermissions: ["contacts:read"],
@@ -107,6 +108,7 @@ export const frontActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Fetch one Front contact by contact ID or documented resource alias.",
     requiredScopes: [],
     providerPermissions: ["contacts:read"],
@@ -119,6 +121,7 @@ export const frontActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a Front company contact with JSON fields and one or more reachable handles.",
     requiredScopes: [],
     providerPermissions: ["contacts:write"],
@@ -132,6 +135,7 @@ export const frontActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update JSON fields on a Front contact. Avatar uploads are intentionally not exposed.",
     requiredScopes: [],
     providerPermissions: ["contacts:write"],
@@ -145,6 +149,7 @@ export const frontActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_teammates",
+    operationType: "read",
     description: "List Front teammates in the company.",
     requiredScopes: [],
     providerPermissions: ["teammates:read"],

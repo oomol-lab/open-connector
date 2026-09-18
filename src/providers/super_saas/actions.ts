@@ -48,6 +48,7 @@ const bookingListOutputSchema = s.object("The bookings returned by SuperSaaS.", 
 export const superSaasActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_schedules",
+    operationType: "read",
     description: "List schedules in the connected SuperSaaS account.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The schedules returned by SuperSaaS.", {
@@ -56,6 +57,7 @@ export const superSaasActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_super_forms",
+    operationType: "read",
     description: "List SuperForms in the connected SuperSaaS account.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The SuperForms returned by SuperSaaS.", {
@@ -64,6 +66,7 @@ export const superSaasActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List groups in the connected SuperSaaS account.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The groups returned by SuperSaaS.", {
@@ -72,6 +75,7 @@ export const superSaasActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_resources",
+    operationType: "read",
     description: "List resources or services for one SuperSaaS schedule.",
     inputSchema: scheduleInputSchema,
     outputSchema: s.object("The resources or services returned by SuperSaaS.", {
@@ -80,6 +84,7 @@ export const superSaasActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_field_names",
+    operationType: "read",
     description: "List available SuperSaaS fields for a schedule or for the user object.",
     inputSchema: s.object(
       "Input parameters for listing SuperSaaS field names.",
@@ -94,12 +99,14 @@ export const superSaasActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_recent_changes",
+    operationType: "read",
     description: "List recently changed bookings for one SuperSaaS schedule.",
     inputSchema: bookingListInputSchema,
     outputSchema: bookingListOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_appointments",
+    operationType: "read",
     description: "List appointments or slots for one SuperSaaS schedule in a time range.",
     inputSchema: bookingListInputSchema,
     outputSchema: bookingListOutputSchema,

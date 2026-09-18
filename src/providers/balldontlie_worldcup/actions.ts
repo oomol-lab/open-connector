@@ -81,12 +81,14 @@ const filteredInputSchema = s.object(
 
 function listAction(input: {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   outputField: string;
   outputDescription: string;
 }): ActionDefinition {
   return defineProviderAction(service, {
     name: input.name,
+    operationType: input.operationType,
     description: input.description,
     requiredScopes: [],
     inputSchema: filteredInputSchema,
@@ -100,6 +102,7 @@ function listAction(input: {
 export const balldontlieWorldcupActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_teams",
+    operationType: "read",
     description: "List FIFA World Cup teams from BALLDONTLIE for the selected season.",
     requiredScopes: [],
     inputSchema: pagedInputSchema,
@@ -110,6 +113,7 @@ export const balldontlieWorldcupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_matches",
+    operationType: "read",
     description: "List FIFA World Cup matches from BALLDONTLIE for the selected season, optionally filtered by team.",
     requiredScopes: [],
     inputSchema: matchesInputSchema,
@@ -120,6 +124,7 @@ export const balldontlieWorldcupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_match",
+    operationType: "read",
     description: "Retrieve one FIFA World Cup match from BALLDONTLIE.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving one BALLDONTLIE World Cup match.", {
@@ -131,6 +136,7 @@ export const balldontlieWorldcupActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_standings",
+    operationType: "read",
     description: "List FIFA World Cup standings from BALLDONTLIE for the selected season.",
     requiredScopes: [],
     inputSchema: pagedInputSchema,
@@ -141,96 +147,112 @@ export const balldontlieWorldcupActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_stadiums",
+    operationType: "read",
     description: "List FIFA World Cup stadiums from BALLDONTLIE for the selected season.",
     outputField: "stadiums",
     outputDescription: "The stadiums returned by BALLDONTLIE.",
   }),
   listAction({
     name: "list_odds",
+    operationType: "read",
     description: "List FIFA World Cup betting odds from BALLDONTLIE.",
     outputField: "odds",
     outputDescription: "The betting odds returned by BALLDONTLIE.",
   }),
   listAction({
     name: "list_player_props",
+    operationType: "read",
     description: "List FIFA World Cup player prop odds from BALLDONTLIE.",
     outputField: "playerProps",
     outputDescription: "The player prop odds returned by BALLDONTLIE.",
   }),
   listAction({
     name: "list_futures_odds",
+    operationType: "read",
     description: "List FIFA World Cup futures odds from BALLDONTLIE.",
     outputField: "futuresOdds",
     outputDescription: "The futures odds returned by BALLDONTLIE.",
   }),
   listAction({
     name: "list_players",
+    operationType: "read",
     description: "List FIFA World Cup players from BALLDONTLIE.",
     outputField: "players",
     outputDescription: "The players returned by BALLDONTLIE.",
   }),
   listAction({
     name: "list_player_injuries",
+    operationType: "read",
     description: "List FIFA World Cup player injuries from BALLDONTLIE.",
     outputField: "playerInjuries",
     outputDescription: "The player injuries returned by BALLDONTLIE.",
   }),
   listAction({
     name: "list_rosters",
+    operationType: "read",
     description: "List FIFA World Cup rosters from BALLDONTLIE.",
     outputField: "rosters",
     outputDescription: "The rosters returned by BALLDONTLIE.",
   }),
   listAction({
     name: "list_match_lineups",
+    operationType: "read",
     description: "List FIFA World Cup match lineups from BALLDONTLIE.",
     outputField: "lineups",
     outputDescription: "The match lineups returned by BALLDONTLIE.",
   }),
   listAction({
     name: "list_match_events",
+    operationType: "read",
     description: "List FIFA World Cup match events from BALLDONTLIE.",
     outputField: "events",
     outputDescription: "The match events returned by BALLDONTLIE.",
   }),
   listAction({
     name: "list_player_match_stats",
+    operationType: "read",
     description: "List FIFA World Cup player match statistics from BALLDONTLIE.",
     outputField: "playerMatchStats",
     outputDescription: "The player match statistics returned by BALLDONTLIE.",
   }),
   listAction({
     name: "list_team_match_stats",
+    operationType: "read",
     description: "List FIFA World Cup team match statistics from BALLDONTLIE.",
     outputField: "teamMatchStats",
     outputDescription: "The team match statistics returned by BALLDONTLIE.",
   }),
   listAction({
     name: "list_match_shots",
+    operationType: "read",
     description: "List FIFA World Cup match shot maps from BALLDONTLIE.",
     outputField: "shots",
     outputDescription: "The match shots returned by BALLDONTLIE.",
   }),
   listAction({
     name: "list_match_momentum",
+    operationType: "read",
     description: "List FIFA World Cup match momentum data from BALLDONTLIE.",
     outputField: "momentum",
     outputDescription: "The match momentum rows returned by BALLDONTLIE.",
   }),
   listAction({
     name: "list_match_best_players",
+    operationType: "read",
     description: "List FIFA World Cup match best-player data from BALLDONTLIE.",
     outputField: "bestPlayers",
     outputDescription: "The match best-player rows returned by BALLDONTLIE.",
   }),
   listAction({
     name: "list_match_avg_positions",
+    operationType: "read",
     description: "List FIFA World Cup average-position data from BALLDONTLIE.",
     outputField: "avgPositions",
     outputDescription: "The average-position rows returned by BALLDONTLIE.",
   }),
   listAction({
     name: "list_match_team_form",
+    operationType: "read",
     description: "List FIFA World Cup team form data from BALLDONTLIE.",
     outputField: "teamForm",
     outputDescription: "The team form rows returned by BALLDONTLIE.",

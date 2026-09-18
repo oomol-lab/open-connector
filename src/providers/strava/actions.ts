@@ -34,6 +34,7 @@ const zonesOutput = s.object({ zones: rawArraySchema }, { required: ["zones"], d
 export const stravaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_authenticated_athlete",
+    operationType: "read",
     description: "Get currently authenticated Strava athlete profile.",
     requiredScopes: ["read"],
     inputSchema: s.object({}, { description: "No additional input is required." }),
@@ -41,6 +42,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_athlete",
+    operationType: "write",
     description: "Update current Strava athlete's weight.",
     requiredScopes: ["profile:write"],
     inputSchema: s.object(
@@ -51,6 +53,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_athlete_stats",
+    operationType: "read",
     description: "Get a summary of statistics for a specified Strava athlete.",
     requiredScopes: ["read"],
     inputSchema: s.object(
@@ -61,6 +64,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_zones",
+    operationType: "read",
     description: "Get the current Strava athlete's training zones.",
     requiredScopes: ["profile:read_all"],
     inputSchema: s.object({}, { description: "No additional input is required." }),
@@ -68,6 +72,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_athlete_activities",
+    operationType: "read",
     description: "Paginated list of current Strava athlete activities.",
     requiredScopes: ["activity:read"],
     inputSchema: s.object(
@@ -82,6 +87,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_activity",
+    operationType: "read",
     description: "Get activity details for current Strava athlete by ID.",
     requiredScopes: ["activity:read"],
     inputSchema: s.object(
@@ -95,6 +101,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_activity",
+    operationType: "write",
     description: "Update activity information for current Strava athlete.",
     requiredScopes: ["activity:write"],
     inputSchema: s.object(
@@ -108,6 +115,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_activity",
+    operationType: "write",
     description: "Create a manually entered Strava activity.",
     requiredScopes: ["activity:write"],
     inputSchema: s.object(
@@ -131,6 +139,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upload_activity",
+    operationType: "write",
     description: "Upload GPX, TCX or FIT files to Strava to generate activities.",
     requiredScopes: ["activity:write"],
     inputSchema: s.object(
@@ -149,6 +158,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_upload",
+    operationType: "read",
     description: "Query the status of Strava activity upload tasks.",
     requiredScopes: ["activity:write"],
     inputSchema: s.object(
@@ -159,6 +169,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_activity_streams",
+    operationType: "read",
     description: "Get stream data for the specified Strava activity.",
     requiredScopes: ["activity:read"],
     inputSchema: s.object(
@@ -169,6 +180,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_activity_zones",
+    operationType: "read",
     description: "Get the training zones for the specified Strava activity.",
     requiredScopes: ["activity:read"],
     inputSchema: activityIdInput,
@@ -176,6 +188,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_activity_laps",
+    operationType: "read",
     description: "List laps for a given Strava activity.",
     requiredScopes: ["activity:read"],
     inputSchema: activityIdInput,
@@ -183,6 +196,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_activity_comments",
+    operationType: "read",
     description: "List comments for the specified Strava activity.",
     requiredScopes: ["activity:read"],
     inputSchema: s.object(
@@ -198,6 +212,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_activity_kudoers",
+    operationType: "read",
     description: "List athletes who have liked the specified Strava activity.",
     requiredScopes: ["activity:read"],
     inputSchema: paginatedIdInput("activityId", "Activity ID."),
@@ -205,6 +220,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_athlete_clubs",
+    operationType: "read",
     description: "List the clubs current Strava athlete belongs to.",
     requiredScopes: ["read"],
     inputSchema: s.object(pageFields, { description: "Club list query input." }),
@@ -212,6 +228,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_club",
+    operationType: "read",
     description: "Get Strava club details by ID.",
     requiredScopes: ["read"],
     inputSchema: idInput("clubId", "Club ID."),
@@ -219,6 +236,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_club_members",
+    operationType: "read",
     description: "Paginated list of Strava club members.",
     requiredScopes: ["read"],
     inputSchema: paginatedIdInput("clubId", "Club ID."),
@@ -226,6 +244,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_club_administrators",
+    operationType: "read",
     description: "Paginated list of Strava club admins.",
     requiredScopes: ["read"],
     inputSchema: paginatedIdInput("clubId", "Club ID."),
@@ -233,6 +252,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_club_activities",
+    operationType: "read",
     description: "Paginated list of recent activity for a given Strava club.",
     requiredScopes: ["read"],
     inputSchema: paginatedIdInput("clubId", "Club ID."),
@@ -240,6 +260,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_equipment",
+    operationType: "read",
     description: "Get Strava gear details by ID.",
     requiredScopes: ["profile:read_all"],
     inputSchema: idInput("gearId", "Equipment ID."),
@@ -247,6 +268,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_athlete_routes",
+    operationType: "read",
     description: "Paginated list of routes for a given Strava athlete.",
     requiredScopes: ["read"],
     inputSchema: paginatedIdInput("athleteId", "Athlete ID."),
@@ -254,6 +276,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_route",
+    operationType: "read",
     description: "Get Strava route details by ID.",
     requiredScopes: ["read"],
     inputSchema: routeIdInput,
@@ -261,6 +284,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_route_streams",
+    operationType: "read",
     description: "Get stream data for a specified Strava route.",
     requiredScopes: ["read"],
     inputSchema: routeIdInput,
@@ -268,6 +292,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "export_route_gpx",
+    operationType: "read",
     description: "Export the GPX content of a specified Strava route.",
     requiredScopes: ["read"],
     inputSchema: routeIdInput,
@@ -275,6 +300,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "export_route_tcx",
+    operationType: "read",
     description: "Export TCX content for a specified Strava route.",
     requiredScopes: ["read"],
     inputSchema: routeIdInput,
@@ -282,6 +308,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_segment",
+    operationType: "read",
     description: "Get Strava segment details by ID.",
     requiredScopes: ["read"],
     inputSchema: idInput("segmentId", "Road segment ID."),
@@ -289,6 +316,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_starred_segments",
+    operationType: "read",
     description: "Paginated list of current Strava athlete starred segments.",
     requiredScopes: ["read"],
     inputSchema: s.object(pageFields, { description: "Favorite segment query input." }),
@@ -296,6 +324,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "star_segment",
+    operationType: "write",
     description: "Favorite or unfavorite a specific Strava segment.",
     requiredScopes: ["profile:write"],
     inputSchema: s.object(
@@ -309,6 +338,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "explore_segments",
+    operationType: "read",
     description: "Explore eligible Strava segments within a given bounding box.",
     requiredScopes: ["read"],
     inputSchema: s.object(
@@ -328,6 +358,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_segment_efforts",
+    operationType: "read",
     description: "List Strava segment efforts by segment ID.",
     requiredScopes: ["read"],
     inputSchema: s.object(
@@ -343,6 +374,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_segment_effort",
+    operationType: "read",
     description: "Get Strava segment effort details by ID.",
     requiredScopes: ["read"],
     inputSchema: idInput("segmentEffortId", "Road segment effort ID."),
@@ -350,6 +382,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_segment_streams",
+    operationType: "read",
     description: "Get stream data for a specified Strava segment.",
     requiredScopes: ["read"],
     inputSchema: s.object(
@@ -360,6 +393,7 @@ export const stravaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_segment_effort_streams",
+    operationType: "read",
     description: "Get stream data for a specified Strava segment effort.",
     requiredScopes: ["read"],
     inputSchema: s.object(

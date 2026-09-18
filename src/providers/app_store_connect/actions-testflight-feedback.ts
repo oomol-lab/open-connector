@@ -388,6 +388,7 @@ const feedbackIdInput = (resource: string, description: string) =>
 export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_beta_feedback_screenshot_submissions",
+    operationType: "read",
     description:
       "List the screenshot feedback testers sent from TestFlight for one app, with the build and tester each submission came from. Screenshot download URLs expire, so fetch them soon after listing.",
     requiredScopes: [],
@@ -404,6 +405,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_beta_feedback_screenshot_submission",
+    operationType: "read",
     description:
       "Read one screenshot feedback submission with its device details, attached screenshots, and the build and tester it came from.",
     requiredScopes: [],
@@ -416,6 +418,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "delete_beta_feedback_screenshot_submission",
+    operationType: "destructive",
     description:
       "Delete a screenshot feedback submission from App Store Connect. The screenshots and comment are removed permanently.",
     requiredScopes: [],
@@ -428,6 +431,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "list_beta_feedback_crash_submissions",
+    operationType: "read",
     description:
       "List the crash feedback testers sent from TestFlight for one app, with the build and tester each submission came from. Use get_beta_feedback_crash_log to read the crash log text of one submission.",
     requiredScopes: [],
@@ -444,6 +448,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_beta_feedback_crash_submission",
+    operationType: "read",
     description: "Read one crash feedback submission with its device details and the build and tester it came from.",
     requiredScopes: [],
     providerPermissions: [...manageTestFlightBuildsRoles],
@@ -455,6 +460,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "delete_beta_feedback_crash_submission",
+    operationType: "destructive",
     description:
       "Delete a crash feedback submission from App Store Connect. The crash log and comment are removed permanently.",
     requiredScopes: [],
@@ -467,6 +473,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_beta_feedback_crash_log",
+    operationType: "read",
     description: "Read the full crash log text attached to one crash feedback submission.",
     requiredScopes: [],
     providerPermissions: [...manageTestFlightBuildsRoles],
@@ -475,6 +482,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_beta_recruitment_criterion",
+    operationType: "read",
     description:
       "Read the recruitment criteria of a TestFlight group, which restrict who can join through its public link by device family and OS version. Returns null when the group has no criteria.",
     requiredScopes: [],
@@ -490,6 +498,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "create_beta_recruitment_criterion",
+    operationType: "write",
     description:
       "Set recruitment criteria on a TestFlight group so only testers on the listed device families and OS versions can join through its public link. A group can hold one set of criteria; update or delete it afterwards.",
     requiredScopes: [],
@@ -509,6 +518,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "update_beta_recruitment_criterion",
+    operationType: "destructive",
     description:
       "Replace the device family and OS version filters of existing recruitment criteria. The previous filters are overwritten.",
     requiredScopes: [],
@@ -528,6 +538,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "delete_beta_recruitment_criterion",
+    operationType: "destructive",
     description:
       "Delete the recruitment criteria of a TestFlight group, so anyone with the public link can join again.",
     requiredScopes: [],
@@ -546,6 +557,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "list_beta_recruitment_criterion_options",
+    operationType: "read",
     description:
       "List the device families and OS versions App Store Connect accepts in recruitment criteria, to pick valid minimumOsInclusive and maximumOsInclusive values.",
     requiredScopes: [],
@@ -563,6 +575,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_beta_recruitment_criterion_compatible_build_check",
+    operationType: "read",
     description:
       "Check whether a TestFlight group has a build that testers matching its recruitment criteria could install.",
     requiredScopes: [],
@@ -578,6 +591,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "list_beta_app_clip_invocations",
+    operationType: "read",
     description:
       "List the App Clip invocations testers can launch from TestFlight for one App Clip build bundle, with the localized titles of each. Find build bundle identifiers with list_build_bundles.",
     requiredScopes: [],
@@ -598,6 +612,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_beta_app_clip_invocation",
+    operationType: "read",
     description: "Read one TestFlight App Clip invocation together with its localized titles.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -614,6 +629,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "create_beta_app_clip_invocation",
+    operationType: "write",
     description:
       "Add an App Clip experience that testers launch from the TestFlight app, creating its localized titles in the same request. At least one localization is required.",
     requiredScopes: [],
@@ -647,6 +663,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "update_beta_app_clip_invocation",
+    operationType: "destructive",
     description: "Change the invocation URL of a TestFlight App Clip invocation. The previous URL is overwritten.",
     requiredScopes: [],
     providerPermissions: [...manageTestFlightRoles],
@@ -665,6 +682,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "delete_beta_app_clip_invocation",
+    operationType: "destructive",
     description:
       "Delete a TestFlight App Clip invocation and its localized titles. Testers can no longer launch that experience from TestFlight.",
     requiredScopes: [],
@@ -683,6 +701,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "create_beta_app_clip_invocation_localization",
+    operationType: "write",
     description: "Add a localized title in one more locale to an existing TestFlight App Clip invocation.",
     requiredScopes: [],
     providerPermissions: [...manageTestFlightRoles],
@@ -702,6 +721,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "update_beta_app_clip_invocation_localization",
+    operationType: "write",
     description:
       "Change the title of one localized App Clip invocation title. The locale itself cannot be changed; the previous title is overwritten.",
     requiredScopes: [],
@@ -721,6 +741,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "delete_beta_app_clip_invocation_localization",
+    operationType: "destructive",
     description: "Delete one localized title of a TestFlight App Clip invocation.",
     requiredScopes: [],
     providerPermissions: [...manageTestFlightRoles],
@@ -738,6 +759,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "list_build_bundles",
+    operationType: "read",
     description:
       "List the bundles (app, App Clip, and watch app) contained in one uploaded build, with their bundle identifiers, architectures, entitlements, and dSYM download URL. Every bundle of the build is returned in one call: App Store Connect only exposes bundles as an include of the build, capped at 50, and offers no cursor. Build bundle identifiers are needed for the App Clip and file size actions.",
     requiredScopes: [],
@@ -756,6 +778,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_build_bundle_app_clip_domain_cache_status",
+    operationType: "read",
     description:
       "Read the cached validation status of the associated domains an App Clip build bundle declares, as Apple's CDN last recorded it. Returns null when App Store Connect has no status for the bundle.",
     requiredScopes: [],
@@ -771,6 +794,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_build_bundle_app_clip_domain_debug_status",
+    operationType: "read",
     description:
       "Read the debug-mode validation status of the associated domains an App Clip build bundle declares, which checks the domains directly instead of Apple's CDN cache. Returns null when App Store Connect has no status for the bundle.",
     requiredScopes: [],
@@ -786,6 +810,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "list_build_bundle_file_sizes",
+    operationType: "read",
     description:
       "List the download and install sizes of one build bundle per device model and OS version, as App Store Connect computed them after processing.",
     requiredScopes: [],
@@ -806,6 +831,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_app_beta_tester_usages",
+    operationType: "read",
     description:
       "Read TestFlight usage metrics for one app: sessions, crashes, and feedback over the chosen period, either as one aggregate row or as one row per tester.",
     requiredScopes: [],
@@ -821,6 +847,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_beta_group_beta_tester_usages",
+    operationType: "read",
     description:
       "Read TestFlight usage metrics for one group: sessions, crashes, and feedback over the chosen period, either as one aggregate row or as one row per tester.",
     requiredScopes: [],
@@ -836,6 +863,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_beta_tester_usages",
+    operationType: "read",
     description:
       "Read TestFlight usage metrics of one tester in one app: sessions, crashes, and feedback over the chosen period.",
     requiredScopes: [],
@@ -867,6 +895,7 @@ export const appStoreConnectTestFlightFeedbackActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_build_beta_build_usages",
+    operationType: "read",
     description:
       "Read TestFlight usage metrics of one build: invitations, installs, sessions, crashes, and feedback since the build became available.",
     requiredScopes: [],

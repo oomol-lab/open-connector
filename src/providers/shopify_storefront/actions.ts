@@ -143,12 +143,14 @@ export type ShopifyStorefrontActionName =
 export const shopifyStorefrontActions: ActionDefinition[] = [
   defineShopifyStorefrontAction({
     name: "get_shop",
+    operationType: "read",
     description: "Get public shop metadata from Shopify Storefront.",
     inputSchema: s.object("No input is required to fetch the shop metadata.", {}),
     outputSchema: s.object("The Shopify Storefront shop metadata result.", { shop: shopSchema }),
   }),
   defineShopifyStorefrontAction({
     name: "list_products",
+    operationType: "read",
     description: "List products visible to the Shopify Storefront API.",
     inputSchema: s.object(
       "Pagination input for listing Shopify Storefront products.",
@@ -166,6 +168,7 @@ export const shopifyStorefrontActions: ActionDefinition[] = [
   }),
   defineShopifyStorefrontAction({
     name: "get_product",
+    operationType: "read",
     description: "Get one product by Storefront GraphQL ID or handle.",
     inputSchema: s.object(
       "Input for fetching one Shopify Storefront product.",
@@ -181,6 +184,7 @@ export const shopifyStorefrontActions: ActionDefinition[] = [
   }),
   defineShopifyStorefrontAction({
     name: "list_collections",
+    operationType: "read",
     description: "List collections visible to the Shopify Storefront API.",
     inputSchema: s.object(
       "Pagination input for listing Shopify Storefront collections.",
@@ -198,6 +202,7 @@ export const shopifyStorefrontActions: ActionDefinition[] = [
   }),
   defineShopifyStorefrontAction({
     name: "get_collection",
+    operationType: "read",
     description: "Get one collection by Storefront GraphQL ID or handle.",
     inputSchema: s.object(
       "Input for fetching one Shopify Storefront collection.",
@@ -213,6 +218,7 @@ export const shopifyStorefrontActions: ActionDefinition[] = [
   }),
   defineShopifyStorefrontAction({
     name: "create_cart",
+    operationType: "write",
     description: "Create a Shopify Storefront cart with optional initial lines.",
     inputSchema: s.object(
       "Input for creating a Shopify cart.",
@@ -230,12 +236,14 @@ export const shopifyStorefrontActions: ActionDefinition[] = [
   }),
   defineShopifyStorefrontAction({
     name: "get_cart",
+    operationType: "read",
     description: "Get a Shopify Storefront cart by ID.",
     inputSchema: s.object("Input for fetching a Shopify cart.", { cartId: gidSchema }),
     outputSchema: s.object("The Shopify Storefront cart lookup result.", { cart: s.nullable(cartSchema) }),
   }),
   defineShopifyStorefrontAction({
     name: "add_cart_lines",
+    operationType: "write",
     description: "Add merchandise lines to a Shopify Storefront cart.",
     inputSchema: s.object("Input for adding lines to a Shopify cart.", {
       cartId: gidSchema,

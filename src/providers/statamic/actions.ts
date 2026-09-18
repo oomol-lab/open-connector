@@ -29,6 +29,7 @@ const siteOutputSchema = s.object("The response returned with a Statamic site.",
 export const statamicActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_sites",
+    operationType: "read",
     description: "List Statamic sites available in the authenticated statamic.com account.",
     inputSchema: s.object("The input payload for listing Statamic sites.", {}),
     outputSchema: s.object("The response returned when listing Statamic sites.", {
@@ -37,6 +38,7 @@ export const statamicActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_site",
+    operationType: "write",
     description: "Create a Statamic site license with an optional domain or domains.",
     inputSchema: s.object(
       "The input payload for creating a Statamic site. Provide either domain or domains, not both.",
@@ -51,6 +53,7 @@ export const statamicActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_site",
+    operationType: "destructive",
     description: "Update a Statamic site name or replace its licensed domain list.",
     inputSchema: s.object(
       "The input payload for updating a Statamic site. Provide at least one of name, domain, or domains; provide either domain or domains, not both.",
@@ -66,6 +69,7 @@ export const statamicActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_site",
+    operationType: "destructive",
     description: "Delete a Statamic site by site key.",
     inputSchema: s.object("The input payload for deleting a Statamic site.", {
       key: siteKeySchema,

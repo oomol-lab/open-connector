@@ -66,6 +66,7 @@ export type NylasActionName = "list_grants" | "get_grant" | "list_calendars" | "
 export const nylasActions: ActionDefinition[] = [
   action(
     "list_grants",
+    "read",
     "List grants in the Nylas application with optional filters.",
     s.actionInput(
       {
@@ -98,6 +99,7 @@ export const nylasActions: ActionDefinition[] = [
   ),
   action(
     "get_grant",
+    "read",
     "Get one Nylas grant by ID.",
     s.actionInput(
       {
@@ -118,6 +120,7 @@ export const nylasActions: ActionDefinition[] = [
   ),
   action(
     "list_calendars",
+    "read",
     "List calendars for a Nylas grant.",
     s.actionInput(
       {
@@ -141,6 +144,7 @@ export const nylasActions: ActionDefinition[] = [
   ),
   action(
     "list_events",
+    "read",
     "List calendar events for a Nylas grant and calendar.",
     s.actionInput(
       {
@@ -176,12 +180,14 @@ export const nylasActions: ActionDefinition[] = [
 
 function action(
   name: NylasActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     requiredScopes: [],
     inputSchema,

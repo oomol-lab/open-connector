@@ -145,6 +145,7 @@ const countMessageTokensOutputSchema = s.looseObject(
 export const anthropicActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",
+    operationType: "read",
     description: "List Anthropic models available to the current API key.",
     requiredScopes: [],
     inputSchema: listModelsInputSchema,
@@ -152,6 +153,7 @@ export const anthropicActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_model",
+    operationType: "read",
     description: "Fetch metadata for one Anthropic model.",
     requiredScopes: [],
     inputSchema: getModelInputSchema,
@@ -159,6 +161,7 @@ export const anthropicActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_message",
+    operationType: "write",
     description: "Create a non-streaming Anthropic message.",
     requiredScopes: [],
     inputSchema: createMessageInputSchema,
@@ -166,6 +169,7 @@ export const anthropicActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "count_message_tokens",
+    operationType: "read",
     description: "Count input tokens for an Anthropic message request.",
     requiredScopes: [],
     inputSchema: countMessageTokensInputSchema,

@@ -250,6 +250,7 @@ const pricesPage = (key: string, resource: JsonSchema, what: string) =>
 export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_subscription_introductory_offers",
+    operationType: "read",
     description:
       "List the introductory offers of one auto-renewable subscription, with the territory and price point of each offer. Filter by territory to inspect one storefront.",
     requiredScopes: [],
@@ -270,6 +271,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "create_subscription_introductory_offer",
+    operationType: "write",
     description:
       "Create an introductory offer for an auto-renewable subscription. A FREE_TRIAL offer needs no price point; PAY_AS_YOU_GO and PAY_UP_FRONT offers need the subscription price point of the territory. Apple allows one active introductory offer per territory at a time. Sandbox may take up to an hour to reflect the change.",
     requiredScopes: [],
@@ -300,6 +302,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "update_subscription_introductory_offer",
+    operationType: "destructive",
     description:
       "Change the end date of an introductory offer, or remove the end date so the offer runs until it is deleted. Apple allows no other change; create a new offer to change the price, duration, or mode.",
     requiredScopes: [],
@@ -321,6 +324,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "delete_subscription_introductory_offer",
+    operationType: "destructive",
     description: "Delete an introductory offer. Customers who already redeemed it keep their discounted period.",
     requiredScopes: [],
     providerPermissions: [...manageInAppPurchaseRoles],
@@ -337,6 +341,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
 
   defineProviderAction(service, {
     name: "list_subscription_promotional_offers",
+    operationType: "read",
     description:
       "List the promotional offers of one auto-renewable subscription. Use list_subscription_promotional_offer_prices to read the territory prices of an offer.",
     requiredScopes: [],
@@ -357,6 +362,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "get_subscription_promotional_offer",
+    operationType: "read",
     description: "Read one promotional offer by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: singleIdInput(
@@ -371,6 +377,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "create_subscription_promotional_offer",
+    operationType: "write",
     description:
       "Create a promotional offer for an auto-renewable subscription together with its territory prices. The offer code becomes the identifier your app passes to StoreKit and cannot be changed later.",
     requiredScopes: [],
@@ -400,6 +407,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "update_subscription_promotional_offer",
+    operationType: "destructive",
     description:
       "Set territory prices on an existing promotional offer. Each submitted territory replaces the price already stored for it; other attributes of the offer cannot be changed after creation.",
     requiredScopes: [],
@@ -419,6 +427,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "delete_subscription_promotional_offer",
+    operationType: "destructive",
     description:
       "Delete a promotional offer. Apps can no longer present it, and customers who already redeemed it keep their discounted period.",
     requiredScopes: [],
@@ -435,6 +444,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "list_subscription_promotional_offer_prices",
+    operationType: "read",
     description:
       "List the territory prices of one promotional offer, with the currency and customer price of each price point.",
     requiredScopes: [],
@@ -459,6 +469,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
 
   defineProviderAction(service, {
     name: "list_subscription_offer_codes",
+    operationType: "read",
     description:
       "List the offer code configurations of one auto-renewable subscription, with the code counts and active state of each configuration.",
     requiredScopes: [],
@@ -475,6 +486,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "get_subscription_offer_code",
+    operationType: "read",
     description: "Read one offer code configuration by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: singleIdInput(
@@ -489,6 +501,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "create_subscription_offer_code",
+    operationType: "write",
     description:
       "Create an offer code configuration for an auto-renewable subscription together with its territory prices. Generate the redeemable codes afterwards with create_subscription_offer_code_custom_code or create_subscription_offer_code_one_time_use_code.",
     requiredScopes: [],
@@ -534,6 +547,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "update_subscription_offer_code",
+    operationType: "destructive",
     description:
       "Activate or deactivate an offer code configuration. Deactivating it stops every custom and one-time use code of the configuration from being redeemed; Apple allows no other change after creation.",
     requiredScopes: [],
@@ -553,6 +567,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "list_subscription_offer_code_prices",
+    operationType: "read",
     description:
       "List the territory prices of one offer code configuration, with the currency and customer price of each price point.",
     requiredScopes: [],
@@ -576,6 +591,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "list_subscription_offer_code_custom_codes",
+    operationType: "read",
     description: "List the custom codes generated for one offer code configuration.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -594,6 +610,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "get_subscription_offer_code_custom_code",
+    operationType: "read",
     description: "Read one custom code batch by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: singleIdInput(
@@ -608,6 +625,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "create_subscription_offer_code_custom_code",
+    operationType: "write",
     description:
       "Generate a custom code for an offer code configuration, which many customers can redeem up to the given number of times. The code text cannot be changed once created.",
     requiredScopes: [],
@@ -634,6 +652,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "update_subscription_offer_code_custom_code",
+    operationType: "destructive",
     description:
       "Activate or deactivate a custom code. A deactivated code can no longer be redeemed until it is activated again.",
     requiredScopes: [],
@@ -653,6 +672,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "list_subscription_offer_code_one_time_use_codes",
+    operationType: "read",
     description:
       "List the one-time use code batches generated for one offer code configuration. The code values themselves are only available as a CSV download in App Store Connect.",
     requiredScopes: [],
@@ -672,6 +692,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "get_subscription_offer_code_one_time_use_code",
+    operationType: "read",
     description: "Read one one-time use code batch by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: singleIdInput(
@@ -686,6 +707,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "create_subscription_offer_code_one_time_use_code",
+    operationType: "write",
     description:
       "Generate a batch of one-time use codes for an offer code configuration. Each code can be redeemed once; download the code values from App Store Connect afterwards.",
     requiredScopes: [],
@@ -713,6 +735,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "update_subscription_offer_code_one_time_use_code",
+    operationType: "destructive",
     description:
       "Activate or deactivate a one-time use code batch. Deactivating it stops every unredeemed code in the batch from being redeemed.",
     requiredScopes: [],
@@ -735,6 +758,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
 
   defineProviderAction(service, {
     name: "list_win_back_offers",
+    operationType: "read",
     description:
       "List the win-back offers of one auto-renewable subscription. Use list_win_back_offer_prices to read the territory prices of an offer.",
     requiredScopes: [],
@@ -747,6 +771,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "get_win_back_offer",
+    operationType: "read",
     description: "Read one win-back offer by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: singleIdInput(
@@ -758,6 +783,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "create_win_back_offer",
+    operationType: "write",
     description:
       "Create a win-back offer for lapsed subscribers of an auto-renewable subscription together with its prices, one subscription price point per territory. The offer identifier, duration, mode, and period count cannot be changed later.",
     requiredScopes: [],
@@ -817,6 +843,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "update_win_back_offer",
+    operationType: "destructive",
     description:
       "Change the schedule, priority, promotion intent, or customer eligibility of a win-back offer. Only the given fields change; the identifier, duration, mode, period count, and prices cannot be changed after creation.",
     requiredScopes: [],
@@ -854,6 +881,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "delete_win_back_offer",
+    operationType: "destructive",
     description:
       "Delete a win-back offer. Apps can no longer present it, and customers who already redeemed it keep their discounted period.",
     requiredScopes: [],
@@ -870,6 +898,7 @@ export const appStoreConnectSubscriptionOfferActions: readonly ProviderActionDef
   }),
   defineProviderAction(service, {
     name: "list_win_back_offer_prices",
+    operationType: "read",
     description:
       "List the territory prices of one win-back offer, with the currency and customer price of each price point.",
     requiredScopes: [],

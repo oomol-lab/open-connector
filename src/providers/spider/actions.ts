@@ -59,12 +59,14 @@ const pageOptionNames = [
 export const spiderActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_credits",
+    operationType: "read",
     description: "Get the available credits for the connected Spider Cloud account.",
     inputSchema: s.actionInput({}, [], "No input is required to get Spider Cloud credits."),
     outputSchema: dataOutputSchema,
   }),
   defineProviderAction(service, {
     name: "scrape",
+    operationType: "read",
     description: "Scrape one public URL with Spider Cloud and return its JSON response.",
     inputSchema: s.object(
       "Input for scraping one public URL with Spider Cloud.",
@@ -78,6 +80,7 @@ export const spiderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search",
+    operationType: "read",
     description: "Search the web with Spider Cloud and optionally fetch result-page content.",
     inputSchema: s.actionInput(
       {
@@ -100,6 +103,7 @@ export const spiderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_links",
+    operationType: "read",
     description: "Extract links from one public URL with Spider Cloud.",
     inputSchema: s.actionInput(
       {

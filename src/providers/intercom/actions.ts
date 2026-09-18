@@ -323,6 +323,7 @@ const getArticleOutputSchema = s.object("Intercom single article response wrappe
 export const intercomActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_admin",
+    operationType: "read",
     description: "Get the currently authorized Intercom admin and workspace metadata.",
     requiredScopes: [intercomPermissionLabels.adminsRead],
     inputSchema: getCurrentAdminInputSchema,
@@ -330,6 +331,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_admins",
+    operationType: "read",
     description: "List Intercom admins for the current workspace.",
     requiredScopes: [intercomPermissionLabels.adminsRead],
     inputSchema: listAdminsInputSchema,
@@ -337,6 +339,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_admin",
+    operationType: "read",
     description: "Get a single Intercom admin by identifier.",
     requiredScopes: [intercomPermissionLabels.adminsRead],
     inputSchema: getAdminInputSchema,
@@ -344,6 +347,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Intercom contacts with cursor-based pagination.",
     requiredScopes: [intercomPermissionLabels.contactsRead],
     inputSchema: listContactsInputSchema,
@@ -351,6 +355,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_contacts",
+    operationType: "read",
     description: "Search Intercom contacts with the official search DSL.",
     requiredScopes: [intercomPermissionLabels.contactsRead],
     inputSchema: searchContactsInputSchema,
@@ -358,6 +363,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get a single Intercom contact by identifier.",
     requiredScopes: [intercomPermissionLabels.contactsRead],
     inputSchema: getContactInputSchema,
@@ -365,6 +371,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact_by_external_id",
+    operationType: "read",
     description: "Get a single Intercom contact by external ID.",
     requiredScopes: [intercomPermissionLabels.contactsRead],
     inputSchema: getContactByExternalIdInputSchema,
@@ -372,6 +379,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a new Intercom contact.",
     requiredScopes: [intercomPermissionLabels.contactsWrite],
     inputSchema: createContactInputSchema,
@@ -379,6 +387,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update an existing Intercom contact.",
     requiredScopes: [intercomPermissionLabels.contactsWrite],
     inputSchema: updateContactInputSchema,
@@ -386,6 +395,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_companies",
+    operationType: "read",
     description: "List Intercom companies with pagination.",
     requiredScopes: [intercomPermissionLabels.contactsRead],
     inputSchema: listCompaniesInputSchema,
@@ -393,6 +403,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description: "Get a single Intercom company by company ID or name.",
     requiredScopes: [intercomPermissionLabels.contactsRead],
     inputSchema: getCompanyInputSchema,
@@ -400,6 +411,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_conversations",
+    operationType: "read",
     description: "List Intercom conversations with cursor-based pagination.",
     requiredScopes: [intercomPermissionLabels.conversationsRead],
     inputSchema: listConversationsInputSchema,
@@ -407,6 +419,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_conversation",
+    operationType: "read",
     description: "Get a single Intercom conversation with its conversation parts.",
     requiredScopes: [intercomPermissionLabels.conversationsRead],
     inputSchema: getConversationInputSchema,
@@ -414,6 +427,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reply_to_conversation",
+    operationType: "write",
     description: "Reply to an Intercom conversation as an admin.",
     requiredScopes: [intercomPermissionLabels.conversationsWrite],
     inputSchema: replyToConversationInputSchema,
@@ -421,6 +435,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "close_conversation",
+    operationType: "destructive",
     description: "Close an Intercom conversation.",
     requiredScopes: [intercomPermissionLabels.conversationsWrite],
     inputSchema: closeConversationInputSchema,
@@ -428,6 +443,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reopen_conversation",
+    operationType: "write",
     description: "Reopen an Intercom conversation.",
     requiredScopes: [intercomPermissionLabels.conversationsWrite],
     inputSchema: reopenConversationInputSchema,
@@ -435,6 +451,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_events",
+    operationType: "read",
     description: "List recent Intercom data events for one user or lead.",
     requiredScopes: [intercomPermissionLabels.eventsRead],
     inputSchema: listEventsInputSchema,
@@ -442,6 +459,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List all Intercom tags for the current workspace.",
     requiredScopes: [intercomPermissionLabels.tagsRead],
     inputSchema: listTagsInputSchema,
@@ -449,6 +467,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_counts",
+    operationType: "read",
     description: "Read Intercom workspace, conversation, or grouped counts.",
     requiredScopes: [intercomPermissionLabels.countsRead],
     inputSchema: getCountsInputSchema,
@@ -456,6 +475,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ticket",
+    operationType: "read",
     description: "Get a single Intercom ticket by internal ticket identifier.",
     requiredScopes: [intercomPermissionLabels.ticketsRead],
     inputSchema: getTicketInputSchema,
@@ -463,6 +483,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_tickets",
+    operationType: "read",
     description: "Search Intercom tickets with the official search DSL.",
     requiredScopes: [intercomPermissionLabels.ticketsRead],
     inputSchema: searchTicketsInputSchema,
@@ -470,6 +491,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job_status",
+    operationType: "read",
     description: "Get the status of an Intercom asynchronous job.",
     requiredScopes: [intercomPermissionLabels.jobsRead],
     inputSchema: getJobStatusInputSchema,
@@ -477,6 +499,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_articles",
+    operationType: "read",
     description: "List Intercom help center articles.",
     requiredScopes: [intercomPermissionLabels.articlesRead],
     inputSchema: listArticlesInputSchema,
@@ -484,6 +507,7 @@ export const intercomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_article",
+    operationType: "read",
     description: "Get a single Intercom help center article by identifier.",
     requiredScopes: [intercomPermissionLabels.articlesRead],
     inputSchema: getArticleInputSchema,

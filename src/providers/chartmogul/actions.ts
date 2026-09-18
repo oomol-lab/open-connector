@@ -80,6 +80,7 @@ const contactSchema = s.object("A normalized ChartMogul contact.", {
 export const chartmogulActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve basic ChartMogul account settings for the authenticated API key.",
     inputSchema: s.object(
       "Input parameters for retrieving ChartMogul account settings.",
@@ -104,6 +105,7 @@ export const chartmogulActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sources",
+    operationType: "read",
     description: "List ChartMogul data sources with optional source name or billing system filters.",
     inputSchema: s.object(
       "Input parameters for listing ChartMogul data sources.",
@@ -119,6 +121,7 @@ export const chartmogulActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List ChartMogul customers with cursor pagination and common customer filters.",
     inputSchema: s.object(
       "Input parameters for listing ChartMogul customers.",
@@ -152,6 +155,7 @@ export const chartmogulActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Retrieve a single ChartMogul customer by customer UUID.",
     inputSchema: s.object("Input parameters for retrieving a ChartMogul customer.", {
       customerUuid: customerUuidSchema,
@@ -162,6 +166,7 @@ export const chartmogulActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List ChartMogul contacts with cursor pagination and common contact filters.",
     inputSchema: s.object(
       "Input parameters for listing ChartMogul contacts.",

@@ -260,6 +260,7 @@ const marketplaceSearchDetailResource = resourceObject(
 export const appStoreConnectDistributionActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_background_assets",
+    operationType: "read",
     description:
       "List the Apple-hosted background asset packs of one app, with the version currently in each of the App Store, internal TestFlight, and external TestFlight slots.",
     requiredScopes: [],
@@ -293,6 +294,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_background_asset",
+    operationType: "read",
     description:
       "Read one background asset pack, with the version currently in each of the App Store, internal TestFlight, and external TestFlight slots.",
     requiredScopes: [],
@@ -305,6 +307,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_background_asset",
+    operationType: "write",
     description:
       "Create an Apple-hosted background asset pack record for an app. The record starts without versions; create a version next, then upload and commit the asset pack archive through the generic proxy or Xcode.",
     requiredScopes: [],
@@ -323,6 +326,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "update_background_asset",
+    operationType: "destructive",
     description:
       "Archive or unarchive a background asset pack. Archiving is the only change App Store Connect accepts on an asset pack; the identifier and versions stay as they are.",
     requiredScopes: [],
@@ -339,6 +343,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "list_background_asset_versions",
+    operationType: "read",
     description:
       "List the versions of one background asset pack with their processing state and their internal TestFlight, external TestFlight, and App Store release records.",
     requiredScopes: [],
@@ -376,6 +381,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_background_asset_version",
+    operationType: "read",
     description:
       "Read one background asset version with its processing state, validation messages, parent asset pack, and release records.",
     requiredScopes: [],
@@ -392,6 +398,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_background_asset_version",
+    operationType: "write",
     description:
       "Create a new version record for a background asset pack. App Store Connect assigns the next version number automatically; the version stays in AWAITING_UPLOAD until the asset pack archive is uploaded and committed, which needs the binary upload endpoints outside these actions.",
     requiredScopes: [],
@@ -409,6 +416,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_background_asset_version_app_store_release",
+    operationType: "read",
     description:
       "Read the App Store release record of a background asset version, which tracks its App Review and distribution state.",
     requiredScopes: [],
@@ -428,6 +436,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_background_asset_version_internal_beta_release",
+    operationType: "read",
     description:
       "Read the internal TestFlight release record of a background asset version. App Store Connect creates it once the version finishes processing.",
     requiredScopes: [],
@@ -447,6 +456,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_background_asset_version_external_beta_release",
+    operationType: "read",
     description:
       "Read the external TestFlight release record of a background asset version, which tracks its beta review state.",
     requiredScopes: [],
@@ -466,6 +476,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "list_alternative_distribution_keys",
+    operationType: "read",
     description:
       "List the alternative distribution public keys of the team. A key without an app applies to every alternative distribution app on the account.",
     requiredScopes: [],
@@ -486,6 +497,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_alternative_distribution_key",
+    operationType: "read",
     description: "Read one alternative distribution key and its public key.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -501,6 +513,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_app_alternative_distribution_key",
+    operationType: "read",
     description: "Read the alternative distribution key tied to one app, or null when the app has no key of its own.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -516,6 +529,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_alternative_distribution_key",
+    operationType: "write",
     description:
       "Upload the public half of an alternative distribution key pair. Without appId the key applies to every alternative distribution app on the account; with appId it is tied to that marketplace or web distribution app. The private half never goes to Apple and signs the marketplace JWTs or install verification.",
     requiredScopes: [],
@@ -538,6 +552,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "delete_alternative_distribution_key",
+    operationType: "destructive",
     description:
       "Remove an alternative distribution key from the account. Tokens signed with the matching private key stop being accepted.",
     requiredScopes: [],
@@ -554,6 +569,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "list_alternative_distribution_domains",
+    operationType: "read",
     description: "List the base web domains registered for alternative distribution on the account.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -570,6 +586,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_alternative_distribution_domain",
+    operationType: "read",
     description: "Read one alternative distribution domain.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -587,6 +604,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_alternative_distribution_domain",
+    operationType: "write",
     description:
       "Register the base web domain that serves a marketplace app or web distribution app. All app pages and the marketplace sitemap must live on this domain, and it is enabled for every alternative distribution app on the account.",
     requiredScopes: [],
@@ -607,6 +625,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "delete_alternative_distribution_domain",
+    operationType: "destructive",
     description:
       "Delete an alternative distribution domain. Apps served from that domain can no longer be installed through it.",
     requiredScopes: [],
@@ -625,6 +644,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_alternative_distribution_package",
+    operationType: "read",
     description:
       "Read one alternative distribution package and the checksums of the source build it was generated from. Use list_alternative_distribution_package_versions for its downloadable versions.",
     requiredScopes: [],
@@ -643,6 +663,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_app_store_version_alternative_distribution_package",
+    operationType: "read",
     description:
       "Read the alternative distribution package generated for one App Store version, or null when none exists yet.",
     requiredScopes: [],
@@ -661,6 +682,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_alternative_distribution_package",
+    operationType: "write",
     description:
       "Generate the alternative distribution package for an already approved App Store version. Versions approved after alternative distribution was enabled get their package automatically; use this for versions that were approved before.",
     requiredScopes: [],
@@ -680,6 +702,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "list_alternative_distribution_package_versions",
+    operationType: "read",
     description: "List the versions of an alternative distribution package with their time-limited download URLs.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -700,6 +723,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_alternative_distribution_package_version",
+    operationType: "read",
     description: "Read one alternative distribution package version and its time-limited download URL.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -717,6 +741,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "list_alternative_distribution_package_version_variants",
+    operationType: "read",
     description:
       "List the device-specific variants of an alternative distribution package version, each with its download URL and encrypted key blob.",
     requiredScopes: [],
@@ -737,6 +762,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_alternative_distribution_package_variant",
+    operationType: "read",
     description:
       "Read one variant of an alternative distribution package version, with its download URL and encrypted key blob.",
     requiredScopes: [],
@@ -755,6 +781,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "list_alternative_distribution_package_version_deltas",
+    operationType: "read",
     description:
       "List the delta updates of an alternative distribution package version, each with its download URL and encrypted key blob.",
     requiredScopes: [],
@@ -775,6 +802,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_alternative_distribution_package_delta",
+    operationType: "read",
     description:
       "Read one delta update of an alternative distribution package version, with its download URL and encrypted key blob.",
     requiredScopes: [],
@@ -789,6 +817,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "get_marketplace_search_detail",
+    operationType: "read",
     description:
       "Read the marketplace search detail of an alternative marketplace app, or null when no catalog URL has been configured.",
     requiredScopes: [],
@@ -805,6 +834,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "create_marketplace_search_detail",
+    operationType: "write",
     description:
       "Set the sitemap catalog URL of an alternative marketplace app so Apple can crawl it and include the marketplace apps in Spotlight search. Each marketplace app holds one search detail.",
     requiredScopes: [],
@@ -825,6 +855,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "update_marketplace_search_detail",
+    operationType: "destructive",
     description: "Replace the sitemap catalog URL of an existing marketplace search detail.",
     requiredScopes: [],
     providerPermissions: [...manageAppStoreRoles],
@@ -844,6 +875,7 @@ export const appStoreConnectDistributionActions: readonly ProviderActionDefiniti
   }),
   defineProviderAction(service, {
     name: "delete_marketplace_search_detail",
+    operationType: "destructive",
     description:
       "Delete the marketplace search detail of an alternative marketplace app. Apple stops crawling the catalog URL.",
     requiredScopes: [],

@@ -1,5 +1,5 @@
 import type { ProviderActionDefinition } from "../../core/provider-definition.ts";
-import type { JsonSchema } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
@@ -51,12 +51,14 @@ function documentInput(
 
 function smartAction(
   name: string,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema = acknowledgementSchema,
 ) {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     requiredScopes: [],
     inputSchema,
@@ -168,6 +170,7 @@ const createTodoInputSchema = s.object(
 export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   smartAction(
     "list_tools",
+    "read",
     "List the current WeCom MCP tools and input schemas available to this bot.",
     s.object(
       "Input for listing dynamically available WeCom tools.",
@@ -186,6 +189,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "call_tool",
+    "destructive",
     "Call a dynamically discovered WeCom MCP tool that does not have a curated action yet.",
     s.object("Input for a dynamic WeCom MCP tool call.", {
       category: categorySchema,
@@ -196,6 +200,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "get_userlist",
+    "read",
     "List WeCom members visible to the API-mode smart bot.",
     emptyInputSchema,
     s.looseObject("The visible WeCom member list.", {
@@ -206,6 +211,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "get_msg_chat_list",
+    "read",
     "List chats that had messages during a time range.",
     s.object(
       "Input for listing WeCom chats.",
@@ -226,6 +232,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "get_message",
+    "read",
     "Read recent messages from one WeCom direct chat or group chat.",
     s.object(
       "Input for reading WeCom messages.",
@@ -250,6 +257,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "download_message_media",
+    "read",
     "Download WeCom message media into the local transit file store.",
     s.object("Input for downloading WeCom message media.", {
       mediaId: s.string("The media ID returned by `get_message`.", {
@@ -273,6 +281,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "send_message",
+    "write",
     "Send a text message to a WeCom direct chat or group chat.",
     s.object("Input for sending a WeCom text message.", {
       chatType: s.integer("The chat type: `1` for direct chat or `2` for group chat.", {
@@ -285,6 +294,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "search_todo_userid",
+    "read",
     "Search WeCom users by name or alias for todo assignment.",
     s.object("Input for searching todo users.", {
       keyword: s.string("The member name or alias to search for.", { minLength: 1 }),
@@ -293,6 +303,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "create_todo",
+    "write",
     "Create a WeCom todo with followers, deadline, and reminders.",
     createTodoInputSchema,
     s.looseObject("The created WeCom todo.", {
@@ -303,6 +314,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "update_todo",
+    "write",
     "Update a WeCom todo's content, followers, status, deadline, or reminders.",
     s.object(
       "Input for updating a WeCom todo.",
@@ -324,6 +336,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "change_todo_user_status",
+    "destructive",
     "Change one follower's status on a WeCom todo.",
     s.object("Input for changing a todo follower status.", {
       todoId: idSchema("The todo ID."),
@@ -336,6 +349,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "get_todo_list",
+    "read",
     "List WeCom todos for one follower with optional time and status filters.",
     s.object(
       "Input for listing WeCom todos.",
@@ -372,6 +386,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "get_todo_detail",
+    "read",
     "Get details for up to 20 WeCom todos.",
     s.object("Input for reading WeCom todo details.", {
       todoIds: s.array("The todo IDs to read.", idSchema("One todo ID."), {
@@ -387,11 +402,13 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "delete_todo",
+    "destructive",
     "Delete a WeCom todo.",
     s.object("Input for deleting a WeCom todo.", { todoId: idSchema("The todo ID.") }),
   ),
   smartAction(
     "create_meeting",
+    "write",
     "Create a scheduled WeCom meeting.",
     s.object(
       "Input for creating a WeCom meeting.",
@@ -417,6 +434,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "list_user_meetings",
+    "read",
     "List WeCom meetings in a time range.",
     s.object(
       "Input for listing WeCom meetings.",
@@ -437,6 +455,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "get_meeting_info",
+    "read",
     "Get complete details for a WeCom meeting.",
     s.object(
       "Input for reading a WeCom meeting.",
@@ -451,6 +470,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "cancel_meeting",
+    "destructive",
     "Cancel a scheduled WeCom meeting.",
     s.object("Input for canceling a WeCom meeting.", {
       meetingId: idSchema("The meeting ID."),
@@ -458,6 +478,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "set_invite_meeting_members",
+    "write",
     "Replace the full invitee list for a WeCom meeting.",
     s.object("Input for replacing meeting invitees.", {
       meetingId: idSchema("The meeting ID."),
@@ -466,6 +487,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "get_schedule_list_by_range",
+    "read",
     "List WeCom schedule IDs within a time range.",
     s.object("Input for listing WeCom schedules.", {
       startTime: dateTimeTextSchema,
@@ -479,6 +501,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "get_schedule_detail",
+    "read",
     "Get details for up to 50 WeCom schedules.",
     s.object("Input for reading WeCom schedule details.", {
       scheduleIds: s.array("The schedule IDs to read.", idSchema("One schedule ID."), {
@@ -494,6 +517,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "create_schedule",
+    "write",
     "Create a WeCom schedule with attendees and reminders.",
     s.object("Input for creating a WeCom schedule.", scheduleFields, {
       optional: ["summary", "description", "location", "isWholeDay", "attendeeUserIds", "reminders"],
@@ -506,6 +530,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "update_schedule",
+    "write",
     "Update selected fields on a WeCom schedule.",
     s.object(
       "Input for updating a WeCom schedule.",
@@ -529,6 +554,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "cancel_schedule",
+    "destructive",
     "Cancel a WeCom schedule.",
     s.object("Input for canceling a WeCom schedule.", {
       scheduleId: idSchema("The schedule ID."),
@@ -536,6 +562,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "add_schedule_attendees",
+    "write",
     "Add attendees to a WeCom schedule.",
     s.object("Input for adding schedule attendees.", {
       scheduleId: idSchema("The schedule ID."),
@@ -544,6 +571,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "del_schedule_attendees",
+    "write",
     "Remove attendees from a WeCom schedule.",
     s.object("Input for removing schedule attendees.", {
       scheduleId: idSchema("The schedule ID."),
@@ -552,6 +580,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "check_availability",
+    "read",
     "Read busy time slots for up to 10 WeCom members.",
     s.object("Input for checking WeCom availability.", {
       userIds: userIdsSchema("The WeCom user IDs to check.", 10),
@@ -566,6 +595,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "create_doc",
+    "write",
     "Create an empty WeCom document, online sheet, or smart sheet.",
     s.object("Input for creating a WeCom document.", {
       documentType: s.stringEnum("The document type to create.", ["document", "sheet", "smart_sheet"]),
@@ -583,6 +613,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "get_doc_content",
+    "read",
     "Read complete WeCom document content as Markdown with polling handled internally.",
     documentInput("Input for reading complete WeCom document content."),
     s.object("The completed WeCom document export.", {
@@ -594,6 +625,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "edit_doc_content",
+    "write",
     "Replace all content in a WeCom document with Markdown.",
     documentInput("Input for replacing WeCom document content.", {
       content: s.string("The replacement Markdown content."),
@@ -601,12 +633,14 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "sheet_get_info",
+    "read",
     "Get online-sheet metadata and sub-sheet IDs.",
     documentInput("Input for reading WeCom online-sheet metadata."),
     looseObjectSchema("The online-sheet metadata and sub-sheet list."),
   ),
   smartAction(
     "sheet_update_range_data",
+    "write",
     "Write cells and formats into a specified online-sheet range.",
     s.object("Input for updating an online-sheet range.", {
       docId: idSchema("The online-sheet document ID."),
@@ -624,6 +658,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "sheet_append_data",
+    "write",
     "Append one row to the end of a WeCom online sheet.",
     s.object("Input for appending an online-sheet row.", {
       docId: idSchema("The online-sheet document ID."),
@@ -633,6 +668,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "sheet_add_sub",
+    "write",
     "Add a sub-sheet to a WeCom online sheet.",
     s.object(
       "Input for adding an online sub-sheet.",
@@ -650,6 +686,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "sheet_delete_sub",
+    "destructive",
     "Permanently delete a sub-sheet from a WeCom online sheet.",
     s.object("Input for deleting an online sub-sheet.", {
       docId: idSchema("The online-sheet document ID."),
@@ -658,12 +695,14 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "smartsheet_get_sheet",
+    "read",
     "List sub-sheets in a WeCom smart sheet.",
     documentInput("Input for listing smart-sheet sub-sheets."),
     looseObjectSchema("The smart-sheet sub-sheet list."),
   ),
   smartAction(
     "smartsheet_add_sheet",
+    "write",
     "Add a sub-sheet to a WeCom smart sheet.",
     documentInput("Input for adding a smart-sheet sub-sheet.", {
       title: s.string("The new sub-sheet title.", { minLength: 1 }),
@@ -671,6 +710,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "smartsheet_update_sheet",
+    "write",
     "Rename a WeCom smart-sheet sub-sheet.",
     documentInput("Input for renaming a smart-sheet sub-sheet.", {
       sheetId: idSchema("The sub-sheet ID."),
@@ -679,6 +719,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "smartsheet_delete_sheet",
+    "destructive",
     "Permanently delete a WeCom smart-sheet sub-sheet.",
     documentInput("Input for deleting a smart-sheet sub-sheet.", {
       sheetId: idSchema("The sub-sheet ID to delete."),
@@ -686,6 +727,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "smartsheet_get_fields",
+    "read",
     "List fields in a WeCom smart-sheet sub-sheet.",
     documentInput("Input for listing smart-sheet fields.", {
       sheetId: idSchema("The sub-sheet ID."),
@@ -694,6 +736,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "smartsheet_add_fields",
+    "write",
     "Add fields to a WeCom smart-sheet sub-sheet.",
     documentInput("Input for adding smart-sheet fields.", {
       sheetId: idSchema("The sub-sheet ID."),
@@ -702,6 +745,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "smartsheet_update_fields",
+    "write",
     "Rename fields in a WeCom smart-sheet sub-sheet without changing their types.",
     documentInput("Input for updating smart-sheet fields.", {
       sheetId: idSchema("The sub-sheet ID."),
@@ -718,6 +762,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "smartsheet_delete_fields",
+    "destructive",
     "Permanently delete fields from a WeCom smart-sheet sub-sheet.",
     documentInput("Input for deleting smart-sheet fields.", {
       sheetId: idSchema("The sub-sheet ID."),
@@ -728,6 +773,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "smartsheet_get_records",
+    "read",
     "Read a page of records from a WeCom smart-sheet sub-sheet.",
     documentInput(
       "Input for reading smart-sheet records.",
@@ -752,6 +798,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "smartsheet_add_records",
+    "write",
     "Add records to a WeCom smart sheet, uploading `fileUrl` attachments before the write.",
     documentInput("Input for adding smart-sheet records.", {
       sheetId: idSchema("The sub-sheet ID."),
@@ -760,6 +807,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "smartsheet_update_records",
+    "write",
     "Update WeCom smart-sheet records, uploading `fileUrl` attachments before the write.",
     documentInput(
       "Input for updating smart-sheet records.",
@@ -786,6 +834,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "smartsheet_delete_records",
+    "destructive",
     "Permanently delete records from a WeCom smart-sheet sub-sheet.",
     documentInput("Input for deleting smart-sheet records.", {
       sheetId: idSchema("The sub-sheet ID."),
@@ -797,6 +846,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "smartpage_create",
+    "write",
     "Create a WeCom smart page from inline text or Markdown pages.",
     s.object(
       "Input for creating a WeCom smart page.",
@@ -827,6 +877,7 @@ export const wecomSmartBotActions: readonly ProviderActionDefinition[] = [
   ),
   smartAction(
     "smartpage_export",
+    "write",
     "Export complete WeCom smart-page content as Markdown with polling handled internally.",
     documentInput("Input for exporting a WeCom smart page."),
     s.object("The completed smart-page export.", {

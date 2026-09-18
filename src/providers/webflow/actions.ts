@@ -69,6 +69,7 @@ const publishResultSchema = s.looseRequiredObject("The Webflow publish response.
 export const webflowActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_sites",
+    operationType: "read",
     description: "List Webflow sites available to the connected token.",
     requiredScopes: [webflowSitesReadScope],
     providerPermissions: [webflowSitesReadScope],
@@ -82,6 +83,7 @@ export const webflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_site",
+    operationType: "read",
     description: "Get details for a single Webflow site.",
     requiredScopes: [webflowSitesReadScope],
     providerPermissions: [webflowSitesReadScope],
@@ -101,6 +103,7 @@ export const webflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "publish_site",
+    operationType: "write",
     description:
       "Publish a Webflow site to all domains or selected custom domains and return Webflow's publish result.",
     requiredScopes: [webflowSitesWriteScope],
@@ -127,6 +130,7 @@ export const webflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_collections",
+    operationType: "read",
     description: "List CMS collections for a Webflow site.",
     requiredScopes: [webflowCmsReadScope],
     providerPermissions: [webflowCmsReadScope],
@@ -146,6 +150,7 @@ export const webflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_collection",
+    operationType: "read",
     description: "Get a Webflow CMS collection including its field definitions.",
     requiredScopes: [webflowCmsReadScope],
     providerPermissions: [webflowCmsReadScope],
@@ -166,6 +171,7 @@ export const webflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_collection_items",
+    operationType: "read",
     description: "List items in a Webflow CMS collection.",
     requiredScopes: [webflowCmsReadScope],
     providerPermissions: [webflowCmsReadScope],
@@ -188,6 +194,7 @@ export const webflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_collection_item",
+    operationType: "read",
     description: "Get a single item from a Webflow CMS collection.",
     requiredScopes: [webflowCmsReadScope],
     providerPermissions: [webflowCmsReadScope],
@@ -209,6 +216,7 @@ export const webflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_collection_item",
+    operationType: "write",
     description: "Create a draft or live item in a Webflow CMS collection.",
     requiredScopes: [webflowCmsWriteScope],
     providerPermissions: [webflowCmsWriteScope],
@@ -233,6 +241,7 @@ export const webflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_collection_item",
+    operationType: "write",
     description: "Update a draft or live item in a Webflow CMS collection.",
     requiredScopes: [webflowCmsWriteScope],
     providerPermissions: [webflowCmsWriteScope],
@@ -258,6 +267,7 @@ export const webflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_collection_item",
+    operationType: "destructive",
     description: "Delete a draft CMS item from a Webflow collection.",
     requiredScopes: [webflowCmsWriteScope],
     providerPermissions: [webflowCmsWriteScope],
@@ -279,6 +289,7 @@ export const webflowActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "publish_collection_items",
+    operationType: "write",
     description: "Publish one or more Webflow CMS collection items.",
     requiredScopes: [webflowCmsWriteScope],
     providerPermissions: [webflowCmsWriteScope],

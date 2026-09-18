@@ -130,30 +130,35 @@ const searchProductsOutputSchema = s.object("VTEX storefront product search resu
 export const vtexActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_product_and_sku_ids",
+    operationType: "read",
     description: "Retrieve VTEX product IDs and their SKU IDs, optionally scoped by category and product ID range.",
     inputSchema: listProductAndSkuIdsInputSchema,
     outputSchema: listProductAndSkuIdsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Retrieve a VTEX Catalog product by its product ID.",
     inputSchema: getProductInputSchema,
     outputSchema: getProductOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_brands",
+    operationType: "read",
     description: "List brands registered in a VTEX store catalog.",
     inputSchema: s.object("The input payload for listing VTEX brands.", {}),
     outputSchema: listBrandsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_category_tree",
+    operationType: "read",
     description: "Retrieve the VTEX store category tree up to a requested depth.",
     inputSchema: listCategoryTreeInputSchema,
     outputSchema: listCategoryTreeOutputSchema,
   }),
   defineProviderAction(service, {
     name: "search_products",
+    operationType: "read",
     description: "Search VTEX storefront products with full text, filter query expressions, sorting, and pagination.",
     inputSchema: searchProductsInputSchema,
     outputSchema: searchProductsOutputSchema,

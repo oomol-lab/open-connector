@@ -7,6 +7,7 @@ const service = "mistral_ai";
 
 interface MistralAiActionSource {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   outputSchema?: JsonSchema;
@@ -517,31 +518,37 @@ const deleteLibraryShareInputSchema = mistralInput(
 const actionSources: MistralAiActionSource[] = [
   {
     name: "list_models",
+    operationType: "read",
     description: "List all Mistral models accessible by the current API key.",
     inputSchema: noInputSchema,
   },
   {
     name: "get_model",
+    operationType: "read",
     description: "Get details of a single Mistral model by model ID.",
     inputSchema: mistralInput("Get one model.", { model_id: modelIdSchema }, ["model_id"]),
   },
   {
     name: "list_conversations",
+    operationType: "read",
     description: "List conversations under the current organization with pagination and metadata filters.",
     inputSchema: listConversationsInputSchema,
   },
   {
     name: "start_conversation",
+    operationType: "write",
     description: "Create a new conversation and append initial context.",
     inputSchema: startConversationInputSchema,
   },
   {
     name: "get_conversation",
+    operationType: "read",
     description: "Get metadata for a single conversation by ID.",
     inputSchema: mistralInput("Get one conversation.", { conversation_id: conversationIdSchema }, ["conversation_id"]),
   },
   {
     name: "delete_conversation",
+    operationType: "destructive",
     description: "Delete the specified conversation.",
     inputSchema: mistralInput("Delete one conversation.", { conversation_id: conversationIdSchema }, [
       "conversation_id",
@@ -550,11 +557,13 @@ const actionSources: MistralAiActionSource[] = [
   },
   {
     name: "append_to_conversation",
+    operationType: "write",
     description: "Append a new message to an existing conversation.",
     inputSchema: appendConversationInputSchema,
   },
   {
     name: "get_conversation_history",
+    operationType: "read",
     description: "Get all history entries in a conversation.",
     inputSchema: mistralInput("Get conversation history.", { conversation_id: conversationIdSchema }, [
       "conversation_id",
@@ -562,6 +571,7 @@ const actionSources: MistralAiActionSource[] = [
   },
   {
     name: "get_conversation_messages",
+    operationType: "read",
     description: "Get all message entries in a conversation.",
     inputSchema: mistralInput("Get conversation messages.", { conversation_id: conversationIdSchema }, [
       "conversation_id",
@@ -569,29 +579,44 @@ const actionSources: MistralAiActionSource[] = [
   },
   {
     name: "restart_conversation",
+    operationType: "read",
     description: "Restart a conversation from a historical entry.",
     inputSchema: restartConversationInputSchema,
   },
   {
     name: "list_agents",
+    operationType: "read",
     description: "List agents with pagination, name, source, or metadata filters.",
     inputSchema: listAgentsInputSchema,
   },
-  { name: "create_agent", description: "Create a new Mistral agent.", inputSchema: createAgentInputSchema },
-  { name: "get_agent", description: "Get a single agent by ID.", inputSchema: getAgentInputSchema },
+  {
+    name: "create_agent",
+    operationType: "write",
+    description: "Create a new Mistral agent.",
+    inputSchema: createAgentInputSchema,
+  },
+  {
+    name: "get_agent",
+    operationType: "read",
+    description: "Get a single agent by ID.",
+    inputSchema: getAgentInputSchema,
+  },
   {
     name: "update_agent",
+    operationType: "write",
     description: "Update an agent configuration and create a new version.",
     inputSchema: updateAgentInputSchema,
   },
   {
     name: "delete_agent",
+    operationType: "destructive",
     description: "Delete the specified agent.",
     inputSchema: mistralInput("Delete one agent.", { agent_id: agentIdSchema }, ["agent_id"]),
     outputSchema: deletedResponseSchema,
   },
   {
     name: "update_agent_version",
+    operationType: "write",
     description: "Switch the current version of an agent.",
     inputSchema: mistralInput(
       "Update the current agent version.",
@@ -601,11 +626,13 @@ const actionSources: MistralAiActionSource[] = [
   },
   {
     name: "list_agent_versions",
+    operationType: "read",
     description: "List all versions of the specified agent.",
     inputSchema: listAgentVersionsInputSchema,
   },
   {
     name: "get_agent_version",
+    operationType: "read",
     description: "Get version details of the specified agent.",
     inputSchema: mistralInput("Get one agent version.", { agent_id: agentIdSchema, version: versionSchema }, [
       "agent_id",
@@ -614,6 +641,7 @@ const actionSources: MistralAiActionSource[] = [
   },
   {
     name: "create_or_update_agent_alias",
+    operationType: "write",
     description: "Create or update an agent version alias.",
     inputSchema: mistralInput(
       "Create or update an agent alias.",
@@ -623,115 +651,152 @@ const actionSources: MistralAiActionSource[] = [
   },
   {
     name: "list_agent_aliases",
+    operationType: "read",
     description: "List all version aliases for the specified agent.",
     inputSchema: mistralInput("List agent aliases.", { agent_id: agentIdSchema }, ["agent_id"]),
   },
   {
     name: "create_chat_completion",
+    operationType: "read",
     description: "Call the Mistral chat completions API.",
     inputSchema: createChatCompletionInputSchema,
   },
   {
     name: "create_fim_completion",
+    operationType: "write",
     description: "Call the Mistral FIM completions API.",
     inputSchema: createFimCompletionInputSchema,
   },
   {
     name: "create_agents_completion",
+    operationType: "write",
     description: "Call the Mistral agents completions API.",
     inputSchema: createAgentsCompletionInputSchema,
   },
   {
     name: "create_embeddings",
+    operationType: "write",
     description: "Generate embeddings with Mistral.",
     inputSchema: createEmbeddingsInputSchema,
   },
   {
     name: "create_moderation",
+    operationType: "write",
     description: "Detect text safety risks with Mistral moderation.",
     inputSchema: createModerationInputSchema,
   },
   {
     name: "create_chat_moderation",
+    operationType: "write",
     description: "Detect chat message safety risks with Mistral moderation.",
     inputSchema: createChatModerationInputSchema,
   },
-  { name: "create_ocr", description: "Run Mistral OCR on a document or image.", inputSchema: createOcrInputSchema },
+  {
+    name: "create_ocr",
+    operationType: "write",
+    description: "Run Mistral OCR on a document or image.",
+    inputSchema: createOcrInputSchema,
+  },
   {
     name: "create_audio_transcription",
+    operationType: "write",
     description: "Upload or reference audio and create a transcription.",
     inputSchema: createAudioTranscriptionInputSchema,
   },
   {
     name: "list_files",
+    operationType: "read",
     description: "List all files under the current organization.",
     inputSchema: listFilesInputSchema,
   },
   {
     name: "upload_file",
+    operationType: "write",
     description: "Upload a file to Mistral for fine-tuning, batch, or OCR.",
     inputSchema: uploadFileInputSchema,
   },
   {
     name: "retrieve_file",
+    operationType: "read",
     description: "Get file metadata by file ID.",
     inputSchema: mistralInput("Retrieve file metadata.", { file_id: fileIdSchema }, ["file_id"]),
   },
   {
     name: "delete_file",
+    operationType: "destructive",
     description: "Delete the specified file.",
     inputSchema: mistralInput("Delete one file.", { file_id: fileIdSchema }, ["file_id"]),
   },
   {
     name: "download_file",
+    operationType: "read",
     description: "Download Mistral file contents into the local transit file store.",
     inputSchema: mistralInput("Download one file.", { file_id: fileIdSchema }, ["file_id"]),
     outputSchema: downloadFileResponseSchema,
   },
   {
     name: "get_file_signed_url",
+    operationType: "read",
     description: "Get a temporary signed download link for a file.",
     inputSchema: getFileSignedUrlInputSchema,
   },
   {
     name: "get_fine_tuning_jobs",
+    operationType: "read",
     description: "List fine-tuning jobs with pagination and filters.",
     inputSchema: getFineTuningJobsInputSchema,
   },
   {
     name: "list_batch_jobs",
+    operationType: "read",
     description: "List batch jobs with pagination and filters.",
     inputSchema: listBatchJobsInputSchema,
   },
   {
     name: "list_libraries",
+    operationType: "read",
     description: "List libraries under the current organization.",
     inputSchema: listLibrariesInputSchema,
   },
-  { name: "create_library", description: "Create a new Mistral library.", inputSchema: createLibraryInputSchema },
+  {
+    name: "create_library",
+    operationType: "write",
+    description: "Create a new Mistral library.",
+    inputSchema: createLibraryInputSchema,
+  },
   {
     name: "get_library",
+    operationType: "read",
     description: "Get library details by library ID.",
     inputSchema: mistralInput("Get one library.", { library_id: libraryIdSchema }, ["library_id"]),
   },
-  { name: "update_library", description: "Update a library.", inputSchema: updateLibraryInputSchema },
+  {
+    name: "update_library",
+    operationType: "write",
+    description: "Update a library.",
+    inputSchema: updateLibraryInputSchema,
+  },
   {
     name: "delete_library",
+    operationType: "destructive",
     description: "Delete the specified library.",
     inputSchema: mistralInput("Delete one library.", { library_id: libraryIdSchema }, ["library_id"]),
   },
   {
     name: "list_library_documents",
+    operationType: "read",
     description: "List documents under a library.",
     inputSchema: listLibraryDocumentsInputSchema,
   },
   {
     name: "upload_library_document",
+    operationType: "write",
     description: "Upload a new document to a library.",
     inputSchema: uploadLibraryDocumentInputSchema,
   },
   {
     name: "get_library_document",
+    operationType: "read",
     description: "Get details of a single library document.",
     inputSchema: mistralInput(
       "Get one library document.",
@@ -741,11 +806,13 @@ const actionSources: MistralAiActionSource[] = [
   },
   {
     name: "update_library_document",
+    operationType: "write",
     description: "Update a library document.",
     inputSchema: updateLibraryDocumentInputSchema,
   },
   {
     name: "delete_library_document",
+    operationType: "destructive",
     description: "Delete a library document.",
     inputSchema: mistralInput(
       "Delete one library document.",
@@ -756,6 +823,7 @@ const actionSources: MistralAiActionSource[] = [
   },
   {
     name: "get_document_text_content",
+    operationType: "read",
     description: "Get extracted text content for a library document.",
     inputSchema: mistralInput(
       "Get document text content.",
@@ -765,6 +833,7 @@ const actionSources: MistralAiActionSource[] = [
   },
   {
     name: "get_document_status",
+    operationType: "read",
     description: "Get processing status for a library document.",
     inputSchema: mistralInput(
       "Get document processing status.",
@@ -774,6 +843,7 @@ const actionSources: MistralAiActionSource[] = [
   },
   {
     name: "get_document_signed_url",
+    operationType: "read",
     description: "Get a temporary signed link to a library document's original file.",
     inputSchema: mistralInput(
       "Get document signed URL.",
@@ -783,6 +853,7 @@ const actionSources: MistralAiActionSource[] = [
   },
   {
     name: "get_document_extracted_text_url",
+    operationType: "read",
     description: "Get a temporary signed link to a library document's extracted text file.",
     inputSchema: mistralInput(
       "Get document extracted text URL.",
@@ -792,6 +863,7 @@ const actionSources: MistralAiActionSource[] = [
   },
   {
     name: "reprocess_document",
+    operationType: "read",
     description: "Reprocess the specified library document.",
     inputSchema: mistralInput(
       "Reprocess a library document.",
@@ -801,16 +873,19 @@ const actionSources: MistralAiActionSource[] = [
   },
   {
     name: "list_library_shares",
+    operationType: "read",
     description: "List shared access records for a library.",
     inputSchema: mistralInput("List library shares.", { library_id: libraryIdSchema }, ["library_id"]),
   },
   {
     name: "create_library_share",
+    operationType: "write",
     description: "Create or update shared access for a library.",
     inputSchema: createLibraryShareInputSchema,
   },
   {
     name: "delete_library_share",
+    operationType: "destructive",
     description: "Remove shared access from a library.",
     inputSchema: deleteLibraryShareInputSchema,
   },
@@ -819,6 +894,7 @@ const actionSources: MistralAiActionSource[] = [
 export const mistralAiActions: ActionDefinition[] = actionSources.map((action) =>
   defineProviderAction(service, {
     name: action.name,
+    operationType: action.operationType,
     description: action.description,
     requiredScopes: [],
     inputSchema: action.inputSchema,

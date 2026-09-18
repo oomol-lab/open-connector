@@ -37,6 +37,7 @@ const graphqlResultSchema = s.object(
 export const taniumActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "execute_graphql",
+    operationType: "write",
     description: "Execute a GraphQL document against the connected Tanium Gateway endpoint.",
     inputSchema: s.actionInput(
       {

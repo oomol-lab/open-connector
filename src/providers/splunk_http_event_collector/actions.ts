@@ -27,6 +27,7 @@ const eventFieldsSchema = s.record(
 
 const sendEvent = defineProviderAction(service, {
   name: "send_event",
+  operationType: "write",
   description: "Send one structured event to the connected Splunk HTTP Event Collector.",
   inputSchema: s.object(
     "Input parameters for sending one structured Splunk HEC event.",
@@ -49,6 +50,7 @@ const sendEvent = defineProviderAction(service, {
 
 const sendRawEvent = defineProviderAction(service, {
   name: "send_raw_event",
+  operationType: "write",
   description: "Send one raw text event to the connected Splunk HTTP Event Collector.",
   inputSchema: s.object(
     "Input parameters for sending one raw Splunk HEC event.",

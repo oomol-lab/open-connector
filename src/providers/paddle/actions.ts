@@ -178,6 +178,7 @@ const updateCustomerInputSchema = s.object(
 export const paddleActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List Paddle products with optional filtering, pagination, and price inclusion.",
     requiredScopes: ["product.read"],
     inputSchema: s.object(
@@ -201,6 +202,7 @@ export const paddleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Get one Paddle product by ID.",
     requiredScopes: ["product.read"],
     inputSchema: s.object("Input for retrieving a Paddle product.", { id: productIdSchema }),
@@ -208,6 +210,7 @@ export const paddleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_product",
+    operationType: "write",
     description: "Create a Paddle product in the catalog.",
     requiredScopes: ["product.write"],
     inputSchema: productPayloadSchema,
@@ -215,6 +218,7 @@ export const paddleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_product",
+    operationType: "write",
     description: "Update a Paddle product, including archiving or reactivating it through status.",
     requiredScopes: ["product.write"],
     inputSchema: updateProductInputSchema,
@@ -222,6 +226,7 @@ export const paddleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_prices",
+    operationType: "read",
     description: "List Paddle prices with optional product, status, recurring, and billing filters.",
     requiredScopes: ["price.read"],
     inputSchema: s.object(
@@ -261,6 +266,7 @@ export const paddleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_price",
+    operationType: "read",
     description: "Get one Paddle price by ID.",
     requiredScopes: ["price.read"],
     inputSchema: s.object("Input for retrieving a Paddle price.", { id: priceIdSchema }),
@@ -268,6 +274,7 @@ export const paddleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_price",
+    operationType: "write",
     description: "Create a Paddle price for a product.",
     requiredScopes: ["price.write"],
     inputSchema: pricePayloadSchema,
@@ -275,6 +282,7 @@ export const paddleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_price",
+    operationType: "destructive",
     description: "Update a Paddle price, including archiving or reactivating it through status.",
     requiredScopes: ["price.write"],
     inputSchema: updatePriceInputSchema,
@@ -282,6 +290,7 @@ export const paddleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List Paddle customers with optional email, status, search, and pagination filters.",
     requiredScopes: ["customer.read"],
     inputSchema: s.object(
@@ -303,6 +312,7 @@ export const paddleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Get one Paddle customer by ID.",
     requiredScopes: ["customer.read"],
     inputSchema: s.object("Input for retrieving a Paddle customer.", { id: customerIdSchema }),
@@ -310,6 +320,7 @@ export const paddleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_customer",
+    operationType: "write",
     description: "Create a Paddle customer.",
     requiredScopes: ["customer.write"],
     inputSchema: customerPayloadSchema,
@@ -317,6 +328,7 @@ export const paddleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_customer",
+    operationType: "write",
     description: "Update a Paddle customer, including archiving or reactivating it through status.",
     requiredScopes: ["customer.write"],
     inputSchema: updateCustomerInputSchema,

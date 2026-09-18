@@ -26,6 +26,7 @@ const optimizationSummarySchema = s.object("A normalized Route4Me optimization s
 export const route4meActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_optimization",
+    operationType: "write",
     description: "Create a Route4Me optimization problem from parameters and destination addresses.",
     inputSchema: s.object("The input payload for creating a Route4Me optimization problem.", {
       parameters: s.looseObject("The optimization parameters object accepted by Route4Me."),
@@ -35,6 +36,7 @@ export const route4meActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_optimizations",
+    operationType: "read",
     description: "List Route4Me optimization problems, or fetch one optimization by its ID.",
     inputSchema: s.object(
       "The input payload for listing Route4Me optimization problems.",
@@ -54,6 +56,7 @@ export const route4meActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_optimizations",
+    operationType: "destructive",
     description: "Delete one or more Route4Me optimization problems by ID.",
     inputSchema: s.object("The input payload for deleting Route4Me optimization problems.", {
       optimizationProblemIds: s.stringArray("The optimization problem IDs to delete.", {

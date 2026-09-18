@@ -105,6 +105,7 @@ lookupAirlinesInputSchema.oneOf = [{ required: ["name"] }, { required: ["iata"] 
 export const apiverveActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_word_definition",
+    operationType: "read",
     description: "Get definitions for a word using APIVerve Dictionary.",
     inputSchema: s.object("The input payload for getting APIVerve word definitions.", {
       word: wordField,
@@ -117,6 +118,7 @@ export const apiverveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_antonyms",
+    operationType: "read",
     description: "Find antonyms for a word using APIVerve Antonym Finder.",
     inputSchema: s.object("The input payload for finding APIVerve antonyms.", {
       word: wordField,
@@ -129,6 +131,7 @@ export const apiverveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "generate_advice",
+    operationType: "read",
     description: "Generate a random piece of advice using APIVerve Advice Generator.",
     inputSchema: s.object("The input payload for generating APIVerve advice.", {}),
     outputSchema: s.object("The response returned by APIVerve Advice Generator.", {
@@ -139,6 +142,7 @@ export const apiverveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "convert_currency",
+    operationType: "read",
     description: "Convert an amount between currencies using APIVerve Currency Converter.",
     inputSchema: s.object("The input payload for converting currency with APIVerve.", {
       value: s.number("The amount to convert.", { minimum: 0 }),
@@ -160,6 +164,7 @@ export const apiverveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "calculate_age",
+    operationType: "read",
     description: "Calculate age details from a date of birth using APIVerve Age Calculator.",
     inputSchema: s.object("The input payload for calculating age with APIVerve.", {
       dob: s.date("The date of birth to calculate from in YYYY-MM-DD format."),
@@ -194,6 +199,7 @@ export const apiverveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_air_quality",
+    operationType: "read",
     description: "Get current air quality by city or ZIP code using APIVerve Air Quality.",
     inputSchema: airQualityInputSchema,
     outputSchema: s.object("The response returned by APIVerve Air Quality.", {
@@ -211,6 +217,7 @@ export const apiverveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_airport_distance",
+    operationType: "read",
     description: "Get distance and flight estimates between two airports using IATA codes.",
     inputSchema: s.object("The input payload for getting APIVerve airport distance by IATA codes.", {
       iata1: iataCodeField,
@@ -232,6 +239,7 @@ export const apiverveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "lookup_airport",
+    operationType: "read",
     description: "Look up airport information by IATA code using APIVerve Airports Lookup.",
     inputSchema: s.object("The input payload for looking up an APIVerve airport by IATA code.", {
       iata: iataCodeField,
@@ -240,6 +248,7 @@ export const apiverveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "lookup_airlines",
+    operationType: "read",
     description: "Look up airlines by name or IATA code using APIVerve Airline Lookup.",
     inputSchema: lookupAirlinesInputSchema,
     outputSchema: s.object("The response returned by APIVerve Airline Lookup.", {

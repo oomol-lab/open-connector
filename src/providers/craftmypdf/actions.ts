@@ -42,12 +42,14 @@ const anchorSchema = s.looseObject(
 export const craftmypdfActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_info",
+    operationType: "read",
     description: "Get the current CraftMyPDF account details resolved by the provided API key.",
     inputSchema: s.object({}, { description: "No input parameters are required for this action." }),
     outputSchema: s.object({ account: accountSchema }, { required: ["account"] }),
   }),
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List CraftMyPDF templates with optional pagination and group-name filtering.",
     inputSchema: s.object(
       {
@@ -66,6 +68,7 @@ export const craftmypdfActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_template",
+    operationType: "read",
     description: "Get the raw CraftMyPDF template body and sample JSON for one template ID.",
     inputSchema: s.object(
       {
@@ -90,6 +93,7 @@ export const craftmypdfActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_pdf",
+    operationType: "write",
     description: "Generate a PDF from a CraftMyPDF template and return the hosted file URL plus transaction metadata.",
     inputSchema: s.object(
       {

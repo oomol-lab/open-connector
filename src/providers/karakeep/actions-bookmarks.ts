@@ -277,6 +277,7 @@ const detachAssetOutputSchema = successResultSchema(
 export const karakeepBookmarkActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_bookmarks",
+    operationType: "read",
     description:
       "List the bookmarks of the connected Karakeep user, optionally filtered by archived or favourited status, sorted by creation date and paged with a cursor. Keep includeContent false unless the extracted page content is really needed, because it can make the response very large; text bookmarks always carry content.text.",
     requiredScopes: bookmarkReadScopes,
@@ -285,6 +286,7 @@ export const karakeepBookmarkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_bookmark",
+    operationType: "write",
     description:
       "Create a bookmark from a link, a text note or an already uploaded asset. Set type to link and provide url, set type to text and provide text, or set type to asset and provide assetType and assetId. When the same URL is already bookmarked Karakeep does not create a duplicate: it returns the existing bookmark with alreadyExists set to true and re-saves it, which bumps createdAt to now, resets archived to false, and overwrites title, favourited, note and summary with whatever you supplied. Only source rss and source import skip that re-save. check_bookmark_url can reduce accidental duplicate updates, but it is a separate request and cannot prevent another client from creating the URL before this action runs.",
     requiredScopes: bookmarkWriteScopes,
@@ -293,6 +295,7 @@ export const karakeepBookmarkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_bookmarks",
+    operationType: "read",
     description:
       "Search the bookmarks of the connected Karakeep user with full text, semantic or hybrid search. Paging uses a search specific cursor that cannot be shared with list_bookmarks. Keep includeContent false unless the extracted page content is really needed, because it can make the response very large; text bookmarks always carry content.text.",
     requiredScopes: bookmarkReadScopes,
@@ -301,6 +304,7 @@ export const karakeepBookmarkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_bookmark_url",
+    operationType: "read",
     description:
       "Check whether a URL is already bookmarked and return the id of the existing bookmark, or null when it is not. Useful before calling create_bookmark.",
     requiredScopes: bookmarkReadScopes,
@@ -309,6 +313,7 @@ export const karakeepBookmarkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_bookmark",
+    operationType: "read",
     description:
       "Get a single bookmark with its tags, content and attached assets. Keep includeContent false unless the extracted page content is really needed, because it can make the response very large; text bookmarks always carry content.text. Use get_bookmark_content to read long article text in chunks.",
     requiredScopes: bookmarkReadScopes,
@@ -317,6 +322,7 @@ export const karakeepBookmarkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_bookmark",
+    operationType: "destructive",
     description:
       "Update a bookmark. Only the fields you send are changed, and sending null clears a nullable field, so existing values are overwritten. Fields that do not belong to the bookmark variant are not ignored: Karakeep rejects the whole request with a 400 such as Attempting to set link attributes for non-link type bookmark and writes nothing, so send only the fields that match the bookmark type.",
     requiredScopes: bookmarkWriteScopes,
@@ -325,6 +331,7 @@ export const karakeepBookmarkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_bookmark",
+    operationType: "destructive",
     description: "Permanently delete a bookmark together with its tags, highlights and attached assets.",
     requiredScopes: bookmarkWriteScopes,
     inputSchema: bookmarkOnlyInputSchema("The bookmark to delete."),
@@ -332,6 +339,7 @@ export const karakeepBookmarkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_bookmark_content",
+    operationType: "read",
     description:
       "Read the readable content of a bookmark in chunks as markdown or plain text. This is the safe way to read long articles: pass nextCursor back to fetch the following chunk instead of asking for the whole content with includeContent. Karakeep rejects a cursor with CONTENT_CHANGED when the bookmark content changed while paging, in which case restart from the first chunk.",
     requiredScopes: bookmarkReadScopes,
@@ -340,6 +348,7 @@ export const karakeepBookmarkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "summarize_bookmark",
+    operationType: "destructive",
     description:
       "Generate an AI summary for a link bookmark and return it. Karakeep saves the generated summary on the bookmark, replacing any summary it already had, and re-indexes the bookmark for search, so this is not a read-only preview. The call blocks while the configured model runs, so it can take a while, and it fails with an invalid input error when the Karakeep instance has no inference provider configured. The current server writes the summary before answering and returns it synchronously, so summary normally carries the finished text. The published OpenAPI spec instead documents the whole bookmark record, so an instance following that shape can answer with summary null; in that case read the bookmark again with get_bookmark until summarizationStatus is success and take the summary from there.",
     requiredScopes: bookmarkWriteScopes,
@@ -348,6 +357,7 @@ export const karakeepBookmarkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "attach_tags_to_bookmark",
+    operationType: "write",
     description:
       "Attach tags to a bookmark. Reference each tag by tagId, or by tagName to let Karakeep create the tag when it does not exist yet.",
     requiredScopes: bookmarkWriteScopes,
@@ -356,6 +366,7 @@ export const karakeepBookmarkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "detach_tags_from_bookmark",
+    operationType: "destructive",
     description:
       "Detach tags from a bookmark. Reference each tag by tagId or by tagName. The tags themselves are kept, only the attachment to this bookmark is removed.",
     requiredScopes: bookmarkWriteScopes,
@@ -364,6 +375,7 @@ export const karakeepBookmarkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_bookmark_lists",
+    operationType: "read",
     description: "List the Karakeep lists that contain a bookmark.",
     requiredScopes: listReadScopes,
     inputSchema: bookmarkOnlyInputSchema("The bookmark whose lists are returned."),
@@ -371,6 +383,7 @@ export const karakeepBookmarkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_bookmark_highlights",
+    operationType: "read",
     description: "List the highlights stored on a bookmark.",
     requiredScopes: highlightReadScopes,
     inputSchema: bookmarkOnlyInputSchema("The bookmark whose highlights are returned."),
@@ -378,6 +391,7 @@ export const karakeepBookmarkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "attach_asset_to_bookmark",
+    operationType: "write",
     description:
       "Attach an already uploaded asset to a bookmark, for example a screenshot or a PDF. Upload the file first to obtain an asset id. Only the screenshot, pdf, assetScreenshot, precrawledArchive, bannerImage, video and userUploaded roles can be attached; linkHtmlContent, bookmarkAsset, fullPageArchive, avatar and unknown assets are maintained by Karakeep itself and are rejected with a 400.",
     requiredScopes: assetWriteScopes,
@@ -386,6 +400,7 @@ export const karakeepBookmarkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "replace_asset_on_bookmark",
+    operationType: "destructive",
     description:
       "Replace an asset that is attached to a bookmark with a different, already uploaded asset. The replacement must not equal the old asset and should not already belong to another bookmark. The replaced asset and its stored file are permanently deleted, and the new asset takes over its role. The asset being replaced must hold an attachable role, meaning screenshot, pdf, assetScreenshot, precrawledArchive, bannerImage, video or userUploaded; assets Karakeep maintains itself, including linkHtmlContent, bookmarkAsset, fullPageArchive, avatar and unknown, are rejected with a 400.",
     requiredScopes: assetWriteScopes,
@@ -394,6 +409,7 @@ export const karakeepBookmarkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "detach_asset_from_bookmark",
+    operationType: "destructive",
     description:
       "Detach an asset from a bookmark. Karakeep deletes the asset record together with the stored file, so the asset id becomes unusable afterwards and the bytes are gone; the bookmark keeps its other assets. Only screenshot, pdf, assetScreenshot, fullPageArchive, precrawledArchive, bannerImage, video and userUploaded assets can be detached; linkHtmlContent, bookmarkAsset, avatar and unknown assets are maintained by Karakeep itself and are rejected with a 400.",
     requiredScopes: assetWriteScopes,

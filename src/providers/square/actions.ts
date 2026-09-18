@@ -183,6 +183,7 @@ const customerOutputSchema = s.object("Square customer response.", {
 export const squareActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_locations",
+    operationType: "read",
     description: "List Square seller locations for the connected access token.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -190,6 +191,7 @@ export const squareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List Square customer profiles with cursor pagination.",
     requiredScopes: [],
     inputSchema: listCustomersInputSchema,
@@ -197,6 +199,7 @@ export const squareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Retrieve one Square customer profile by ID.",
     requiredScopes: [],
     inputSchema: getCustomerInputSchema,
@@ -204,6 +207,7 @@ export const squareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_customer",
+    operationType: "write",
     description: "Create a Square customer profile.",
     requiredScopes: [],
     inputSchema: createCustomerInputSchema,
@@ -211,6 +215,7 @@ export const squareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_customer",
+    operationType: "write",
     description: "Update a Square customer profile by ID.",
     requiredScopes: [],
     inputSchema: updateCustomerInputSchema,
@@ -218,6 +223,7 @@ export const squareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_customers",
+    operationType: "read",
     description: "Search Square customer profiles with supported Square filters.",
     requiredScopes: [],
     inputSchema: searchCustomersInputSchema,

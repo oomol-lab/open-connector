@@ -122,6 +122,7 @@ const getGroupOutputSchema = s.object("KnowBe4 group response.", {
 export const knowbe4Actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Get KnowBe4 account and subscription data from the Reporting API.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to get KnowBe4 account data.", {}),
@@ -129,6 +130,7 @@ export const knowbe4Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List KnowBe4 users with optional status, group, expanded group, per_page, and cursor filters.",
     requiredScopes: [],
     inputSchema: listUsersInputSchema,
@@ -136,6 +138,7 @@ export const knowbe4Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get a specific KnowBe4 user by user ID.",
     requiredScopes: [],
     inputSchema: getUserInputSchema,
@@ -143,6 +146,7 @@ export const knowbe4Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List KnowBe4 groups with optional status, per_page, and cursor filters.",
     requiredScopes: [],
     inputSchema: listGroupsInputSchema,
@@ -150,6 +154,7 @@ export const knowbe4Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_group",
+    operationType: "read",
     description: "Get a specific KnowBe4 group by group ID.",
     requiredScopes: [],
     inputSchema: getGroupInputSchema,

@@ -96,6 +96,7 @@ const relatedProductInputSchema = s.object(
 export const chuhaijiangActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_products",
+    operationType: "read",
     description:
       "Search TikTok Shop products in Chuhaijiang by market, keyword, category, price, rating, sales, shipping, and sort order.",
     requiredScopes: [],
@@ -165,6 +166,7 @@ export const chuhaijiangActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description:
       "Retrieve a TikTok Shop product from Chuhaijiang with product, shop, pricing, sales, and category details.",
     requiredScopes: [],
@@ -185,6 +187,7 @@ export const chuhaijiangActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_product_creators",
+    operationType: "read",
     description: "List TikTok creators associated with a product in Chuhaijiang.",
     requiredScopes: [],
     inputSchema: relatedProductInputSchema,
@@ -192,6 +195,7 @@ export const chuhaijiangActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_product_videos",
+    operationType: "read",
     description: "List TikTok videos associated with a product in Chuhaijiang.",
     requiredScopes: [],
     inputSchema: relatedProductInputSchema,
@@ -199,6 +203,7 @@ export const chuhaijiangActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_product_lives",
+    operationType: "read",
     description: "List TikTok live streams associated with a product in Chuhaijiang.",
     requiredScopes: [],
     inputSchema: relatedProductInputSchema,
@@ -206,6 +211,7 @@ export const chuhaijiangActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_product_reviews",
+    operationType: "read",
     description: "List TikTok Shop reviews associated with a product in Chuhaijiang.",
     requiredScopes: [],
     inputSchema: relatedProductInputSchema,
@@ -213,6 +219,7 @@ export const chuhaijiangActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_similar_products",
+    operationType: "read",
     description: "List TikTok products similar to a selected product in Chuhaijiang.",
     requiredScopes: [],
     inputSchema: relatedProductInputSchema,
@@ -220,6 +227,7 @@ export const chuhaijiangActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_top_selling_products",
+    operationType: "read",
     description:
       "List TikTok Shop products ranked by sales for a selected market and statistics period in Chuhaijiang.",
     requiredScopes: [],
@@ -247,6 +255,7 @@ export const chuhaijiangActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_most_promoted_products",
+    operationType: "read",
     description:
       "List TikTok Shop products most heavily promoted by creators, videos, and live streams in Chuhaijiang.",
     requiredScopes: [],
@@ -274,6 +283,7 @@ export const chuhaijiangActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_new_arrival_products",
+    operationType: "read",
     description: "List recently launched TikTok Shop products that are quickly gaining sales in Chuhaijiang.",
     requiredScopes: [],
     inputSchema: s.object(

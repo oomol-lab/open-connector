@@ -20,6 +20,7 @@ const getAccountOutputSchema = s.object("Single brokerage account payload return
 export const coinbaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_accounts",
+    operationType: "read",
     description: "List Coinbase Advanced Trade brokerage accounts that the connected credential can access.",
     requiredScopes: [coinbaseAccountReadScope],
     inputSchema: s.object(
@@ -34,6 +35,7 @@ export const coinbaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Get one Coinbase Advanced Trade brokerage account by UUID.",
     requiredScopes: [coinbaseAccountReadScope],
     inputSchema: s.object(

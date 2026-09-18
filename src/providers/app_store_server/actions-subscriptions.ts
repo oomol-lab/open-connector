@@ -35,6 +35,7 @@ const massRequestIdentifierInput = uuidString(
 export const appStoreServerSubscriptionActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_all_subscription_statuses",
+    operationType: "read",
     description:
       "Read the status of every auto-renewable subscription a customer has for your app, grouped by subscription group, with the latest transaction and renewal information of each decoded from the signed payloads Apple returns.",
     requiredScopes: [],
@@ -88,6 +89,7 @@ export const appStoreServerSubscriptionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "extend_subscription_renewal_date",
+    operationType: "destructive",
     description:
       "Extend the renewal date of one customer's active auto-renewable subscription, to compensate for a service outage or a cancelled event. The extension cannot be reversed, and Apple emails the customer about the new renewal date.",
     requiredScopes: [],
@@ -115,6 +117,7 @@ export const appStoreServerSubscriptionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "extend_renewal_date_for_all_active_subscribers",
+    operationType: "destructive",
     description:
       "Extend the renewal date of every active subscription to one product, optionally limited to some storefronts. The App Store processes the request asynchronously; poll get_subscription_renewal_date_extension_status for the outcome. The extension cannot be reversed.",
     requiredScopes: [],
@@ -145,6 +148,7 @@ export const appStoreServerSubscriptionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_subscription_renewal_date_extension_status",
+    operationType: "read",
     description:
       "Check how far the App Store has got with a renewal date extension that was requested for all active subscribers of a product.",
     requiredScopes: [],

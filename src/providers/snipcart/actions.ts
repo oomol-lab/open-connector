@@ -28,6 +28,7 @@ const paginatedOutputSchema = (description: string, itemDescription: string) =>
 export const snipcartActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description: "List completed Snipcart orders with pagination and optional filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -72,6 +73,7 @@ export const snipcartActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_order",
+    operationType: "read",
     description: "Retrieve one Snipcart order by token.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -88,6 +90,7 @@ export const snipcartActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List Snipcart customers with pagination and optional filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -110,6 +113,7 @@ export const snipcartActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Retrieve one Snipcart customer by ID.",
     requiredScopes: [],
     inputSchema: s.object("The identifier for retrieving one Snipcart customer.", {

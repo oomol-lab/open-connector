@@ -198,6 +198,7 @@ const contactSearchResultSchema = s.looseObject("One contact result returned by 
 export const autoboundActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Get the authenticated Autobound Signals account details and current credit balance.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for loading the current Autobound account.", {}),
@@ -207,6 +208,7 @@ export const autoboundActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_signal_types",
+    operationType: "read",
     description: "List Autobound signal types and optionally include live counts and refresh cadence metadata.",
     requiredScopes: [],
     inputSchema: listSignalTypesInputSchema,
@@ -222,6 +224,7 @@ export const autoboundActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "enrich_company",
+    operationType: "read",
     description: "Enrich one company with Autobound company-level signals.",
     requiredScopes: [],
     inputSchema: companyEnrichInputSchema,
@@ -234,6 +237,7 @@ export const autoboundActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_companies",
+    operationType: "read",
     description: "Search companies that match Autobound company-level signal filters.",
     requiredScopes: [],
     inputSchema: companySearchInputSchema,
@@ -246,6 +250,7 @@ export const autoboundActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "enrich_contact",
+    operationType: "read",
     description: "Enrich one contact with Autobound contact-level signals and employer context.",
     requiredScopes: [],
     inputSchema: contactEnrichInputSchema,
@@ -260,6 +265,7 @@ export const autoboundActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_contacts",
+    operationType: "read",
     description: "Search contacts that match Autobound contact-level signal filters.",
     requiredScopes: [],
     inputSchema: contactSearchInputSchema,

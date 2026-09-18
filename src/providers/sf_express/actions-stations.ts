@@ -145,6 +145,7 @@ const receiptAdditionSchema = s.requiredObject("One additional attribute entry f
 export const sfExpressStationActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "station_batch_inventory",
+    operationType: "write",
     description: "Batch-upload the 600 route (滞留件盘点) for waybills held at a partner station.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The station inventory batch.", {
@@ -172,6 +173,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_handle_exception_return",
+    operationType: "write",
     description: "Report an exception return for a waybill at an external station (驿站异常件退件处理).",
     requiredScopes: [],
     inputSchema: s.object(
@@ -190,6 +192,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_verify_waybill_number",
+    operationType: "read",
     description: "Check whether a waybill number is an SF Express waybill number, for the station channel.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The waybill number to verify.", {
@@ -200,6 +203,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_query_waybill_route",
+    operationType: "read",
     description: "Query the route events of a waybill for the station channel.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The waybill whose route should be queried.", {
@@ -227,6 +231,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_notify_recipient",
+    operationType: "write",
     description: "Send a pickup notification SMS to the recipient of a waybill held at a station.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The notification to send.", {
@@ -238,6 +243,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_send_waybill_sms",
+    operationType: "write",
     description: "Send a fixed-template notification SMS for a waybill to its recipient or sender.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -259,6 +265,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_store_batch_inventory",
+    operationType: "write",
     description: "Batch-upload the 600 route (滞留件盘点) for waybills held at a convenience store.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The store inventory batch.", {
@@ -287,6 +294,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_query_centralization",
+    operationType: "read",
     description: "Query whether a waybill is a centralized (集收/集派) shipment through the station general query API.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The centralization query.", {
@@ -300,6 +308,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_update_outsource_info",
+    operationType: "write",
     description:
       "Submit or update the regional outsourcing information (区域外包信息变更) for outsourced station areas.",
     requiredScopes: [],
@@ -378,6 +387,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_upsert_robot_channel",
+    operationType: "write",
     description:
       "Create or update a robot/smart-cabinet channel station (渠道新增/修改). Omit virtual_addr when creating; pass it when updating.",
     requiredScopes: [],
@@ -410,6 +420,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_upsert_cage_cabinet",
+    operationType: "write",
     description: "Create or update a cage cabinet (笼车柜); the sn field is the upsert key.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -434,6 +445,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_store_handle_exception_return",
+    operationType: "write",
     description: "Report an exception return for a waybill at a store (门店异常件退件处理).",
     requiredScopes: [],
     inputSchema: s.object(
@@ -456,6 +468,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_check_delivery_operation",
+    operationType: "read",
     description: "Check whether an operator on a channel may handle a waybill at a store (渠道可派件交接管控).",
     requiredScopes: [],
     inputSchema: s.object(
@@ -487,6 +500,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_customer_send_in_store",
+    operationType: "write",
     description:
       "Register a customer drop-off at a store (顾客到店寄件). When receiver_payment is 0 (寄付), weight, pack_fee, insurance_money and insurance_fee are required.",
     requiredScopes: [],
@@ -517,6 +531,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_courier_pickup_in_store",
+    operationType: "write",
     description: "Register that an SF courier picked up the consigned parcels from a store (顺丰小哥到店收件).",
     requiredScopes: [],
     inputSchema: s.object(
@@ -538,6 +553,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_store_receive_delivery",
+    operationType: "write",
     description: "Register that a store received parcels handed over by an SF courier (门店接收小哥派件).",
     requiredScopes: [],
     inputSchema: s.object(
@@ -559,6 +575,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_customer_pickup_in_store",
+    operationType: "write",
     description:
       "Register that a customer picked up their parcel at a store (顾客到店取件). When receiver_payment is 1 (到付), weight, pack_fee, insurance_money, insurance_fee and successfully_payed_fee are required.",
     requiredScopes: [],
@@ -610,6 +627,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_query_store_info",
+    operationType: "read",
     description:
       "Query a station's information. One of virtual_addr or store_code is required. The returned field names vary by api_version.",
     requiredScopes: [],
@@ -633,6 +651,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_verify_fc_settlement",
+    operationType: "read",
     description:
       "Check whether a Hive Box (丰巢) cabinet drop-off fee settles monthly (丰巢订单结算校验, 订单类型 1 派件投柜). The rental and reservation order types carry different payloads and are not covered.",
     requiredScopes: [],
@@ -687,6 +706,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_upsert_fc_outsource_store",
+    operationType: "write",
     description: "Create or update a Hive Box regional-outsource store (丰巢区域外包门店新增及更新).",
     requiredScopes: [],
     inputSchema: s.requireAnyProperty(
@@ -746,6 +766,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_upsert_ysf_outsource_store",
+    operationType: "write",
     description: "Create or update a 驿收发 regional-outsource store (驿收发区域外包门店新增及更新).",
     requiredScopes: [],
     inputSchema: s.requireAnyProperty(
@@ -811,6 +832,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_save_village_store",
+    operationType: "write",
     description: "Create or update a township agent station (乡镇代理基本信息新增).",
     requiredScopes: [],
     inputSchema: s.object(
@@ -859,6 +881,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_upload_village_store_images",
+    operationType: "write",
     description: "Upload the exterior and interior images for a township agent station (乡镇代理图片上传).",
     requiredScopes: [],
     inputSchema: s.object(
@@ -878,6 +901,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_upsert_store_info",
+    operationType: "write",
     description:
       "Create or update a city station's base information (驿站基本信息新增/更新). When outsource_flag is 1, outsource_info is saved and required for 驿收发/丰巢 stores.",
     requiredScopes: [],
@@ -983,6 +1007,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_save_xgj_store",
+    operationType: "write",
     description: "Create or update a 星管家 station's base information (星管家基本信息新增).",
     requiredScopes: [],
     inputSchema: s.requireAnyProperty(
@@ -1044,6 +1069,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_upload_xgj_images",
+    operationType: "write",
     description:
       "Upload identity, face and property images for a 星管家 station (星管家相册新增); identity_file_names must contain exactly 2 images.",
     requiredScopes: [],
@@ -1068,6 +1094,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_get_oss_token",
+    operationType: "read",
     description:
       "Get an OSS token for direct image upload (获取OSSToken信息). The oss_client_name and path_id values come from your SF Express contact.",
     requiredScopes: [],
@@ -1082,6 +1109,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_query_grid_schedule",
+    operationType: "read",
     description: "Query the grid/bin assignment for a courier's shift at a station (星管家排班信息查询).",
     requiredScopes: [],
     inputSchema: s.requiredObject("The schedule query.", {
@@ -1096,6 +1124,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_upload_picture",
+    operationType: "write",
     description: "Upload one base64 image for a station (图片上传); the image must be at most 200 KB.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The image to upload.", {
@@ -1111,6 +1140,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_submit_fc_resource",
+    operationType: "write",
     description: "Submit or update a Hive Box service station's information (丰巢服务站信息接收或更新).",
     requiredScopes: [],
     inputSchema: s.requireAnyProperty(
@@ -1165,6 +1195,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_update_xgj_waybill_fee",
+    operationType: "write",
     description: "Update a 星管家 waybill's dispatch and review-fee information (星管家运单及好评费更新).",
     requiredScopes: [],
     inputSchema: s.object(
@@ -1191,6 +1222,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_update_xgj_insurance_fee",
+    operationType: "write",
     description: "Update a 星管家 station's monthly insurance fee (星管家保险费更新).",
     requiredScopes: [],
     inputSchema: s.object(
@@ -1210,6 +1242,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_submit_receipt_info",
+    operationType: "write",
     description: "Submit a waybill's receipt information with its fee, service, mark and addition lists (回单信息).",
     requiredScopes: [],
     inputSchema: s.object(
@@ -1262,6 +1295,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_query_waybill_info",
+    operationType: "read",
     description:
       "Query a waybill's contact, payer and fee details (通用运单查询). Phone and address fields in the response are encrypted by SF Express.",
     requiredScopes: [],
@@ -1319,6 +1353,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_upload_fc_images",
+    operationType: "write",
     description: "Upload storefront and interior images for a Hive Box service station (丰巢服务站相册新增).",
     requiredScopes: [],
     inputSchema: s.object(
@@ -1339,6 +1374,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_upload_store_album",
+    operationType: "write",
     description:
       "Upload album images for a station (驿站相册新增), such as exterior, license, poster and signage photos.",
     requiredScopes: [],
@@ -1397,6 +1433,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_add_brand_inspection_images",
+    operationType: "write",
     description:
       "Submit brand-inspection images for a station task (品牌巡检相册新增); resubmitting the same task_id updates its images.",
     requiredScopes: [],
@@ -1462,6 +1499,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_pre_handover_pack",
+    operationType: "write",
     description:
       "Pre-check-in a delivery waybill at an external station (外部驿站派件预入库) before the physical handover.",
     requiredScopes: [],
@@ -1470,6 +1508,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_handover_pack",
+    operationType: "write",
     description: "Check in a delivery waybill at an external station (外部驿站派件入库, route 657).",
     requiredScopes: [],
     inputSchema: kbPackInputSchema("The check-in request."),
@@ -1477,6 +1516,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_customer_receive_pack",
+    operationType: "write",
     description:
       "Check out a waybill at an external station when the customer picks it up (外部驿站派件出库, route 658).",
     requiredScopes: [],
@@ -1485,6 +1525,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_save_store",
+    operationType: "write",
     description:
       "Create or update an external station (新增/修改外部驿站). Omit virtual_addr to create; pass it to update an existing station.",
     requiredScopes: [],
@@ -1531,6 +1572,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_add_store_images",
+    operationType: "write",
     description:
       "Attach business-license, filing, or album image file names to an external station (外部驿站上传营业执照、末端备案、相册).",
     requiredScopes: [],
@@ -1549,6 +1591,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_send_sms",
+    operationType: "write",
     description: "Send a pickup-code SMS for a waybill from an external station (外部驿站发送短信).",
     requiredScopes: [],
     inputSchema: s.object(
@@ -1575,6 +1618,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_check_waybill",
+    operationType: "read",
     description:
       "Check whether a waybill is valid for external-station operations (外部驿站运单校验); an SF waybill without a recipient phone cannot receive station SMS.",
     requiredScopes: [],
@@ -1599,6 +1643,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_temp_store",
+    operationType: "write",
     description:
       "Report a temporary station hold for a waybill (驿站暂存): bill_type 1 = 收端暂存 (route 410), 2 = 派端暂存 (route 210).",
     requiredScopes: [],
@@ -1617,6 +1662,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_verify_delivery_permission",
+    operationType: "read",
     description:
       "Check whether a channel and courier may deliver a waybill (派件管控). The channel code is allocated by SF (联系868850).",
     requiredScopes: [],
@@ -1642,6 +1688,7 @@ export const sfExpressStationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "station_validate_delivery_password",
+    operationType: "read",
     description: "Validate a customer's pickup password for a waybill at a partner station (验证取件密码).",
     requiredScopes: [],
     inputSchema: s.object(

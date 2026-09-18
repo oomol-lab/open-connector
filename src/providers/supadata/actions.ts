@@ -48,6 +48,7 @@ const webMapSchema = s.object("The web link map returned by Supadata.", {
 export const supadataActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve Supadata organization, plan, and credit usage details.",
     inputSchema: s.object("The input payload for retrieving Supadata account information.", {}),
     outputSchema: s.object("The Supadata account information response.", {
@@ -59,6 +60,7 @@ export const supadataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_youtube",
+    operationType: "read",
     description: "Search YouTube videos, channels, and playlists through Supadata.",
     inputSchema: s.object(
       "The input payload for searching YouTube.",
@@ -93,18 +95,21 @@ export const supadataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_youtube_video",
+    operationType: "read",
     description: "Get metadata for a YouTube video by URL or ID.",
     inputSchema: s.object("The input payload for getting YouTube video metadata.", { id: youtubeIdSchema }),
     outputSchema: looseYoutubeItemSchema,
   }),
   defineProviderAction(service, {
     name: "get_youtube_channel",
+    operationType: "read",
     description: "Get metadata for a YouTube channel by URL, handle, or ID.",
     inputSchema: s.object("The input payload for getting YouTube channel metadata.", { id: youtubeIdSchema }),
     outputSchema: looseYoutubeItemSchema,
   }),
   defineProviderAction(service, {
     name: "list_youtube_channel_videos",
+    operationType: "read",
     description: "List video IDs from a YouTube channel.",
     inputSchema: s.object(
       "The input payload for listing YouTube channel video IDs.",
@@ -119,12 +124,14 @@ export const supadataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_youtube_playlist",
+    operationType: "read",
     description: "Get metadata for a YouTube playlist by URL or ID.",
     inputSchema: s.object("The input payload for getting YouTube playlist metadata.", { id: youtubeIdSchema }),
     outputSchema: looseYoutubeItemSchema,
   }),
   defineProviderAction(service, {
     name: "list_youtube_playlist_videos",
+    operationType: "read",
     description: "List video IDs from a YouTube playlist.",
     inputSchema: s.object(
       "The input payload for listing YouTube playlist video IDs.",
@@ -138,6 +145,7 @@ export const supadataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_youtube_transcript",
+    operationType: "read",
     description: "Get a YouTube transcript by video URL or ID.",
     inputSchema: s.oneOf(
       [
@@ -174,6 +182,7 @@ export const supadataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "scrape_web_page",
+    operationType: "read",
     description: "Extract Markdown content from a web page.",
     inputSchema: s.object(
       "The input payload for scraping a web page.",
@@ -188,6 +197,7 @@ export const supadataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "map_web_links",
+    operationType: "read",
     description: "Extract links found on a website.",
     inputSchema: s.object(
       "The input payload for mapping website links.",

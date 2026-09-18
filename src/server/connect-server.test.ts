@@ -94,6 +94,7 @@ const echoAction: ActionDefinition = {
   service: "example",
   name: "echo",
   description: "Echo input.",
+  operationType: "write",
   requiredScopes: [],
   providerPermissions: [],
   inputSchema: { type: "object" },
@@ -365,6 +366,7 @@ describe("ConnectServer", () => {
             service: "example",
             name: "echo",
             description: "Echo the input.",
+            operationType: "read",
             requiredScopes: [],
             providerPermissions: [],
             inputSchema: { type: "object", properties: { message: { type: "string" } } },
@@ -2614,6 +2616,7 @@ describe("ConnectServer", () => {
         {
           id: "example.echo",
           service: "example",
+          operationType: "write",
           followUpActions: [{ actionId: "example.follow_up" }],
         },
         {
@@ -2654,6 +2657,7 @@ describe("ConnectServer", () => {
         service: string;
         name: string;
         description: string;
+        operationType: ActionDefinition["operationType"];
         authenticated: boolean;
         inputSchema: Record<string, unknown>;
         outputSchema: Record<string, unknown>;
@@ -2665,6 +2669,7 @@ describe("ConnectServer", () => {
       service: "example",
       name: "echo",
       description: "Echo input.",
+      operationType: "write",
       authenticated: true,
       inputSchema: { type: "object" },
       outputSchema: { type: "object" },
@@ -2679,6 +2684,7 @@ describe("ConnectServer", () => {
       data: {
         id: "example.echo",
         service: "example",
+        operationType: "write",
         inputSchema: { type: "object" },
         outputSchema: { type: "object" },
         followUpActions: [{ actionId: "example.follow_up" }],

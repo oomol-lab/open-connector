@@ -70,6 +70,7 @@ const accountUsageSchema = s.looseObject("Usage and account details returned by 
 export const scraperapiActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "scrape_url",
+    operationType: "read",
     description:
       "Fetch one public URL through ScraperAPI with optional rendering, geotargeting, and text output controls.",
     inputSchema: s.actionInput(
@@ -81,6 +82,7 @@ export const scraperapiActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_url",
+    operationType: "write",
     description: "Send a POST or PUT request to one public URL through ScraperAPI.",
     inputSchema: s.actionInput(
       {
@@ -99,6 +101,7 @@ export const scraperapiActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_account_usage",
+    operationType: "read",
     description: "Retrieve current ScraperAPI account usage and limits.",
     inputSchema: s.actionInput({}, [], "The input payload for retrieving ScraperAPI account usage."),
     outputSchema: s.actionOutput(

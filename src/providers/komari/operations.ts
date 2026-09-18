@@ -1,4 +1,4 @@
-import type { JsonSchema } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 
@@ -15,6 +15,7 @@ export type KomariResultMode =
 
 export interface KomariOperation {
   name: string;
+  readonly operationType: ActionDefinition["operationType"];
   rpcMethod: `public:${string}` | `admin:${string}`;
   description: string;
   inputSchema: JsonSchema;
@@ -103,19 +104,24 @@ function dataOutput(description: string): JsonSchema {
 
 function operation(
   name: string,
+  operationType: KomariOperation["operationType"],
   rpcMethod: KomariOperation["rpcMethod"],
   description: string,
   inputSchema: JsonSchema = emptyInput,
   outputSchema: JsonSchema = dataOutput("Komari response."),
-  options: Omit<KomariOperation, "name" | "rpcMethod" | "description" | "inputSchema" | "outputSchema"> = {},
+  options: Omit<
+    KomariOperation,
+    "name" | "operationType" | "rpcMethod" | "description" | "inputSchema" | "outputSchema"
+  > = {},
 ): KomariOperation {
-  return { name, rpcMethod, description, inputSchema, outputSchema, ...options };
+  return { name, operationType, rpcMethod, description, inputSchema, outputSchema, ...options };
 }
 
 export const komariOperations: readonly KomariOperation[] = [
   // Public monitoring API.
   operation(
     "get_current_user",
+    "read",
     "public:getMe",
     "Get the current Komari user or guest identity.",
     emptyInput,
@@ -123,6 +129,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "list_nodes",
+    "read",
     "public:getNodesInformation",
     "List visible Komari nodes without client tokens or private address fields.",
     emptyInput,
@@ -131,6 +138,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "get_public_settings",
+    "read",
     "public:getPublicSettings",
     "Get settings that Komari exposes to its public frontend.",
     emptyInput,
@@ -138,6 +146,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "get_version",
+    "read",
     "public:getVersion",
     "Get the Komari server version and build hash.",
     emptyInput,
@@ -148,6 +157,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "get_recent_metrics",
+    "read",
     "public:getClientRecentRecords",
     "Get the short in-memory window of recent reports for a node.",
     uuidInput,
@@ -156,6 +166,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "get_load_history",
+    "read",
     "public:getRecordsByUUID",
     "Get persisted resource metrics for a node.",
     s.object(
@@ -193,6 +204,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "get_ping_history",
+    "read",
     "public:getPingRecords",
     "Get ping records by node, task, or both.",
     {
@@ -216,6 +228,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "list_public_ping_tasks",
+    "read",
     "public:getPublicPingTasks",
     "List ping tasks using the public response shape.",
     emptyInput,
@@ -224,6 +237,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "list_public_metric_definitions",
+    "read",
     "public:listMetricDefinitions",
     "List public metric definitions and retention policies.",
     emptyInput,
@@ -232,6 +246,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "query_metrics",
+    "read",
     "public:queryMetrics",
     "Query metric time-series points with filters, aggregation, and downsampling.",
     s.looseRequiredObject(
@@ -242,6 +257,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "get_ping_metric_stats",
+    "read",
     "public:getPingMetricStats",
     "Get aggregate latency, loss, percentile, and standard-deviation statistics.",
     s.looseObject("Ping statistics query with optional entity, task, time, and point filters."),
@@ -249,6 +265,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "record_visitor_event",
+    "write",
     "public:recordVisitorEvent",
     "Record a bounded visitor audit event in Komari.",
     s.object(
@@ -268,6 +285,7 @@ export const komariOperations: readonly KomariOperation[] = [
   // Client administration.
   operation(
     "add_client",
+    "write",
     "admin:addClient",
     "Create a Komari client. The response contains its enrollment token.",
     s.object("New client.", { name: s.string("Optional client name.") }, { optional: ["name"] }),
@@ -275,6 +293,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "edit_client",
+    "write",
     "admin:editClient",
     "Update client fields. This changes Komari configuration.",
     s.looseRequiredObject("Partial client fields to update.", { uuid: s.uuid("The client UUID.") }),
@@ -283,6 +302,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "remove_client",
+    "destructive",
     "admin:removeClient",
     "Permanently delete a client and its runtime state.",
     uuidInput,
@@ -291,6 +311,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "get_client",
+    "read",
     "admin:getClient",
     "Get one client without returning its enrollment token.",
     uuidInput,
@@ -299,6 +320,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "list_clients",
+    "read",
     "admin:listClients",
     "List all clients without returning enrollment tokens.",
     emptyInput,
@@ -307,18 +329,28 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "get_client_token",
+    "read",
     "admin:getClientToken",
     "Get a client enrollment token. Treat the response as a secret.",
     uuidInput,
     s.looseObject("Client enrollment token."),
   ),
-  operation("clear_records", "admin:clearRecords", "Permanently delete all load records.", emptyInput, successOutput, {
-    resultMode: "success",
-  }),
+  operation(
+    "clear_records",
+    "destructive",
+    "admin:clearRecords",
+    "Permanently delete all load records.",
+    emptyInput,
+    successOutput,
+    {
+      resultMode: "success",
+    },
+  ),
 
   // Clipboard.
   operation(
     "get_clipboard",
+    "read",
     "admin:getClipboard",
     "Get one clipboard entry.",
     s.requiredObject("Clipboard selector.", { id: s.positiveInteger("Clipboard ID.") }),
@@ -327,6 +359,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "list_clipboard",
+    "read",
     "admin:listClipboard",
     "List clipboard entries.",
     emptyInput,
@@ -335,6 +368,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "create_clipboard",
+    "write",
     "admin:createClipboard",
     "Create a clipboard entry.",
     s.looseObject("Clipboard fields such as name, text, weight, and remark."),
@@ -342,6 +376,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "update_clipboard",
+    "write",
     "admin:updateClipboard",
     "Update a clipboard entry.",
     s.looseRequiredObject("Clipboard ID and fields to update.", { id: s.positiveInteger("Clipboard ID.") }),
@@ -350,6 +385,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "delete_clipboard",
+    "destructive",
     "admin:deleteClipboard",
     "Delete a clipboard entry.",
     s.requiredObject("Clipboard selector.", { id: s.positiveInteger("Clipboard ID.") }),
@@ -358,6 +394,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "batch_delete_clipboard",
+    "destructive",
     "admin:batchDeleteClipboard",
     "Delete multiple clipboard entries.",
     s.requiredObject("Clipboard selectors.", {
@@ -370,6 +407,7 @@ export const komariOperations: readonly KomariOperation[] = [
   // Database and metrics administration.
   operation(
     "get_database_size",
+    "read",
     "admin:getDatabaseSize",
     "Inspect main and monitoring database storage.",
     emptyInput,
@@ -377,6 +415,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "vacuum_database",
+    "write",
     "admin:vacuumDatabase",
     "Run database maintenance and reclaim storage space.",
     emptyInput,
@@ -384,6 +423,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "list_metric_definitions",
+    "read",
     "admin:listMetricDefinitions",
     "List all metric definitions and retention policies.",
     emptyInput,
@@ -392,6 +432,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "update_metric_definition",
+    "write",
     "admin:updateMetricDefinition",
     "Change a metric retention policy; zero deletes stored data for that metric.",
     s.requiredObject("Metric retention update.", {
@@ -402,6 +443,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "get_metric_migration_status",
+    "read",
     "admin:getMetricMigrationStatus",
     "Get metric-store migration progress.",
     emptyInput,
@@ -409,6 +451,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "start_metric_migration",
+    "write",
     "admin:startMetricMigration",
     "Start migrating metrics from a source store into the current store.",
     s.object(
@@ -423,6 +466,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "cancel_metric_migration",
+    "destructive",
     "admin:cancelMetricMigration",
     "Cancel the active metric-store migration.",
     emptyInput,
@@ -432,6 +476,7 @@ export const komariOperations: readonly KomariOperation[] = [
   // Sessions and global settings.
   operation(
     "list_sessions",
+    "read",
     "admin:getSessions",
     "List login sessions using stable identifiers while redacting session tokens and IP addresses.",
     emptyInput,
@@ -443,6 +488,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "delete_session",
+    "destructive",
     "admin:deleteSession",
     "Revoke one login session using the stable identifier returned by list_sessions.",
     s.requiredObject("Session selector.", {
@@ -455,11 +501,20 @@ export const komariOperations: readonly KomariOperation[] = [
     successOutput,
     { resultMode: "success" },
   ),
-  operation("delete_all_sessions", "admin:deleteAllSessions", "Revoke all login sessions.", emptyInput, successOutput, {
-    resultMode: "success",
-  }),
+  operation(
+    "delete_all_sessions",
+    "destructive",
+    "admin:deleteAllSessions",
+    "Revoke all login sessions.",
+    emptyInput,
+    successOutput,
+    {
+      resultMode: "success",
+    },
+  ),
   operation(
     "get_settings",
+    "read",
     "admin:getSettings",
     "Get all Komari settings. The result can contain secrets and database DSNs.",
     emptyInput,
@@ -467,6 +522,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "edit_settings",
+    "destructive",
     "admin:editSettings",
     "Update arbitrary Komari settings; invalid database settings can disrupt service.",
     s.looseObject("Setting keys and replacement values."),
@@ -475,6 +531,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "clear_all_records",
+    "destructive",
     "admin:clearAllRecords",
     "Permanently delete all load and ping records.",
     emptyInput,
@@ -483,6 +540,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "order_clients",
+    "write",
     "admin:orderClients",
     "Set client display weights using a UUID-to-weight map.",
     s.record("Client UUIDs mapped to integer weights.", s.integer("Display weight.")),
@@ -493,6 +551,7 @@ export const komariOperations: readonly KomariOperation[] = [
   // Notifications.
   operation(
     "add_load_notification",
+    "write",
     "admin:addLoadNotification",
     "Create a load notification rule.",
     s.object(
@@ -511,6 +570,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "delete_load_notification",
+    "destructive",
     "admin:deleteLoadNotification",
     "Delete load notification rules.",
     idsInput,
@@ -519,6 +579,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "edit_load_notification",
+    "write",
     "admin:editLoadNotification",
     "Replace load notification rule fields.",
     s.requiredObject("Load notification updates.", {
@@ -529,6 +590,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "list_load_notifications",
+    "read",
     "admin:getAllLoadNotifications",
     "List load notification rules.",
     emptyInput,
@@ -537,6 +599,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "list_offline_notifications",
+    "read",
     "admin:listOfflineNotifications",
     "List offline notification rules.",
     emptyInput,
@@ -545,6 +608,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "edit_offline_notifications",
+    "write",
     "admin:editOfflineNotification",
     "Replace offline notification rule fields.",
     s.requiredObject("Offline notification updates.", {
@@ -555,6 +619,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "enable_offline_notifications",
+    "write",
     "admin:enableOfflineNotification",
     "Enable offline notifications for clients.",
     clientsInput,
@@ -563,6 +628,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "disable_offline_notifications",
+    "destructive",
     "admin:disableOfflineNotification",
     "Disable offline notifications for clients.",
     clientsInput,
@@ -571,6 +637,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "list_traffic_report_notifications",
+    "read",
     "admin:listTrafficReportNotifications",
     "List traffic-report rules.",
     emptyInput,
@@ -579,6 +646,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "edit_traffic_report_notifications",
+    "write",
     "admin:editTrafficReportNotifications",
     "Replace traffic-report rule fields.",
     s.requiredObject("Traffic report updates.", {
@@ -589,6 +657,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "enable_traffic_report_notifications",
+    "write",
     "admin:enableTrafficReportNotifications",
     "Enable traffic reports for clients.",
     clientsInput,
@@ -597,6 +666,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "disable_traffic_report_notifications",
+    "destructive",
     "admin:disableTrafficReportNotifications",
     "Disable traffic reports for clients.",
     clientsInput,
@@ -607,6 +677,7 @@ export const komariOperations: readonly KomariOperation[] = [
   // Ping task administration.
   operation(
     "add_ping_task",
+    "write",
     "admin:addPingTask",
     "Create a ping task.",
     s.object(
@@ -625,6 +696,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "delete_ping_tasks",
+    "destructive",
     "admin:deletePingTask",
     "Delete ping tasks and their records.",
     idsInput,
@@ -633,6 +705,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "edit_ping_tasks",
+    "write",
     "admin:editPingTask",
     "Replace ping task fields.",
     s.requiredObject("Ping task updates.", {
@@ -643,6 +716,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "list_ping_tasks",
+    "read",
     "admin:getAllPingTasks",
     "List all ping tasks including targets.",
     emptyInput,
@@ -651,6 +725,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "order_ping_tasks",
+    "write",
     "admin:orderPingTask",
     "Set ping-task weights using an ID-to-weight map.",
     s.record("Ping task IDs mapped to weights.", s.integer("Display weight.")),
@@ -661,6 +736,7 @@ export const komariOperations: readonly KomariOperation[] = [
   // Provider configuration.
   operation(
     "get_message_sender_provider",
+    "read",
     "admin:getMessageSenderProvider",
     "Get one message-sender configuration or list available templates. The result may contain secrets.",
     s.object("Provider selector.", { provider: s.string("Optional provider name.") }, { optional: ["provider"] }),
@@ -669,6 +745,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "set_message_sender_provider",
+    "write",
     "admin:setMessageSenderProvider",
     "Save and possibly reload a message-sender provider configuration.",
     s.object(
@@ -683,6 +760,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "get_oidc_provider",
+    "read",
     "admin:getOidcProvider",
     "Get one OIDC configuration or list templates. The result may contain client secrets.",
     s.object("Provider selector.", { provider: s.string("Optional provider name.") }, { optional: ["provider"] }),
@@ -691,6 +769,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "set_oidc_provider",
+    "write",
     "admin:setOidcProvider",
     "Save and possibly reload an OIDC provider configuration.",
     s.object(
@@ -707,6 +786,7 @@ export const komariOperations: readonly KomariOperation[] = [
   // System, remote execution, and task results.
   operation(
     "list_audit_logs",
+    "read",
     "admin:getLogs",
     "List paged audit logs.",
     s.object(
@@ -723,6 +803,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "execute_command",
+    "destructive",
     "admin:exec",
     "DANGEROUS: execute a shell command on selected clients. Komari API keys bypass interactive 2FA for this sensitive RPC.",
     s.requiredObject("Remote command.", {
@@ -733,6 +814,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "test_message_sender",
+    "write",
     "admin:testSendMessage",
     "Send a test notification through the active message sender.",
     emptyInput,
@@ -741,6 +823,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "test_geoip",
+    "read",
     "admin:testGeoip",
     "Test Komari GeoIP lookup.",
     s.object("GeoIP query.", { ip: s.string("IP address; defaults to the caller address.") }, { optional: ["ip"] }),
@@ -748,6 +831,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "list_execution_tasks",
+    "read",
     "admin:getTasks",
     "List remote execution tasks and their results, which may contain command output.",
     emptyInput,
@@ -756,6 +840,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "get_execution_task",
+    "read",
     "admin:getTaskById",
     "Get one remote execution task and its results.",
     taskIdInput,
@@ -763,6 +848,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "list_client_execution_tasks",
+    "read",
     "admin:getTasksByClientId",
     "List execution tasks assigned to a client.",
     uuidInput,
@@ -771,6 +857,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "get_client_task_result",
+    "read",
     "admin:getSpecificTaskResult",
     "Get one client's result for an execution task.",
     s.requiredObject("Task result selector.", {
@@ -781,6 +868,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "list_task_results",
+    "read",
     "admin:getTaskResultsByTaskId",
     "List all client results for an execution task.",
     taskIdInput,
@@ -791,6 +879,7 @@ export const komariOperations: readonly KomariOperation[] = [
   // Terminal appearance.
   operation(
     "get_terminal_settings",
+    "read",
     "admin:getXtermjsSettings",
     "Get xterm.js terminal appearance settings.",
     emptyInput,
@@ -798,6 +887,7 @@ export const komariOperations: readonly KomariOperation[] = [
   ),
   operation(
     "set_terminal_settings",
+    "write",
     "admin:setXtermjsSettings",
     "Update xterm.js terminal appearance settings, including optional custom CSS.",
     s.looseObject("xterm.js terminalOptions, terminalPadding, transparentBackground, and customCss."),

@@ -12,6 +12,7 @@ const expirationSecondsSchema = s.positiveInteger("Expiration time in seconds.")
 export const upstashRedisActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get",
+    operationType: "read",
     description: "Get the string value stored for one Redis key.",
     inputSchema: s.actionInput({ key: keySchema }, ["key"], "The Redis key to retrieve."),
     outputSchema: s.actionOutput(
@@ -26,6 +27,7 @@ export const upstashRedisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set",
+    operationType: "write",
     description: "Store a string value for one Redis key, optionally with an expiration or conditional write.",
     inputSchema: s.object(
       "The Redis string value to store.",
@@ -47,6 +49,7 @@ export const upstashRedisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete",
+    operationType: "destructive",
     description: "Delete one Redis key.",
     inputSchema: s.actionInput({ key: keySchema }, ["key"], "The Redis key to delete."),
     outputSchema: s.actionOutput(
@@ -56,6 +59,7 @@ export const upstashRedisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "exists",
+    operationType: "read",
     description: "Check whether one Redis key exists.",
     inputSchema: s.actionInput({ key: keySchema }, ["key"], "The Redis key to check."),
     outputSchema: s.actionOutput(
@@ -66,6 +70,7 @@ export const upstashRedisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "expire",
+    operationType: "destructive",
     description: "Set or replace the expiration time for one Redis key.",
     inputSchema: s.actionInput(
       { key: keySchema, expirationSeconds: expirationSecondsSchema },
@@ -80,6 +85,7 @@ export const upstashRedisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "ttl",
+    operationType: "read",
     description: "Get the remaining expiration time for one Redis key.",
     inputSchema: s.actionInput({ key: keySchema }, ["key"], "The Redis key whose expiration to retrieve."),
     outputSchema: s.actionOutput(
@@ -93,6 +99,7 @@ export const upstashRedisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "scan",
+    operationType: "read",
     description: "Scan one page of Redis keys without reading the full keyspace.",
     inputSchema: s.object(
       "Cursor pagination and optional filters for Redis SCAN.",

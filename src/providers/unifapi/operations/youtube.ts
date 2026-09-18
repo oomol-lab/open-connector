@@ -3,6 +3,7 @@ import type { UnifapiOperationDefinition } from "../operations.ts";
 export const youtubeOperations: readonly UnifapiOperationDefinition[] = [
   {
     name: "list_youtube_channel_community_posts",
+    operationType: "read",
     operationId: "getYoutubeChannelsByChannelIdCommunity",
     description: "List a YouTube channel's community posts.",
     method: "GET",
@@ -31,6 +32,7 @@ export const youtubeOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_youtube_channel_playlists",
+    operationType: "read",
     operationId: "getYoutubeChannelsByChannelIdPlaylists",
     description: "List playlists created by a YouTube channel.",
     method: "GET",
@@ -59,6 +61,7 @@ export const youtubeOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_youtube_channel",
+    operationType: "read",
     operationId: "getYoutubeChannelsByChannelId",
     description: "Get a YouTube channel by id.",
     method: "GET",
@@ -83,6 +86,7 @@ export const youtubeOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_youtube_channel",
+    operationType: "read",
     operationId: "getYoutubeChannelsByChannelIdSearch",
     description: "Search within a YouTube channel.",
     method: "GET",
@@ -116,6 +120,7 @@ export const youtubeOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_youtube_channel_shorts",
+    operationType: "read",
     operationId: "getYoutubeChannelsByChannelIdShorts",
     description: "List Shorts uploaded by a YouTube channel.",
     method: "GET",
@@ -144,6 +149,7 @@ export const youtubeOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_youtube_channel_videos",
+    operationType: "read",
     operationId: "getYoutubeChannelsByChannelIdVideos",
     description: "List videos uploaded by a YouTube channel.",
     method: "GET",
@@ -172,6 +178,7 @@ export const youtubeOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_youtube_hashtag_videos",
+    operationType: "read",
     operationId: "getYoutubeHashtagsByTagVideos",
     description: "List videos for a YouTube hashtag.",
     method: "GET",
@@ -200,6 +207,7 @@ export const youtubeOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_youtube_playlist",
+    operationType: "read",
     operationId: "getYoutubePlaylistsByPlaylistId",
     description: "Get a YouTube playlist by id.",
     method: "GET",
@@ -224,6 +232,7 @@ export const youtubeOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_youtube_playlist_videos",
+    operationType: "read",
     operationId: "getYoutubePlaylistsByPlaylistIdVideos",
     description: "List videos in a YouTube playlist.",
     method: "GET",
@@ -252,6 +261,7 @@ export const youtubeOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "resolve_youtube_channel_id",
+    operationType: "read",
     operationId: "getYoutubeResolveChannelId",
     description: "Resolve a YouTube channel URL to its UC... channel id.",
     method: "GET",
@@ -276,6 +286,7 @@ export const youtubeOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_youtube_channels",
+    operationType: "read",
     operationId: "getYoutubeSearchChannels",
     description: "Search YouTube channels by keyword.",
     method: "GET",
@@ -304,6 +315,7 @@ export const youtubeOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_youtube_playlists",
+    operationType: "read",
     operationId: "getYoutubeSearchPlaylists",
     description: "Search YouTube playlists by keyword.",
     method: "GET",
@@ -332,6 +344,7 @@ export const youtubeOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_youtube_videos",
+    operationType: "read",
     operationId: "getYoutubeSearch",
     description: "Search YouTube videos by keyword.",
     method: "GET",
@@ -385,6 +398,7 @@ export const youtubeOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "browse_youtube_trending",
+    operationType: "write",
     operationId: "getYoutubeTrending",
     description: "Browse YouTube's trending videos.",
     method: "GET",
@@ -418,6 +432,7 @@ export const youtubeOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_youtube_video_captions",
+    operationType: "read",
     operationId: "getYoutubeVideosByVideoIdCaptions",
     description: "List a YouTube video's caption tracks.",
     method: "GET",
@@ -442,6 +457,7 @@ export const youtubeOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_youtube_video_comments",
+    operationType: "read",
     operationId: "getYoutubeVideosByVideoIdComments",
     description: "List comments on a YouTube video.",
     method: "GET",
@@ -475,6 +491,7 @@ export const youtubeOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_youtube_related_videos",
+    operationType: "read",
     operationId: "getYoutubeVideosByVideoIdRelated",
     description: "List YouTube videos related to a given video.",
     method: "GET",
@@ -503,6 +520,7 @@ export const youtubeOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_youtube_video",
+    operationType: "read",
     operationId: "getYoutubeVideosByVideoId",
     description: "Get a YouTube video by id.",
     method: "GET",
@@ -527,6 +545,7 @@ export const youtubeOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_youtube_video_transcript",
+    operationType: "read",
     operationId: "getYoutubeVideosByVideoIdTranscript",
     description: "Get a YouTube video's transcript.",
     method: "GET",

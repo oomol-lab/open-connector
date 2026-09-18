@@ -29,6 +29,7 @@ const orderTimeFilters = {
 export const skioActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description: "Export one page of Skio orders with cursor pagination and optional filters.",
     inputSchema: s.object(
       "Filters for exporting Skio orders.",
@@ -57,6 +58,7 @@ export const skioActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "Export one page of Skio products with cursor pagination and optional filters.",
     inputSchema: s.object(
       "Filters for exporting Skio products.",
@@ -90,6 +92,7 @@ export const skioActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_storefront_users",
+    operationType: "read",
     description: "Export one page of Skio storefront users with cursor pagination and optional filters.",
     inputSchema: s.object(
       "Filters for exporting Skio storefront users.",
@@ -121,6 +124,7 @@ export const skioActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subscriptions",
+    operationType: "read",
     description: "Export one page of Skio subscriptions with cursor pagination and optional filters.",
     inputSchema: s.object(
       "Filters for exporting Skio subscriptions.",

@@ -26,6 +26,7 @@ const cloudflareR2ClassMetricsSchema = s.object(
 export const cloudflareR2AccountActions: ActionDefinition[] = [
   defineProviderAction("cloudflare_r2", {
     name: "get_account_metrics",
+    operationType: "read",
     description:
       "Get object count and storage usage metrics across all R2 buckets in the account. Metrics may lag behind the latest data.",
     requiredScopes: ["workers-r2.read"],
@@ -42,6 +43,7 @@ export const cloudflareR2AccountActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "create_temporary_access_credentials",
+    operationType: "write",
     description:
       "Create short-lived S3-compatible credentials scoped to one R2 bucket and optionally to prefixes or objects.",
     requiredScopes: ["workers-r2.write"],

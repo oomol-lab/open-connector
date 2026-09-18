@@ -161,12 +161,14 @@ const chatCompletionOutputSchema = s.looseRequiredObject(
 export const edenaiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",
+    operationType: "read",
     description: "List the Eden AI models available to the current API key.",
     inputSchema: noInputSchema,
     outputSchema: listModelsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_chat_completion",
+    operationType: "read",
     description: "Create a non-streaming Eden AI OpenAI-compatible chat completion.",
     inputSchema: chatCompletionInputSchema,
     outputSchema: chatCompletionOutputSchema,

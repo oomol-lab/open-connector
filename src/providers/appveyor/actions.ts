@@ -75,6 +75,7 @@ const appveyorArtifactSchema = s.looseObject("An AppVeyor build artifact returne
 export const appveyorActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_projects",
+    operationType: "read",
     description: "List AppVeyor projects accessible to the connected API token.",
     inputSchema: scopedInputSchema,
     outputSchema: s.object("The normalized AppVeyor projects list.", {
@@ -84,6 +85,7 @@ export const appveyorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_environments",
+    operationType: "read",
     description: "List AppVeyor deployment environments accessible to the connected API token.",
     inputSchema: scopedInputSchema,
     outputSchema: s.object("The normalized AppVeyor environments list.", {
@@ -93,6 +95,7 @@ export const appveyorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_users",
+    operationType: "read",
     description: "List AppVeyor team users accessible to the connected API token.",
     inputSchema: scopedInputSchema,
     outputSchema: s.object("The normalized AppVeyor users list.", {
@@ -102,6 +105,7 @@ export const appveyorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_roles",
+    operationType: "read",
     description: "List AppVeyor team roles accessible to the connected API token.",
     inputSchema: scopedInputSchema,
     outputSchema: s.object("The normalized AppVeyor roles list.", {
@@ -111,6 +115,7 @@ export const appveyorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_role",
+    operationType: "read",
     description: "Retrieve one AppVeyor team role by ID.",
     inputSchema: s.object(
       "Input parameters for retrieving one AppVeyor role.",
@@ -126,6 +131,7 @@ export const appveyorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_build_artifacts",
+    operationType: "read",
     description: "List artifacts produced by one AppVeyor build job.",
     inputSchema: s.object(
       "Input parameters for listing artifacts produced by one AppVeyor build job.",

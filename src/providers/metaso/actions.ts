@@ -165,6 +165,7 @@ const chatInputProperties: Record<string, JsonSchema> = {
 export const metasoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search",
+    operationType: "read",
     description: "Search webpages, documents, papers, images, videos, or podcasts with the Metaso search API.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -189,6 +190,7 @@ export const metasoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "read_webpage",
+    operationType: "read",
     description:
       "Read one webpage with Metaso and return either the extracted markdown string or the structured JSON payload.",
     requiredScopes: [],
@@ -202,6 +204,7 @@ export const metasoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_chat_completion",
+    operationType: "read",
     description: "Create one non-streaming Metaso chat completion grounded by the requested Metaso scope.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -215,6 +218,7 @@ export const metasoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_chat_completion_stream",
+    operationType: "write",
     description:
       "Consume a streamed Metaso chat completion and return the ordered chunks plus aggregated assistant content.",
     requiredScopes: [],

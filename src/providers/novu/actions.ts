@@ -98,6 +98,7 @@ const tenantSchema = s.anyOf("A tenant ID or rich tenant object.", [
 export const novuActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_subscribers",
+    operationType: "read",
     description: "Search Novu subscribers with filters and cursor pagination.",
     inputSchema: s.object(
       "Query parameters for searching Novu subscribers.",
@@ -139,6 +140,7 @@ export const novuActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_subscriber",
+    operationType: "write",
     description: "Create or upsert a Novu subscriber.",
     inputSchema: s.object(
       "Input for creating or upserting a Novu subscriber.",
@@ -170,6 +172,7 @@ export const novuActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_subscriber",
+    operationType: "read",
     description: "Retrieve a Novu subscriber by subscriber ID.",
     inputSchema: s.object("Input for retrieving a Novu subscriber.", {
       subscriberId: s.nonEmptyString("The subscriber identifier from your system."),
@@ -181,6 +184,7 @@ export const novuActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_subscriber",
+    operationType: "write",
     description: "Update a Novu subscriber by subscriber ID.",
     inputSchema: s.object(
       "Input for updating a Novu subscriber.",
@@ -200,6 +204,7 @@ export const novuActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "trigger_event",
+    operationType: "write",
     description: "Trigger a Novu workflow event for subscribers or topics.",
     inputSchema: s.object(
       "Input for triggering a Novu workflow event.",

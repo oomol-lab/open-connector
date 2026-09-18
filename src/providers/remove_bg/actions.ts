@@ -151,6 +151,7 @@ const submitImprovementInputSchema = s.object(
 export const removeBgActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "remove_background",
+    operationType: "destructive",
     description:
       "Remove the background from an image with remove.bg and upload the generated image or ZIP result to local transit storage. Provide exactly one of imageUrl or contentBase64; use shadowType and shadowOpacity for shadows.",
     inputSchema: removeBackgroundInputSchema,
@@ -185,6 +186,7 @@ export const removeBgActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description:
       "Fetch the current remove.bg credit balance and free API call allowance for the authenticated account.",
     inputSchema: s.object({}, { description: "The input payload for this action." }),
@@ -192,6 +194,7 @@ export const removeBgActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_improvement",
+    operationType: "write",
     description: "Submit a source image to the remove.bg improvement program for future model quality improvements.",
     inputSchema: submitImprovementInputSchema,
     outputSchema: s.object(

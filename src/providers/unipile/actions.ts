@@ -69,6 +69,7 @@ const pageInfoSchema = s.object("Unipile pagination metadata.", {
 export const unipileActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_accounts",
+    operationType: "read",
     description: "List accounts connected to Unipile.",
     inputSchema: s.actionInput(
       {
@@ -89,6 +90,7 @@ export const unipileActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve a Unipile account by ID.",
     inputSchema: s.actionInput(
       {
@@ -108,6 +110,7 @@ export const unipileActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_chats",
+    operationType: "read",
     description: "List Unipile messaging chats with optional filters.",
     inputSchema: s.actionInput(
       {
@@ -137,6 +140,7 @@ export const unipileActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_chat",
+    operationType: "read",
     description: "Retrieve a Unipile chat by ID.",
     inputSchema: s.actionInput(
       {
@@ -158,6 +162,7 @@ export const unipileActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_chat_messages",
+    operationType: "read",
     description: "List messages from a Unipile chat.",
     inputSchema: s.actionInput(
       {
@@ -190,6 +195,7 @@ export const unipileActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_message",
+    operationType: "read",
     description: "Retrieve a Unipile message by ID.",
     inputSchema: s.actionInput(
       {

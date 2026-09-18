@@ -142,30 +142,35 @@ const hourlyForecastOutputSchema = s.requiredObject("The AccuWeather hourly fore
 export const accuweatherActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_locations",
+    operationType: "read",
     description: "Search AccuWeather locations by text and return normalized location keys for weather requests.",
     inputSchema: searchLocationsInputSchema,
     outputSchema: locationSearchOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_location_by_geoposition",
+    operationType: "read",
     description: "Resolve latitude and longitude coordinates to a single AccuWeather location key.",
     inputSchema: geopositionInputSchema,
     outputSchema: geopositionOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_current_conditions",
+    operationType: "read",
     description: "Retrieve current weather conditions for an AccuWeather location key.",
     inputSchema: locationKeyInputSchema,
     outputSchema: currentConditionsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_daily_forecast",
+    operationType: "read",
     description: "Retrieve a daily forecast for an AccuWeather location key using an official duration endpoint.",
     inputSchema: dailyForecastInputSchema,
     outputSchema: dailyForecastOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_hourly_forecast",
+    operationType: "read",
     description: "Retrieve an hourly forecast for an AccuWeather location key using an official duration endpoint.",
     inputSchema: hourlyForecastInputSchema,
     outputSchema: hourlyForecastOutputSchema,

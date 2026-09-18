@@ -22,6 +22,7 @@ const listMeta = {
 export const pandadocActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List contacts in the connected PandaDoc workspace, optionally filtered by email.",
     inputSchema: s.object(
       "Input parameters for listing PandaDoc contacts.",
@@ -36,6 +37,7 @@ export const pandadocActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_or_update_contact",
+    operationType: "write",
     description: "Create a PandaDoc contact or update the existing contact with the same email address.",
     inputSchema: s.object(
       "Input parameters for creating or updating a PandaDoc contact.",
@@ -71,6 +73,7 @@ export const pandadocActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete a contact from the connected PandaDoc workspace.",
     inputSchema: s.object("Input parameters for deleting a PandaDoc contact.", {
       contact_id: s.nonEmptyString("The PandaDoc contact identifier."),
@@ -81,6 +84,7 @@ export const pandadocActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List templates available in the connected PandaDoc workspace.",
     inputSchema: s.object(
       "Input parameters for listing PandaDoc templates.",
@@ -107,6 +111,7 @@ export const pandadocActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_template_details",
+    operationType: "read",
     description: "Retrieve detailed metadata for a specific PandaDoc template.",
     inputSchema: s.object("Input parameters for retrieving a PandaDoc template.", {
       template_id: s.nonEmptyString("The PandaDoc template identifier."),
@@ -115,6 +120,7 @@ export const pandadocActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_template",
+    operationType: "write",
     description: "Create a PandaDoc template from structured content or from a transit file upload.",
     inputSchema: s.object(
       "Input parameters for creating a PandaDoc template.",
@@ -131,6 +137,7 @@ export const pandadocActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_template",
+    operationType: "destructive",
     description: "Delete a template from the connected PandaDoc workspace.",
     inputSchema: s.object("Input parameters for deleting a PandaDoc template.", {
       template_id: s.nonEmptyString("The PandaDoc template identifier."),
@@ -142,6 +149,7 @@ export const pandadocActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_document_folders",
+    operationType: "read",
     description: "List document folders in the connected PandaDoc workspace.",
     inputSchema: s.object(
       "Input parameters for listing PandaDoc document folders.",
@@ -162,6 +170,7 @@ export const pandadocActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_folder",
+    operationType: "write",
     description: "Create a new document folder in PandaDoc.",
     inputSchema: s.object(
       "Input parameters for creating a PandaDoc folder.",
@@ -175,6 +184,7 @@ export const pandadocActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_document_from_file",
+    operationType: "write",
     description: "Create a PandaDoc document from a PDF file reference and document metadata.",
     inputSchema: s.object(
       "Input parameters for creating a PandaDoc document from a file.",
@@ -194,6 +204,7 @@ export const pandadocActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document_details",
+    operationType: "read",
     description: "Retrieve detailed metadata for a specific PandaDoc document.",
     inputSchema: s.object("Input parameters for retrieving a PandaDoc document.", {
       document_id: s.nonEmptyString("The PandaDoc document identifier."),
@@ -202,6 +213,7 @@ export const pandadocActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_webhook",
+    operationType: "write",
     description: "Create a PandaDoc webhook subscription for document lifecycle events.",
     inputSchema: s.object("Input parameters for creating a PandaDoc webhook.", {
       name: s.nonEmptyString("Webhook name."),
@@ -212,6 +224,7 @@ export const pandadocActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_document_attachment",
+    operationType: "write",
     description: "Upload an attachment file to a draft PandaDoc document.",
     inputSchema: s.object("Input parameters for uploading a PandaDoc document attachment.", {
       document_id: s.nonEmptyString("The PandaDoc document identifier."),

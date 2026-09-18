@@ -222,6 +222,7 @@ export type LaunchDarklyActionName =
 export const launchDarklyActions: ActionDefinition[] = [
   action(
     "get_caller_identity",
+    "read",
     "Get the LaunchDarkly caller identity for the current access token.",
     {},
     [],
@@ -229,14 +230,23 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "list_projects",
+    "read",
     "List LaunchDarkly projects with optional filtering, sorting, pagination, and expansion.",
     listInput({ expand }),
     [],
     collection(project, "A LaunchDarkly project collection response."),
   ),
-  action("get_project", "Get a LaunchDarkly project by project key.", { projectKey, expand }, ["projectKey"], project),
+  action(
+    "get_project",
+    "read",
+    "Get a LaunchDarkly project by project key.",
+    { projectKey, expand },
+    ["projectKey"],
+    project,
+  ),
   action(
     "create_project",
+    "write",
     "Create a LaunchDarkly project using either common fields or a full official request body.",
     {
       key: nonEmptyString("The project key to create."),
@@ -255,6 +265,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "patch_project",
+    "write",
     "Patch a LaunchDarkly project with standard JSON Patch operations.",
     { projectKey, patch: patchOperations },
     ["projectKey", "patch"],
@@ -262,6 +273,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "delete_project",
+    "destructive",
     "Delete a LaunchDarkly project by project key.",
     { projectKey },
     ["projectKey"],
@@ -269,6 +281,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "get_environments",
+    "read",
     "List the LaunchDarkly environments that belong to a project.",
     { projectKey },
     ["projectKey"],
@@ -276,6 +289,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "get_environment",
+    "read",
     "Get a LaunchDarkly environment by project key and environment key.",
     { projectKey, environmentKey },
     ["projectKey", "environmentKey"],
@@ -283,6 +297,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "create_environment",
+    "write",
     "Create a LaunchDarkly environment using either common fields or a full official request body.",
     {
       projectKey,
@@ -305,6 +320,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "patch_environment",
+    "write",
     "Patch a LaunchDarkly environment with standard JSON Patch operations.",
     { projectKey, environmentKey, patch: patchOperations },
     ["projectKey", "environmentKey", "patch"],
@@ -312,6 +328,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "delete_environment",
+    "destructive",
     "Delete a LaunchDarkly environment by project key and environment key.",
     { projectKey, environmentKey },
     ["projectKey", "environmentKey"],
@@ -319,6 +336,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "get_feature_flags",
+    "read",
     "List LaunchDarkly feature flags in a project with optional filtering, pagination, and summary output.",
     {
       projectKey,
@@ -333,6 +351,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "get_feature_flag",
+    "read",
     "Get a LaunchDarkly feature flag by project key and feature flag key.",
     {
       projectKey,
@@ -345,6 +364,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "create_feature_flag",
+    "write",
     "Create a LaunchDarkly feature flag using either common fields or a full official request body.",
     {
       projectKey,
@@ -378,6 +398,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "delete_feature_flag",
+    "destructive",
     "Delete a LaunchDarkly feature flag by project key and feature flag key.",
     { projectKey, featureFlagKey },
     ["projectKey", "featureFlagKey"],
@@ -385,6 +406,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "get_segments",
+    "read",
     "List LaunchDarkly segments in a project environment with optional filtering and pagination.",
     { projectKey, environmentKey, ...listInput() },
     ["projectKey", "environmentKey"],
@@ -392,6 +414,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "get_segment",
+    "read",
     "Get a LaunchDarkly segment by project key, environment key, and segment key.",
     { projectKey, environmentKey, segmentKey },
     ["projectKey", "environmentKey", "segmentKey"],
@@ -399,6 +422,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "create_segment",
+    "write",
     "Create a LaunchDarkly segment using either common fields or a full official request body.",
     {
       projectKey,
@@ -427,6 +451,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "delete_segment",
+    "destructive",
     "Delete a LaunchDarkly segment by project key, environment key, and segment key.",
     { projectKey, environmentKey, segmentKey },
     ["projectKey", "environmentKey", "segmentKey"],
@@ -434,6 +459,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "search_contexts",
+    "read",
     "Search LaunchDarkly contexts in a project environment with filtering, sorting, and pagination.",
     contextSearchInput(),
     ["projectKey", "environmentKey"],
@@ -441,6 +467,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "get_contexts",
+    "read",
     "Get a LaunchDarkly context by context kind and key, with optional paging over related results.",
     {
       ...contextSearchInput(),
@@ -452,6 +479,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "search_context_instances",
+    "read",
     "Search LaunchDarkly context instances in a project environment with filtering, sorting, and pagination.",
     contextSearchInput(),
     ["projectKey", "environmentKey"],
@@ -459,6 +487,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "get_context_instances",
+    "read",
     "Get a LaunchDarkly context instance by project key, environment key, and context instance identifier.",
     { ...contextSearchInput(), contextInstanceId: nonEmptyString("The LaunchDarkly context instance identifier.") },
     ["projectKey", "environmentKey", "contextInstanceId"],
@@ -466,6 +495,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "get_members",
+    "read",
     "List LaunchDarkly account members with optional filtering, sorting, pagination, and expansion.",
     listInput({ expand }),
     [],
@@ -473,6 +503,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "get_member",
+    "read",
     "Get a LaunchDarkly account member by member identifier.",
     { memberId, expand },
     ["memberId"],
@@ -480,14 +511,16 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "list_teams",
+    "read",
     "List LaunchDarkly teams with optional filtering, pagination, and expansion controls.",
     listInput({ expand }),
     [],
     collection(team, "A LaunchDarkly team collection response."),
   ),
-  action("get_team", "Get a LaunchDarkly team by team key.", { teamKey, expand }, ["teamKey"], team),
+  action("get_team", "read", "Get a LaunchDarkly team by team key.", { teamKey, expand }, ["teamKey"], team),
   action(
     "create_team",
+    "write",
     "Create a LaunchDarkly team using either common fields or a full official request body.",
     {
       key: nonEmptyString("The team key to create."),
@@ -505,6 +538,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "patch_team",
+    "write",
     "Patch a LaunchDarkly team with semantic patch instructions.",
     {
       teamKey,
@@ -515,9 +549,17 @@ export const launchDarklyActions: ActionDefinition[] = [
     ["teamKey", "instructions"],
     team,
   ),
-  action("delete_team", "Delete a LaunchDarkly team by team key.", { teamKey }, ["teamKey"], emptyOutput),
+  action(
+    "delete_team",
+    "destructive",
+    "Delete a LaunchDarkly team by team key.",
+    { teamKey },
+    ["teamKey"],
+    emptyOutput,
+  ),
   action(
     "add_member_to_teams",
+    "write",
     "Add one or more LaunchDarkly members to one or more teams with a semantic patch update.",
     {
       memberIds: s.array(memberId, {
@@ -542,6 +584,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "get_tags",
+    "read",
     "List LaunchDarkly tags with optional prefix and resource-kind filters.",
     {
       limit,
@@ -560,6 +603,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "get_tokens",
+    "read",
     "List LaunchDarkly access tokens with optional pagination and visibility scope.",
     {
       limit,
@@ -569,9 +613,10 @@ export const launchDarklyActions: ActionDefinition[] = [
     [],
     collection(token, "A LaunchDarkly access token collection response."),
   ),
-  action("get_token", "Get a LaunchDarkly access token by token identifier.", { tokenId }, ["tokenId"], token),
+  action("get_token", "read", "Get a LaunchDarkly access token by token identifier.", { tokenId }, ["tokenId"], token),
   action(
     "create_token",
+    "write",
     "Create a LaunchDarkly access token using either common fields or a full official request body.",
     {
       name: nonEmptyString("The access token name to create."),
@@ -597,6 +642,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "patch_token",
+    "write",
     "Patch a LaunchDarkly access token with standard JSON Patch operations.",
     { tokenId, patch: patchOperations },
     ["tokenId", "patch"],
@@ -604,6 +650,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "delete_token",
+    "destructive",
     "Delete a LaunchDarkly access token by token identifier.",
     { tokenId },
     ["tokenId"],
@@ -611,6 +658,7 @@ export const launchDarklyActions: ActionDefinition[] = [
   ),
   action(
     "reset_token",
+    "destructive",
     "Reset a LaunchDarkly access token value and optionally control when the old value expires.",
     {
       tokenId,
@@ -625,6 +673,7 @@ export const launchDarklyActions: ActionDefinition[] = [
 
 function action(
   name: LaunchDarklyActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   input: Record<string, JsonSchema>,
   required: string[],
@@ -633,6 +682,7 @@ function action(
 ): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     requiredScopes: [],
     inputSchema: {
@@ -652,6 +702,7 @@ function patchModeAction(
 ): ActionDefinition {
   return action(
     name,
+    "write",
     description,
     {
       ...requiredInput,

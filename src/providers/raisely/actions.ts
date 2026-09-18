@@ -54,6 +54,7 @@ export type RaiselyActionName =
 export const raiselyActions: ProviderActionDefinition<RaiselyActionName>[] = [
   defineProviderAction(service, {
     name: "list_campaigns",
+    operationType: "read",
     description: "List Raisely campaigns with optional search, filters, sorting, and pagination.",
     inputSchema: s.object(
       "List Raisely campaigns.",
@@ -74,6 +75,7 @@ export const raiselyActions: ProviderActionDefinition<RaiselyActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign",
+    operationType: "read",
     description: "Fetch one Raisely campaign by UUID, path, or domain.",
     inputSchema: s.object(
       "Fetch one Raisely campaign.",
@@ -91,6 +93,7 @@ export const raiselyActions: ProviderActionDefinition<RaiselyActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "list_profiles",
+    operationType: "read",
     description: "List fundraising profiles in a Raisely campaign.",
     inputSchema: s.object(
       "List fundraising profiles in one Raisely campaign.",
@@ -111,6 +114,7 @@ export const raiselyActions: ProviderActionDefinition<RaiselyActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "get_profile",
+    operationType: "read",
     description: "Fetch one Raisely fundraising profile by UUID or path.",
     inputSchema: s.object(
       "Fetch one Raisely fundraising profile.",
@@ -127,6 +131,7 @@ export const raiselyActions: ProviderActionDefinition<RaiselyActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "list_webhooks",
+    operationType: "read",
     description: "List webhooks configured for a Raisely campaign.",
     inputSchema: s.object(
       "List webhooks configured for one Raisely campaign.",
@@ -143,6 +148,7 @@ export const raiselyActions: ProviderActionDefinition<RaiselyActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "create_webhook",
+    operationType: "write",
     description: "Create a Raisely webhook for account-wide or campaign-specific events.",
     inputSchema: s.object(
       "Create a Raisely webhook.",
@@ -163,6 +169,7 @@ export const raiselyActions: ProviderActionDefinition<RaiselyActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "update_webhook",
+    operationType: "write",
     description: "Update a Raisely webhook's events, secret, or destination URL.",
     inputSchema: s.object(
       "Update a Raisely webhook.",
@@ -184,6 +191,7 @@ export const raiselyActions: ProviderActionDefinition<RaiselyActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "delete_webhook",
+    operationType: "destructive",
     description: "Delete a Raisely webhook and return the deleted record.",
     inputSchema: s.requiredObject("Delete a Raisely webhook.", {
       webhookId: nonEmptyString("The Raisely webhook UUID."),

@@ -194,12 +194,14 @@ const listRefundsInputSchema = s.object(
 export const youzanActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_shop",
+    operationType: "read",
     description: "Get the identity and basic profile of the connected Youzan shop.",
     inputSchema: s.object("No input is required to retrieve the connected Youzan shop.", {}),
     outputSchema: s.object("The connected Youzan shop result.", { shop: rawShopSchema }),
   }),
   defineProviderAction(service, {
     name: "list_inventory_items",
+    operationType: "read",
     description: "List shelved or sold-out items from a Youzan store inventory.",
     inputSchema: listInventoryInputSchema,
     outputSchema: s.object("A paginated Youzan inventory result.", {
@@ -211,6 +213,7 @@ export const youzanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_item",
+    operationType: "read",
     description: "Get a Youzan item by its item ID.",
     inputSchema: s.object("The item identifier used to retrieve a Youzan item.", {
       itemId: s.positiveInteger("The Youzan item ID."),
@@ -219,6 +222,7 @@ export const youzanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_onsale_items",
+    operationType: "read",
     description: "List items currently visible for sale in a Youzan online or physical store.",
     inputSchema: listOnsaleItemsInputSchema,
     outputSchema: s.object("A paginated Youzan on-sale item result.", {
@@ -230,6 +234,7 @@ export const youzanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description: "List Youzan orders using status, time, item, delivery, and text filters.",
     inputSchema: listOrdersInputSchema,
     outputSchema: s.object("A paginated Youzan order result.", {
@@ -241,6 +246,7 @@ export const youzanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_order",
+    operationType: "read",
     description: "Get a Youzan order by its order ID.",
     inputSchema: s.object("The order identifier used to retrieve a Youzan order.", {
       orderId: s.nonWhitespaceString("The Youzan order ID."),
@@ -249,6 +255,7 @@ export const youzanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_refunds",
+    operationType: "read",
     description: "List Youzan refund and after-sale records using order, status, and time filters.",
     inputSchema: listRefundsInputSchema,
     outputSchema: s.object("A paginated Youzan refund result.", {
@@ -260,6 +267,7 @@ export const youzanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_refund",
+    operationType: "read",
     description: "Get a Youzan refund or after-sale record by its refund ID.",
     inputSchema: s.object(
       "The refund identifier used to retrieve a Youzan refund.",
@@ -273,6 +281,7 @@ export const youzanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_order_logistics",
+    operationType: "read",
     description: "Get all express or local-delivery packages and tracking details for a Youzan order.",
     inputSchema: s.object(
       "The order identifier used to retrieve Youzan logistics packages.",

@@ -163,6 +163,7 @@ const departmentSchema = s.looseObject("A normalized LiveAgent department.", {
 export const liveagentActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tickets",
+    operationType: "read",
     description: "List LiveAgent tickets with page pagination, sorting, and optional filters.",
     inputSchema: s.object("Query parameters for listing LiveAgent tickets.", paginationInputSchema, {
       optional: ["page", "perPage", "from", "to", "sortDir", "sortField", "filters"],
@@ -174,6 +175,7 @@ export const liveagentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ticket",
+    operationType: "read",
     description: "Get a LiveAgent ticket by ID.",
     inputSchema: s.requiredObject("Input for fetching one LiveAgent ticket.", {
       ticketId: s.nonEmptyString("LiveAgent ticket ID."),
@@ -184,6 +186,7 @@ export const liveagentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_ticket",
+    operationType: "write",
     description: "Create a LiveAgent ticket with an initial message.",
     inputSchema: s.object("LiveAgent ticket creation payload.", ticketInputSchema, {
       optional: [
@@ -205,6 +208,7 @@ export const liveagentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_ticket",
+    operationType: "write",
     description: "Update mutable fields on a LiveAgent ticket.",
     inputSchema: s.object(
       "LiveAgent ticket update payload.",
@@ -222,6 +226,7 @@ export const liveagentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List LiveAgent contacts with pagination, sorting, and filters.",
     inputSchema: s.object("Query parameters for listing LiveAgent contacts.", paginationInputSchema, {
       optional: ["page", "perPage", "from", "to", "sortDir", "sortField", "filters"],
@@ -233,6 +238,7 @@ export const liveagentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get a LiveAgent contact by ID.",
     inputSchema: s.requiredObject("Input for fetching one LiveAgent contact.", {
       contactId: s.nonEmptyString("LiveAgent contact ID."),
@@ -243,6 +249,7 @@ export const liveagentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a LiveAgent contact.",
     inputSchema: s.object("LiveAgent contact creation payload.", contactInputSchema, {
       optional: [
@@ -277,6 +284,7 @@ export const liveagentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update mutable fields on a LiveAgent contact.",
     inputSchema: s.object(
       "LiveAgent contact update payload.",
@@ -318,6 +326,7 @@ export const liveagentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List LiveAgent contact groups.",
     inputSchema: s.object("Input for listing LiveAgent contact groups.", {}),
     outputSchema: s.requiredObject("LiveAgent contact group list response.", {
@@ -327,6 +336,7 @@ export const liveagentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_group",
+    operationType: "read",
     description: "Get a LiveAgent contact group by ID.",
     inputSchema: s.requiredObject("Input for fetching one LiveAgent contact group.", {
       groupId: s.nonEmptyString("LiveAgent group ID."),
@@ -337,6 +347,7 @@ export const liveagentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_departments",
+    operationType: "read",
     description: "List LiveAgent departments with pagination, sorting, and filters.",
     inputSchema: s.object("Query parameters for listing LiveAgent departments.", paginationInputSchema, {
       optional: ["page", "perPage", "from", "to", "sortDir", "sortField", "filters"],
@@ -348,6 +359,7 @@ export const liveagentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_department",
+    operationType: "read",
     description: "Get a LiveAgent department by ID.",
     inputSchema: s.requiredObject("Input for fetching one LiveAgent department.", {
       departmentId: s.nonEmptyString("LiveAgent department ID."),

@@ -59,6 +59,7 @@ function output(properties: Record<string, JsonSchema>, description: string): Js
 
 function action(input: {
   name: LinkedinActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -73,6 +74,7 @@ function action(input: {
 export const linkedinActions: ActionDefinition[] = [
   action({
     name: "get_current_member",
+    operationType: "read",
     description: "Retrieve the authenticated LinkedIn member's OpenID Connect profile.",
     requiredScopes: memberReadScopes,
     inputSchema: s.object({}, { description: "No input is required to retrieve the current LinkedIn member." }),
@@ -80,6 +82,7 @@ export const linkedinActions: ActionDefinition[] = [
   }),
   action({
     name: "create_text_post",
+    operationType: "write",
     description: "Create a text-only organic LinkedIn post for a member author.",
     requiredScopes: postWriteScopes,
     inputSchema: s.object(
@@ -102,6 +105,7 @@ export const linkedinActions: ActionDefinition[] = [
   }),
   action({
     name: "delete_post",
+    operationType: "destructive",
     description: "Delete a LinkedIn post by raw post URN using the Posts API.",
     requiredScopes: postWriteScopes,
     inputSchema: s.object("Request parameters for deleting a LinkedIn post.", { postUrn }, { required: ["postUrn"] }),
@@ -116,6 +120,7 @@ export const linkedinActions: ActionDefinition[] = [
   }),
   action({
     name: "create_article_post",
+    operationType: "write",
     description: "Create a LinkedIn article or link post with explicit source URL metadata using the Posts API.",
     requiredScopes: postWriteScopes,
     inputSchema: s.object(
@@ -145,6 +150,7 @@ export const linkedinActions: ActionDefinition[] = [
   }),
   action({
     name: "create_reshare",
+    operationType: "write",
     description: "Create a LinkedIn reshare of an existing post using the Posts API.",
     requiredScopes: postWriteScopes,
     inputSchema: s.object(

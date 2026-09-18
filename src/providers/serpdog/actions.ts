@@ -100,12 +100,14 @@ const googleAutocompleteInputSchema = s.actionInput(
 export const serpdogActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_info",
+    operationType: "read",
     description: "Retrieve account details and quota usage for the connected Serpdog API key.",
     inputSchema: s.actionInput({}, [], "The input payload for retrieving Serpdog account information."),
     outputSchema: accountInfoOutputSchema,
   }),
   defineProviderAction(service, {
     name: "google_search",
+    operationType: "read",
     description: "Run a Google Search request through Serpdog using either the advanced or lite endpoint.",
     inputSchema: googleSearchInputSchema,
     outputSchema: s.object(
@@ -157,6 +159,7 @@ export const serpdogActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_news_search",
+    operationType: "read",
     description: "Run a Google News request through Serpdog.",
     inputSchema: googleNewsInputSchema,
     outputSchema: s.object(
@@ -176,6 +179,7 @@ export const serpdogActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_videos_search",
+    operationType: "read",
     description: "Run a Google Videos request through Serpdog.",
     inputSchema: googleVideosInputSchema,
     outputSchema: s.object(
@@ -191,6 +195,7 @@ export const serpdogActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_autocomplete",
+    operationType: "read",
     description: "Retrieve Google Autocomplete suggestions through Serpdog.",
     inputSchema: googleAutocompleteInputSchema,
     outputSchema: s.actionOutput(

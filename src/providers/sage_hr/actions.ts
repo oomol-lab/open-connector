@@ -89,6 +89,7 @@ const timeOffRequestListInputSchema = s.object(
 export const sageHrActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_employees",
+    operationType: "read",
     description: "List active employees in Sage HR with optional pagination and history expansions.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -104,6 +105,7 @@ export const sageHrActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_employee",
+    operationType: "read",
     description: "Get a single active Sage HR employee by ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -122,6 +124,7 @@ export const sageHrActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_terminated_employees",
+    operationType: "read",
     description: "List terminated employees in Sage HR with optional pagination and history expansions.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -137,6 +140,7 @@ export const sageHrActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_terminated_employee",
+    operationType: "read",
     description: "Get a single terminated Sage HR employee by ID.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for getting a Sage HR terminated employee.", {
@@ -146,6 +150,7 @@ export const sageHrActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_teams",
+    operationType: "read",
     description: "List teams in Sage HR with optional pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -161,6 +166,7 @@ export const sageHrActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_positions",
+    operationType: "read",
     description: "List positions in Sage HR with optional pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -176,6 +182,7 @@ export const sageHrActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_termination_reasons",
+    operationType: "read",
     description: "List termination reasons configured in Sage HR with optional pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -191,6 +198,7 @@ export const sageHrActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_time_off_requests",
+    operationType: "read",
     description: "List Sage HR time off requests with optional date range and pagination filters.",
     requiredScopes: [],
     inputSchema: timeOffRequestListInputSchema,

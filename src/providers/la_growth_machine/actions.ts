@@ -162,6 +162,7 @@ createOrUpdateLeadInputSchema.anyOf = [
 export const laGrowthMachineActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_members",
+    operationType: "read",
     description: "List members in the authenticated La Growth Machine account.",
     requiredScopes: [],
     inputSchema: s.object("Input for listing La Growth Machine members.", {}),
@@ -175,6 +176,7 @@ export const laGrowthMachineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_audiences",
+    operationType: "read",
     description: "List audiences in the authenticated La Growth Machine account.",
     requiredScopes: [],
     inputSchema: s.object("Input for listing La Growth Machine audiences.", {}),
@@ -185,6 +187,7 @@ export const laGrowthMachineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_audience",
+    operationType: "write",
     description: "Create an empty La Growth Machine audience.",
     requiredScopes: [],
     inputSchema: s.object("Input for creating a La Growth Machine audience.", {
@@ -197,6 +200,7 @@ export const laGrowthMachineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_audience_detail",
+    operationType: "read",
     description: "Get detailed information about one La Growth Machine audience.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a La Growth Machine audience.", {
@@ -209,6 +213,7 @@ export const laGrowthMachineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_audience_leads",
+    operationType: "read",
     description: "List leads belonging to a La Growth Machine audience.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -227,6 +232,7 @@ export const laGrowthMachineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_leads",
+    operationType: "read",
     description: "Search La Growth Machine leads by one or more documented criteria.",
     requiredScopes: [],
     inputSchema: searchLeadsInputSchema,
@@ -241,6 +247,7 @@ export const laGrowthMachineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_or_update_lead",
+    operationType: "write",
     description: "Create a La Growth Machine lead or update it when it already exists.",
     requiredScopes: [],
     inputSchema: createOrUpdateLeadInputSchema,

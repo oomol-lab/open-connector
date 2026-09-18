@@ -9,6 +9,7 @@ const jsonValueSchema = s.unknown("A JSON-compatible value, including objects, a
 export const evervaultActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "encrypt_json",
+    operationType: "write",
     description: "Encrypt a JSON-compatible value with the configured Evervault app.",
     requiredScopes: [],
     inputSchema: s.object("The JSON value to encrypt.", {
@@ -20,6 +21,7 @@ export const evervaultActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "decrypt_json",
+    operationType: "write",
     description: "Decrypt an Evervault-encrypted JSON-compatible value.",
     requiredScopes: [],
     inputSchema: s.object("The Evervault-encrypted JSON value to decrypt.", {
@@ -31,6 +33,7 @@ export const evervaultActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "inspect_token",
+    operationType: "read",
     description: "Inspect metadata for an Evervault-encrypted token without decrypting it.",
     requiredScopes: [],
     inputSchema: s.object("The encrypted token to inspect.", {

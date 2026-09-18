@@ -55,25 +55,36 @@ const relationshipPropertySchema = s.object("A Parma custom relationship propert
   value: s.string("The new custom property value."),
 });
 
-function action(input: { name: string; description: string; inputSchema: JsonSchema; outputSchema: JsonSchema }) {
+interface ParmaActionSource {
+  name: string;
+  operationType: ActionDefinition["operationType"];
+  description: string;
+  inputSchema: JsonSchema;
+  outputSchema: JsonSchema;
+}
+
+function action(input: ParmaActionSource) {
   return defineProviderAction(service, { requiredScopes: [], ...input });
 }
 
 export const parmaActions: ActionDefinition[] = [
   action({
     name: "list_deals",
+    operationType: "read",
     description: "List deals in the connected Parma workspace.",
     inputSchema: s.object("The input payload for listing Parma deals.", { page: pageSchema }, { optional: ["page"] }),
     outputSchema: listOutputSchema,
   }),
   action({
     name: "get_deal",
+    operationType: "read",
     description: "Get a Parma deal by ID.",
     inputSchema: idInputSchema,
     outputSchema: dataOutputSchema,
   }),
   action({
     name: "list_groups",
+    operationType: "read",
     description: "List Parma relationship groups, optionally filtered by name.",
     inputSchema: s.object(
       "The input payload for listing Parma groups.",
@@ -84,12 +95,14 @@ export const parmaActions: ActionDefinition[] = [
   }),
   action({
     name: "list_notes",
+    operationType: "read",
     description: "List notes in the connected Parma workspace.",
     inputSchema: s.object("The input payload for listing Parma notes.", { page: pageSchema }, { optional: ["page"] }),
     outputSchema: listOutputSchema,
   }),
   action({
     name: "create_note",
+    operationType: "write",
     description: "Create a note linked to one or more Parma relationships.",
     inputSchema: s.object("The input payload for creating a Parma note.", noteFields, {
       optional: ["datetime"],
@@ -98,6 +111,7 @@ export const parmaActions: ActionDefinition[] = [
   }),
   action({
     name: "update_note",
+    operationType: "destructive",
     description: "Update a Parma note by ID.",
     inputSchema: s.object(
       "The input payload for updating a Parma note.",
@@ -108,24 +122,28 @@ export const parmaActions: ActionDefinition[] = [
   }),
   action({
     name: "list_pipelines",
+    operationType: "read",
     description: "List pipelines in the connected Parma workspace.",
     inputSchema: emptyInputSchema,
     outputSchema: listOutputSchema,
   }),
   action({
     name: "get_pipeline",
+    operationType: "read",
     description: "Get a Parma pipeline by ID.",
     inputSchema: idInputSchema,
     outputSchema: dataOutputSchema,
   }),
   action({
     name: "list_relationship_groups",
+    operationType: "read",
     description: "List groups assigned to a Parma relationship.",
     inputSchema: relationshipIdInputSchema,
     outputSchema: listOutputSchema,
   }),
   action({
     name: "add_relationship_to_group",
+    operationType: "write",
     description: "Add a Parma relationship to a group.",
     inputSchema: s.object("The input payload for adding a Parma relationship to a group.", {
       relationship_id: idSchema("The Parma relationship ID."),
@@ -135,12 +153,14 @@ export const parmaActions: ActionDefinition[] = [
   }),
   action({
     name: "remove_relationship_from_group",
+    operationType: "destructive",
     description: "Remove a Parma relationship from one of its groups.",
     inputSchema: relationshipGroupInputSchema,
     outputSchema: deleteOutputSchema,
   }),
   action({
     name: "list_relationship_notes",
+    operationType: "read",
     description: "List notes linked to a Parma relationship.",
     inputSchema: s.object(
       "The input payload for listing a Parma relationship's notes.",
@@ -151,6 +171,7 @@ export const parmaActions: ActionDefinition[] = [
   }),
   action({
     name: "list_relationships",
+    operationType: "read",
     description: "List and filter relationships in the connected Parma workspace.",
     inputSchema: s.object(
       "The input payload for listing Parma relationships.",
@@ -189,6 +210,7 @@ export const parmaActions: ActionDefinition[] = [
   }),
   action({
     name: "create_relationship",
+    operationType: "write",
     description: "Create a person or company relationship in Parma.",
     inputSchema: s.object("The input payload for creating a Parma relationship.", relationshipFields, {
       optional: ["type", "company_id", "about"],
@@ -197,12 +219,14 @@ export const parmaActions: ActionDefinition[] = [
   }),
   action({
     name: "get_relationship",
+    operationType: "read",
     description: "Get a Parma relationship by ID.",
     inputSchema: idInputSchema,
     outputSchema: dataOutputSchema,
   }),
   action({
     name: "update_relationship",
+    operationType: "write",
     description: "Update a Parma relationship and its custom properties.",
     inputSchema: s.object(
       "The input payload for updating a Parma relationship.",
@@ -217,36 +241,42 @@ export const parmaActions: ActionDefinition[] = [
   }),
   action({
     name: "delete_relationship",
+    operationType: "destructive",
     description: "Delete a Parma relationship by ID.",
     inputSchema: idInputSchema,
     outputSchema: deleteOutputSchema,
   }),
   action({
     name: "list_stages",
+    operationType: "read",
     description: "List pipeline stages in the connected Parma workspace.",
     inputSchema: emptyInputSchema,
     outputSchema: listOutputSchema,
   }),
   action({
     name: "get_stage",
+    operationType: "read",
     description: "Get a Parma pipeline stage by ID.",
     inputSchema: idInputSchema,
     outputSchema: dataOutputSchema,
   }),
   action({
     name: "list_users",
+    operationType: "read",
     description: "List users in the connected Parma workspace.",
     inputSchema: emptyInputSchema,
     outputSchema: listOutputSchema,
   }),
   action({
     name: "get_user",
+    operationType: "read",
     description: "Get a Parma user by ID.",
     inputSchema: idInputSchema,
     outputSchema: dataOutputSchema,
   }),
   action({
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current Parma user and workspace account.",
     inputSchema: emptyInputSchema,
     outputSchema: dataOutputSchema,

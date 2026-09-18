@@ -241,36 +241,42 @@ const getDownloadOutputSchema = s.object("VerifiedEmail single download response
 export const verifiedemailActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_entitlements",
+    operationType: "read",
     description: "Get VerifiedEmail verification credit entitlements for the account.",
     inputSchema: emptyInputSchema,
     outputSchema: entitlementsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "verify_emails",
+    operationType: "read",
     description: "Verify one to ten email addresses synchronously with VerifiedEmail.",
     inputSchema: verifyEmailsInputSchema,
     outputSchema: verifyEmailsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_lists",
+    operationType: "read",
     description: "List VerifiedEmail verification lists with optional pagination and sorting.",
     inputSchema: paginationInputSchema,
     outputSchema: listListsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_list",
+    operationType: "read",
     description: "Get one VerifiedEmail verification list by ID.",
     inputSchema: idInputSchema,
     outputSchema: getListOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_downloads",
+    operationType: "read",
     description: "List VerifiedEmail download requests with optional pagination and sorting.",
     inputSchema: paginationInputSchema,
     outputSchema: listDownloadsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_download",
+    operationType: "read",
     description: "Get one VerifiedEmail download request by ID.",
     inputSchema: idInputSchema,
     outputSchema: getDownloadOutputSchema,

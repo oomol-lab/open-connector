@@ -21,6 +21,7 @@ const submission = s.looseRequiredObject(
 export const appleNotaryActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "submit_software",
+    operationType: "write",
     description: "Create a notarization submission and return temporary Amazon S3 upload credentials.",
     asyncLifecycle: {
       startActionId: "apple_notary.submit_software",
@@ -54,6 +55,7 @@ export const appleNotaryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_submission_status",
+    operationType: "read",
     description: "Read the state of one notarization submission.",
     asyncLifecycle: {
       startActionId: "apple_notary.submit_software",
@@ -64,6 +66,7 @@ export const appleNotaryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_submissions",
+    operationType: "read",
     description: "List up to the 100 most recent notarization submissions for the connected team.",
     inputSchema: s.object("No input is required.", {}),
     outputSchema: s.object("The recent submissions.", {
@@ -72,6 +75,7 @@ export const appleNotaryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_submission_log",
+    operationType: "read",
     description: "Get a temporary download URL for a notarization submission log.",
     inputSchema: s.object("The submission whose log should be read.", { submissionId }),
     outputSchema: s.object("The temporary log location.", {

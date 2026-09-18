@@ -79,6 +79,7 @@ const paginatedCallSchema = s.object("A Retell AI paginated call response.", {
 export const retellAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_voices",
+    operationType: "read",
     description: "List all Retell AI voices available to the authenticated workspace.",
     inputSchema: s.object("The input payload for listing Retell AI voices.", {}),
     outputSchema: s.object("The response returned when listing Retell AI voices.", {
@@ -88,6 +89,7 @@ export const retellAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_voice",
+    operationType: "read",
     description: "Retrieve details for a specific Retell AI voice.",
     inputSchema: s.object("The input payload for retrieving a Retell AI voice.", {
       voiceId: s.nonEmptyString("Unique id for the voice."),
@@ -98,6 +100,7 @@ export const retellAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_voice_agents",
+    operationType: "read",
     description: "List Retell AI voice agents with optional pagination filters.",
     inputSchema: s.object(
       "The input payload for listing Retell AI voice agents.",
@@ -120,6 +123,7 @@ export const retellAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_voice_agent",
+    operationType: "read",
     description: "Retrieve details for a specific Retell AI voice agent.",
     inputSchema: s.object(
       "The input payload for retrieving a Retell AI voice agent.",
@@ -138,6 +142,7 @@ export const retellAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_phone_numbers",
+    operationType: "read",
     description: "List Retell AI phone numbers with cursor pagination.",
     inputSchema: s.object(
       "The input payload for listing Retell AI phone numbers.",
@@ -151,6 +156,7 @@ export const retellAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_phone_number",
+    operationType: "read",
     description: "Retrieve details for a specific Retell AI phone number.",
     inputSchema: s.object("The input payload for retrieving a Retell AI phone number.", {
       phoneNumber: s.nonEmptyString("E.164 phone number to retrieve."),
@@ -161,6 +167,7 @@ export const retellAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_calls",
+    operationType: "read",
     description: "List Retell AI calls with pagination and optional simple filters.",
     inputSchema: s.object(
       "The input payload for listing Retell AI calls.",
@@ -214,6 +221,7 @@ export const retellAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_call",
+    operationType: "read",
     description: "Retrieve details for a specific Retell AI call.",
     inputSchema: s.object("The input payload for retrieving a Retell AI call.", {
       callId: s.nonEmptyString("The call id to retrieve call history for."),

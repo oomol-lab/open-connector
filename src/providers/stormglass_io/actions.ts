@@ -117,6 +117,7 @@ const tidePointInputSchema = s.object(
 export const stormglassIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_weather_point",
+    operationType: "read",
     description: "Get Stormglass forecast weather data for one coordinate.",
     inputSchema: s.object(
       {
@@ -144,6 +145,7 @@ export const stormglassIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tide_extremes",
+    operationType: "read",
     description: "Get Stormglass high and low tide extremes for one coordinate.",
     inputSchema: tidePointInputSchema,
     outputSchema: s.object(
@@ -166,6 +168,7 @@ export const stormglassIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tide_sea_level",
+    operationType: "read",
     description: "Get Stormglass hourly tide sea-level data for one coordinate.",
     inputSchema: tidePointInputSchema,
     outputSchema: s.object(

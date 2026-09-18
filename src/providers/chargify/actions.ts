@@ -47,6 +47,7 @@ const perPageField = (resource: string) =>
 export const chargifyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List Maxio Advanced Billing customers with search and pagination filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -70,6 +71,7 @@ export const chargifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Retrieve one Maxio Advanced Billing customer by ID.",
     requiredScopes: [],
     inputSchema: s.object("The customer lookup input.", {
@@ -79,6 +81,7 @@ export const chargifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List Maxio Advanced Billing products with pagination and archive filtering.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -98,6 +101,7 @@ export const chargifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Retrieve one Maxio Advanced Billing product by ID.",
     requiredScopes: [],
     inputSchema: s.object("The product lookup input.", {
@@ -107,6 +111,7 @@ export const chargifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subscriptions",
+    operationType: "read",
     description: "List Maxio Advanced Billing subscriptions with common filters and pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -128,6 +133,7 @@ export const chargifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_subscription",
+    operationType: "read",
     description: "Retrieve one Maxio Advanced Billing subscription by ID.",
     requiredScopes: [],
     inputSchema: s.object("The subscription lookup input.", {

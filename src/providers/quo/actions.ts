@@ -227,6 +227,7 @@ const userIdInputSchema = s.object("Input parameters for reading a Quo user.", {
 export const quoActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_phone_numbers",
+    operationType: "read",
     description: "List phone numbers in the connected Quo workspace.",
     requiredScopes: [],
     inputSchema: listPhoneNumbersInputSchema,
@@ -234,6 +235,7 @@ export const quoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_phone_number",
+    operationType: "read",
     description: "Get details for a Quo phone number by ID.",
     requiredScopes: [],
     inputSchema: phoneNumberIdInputSchema,
@@ -241,6 +243,7 @@ export const quoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List users in the connected Quo workspace.",
     requiredScopes: [],
     inputSchema: listUsersInputSchema,
@@ -248,6 +251,7 @@ export const quoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get details for a Quo user by ID.",
     requiredScopes: [],
     inputSchema: userIdInputSchema,
@@ -255,6 +259,7 @@ export const quoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List contacts in the connected Quo workspace with optional filters.",
     requiredScopes: [],
     inputSchema: listContactsInputSchema,
@@ -262,6 +267,7 @@ export const quoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get details for a Quo contact by ID.",
     requiredScopes: [],
     inputSchema: contactIdInputSchema,
@@ -269,6 +275,7 @@ export const quoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a contact in the connected Quo workspace.",
     requiredScopes: [],
     inputSchema: createContactInputSchema,
@@ -276,6 +283,7 @@ export const quoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update a contact in the connected Quo workspace.",
     requiredScopes: [],
     inputSchema: updateContactInputSchema,
@@ -283,6 +291,7 @@ export const quoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete a contact from the connected Quo workspace.",
     requiredScopes: [],
     inputSchema: contactIdInputSchema,
@@ -292,6 +301,7 @@ export const quoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_messages",
+    operationType: "read",
     description: "List messages exchanged between a Quo number and conversation participants.",
     requiredScopes: [],
     inputSchema: listMessagesInputSchema,
@@ -299,6 +309,7 @@ export const quoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_message",
+    operationType: "read",
     description: "Get details for a Quo message by ID.",
     requiredScopes: [],
     inputSchema: messageIdInputSchema,
@@ -306,6 +317,7 @@ export const quoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_text_message",
+    operationType: "write",
     description: "Send a text message from a Quo phone number.",
     requiredScopes: [],
     inputSchema: sendTextMessageInputSchema,

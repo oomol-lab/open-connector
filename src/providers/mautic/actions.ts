@@ -50,6 +50,7 @@ const listInputSchema = s.object(
 
 const listContacts = defineProviderAction(service, {
   name: "list_contacts",
+  operationType: "read",
   description: "List Mautic contacts with optional search, pagination, and ordering controls.",
   requiredScopes: [],
   followUpActions: ["mautic.get_contact"],
@@ -62,6 +63,7 @@ const listContacts = defineProviderAction(service, {
 
 const getContact = defineProviderAction(service, {
   name: "get_contact",
+  operationType: "read",
   description: "Get a Mautic contact by numeric contact ID.",
   requiredScopes: [],
   inputSchema: s.object("The Mautic contact to retrieve.", {
@@ -74,6 +76,7 @@ const getContact = defineProviderAction(service, {
 
 const createContact = defineProviderAction(service, {
   name: "create_contact",
+  operationType: "write",
   description: "Create a Mautic contact using standard or instance-specific custom contact field aliases.",
   requiredScopes: [],
   followUpActions: ["mautic.get_contact", "mautic.add_contact_to_segment"],
@@ -87,6 +90,7 @@ const createContact = defineProviderAction(service, {
 
 const updateContact = defineProviderAction(service, {
   name: "update_contact",
+  operationType: "write",
   description: "Update selected fields on an existing Mautic contact without creating a missing contact.",
   requiredScopes: [],
   followUpActions: ["mautic.get_contact"],
@@ -101,6 +105,7 @@ const updateContact = defineProviderAction(service, {
 
 const deleteContact = defineProviderAction(service, {
   name: "delete_contact",
+  operationType: "destructive",
   description: "Delete a Mautic contact by numeric contact ID.",
   requiredScopes: [],
   inputSchema: s.object("The Mautic contact to delete.", {
@@ -113,6 +118,7 @@ const deleteContact = defineProviderAction(service, {
 
 const listSegments = defineProviderAction(service, {
   name: "list_segments",
+  operationType: "read",
   description: "List Mautic segments with optional search, pagination, and ordering controls.",
   requiredScopes: [],
   inputSchema: listInputSchema,
@@ -134,6 +140,7 @@ const segmentMembershipOutputSchema = s.object("The segment membership operation
 
 const addContactToSegment = defineProviderAction(service, {
   name: "add_contact_to_segment",
+  operationType: "write",
   description: "Manually add a Mautic contact to a segment.",
   requiredScopes: [],
   inputSchema: segmentMembershipInputSchema,
@@ -142,6 +149,7 @@ const addContactToSegment = defineProviderAction(service, {
 
 const removeContactFromSegment = defineProviderAction(service, {
   name: "remove_contact_from_segment",
+  operationType: "destructive",
   description: "Manually remove a Mautic contact from a segment.",
   requiredScopes: [],
   inputSchema: segmentMembershipInputSchema,

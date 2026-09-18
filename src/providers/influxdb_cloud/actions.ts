@@ -60,6 +60,7 @@ export type InfluxdbCloudActionName = "list_buckets" | "get_bucket" | "query_inf
 export const influxdbCloudActions: ProviderActionDefinition<InfluxdbCloudActionName>[] = [
   defineProviderAction(service, {
     name: "list_buckets",
+    operationType: "read",
     description: "List InfluxDB Cloud Serverless buckets visible to the connected API token.",
     followUpActions: ["influxdb_cloud.get_bucket"],
     inputSchema: bucketPageInputSchema,
@@ -70,6 +71,7 @@ export const influxdbCloudActions: ProviderActionDefinition<InfluxdbCloudActionN
   }),
   defineProviderAction(service, {
     name: "get_bucket",
+    operationType: "read",
     description: "Retrieve one InfluxDB Cloud Serverless bucket by ID.",
     inputSchema: s.requiredObject("Input for retrieving an InfluxDB Cloud bucket.", {
       bucketId: s.string("The InfluxDB bucket ID.", { minLength: 1 }),
@@ -80,6 +82,7 @@ export const influxdbCloudActions: ProviderActionDefinition<InfluxdbCloudActionN
   }),
   defineProviderAction(service, {
     name: "query_influxql",
+    operationType: "read",
     description: "Query an InfluxDB Cloud Serverless bucket with the v1-compatible InfluxQL HTTP API.",
     inputSchema: s.object(
       "Input for querying InfluxDB Cloud with InfluxQL.",
@@ -99,6 +102,7 @@ export const influxdbCloudActions: ProviderActionDefinition<InfluxdbCloudActionN
   }),
   defineProviderAction(service, {
     name: "write_line_protocol",
+    operationType: "write",
     description: "Synchronously write line protocol data to an InfluxDB Cloud Serverless bucket.",
     followUpActions: ["influxdb_cloud.query_influxql"],
     inputSchema: s.object(

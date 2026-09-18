@@ -206,6 +206,7 @@ const companySearchOutputSchema = s.object(
 export const peopledatalabsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "enrich_person",
+    operationType: "read",
     description: "Match a single person in People Data Labs and return the top matched person record.",
     requiredScopes: [],
     inputSchema: personEnrichInputSchema,
@@ -213,6 +214,7 @@ export const peopledatalabsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_people",
+    operationType: "read",
     description: "Search the People Data Labs person dataset with either an Elasticsearch query or SQL query.",
     requiredScopes: [],
     inputSchema: personSearchInputSchema,
@@ -220,6 +222,7 @@ export const peopledatalabsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "enrich_company",
+    operationType: "read",
     description: "Match a single company in People Data Labs and return the top matched company record.",
     requiredScopes: [],
     inputSchema: companyEnrichInputSchema,
@@ -227,6 +230,7 @@ export const peopledatalabsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_companies",
+    operationType: "read",
     description: "Search the People Data Labs company dataset with either an Elasticsearch query or SQL query.",
     requiredScopes: [],
     inputSchema: companySearchInputSchema,

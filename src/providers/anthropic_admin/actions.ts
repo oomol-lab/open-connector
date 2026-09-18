@@ -113,6 +113,7 @@ const workspaceMembersInputSchema = s.object(
 export const anthropicAdminActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_organization",
+    operationType: "read",
     description: "Retrieve the Anthropic organization associated with the Admin API key.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving the Anthropic organization.", {}),
@@ -120,6 +121,7 @@ export const anthropicAdminActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List users in the Anthropic organization with cursor pagination.",
     requiredScopes: [],
     inputSchema: paginationInputSchema,
@@ -127,6 +129,7 @@ export const anthropicAdminActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workspaces",
+    operationType: "read",
     description: "List Anthropic workspaces in the organization with cursor pagination.",
     requiredScopes: [],
     inputSchema: paginationInputSchema,
@@ -138,6 +141,7 @@ export const anthropicAdminActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_api_keys",
+    operationType: "read",
     description: "List Anthropic API keys in the organization, optionally filtered by workspace.",
     requiredScopes: [],
     inputSchema: listApiKeysInputSchema,
@@ -145,6 +149,7 @@ export const anthropicAdminActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workspace_members",
+    operationType: "read",
     description: "List members of one Anthropic workspace with cursor pagination.",
     requiredScopes: [],
     inputSchema: workspaceMembersInputSchema,
@@ -156,6 +161,7 @@ export const anthropicAdminActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_invites",
+    operationType: "read",
     description: "List pending or historical Anthropic organization invites.",
     requiredScopes: [],
     inputSchema: paginationInputSchema,

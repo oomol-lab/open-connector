@@ -31,6 +31,7 @@ const organizationSchema = s.looseRequiredObject("An Appcircle organization.", {
 export const appcircleActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_organizations",
+    operationType: "read",
     description: "List Appcircle organizations available to the connected API key.",
     inputSchema: s.object(
       "Pagination and search filters for Appcircle organizations.",
@@ -50,18 +51,21 @@ export const appcircleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_build_profiles",
+    operationType: "read",
     description: "List Appcircle Build profiles for the connected organization.",
     inputSchema: profileListInputSchema,
     outputSchema: profileListOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_distribution_profiles",
+    operationType: "read",
     description: "List Appcircle Testing Distribution profiles for the connected organization.",
     inputSchema: profileListInputSchema,
     outputSchema: profileListOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_enterprise_store_profiles",
+    operationType: "read",
     description: "List Appcircle Enterprise App Store profiles for the connected organization.",
     inputSchema: profileListInputSchema,
     outputSchema: profileListOutputSchema,

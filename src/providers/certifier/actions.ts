@@ -43,6 +43,7 @@ const listInputSchema = s.object(
 export const certifierActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List Certifier groups with cursor pagination.",
     requiredScopes: [],
     inputSchema: listInputSchema,
@@ -53,6 +54,7 @@ export const certifierActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_designs",
+    operationType: "read",
     description: "List Certifier certificate and badge designs with cursor pagination.",
     requiredScopes: [],
     inputSchema: listInputSchema,
@@ -63,6 +65,7 @@ export const certifierActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_credentials",
+    operationType: "read",
     description: "List Certifier credentials with cursor pagination.",
     requiredScopes: [],
     inputSchema: listInputSchema,
@@ -73,6 +76,7 @@ export const certifierActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_credentials",
+    operationType: "read",
     description: "Search Certifier credentials with structured filter, sorting, and cursor pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -99,6 +103,7 @@ export const certifierActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_credential_interactions",
+    operationType: "read",
     description:
       "List Certifier credential interaction events with optional credential filtering and cursor pagination.",
     requiredScopes: [],
@@ -117,6 +122,7 @@ export const certifierActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_issue_send_credential",
+    operationType: "write",
     description: "Create, issue, and send one Certifier credential in a single request.",
     requiredScopes: [],
     inputSchema: s.object(

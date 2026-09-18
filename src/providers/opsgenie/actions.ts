@@ -17,6 +17,7 @@ export type OpsgenieActionName =
 
 interface OpsgenieActionDefinition {
   name: OpsgenieActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   followUpActions?: string[];
   asyncLifecycle?: ProviderActionDefinition["asyncLifecycle"];
@@ -139,6 +140,7 @@ const mutationTargetInputSchema = s.object(
 const actionDefinitions: OpsgenieActionDefinition[] = [
   {
     name: "get_current_account",
+    operationType: "read",
     description: "Validate the Opsgenie API key and return account information for the key.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("Opsgenie account validation result.", {
@@ -150,6 +152,7 @@ const actionDefinitions: OpsgenieActionDefinition[] = [
   },
   {
     name: "list_alerts",
+    operationType: "read",
     description: "List Opsgenie alerts with query, saved-search, sorting, and paging filters.",
     inputSchema: s.object(
       "Opsgenie alert list filters.",
@@ -172,6 +175,7 @@ const actionDefinitions: OpsgenieActionDefinition[] = [
   },
   {
     name: "get_alert",
+    operationType: "read",
     description: "Get one Opsgenie alert by ID, tiny ID, or alias.",
     inputSchema: s.object(
       "Opsgenie alert lookup request.",
@@ -188,6 +192,7 @@ const actionDefinitions: OpsgenieActionDefinition[] = [
   },
   {
     name: "create_alert",
+    operationType: "write",
     description: "Create an Opsgenie alert and return the asynchronous request ID.",
     followUpActions: ["opsgenie.get_request_status"],
     asyncLifecycle: {
@@ -238,6 +243,7 @@ const actionDefinitions: OpsgenieActionDefinition[] = [
   },
   {
     name: "acknowledge_alert",
+    operationType: "write",
     description: "Acknowledge an Opsgenie alert and return the asynchronous request ID.",
     followUpActions: ["opsgenie.get_request_status"],
     asyncLifecycle: {
@@ -249,6 +255,7 @@ const actionDefinitions: OpsgenieActionDefinition[] = [
   },
   {
     name: "close_alert",
+    operationType: "destructive",
     description: "Close an Opsgenie alert and return the asynchronous request ID.",
     followUpActions: ["opsgenie.get_request_status"],
     asyncLifecycle: {
@@ -260,6 +267,7 @@ const actionDefinitions: OpsgenieActionDefinition[] = [
   },
   {
     name: "get_request_status",
+    operationType: "read",
     description: "Get processing status for an Opsgenie asynchronous alert request.",
     inputSchema: s.object(
       "Opsgenie request status lookup.",
@@ -279,6 +287,7 @@ const actionDefinitions: OpsgenieActionDefinition[] = [
 export const opsgenieActions: ActionDefinition[] = actionDefinitions.map((action) =>
   defineProviderAction(service, {
     name: action.name,
+    operationType: action.operationType,
     description: action.description,
     requiredScopes: [],
     followUpActions: action.followUpActions,

@@ -42,6 +42,7 @@ function idsInput(description: string, fieldDescription: string) {
 export const pendoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "identify",
+    operationType: "read",
     description: "Verify the current Pendo integration key and report whether Pendo says it has write access.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to verify a Pendo integration key.", {}),
@@ -49,6 +50,7 @@ export const pendoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pages",
+    operationType: "read",
     description: "List Pendo pages, optionally scoped to one application or expanded across all applications.",
     requiredScopes: [],
     inputSchema: listPagesInput,
@@ -58,6 +60,7 @@ export const pendoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_pages",
+    operationType: "read",
     description: "Get one or more Pendo pages by page ID.",
     requiredScopes: [],
     inputSchema: idsInput("Input for retrieving Pendo pages.", "Pendo page IDs to retrieve."),
@@ -67,6 +70,7 @@ export const pendoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_features",
+    operationType: "read",
     description: "List Pendo features, optionally scoped to one application or expanded across all applications.",
     requiredScopes: [],
     inputSchema: listFeaturesInput,
@@ -76,6 +80,7 @@ export const pendoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_features",
+    operationType: "read",
     description: "Get one or more Pendo features by feature ID.",
     requiredScopes: [],
     inputSchema: idsInput("Input for retrieving Pendo features.", "Pendo feature IDs to retrieve."),

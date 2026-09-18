@@ -119,6 +119,7 @@ const removeDatapointOutputSchema = s.requiredObject("HoneyHive datapoint derefe
 export const honeyhiveActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_datasets",
+    operationType: "read",
     description: "List HoneyHive datasets in the API key's project, optionally filtering by dataset ID or exact name.",
     requiredScopes: [],
     inputSchema: listDatasetsInputSchema,
@@ -126,6 +127,7 @@ export const honeyhiveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_dataset",
+    operationType: "write",
     description: "Create a HoneyHive dataset with an optional name, description, and initial datapoint identifiers.",
     requiredScopes: [],
     inputSchema: createDatasetInputSchema,
@@ -133,6 +135,7 @@ export const honeyhiveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_dataset",
+    operationType: "write",
     description: "Update a HoneyHive dataset's name, description, or complete datapoint identifier list.",
     requiredScopes: [],
     inputSchema: updateDatasetInputSchema,
@@ -140,6 +143,7 @@ export const honeyhiveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_dataset",
+    operationType: "destructive",
     description: "Permanently delete a HoneyHive dataset by its unique identifier.",
     requiredScopes: [],
     inputSchema: datasetIdInputSchema,
@@ -147,6 +151,7 @@ export const honeyhiveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_datapoints",
+    operationType: "write",
     description: "Create datapoints from raw JSON objects and add them to a HoneyHive dataset using a field mapping.",
     requiredScopes: [],
     inputSchema: addDatapointsInputSchema,
@@ -154,6 +159,7 @@ export const honeyhiveActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_datapoint",
+    operationType: "destructive",
     description: "Remove a datapoint association from a HoneyHive dataset without deleting the datapoint itself.",
     requiredScopes: [],
     inputSchema: removeDatapointInputSchema,

@@ -118,6 +118,7 @@ const recordWriteOptions = {
 export const teableActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the Teable user associated with the connected personal access token.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to get the current Teable user.", {}),
@@ -134,6 +135,7 @@ export const teableActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_spaces",
+    operationType: "read",
     description: "List the Teable spaces accessible to the connected personal access token.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list accessible Teable spaces.", {}),
@@ -143,6 +145,7 @@ export const teableActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_bases",
+    operationType: "read",
     description: "List the Teable bases in a space accessible to the connected token.",
     requiredScopes: [],
     inputSchema: s.object("Input for listing Teable bases in a space.", {
@@ -154,6 +157,7 @@ export const teableActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tables",
+    operationType: "read",
     description: "List the Teable tables in a base accessible to the connected token.",
     requiredScopes: [],
     inputSchema: s.object("Input for listing Teable tables in a base.", {
@@ -165,6 +169,7 @@ export const teableActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_records",
+    operationType: "read",
     description:
       "List records in a Teable table with optional projection, view, filtering, sorting, and offset pagination.",
     requiredScopes: [],
@@ -208,6 +213,7 @@ export const teableActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_record",
+    operationType: "read",
     description: "Get one Teable record by table ID and record ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -225,6 +231,7 @@ export const teableActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_records",
+    operationType: "write",
     description: "Create one or more records in a Teable table using provider-defined field values.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -248,6 +255,7 @@ export const teableActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_record",
+    operationType: "write",
     description: "Update the fields of one Teable record by table ID and record ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -266,6 +274,7 @@ export const teableActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_record",
+    operationType: "destructive",
     description: "Permanently delete one Teable record by table ID and record ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for permanently deleting a Teable record.", {

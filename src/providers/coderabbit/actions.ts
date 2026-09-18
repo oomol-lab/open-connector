@@ -166,6 +166,7 @@ const updateRoleFields = {
 export const coderabbitActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description:
       "List CodeRabbit organization users with optional seat and role filters using cursor-based pagination.",
     inputSchema: s.object(
@@ -192,6 +193,7 @@ export const coderabbitActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "manage_seats",
+    operationType: "destructive",
     description: "Bulk assign or unassign CodeRabbit seats for up to 500 organization users.",
     inputSchema: s.object(
       "The input payload for managing CodeRabbit seats.",
@@ -211,6 +213,7 @@ export const coderabbitActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_seat_assignment_mode",
+    operationType: "read",
     description: "Retrieve the current CodeRabbit seat assignment mode for a self-hosted Enterprise organization.",
     inputSchema: s.object("The input payload for getting CodeRabbit seat assignment mode.", {}),
     outputSchema: s.object("The response returned with the CodeRabbit seat assignment mode.", {
@@ -219,6 +222,7 @@ export const coderabbitActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_seat_assignment_mode",
+    operationType: "write",
     description: "Update the CodeRabbit seat assignment mode for a self-hosted Enterprise organization.",
     inputSchema: s.object(
       "The input payload for updating CodeRabbit seat assignment mode.",
@@ -233,6 +237,7 @@ export const coderabbitActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "change_roles",
+    operationType: "destructive",
     description: "Bulk change CodeRabbit organization roles for up to 500 users.",
     inputSchema: s.object(
       "The input payload for changing CodeRabbit user roles.",
@@ -250,6 +255,7 @@ export const coderabbitActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_review_metrics",
+    operationType: "read",
     description:
       "Get CodeRabbit merged pull request review metrics for a date range with optional organization, repository, and user filters.",
     inputSchema: s.object(
@@ -287,6 +293,7 @@ export const coderabbitActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_audit_logs",
+    operationType: "read",
     description:
       "List CodeRabbit organization audit log entries with optional actor, action, resource type, date, and pagination filters.",
     inputSchema: s.object(
@@ -328,6 +335,7 @@ export const coderabbitActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_roles",
+    operationType: "read",
     description: "List CodeRabbit built-in and Enterprise custom roles for the organization.",
     inputSchema: s.object(
       "The input payload for listing CodeRabbit roles.",
@@ -346,6 +354,7 @@ export const coderabbitActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_role",
+    operationType: "read",
     description: "Get details for one CodeRabbit built-in or Enterprise custom role.",
     inputSchema: s.object(
       "The input payload for getting a CodeRabbit role.",
@@ -361,6 +370,7 @@ export const coderabbitActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_role",
+    operationType: "write",
     description: "Create a CodeRabbit Enterprise custom role.",
     inputSchema: s.object("The input payload for creating a CodeRabbit custom role.", createRoleFields, {
       optional: ["orgId", "description", "isDefault", "duplicateFrom", "permissions"],
@@ -369,6 +379,7 @@ export const coderabbitActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_role",
+    operationType: "write",
     description: "Update a CodeRabbit Enterprise custom role.",
     inputSchema: s.object("The input payload for updating a CodeRabbit custom role.", updateRoleFields, {
       optional: ["orgId", "name", "description", "isDefault", "permissions"],
@@ -377,6 +388,7 @@ export const coderabbitActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_role",
+    operationType: "destructive",
     description: "Delete a CodeRabbit Enterprise custom role when it is not assigned to users.",
     inputSchema: s.object(
       "The input payload for deleting a CodeRabbit custom role.",
@@ -392,6 +404,7 @@ export const coderabbitActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_role_permissions",
+    operationType: "read",
     description: "List valid CodeRabbit role permission resource identifiers and access types for custom roles.",
     inputSchema: s.object(
       "The input payload for listing CodeRabbit role permission options.",

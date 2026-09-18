@@ -65,6 +65,7 @@ const teamMutationFields = {
 export const asanaTeamActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_team",
+    operationType: "write",
     description: "Create an Asana team within an organization.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -82,6 +83,7 @@ export const asanaTeamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_team",
+    operationType: "read",
     description: "Get an Asana team by gid.",
     requiredScopes: ["teams:read"],
     inputSchema: s.object(
@@ -98,6 +100,7 @@ export const asanaTeamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_team",
+    operationType: "write",
     description: "Update an existing Asana team.",
     requiredScopes: [],
     inputSchema: (() => {
@@ -119,6 +122,7 @@ export const asanaTeamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workspace_teams",
+    operationType: "read",
     description: "List teams in an Asana organization workspace.",
     requiredScopes: ["teams:read"],
     inputSchema: s.object(
@@ -134,6 +138,7 @@ export const asanaTeamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_user_teams",
+    operationType: "read",
     description: "List the teams to which an Asana user belongs in an organization.",
     requiredScopes: ["teams:read"],
     inputSchema: s.object(
@@ -150,6 +155,7 @@ export const asanaTeamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_team_user",
+    operationType: "write",
     description: "Add an existing organization user to an Asana team.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -167,6 +173,7 @@ export const asanaTeamActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_team_user",
+    operationType: "destructive",
     description: "Remove a user from an Asana team.",
     requiredScopes: [],
     inputSchema: s.object(

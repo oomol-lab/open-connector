@@ -1,4 +1,4 @@
-import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
+import type { ActionDefinition, ActionOperationType, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
@@ -39,28 +39,32 @@ const applicationInput = s.object({ uuid: uuidSchema });
 
 function action(
   name: string,
+  operationType: ActionOperationType,
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): ActionDefinition {
-  return defineProviderAction(service, { name, description, inputSchema, outputSchema });
+  return defineProviderAction(service, { name, operationType, description, inputSchema, outputSchema });
 }
 
 export const coolifyActions: ActionDefinition[] = [
   action(
     "list_applications",
+    "read",
     "List applications available to the connected Coolify team.",
     s.object({ tag: s.optional(s.string("Only include applications with this tag.")) }),
     s.object({ applications: s.array("The matching Coolify applications.", applicationSchema) }),
   ),
   action(
     "get_application",
+    "read",
     "Get one Coolify application by UUID.",
     applicationInput,
     s.object({ application: applicationSchema }),
   ),
   action(
     "get_application_logs",
+    "read",
     "Get recent logs for a Coolify application.",
     s.object({
       uuid: uuidSchema,
@@ -73,6 +77,7 @@ export const coolifyActions: ActionDefinition[] = [
   ),
   action(
     "start_application",
+    "write",
     "Start a Coolify application and queue its deployment.",
     s.object({
       uuid: uuidSchema,
@@ -85,6 +90,7 @@ export const coolifyActions: ActionDefinition[] = [
   ),
   action(
     "stop_application",
+    "destructive",
     "Stop a Coolify application.",
     s.object({
       uuid: uuidSchema,
@@ -94,21 +100,24 @@ export const coolifyActions: ActionDefinition[] = [
     }),
     messageSchema,
   ),
-  action("restart_application", "Restart a Coolify application.", applicationInput, messageSchema),
+  action("restart_application", "write", "Restart a Coolify application.", applicationInput, messageSchema),
   action(
     "list_deployments",
+    "read",
     "List deployments currently running in Coolify.",
     emptyInput,
     s.object({ deployments: s.array("The running Coolify deployments.", deploymentSchema) }),
   ),
   action(
     "get_deployment",
+    "read",
     "Get a Coolify deployment by UUID.",
     s.object({ uuid: s.nonWhitespaceString("The Coolify deployment UUID.") }),
     s.object({ deployment: deploymentSchema }),
   ),
   action(
     "deploy_resource",
+    "write",
     "Queue a deployment for one Coolify resource UUID.",
     s.object({
       uuid: uuidSchema,

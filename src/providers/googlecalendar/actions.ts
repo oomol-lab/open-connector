@@ -15,6 +15,7 @@ const service = "googlecalendar";
 
 interface GooglecalendarActionSource {
   name: GooglecalendarActionName;
+  readonly operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -261,6 +262,7 @@ const listEventsInputProperties = {
 const actions: GooglecalendarActionSource[] = [
   action(
     "list_calendars",
+    "read",
     "List the current user's Google Calendar list entries.",
     googlecalendarReadScopes,
     input({
@@ -275,6 +277,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "get_calendar_list_entry",
+    "read",
     "Fetch one Google Calendar list entry by calendar ID.",
     googlecalendarReadScopes,
     calendarIdInput(),
@@ -282,6 +285,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "add_calendar_to_list",
+    "write",
     "Add a calendar to the current user's Google Calendar list.",
     googlecalendarCalendarsWriteScopes,
     calendarIdInput(),
@@ -289,6 +293,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "update_calendar_list_entry",
+    "destructive",
     "Replace writable fields on a Google Calendar list entry.",
     googlecalendarCalendarsWriteScopes,
     input({ calendarId, entry: calendarListEntryWritable }, ["calendarId", "entry"]),
@@ -296,6 +301,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "patch_calendar_list_entry",
+    "write",
     "Patch writable fields on a Google Calendar list entry.",
     googlecalendarCalendarsWriteScopes,
     input({ calendarId, entry: calendarListEntryWritable }, ["calendarId", "entry"]),
@@ -303,6 +309,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "remove_calendar_from_list",
+    "destructive",
     "Remove a calendar from the current user's Calendar list.",
     googlecalendarCalendarsWriteScopes,
     calendarIdInput(),
@@ -310,6 +317,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "get_calendar",
+    "read",
     "Fetch one Google Calendar resource by ID.",
     googlecalendarReadScopes,
     calendarIdInput(),
@@ -317,6 +325,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "create_calendar",
+    "write",
     "Create a Google Calendar.",
     googlecalendarCalendarsWriteScopes,
     calendarWritable,
@@ -324,6 +333,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "update_calendar",
+    "destructive",
     "Replace writable fields on a Google Calendar resource.",
     googlecalendarCalendarsWriteScopes,
     input({ calendarId, calendar: calendarWritable }, ["calendarId", "calendar"]),
@@ -331,6 +341,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "patch_calendar",
+    "write",
     "Patch writable fields on a Google Calendar resource.",
     googlecalendarCalendarsWriteScopes,
     input({ calendarId, calendar: calendarWritable }, ["calendarId", "calendar"]),
@@ -338,6 +349,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "delete_calendar",
+    "destructive",
     "Delete a Google Calendar.",
     googlecalendarCalendarsWriteScopes,
     calendarIdInput(),
@@ -345,6 +357,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "clear_calendar",
+    "destructive",
     "Clear all events from a Google Calendar.",
     googlecalendarCalendarsWriteScopes,
     calendarIdInput(),
@@ -352,6 +365,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "list_events",
+    "read",
     "List events from a Google Calendar.",
     googlecalendarReadScopes,
     input(listEventsInputProperties, ["calendarId"]),
@@ -359,6 +373,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "list_events_all_calendars",
+    "read",
     "List events across multiple Google Calendars and aggregate the result.",
     googlecalendarReadScopes,
     input(
@@ -393,6 +408,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "get_event",
+    "read",
     "Fetch one Google Calendar event.",
     googlecalendarReadScopes,
     calendarEventIdInput(),
@@ -400,6 +416,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "create_event",
+    "write",
     "Create a Google Calendar event.",
     googlecalendarEventsWriteScopes,
     input({ calendarId, event: eventCreate, sendUpdates }, ["calendarId", "event"]),
@@ -407,6 +424,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "update_event",
+    "destructive",
     "Replace writable fields on a Google Calendar event.",
     googlecalendarEventsWriteScopes,
     input({ calendarId, eventId, event: eventWritable, sendUpdates }, ["calendarId", "eventId", "event"]),
@@ -414,6 +432,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "patch_event",
+    "write",
     "Patch writable fields on a Google Calendar event.",
     googlecalendarEventsWriteScopes,
     input({ calendarId, eventId, event: eventWritable, sendUpdates }, ["calendarId", "eventId", "event"]),
@@ -421,6 +440,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "delete_event",
+    "destructive",
     "Delete a Google Calendar event.",
     googlecalendarEventsWriteScopes,
     input({ calendarId, eventId, sendUpdates }, ["calendarId", "eventId"]),
@@ -428,6 +448,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "import_event",
+    "write",
     "Import an event into Google Calendar without conferenceData or attachments.",
     googlecalendarEventsWriteScopes,
     input({ calendarId, event: eventImport }, ["calendarId", "event"]),
@@ -435,6 +456,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "move_event",
+    "destructive",
     "Move a Google Calendar event to another calendar.",
     googlecalendarEventsWriteScopes,
     input(
@@ -450,6 +472,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "list_event_instances",
+    "read",
     "List instances of a recurring Google Calendar event.",
     googlecalendarReadScopes,
     input(
@@ -470,6 +493,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "quick_add_event",
+    "write",
     "Create a Google Calendar event with natural language text.",
     googlecalendarEventsWriteScopes,
     input(
@@ -484,6 +508,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "sync_events",
+    "write",
     "Incrementally sync events from a Google Calendar.",
     googlecalendarReadScopes,
     input(listEventsInputProperties, ["calendarId"]),
@@ -491,6 +516,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "free_busy_query",
+    "read",
     "Query busy intervals for calendars and groups.",
     googlecalendarReadScopes,
     freeBusyInput(),
@@ -498,6 +524,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "find_free_slots",
+    "read",
     "Derive free slots from Google Calendar freeBusy data.",
     googlecalendarReadScopes,
     freeBusyInput(),
@@ -511,9 +538,17 @@ const actions: GooglecalendarActionSource[] = [
       { required: ["kind", "timeMin", "timeMax", "calendars"], description: "Derived free slots." },
     ),
   ),
-  action("get_colors", "Fetch the Google Calendar colors resource.", googlecalendarReadScopes, input({}), objectSchema),
+  action(
+    "get_colors",
+    "read",
+    "Fetch the Google Calendar colors resource.",
+    googlecalendarReadScopes,
+    input({}),
+    objectSchema,
+  ),
   action(
     "list_settings",
+    "read",
     "List Google Calendar settings.",
     googlecalendarSettingsReadScopes,
     input({
@@ -525,6 +560,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "get_setting",
+    "read",
     "Fetch one Google Calendar setting.",
     googlecalendarSettingsReadScopes,
     input({ settingId: nonEmptyStringWithDescription("Google Calendar setting ID.") }, ["settingId"]),
@@ -532,6 +568,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "list_acl",
+    "read",
     "List ACL rules for a Google Calendar.",
     googlecalendarAclReadScopes,
     input(
@@ -548,6 +585,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "get_acl_rule",
+    "read",
     "Fetch one ACL rule from a Google Calendar.",
     googlecalendarAclReadScopes,
     calendarRuleIdInput(),
@@ -555,6 +593,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "create_acl_rule",
+    "write",
     "Create an ACL rule on a Google Calendar.",
     googlecalendarAclWriteScopes,
     input({ calendarId, rule: aclRuleWritable }, ["calendarId", "rule"]),
@@ -562,6 +601,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "update_acl_rule",
+    "destructive",
     "Replace writable fields on a Google Calendar ACL rule.",
     googlecalendarAclWriteScopes,
     input({ calendarId, ruleId, rule: aclRuleWritable }, ["calendarId", "ruleId", "rule"]),
@@ -569,6 +609,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "patch_acl_rule",
+    "write",
     "Patch writable fields on a Google Calendar ACL rule.",
     googlecalendarAclWriteScopes,
     input({ calendarId, ruleId, rule: aclRuleWritable }, ["calendarId", "ruleId", "rule"]),
@@ -576,6 +617,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "delete_acl_rule",
+    "destructive",
     "Delete an ACL rule from a Google Calendar.",
     googlecalendarAclWriteScopes,
     calendarRuleIdInput(),
@@ -583,6 +625,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "find_event",
+    "read",
     "Search events in a Google Calendar using a query string.",
     googlecalendarReadScopes,
     input(
@@ -605,6 +648,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "add_attendee",
+    "write",
     "Add one attendee to a Google Calendar event without replacing existing guests.",
     googlecalendarEventsWriteScopes,
     input(
@@ -628,6 +672,7 @@ const actions: GooglecalendarActionSource[] = [
   ),
   action(
     "remove_attendee",
+    "destructive",
     "Remove one attendee from a Google Calendar event without replacing the remaining guests.",
     googlecalendarEventsWriteScopes,
     input(
@@ -686,6 +731,7 @@ export type GooglecalendarActionName =
 export const googlecalendarActions: ActionDefinition[] = actions.map((source) =>
   defineProviderAction(service, {
     name: source.name,
+    operationType: source.operationType,
     description: source.description,
     requiredScopes: source.requiredScopes,
     inputSchema: source.inputSchema,
@@ -695,12 +741,13 @@ export const googlecalendarActions: ActionDefinition[] = actions.map((source) =>
 
 function action(
   name: GooglecalendarActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   requiredScopes: string[],
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): GooglecalendarActionSource {
-  return { name, description, requiredScopes, inputSchema, outputSchema };
+  return { name, operationType, description, requiredScopes, inputSchema, outputSchema };
 }
 
 function input(properties: Record<string, JsonSchema>, required: string[] = []): JsonSchema {

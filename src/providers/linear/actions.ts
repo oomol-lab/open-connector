@@ -8,6 +8,7 @@ const service = "linear";
 
 interface LinearActionSource {
   name: LinearActionName;
+  readonly operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -42,6 +43,7 @@ const rawGraphqlResult = s.object(
 const actions: LinearActionSource[] = [
   action(
     "create_attachment",
+    "write",
     "Create or update an attachment for the specified Linear issue.",
     [linearIssuesCreateScope],
     input(
@@ -63,6 +65,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "create_comment_reaction",
+    "write",
     "Creates an emoji reaction for the specified Linear comment.",
     [linearWriteScope],
     input(
@@ -76,6 +79,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "create_linear_comment",
+    "write",
     "Creates a comment for the specified Linear issue.",
     [linearCommentsCreateScope],
     input(
@@ -89,6 +93,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "create_linear_issue",
+    "write",
     "Create a new Linear issue in the specified team and support fields such as project, person in charge, status, label, etc.",
     [linearIssuesCreateScope],
     input(issueCreateFields(), ["title", "team_id"]),
@@ -102,6 +107,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "create_linear_issue_relation",
+    "write",
     "Create a relationship between two Linear issues, such as blocks, related, or duplicate.",
     [linearWriteScope],
     input(
@@ -118,6 +124,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "create_linear_label",
+    "write",
     "Creates a new Linear issue label in the specified team.",
     [linearWriteScope],
     input(
@@ -139,6 +146,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "create_linear_project",
+    "write",
     "Create a new Linear project and associate one or more teams.",
     [linearWriteScope],
     input(projectCreateFields(), ["name", "team_ids"]),
@@ -146,6 +154,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "create_project_milestone",
+    "write",
     "Creates a project milestone for the specified Linear project.",
     [linearWriteScope],
     input(
@@ -162,6 +171,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "create_project_update",
+    "write",
     "Creates a project progress update for the specified Linear project.",
     [linearWriteScope],
     input(
@@ -183,6 +193,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "delete_linear_issue",
+    "destructive",
     "Delete the specified Linear issue.",
     [linearWriteScope],
     input({ issue_id: stringId }, ["issue_id"]),
@@ -190,6 +201,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "get_all_linear_teams",
+    "read",
     "Lists all Linear team basic information accessible with the current credentials.",
     [linearReadScope],
     input({}),
@@ -197,6 +209,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "get_attachment",
+    "read",
     "Retrieve a Linear attachment based on the issue and attachment ID or file name.",
     [linearReadScope],
     input(
@@ -211,6 +224,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "get_current_user",
+    "read",
     "Get the currently authenticated Linear user profile.",
     [linearReadScope],
     input({}),
@@ -218,6 +232,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "get_cycles_by_team_id",
+    "read",
     "Get all cycle information under the specified team.",
     [linearReadScope],
     input({ team_id: stringId }, ["team_id"]),
@@ -225,6 +240,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "get_issue_defaults",
+    "read",
     "Gets the default status and default estimate used when the specified team creates an issue.",
     [linearReadScope],
     input({ team_id: stringId }, ["team_id"]),
@@ -232,6 +248,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "get_linear_issue",
+    "read",
     "Get details of a Linear issue, including comments, attachments, subscribers, and underlying relationship fields.",
     [linearReadScope],
     input({ issue_id: stringId }, ["issue_id"]),
@@ -239,6 +256,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "get_linear_project",
+    "read",
     "Get the details of a Linear project, complete with team, members, and initiatives on demand.",
     [linearReadScope],
     input(
@@ -254,6 +272,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "list_issues_by_team_id",
+    "read",
     "List Linear issues by team, and support cursor paging and whether to include archived issues.",
     [linearReadScope],
     input(
@@ -269,6 +288,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "list_issue_drafts",
+    "read",
     "Lists issue drafts visible to the current user in Linear.",
     [linearReadScope],
     pagedInput(),
@@ -276,6 +296,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "list_linear_cycles",
+    "read",
     "Lists the Linear periods accessible by the current credential.",
     [linearReadScope],
     input({}),
@@ -283,6 +304,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "list_linear_issues",
+    "read",
     "Lists Linear issues accessible with current credentials, and supports filtering by project and person in charge.",
     [linearReadScope],
     input({
@@ -295,6 +317,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "list_linear_labels",
+    "read",
     "Lists Linear labels for a specified team or entire workspace.",
     [linearReadScope],
     input({ team_id: stringId }),
@@ -302,6 +325,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "list_linear_projects",
+    "read",
     "Lists Linear projects accessible with the current credentials.",
     [linearReadScope],
     input({}),
@@ -309,6 +333,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "list_linear_states",
+    "read",
     "Lists all workflow statuses for the specified team.",
     [linearReadScope],
     input({ team_id: stringId }, ["team_id"]),
@@ -316,6 +341,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "list_linear_teams",
+    "read",
     "Lists Linear teams accessible with current credentials, along with a list of members and projects.",
     [linearReadScope],
     input({ project_id: stringId }),
@@ -323,6 +349,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "list_linear_users",
+    "read",
     "List Linear users in the current workspace and support cursor paging.",
     [linearReadScope],
     pagedInput(),
@@ -330,6 +357,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "remove_issue_label",
+    "destructive",
     "Removes a label from the specified Linear issue.",
     [linearWriteScope],
     input({ issue_id: stringId, label_id: stringId }, ["issue_id", "label_id"]),
@@ -337,6 +365,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "remove_reaction",
+    "destructive",
     "Delete an existing Linear reaction.",
     [linearWriteScope],
     input({ reaction_id: stringId }, ["reaction_id"]),
@@ -344,6 +373,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "run_query",
+    "read",
     "Execute a read-only query directly against the Linear GraphQL API.",
     [linearReadScope],
     input({ query: s.string({ minLength: 1 }), variables: objectSchema }, ["query"]),
@@ -351,6 +381,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "run_mutation",
+    "destructive",
     "Perform a mutation directly on the Linear GraphQL API.",
     [linearWriteScope],
     input({ mutation: s.string({ minLength: 1 }), variables: objectSchema }, ["mutation"]),
@@ -358,6 +389,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "search_issues",
+    "read",
     "Retrieve issues through Linear's full-text search capabilities.",
     [linearReadScope],
     input(
@@ -373,6 +405,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "update_issue",
+    "write",
     "Update an existing Linear issue and support fields such as title, description, status, project, label, etc.",
     [linearWriteScope],
     input(issueUpdateFields(), ["issueId"]),
@@ -380,6 +413,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "update_linear_comment",
+    "write",
     "Update the text of an existing Linear comment.",
     [linearWriteScope],
     input({ comment_id: stringId, body: s.string({ minLength: 1 }) }, ["comment_id", "body"]),
@@ -387,6 +421,7 @@ const actions: LinearActionSource[] = [
   ),
   action(
     "update_linear_project",
+    "destructive",
     "Update an existing Linear project.",
     [linearWriteScope],
     input({ project_id: stringId, ...projectUpdateFields() }, ["project_id"]),
@@ -433,6 +468,7 @@ export type LinearActionName =
 export const linearActions: ActionDefinition[] = actions.map((source) =>
   defineProviderAction(service, {
     name: source.name,
+    operationType: source.operationType,
     description: source.description,
     requiredScopes: source.requiredScopes,
     inputSchema: source.inputSchema,
@@ -442,12 +478,13 @@ export const linearActions: ActionDefinition[] = actions.map((source) =>
 
 function action(
   name: LinearActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   requiredScopes: string[],
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): LinearActionSource {
-  return { name, description, requiredScopes, inputSchema, outputSchema };
+  return { name, operationType, description, requiredScopes, inputSchema, outputSchema };
 }
 
 function input(properties: Record<string, JsonSchema>, required: string[] = []): JsonSchema {

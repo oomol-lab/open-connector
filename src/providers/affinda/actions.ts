@@ -42,6 +42,7 @@ const nullablePageUrlSchema = s.nullable(s.string("A URL for another page of Aff
 export const affindaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_organizations",
+    operationType: "read",
     description: "List Affinda organizations available to the connected API key.",
     requiredScopes: [],
     inputSchema: s.object("The empty input payload for this Affinda action.", {}),
@@ -51,6 +52,7 @@ export const affindaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workspaces",
+    operationType: "read",
     description: "List Affinda workspaces in an organization.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -67,6 +69,7 @@ export const affindaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_document_types",
+    operationType: "read",
     description: "List Affinda document types available to the API key.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -83,6 +86,7 @@ export const affindaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_document_from_url",
+    operationType: "write",
     description: "Upload a document to Affinda from a URL and optionally wait for parsing results.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -134,6 +138,7 @@ export const affindaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_documents",
+    operationType: "read",
     description: "List Affinda documents with optional workflow and pagination filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -180,6 +185,7 @@ export const affindaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document",
+    operationType: "read",
     description: "Get one Affinda document by identifier.",
     requiredScopes: [],
     inputSchema: s.object(

@@ -78,6 +78,7 @@ const listCallsInput = s.object(
 export const ringoverActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_team",
+    operationType: "read",
     description:
       "Retrieve the Ringover team object with nested numbers, users, IVRs, conferences, tags, and groups allowed by the API key.",
     requiredScopes: [],
@@ -90,6 +91,7 @@ export const ringoverActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List Ringover call groups with offset pagination.",
     requiredScopes: [],
     inputSchema: paginatedInputSchema("Pagination parameters for listing Ringover groups."),
@@ -97,6 +99,7 @@ export const ringoverActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_group",
+    operationType: "read",
     description: "Get a Ringover call group by ID, optionally paginating its users array.",
     requiredScopes: [],
     inputSchema: paginatedObjectIdInput("Input for retrieving a Ringover group.", "groupId", "The Ringover group ID."),
@@ -108,6 +111,7 @@ export const ringoverActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Ringover users visible to the API key.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list Ringover users.", {}),
@@ -115,6 +119,7 @@ export const ringoverActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get a Ringover user by ID.",
     requiredScopes: [],
     inputSchema: objectIdInput("Input for retrieving a Ringover user.", "userId", "The Ringover user ID."),
@@ -126,6 +131,7 @@ export const ringoverActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_numbers",
+    operationType: "read",
     description: "List Ringover phone numbers with assignment-type filters.",
     requiredScopes: [],
     inputSchema: numberFiltersInput,
@@ -137,6 +143,7 @@ export const ringoverActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_number",
+    operationType: "read",
     description: "Get Ringover phone number details by E.164 number without the plus prefix.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a Ringover phone number.", {
@@ -150,6 +157,7 @@ export const ringoverActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_ivrs",
+    operationType: "read",
     description: "List Ringover IVR configurations visible to the API key.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list Ringover IVRs.", {}),
@@ -157,6 +165,7 @@ export const ringoverActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ivr",
+    operationType: "read",
     description: "Get a Ringover IVR by ID.",
     requiredScopes: [],
     inputSchema: objectIdInput("Input for retrieving a Ringover IVR.", "ivrId", "The Ringover IVR ID."),
@@ -168,6 +177,7 @@ export const ringoverActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List Ringover call tags.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list Ringover call tags.", {}),
@@ -175,6 +185,7 @@ export const ringoverActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tag",
+    operationType: "read",
     description: "Get a Ringover call tag by ID.",
     requiredScopes: [],
     inputSchema: objectIdInput("Input for retrieving a Ringover call tag.", "tagId", "The Ringover tag ID."),
@@ -186,6 +197,7 @@ export const ringoverActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_calls",
+    operationType: "read",
     description: "List terminated Ringover calls with optional date, pagination, and call type filters.",
     requiredScopes: [],
     inputSchema: listCallsInput,
@@ -197,6 +209,7 @@ export const ringoverActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_call",
+    operationType: "read",
     description: "Get Ringover call log entries for one call ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a Ringover call.", {

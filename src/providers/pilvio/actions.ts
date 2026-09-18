@@ -58,6 +58,7 @@ const billingAccount = s.object("A normalized Pilvio billing account.", {
 export const pilvioActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the authenticated Pilvio user profile.",
     inputSchema: s.object("Input parameters for retrieving the current Pilvio user.", {}),
     outputSchema: s.object("The normalized current Pilvio user response.", {
@@ -67,6 +68,7 @@ export const pilvioActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_locations",
+    operationType: "read",
     description: "List Pilvio data center locations available for resource operations.",
     inputSchema: s.object("Input parameters for listing Pilvio locations.", {}),
     outputSchema: s.object("The normalized Pilvio locations response.", {
@@ -76,6 +78,7 @@ export const pilvioActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_virtual_machines",
+    operationType: "read",
     description: "List Pilvio virtual machines, optionally scoped to a documented location slug.",
     inputSchema: s.object(
       "Input parameters for listing Pilvio virtual machines.",
@@ -91,6 +94,7 @@ export const pilvioActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_billing_accounts",
+    operationType: "read",
     description: "List Pilvio billing accounts attached to the authenticated user.",
     inputSchema: s.object(
       "Input parameters for listing Pilvio billing accounts.",
@@ -106,6 +110,7 @@ export const pilvioActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_billing_account",
+    operationType: "read",
     description: "Get one Pilvio billing account by numeric identifier.",
     inputSchema: s.object("Input parameters for retrieving one Pilvio billing account.", {
       billingAccountId: s.integer("The Pilvio billing account identifier.", { minimum: 1 }),

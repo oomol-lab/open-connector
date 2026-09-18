@@ -160,6 +160,7 @@ const updateSubmissionInputSchema = s.requireAnyProperty(
 export const formstackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_forms",
+    operationType: "read",
     description: "List Formstack forms with pagination, name search, sorting, and folder filtering.",
     requiredScopes: [],
     inputSchema: listFormsInputSchema,
@@ -170,6 +171,7 @@ export const formstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form",
+    operationType: "read",
     description: "Retrieve one Formstack form, optionally including its fields.",
     requiredScopes: [],
     inputSchema: getFormInputSchema,
@@ -177,6 +179,7 @@ export const formstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_form_fields",
+    operationType: "read",
     description: "List the fields defined on a Formstack form.",
     requiredScopes: [],
     inputSchema: s.object("The form whose fields should be listed.", { formId: formIdSchema }),
@@ -186,6 +189,7 @@ export const formstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_submissions",
+    operationType: "read",
     description: "List submissions for a Formstack form with pagination, time, keyword, and field-level filters.",
     requiredScopes: [],
     inputSchema: listSubmissionsInputSchema,
@@ -196,6 +200,7 @@ export const formstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_submission",
+    operationType: "read",
     description: "Retrieve one Formstack submission and its field data.",
     requiredScopes: [],
     inputSchema: getSubmissionInputSchema,
@@ -205,6 +210,7 @@ export const formstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_submission",
+    operationType: "write",
     description: "Create a submission for a Formstack form using field IDs and typed values.",
     requiredScopes: [],
     inputSchema: createSubmissionInputSchema,
@@ -214,6 +220,7 @@ export const formstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_submission",
+    operationType: "destructive",
     description: "Replace field values or metadata on an existing Formstack submission.",
     requiredScopes: [],
     inputSchema: updateSubmissionInputSchema,
@@ -223,6 +230,7 @@ export const formstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_submission",
+    operationType: "destructive",
     description: "Permanently delete a Formstack submission and its associated data.",
     requiredScopes: [],
     inputSchema: s.object("The submission to delete.", { submissionId: submissionIdSchema }),

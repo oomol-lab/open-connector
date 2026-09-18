@@ -44,6 +44,7 @@ const listOutputSchema = s.requiredObject("A page of Instabot users.", {
 export const instabotActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_user",
+    operationType: "write",
     description: "Create a registered user in Instabot.",
     inputSchema: s.object(
       "The Instabot user fields used for creation.",
@@ -66,6 +67,7 @@ export const instabotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get one Instabot user by object ID.",
     inputSchema: s.object(
       "The input for retrieving one Instabot user.",
@@ -79,6 +81,7 @@ export const instabotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Instabot users with pagination, sorting, and optional related resources.",
     inputSchema: s.object("The input for listing Instabot users.", listOptions, {
       optional: ["limit", "skip", "orderBy", "resolve", "getTotalCount"],
@@ -87,6 +90,7 @@ export const instabotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_updated_users",
+    operationType: "read",
     description: "List Instabot users changed since an ISO-8601 timestamp.",
     inputSchema: s.object(
       "The input for listing recently updated Instabot users.",
@@ -100,6 +104,7 @@ export const instabotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_user",
+    operationType: "write",
     description: "Update writable fields on an Instabot user.",
     inputSchema: s.object(
       "The Instabot user fields to update.",
@@ -121,6 +126,7 @@ export const instabotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_user",
+    operationType: "destructive",
     description: "Soft-delete an Instabot user.",
     inputSchema: s.requiredObject("The input for deleting an Instabot user.", {
       userId: userIdSchema,
@@ -129,6 +135,7 @@ export const instabotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "restore_user",
+    operationType: "write",
     description: "Restore a previously deleted Instabot user.",
     inputSchema: s.requiredObject("The input for restoring an Instabot user.", {
       userId: userIdSchema,

@@ -32,6 +32,7 @@ export function createFeishuImUserActions(service: string): readonly ActionDefin
   return [
     defineProviderAction(service, {
       name: "list_chats",
+      operationType: "read",
       description: "List Feishu chats visible to the authorized user.",
       requiredScopes: ["im:chat:read"],
       providerPermissions: ["im:chat:read"],
@@ -51,6 +52,7 @@ export function createFeishuImUserActions(service: string): readonly ActionDefin
     }),
     defineProviderAction(service, {
       name: "search_chats",
+      operationType: "read",
       description: "Search Feishu chats visible to the authorized user by name.",
       requiredScopes: ["im:chat:read"],
       providerPermissions: ["im:chat:read"],
@@ -70,6 +72,7 @@ export function createFeishuImUserActions(service: string): readonly ActionDefin
     }),
     defineProviderAction(service, {
       name: "get_chat",
+      operationType: "read",
       description: "Get the metadata of one Feishu chat visible to the authorized user.",
       requiredScopes: ["im:chat:read"],
       providerPermissions: ["im:chat:read"],
@@ -95,6 +98,7 @@ export function createFeishuImUserActions(service: string): readonly ActionDefin
     }),
     defineProviderAction(service, {
       name: "list_chat_members",
+      operationType: "read",
       description: "List members of one Feishu chat visible to the authorized user.",
       requiredScopes: ["im:chat.members:read"],
       providerPermissions: ["im:chat.members:read"],
@@ -118,6 +122,7 @@ export function createFeishuImUserActions(service: string): readonly ActionDefin
     }),
     defineProviderAction(service, {
       name: "list_messages",
+      operationType: "read",
       description: "List messages from one Feishu chat or thread with user-identity history permissions.",
       requiredScopes: [
         "im:message:readonly",
@@ -150,6 +155,7 @@ export function createFeishuImUserActions(service: string): readonly ActionDefin
     }),
     defineProviderAction(service, {
       name: "reply_message",
+      operationType: "write",
       description: "Reply to a Feishu message as the authorized user, optionally inside the message thread.",
       requiredScopes: ["im:message.send_as_user", "im:message"],
       providerPermissions: ["im:message.send_as_user", "im:message"],

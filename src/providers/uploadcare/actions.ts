@@ -65,6 +65,7 @@ const uploadcareProjectSchema = s.looseObject("The Uploadcare project details.",
 
 const getProjectInfoAction = defineProviderAction(service, {
   name: "get_project_info",
+  operationType: "read",
   description: "Get Uploadcare project details for the connected public key.",
   inputSchema: s.object("Input for retrieving Uploadcare project details.", {}),
   outputSchema: s.object(
@@ -78,6 +79,7 @@ const getProjectInfoAction = defineProviderAction(service, {
 
 const listFilesAction = defineProviderAction(service, {
   name: "list_files",
+  operationType: "read",
   description: "List Uploadcare files with documented pagination and filters.",
   inputSchema: s.object(
     "Input for listing Uploadcare files.",
@@ -114,6 +116,7 @@ const listFilesAction = defineProviderAction(service, {
 
 const getFileInfoAction = defineProviderAction(service, {
   name: "get_file_info",
+  operationType: "read",
   description: "Get Uploadcare file metadata by UUID.",
   inputSchema: s.object(
     "Input for retrieving one Uploadcare file.",
@@ -134,6 +137,7 @@ const getFileInfoAction = defineProviderAction(service, {
 
 const storeFileAction = defineProviderAction(service, {
   name: "store_file",
+  operationType: "write",
   description: "Mark an Uploadcare file as permanently stored.",
   inputSchema: fileUuidInputSchema,
   outputSchema: s.object(
@@ -147,6 +151,7 @@ const storeFileAction = defineProviderAction(service, {
 
 const deleteFileAction = defineProviderAction(service, {
   name: "delete_file",
+  operationType: "destructive",
   description: "Remove an Uploadcare file from storage by UUID.",
   inputSchema: fileUuidInputSchema,
   outputSchema: s.object(
@@ -160,6 +165,7 @@ const deleteFileAction = defineProviderAction(service, {
 
 const listGroupsAction = defineProviderAction(service, {
   name: "list_groups",
+  operationType: "read",
   description: "List Uploadcare file groups with documented pagination.",
   inputSchema: s.object(
     "Input for listing Uploadcare groups.",
@@ -188,6 +194,7 @@ const listGroupsAction = defineProviderAction(service, {
 
 const getGroupInfoAction = defineProviderAction(service, {
   name: "get_group_info",
+  operationType: "read",
   description: "Get an Uploadcare file group by its group ID.",
   inputSchema: s.object(
     "Input for retrieving one Uploadcare group.",

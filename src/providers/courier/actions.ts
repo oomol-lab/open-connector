@@ -53,6 +53,7 @@ const addSubscriberSchema = s.object(
 
 const sendMessageAction = defineProviderAction(service, {
   name: "send_message",
+  operationType: "write",
   description: "Send a Courier message to one or more recipients.",
   inputSchema: s.object(
     "The input payload for sending a Courier message.",
@@ -72,6 +73,7 @@ const sendMessageAction = defineProviderAction(service, {
 
 const getProfileAction = defineProviderAction(service, {
   name: "get_profile",
+  operationType: "read",
   description: "Return a Courier user profile and preferences by user ID.",
   inputSchema: s.object("The input payload for reading a Courier profile.", {
     userId: userIdSchema,
@@ -86,6 +88,7 @@ const getProfileAction = defineProviderAction(service, {
 
 const mergeProfileAction = defineProviderAction(service, {
   name: "merge_profile",
+  operationType: "write",
   description: "Merge values into a Courier user profile or create it when missing.",
   inputSchema: s.object("The input payload for merging a Courier profile.", {
     userId: userIdSchema,
@@ -100,6 +103,7 @@ const mergeProfileAction = defineProviderAction(service, {
 
 const deleteProfileAction = defineProviderAction(service, {
   name: "delete_profile",
+  operationType: "destructive",
   description: "Delete a Courier user profile by user ID.",
   inputSchema: s.object("The input payload for deleting a Courier profile.", {
     userId: userIdSchema,
@@ -113,6 +117,7 @@ const deleteProfileAction = defineProviderAction(service, {
 
 const listListsAction = defineProviderAction(service, {
   name: "list_lists",
+  operationType: "read",
   description: "List Courier subscription lists with optional cursor and pattern filters.",
   inputSchema: s.object(
     "The input payload for listing Courier subscription lists.",
@@ -131,6 +136,7 @@ const listListsAction = defineProviderAction(service, {
 
 const getListAction = defineProviderAction(service, {
   name: "get_list",
+  operationType: "read",
   description: "Return a Courier subscription list by list ID.",
   inputSchema: s.object("The input payload for reading a Courier subscription list.", {
     listId: listIdSchema,
@@ -143,6 +149,7 @@ const getListAction = defineProviderAction(service, {
 
 const upsertListAction = defineProviderAction(service, {
   name: "upsert_list",
+  operationType: "destructive",
   description: "Create or replace a Courier subscription list.",
   inputSchema: s.object(
     "The input payload for creating or replacing a Courier subscription list.",
@@ -162,6 +169,7 @@ const upsertListAction = defineProviderAction(service, {
 
 const deleteListAction = defineProviderAction(service, {
   name: "delete_list",
+  operationType: "destructive",
   description: "Delete a Courier subscription list by list ID.",
   inputSchema: s.object("The input payload for deleting a Courier subscription list.", {
     listId: listIdSchema,
@@ -175,6 +183,7 @@ const deleteListAction = defineProviderAction(service, {
 
 const listListSubscriptionsAction = defineProviderAction(service, {
   name: "list_list_subscriptions",
+  operationType: "read",
   description: "List subscriptions for a Courier subscription list.",
   inputSchema: s.object(
     "The input payload for listing Courier list subscriptions.",
@@ -194,6 +203,7 @@ const listListSubscriptionsAction = defineProviderAction(service, {
 
 const addListSubscribersAction = defineProviderAction(service, {
   name: "add_list_subscribers",
+  operationType: "write",
   description: "Add Courier recipients to a subscription list without replacing existing members.",
   inputSchema: s.object("The input payload for adding Courier list subscribers.", {
     listId: listIdSchema,
@@ -210,6 +220,7 @@ const addListSubscribersAction = defineProviderAction(service, {
 
 const unsubscribeListSubscriberAction = defineProviderAction(service, {
   name: "unsubscribe_list_subscriber",
+  operationType: "destructive",
   description: "Unsubscribe one Courier user profile from a subscription list.",
   inputSchema: s.object("The input payload for unsubscribing a Courier list subscriber.", {
     listId: listIdSchema,

@@ -42,6 +42,7 @@ const registrationSchema = s.looseObject("Eventee registration.", {
 export const eventeeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_event_content",
+    operationType: "read",
     description: "Retrieve the event content export, including halls, sessions, pauses, speakers, and tracks.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("Eventee content export response.", {
@@ -57,6 +58,7 @@ export const eventeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_reviews",
+    operationType: "read",
     description: "List all session reviews submitted by attendees for the current Eventee event.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("Eventee review list response.", {
@@ -65,6 +67,7 @@ export const eventeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List all attendee groups configured for the current Eventee event.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("Eventee group list response.", {
@@ -73,6 +76,7 @@ export const eventeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_participants",
+    operationType: "read",
     description: "List all participants currently registered in the current Eventee event.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("Eventee participant list response.", {
@@ -81,6 +85,7 @@ export const eventeeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_registrations",
+    operationType: "read",
     description: "List all pending or completed registrations for the current Eventee event.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("Eventee registration list response.", {

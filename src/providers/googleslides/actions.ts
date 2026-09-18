@@ -8,6 +8,7 @@ const service = "googleslides";
 
 interface GoogleSlidesActionSource {
   name: GoogleSlidesActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -121,6 +122,7 @@ const copyPresentationOutput = s.object(
 const actions: GoogleSlidesActionSource[] = [
   action(
     "create_presentation",
+    "write",
     "Create a blank Google Slides presentation. Optional locale, page size, and presentation ID values are forwarded when provided.",
     googleSlidesWriteScopes,
     input({
@@ -133,6 +135,7 @@ const actions: GoogleSlidesActionSource[] = [
   ),
   action(
     "presentations_get",
+    "read",
     "Retrieve a Google Slides presentation by presentation ID, or search Google Drive by exact presentation title first and then fetch the presentation.",
     googleSlidesReadScopes,
     presentationReferenceWithFields,
@@ -140,6 +143,7 @@ const actions: GoogleSlidesActionSource[] = [
   ),
   action(
     "presentations_batch_update",
+    "destructive",
     "Apply raw Google Slides batchUpdate requests to a presentation.",
     googleSlidesWriteScopes,
     input(
@@ -154,6 +158,7 @@ const actions: GoogleSlidesActionSource[] = [
   ),
   action(
     "presentations_pages_get",
+    "read",
     "Retrieve a specific page from a Google Slides presentation, including its page elements and page-specific properties.",
     googleSlidesReadScopes,
     pageReference,
@@ -161,6 +166,7 @@ const actions: GoogleSlidesActionSource[] = [
   ),
   action(
     "get_page_thumbnail2",
+    "read",
     "Generate a thumbnail for a Google Slides page. Returns a temporary content URL plus thumbnail dimensions when Google provides them.",
     googleSlidesReadScopes,
     pageReferenceWithThumbnail,
@@ -168,6 +174,7 @@ const actions: GoogleSlidesActionSource[] = [
   ),
   action(
     "presentations_pages_get_thumbnail",
+    "read",
     "Compatibility alias for get_page_thumbnail2. Generates a thumbnail for a Google Slides page.",
     googleSlidesReadScopes,
     pageReferenceWithThumbnail,
@@ -175,6 +182,7 @@ const actions: GoogleSlidesActionSource[] = [
   ),
   action(
     "presentations_copy_from_template",
+    "write",
     "Copy an existing Google Slides presentation through Google Drive so the new presentation preserves the original themes, masters, and layouts.",
     googleSlidesWriteScopes,
     input(
@@ -207,6 +215,7 @@ export type GoogleSlidesActionName =
 
 function action(
   name: GoogleSlidesActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   requiredScopes: string[],
   inputSchema: JsonSchema,
@@ -214,6 +223,7 @@ function action(
 ): GoogleSlidesActionSource {
   return {
     name,
+    operationType,
     description,
     requiredScopes,
     inputSchema,

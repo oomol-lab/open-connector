@@ -253,6 +253,7 @@ const updateRobotCookiesInputSchema = s.actionInput(
 export const browseAiActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_robots",
+    operationType: "read",
     description: "List the Browse AI robots available to the connected API key.",
     inputSchema: s.actionInput({}, [], "The input for listing Browse AI robots."),
     outputSchema: s.actionOutput(
@@ -267,6 +268,7 @@ export const browseAiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_robot",
+    operationType: "read",
     description: "Retrieve one Browse AI robot and its input parameter definitions by robot ID.",
     followUpActions: ["browse_ai.run_robot_task"],
     inputSchema: getRobotInputSchema,
@@ -279,6 +281,7 @@ export const browseAiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_robot_task",
+    operationType: "write",
     description: "Start one Browse AI robot task with optional inputParameters overrides.",
     followUpActions: ["browse_ai.get_robot_task"],
     inputSchema: runRobotTaskInputSchema,
@@ -291,6 +294,7 @@ export const browseAiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_robot_task",
+    operationType: "read",
     description: "Retrieve one Browse AI robot task and its captured data by robot and task IDs.",
     inputSchema: getRobotTaskInputSchema,
     outputSchema: s.actionOutput(
@@ -302,6 +306,7 @@ export const browseAiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_robot_tasks",
+    operationType: "read",
     description: "List Browse AI robot tasks with pagination and status filters.",
     inputSchema: listRobotTasksInputSchema,
     outputSchema: s.actionOutput(
@@ -318,6 +323,7 @@ export const browseAiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_robot_cookies",
+    operationType: "destructive",
     description: "Update the cookies stored on one Browse AI robot.",
     inputSchema: updateRobotCookiesInputSchema,
     outputSchema: s.actionOutput(

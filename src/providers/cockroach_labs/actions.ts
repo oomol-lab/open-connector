@@ -78,6 +78,7 @@ const sqlUserSchema = s.looseObject("CockroachDB Cloud SQL user record.", {
 export const cockroachLabsActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_organization",
+    operationType: "read",
     description: "Get information about the caller's CockroachDB Cloud organization.",
     inputSchema: s.object("Input payload for getting CockroachDB Cloud organization information.", {}),
     outputSchema: s.object("CockroachDB Cloud organization response.", {
@@ -86,6 +87,7 @@ export const cockroachLabsActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_clusters",
+    operationType: "read",
     description: "List CockroachDB Cloud clusters in the organization.",
     inputSchema: s.object(
       "Input parameters for listing CockroachDB Cloud clusters.",
@@ -105,6 +107,7 @@ export const cockroachLabsActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_cluster",
+    operationType: "read",
     description: "Get extended information about a CockroachDB Cloud cluster.",
     inputSchema: s.object(
       "Input parameters for getting a CockroachDB Cloud cluster.",
@@ -119,6 +122,7 @@ export const cockroachLabsActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_available_regions",
+    operationType: "read",
     description: "List cloud regions available for new CockroachDB Cloud clusters and nodes.",
     inputSchema: s.object(
       "Input parameters for listing CockroachDB Cloud available regions.",
@@ -136,6 +140,7 @@ export const cockroachLabsActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_cluster_nodes",
+    operationType: "read",
     description: "List nodes for a CockroachDB Cloud cluster.",
     inputSchema: s.object(
       "Input parameters for listing CockroachDB Cloud cluster nodes.",
@@ -153,6 +158,7 @@ export const cockroachLabsActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_databases",
+    operationType: "read",
     description: "List databases for a CockroachDB Cloud cluster.",
     inputSchema: s.object(
       "Input parameters for listing CockroachDB Cloud databases.",
@@ -169,6 +175,7 @@ export const cockroachLabsActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sql_users",
+    operationType: "read",
     description: "List SQL users for a CockroachDB Cloud cluster.",
     inputSchema: s.object(
       "Input parameters for listing CockroachDB Cloud SQL users.",

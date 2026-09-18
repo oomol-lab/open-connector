@@ -60,6 +60,7 @@ const contactOutputSchema = s.actionOutput(
 export const highLevelActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get a HighLevel contact by contact ID.",
     inputSchema: s.actionInput(
       { contactId: contactIdSchema },
@@ -70,12 +71,14 @@ export const highLevelActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a HighLevel contact in a location.",
     inputSchema: s.actionInput({ fields: contactFieldsSchema }, ["fields"], "Input for creating a HighLevel contact."),
     outputSchema: contactOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update a HighLevel contact by contact ID.",
     inputSchema: s.actionInput(
       {
@@ -89,6 +92,7 @@ export const highLevelActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete a HighLevel contact by contact ID.",
     inputSchema: s.actionInput(
       { contactId: contactIdSchema },
@@ -106,6 +110,7 @@ export const highLevelActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_contacts",
+    operationType: "read",
     description: "Search HighLevel contacts in a location.",
     inputSchema: s.actionInput(
       {

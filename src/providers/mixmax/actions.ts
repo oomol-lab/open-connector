@@ -174,6 +174,7 @@ const searchSequenceRecipientsInputSchema = s.object(
 
 const listSequencesAction = defineProviderAction(service, {
   name: "list_sequences",
+  operationType: "read",
   description: "List Mixmax sequences with optional name, folder, expansion, and cursor filters.",
   inputSchema: listSequencesInputSchema,
   outputSchema: s.looseRequiredObject(
@@ -191,6 +192,7 @@ const listSequencesAction = defineProviderAction(service, {
 
 const listSequenceRecipientsAction = defineProviderAction(service, {
   name: "list_sequence_recipients",
+  operationType: "read",
   description: "List activated recipients for one Mixmax sequence with offset pagination.",
   inputSchema: listSequenceRecipientsInputSchema,
   outputSchema: s.array("The activated Mixmax sequence recipients returned by the API.", sequenceRecipientSchema),
@@ -198,6 +200,7 @@ const listSequenceRecipientsAction = defineProviderAction(service, {
 
 const addSequenceRecipientsAction = defineProviderAction(service, {
   name: "add_sequence_recipients",
+  operationType: "write",
   description: "Add recipients to a Mixmax sequence and optionally schedule them or keep them in draft.",
   inputSchema: s.object(
     "The input payload for adding recipients to a Mixmax sequence.",
@@ -219,6 +222,7 @@ const addSequenceRecipientsAction = defineProviderAction(service, {
 
 const searchSequenceRecipientsAction = defineProviderAction(service, {
   name: "search_sequence_recipients",
+  operationType: "read",
   description:
     "Search Mixmax sequence recipients by query text or exact email addresses, optionally within one sequence.",
   inputSchema: searchSequenceRecipientsInputSchema,

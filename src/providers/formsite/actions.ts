@@ -238,6 +238,7 @@ const deleteWebhookInputSchema = s.object(
 export const formsiteActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_forms",
+    operationType: "read",
     description: "List all forms available in the connected Formsite account user directory.",
     requiredScopes: [],
     inputSchema: listFormsInputSchema,
@@ -247,6 +248,7 @@ export const formsiteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form",
+    operationType: "read",
     description: "Get one Formsite form by its form directory identifier.",
     requiredScopes: [],
     inputSchema: formInputSchema,
@@ -256,6 +258,7 @@ export const formsiteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form_items",
+    operationType: "read",
     description: "List the item definitions for one Formsite form.",
     requiredScopes: [],
     inputSchema: getFormItemsInputSchema,
@@ -265,6 +268,7 @@ export const formsiteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form_results",
+    operationType: "read",
     description:
       "List results for one Formsite form with pagination, date windows, result ID windows, and upstream search filters.",
     requiredScopes: [],
@@ -275,6 +279,7 @@ export const formsiteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_webhooks",
+    operationType: "read",
     description: "List all webhooks configured for one Formsite form.",
     requiredScopes: [],
     inputSchema: listWebhooksInputSchema,
@@ -284,6 +289,7 @@ export const formsiteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_webhook",
+    operationType: "write",
     description: "Create a new Formsite webhook, or update the existing webhook that matches the same URL.",
     requiredScopes: [],
     inputSchema: upsertWebhookInputSchema,
@@ -293,6 +299,7 @@ export const formsiteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_webhook",
+    operationType: "destructive",
     description: "Delete one Formsite webhook from a form by its destination URL.",
     requiredScopes: [],
     inputSchema: deleteWebhookInputSchema,

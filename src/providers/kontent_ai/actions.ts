@@ -63,6 +63,7 @@ const listOutputSchema = (description: string, key: "items" | "types" | "languag
 export const kontentAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_content_items",
+    operationType: "read",
     description: "List content items in a Kontent.ai environment.",
     requiredScopes: [],
     inputSchema: listInputSchema("Input parameters for listing Kontent.ai content items."),
@@ -70,6 +71,7 @@ export const kontentAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_content_item",
+    operationType: "read",
     description: "Retrieve one content item from a Kontent.ai environment.",
     requiredScopes: [],
     inputSchema: getByIdentifierInputSchema,
@@ -80,6 +82,7 @@ export const kontentAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_content_types",
+    operationType: "read",
     description: "List content types in a Kontent.ai environment.",
     requiredScopes: [],
     inputSchema: listInputSchema("Input parameters for listing Kontent.ai content types."),
@@ -87,6 +90,7 @@ export const kontentAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_content_type",
+    operationType: "read",
     description: "Retrieve one content type from a Kontent.ai environment.",
     requiredScopes: [],
     inputSchema: getByIdentifierInputSchema,
@@ -97,6 +101,7 @@ export const kontentAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_languages",
+    operationType: "read",
     description: "List languages in a Kontent.ai environment.",
     requiredScopes: [],
     inputSchema: listInputSchema("Input parameters for listing Kontent.ai languages."),
@@ -104,6 +109,7 @@ export const kontentAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_language",
+    operationType: "read",
     description: "Retrieve one language from a Kontent.ai environment.",
     requiredScopes: [],
     inputSchema: getByIdentifierInputSchema,

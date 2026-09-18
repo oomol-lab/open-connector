@@ -13,6 +13,7 @@ const workingHourSchema = s.looseObject("A Talenox working hour object.");
 export const talenoxActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_company_settings",
+    operationType: "read",
     description: "Retrieve the current Talenox company settings visible to the API token.",
     inputSchema: s.actionInput({}, [], "Input for retrieving Talenox company settings."),
     outputSchema: s.actionOutput(
@@ -22,6 +23,7 @@ export const talenoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_branches",
+    operationType: "read",
     description: "List all Talenox branches for the connected company.",
     inputSchema: s.actionInput({}, [], "Input for listing Talenox branches."),
     outputSchema: s.actionOutput(
@@ -31,6 +33,7 @@ export const talenoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_branch",
+    operationType: "read",
     description: "Retrieve one Talenox branch by branch ID.",
     inputSchema: s.actionInput(
       { id: s.positiveInteger("The Talenox branch ID.") },
@@ -41,6 +44,7 @@ export const talenoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_employees",
+    operationType: "read",
     description: "List all Talenox employees for the connected company.",
     inputSchema: s.actionInput({}, [], "Input for listing Talenox employees."),
     outputSchema: s.actionOutput(
@@ -50,6 +54,7 @@ export const talenoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_employee",
+    operationType: "read",
     description: "Retrieve one Talenox employee by employee ID.",
     inputSchema: s.actionInput(
       { id: s.positiveInteger("The Talenox employee ID.") },
@@ -60,6 +65,7 @@ export const talenoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_working_days",
+    operationType: "read",
     description: "List all Talenox working day configurations.",
     inputSchema: s.actionInput({}, [], "Input for listing Talenox working days."),
     outputSchema: s.actionOutput(
@@ -69,6 +75,7 @@ export const talenoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_working_day",
+    operationType: "read",
     description: "Retrieve one Talenox working day configuration by ID.",
     inputSchema: s.actionInput(
       { id: s.positiveInteger("The Talenox working day ID.") },
@@ -79,6 +86,7 @@ export const talenoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_working_hours",
+    operationType: "read",
     description: "List all Talenox working hour configurations.",
     inputSchema: s.actionInput({}, [], "Input for listing Talenox working hours."),
     outputSchema: s.actionOutput(
@@ -88,6 +96,7 @@ export const talenoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_working_hour",
+    operationType: "read",
     description: "Retrieve one Talenox working hour configuration by ID.",
     inputSchema: s.actionInput(
       { id: s.positiveInteger("The Talenox working hour ID.") },

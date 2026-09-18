@@ -31,12 +31,14 @@ const uuidFilter = (description: string): JsonSchema => s.array(description, uui
 export const snykActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_self",
+    operationType: "read",
     description: "Fetch the Snyk principal associated with the configured API token.",
     inputSchema: s.actionInput({}, [], "Input for fetching the current Snyk principal."),
     outputSchema: s.actionOutput({ principal: resource, raw }, "The current Snyk principal response."),
   }),
   defineProviderAction(service, {
     name: "list_orgs",
+    operationType: "read",
     description: "List Snyk organizations accessible to the configured API token.",
     inputSchema: s.actionInput(
       {
@@ -60,6 +62,7 @@ export const snykActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_org",
+    operationType: "read",
     description: "Fetch one Snyk organization by ID.",
     inputSchema: s.actionInput(
       { orgId: uuid("The Snyk organization ID.") },
@@ -73,6 +76,7 @@ export const snykActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Snyk projects in an organization with useful filters.",
     inputSchema: s.actionInput(
       {
@@ -133,6 +137,7 @@ export const snykActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Fetch one Snyk project by organization ID and project ID.",
     inputSchema: s.actionInput(
       {
@@ -152,6 +157,7 @@ export const snykActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_org_issues",
+    operationType: "read",
     description: "List Snyk issues in an organization with common filters.",
     inputSchema: s.actionInput(
       {

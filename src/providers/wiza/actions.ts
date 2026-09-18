@@ -37,24 +37,28 @@ function getByIdInputSchema(description: string) {
 export const wizaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_credits",
+    operationType: "read",
     description: "Get the remaining Wiza API credit balances for the connected account.",
     inputSchema: s.actionInput({}, [], "This Wiza action does not require any input."),
     outputSchema: wizaCreditsResponseSchema,
   }),
   defineProviderAction(service, {
     name: "get_individual_reveal",
+    operationType: "read",
     description: "Get the status and results of a Wiza individual reveal by ID.",
     inputSchema: getByIdInputSchema("Request parameters for retrieving a Wiza individual reveal."),
     outputSchema: wizaGenericResponseSchema,
   }),
   defineProviderAction(service, {
     name: "get_list",
+    operationType: "read",
     description: "Get the status and details of a Wiza list by ID.",
     inputSchema: getByIdInputSchema("Request parameters for retrieving a Wiza list."),
     outputSchema: wizaGenericResponseSchema,
   }),
   defineProviderAction(service, {
     name: "prospect_search",
+    operationType: "read",
     description: "Search Wiza prospects with a filters object.",
     inputSchema: s.actionInput(
       {
@@ -73,6 +77,7 @@ export const wizaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_individual_reveal",
+    operationType: "write",
     description: "Start a Wiza individual reveal for real-time single contact enrichment.",
     inputSchema: s.actionInput(
       {

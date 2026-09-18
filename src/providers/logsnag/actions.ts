@@ -79,6 +79,7 @@ const mutateInsightInputSchema = s.object(
 export const logsnagActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "publish_event",
+    operationType: "write",
     description: "Publish an event to a LogSnag project channel.",
     requiredScopes: [],
     inputSchema: publishEventInputSchema,
@@ -86,6 +87,7 @@ export const logsnagActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "identify_user",
+    operationType: "write",
     description: "Add or update key-value properties on a LogSnag user profile.",
     requiredScopes: [],
     inputSchema: identifyUserInputSchema,
@@ -93,6 +95,7 @@ export const logsnagActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "publish_insight",
+    operationType: "write",
     description: "Publish the latest value for a LogSnag real-time insight.",
     requiredScopes: [],
     inputSchema: publishInsightInputSchema,
@@ -100,6 +103,7 @@ export const logsnagActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "mutate_insight",
+    operationType: "write",
     description: "Increment or decrement an existing numeric LogSnag insight.",
     requiredScopes: [],
     inputSchema: mutateInsightInputSchema,

@@ -157,6 +157,7 @@ const userAclResource = looseResource(
 export const appleAdsAccountActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_me",
+    operationType: "read",
     description:
       "Read the user and organization the access token belongs to. It is the cheapest way to confirm the credential works and to learn the orgId the other account actions need.",
     requiredScopes: [],
@@ -166,6 +167,7 @@ export const appleAdsAccountActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_acls",
+    operationType: "read",
     description:
       "List every ad account the access token can reach and the roles the API user holds on each. Start here to discover the adAccountId values the ad-account-scoped actions need.",
     requiredScopes: [],
@@ -183,6 +185,7 @@ export const appleAdsAccountActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_org",
+    operationType: "read",
     description:
       "Read one organization by identifier, including the currency, time zone, payment model and system status its ad accounts inherit.",
     requiredScopes: [],
@@ -200,6 +203,7 @@ export const appleAdsAccountActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_advertiser_resources",
+    operationType: "read",
     description:
       "List the advertiser resources of one type that the organization can delegate to an ad account. Use the returned resourceId values in the delegations of create_ad_account and update_ad_account.",
     requiredScopes: [],
@@ -226,6 +230,7 @@ export const appleAdsAccountActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_ad_account",
+    operationType: "write",
     description:
       "Create an ad account under the organization the access token is bound to. The currency, time zone and payment model are inherited from the organization, and productFeatures is fixed at creation: an account authorized for the App Store can never run Apple Maps campaigns, or the other way around.",
     requiredScopes: [],
@@ -252,6 +257,7 @@ export const appleAdsAccountActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ad_account",
+    operationType: "read",
     description:
       "Read the full record of one ad account, including its delegated advertiser resources and the reasons it is not operational.",
     requiredScopes: [],
@@ -265,6 +271,7 @@ export const appleAdsAccountActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_ad_account",
+    operationType: "destructive",
     description:
       "Change the name or the delegated advertiser resources of one ad account. Only the fields you pass are changed, and the delegations array you pass replaces the stored one entirely. The currency, time zone, payment model, organization and productFeatures are fixed and cannot be updated.",
     requiredScopes: [],

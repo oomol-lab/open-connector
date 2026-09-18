@@ -269,6 +269,7 @@ function stringFieldOutput(outputKey: string, outputDescription: string): JsonSc
 export const ipinfoIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_ip_info",
+    operationType: "read",
     description:
       "Retrieve Lite IP information for a specific IP address or for the caller's current IP when no IP is provided.",
     inputSchema: getIpInfoInputSchema,
@@ -276,12 +277,14 @@ export const ipinfoIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_current_ip",
+    operationType: "read",
     description: "Retrieve the caller's current public IP address as plain text.",
     inputSchema: emptyInputSchema,
     outputSchema: stringFieldOutput("ip", "The caller's current public IP address."),
   }),
   defineProviderAction(service, {
     name: "get_current_ip_info",
+    operationType: "read",
     description:
       "Retrieve the full legacy IPinfo profile for the caller's current IP address, including location, ASN, company, privacy, carrier, abuse, and hosted domain data when available.",
     inputSchema: emptyInputSchema,
@@ -289,24 +292,28 @@ export const ipinfoIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_current_loc",
+    operationType: "read",
     description: "Retrieve the caller's current coordinates in latitude,longitude format.",
     inputSchema: emptyInputSchema,
     outputSchema: stringFieldOutput("location", "The coordinates returned by IPinfo in latitude,longitude format."),
   }),
   defineProviderAction(service, {
     name: "get_current_region",
+    operationType: "read",
     description: "Retrieve the caller's current region or state name.",
     inputSchema: emptyInputSchema,
     outputSchema: stringFieldOutput("region", "The current region or state name."),
   }),
   defineProviderAction(service, {
     name: "get_ip_by_ip",
+    operationType: "read",
     description: "Retrieve the requested IP address as plain text through the field filtering endpoint.",
     inputSchema: ipInputSchema,
     outputSchema: stringFieldOutput("ip", "The requested IP address as returned by IPinfo."),
   }),
   defineProviderAction(service, {
     name: "get_ip_info_by_ip",
+    operationType: "read",
     description:
       "Retrieve the full legacy IPinfo profile for a specific IP address, including location, ASN, company, privacy, carrier, abuse, and hosted domain data when available.",
     inputSchema: ipInputSchema,
@@ -314,12 +321,14 @@ export const ipinfoIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_location_by_ip",
+    operationType: "read",
     description: "Retrieve coordinates for a specific IP address in latitude,longitude format.",
     inputSchema: ipInputSchema,
     outputSchema: stringFieldOutput("location", "The coordinates returned by IPinfo in latitude,longitude format."),
   }),
   defineProviderAction(service, {
     name: "get_geo_by_ip",
+    operationType: "read",
     description:
       "Retrieve Lookup API geolocation data for a specific IP address, including city, region, country, coordinates, timezone, and postal metadata.",
     inputSchema: ipInputSchema,
@@ -327,54 +336,63 @@ export const ipinfoIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_city_by_ip",
+    operationType: "read",
     description: "Retrieve the city name for a specific IP address.",
     inputSchema: ipInputSchema,
     outputSchema: stringFieldOutput("city", "The city name returned by IPinfo."),
   }),
   defineProviderAction(service, {
     name: "get_region_by_ip",
+    operationType: "read",
     description: "Retrieve the region or state name for a specific IP address.",
     inputSchema: ipInputSchema,
     outputSchema: stringFieldOutput("region", "The region or state name returned by IPinfo."),
   }),
   defineProviderAction(service, {
     name: "get_country_by_ip",
+    operationType: "read",
     description: "Retrieve the ISO 3166-1 alpha-2 country code for a specific IP address.",
     inputSchema: ipInputSchema,
     outputSchema: stringFieldOutput("country_code", "The ISO 3166-1 alpha-2 country code returned by IPinfo."),
   }),
   defineProviderAction(service, {
     name: "get_postal_by_ip",
+    operationType: "read",
     description: "Retrieve the postal or ZIP code for a specific IP address.",
     inputSchema: ipInputSchema,
     outputSchema: stringFieldOutput("postal", "The postal or ZIP code returned by IPinfo."),
   }),
   defineProviderAction(service, {
     name: "get_timezone_by_ip",
+    operationType: "read",
     description: "Retrieve the IANA timezone name for a specific IP address.",
     inputSchema: ipInputSchema,
     outputSchema: stringFieldOutput("timezone", "The IANA timezone name returned by IPinfo."),
   }),
   defineProviderAction(service, {
     name: "get_hostname_by_ip",
+    operationType: "read",
     description: "Retrieve the reverse DNS hostname for a specific IP address.",
     inputSchema: ipInputSchema,
     outputSchema: stringFieldOutput("hostname", "The reverse DNS hostname returned by IPinfo."),
   }),
   defineProviderAction(service, {
     name: "get_org_by_ip",
+    operationType: "read",
     description: "Retrieve the organization summary for a specific IP address.",
     inputSchema: ipInputSchema,
     outputSchema: stringFieldOutput("org", "The organization summary returned by IPinfo."),
   }),
   defineProviderAction(service, {
     name: "get_company_info",
+    operationType: "read",
     description: "Retrieve company enrichment data for a specific IP address when the token includes that dataset.",
     inputSchema: ipInputSchema,
     outputSchema: companySchema,
   }),
   defineProviderAction(service, {
     name: "get_carrier_info",
+    operationType: "read",
     description: "Retrieve carrier enrichment data for a specific IP address when the token includes that dataset.",
     inputSchema: ipInputSchema,
     outputSchema: s.object("The carrier enrichment payload for the requested IP address.", {
@@ -383,6 +401,7 @@ export const ipinfoIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_privacy_details",
+    operationType: "read",
     description:
       "Retrieve privacy detection flags for a specific IP address when the token includes privacy enrichment.",
     inputSchema: ipInputSchema,
@@ -390,6 +409,7 @@ export const ipinfoIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_abuse_contact",
+    operationType: "read",
     description: "Retrieve abuse contact data for a specific IP address when the token includes that dataset.",
     inputSchema: ipInputSchema,
     outputSchema: s.object("The abuse contact payload for the requested IP address.", {
@@ -398,6 +418,7 @@ export const ipinfoIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_lite_field_by_ip",
+    operationType: "read",
     description: "Retrieve a single field from the Lite API for a specific IP address.",
     inputSchema: s.object("The input payload for retrieving a specific Lite API field.", {
       ip: s.nonEmptyString("The IPv4 or IPv6 address to look up."),
@@ -407,6 +428,7 @@ export const ipinfoIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_core_field_by_me",
+    operationType: "read",
     description: "Retrieve a single Lookup API core field for the caller's current IP address.",
     inputSchema: s.object("The input payload for retrieving a specific Lookup API core field.", {
       field: s.stringEnum("The Lookup API field path to retrieve for the caller's current IP.", coreFieldNames),
@@ -415,6 +437,7 @@ export const ipinfoIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_plus_field_by_me",
+    operationType: "read",
     description: "Retrieve a single Lookup API plus field for the caller's current IP address.",
     inputSchema: s.object("The input payload for retrieving a specific Lookup API plus field.", {
       field: s.stringEnum("The Lookup API field path to retrieve for the caller's current IP.", plusFieldNames),
@@ -423,6 +446,7 @@ export const ipinfoIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "batch_lookup",
+    operationType: "read",
     description:
       "Look up multiple IPinfo legacy or Lite-compatible paths in a single batch request through the legacy batch endpoint.",
     inputSchema: batchLookupInputSchema,
@@ -430,18 +454,21 @@ export const ipinfoIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "batch_lite_lookup",
+    operationType: "read",
     description: "Look up multiple Lite API IPs or field paths in a single batch request.",
     inputSchema: batchLiteLookupInputSchema,
     outputSchema: s.unknownObject("A map from each Lite batch query string to the corresponding IPinfo result."),
   }),
   defineProviderAction(service, {
     name: "map_ips",
+    operationType: "write",
     description: "Upload up to 500,000 IP addresses to the IPinfo map tool and return the generated report URL.",
     inputSchema: mapIpsInputSchema,
     outputSchema: mapIpsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_token_info",
+    operationType: "read",
     description: "Retrieve account and usage metadata for the current IPinfo token.",
     inputSchema: emptyInputSchema,
     outputSchema: tokenInfoSchema,

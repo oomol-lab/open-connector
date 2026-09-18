@@ -167,6 +167,7 @@ const profileOutput = s.object(
 export const twelveDataActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "symbol_search",
+    operationType: "read",
     description: "Search financial instruments by symbol or name and return the most relevant matches.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -185,6 +186,7 @@ export const twelveDataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "price",
+    operationType: "read",
     description: "Fetch the latest available market price for a specific instrument.",
     requiredScopes: [],
     inputSchema: latestPriceInput,
@@ -195,6 +197,7 @@ export const twelveDataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "quote",
+    operationType: "read",
     description: "Fetch a real-time quote snapshot with price, change, volume, and 52-week range fields.",
     requiredScopes: [],
     inputSchema: quoteInput,
@@ -212,6 +215,7 @@ export const twelveDataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "eod",
+    operationType: "read",
     description: "Fetch the end-of-day close price for a specific instrument.",
     requiredScopes: [],
     inputSchema: latestPriceInput,
@@ -230,6 +234,7 @@ export const twelveDataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "time_series",
+    operationType: "read",
     description: "Fetch historical OHLCV time-series data with metadata for a specific instrument and interval.",
     requiredScopes: [],
     inputSchema: timeSeriesInput,
@@ -243,6 +248,7 @@ export const twelveDataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "stocks",
+    operationType: "read",
     description: "List stock symbols and metadata from the Twelve Data stock catalog with optional filters.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -263,6 +269,7 @@ export const twelveDataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "forex_pairs",
+    operationType: "read",
     description: "List available forex pairs with base and quote currency metadata.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -281,6 +288,7 @@ export const twelveDataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "exchanges",
+    operationType: "read",
     description: "List equity exchanges and their timezone and access metadata.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -301,6 +309,7 @@ export const twelveDataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "market_state",
+    operationType: "read",
     description: "List the current open or closed state of exchanges together with timing data.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -316,6 +325,7 @@ export const twelveDataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "earliest_timestamp",
+    operationType: "read",
     description: "Fetch the earliest available historical timestamp for an instrument at a given interval.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -339,6 +349,7 @@ export const twelveDataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "profile",
+    operationType: "read",
     description: "Fetch the company profile for an instrument, including sector and contact fields.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -355,6 +366,7 @@ export const twelveDataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "market_movers",
+    operationType: "read",
     description: "Fetch the top gaining or losing instruments for a market family such as stocks, forex, or crypto.",
     requiredScopes: [],
     inputSchema: s.actionInput(

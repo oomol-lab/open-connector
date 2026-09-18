@@ -130,30 +130,35 @@ const verifyEmailOutputSchema = responseSchema(
 export const apiVoidActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_info",
+    operationType: "read",
     description: "Get APIVoid account credit, overage, and usage information.",
     inputSchema: s.object("Input parameters for APIVoid account info.", {}),
     outputSchema: accountInfoOutputSchema,
   }),
   defineProviderAction(service, {
     name: "check_ip_reputation",
+    operationType: "read",
     description: "Check the reputation, blacklist status, and risk score of an IP address with APIVoid.",
     inputSchema: ipReputationInputSchema,
     outputSchema: ipReputationOutputSchema,
   }),
   defineProviderAction(service, {
     name: "check_domain_reputation",
+    operationType: "read",
     description: "Check the reputation, blacklist status, category flags, and risk score of a domain with APIVoid.",
     inputSchema: domainReputationInputSchema,
     outputSchema: domainReputationOutputSchema,
   }),
   defineProviderAction(service, {
     name: "check_url_reputation",
+    operationType: "read",
     description: "Check DNS, blacklist, file, and risk signals for a URL with APIVoid.",
     inputSchema: urlReputationInputSchema,
     outputSchema: urlReputationOutputSchema,
   }),
   defineProviderAction(service, {
     name: "verify_email",
+    operationType: "read",
     description: "Verify an email address or email domain with APIVoid.",
     inputSchema: verifyEmailInputSchema,
     outputSchema: verifyEmailOutputSchema,

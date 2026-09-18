@@ -274,6 +274,7 @@ const searchResults = <T extends JsonSchema>(itemSchema: T, description: string)
 export const xeroActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_organisations",
+    operationType: "read",
     description: "List the Xero organisations (tenants) connected to this account.",
     inputSchema: s.object({}, { description: "No input is required." }),
     outputSchema: s.object(
@@ -288,6 +289,7 @@ export const xeroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_organisation",
+    operationType: "read",
     requiredScopes: [xeroSettingsReadScope],
     description: "Get the organisation profile for a tenant.",
     inputSchema: s.object(tenantField, { description: "Organisation lookup input." }),
@@ -310,6 +312,7 @@ export const xeroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_contacts",
+    operationType: "read",
     requiredScopes: [xeroContactsReadScope],
     description: "Search contacts by name fragment with pagination.",
     inputSchema: s.object(
@@ -326,6 +329,7 @@ export const xeroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     requiredScopes: [xeroContactsReadScope],
     description: "Get a contact by ID.",
     inputSchema: s.object(
@@ -336,6 +340,7 @@ export const xeroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     requiredScopes: [xeroContactsWriteScope],
     description: "Create a contact. Requires a connection with the accounting.contacts scope.",
     inputSchema: s.object(
@@ -355,6 +360,7 @@ export const xeroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_invoices",
+    operationType: "read",
     requiredScopes: [xeroInvoicesReadScope],
     description: "Search invoices by status with pagination.",
     inputSchema: s.object(
@@ -371,6 +377,7 @@ export const xeroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_invoice",
+    operationType: "read",
     requiredScopes: [xeroInvoicesReadScope],
     description: "Get an invoice with its line items by ID.",
     inputSchema: s.object(
@@ -381,6 +388,7 @@ export const xeroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_invoice",
+    operationType: "write",
     requiredScopes: [xeroInvoicesWriteScope],
     description: "Create an invoice for a contact. Requires a connection with the accounting.invoices scope.",
     inputSchema: s.object(
@@ -407,6 +415,7 @@ export const xeroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_invoice_status",
+    operationType: "write",
     requiredScopes: [xeroInvoicesWriteScope],
     description:
       "Move an invoice through its lifecycle: submit, approve, or void. Requires the accounting.invoices scope.",
@@ -427,6 +436,7 @@ export const xeroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_accounts",
+    operationType: "read",
     requiredScopes: [xeroSettingsReadScope],
     description: "List the chart of accounts for a tenant.",
     inputSchema: s.object(
@@ -448,6 +458,7 @@ export const xeroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     requiredScopes: [xeroSettingsReadScope],
     description: "Get an account by ID.",
     inputSchema: s.object(
@@ -458,6 +469,7 @@ export const xeroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_bank_transactions",
+    operationType: "read",
     requiredScopes: [xeroBankTransactionsReadScope],
     description: "Search bank transactions, overpayments, prepayments, and transfers by status with pagination.",
     inputSchema: s.object(
@@ -474,6 +486,7 @@ export const xeroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_bank_transaction",
+    operationType: "read",
     requiredScopes: [xeroBankTransactionsReadScope],
     description: "Get a bank transaction with its line items by ID.",
     inputSchema: s.object(
@@ -484,6 +497,7 @@ export const xeroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_profit_and_loss",
+    operationType: "read",
     requiredScopes: [xeroProfitAndLossReadScope],
     description: "Get the profit and loss report for a tenant, as labelled sections an agent can summarise.",
     inputSchema: s.object(
@@ -498,6 +512,7 @@ export const xeroActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_balance_sheet",
+    operationType: "read",
     requiredScopes: [xeroBalanceSheetReadScope],
     description: "Get the balance sheet report for a tenant, as labelled sections an agent can summarise.",
     inputSchema: s.object(

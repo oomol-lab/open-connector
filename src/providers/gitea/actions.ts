@@ -715,6 +715,7 @@ function repositoryInput(
 export const giteaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current authenticated Gitea user profile.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for this action.", {}),
@@ -723,6 +724,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_my_repositories",
+    operationType: "read",
     description: "List repositories owned by the authenticated Gitea user.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -738,6 +740,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_repository",
+    operationType: "read",
     description: "Get metadata for a Gitea repository by owner and name.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action."),
@@ -746,6 +749,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_repositories",
+    operationType: "read",
     description: "Search Gitea repositories by keyword with optional repository filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -803,6 +807,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_repository_issues",
+    operationType: "read",
     description: "List issues in a Gitea repository. Pull requests are filtered out.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -845,6 +850,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_issue",
+    operationType: "read",
     description: "Get a Gitea issue by repository and issue number.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -855,6 +861,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_issue",
+    operationType: "write",
     description: "Create an issue in a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -876,6 +883,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_issue_comments",
+    operationType: "read",
     description: "List comments under a Gitea issue.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -892,6 +900,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_issue_comment",
+    operationType: "write",
     description: "Create a comment on a Gitea issue.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -902,6 +911,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pull_requests",
+    operationType: "read",
     description: "List pull requests in a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -931,6 +941,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_pull_request",
+    operationType: "read",
     description: "Get a Gitea pull request by repository and pull request number.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -941,6 +952,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_pull_request",
+    operationType: "write",
     description: "Create a pull request in a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -971,6 +983,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_pull_request",
+    operationType: "write",
     description: "Update a Gitea pull request title, body, state, base branch, or review assignments.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1006,6 +1019,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "merge_pull_request",
+    operationType: "destructive",
     description: "Merge a Gitea pull request.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1034,6 +1048,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pull_request_files",
+    operationType: "read",
     description: "List files changed by a Gitea pull request.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1050,6 +1065,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pull_request_reviews",
+    operationType: "read",
     description: "List reviews for a Gitea pull request.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1066,6 +1082,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_pull_request_review",
+    operationType: "write",
     description: "Create a review for a Gitea pull request.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1083,6 +1100,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_pull_request_review",
+    operationType: "write",
     description: "Submit a pending Gitea pull request review.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1099,6 +1117,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_repository_contents",
+    operationType: "read",
     description: "Get the contents or metadata of a file or directory in a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1114,6 +1133,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_file",
+    operationType: "write",
     description: "Create a file in a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1148,6 +1168,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_file",
+    operationType: "write",
     description: "Update or create a file in a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1186,6 +1207,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_file",
+    operationType: "destructive",
     description: "Delete a file from a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1209,6 +1231,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_repository",
+    operationType: "write",
     description: "Create a repository for the authenticated Gitea user.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -1253,6 +1276,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_repository",
+    operationType: "write",
     description: "Update settings of a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1329,6 +1353,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_repository",
+    operationType: "destructive",
     description: "Delete a Gitea repository permanently.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action."),
@@ -1336,6 +1361,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "fork_repository",
+    operationType: "write",
     description: "Fork a Gitea repository to the authenticated user or an organization.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1351,6 +1377,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_repository_topics",
+    operationType: "read",
     description: "List topics of a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action."),
@@ -1359,6 +1386,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_repository_topics",
+    operationType: "destructive",
     description: "Replace all topics of a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -1369,6 +1397,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_branches",
+    operationType: "read",
     description: "List branches of a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1384,6 +1413,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_branch",
+    operationType: "read",
     description: "Get a branch of a Gitea repository by name.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -1394,6 +1424,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_branch",
+    operationType: "write",
     description: "Create a new branch in a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1409,6 +1440,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_branch",
+    operationType: "destructive",
     description: "Delete a branch of a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -1418,6 +1450,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_commits",
+    operationType: "read",
     description: "List commits of a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1437,6 +1470,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_commit",
+    operationType: "read",
     description: "Get a commit of a Gitea repository by SHA.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -1447,6 +1481,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_commit_status",
+    operationType: "write",
     description: "Create a commit status for a commit SHA in a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1465,6 +1500,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_commit_statuses",
+    operationType: "read",
     description: "List commit statuses for a commit SHA or ref in a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1480,6 +1516,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List tags of a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1495,6 +1532,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tag",
+    operationType: "read",
     description: "Get a tag of a Gitea repository by name.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -1504,6 +1542,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_tag",
+    operationType: "write",
     description: "Create a tag in a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1522,6 +1561,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_tag",
+    operationType: "destructive",
     description: "Delete a tag from a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -1531,6 +1571,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_releases",
+    operationType: "read",
     description: "List releases of a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1548,6 +1589,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_release",
+    operationType: "read",
     description: "Get a release of a Gitea repository by ID.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -1557,6 +1599,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_release",
+    operationType: "write",
     description: "Create a release in a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1577,6 +1620,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_release",
+    operationType: "write",
     description: "Update a release of a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1597,6 +1641,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_release",
+    operationType: "destructive",
     description: "Delete a release from a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -1606,6 +1651,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_repository_labels",
+    operationType: "read",
     description: "List labels of a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1621,6 +1667,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_label",
+    operationType: "read",
     description: "Get a label of a Gitea repository by ID.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -1630,6 +1677,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_label",
+    operationType: "write",
     description: "Create a label in a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1648,6 +1696,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_label",
+    operationType: "write",
     description: "Update a label of a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1666,6 +1715,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_label",
+    operationType: "destructive",
     description: "Delete a label from a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -1675,6 +1725,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_milestones",
+    operationType: "read",
     description: "List milestones of a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1692,6 +1743,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_milestone",
+    operationType: "read",
     description: "Get a milestone of a Gitea repository by ID.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -1701,6 +1753,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_milestone",
+    operationType: "write",
     description: "Create a milestone in a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1718,6 +1771,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_milestone",
+    operationType: "write",
     description: "Update a milestone of a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1735,6 +1789,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_milestone",
+    operationType: "destructive",
     description: "Delete a milestone from a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -1744,6 +1799,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_issue",
+    operationType: "write",
     description: "Update an issue in a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1766,6 +1822,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_issue_labels",
+    operationType: "read",
     description: "List labels attached to a Gitea issue.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -1776,6 +1833,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_issue_labels",
+    operationType: "write",
     description: "Add labels to a Gitea issue.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1791,6 +1849,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "replace_issue_labels",
+    operationType: "destructive",
     description: "Replace all labels of a Gitea issue.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1806,6 +1865,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_issue_label",
+    operationType: "destructive",
     description: "Remove a label from a Gitea issue.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -1817,6 +1877,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "clear_issue_labels",
+    operationType: "destructive",
     description: "Remove all labels from a Gitea issue.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -1827,6 +1888,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_issue_comment",
+    operationType: "write",
     description: "Update a comment on a Gitea issue.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -1838,6 +1900,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_issue_comment",
+    operationType: "destructive",
     description: "Delete a comment from a Gitea issue.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -1847,6 +1910,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_issue_assignees",
+    operationType: "read",
     description: "List users that can be assigned to issues in a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action."),
@@ -1855,6 +1919,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pull_request_commits",
+    operationType: "read",
     description: "List commits of a Gitea pull request.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1871,6 +1936,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_pull_request_merged",
+    operationType: "read",
     description: "Check whether a Gitea pull request has been merged.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -1881,6 +1947,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "request_pull_request_reviewers",
+    operationType: "write",
     description: "Request reviews for a Gitea pull request from users or teams.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1899,6 +1966,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_pull_request_reviewers",
+    operationType: "destructive",
     description: "Remove requested reviewers from a Gitea pull request.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1919,6 +1987,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_pull_request_review",
+    operationType: "destructive",
     description: "Delete a review from a Gitea pull request.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -1930,6 +1999,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "dismiss_pull_request_review",
+    operationType: "destructive",
     description: "Dismiss a review on a Gitea pull request.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1947,6 +2017,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pull_request_review_comments",
+    operationType: "read",
     description: "List review comments of a Gitea pull request review.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -1958,6 +2029,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_pull_request_branch",
+    operationType: "write",
     description: "Update the head branch of a Gitea pull request to the latest base branch.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1973,6 +2045,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_repository_hooks",
+    operationType: "read",
     description: "List webhooks of a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -1988,6 +2061,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_repository_hook",
+    operationType: "write",
     description: "Create a webhook in a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -2027,6 +2101,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_repository_hook",
+    operationType: "read",
     description: "Get a webhook of a Gitea repository by ID.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -2036,6 +2111,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_repository_hook",
+    operationType: "write",
     description: "Update a webhook of a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -2064,6 +2140,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_repository_hook",
+    operationType: "destructive",
     description: "Delete a webhook from a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -2073,6 +2150,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_collaborators",
+    operationType: "read",
     description: "List collaborators of a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -2088,6 +2166,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_collaborator",
+    operationType: "write",
     description: "Add a collaborator to a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -2103,6 +2182,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_collaborator",
+    operationType: "destructive",
     description: "Remove a collaborator from a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -2113,6 +2193,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_collaborator_permission",
+    operationType: "read",
     description: "Get the permission level of a Gitea repository collaborator.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -2122,6 +2203,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_my_organizations",
+    operationType: "read",
     description: "List organizations the authenticated Gitea user belongs to.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -2137,6 +2219,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_organization",
+    operationType: "read",
     description: "Get a Gitea organization by name.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for this action.", {
@@ -2147,6 +2230,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_organization_repositories",
+    operationType: "read",
     description: "List repositories of a Gitea organization.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -2163,6 +2247,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_organization_members",
+    operationType: "read",
     description: "List members of a Gitea organization.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -2179,6 +2264,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_repository_stargazers",
+    operationType: "read",
     description: "List stargazers of a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -2193,6 +2279,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_repository_watchers",
+    operationType: "read",
     description: "List watchers of a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -2207,6 +2294,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "star_repository",
+    operationType: "write",
     description: "Star a Gitea repository for the authenticated user.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action."),
@@ -2214,6 +2302,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "unstar_repository",
+    operationType: "destructive",
     description: "Remove a star from a Gitea repository for the authenticated user.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action."),
@@ -2221,6 +2310,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_repository_keys",
+    operationType: "read",
     description: "List deploy keys of a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -2236,6 +2326,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_repository_key",
+    operationType: "write",
     description: "Create a deploy key in a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput(
@@ -2252,6 +2343,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_repository_key",
+    operationType: "read",
     description: "Get a deploy key of a Gitea repository by ID.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {
@@ -2261,6 +2353,7 @@ export const giteaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_repository_key",
+    operationType: "destructive",
     description: "Delete a deploy key from a Gitea repository.",
     requiredScopes: [],
     inputSchema: repositoryInput("The input payload for this action.", {

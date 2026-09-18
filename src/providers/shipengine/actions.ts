@@ -76,6 +76,7 @@ const rawObjectSchema = s.looseObject("The raw object returned by ShipEngine.");
 export const shipengineActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "validate_addresses",
+    operationType: "read",
     description: "Validate one or more mailing addresses with ShipEngine and return deliverability details.",
     inputSchema: s.object("The input payload for validating ShipEngine addresses.", {
       addresses: s.array("The addresses to validate.", addressSchema, { minItems: 1 }),
@@ -86,6 +87,7 @@ export const shipengineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "parse_address",
+    operationType: "read",
     description: "Parse unstructured text into a structured ShipEngine address.",
     inputSchema: s.object(
       "The input payload for parsing a ShipEngine address.",
@@ -101,6 +103,7 @@ export const shipengineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_carriers",
+    operationType: "read",
     description: "List carrier accounts connected to the ShipEngine account.",
     inputSchema: s.object("The input payload for listing ShipEngine carriers.", {}),
     outputSchema: s.object("The response returned when listing ShipEngine carriers.", {
@@ -110,6 +113,7 @@ export const shipengineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_rate",
+    operationType: "read",
     description: "Retrieve a previously queried ShipEngine rate by ID.",
     inputSchema: s.object("The input payload for retrieving a ShipEngine rate.", {
       rateId: seIdSchema,
@@ -120,6 +124,7 @@ export const shipengineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "calculate_rates",
+    operationType: "read",
     description: "Calculate shipping rates for a shipment request using connected ShipEngine carriers.",
     inputSchema: s.looseRequiredObject("The ShipEngine calculate rates request body.", {
       rateOptions: s.looseObject("The rate_options object passed to ShipEngine."),
@@ -131,6 +136,7 @@ export const shipengineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "estimate_rates",
+    operationType: "read",
     description: "Estimate shipping rates with basic address and package information.",
     inputSchema: s.looseRequiredObject("The ShipEngine estimate rates request body.", {
       carrierIds: s.array("The ShipEngine carrier IDs to use for the estimate.", seIdSchema, { minItems: 1 }),

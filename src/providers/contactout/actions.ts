@@ -50,6 +50,7 @@ const filtersSchema = s.looseObject("Official ContactOut search filters to send 
 export const contactoutActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "enrich_linkedin_profile",
+    operationType: "read",
     description: "Enrich a ContactOut profile from a LinkedIn profile URL.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -64,6 +65,7 @@ export const contactoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "enrich_email_profile",
+    operationType: "read",
     description: "Enrich a ContactOut profile from an email address.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -78,6 +80,7 @@ export const contactoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "enrich_person",
+    operationType: "read",
     description: "Enrich a ContactOut profile from identifiers or name plus context.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -120,6 +123,7 @@ export const contactoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_linkedin_contact_info",
+    operationType: "read",
     description: "Get ContactOut contact information for a LinkedIn profile.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -140,6 +144,7 @@ export const contactoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "enrich_companies_by_domain",
+    operationType: "read",
     description: "Enrich companies from domain names with ContactOut.",
     requiredScopes: [],
     inputSchema: s.object("Input for enriching companies by domain.", {
@@ -149,6 +154,7 @@ export const contactoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_people",
+    operationType: "read",
     description: "Search ContactOut people records with official search filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -168,6 +174,7 @@ export const contactoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "count_people",
+    operationType: "read",
     description: "Count ContactOut people records matching official search filters.",
     requiredScopes: [],
     inputSchema: s.object("Input for counting ContactOut people records.", {
@@ -180,6 +187,7 @@ export const contactoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_decision_makers",
+    operationType: "read",
     description: "Find decision makers for a company with ContactOut.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -199,6 +207,7 @@ export const contactoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_companies",
+    operationType: "read",
     description: "Search ContactOut company records with official search filters.",
     requiredScopes: [],
     inputSchema: s.object("Input for searching ContactOut company records.", {
@@ -208,6 +217,7 @@ export const contactoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_linkedin_profile_by_email",
+    operationType: "read",
     description: "Resolve a LinkedIn profile URL from an email address with ContactOut.",
     requiredScopes: [],
     inputSchema: s.object("Input for resolving a LinkedIn profile from an email address.", {
@@ -217,6 +227,7 @@ export const contactoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_personal_email_available",
+    operationType: "read",
     description: "Check whether ContactOut has a personal email for a LinkedIn profile.",
     requiredScopes: [],
     inputSchema: s.object("Input for checking whether a LinkedIn profile has ContactOut contact data.", {
@@ -226,6 +237,7 @@ export const contactoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_work_email_available",
+    operationType: "read",
     description: "Check whether ContactOut has a work email for a LinkedIn profile.",
     requiredScopes: [],
     inputSchema: s.object("Input for checking whether a LinkedIn profile has ContactOut contact data.", {
@@ -235,6 +247,7 @@ export const contactoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_phone_available",
+    operationType: "read",
     description: "Check whether ContactOut has a phone number for a LinkedIn profile.",
     requiredScopes: [],
     inputSchema: s.object("Input for checking whether a LinkedIn profile has ContactOut contact data.", {
@@ -244,6 +257,7 @@ export const contactoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "verify_email",
+    operationType: "read",
     description: "Verify an email address with ContactOut.",
     requiredScopes: [],
     inputSchema: s.object("Input for verifying an email address with ContactOut.", {
@@ -261,6 +275,7 @@ export const contactoutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_usage_stats",
+    operationType: "read",
     description: "Read ContactOut API usage statistics.",
     requiredScopes: [],
     inputSchema: s.object(

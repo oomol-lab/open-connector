@@ -39,6 +39,7 @@ const eventPointSchema = s.looseObject("A Countly event analytics data point.", 
 export const countlyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Retrieve the Countly user associated with the connected API key.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving the current Countly user.", {}),
@@ -46,6 +47,7 @@ export const countlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_apps",
+    operationType: "read",
     description: "List Countly applications owned by the connected user.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Countly applications.", {}),
@@ -56,6 +58,7 @@ export const countlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_app_details",
+    operationType: "read",
     description: "Retrieve Countly application metadata and its user access lists.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving one Countly application.", {
@@ -78,6 +81,7 @@ export const countlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dashboard_analytics",
+    operationType: "read",
     description: "Retrieve Countly dashboard analytics for an application.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving Countly dashboard analytics.", {
@@ -89,6 +93,7 @@ export const countlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_session_analytics",
+    operationType: "read",
     description: "Retrieve session analytics data points for a Countly application and period.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -102,6 +107,7 @@ export const countlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_event_analytics",
+    operationType: "read",
     description: "Retrieve event analytics for one or more Countly event keys.",
     requiredScopes: [],
     inputSchema: s.object(

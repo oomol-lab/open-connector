@@ -116,6 +116,7 @@ const enduserResultSchema = s.requiredObject("End user returned by Planhat.", {
 export const planhatActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_company",
+    operationType: "write",
     description: "Create a Planhat company.",
     requiredScopes: [],
     inputSchema: s.object("Input for creating a Planhat company.", companyPayloadSchema, {
@@ -143,6 +144,7 @@ export const planhatActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_company",
+    operationType: "write",
     description: "Update a Planhat company by ID, externalId, or sourceId.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -180,6 +182,7 @@ export const planhatActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description: "Get a Planhat company by ID, externalId, or sourceId.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Input for retrieving a Planhat company.", {
@@ -191,6 +194,7 @@ export const planhatActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_companies",
+    operationType: "read",
     description: "List Planhat companies with offset pagination.",
     requiredScopes: [],
     inputSchema: listCompaniesInputSchema,
@@ -202,6 +206,7 @@ export const planhatActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_enduser",
+    operationType: "write",
     description: "Create a Planhat end user.",
     requiredScopes: [],
     inputSchema: s.object("Input for creating a Planhat end user.", enduserPayloadSchema, {
@@ -228,6 +233,7 @@ export const planhatActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_enduser",
+    operationType: "write",
     description: "Update a Planhat end user by ID, externalId, or sourceId.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -264,6 +270,7 @@ export const planhatActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_enduser",
+    operationType: "read",
     description: "Get a Planhat end user by ID, externalId, or sourceId.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Input for retrieving a Planhat end user.", {
@@ -275,6 +282,7 @@ export const planhatActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_endusers",
+    operationType: "read",
     description: "List Planhat end users with offset pagination.",
     requiredScopes: [],
     inputSchema: listEndusersInputSchema,

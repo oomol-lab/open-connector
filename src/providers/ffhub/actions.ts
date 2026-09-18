@@ -33,6 +33,7 @@ const taskSchema = s.requiredObject("Normalized FFHub task.", {
 export const ffhubActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_ffmpeg_task",
+    operationType: "write",
     description:
       "Create a new FFHub FFmpeg transcoding task from a full FFmpeg command or argument-only command string.",
     followUpActions: ["ffhub.get_ffmpeg_task"],
@@ -54,6 +55,7 @@ export const ffhubActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ffmpeg_task",
+    operationType: "read",
     description: "Get the current status, timing, error, and output files for one FFHub FFmpeg task.",
     inputSchema: s.requiredObject("Identifier of the FFHub task to retrieve.", {
       taskId: s.string("FFHub task ID to retrieve.", { minLength: 1 }),
@@ -64,6 +66,7 @@ export const ffhubActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_ffmpeg_tasks",
+    operationType: "read",
     description: "List FFHub FFmpeg tasks with optional customer, status, limit, and offset filters.",
     inputSchema: s.object(
       "Filters for listing FFHub FFmpeg tasks.",

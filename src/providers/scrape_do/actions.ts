@@ -141,24 +141,28 @@ const accountInfoSchema = s.looseRequiredObject("The account information and usa
 export const scrapeDoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "fetch_html",
+    operationType: "read",
     description: "Fetch one public URL through Scrape.do and return the synchronous response body.",
     inputSchema: commonScrapeInputSchema,
     outputSchema: responseOutputSchema,
   }),
   defineProviderAction(service, {
     name: "fetch_json",
+    operationType: "read",
     description: "Fetch one public URL through Scrape.do returnJSON mode and return the parsed JSON payload.",
     inputSchema: returnJsonInputSchema,
     outputSchema: jsonOutputSchema,
   }),
   defineProviderAction(service, {
     name: "take_screenshot",
+    operationType: "read",
     description: "Render one public URL through Scrape.do and return a screenshot as base64.",
     inputSchema: screenshotInputSchema,
     outputSchema: screenshotOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_account_info",
+    operationType: "read",
     description: "Retrieve Scrape.do account information and usage counters for the API token.",
     inputSchema: s.object("The input payload for retrieving Scrape.do account information.", {}),
     outputSchema: s.object("The output payload for Scrape.do account information.", {

@@ -86,12 +86,14 @@ const documentMutationFields = {
 export const signwellActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_me",
+    operationType: "read",
     description: "Get the authenticated SignWell account, workspace, and user information.",
     inputSchema: s.object("This action does not require any input fields.", {}),
     outputSchema: rawObjectSchema,
   }),
   defineProviderAction(service, {
     name: "get_template",
+    operationType: "read",
     description: "Retrieve one SignWell document template by ID.",
     inputSchema: s.object("The SignWell template to retrieve.", {
       id: idSchema,
@@ -100,6 +102,7 @@ export const signwellActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_document_from_template",
+    operationType: "write",
     description: "Create a SignWell document from one or more templates.",
     inputSchema: s.object(
       "The SignWell template document creation payload.",
@@ -142,6 +145,7 @@ export const signwellActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document",
+    operationType: "read",
     description: "Retrieve one SignWell document by ID.",
     inputSchema: s.object("The SignWell document to retrieve.", {
       id: idSchema,
@@ -150,6 +154,7 @@ export const signwellActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_document",
+    operationType: "write",
     description: "Send a SignWell draft document for signing.",
     inputSchema: s.object(
       "The SignWell document send payload.",
@@ -163,6 +168,7 @@ export const signwellActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_document_reminder",
+    operationType: "write",
     description: "Send a reminder for a SignWell document.",
     inputSchema: s.object(
       "The SignWell reminder payload.",

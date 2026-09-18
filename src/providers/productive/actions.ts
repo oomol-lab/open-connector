@@ -27,6 +27,7 @@ const attributes = s.looseObject("Additional Productive JSON:API attributes.");
 export const productiveActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "List Productive tasks with optional pagination, sorting, filters, and includes.",
     inputSchema: s.object("Query parameters for listing Productive tasks.", pageInput, {
       optional: ["pageNumber", "pageSize", "sort", "filter", "include"],
@@ -40,6 +41,7 @@ export const productiveActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task",
+    operationType: "read",
     description: "Retrieve one Productive task by ID.",
     inputSchema: s.object(
       "The Productive task lookup payload.",
@@ -53,6 +55,7 @@ export const productiveActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_task",
+    operationType: "write",
     description: "Create a Productive task using JSON:API attributes and relationships.",
     inputSchema: s.object(
       "The Productive task creation payload.",
@@ -69,6 +72,7 @@ export const productiveActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_task",
+    operationType: "write",
     description: "Update a Productive task by ID.",
     inputSchema: s.object(
       "The Productive task update payload.",
@@ -86,6 +90,7 @@ export const productiveActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_time_entries",
+    operationType: "read",
     description: "List Productive time entries with optional pagination, sorting, filters, and includes.",
     inputSchema: s.object("Query parameters for listing Productive time entries.", pageInput, {
       optional: ["pageNumber", "pageSize", "sort", "filter", "include"],
@@ -99,6 +104,7 @@ export const productiveActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_time_entry",
+    operationType: "write",
     description: "Create a Productive time entry for a person and service.",
     inputSchema: s.object(
       "The Productive time entry creation payload.",
@@ -121,6 +127,7 @@ export const productiveActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_time_entry",
+    operationType: "write",
     description: "Update a Productive time entry by ID.",
     inputSchema: s.object(
       "The Productive time entry update payload.",
@@ -142,6 +149,7 @@ export const productiveActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_time_entry",
+    operationType: "destructive",
     description: "Delete a Productive time entry by ID.",
     inputSchema: s.object("The Productive time entry deletion payload.", { timeEntryId: id }),
     outputSchema: s.object("The generic Productive success output.", {

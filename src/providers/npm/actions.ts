@@ -305,6 +305,7 @@ const auditPackageVersionsOutputSchema = s.requiredObject(
 export const npmActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the npm username associated with the connected access token.",
     requiredScopes: [],
     inputSchema: getCurrentUserInputSchema,
@@ -312,6 +313,7 @@ export const npmActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_packages",
+    operationType: "read",
     description: "Search the npm registry for packages with offset pagination.",
     requiredScopes: [],
     inputSchema: searchPackagesInputSchema,
@@ -319,6 +321,7 @@ export const npmActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_package",
+    operationType: "read",
     description: "Get a compact summary and version list for an npm package.",
     requiredScopes: [],
     inputSchema: getPackageInputSchema,
@@ -326,6 +329,7 @@ export const npmActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_package_version",
+    operationType: "read",
     description: "Get the manifest for a specific npm package version or distribution tag.",
     requiredScopes: [],
     inputSchema: getPackageVersionInputSchema,
@@ -333,6 +337,7 @@ export const npmActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_package_download_counts",
+    operationType: "read",
     description: "Get download totals for up to 128 npm packages over an inclusive period.",
     requiredScopes: [],
     inputSchema: getPackageDownloadCountsInputSchema,
@@ -340,6 +345,7 @@ export const npmActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_package_download_trend",
+    operationType: "read",
     description: "Get daily download counts for one npm package over an inclusive period.",
     requiredScopes: [],
     inputSchema: getPackageDownloadTrendInputSchema,
@@ -347,6 +353,7 @@ export const npmActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_version_download_counts",
+    operationType: "read",
     description: "Get npm downloads grouped by package version for the last seven days.",
     requiredScopes: [],
     inputSchema: getVersionDownloadCountsInputSchema,
@@ -354,6 +361,7 @@ export const npmActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "audit_package_versions",
+    operationType: "read",
     description: "Get npm security advisories for requested exact package versions.",
     requiredScopes: [],
     inputSchema: auditPackageVersionsInputSchema,

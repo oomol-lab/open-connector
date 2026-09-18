@@ -35,6 +35,7 @@ const pageFields = {
 export const productboardActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_entity_configurations",
+    operationType: "read",
     description: "List Productboard entity configurations available in the workspace.",
     inputSchema: s.object(
       { types: s.array("Optional entity types to include.", s.stringEnum(entityTypes), { minItems: 1 }) },
@@ -47,12 +48,14 @@ export const productboardActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_entity_configuration",
+    operationType: "read",
     description: "Get the Productboard configuration for one entity type.",
     inputSchema: s.object({ type: s.stringEnum("Productboard entity type to retrieve.", entityTypes) }),
     outputSchema: s.object({ configuration: loosePayload }),
   }),
   defineProviderAction(service, {
     name: "list_entities",
+    operationType: "read",
     description: "List Productboard product-management entities with supported filters.",
     inputSchema: s.object(
       {
@@ -93,6 +96,7 @@ export const productboardActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_entity",
+    operationType: "read",
     description: "Get a Productboard product-management entity by ID.",
     inputSchema: s.object(
       { id: s.nonEmptyString("Productboard entity identifier."), fields },
@@ -102,6 +106,7 @@ export const productboardActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_note_configurations",
+    operationType: "read",
     description: "List Productboard note configurations available in the workspace.",
     inputSchema: s.object(
       { types: s.array("Optional note types to include.", s.stringEnum(noteTypes), { minItems: 1 }) },
@@ -114,12 +119,14 @@ export const productboardActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_note_configuration",
+    operationType: "read",
     description: "Get the Productboard configuration for one note type.",
     inputSchema: s.object({ type: s.stringEnum("Productboard note type to retrieve.", noteTypes) }),
     outputSchema: s.object({ configuration: loosePayload }),
   }),
   defineProviderAction(service, {
     name: "list_notes",
+    operationType: "read",
     description: "List Productboard notes with supported filters.",
     inputSchema: s.object(
       {
@@ -163,12 +170,14 @@ export const productboardActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_note",
+    operationType: "read",
     description: "Get a Productboard note by ID.",
     inputSchema: s.object({ id: s.nonEmptyString("Productboard note identifier."), fields }, { optional: ["fields"] }),
     outputSchema: s.object({ note: loosePayload }),
   }),
   defineProviderAction(service, {
     name: "list_members",
+    operationType: "read",
     description: "List Productboard workspace members.",
     inputSchema: s.object(
       {
@@ -187,12 +196,14 @@ export const productboardActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_member",
+    operationType: "read",
     description: "Get a Productboard workspace member by ID.",
     inputSchema: s.object({ id: s.nonEmptyString("Productboard member identifier.") }),
     outputSchema: s.object({ member: loosePayload }),
   }),
   defineProviderAction(service, {
     name: "list_teams",
+    operationType: "read",
     description: "List Productboard teams.",
     inputSchema: s.object(
       {
@@ -207,12 +218,14 @@ export const productboardActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_team",
+    operationType: "read",
     description: "Get a Productboard team by ID.",
     inputSchema: s.object({ id: s.nonEmptyString("Productboard team identifier.") }),
     outputSchema: s.object({ team: loosePayload }),
   }),
   defineProviderAction(service, {
     name: "list_team_members",
+    operationType: "read",
     description: "List members belonging to a Productboard team.",
     inputSchema: s.object(
       {

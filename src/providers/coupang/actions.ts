@@ -64,6 +64,7 @@ const mutationOutputSchema = s.object("The result of a Coupang item update.", {
 export const coupangActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List seller products in Coupang with optional filters and cursor pagination.",
     requiredScopes: [],
     inputSchema: productListInputSchema,
@@ -71,6 +72,7 @@ export const coupangActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Get the registered details of one Coupang seller product.",
     requiredScopes: [],
     inputSchema: s.object("The Coupang seller product to retrieve.", {
@@ -80,6 +82,7 @@ export const coupangActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_item_inventory",
+    operationType: "read",
     description: "Get the stock quantity, sale price, and sale status of one Coupang item.",
     requiredScopes: [],
     inputSchema: s.object("The Coupang item to inspect.", {
@@ -89,6 +92,7 @@ export const coupangActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_item_quantity",
+    operationType: "destructive",
     description: "Replace the available inventory quantity of one Coupang item.",
     requiredScopes: [],
     inputSchema: s.object("The Coupang item and replacement inventory quantity.", {
@@ -99,6 +103,7 @@ export const coupangActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_item_price",
+    operationType: "destructive",
     description: "Replace the selling price and optional auto-pricing settings of one Coupang item.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -116,6 +121,7 @@ export const coupangActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description: "List Coupang purchase orders for a date range and fulfillment status.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -143,6 +149,7 @@ export const coupangActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_order",
+    operationType: "read",
     description: "Get current purchase-order and receiver details for one Coupang order.",
     requiredScopes: [],
     inputSchema: s.object("The Coupang order to retrieve.", {
@@ -152,6 +159,7 @@ export const coupangActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_return_requests",
+    operationType: "read",
     description: "List Coupang return or cancellation requests submitted in a time range.",
     requiredScopes: [],
     inputSchema: s.object(

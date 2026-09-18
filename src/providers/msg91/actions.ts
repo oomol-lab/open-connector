@@ -71,6 +71,7 @@ const resendOtpOutputSchema = s.actionOutput(
 export const msg91Actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_flow_sms",
+    operationType: "write",
     description: "Send an SMS through an approved MSG91 Flow template.",
     inputSchema: s.actionInput(
       {
@@ -91,6 +92,7 @@ export const msg91Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_otp",
+    operationType: "write",
     description: "Generate or send an OTP with an MSG91 OTP template.",
     inputSchema: s.actionInput(
       {
@@ -120,6 +122,7 @@ export const msg91Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "verify_otp",
+    operationType: "read",
     description: "Verify an OTP previously sent through MSG91.",
     inputSchema: s.actionInput(
       {
@@ -133,6 +136,7 @@ export const msg91Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "resend_otp",
+    operationType: "write",
     description: "Resend an existing MSG91 OTP by text message or voice call.",
     inputSchema: s.actionInput(
       {

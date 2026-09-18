@@ -78,6 +78,7 @@ const searchInputSchema = s.object(
 export const docsbotAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_teams",
+    operationType: "read",
     description: "List DocsBot teams visible to the API key user.",
     inputSchema: s.object("No input is required to list DocsBot teams.", {}),
     outputSchema: s.object("DocsBot teams visible to the API key user.", {
@@ -86,6 +87,7 @@ export const docsbotAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_team",
+    operationType: "read",
     description: "Get a DocsBot team by ID.",
     inputSchema: s.object("Input for retrieving a DocsBot team.", {
       teamId: teamIdSchema,
@@ -96,6 +98,7 @@ export const docsbotAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_bots",
+    operationType: "read",
     description: "List DocsBot bots in a team.",
     inputSchema: s.object("Input for listing DocsBot bots in a team.", {
       teamId: teamIdSchema,
@@ -106,6 +109,7 @@ export const docsbotAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_bot",
+    operationType: "read",
     description: "Get a DocsBot bot by team and bot ID.",
     inputSchema: s.object("Input for retrieving a DocsBot bot.", {
       teamId: teamIdSchema,
@@ -117,6 +121,7 @@ export const docsbotAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "semantic_search",
+    operationType: "read",
     description: "Search a DocsBot bot's trained source chunks by natural-language query.",
     inputSchema: searchInputSchema,
     outputSchema: s.object("DocsBot semantic search results.", {
@@ -125,6 +130,7 @@ export const docsbotAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "fetch_document",
+    operationType: "read",
     description: "Fetch the full reconstructed document text for a DocsBot search result file ID.",
     inputSchema: s.object("Input for fetching a reconstructed DocsBot document.", {
       teamId: teamIdSchema,

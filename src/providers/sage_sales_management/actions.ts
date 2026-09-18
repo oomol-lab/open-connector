@@ -73,6 +73,7 @@ const deleteOutputSchema = s.object("The Sage Sales Management delete response."
 
 const getAccountsSchemaAction = defineProviderAction(service, {
   name: "get_accounts_schema",
+  operationType: "read",
   description: "Get the Sage Sales Management Accounts schema metadata.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for getting the Accounts schema.", {}),
@@ -81,6 +82,7 @@ const getAccountsSchemaAction = defineProviderAction(service, {
 
 const listAccountsAction = defineProviderAction(service, {
   name: "list_accounts",
+  operationType: "read",
   description: "List Sage Sales Management accounts with optional filters and pagination.",
   requiredScopes: [],
   inputSchema: listInputSchema,
@@ -89,6 +91,7 @@ const listAccountsAction = defineProviderAction(service, {
 
 const getAccountAction = defineProviderAction(service, {
   name: "get_account",
+  operationType: "read",
   description: "Get one Sage Sales Management account by ID.",
   requiredScopes: [],
   inputSchema: idInputSchema,
@@ -97,6 +100,7 @@ const getAccountAction = defineProviderAction(service, {
 
 const createAccountAction = defineProviderAction(service, {
   name: "create_account",
+  operationType: "write",
   description: "Create one Sage Sales Management account.",
   requiredScopes: [],
   inputSchema: writeInputSchema("account"),
@@ -105,6 +109,7 @@ const createAccountAction = defineProviderAction(service, {
 
 const updateAccountAction = defineProviderAction(service, {
   name: "update_account",
+  operationType: "write",
   description: "Update one Sage Sales Management account by ID.",
   requiredScopes: [],
   inputSchema: updateInputSchema("account"),
@@ -113,6 +118,7 @@ const updateAccountAction = defineProviderAction(service, {
 
 const deleteAccountAction = defineProviderAction(service, {
   name: "delete_account",
+  operationType: "destructive",
   description: "Delete one Sage Sales Management account by ID.",
   requiredScopes: [],
   inputSchema: idInputSchema,
@@ -121,6 +127,7 @@ const deleteAccountAction = defineProviderAction(service, {
 
 const getContactsSchemaAction = defineProviderAction(service, {
   name: "get_contacts_schema",
+  operationType: "read",
   description: "Get the Sage Sales Management Contacts schema metadata.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for getting the Contacts schema.", {}),
@@ -129,6 +136,7 @@ const getContactsSchemaAction = defineProviderAction(service, {
 
 const listContactsAction = defineProviderAction(service, {
   name: "list_contacts",
+  operationType: "read",
   description: "List Sage Sales Management contacts with optional filters and pagination.",
   requiredScopes: [],
   inputSchema: listInputSchema,
@@ -137,6 +145,7 @@ const listContactsAction = defineProviderAction(service, {
 
 const getContactAction = defineProviderAction(service, {
   name: "get_contact",
+  operationType: "read",
   description: "Get one Sage Sales Management contact by ID.",
   requiredScopes: [],
   inputSchema: idInputSchema,
@@ -145,6 +154,7 @@ const getContactAction = defineProviderAction(service, {
 
 const createContactAction = defineProviderAction(service, {
   name: "create_contact",
+  operationType: "write",
   description: "Create one Sage Sales Management contact.",
   requiredScopes: [],
   inputSchema: writeInputSchema("contact"),
@@ -153,6 +163,7 @@ const createContactAction = defineProviderAction(service, {
 
 const updateContactAction = defineProviderAction(service, {
   name: "update_contact",
+  operationType: "write",
   description: "Update one Sage Sales Management contact by ID.",
   requiredScopes: [],
   inputSchema: updateInputSchema("contact"),
@@ -161,6 +172,7 @@ const updateContactAction = defineProviderAction(service, {
 
 const deleteContactAction = defineProviderAction(service, {
   name: "delete_contact",
+  operationType: "destructive",
   description: "Delete one Sage Sales Management contact by ID.",
   requiredScopes: [],
   inputSchema: idInputSchema,
@@ -169,6 +181,7 @@ const deleteContactAction = defineProviderAction(service, {
 
 const getOpportunitiesSchemaAction = defineProviderAction(service, {
   name: "get_opportunities_schema",
+  operationType: "read",
   description: "Get the Sage Sales Management Opportunities schema metadata.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for getting the Opportunities schema.", {}),
@@ -177,6 +190,7 @@ const getOpportunitiesSchemaAction = defineProviderAction(service, {
 
 const listOpportunitiesAction = defineProviderAction(service, {
   name: "list_opportunities",
+  operationType: "read",
   description: "List Sage Sales Management opportunities with optional filters and pagination.",
   requiredScopes: [],
   inputSchema: listInputSchema,
@@ -185,6 +199,7 @@ const listOpportunitiesAction = defineProviderAction(service, {
 
 const getOpportunityAction = defineProviderAction(service, {
   name: "get_opportunity",
+  operationType: "read",
   description: "Get one Sage Sales Management opportunity by ID.",
   requiredScopes: [],
   inputSchema: idInputSchema,
@@ -193,6 +208,7 @@ const getOpportunityAction = defineProviderAction(service, {
 
 const createOpportunityAction = defineProviderAction(service, {
   name: "create_opportunity",
+  operationType: "write",
   description: "Create one Sage Sales Management opportunity.",
   requiredScopes: [],
   inputSchema: writeInputSchema("opportunity"),
@@ -201,6 +217,7 @@ const createOpportunityAction = defineProviderAction(service, {
 
 const updateOpportunityAction = defineProviderAction(service, {
   name: "update_opportunity",
+  operationType: "write",
   description: "Update one Sage Sales Management opportunity by ID.",
   requiredScopes: [],
   inputSchema: updateInputSchema("opportunity"),
@@ -209,6 +226,7 @@ const updateOpportunityAction = defineProviderAction(service, {
 
 const deleteOpportunityAction = defineProviderAction(service, {
   name: "delete_opportunity",
+  operationType: "destructive",
   description: "Delete one Sage Sales Management opportunity by ID.",
   requiredScopes: [],
   inputSchema: idInputSchema,

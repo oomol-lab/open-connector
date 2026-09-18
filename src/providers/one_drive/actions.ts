@@ -8,6 +8,7 @@ const service = "one_drive";
 
 interface OneDriveActionSource {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   providerPermissions: string[];
@@ -223,7 +224,7 @@ const actions: OneDriveActionSource[] = [
     ),
     driveItem,
   ),
-  write(
+  destructive(
     "delete_item",
     "Delete a drive item from OneDrive and move it to the recycle bin.",
     input({ driveId, itemId, ifMatch: nonEmptyString("Optional eTag used for conditional delete requests.") }, [
@@ -291,7 +292,7 @@ const actions: OneDriveActionSource[] = [
     ),
     driveItem,
   ),
-  write(
+  destructive(
     "update_file_content",
     "Replace the content of one existing OneDrive file.",
     input(
@@ -334,6 +335,7 @@ function read(
 ): OneDriveActionSource {
   return {
     name,
+    operationType: "read",
     description,
     requiredScopes: oneDriveReadScopes,
     providerPermissions: [oneDriveProviderScopes.filesRead],
@@ -350,6 +352,24 @@ function write(
 ): OneDriveActionSource {
   return {
     name,
+    operationType: "write",
+    description,
+    requiredScopes: oneDriveWriteScopes,
+    providerPermissions: [oneDriveProviderScopes.filesReadWrite],
+    inputSchema,
+    outputSchema,
+  };
+}
+
+function destructive(
+  name: string,
+  description: string,
+  inputSchema: JsonSchema,
+  outputSchema: JsonSchema,
+): OneDriveActionSource {
+  return {
+    name,
+    operationType: "destructive",
     description,
     requiredScopes: oneDriveWriteScopes,
     providerPermissions: [oneDriveProviderScopes.filesReadWrite],

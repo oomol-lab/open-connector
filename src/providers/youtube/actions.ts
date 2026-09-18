@@ -379,6 +379,7 @@ export type YoutubeActionName =
 
 const actionSpecs: Array<{
   name: YoutubeActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -386,6 +387,7 @@ const actionSpecs: Array<{
 }> = [
   {
     name: "search",
+    operationType: "read",
     description: "Search YouTube for videos, channels, or playlists.",
     requiredScopes: youtubeReadScopes,
     inputSchema: youtubeInputSchemas.search,
@@ -397,6 +399,7 @@ const actionSpecs: Array<{
   },
   {
     name: "list_videos",
+    operationType: "read",
     description: "List YouTube video resources by ID or chart.",
     requiredScopes: youtubeReadScopes,
     inputSchema: youtubeInputSchemas.list_videos,
@@ -408,6 +411,7 @@ const actionSpecs: Array<{
   },
   {
     name: "list_channels",
+    operationType: "read",
     description: "List YouTube channel resources by ID, username, handle, or authenticated owner.",
     requiredScopes: youtubeReadScopes,
     inputSchema: youtubeInputSchemas.list_channels,
@@ -419,6 +423,7 @@ const actionSpecs: Array<{
   },
   {
     name: "list_playlists",
+    operationType: "read",
     description: "List YouTube playlists by ID, channel, or authenticated owner.",
     requiredScopes: youtubeReadScopes,
     inputSchema: youtubeInputSchemas.list_playlists,
@@ -430,6 +435,7 @@ const actionSpecs: Array<{
   },
   {
     name: "list_playlist_items",
+    operationType: "read",
     description: "List videos and resources contained in a YouTube playlist.",
     requiredScopes: youtubeReadScopes,
     inputSchema: youtubeInputSchemas.list_playlist_items,
@@ -441,6 +447,7 @@ const actionSpecs: Array<{
   },
   {
     name: "create_playlist",
+    operationType: "write",
     description: "Create a YouTube playlist owned by the authenticated user.",
     requiredScopes: youtubeWriteScopes,
     inputSchema: youtubeInputSchemas.create_playlist,
@@ -448,6 +455,7 @@ const actionSpecs: Array<{
   },
   {
     name: "update_playlist",
+    operationType: "write",
     description: "Update a YouTube playlist's snippet and status metadata.",
     requiredScopes: youtubeWriteScopes,
     inputSchema: youtubeInputSchemas.update_playlist,
@@ -455,6 +463,7 @@ const actionSpecs: Array<{
   },
   {
     name: "delete_playlist",
+    operationType: "destructive",
     description: "Delete a YouTube playlist owned by the authenticated user.",
     requiredScopes: youtubeWriteScopes,
     inputSchema: youtubeInputSchemas.delete_playlist,
@@ -462,6 +471,7 @@ const actionSpecs: Array<{
   },
   {
     name: "add_video_to_playlist",
+    operationType: "write",
     description: "Add a YouTube video to a playlist.",
     requiredScopes: youtubeWriteScopes,
     inputSchema: youtubeInputSchemas.add_video_to_playlist,
@@ -469,6 +479,7 @@ const actionSpecs: Array<{
   },
   {
     name: "update_playlist_item",
+    operationType: "write",
     description: "Update a YouTube playlist item's position or note.",
     requiredScopes: youtubeWriteScopes,
     inputSchema: youtubeInputSchemas.update_playlist_item,
@@ -476,6 +487,7 @@ const actionSpecs: Array<{
   },
   {
     name: "delete_playlist_item",
+    operationType: "destructive",
     description: "Delete an item from a YouTube playlist.",
     requiredScopes: youtubeWriteScopes,
     inputSchema: youtubeInputSchemas.delete_playlist_item,
@@ -483,6 +495,7 @@ const actionSpecs: Array<{
   },
   {
     name: "list_comment_threads",
+    operationType: "read",
     description: "List top-level YouTube comment threads for a video, channel, or thread IDs.",
     requiredScopes: youtubeReadScopes,
     inputSchema: youtubeInputSchemas.list_comment_threads,
@@ -494,6 +507,7 @@ const actionSpecs: Array<{
   },
   {
     name: "list_comments",
+    operationType: "read",
     description: "List YouTube comments by parent comment ID or comment IDs.",
     requiredScopes: youtubeReadScopes,
     inputSchema: youtubeInputSchemas.list_comments,
@@ -505,6 +519,7 @@ const actionSpecs: Array<{
   },
   {
     name: "post_comment",
+    operationType: "write",
     description: "Post a top-level public comment on a YouTube video.",
     requiredScopes: youtubeWriteScopes,
     inputSchema: youtubeInputSchemas.post_comment,
@@ -512,6 +527,7 @@ const actionSpecs: Array<{
   },
   {
     name: "create_comment_reply",
+    operationType: "write",
     description: "Reply to an existing YouTube comment thread.",
     requiredScopes: youtubeWriteScopes,
     inputSchema: youtubeInputSchemas.create_comment_reply,
@@ -519,6 +535,7 @@ const actionSpecs: Array<{
   },
   {
     name: "upload_video_from_url",
+    operationType: "write",
     description: "Upload a YouTube video from an HTTPS media URL using the resumable upload API.",
     requiredScopes: youtubeWriteScopes,
     inputSchema: youtubeInputSchemas.upload_video_from_url,
@@ -526,6 +543,7 @@ const actionSpecs: Array<{
   },
   {
     name: "update_video",
+    operationType: "write",
     description: "Update a YouTube video's snippet and status metadata.",
     requiredScopes: youtubeWriteScopes,
     inputSchema: youtubeInputSchemas.update_video,
@@ -533,6 +551,7 @@ const actionSpecs: Array<{
   },
   {
     name: "delete_video",
+    operationType: "destructive",
     description: "Delete a YouTube video owned by the authenticated user.",
     requiredScopes: youtubeWriteScopes,
     inputSchema: youtubeInputSchemas.delete_video,
@@ -540,6 +559,7 @@ const actionSpecs: Array<{
   },
   {
     name: "get_video_rating",
+    operationType: "read",
     description: "Get the authenticated user's rating for one or more YouTube videos.",
     requiredScopes: youtubeReadScopes,
     inputSchema: youtubeInputSchemas.get_video_rating,
@@ -549,6 +569,7 @@ const actionSpecs: Array<{
   },
   {
     name: "rate_video",
+    operationType: "destructive",
     description: "Set or clear the authenticated user's rating for a YouTube video.",
     requiredScopes: youtubeWriteScopes,
     inputSchema: youtubeInputSchemas.rate_video,
@@ -560,6 +581,7 @@ const actionSpecs: Array<{
   },
   {
     name: "set_thumbnail_from_url",
+    operationType: "write",
     description: "Upload and set a custom YouTube video thumbnail from an HTTPS image URL.",
     requiredScopes: youtubeWriteScopes,
     inputSchema: youtubeInputSchemas.set_thumbnail_from_url,
@@ -567,6 +589,7 @@ const actionSpecs: Array<{
   },
   {
     name: "download_caption",
+    operationType: "read",
     description: "Download a YouTube caption track and return a temporary transit URL.",
     requiredScopes: youtubeReadScopes,
     inputSchema: youtubeInputSchemas.download_caption,
@@ -576,6 +599,7 @@ const actionSpecs: Array<{
   },
   {
     name: "list_caption_tracks",
+    operationType: "read",
     description: "List YouTube caption tracks for a video or caption track IDs.",
     requiredScopes: youtubeReadScopes,
     inputSchema: youtubeInputSchemas.list_caption_tracks,
@@ -585,6 +609,7 @@ const actionSpecs: Array<{
   },
   {
     name: "upload_caption_from_url",
+    operationType: "write",
     description: "Upload a YouTube caption track from an HTTPS caption file URL.",
     requiredScopes: youtubeWriteScopes,
     inputSchema: youtubeInputSchemas.upload_caption_from_url,
@@ -592,6 +617,7 @@ const actionSpecs: Array<{
   },
   {
     name: "update_caption",
+    operationType: "write",
     description: "Update a YouTube caption track's metadata.",
     requiredScopes: youtubeWriteScopes,
     inputSchema: youtubeInputSchemas.update_caption,
@@ -599,6 +625,7 @@ const actionSpecs: Array<{
   },
   {
     name: "delete_caption",
+    operationType: "destructive",
     description: "Delete a YouTube caption track.",
     requiredScopes: youtubeWriteScopes,
     inputSchema: youtubeInputSchemas.delete_caption,
@@ -606,6 +633,7 @@ const actionSpecs: Array<{
   },
   {
     name: "list_video_categories",
+    operationType: "read",
     description: "List YouTube video categories for a region or category IDs.",
     requiredScopes: youtubeReadScopes,
     inputSchema: youtubeInputSchemas.list_video_categories,
@@ -615,6 +643,7 @@ const actionSpecs: Array<{
   },
   {
     name: "list_i18n_languages",
+    operationType: "read",
     description: "List YouTube interface languages.",
     requiredScopes: youtubeReadScopes,
     inputSchema: youtubeInputSchemas.list_i18n_languages,
@@ -624,6 +653,7 @@ const actionSpecs: Array<{
   },
   {
     name: "list_i18n_regions",
+    operationType: "read",
     description: "List YouTube content regions.",
     requiredScopes: youtubeReadScopes,
     inputSchema: youtubeInputSchemas.list_i18n_regions,

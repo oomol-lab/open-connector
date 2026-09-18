@@ -123,12 +123,14 @@ const successSchema = s.looseRequiredObject(
 export const zepActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Retrieve the Zep project associated with the connected API key.",
     inputSchema: s.object("This action does not require input.", {}),
     outputSchema: s.looseRequiredObject("The Zep project information response.", { project: projectSchema }),
   }),
   defineProviderAction(service, {
     name: "create_user",
+    operationType: "write",
     description: "Create a Zep user that can own conversation threads and graph memory.",
     inputSchema: s.object(
       "The input for creating a Zep user.",
@@ -139,6 +141,7 @@ export const zepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Zep users with pagination, search, and ordering controls.",
     inputSchema: s.object(
       "The filters and pagination options for listing Zep users.",
@@ -161,6 +164,7 @@ export const zepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Retrieve one Zep user by its application-defined identifier.",
     inputSchema: s.requiredObject("The input identifying a Zep user.", {
       user_id: userIdSchema,
@@ -169,6 +173,7 @@ export const zepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_user",
+    operationType: "write",
     description: "Update the profile, metadata, time zone, or ontology setting of a Zep user.",
     inputSchema: s.object(
       "The input for updating a Zep user.",
@@ -179,6 +184,7 @@ export const zepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_user",
+    operationType: "destructive",
     description: "Delete a Zep user and the threads and graph artifacts associated with that user.",
     inputSchema: s.requiredObject("The input identifying a Zep user.", {
       user_id: userIdSchema,
@@ -187,6 +193,7 @@ export const zepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_thread",
+    operationType: "write",
     description: "Create a conversation thread for an existing Zep user.",
     inputSchema: s.requiredObject("The input for creating a Zep thread.", {
       thread_id: threadIdSchema,
@@ -196,6 +203,7 @@ export const zepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_threads",
+    operationType: "read",
     description: "List Zep conversation threads with pagination and ordering controls.",
     inputSchema: s.object(
       "The pagination and sorting options for listing Zep threads.",
@@ -217,6 +225,7 @@ export const zepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_thread",
+    operationType: "destructive",
     description: "Delete a Zep conversation thread and its thread-specific memory.",
     inputSchema: s.requiredObject("The input identifying a Zep thread.", {
       thread_id: threadIdSchema,
@@ -225,6 +234,7 @@ export const zepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_thread_messages",
+    operationType: "write",
     description:
       "Add chat messages to a Zep thread, ingest them into the user's graph, and optionally return current context.",
     inputSchema: s.object(
@@ -258,6 +268,7 @@ export const zepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_thread_messages",
+    operationType: "read",
     description: "Retrieve messages from a Zep thread with cursor or recent-message controls.",
     inputSchema: s.object(
       "The input for retrieving messages from a Zep thread.",
@@ -286,6 +297,7 @@ export const zepActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_thread_context",
+    operationType: "read",
     description: "Retrieve the most relevant context from a user's graph for the current Zep thread.",
     inputSchema: s.object(
       "The input for retrieving assembled user context for a Zep thread.",

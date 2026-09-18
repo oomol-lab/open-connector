@@ -545,6 +545,7 @@ const getTaskFollowUp = "paperless_ngx.get_task";
 export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_documents",
+    operationType: "read",
     description:
       "List or search documents visible to the connected user, 25 per page by default. Filters mirror the Paperless-ngx query parameters: id, title, archive serial number, dates, correspondent, document type, storage path, tags, owner, custom fields, MIME type and content lookups can be combined; anything not modelled goes into additional_filters. query, text, title_search and more_like_id run a search-index query instead, returning results with __search_hit__ ordered by relevance, and only one of them may be used per call. Only root documents are listed; file versions appear inside each document's versions array. Requires the view_document permission.",
     requiredScopes: [],
@@ -553,6 +554,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document",
+    operationType: "read",
     description:
       "Get one document with its metadata, tags, custom fields, notes, file versions and duplicate_documents (other documents sharing the same checksum). content holds the extracted text of the latest version unless version selects another one. Requires the view_document permission and view access to the document.",
     requiredScopes: [],
@@ -561,6 +563,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_document",
+    operationType: "write",
     description:
       "Partially update a document: title, content, correspondent, document type, storage path, tags, creation date, archive serial number, custom fields, inbox tag removal, owner and object permissions. Only the provided fields are sent (PATCH); tags and custom_fields replace the whole list. Changing owner or set_permissions requires being the owner or a superuser. The response carries the full permissions object. Requires the change_document permission and change access to the document.",
     requiredScopes: [],
@@ -569,6 +572,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_document",
+    operationType: "destructive",
     description:
       "Move a document and all of its file versions to the trash. Trashed documents stay restorable until the configured trash delay (30 days by default) expires and are removed from the search index immediately. Requires the delete_document permission and delete access to the document.",
     requiredScopes: [],
@@ -581,6 +585,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document_root",
+    operationType: "read",
     description:
       "Resolve the root document of any document id, including ids of file versions and trashed documents. For a root document the answer is its own id. Requires view access to the root document.",
     requiredScopes: [],
@@ -593,6 +598,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document_metadata",
+    operationType: "read",
     description:
       "Get file-level metadata of a document: checksums, sizes, MIME type, media file names, whether an archived PDF exists, parser metadata (such as PDF info and XMP fields) of the original and archived files, and the detected content language. Reads the latest version unless version is given. Requires view access to the document.",
     requiredScopes: [],
@@ -605,6 +611,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document_suggestions",
+    operationType: "read",
     description:
       "Get correspondent, tag, document type, storage path and date suggestions for a document from the matching rules and the trained classifier. Results are cached until the document or classifier changes. Requires change access to the document (403 otherwise).",
     requiredScopes: [],
@@ -613,6 +620,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document_ai_suggestions",
+    operationType: "read",
     description:
       "Ask the configured language model for a title, tags, correspondent, document type, storage path and dates for a document. Existing objects the model picked are returned as ids, new names it proposed are returned separately. Requires AI to be enabled on the instance: otherwise Paperless-ngx answers 400 AI is required for this feature, an invalid AI configuration yields 400 and a model timeout yields 503. The call blocks while the model answers, and requires change access to the document.",
     requiredScopes: [],
@@ -621,6 +629,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "download_document",
+    operationType: "read",
     description:
       "Download the file of a document and hand it back as a local transit file. By default the archived PDF is served when it exists, otherwise the original upload; original=true always serves the original. The preview endpoint of Paperless-ngx serves exactly the same bytes with an inline disposition, so it is not exposed as a separate action. Works for trashed documents and file versions. Requires view access to the document; files above 200 MiB are rejected.",
     requiredScopes: [],
@@ -629,6 +638,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document_thumbnail",
+    operationType: "read",
     description:
       "Download the WebP thumbnail of a document (or of one of its file versions) and hand it back as a local transit file. Requires view access to the document.",
     requiredScopes: [],
@@ -641,6 +651,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_document_notes",
+    operationType: "read",
     description:
       "List the notes attached to a document, newest first, each with its author. Requires the view_note permission and view access to the document.",
     requiredScopes: [],
@@ -649,6 +660,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_document_note",
+    operationType: "write",
     description:
       "Add a note to a document on behalf of the connected user and return the complete note list. Also bumps the document's modified timestamp and re-indexes it. Requires the add_note permission and change access to the document.",
     requiredScopes: [],
@@ -660,6 +672,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_document_note",
+    operationType: "destructive",
     description:
       "Delete one note from a document and return the remaining notes. Requires the delete_note permission and change access to the document; a note id that does not belong to the document yields 404.",
     requiredScopes: [],
@@ -675,6 +688,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_document_share_links",
+    operationType: "read",
     description:
       "List the share links of a document that have not expired yet, newest first. Requires change access to the document (Paperless-ngx treats reading share links as a sharing operation).",
     requiredScopes: [],
@@ -685,6 +699,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document_history",
+    operationType: "read",
     description:
       "Get the audit trail of a document: every logged create, update, delete and access entry for the document and its custom field values, newest first, with the changed fields and the acting user. Requires the audit log to be enabled on the instance (PAPERLESS_AUDIT_LOG_ENABLED, otherwise 400 Audit log is disabled), the auditlog.view_logentry permission, and the connected user must own the document, be a superuser, or the document must be unowned.",
     requiredScopes: [],
@@ -695,6 +710,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "email_document",
+    operationType: "write",
     description:
       "Send one document as an email attachment through the mail server configured on the Paperless-ngx instance. The archived PDF is attached when it exists unless use_archive_version is false. Paperless-ngx routes this through its collection email endpoint with a single document id. Requires the view_document permission, view access to the document and a configured outgoing mail server (otherwise a 500 Error emailing documents).",
     requiredScopes: [],
@@ -707,6 +723,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "email_documents",
+    operationType: "write",
     description:
       "Send several documents as attachments of one email through the mail server configured on the Paperless-ngx instance. Archived PDFs are attached when they exist unless use_archive_version is false. Requires the view_document permission, view access to every document (403 otherwise) and a configured outgoing mail server (otherwise a 500 Error emailing documents).",
     requiredScopes: [],
@@ -726,6 +743,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_document_version",
+    operationType: "write",
     description:
       "Upload a new file version for a document. The connector reads the supplied local transit file and posts it as multipart form field document; Paperless-ngx consumes it in the background as a new version of the root document, keeping title, tags and other metadata shared. Returns the Celery task id to poll with get_task. Requires the change_document permission and change access to the root document; unsupported file types are rejected with 400.",
     requiredScopes: [],
@@ -748,6 +766,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_document_version",
+    operationType: "destructive",
     description:
       "Permanently delete one non-root file version of a document. The root (original) version cannot be deleted this way; delete the document instead (400 otherwise). Requires delete access to the root document.",
     requiredScopes: [],
@@ -761,6 +780,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_document_version_label",
+    operationType: "write",
     description:
       "Set or clear the label of one file version of a document, including the root version. Requires change access to the root document.",
     requiredScopes: [],
@@ -773,6 +793,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_next_asn",
+    operationType: "read",
     description:
       "Get the next free archive serial number: the highest ASN currently in use plus one, or 1 when none is assigned. Trashed documents keep their ASN reserved.",
     requiredScopes: [],
@@ -783,6 +804,7 @@ export const paperlessNgxDocumentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upload_document",
+    operationType: "write",
     description:
       "Upload a file for consumption as a new document. The connector reads the supplied local transit file (at most 100 MiB) and posts it as multipart form field document together with the optional title, creation date, correspondent, document type, storage path, tags, archive serial number and custom field values. Paperless-ngx sniffs the file type from the bytes and rejects unsupported types with 400; consumption (OCR, matching, workflows) runs in the background, so the action returns the Celery task id to poll with get_task, whose result_data.document_id identifies the new document once it succeeded. The connected user becomes the owner. Requires the add_document permission.",
     requiredScopes: [],

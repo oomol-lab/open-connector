@@ -54,6 +54,7 @@ const resourceWithMetaSchema = (description: string) =>
 export const ripplingActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_companies",
+    operationType: "read",
     description: "List companies available to the Rippling API token.",
     requiredScopes: [],
     inputSchema: s.object("Query parameters for listing Rippling companies.", optionalPaginationFields, {
@@ -64,6 +65,7 @@ export const ripplingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workers",
+    operationType: "read",
     description: "List workers available to the Rippling API token.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -78,6 +80,7 @@ export const ripplingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_worker",
+    operationType: "read",
     description: "Retrieve one Rippling worker by ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -92,6 +95,7 @@ export const ripplingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_departments",
+    operationType: "read",
     description: "List departments available to the Rippling API token.",
     requiredScopes: [],
     inputSchema: s.object("Query parameters for listing Rippling departments.", optionalPaginationFields, {

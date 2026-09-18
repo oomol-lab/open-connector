@@ -103,18 +103,21 @@ const ipstackLookupOutputSchema = s.looseObject("The IP geolocation payload retu
 export const ipstackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "lookup_current_ip",
+    operationType: "read",
     description: "Look up the requester IP address and return ipstack geolocation data.",
     inputSchema: currentIpInputSchema,
     outputSchema: ipstackLookupOutputSchema,
   }),
   defineProviderAction(service, {
     name: "lookup_ip",
+    operationType: "read",
     description: "Look up a single IPv4 or IPv6 address and return ipstack geolocation data.",
     inputSchema: ipLookupInputSchema,
     outputSchema: ipstackLookupOutputSchema,
   }),
   defineProviderAction(service, {
     name: "bulk_lookup",
+    operationType: "read",
     description: "Look up multiple IPv4 or IPv6 addresses in one ipstack request.",
     inputSchema: bulkLookupInputSchema,
     outputSchema: s.array(

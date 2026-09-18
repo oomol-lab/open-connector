@@ -111,6 +111,7 @@ const createCouponInputSchema = s.object("The coupon fields accepted by Zylvie."
 const actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the Zylvie user and brand authenticated by the current API key.",
     inputSchema: s.requiredObject("The input payload for getting the current Zylvie user.", {}),
     outputSchema: s.looseRequiredObject("The authenticated Zylvie user.", {
@@ -120,12 +121,14 @@ const actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_product",
+    operationType: "write",
     description: "Create a product in Zylvie.",
     inputSchema: createProductInputSchema,
     outputSchema: productOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_product",
+    operationType: "write",
     description: "Update selected fields on an existing Zylvie product.",
     inputSchema: s.object(
       "The product identifier and fields to update.",
@@ -136,18 +139,21 @@ const actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_product",
+    operationType: "destructive",
     description: "Delete a Zylvie product, or archive it when transaction history requires it.",
     inputSchema: s.requiredObject("The product to delete or archive.", { id: idSchema }),
     outputSchema: statusOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_coupon",
+    operationType: "write",
     description: "Create a coupon in Zylvie.",
     inputSchema: createCouponInputSchema,
     outputSchema: couponOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_coupon",
+    operationType: "write",
     description: "Update selected fields on an existing Zylvie coupon.",
     inputSchema: s.object(
       "The coupon identifier and fields to update.",
@@ -158,12 +164,14 @@ const actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_coupon",
+    operationType: "destructive",
     description: "Delete a Zylvie coupon, or archive it when transaction history requires it.",
     inputSchema: s.requiredObject("The coupon to delete or archive.", { id: idSchema }),
     outputSchema: statusOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_coupons",
+    operationType: "read",
     description: "List active or archived coupons for the authenticated Zylvie brand.",
     inputSchema: s.object(
       "The filter used to list Zylvie coupons.",
@@ -177,6 +185,7 @@ const actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "verify_license_key",
+    operationType: "read",
     description: "Verify that a Zylvie license key is valid for a product.",
     inputSchema: s.requiredObject("The product and license key to verify.", {
       productId: idSchema,
@@ -186,18 +195,21 @@ const actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "redeem_license_key",
+    operationType: "write",
     description: "Mark a Zylvie license key as redeemed.",
     inputSchema: s.requiredObject("The license key to redeem.", { licenseKey: licenseKeySchema }),
     outputSchema: licenseOutputSchema,
   }),
   defineProviderAction(service, {
     name: "refund_license_key",
+    operationType: "destructive",
     description: "Mark a Zylvie license key as refunded.",
     inputSchema: s.requiredObject("The license key to refund.", { licenseKey: licenseKeySchema }),
     outputSchema: licenseOutputSchema,
   }),
   defineProviderAction(service, {
     name: "verify_subscriptions",
+    operationType: "read",
     description: "List Zylvie subscriptions associated with a subscriber email address.",
     inputSchema: s.requiredObject("The subscriber whose subscriptions should be verified.", {
       email: s.string("The subscriber email address.", { format: "email" }),

@@ -90,6 +90,7 @@ const resultsSortOrderSchema = s.stringEnum("The sort direction used for multipl
 export const docparserActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "ping",
+    operationType: "read",
     description: "Ping the Docparser API to verify that the provided API key is valid.",
     inputSchema: noInputSchema,
     outputSchema: s.object("The normalized ping response returned by Docparser.", {
@@ -98,6 +99,7 @@ export const docparserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_parsers",
+    operationType: "read",
     description: "List all Document Parsers linked to the current Docparser account.",
     inputSchema: noInputSchema,
     outputSchema: s.object("The normalized parser list returned by Docparser.", {
@@ -106,6 +108,7 @@ export const docparserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_parser_models",
+    operationType: "read",
     description: "List all model layouts for a specific Docparser parser.",
     inputSchema: s.object("Input parameters for retrieving parser model layouts.", {
       parserId: s.nonEmptyString("The parser identifier to list model layouts for."),
@@ -116,6 +119,7 @@ export const docparserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upload_document_by_content",
+    operationType: "write",
     description:
       "Upload a document to a Docparser parser by sending base64-encoded file content and an optional file name.",
     inputSchema: s.object(
@@ -132,6 +136,7 @@ export const docparserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "fetch_document_from_url",
+    operationType: "read",
     description:
       "Queue a publicly accessible document URL for import into a Docparser parser and return the scheduled document metadata.",
     inputSchema: s.object(
@@ -147,6 +152,7 @@ export const docparserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document_status",
+    operationType: "read",
     description: "Retrieve the import, preprocessing, parsing, and webhook-dispatch status of one Docparser document.",
     inputSchema: s.object("Input parameters for retrieving a Docparser document status.", {
       parserId: s.nonEmptyString("The parser identifier that owns the document."),
@@ -158,6 +164,7 @@ export const docparserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document_result",
+    operationType: "read",
     description:
       "Retrieve the parsed data of one Docparser document. When child documents exist and are included, multiple result rows may be returned.",
     inputSchema: s.object(
@@ -179,6 +186,7 @@ export const docparserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_multiple_document_results",
+    operationType: "read",
     description:
       "Retrieve parsed data for multiple documents of a specific parser with optional filtering, pagination, queue inclusion, and sorting.",
     inputSchema: s.object(
@@ -210,6 +218,7 @@ export const docparserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reparse_documents",
+    operationType: "write",
     description: "Schedule one or more Docparser documents for re-parsing using their document IDs.",
     inputSchema: s.object("Input parameters for scheduling documents for re-parsing.", {
       parserId: s.nonEmptyString("The parser identifier that owns the documents."),
@@ -222,6 +231,7 @@ export const docparserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reintegrate_documents",
+    operationType: "write",
     description: "Schedule one or more Docparser documents for the integration queue using their document IDs.",
     inputSchema: s.object("Input parameters for scheduling documents for reintegration.", {
       parserId: s.nonEmptyString("The parser identifier that owns the documents."),

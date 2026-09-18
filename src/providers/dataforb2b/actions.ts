@@ -67,6 +67,7 @@ const enrichProfileInputSchema = {
 export const dataForB2BActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Get the connected DataForB2B account status and remaining credit balance.",
     inputSchema: s.requiredObject("Input for retrieving DataForB2B account information.", {}),
     outputSchema: s.requiredObject("DataForB2B account information.", {
@@ -76,6 +77,7 @@ export const dataForB2BActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_people",
+    operationType: "read",
     description: "Search professional profiles with DataForB2B filters and pagination.",
     inputSchema: s.object(
       "Input for searching DataForB2B people.",
@@ -86,6 +88,7 @@ export const dataForB2BActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_companies",
+    operationType: "read",
     description: "Search companies with DataForB2B filters and pagination.",
     inputSchema: s.object(
       "Input for searching DataForB2B companies.",
@@ -96,6 +99,7 @@ export const dataForB2BActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "count_results",
+    operationType: "read",
     description: "Count matching people or companies without retrieving result records.",
     inputSchema: s.requiredObject("Input for counting DataForB2B search matches.", {
       category: s.stringEnum("Record category to count.", ["people", "company"]),
@@ -108,12 +112,14 @@ export const dataForB2BActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "enrich_profile",
+    operationType: "read",
     description: "Enrich a person profile and optionally retrieve contact or GitHub data.",
     inputSchema: enrichProfileInputSchema,
     outputSchema: enrichmentOutputSchema,
   }),
   defineProviderAction(service, {
     name: "enrich_company",
+    operationType: "read",
     description: "Enrich a company with firmographic, funding, location, and growth data.",
     inputSchema: s.requiredObject("Input for enriching a DataForB2B company.", {
       company_identifier: s.nonWhitespaceString(
@@ -124,6 +130,7 @@ export const dataForB2BActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "typeahead",
+    operationType: "read",
     description: "Autocomplete values for DataForB2B people and company search filters.",
     inputSchema: s.object(
       "Input for DataForB2B typeahead.",

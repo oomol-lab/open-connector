@@ -29,6 +29,7 @@ const domainSchema = s.object("A domain available for U301 short links.", {
 export const u301Actions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "shorten_link",
+    operationType: "write",
     description: "Create one U301 short link for a destination URL.",
     inputSchema: s.actionInput(
       {
@@ -48,6 +49,7 @@ export const u301Actions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_link",
+    operationType: "destructive",
     description: "Delete one U301 short link by its domain/slug identifier.",
     inputSchema: s.actionInput(
       {
@@ -70,6 +72,7 @@ export const u301Actions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_domains",
+    operationType: "read",
     description: "List the U301 short-link domains available in the connected workspace.",
     inputSchema: s.actionInput({}, [], "The input payload for listing U301 domains."),
     outputSchema: s.actionOutput(

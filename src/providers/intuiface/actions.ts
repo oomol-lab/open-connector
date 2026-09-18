@@ -60,6 +60,7 @@ const experienceCollectionFields = {
 export const intuifaceActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_available_experiences",
+    operationType: "read",
     description: "List running Intuiface experiences that can receive Web Trigger messages.",
     inputSchema: s.object(
       "Filters for listing available Intuiface experiences. All provided filters use AND semantics.",
@@ -77,6 +78,7 @@ export const intuifaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send a Web Trigger message to selected running Intuiface experiences.",
     inputSchema: s.object(
       "The message and optional filters for selecting target Intuiface experiences.",

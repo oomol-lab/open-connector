@@ -95,6 +95,7 @@ export function createFeishuDriveAdvancedActions(
   const actions: ActionDefinition[] = [
     defineProviderAction(options.service, {
       name: "create_drive_shortcut",
+      operationType: "write",
       description: "Create a Feishu Drive shortcut to an existing file in another folder.",
       requiredScopes: [feishuDriveAdvancedProviderPermissions.shortcut],
       providerPermissions: [feishuDriveAdvancedProviderPermissions.shortcut],
@@ -130,6 +131,7 @@ export function createFeishuDriveAdvancedActions(
     }),
     defineProviderAction(options.service, {
       name: "list_drive_versions",
+      operationType: "read",
       description: "List one page of tagged version history for a Feishu Drive file.",
       requiredScopes: [feishuDriveAdvancedProviderPermissions.fileDownload],
       providerPermissions: [feishuDriveAdvancedProviderPermissions.fileDownload],
@@ -163,6 +165,7 @@ export function createFeishuDriveAdvancedActions(
     }),
     defineProviderAction(options.service, {
       name: "get_drive_version",
+      operationType: "read",
       description: "Download one specific Feishu Drive file version into local transit storage.",
       requiredScopes: [feishuDriveAdvancedProviderPermissions.fileDownload],
       providerPermissions: [feishuDriveAdvancedProviderPermissions.fileDownload],
@@ -203,6 +206,7 @@ export function createFeishuDriveAdvancedActions(
     }),
     defineProviderAction(options.service, {
       name: "list_drive_previews",
+      operationType: "read",
       description: "List available preview artifacts and generation states for a Feishu Drive file.",
       requiredScopes: [feishuDriveAdvancedProviderPermissions.fileDownload],
       providerPermissions: [feishuDriveAdvancedProviderPermissions.fileDownload],
@@ -230,6 +234,7 @@ export function createFeishuDriveAdvancedActions(
     }),
     defineProviderAction(options.service, {
       name: "download_drive_preview",
+      operationType: "read",
       description: "Resolve a requested Drive preview type and download the ready artifact into local transit storage.",
       requiredScopes: [feishuDriveAdvancedProviderPermissions.fileDownload],
       providerPermissions: [feishuDriveAdvancedProviderPermissions.fileDownload],
@@ -264,6 +269,7 @@ export function createFeishuDriveAdvancedActions(
     }),
     defineProviderAction(options.service, {
       name: "download_drive_cover",
+      operationType: "read",
       description: "Download a stable Drive cover preset into local transit storage.",
       requiredScopes: [feishuDriveAdvancedProviderPermissions.fileDownload],
       providerPermissions: [feishuDriveAdvancedProviderPermissions.fileDownload],
@@ -301,6 +307,7 @@ export function createFeishuDriveAdvancedActions(
     }),
     defineProviderAction(options.service, {
       name: "revert_drive_version",
+      operationType: "destructive",
       description: "Revert a Feishu Drive file to a specific historical version.",
       requiredScopes: [feishuDriveAdvancedProviderPermissions.fileUpload],
       providerPermissions: [feishuDriveAdvancedProviderPermissions.fileUpload],
@@ -319,6 +326,7 @@ export function createFeishuDriveAdvancedActions(
     }),
     defineProviderAction(options.service, {
       name: "delete_drive_version",
+      operationType: "destructive",
       description: "Permanently delete a specific historical version of a Feishu Drive file.",
       requiredScopes: [feishuDriveAdvancedProviderPermissions.fileUpload],
       providerPermissions: [feishuDriveAdvancedProviderPermissions.fileUpload],
@@ -340,6 +348,7 @@ export function createFeishuDriveAdvancedActions(
     actions.push(
       defineProviderAction(options.service, {
         name: "apply_drive_permission",
+        operationType: "write",
         description: "Apply to a Feishu document owner for view or edit permission on behalf of the current user.",
         requiredScopes: [feishuDriveAdvancedProviderPermissions.permissionApply],
         providerPermissions: [feishuDriveAdvancedProviderPermissions.permissionApply],
@@ -369,6 +378,7 @@ export function createFeishuDriveAdvancedActions(
       }),
       defineProviderAction(options.service, {
         name: "list_drive_secure_labels",
+        operationType: "read",
         description: "List secure labels available to the current Feishu user.",
         requiredScopes: [feishuDriveAdvancedProviderPermissions.secureLabelRead],
         providerPermissions: [feishuDriveAdvancedProviderPermissions.secureLabelRead],
@@ -400,6 +410,7 @@ export function createFeishuDriveAdvancedActions(
       }),
       defineProviderAction(options.service, {
         name: "update_drive_secure_label",
+        operationType: "write",
         description: "Set the secure label of a Feishu Drive file or document.",
         requiredScopes: [feishuDriveAdvancedProviderPermissions.secureLabelWrite],
         providerPermissions: [feishuDriveAdvancedProviderPermissions.secureLabelWrite],

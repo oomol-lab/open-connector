@@ -45,6 +45,7 @@ const createUnitGroupTypeValues = ["BedRoom", "MeetingRoom", "EventSpace", "Park
 
 interface ApaleoActionDefinition {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: readonly string[];
   providerPermissions?: readonly string[];
@@ -540,6 +541,7 @@ const idInputSchemas = {
 const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   {
     name: "list_properties",
+    operationType: "read",
     description:
       "List properties accessible to the connected apaleo account, with optional status, archive, country, and expansion filters.",
     requiredScopes: [],
@@ -561,6 +563,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "count_properties",
+    operationType: "read",
     description: "Return the total number of properties accessible to the connected apaleo account.",
     requiredScopes: [],
     inputSchema: actionInputSchema,
@@ -568,6 +571,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "get_property",
+    operationType: "read",
     description: "Get one property by ID, including optional localized fields and expanded actions.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -579,6 +583,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "check_property_exists",
+    operationType: "read",
     description: "Check whether a property exists by ID.",
     requiredScopes: [],
     inputSchema: idInputSchemas.checkProperty,
@@ -586,6 +591,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "create_property",
+    operationType: "write",
     description: "Create a new property in apaleo.",
     requiredScopes: [apaleoPropertyCreateScope],
     providerPermissions: propertyCreatePermissions,
@@ -598,6 +604,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "clone_property",
+    operationType: "write",
     description: "Clone an existing property into a new property with inventory and rate plans.",
     requiredScopes: [apaleoPropertyCreateScope],
     providerPermissions: propertyCreatePermissions,
@@ -610,6 +617,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "archive_property",
+    operationType: "destructive",
     description: "Archive a live property by ID.",
     requiredScopes: [apaleoPropertyManageScope],
     providerPermissions: propertyManagePermissions,
@@ -618,6 +626,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "move_property_to_live",
+    operationType: "write",
     description: "Move a test property to live status.",
     requiredScopes: [apaleoPropertyManageScope],
     providerPermissions: propertyManagePermissions,
@@ -626,6 +635,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "reset_property_data",
+    operationType: "destructive",
     description: "Delete all transactional data for a test property.",
     requiredScopes: [apaleoPropertyManageScope],
     providerPermissions: propertyManagePermissions,
@@ -634,6 +644,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "list_supported_countries",
+    operationType: "read",
     description: "List ISO country codes supported by apaleo property creation.",
     requiredScopes: [],
     inputSchema: actionInputSchema,
@@ -641,6 +652,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "list_units",
+    operationType: "read",
     description:
       "List units with filters for property, unit group, attributes, occupancy, maintenance state, archive state, and expansions.",
     requiredScopes: [apaleoUnitReadScope],
@@ -674,6 +686,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "count_units",
+    operationType: "read",
     description: "Return the total number of units matching the provided filters.",
     requiredScopes: [apaleoUnitReadScope],
     providerPermissions: unitReadPermissions,
@@ -682,6 +695,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "get_unit",
+    operationType: "read",
     description: "Get one unit by ID, including optional localized fields and expansions.",
     requiredScopes: [apaleoUnitReadScope],
     providerPermissions: unitReadPermissions,
@@ -694,6 +708,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "check_unit_exists",
+    operationType: "read",
     description: "Check whether a unit exists by ID.",
     requiredScopes: [apaleoUnitReadScope],
     providerPermissions: unitReadPermissions,
@@ -702,6 +717,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "create_unit",
+    operationType: "write",
     description: "Create a new unit.",
     requiredScopes: [apaleoUnitCreateScope],
     providerPermissions: unitCreatePermissions,
@@ -714,6 +730,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "create_multiple_units",
+    operationType: "write",
     description: "Create multiple units in a single bulk request.",
     requiredScopes: [apaleoUnitCreateScope],
     providerPermissions: unitCreatePermissions,
@@ -735,6 +752,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "delete_unit",
+    operationType: "destructive",
     description: "Delete a unit by ID.",
     requiredScopes: [apaleoUnitDeleteScope],
     providerPermissions: unitDeletePermissions,
@@ -743,6 +761,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "list_unit_groups",
+    operationType: "read",
     description: "List unit groups with filters for property, unit group type, pagination, and embedded resources.",
     requiredScopes: [apaleoUnitGroupReadScope],
     providerPermissions: unitGroupReadPermissions,
@@ -761,6 +780,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "count_unit_groups",
+    operationType: "read",
     description: "Return the total number of unit groups matching the provided filters.",
     requiredScopes: [apaleoUnitGroupReadScope],
     providerPermissions: unitGroupReadPermissions,
@@ -776,6 +796,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "get_unit_group",
+    operationType: "read",
     description: "Get one unit group by ID, including optional localized fields and expansions.",
     requiredScopes: [apaleoUnitGroupReadScope],
     providerPermissions: unitGroupReadPermissions,
@@ -788,6 +809,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "check_unit_group_exists",
+    operationType: "read",
     description: "Check whether a unit group exists by ID.",
     requiredScopes: [apaleoUnitGroupReadScope],
     providerPermissions: unitGroupReadPermissions,
@@ -796,6 +818,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "create_unit_group",
+    operationType: "write",
     description: "Create a new unit group.",
     requiredScopes: [apaleoUnitGroupCreateScope],
     providerPermissions: unitGroupCreatePermissions,
@@ -808,6 +831,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "replace_unit_group",
+    operationType: "destructive",
     description: "Completely replace the mutable fields of an existing unit group.",
     requiredScopes: [apaleoUnitGroupManageScope],
     providerPermissions: unitGroupManagePermissions,
@@ -820,6 +844,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "delete_unit_group",
+    operationType: "destructive",
     description: "Delete a unit group by ID.",
     requiredScopes: [apaleoUnitGroupDeleteScope],
     providerPermissions: unitGroupDeletePermissions,
@@ -828,6 +853,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "list_unit_attributes",
+    operationType: "read",
     description: "List unit attribute definitions for the current account.",
     requiredScopes: [apaleoUnitAttributeReadScope],
     providerPermissions: unitAttributeReadPermissions,
@@ -840,6 +866,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "get_unit_attribute",
+    operationType: "read",
     description: "Get one unit attribute definition by ID.",
     requiredScopes: [apaleoUnitAttributeReadScope],
     providerPermissions: unitAttributeReadPermissions,
@@ -848,6 +875,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "check_unit_attribute_exists",
+    operationType: "read",
     description: "Check whether a unit attribute definition exists by ID.",
     requiredScopes: [apaleoUnitAttributeReadScope],
     providerPermissions: unitAttributeReadPermissions,
@@ -856,6 +884,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "create_unit_attribute",
+    operationType: "write",
     description: "Create a new unit attribute definition.",
     requiredScopes: [apaleoUnitAttributeCreateScope],
     providerPermissions: unitAttributeCreatePermissions,
@@ -868,6 +897,7 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
   },
   {
     name: "delete_unit_attribute",
+    operationType: "destructive",
     description: "Delete a unit attribute definition by ID.",
     requiredScopes: [apaleoUnitAttributeDeleteScope],
     providerPermissions: unitAttributeDeletePermissions,
@@ -881,6 +911,7 @@ export const apaleoActions: ActionDefinition[] = apaleoActionDefinitions.map(def
 function defineApaleoAction(definition: ApaleoActionDefinition): ActionDefinition {
   return defineProviderAction(service, {
     name: definition.name,
+    operationType: definition.operationType,
     description: definition.description,
     requiredScopes: [...definition.requiredScopes],
     providerPermissions: getProviderPermissions(definition),

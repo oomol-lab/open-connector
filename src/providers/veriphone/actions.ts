@@ -67,12 +67,14 @@ const verifyPhoneNumberOutputSchema = s.object(
 export const veriphoneActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_credits",
+    operationType: "read",
     description: "Retrieve the current Veriphone verification credit summary for the account.",
     inputSchema: s.object("The input payload for retrieving the current Veriphone credit summary.", {}),
     outputSchema: getCreditsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "verify_phone_number",
+    operationType: "read",
     description: "Verify whether a phone number is valid and return its carrier and region data.",
     inputSchema: verifyPhoneNumberInputSchema,
     outputSchema: verifyPhoneNumberOutputSchema,

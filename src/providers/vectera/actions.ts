@@ -104,6 +104,7 @@ const mutationFields = {
 export const vecteraActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the user associated with the connected Vectera API token.",
     inputSchema: s.object(
       "Options for retrieving the current Vectera user.",
@@ -114,6 +115,7 @@ export const vecteraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_meeting_rooms",
+    operationType: "read",
     description: "List Vectera meeting rooms available to the connected user.",
     inputSchema: s.object(
       "Filters and pagination controls for listing Vectera meeting rooms.",
@@ -140,6 +142,7 @@ export const vecteraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_meeting_room",
+    operationType: "read",
     description: "Get one Vectera meeting room by id.",
     inputSchema: s.object(
       "Input for retrieving one Vectera meeting room.",
@@ -155,6 +158,7 @@ export const vecteraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_meeting_room",
+    operationType: "write",
     description: "Create a Vectera meeting room with optional ownership and access settings.",
     inputSchema: {
       ...s.object(
@@ -180,6 +184,7 @@ export const vecteraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_meeting_room",
+    operationType: "write",
     description: "Update the key, owner, or access levels of a Vectera meeting room.",
     inputSchema: {
       ...s.object(
@@ -204,6 +209,7 @@ export const vecteraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_meeting_room_settings",
+    operationType: "read",
     description: "Get settings for one Vectera meeting room.",
     inputSchema: s.requiredObject("Input identifying one Vectera meeting room.", {
       meetingRoomId: s.nonWhitespaceString("The Vectera meeting room id."),
@@ -214,6 +220,7 @@ export const vecteraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_meeting_room_settings",
+    operationType: "write",
     description: "Update writable settings for one Vectera meeting room.",
     inputSchema: {
       ...s.object(
@@ -234,6 +241,7 @@ export const vecteraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_meeting_room_permission",
+    operationType: "write",
     description: "Create a shareable Vectera meeting room access permission and join URL.",
     inputSchema: {
       ...s.object(

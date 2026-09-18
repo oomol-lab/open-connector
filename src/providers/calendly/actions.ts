@@ -162,6 +162,7 @@ export const calendlyProviderScopes: string[] = [
 export const calendlyActions: ActionDefinition[] = [
   action(
     "get_current_user",
+    "read",
     "Retrieve the authenticated Calendly user for the connected credential.",
     s.actionInput({}, [], "The input payload for retrieving the authenticated Calendly user."),
     s.actionOutput(
@@ -172,6 +173,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "get_user",
+    "read",
     "Retrieve one Calendly user by user URI.",
     input({ userUri }, ["userUri"]),
     resourceOutput("user", "A Calendly user resource."),
@@ -179,6 +181,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "get_organization",
+    "read",
     "Retrieve one Calendly organization by organization URI.",
     input({ organizationUri }, ["organizationUri"]),
     resourceOutput("organization", "A Calendly organization resource."),
@@ -186,6 +189,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "list_organization_memberships",
+    "read",
     "List Calendly organization memberships for one organization or one user.",
     input({
       organizationUri,
@@ -199,6 +203,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "get_organization_membership",
+    "read",
     "Retrieve one Calendly organization membership by membership URI.",
     input({ organizationMembershipUri }, ["organizationMembershipUri"]),
     resourceOutput("organizationMembership", "A Calendly organization membership resource."),
@@ -206,6 +211,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "delete_organization_membership",
+    "destructive",
     "Delete one Calendly organization membership by membership URI.",
     input({ organizationMembershipUri }, ["organizationMembershipUri"]),
     booleanOutput("deleted", "The response wrapper for deleting one Calendly organization membership."),
@@ -213,6 +219,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "list_organization_invitations",
+    "read",
     "List organization invitations for one Calendly organization.",
     input(
       {
@@ -232,6 +239,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "create_organization_invitation",
+    "write",
     "Create one organization invitation for a Calendly organization.",
     input(
       {
@@ -245,6 +253,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "revoke_organization_invitation",
+    "destructive",
     "Revoke one organization invitation from a Calendly organization.",
     input({ organizationUri, organizationInvitationUri }, ["organizationUri", "organizationInvitationUri"]),
     booleanOutput("revoked", "The response wrapper for revoking one Calendly organization invitation."),
@@ -252,6 +261,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "list_event_types",
+    "read",
     "List Calendly event types for exactly one user or one organization, including scheduling URLs.",
     input({
       userUri,
@@ -268,6 +278,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "get_event_type",
+    "read",
     "Retrieve one Calendly event type by event type URI.",
     input({ eventTypeUri }, ["eventTypeUri"]),
     resourceOutput("eventType", "A Calendly event type resource."),
@@ -275,6 +286,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "create_single_use_scheduling_link",
+    "write",
     "Create one single-use scheduling link from an existing Calendly event type without customization.",
     input({ eventTypeUri }, ["eventTypeUri"]),
     resourceOutput("schedulingLink", "A Calendly single-use scheduling link resource."),
@@ -282,6 +294,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "create_share",
+    "write",
     "Create one customized single-use share from an existing Calendly event type.",
     input(
       {
@@ -318,6 +331,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "create_event_invitee",
+    "write",
     "Create one Calendly invitee booking for a confirmed available start time.",
     input(
       {
@@ -340,6 +354,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "list_event_type_available_times",
+    "read",
     "List available time slots for one Calendly event type within a 7-day window.",
     input(
       {
@@ -359,6 +374,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "list_event_type_availability_schedules",
+    "read",
     "List the official Calendly availability schedules attached to one event type.",
     input({ eventTypeUri }, ["eventTypeUri"]),
     s.actionOutput(
@@ -375,6 +391,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "update_event_type_availability_schedule",
+    "write",
     "Update the official Calendly availability schedule for one event type.",
     input(
       {
@@ -391,6 +408,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "list_scheduled_events",
+    "read",
     "List Calendly scheduled events for exactly one user or one organization.",
     input({
       userUri,
@@ -412,6 +430,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "get_scheduled_event",
+    "read",
     "Retrieve one Calendly scheduled event by scheduled-event URI.",
     input({ scheduledEventUri }, ["scheduledEventUri"]),
     resourceOutput("scheduledEvent", "A Calendly scheduled event resource."),
@@ -419,6 +438,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "cancel_scheduled_event",
+    "destructive",
     "Cancel one Calendly scheduled event by scheduled-event URI.",
     input(
       {
@@ -432,6 +452,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "list_event_invitees",
+    "read",
     "List invitees for one Calendly scheduled event.",
     input(
       {
@@ -453,6 +474,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "get_event_invitee",
+    "read",
     "Retrieve one Calendly invitee by invitee URI.",
     input({ scheduledEventUri, inviteeUri }, ["scheduledEventUri", "inviteeUri"]),
     resourceOutput("invitee", "A Calendly invitee resource."),
@@ -460,6 +482,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "create_invitee_no_show",
+    "write",
     "Mark one Calendly invitee as a no-show by invitee URI.",
     input({ inviteeUri }, ["inviteeUri"]),
     resourceOutput("inviteeNoShow", "A Calendly invitee no-show resource."),
@@ -467,6 +490,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "get_invitee_no_show",
+    "read",
     "Retrieve one Calendly invitee no-show by no-show URI.",
     input({ inviteeNoShowUri }, ["inviteeNoShowUri"]),
     resourceOutput("inviteeNoShow", "A Calendly invitee no-show resource."),
@@ -474,6 +498,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "delete_invitee_no_show",
+    "destructive",
     "Delete one Calendly invitee no-show by no-show URI.",
     input({ inviteeNoShowUri }, ["inviteeNoShowUri"]),
     booleanOutput("deleted", "The response wrapper for deleting one Calendly invitee no-show."),
@@ -481,6 +506,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "list_routing_forms",
+    "read",
     "List Calendly routing forms for one organization.",
     input(
       {
@@ -498,6 +524,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "get_routing_form",
+    "read",
     "Retrieve one Calendly routing form by routing-form URI.",
     input({ routingFormUri }, ["routingFormUri"]),
     resourceOutput("routingForm", "A Calendly routing form resource."),
@@ -505,6 +532,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "list_routing_form_submissions",
+    "read",
     "List Calendly routing form submissions for one routing form.",
     input(
       {
@@ -522,6 +550,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "get_routing_form_submission",
+    "read",
     "Retrieve one Calendly routing form submission by submission URI.",
     input({ routingFormSubmissionUri }, ["routingFormSubmissionUri"]),
     resourceOutput("routingFormSubmission", "A Calendly routing form submission resource."),
@@ -529,6 +558,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "list_user_meeting_locations",
+    "read",
     "List the configured meeting locations for one Calendly user.",
     input({ userUri }, ["userUri"]),
     s.actionOutput(
@@ -544,6 +574,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "create_webhook_subscription",
+    "write",
     "Create one Calendly webhook subscription for an organization or one user.",
     input(
       {
@@ -563,6 +594,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "list_webhook_subscriptions",
+    "read",
     "List Calendly webhook subscriptions for an organization or one user.",
     input(
       {
@@ -582,6 +614,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "get_webhook_subscription",
+    "read",
     "Retrieve one Calendly webhook subscription by URI.",
     input({ webhookSubscriptionUri }, ["webhookSubscriptionUri"]),
     resourceOutput("webhookSubscription", "One Calendly webhook subscription returned by the API."),
@@ -589,6 +622,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "delete_webhook_subscription",
+    "destructive",
     "Delete one Calendly webhook subscription by URI.",
     input({ webhookSubscriptionUri }, ["webhookSubscriptionUri"]),
     booleanOutput("deleted", "The response wrapper for deleting one Calendly webhook subscription."),
@@ -596,6 +630,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "list_user_availability_schedules",
+    "read",
     "List user availability schedules for one Calendly user.",
     input({ userUri }, ["userUri"]),
     listOutput("availabilitySchedules", "The availability schedules returned by Calendly."),
@@ -603,6 +638,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "get_user_availability_schedule",
+    "read",
     "Retrieve one Calendly user availability schedule by schedule URI.",
     input({ availabilityScheduleUri }, ["availabilityScheduleUri"]),
     resourceOutput("availabilitySchedule", "A Calendly user availability schedule resource."),
@@ -610,6 +646,7 @@ export const calendlyActions: ActionDefinition[] = [
   ),
   action(
     "list_user_busy_times",
+    "read",
     "List busy time slots for one Calendly user within a 7-day window.",
     input(
       {
@@ -632,6 +669,7 @@ export const calendlyActions: ActionDefinition[] = [
 
 function action(
   name: CalendlyActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
@@ -639,6 +677,7 @@ function action(
 ): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     requiredScopes,
     inputSchema,

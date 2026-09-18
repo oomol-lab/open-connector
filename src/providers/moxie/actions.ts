@@ -66,6 +66,7 @@ const optionalQueryInputSchema = s.object(
 export const moxieActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_clients",
+    operationType: "read",
     description: "List all clients in the connected Moxie workspace.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -75,6 +76,7 @@ export const moxieActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_clients",
+    operationType: "read",
     description: "Search Moxie clients by client name or contact information.",
     requiredScopes: [],
     inputSchema: requiredQueryInputSchema,
@@ -84,6 +86,7 @@ export const moxieActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_contacts",
+    operationType: "read",
     description: "Search Moxie contacts by first name, last name, or email address.",
     requiredScopes: [],
     inputSchema: optionalQueryInputSchema,
@@ -93,6 +96,7 @@ export const moxieActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_projects",
+    operationType: "read",
     description: "Search active Moxie projects, optionally filtering by client name.",
     requiredScopes: [],
     inputSchema: optionalQueryInputSchema,
@@ -102,6 +106,7 @@ export const moxieActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pipeline_stages",
+    operationType: "read",
     description: "List sales pipeline stages configured in the Moxie workspace.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -111,6 +116,7 @@ export const moxieActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_task_stages",
+    operationType: "read",
     description: "List project task stages configured in the Moxie workspace.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,

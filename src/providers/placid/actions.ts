@@ -84,6 +84,7 @@ const imageTransferSchema = s.looseRequiredObject(
 export const placidActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description:
       "List Placid templates for the connected project with optional collection, title, tag, ordering, or next-page URL filters.",
     inputSchema: s.actionInput({
@@ -103,6 +104,7 @@ export const placidActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_template",
+    operationType: "read",
     description:
       "Get one Placid template by UUID and return its dynamic layer metadata for downstream image generation.",
     inputSchema: s.actionInput({ template_uuid: s.nonEmptyString("The Placid template UUID to retrieve.") }, [
@@ -112,6 +114,7 @@ export const placidActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_image",
+    operationType: "write",
     description:
       "Queue one Placid image generation request from a template UUID and dynamic layer payload, then return the image handle for polling.",
     inputSchema: s.actionInput(
@@ -136,6 +139,7 @@ export const placidActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_image",
+    operationType: "read",
     description:
       "Get the current Placid image generation status for one image identifier and return the finished image URL when available.",
     inputSchema: s.actionInput(
@@ -147,6 +151,7 @@ export const placidActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_image",
+    operationType: "destructive",
     description: "Delete one Placid image request by identifier and return whether the delete succeeded.",
     inputSchema: s.actionInput({ image_id: s.positiveInteger("The Placid image identifier to delete.") }, ["image_id"]),
     outputSchema: s.actionOutput({ deleted: s.boolean("Whether the delete succeeded.") }),

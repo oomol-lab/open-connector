@@ -173,6 +173,7 @@ updateRefundTransaction.required = ["transaction_id"];
 export const taxjarActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "calculate_sales_tax_for_order",
+    operationType: "read",
     description: "Calculate TaxJar sales tax for an order.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -203,6 +204,7 @@ export const taxjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "show_tax_rates_for_location",
+    operationType: "read",
     description: "Retrieve TaxJar sales tax rates for a location.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -220,6 +222,7 @@ export const taxjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tax_categories",
+    operationType: "read",
     description: "List TaxJar product tax categories and codes.",
     requiredScopes: [],
     inputSchema: emptyInput,
@@ -230,6 +233,7 @@ export const taxjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_nexus_regions",
+    operationType: "read",
     description: "List TaxJar nexus regions for the account.",
     requiredScopes: [],
     inputSchema: emptyInput,
@@ -240,6 +244,7 @@ export const taxjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "summarize_tax_rates_for_all_regions",
+    operationType: "read",
     description: "Retrieve TaxJar minimum and average sales tax rates by region.",
     requiredScopes: [],
     inputSchema: emptyInput,
@@ -250,6 +255,7 @@ export const taxjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List TaxJar customer identifiers.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -267,6 +273,7 @@ export const taxjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "show_customer",
+    operationType: "read",
     description: "Retrieve a TaxJar customer by identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -278,6 +285,7 @@ export const taxjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_customer",
+    operationType: "write",
     description: "Create a TaxJar customer for exemption management.",
     requiredScopes: [],
     inputSchema: customerPayload,
@@ -285,6 +293,7 @@ export const taxjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_customer",
+    operationType: "write",
     description: "Update an existing TaxJar customer.",
     requiredScopes: [],
     inputSchema: customerPayload,
@@ -292,6 +301,7 @@ export const taxjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_customer",
+    operationType: "destructive",
     description: "Delete a TaxJar customer by identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -311,6 +321,7 @@ export const taxjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_order_transactions",
+    operationType: "read",
     description: "List TaxJar order transaction identifiers within a date range.",
     requiredScopes: [],
     inputSchema: transactionDateRange,
@@ -321,6 +332,7 @@ export const taxjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "show_order_transaction",
+    operationType: "read",
     description: "Retrieve a TaxJar order transaction by identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -332,6 +344,7 @@ export const taxjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_order_transaction",
+    operationType: "write",
     description: "Create a TaxJar order transaction for reporting and filing.",
     requiredScopes: [],
     inputSchema: orderTransaction,
@@ -339,6 +352,7 @@ export const taxjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_order_transaction",
+    operationType: "write",
     description: "Update an existing TaxJar order transaction.",
     requiredScopes: [],
     inputSchema: updateOrderTransaction,
@@ -346,6 +360,7 @@ export const taxjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_order_transaction",
+    operationType: "destructive",
     description: "Delete a TaxJar order transaction by identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -365,6 +380,7 @@ export const taxjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_refund_transactions",
+    operationType: "read",
     description: "List TaxJar refund transaction identifiers within a date range.",
     requiredScopes: [],
     inputSchema: transactionDateRange,
@@ -375,6 +391,7 @@ export const taxjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "show_refund_transaction",
+    operationType: "read",
     description: "Retrieve a TaxJar refund transaction by identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -386,6 +403,7 @@ export const taxjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_refund_transaction",
+    operationType: "destructive",
     description: "Create a TaxJar refund transaction.",
     requiredScopes: [],
     inputSchema: refundTransaction,
@@ -393,6 +411,7 @@ export const taxjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_refund_transaction",
+    operationType: "destructive",
     description: "Update an existing TaxJar refund transaction.",
     requiredScopes: [],
     inputSchema: updateRefundTransaction,
@@ -400,6 +419,7 @@ export const taxjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_refund_transaction",
+    operationType: "destructive",
     description: "Delete a TaxJar refund transaction by identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -419,6 +439,7 @@ export const taxjarActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "validate_vat_number",
+    operationType: "read",
     description: "Validate a VAT identification number with TaxJar.",
     requiredScopes: [],
     inputSchema: s.actionInput(

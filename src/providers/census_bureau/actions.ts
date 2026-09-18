@@ -68,6 +68,7 @@ const queryRowsSchema = s.array(
 export const censusBureauActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_datasets",
+    operationType: "read",
     description: "List Census Data API datasets with optional client-side search, vintage, and pagination filters.",
     inputSchema: s.object(
       "The input payload for listing Census Data API datasets.",
@@ -87,6 +88,7 @@ export const censusBureauActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_variables",
+    operationType: "read",
     description: "List variables for a Census Data API dataset.",
     inputSchema: s.object("The input payload for listing Census dataset variables.", {
       datasetPath: datasetPathSchema,
@@ -99,6 +101,7 @@ export const censusBureauActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List variable groups for a Census Data API dataset.",
     inputSchema: s.object("The input payload for listing Census dataset groups.", {
       datasetPath: datasetPathSchema,
@@ -111,6 +114,7 @@ export const censusBureauActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_group",
+    operationType: "read",
     description: "Get one Census Data API variable group and its variables.",
     inputSchema: s.object("The input payload for getting a Census dataset group.", {
       datasetPath: datasetPathSchema,
@@ -127,6 +131,7 @@ export const censusBureauActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_dataset",
+    operationType: "read",
     description: "Query a Census Data API dataset with variables, geography predicates, and optional filters.",
     inputSchema: s.object(
       "The input payload for querying a Census dataset.",

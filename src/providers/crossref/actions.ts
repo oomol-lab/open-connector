@@ -264,6 +264,7 @@ const listResourcesInputSchema = s.oneOf(
 export const crossrefActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_work",
+    operationType: "read",
     description: "Get the current Crossref metadata record for one DOI.",
     inputSchema: s.object(
       "Input parameters for retrieving one Crossref work.",
@@ -276,6 +277,7 @@ export const crossrefActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_work_agency",
+    operationType: "read",
     description: "Get the DOI registration agency reported by Crossref for one work.",
     inputSchema: s.object(
       "Input parameters for retrieving the registration agency for a DOI.",
@@ -293,12 +295,14 @@ export const crossrefActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_works",
+    operationType: "read",
     description: "Search, filter, sort, sample, facet, or page through works registered with Crossref.",
     inputSchema: workListInputSchema,
     outputSchema: listWorksOutputSchema,
   }),
   defineProviderAction(service, {
     name: "match_reference",
+    operationType: "read",
     description: "Find the most relevant Crossref work candidates for a formatted bibliographic reference.",
     inputSchema: s.object("Input parameters for matching a bibliographic reference.", {
       reference: s.nonWhitespaceString(
@@ -319,6 +323,7 @@ export const crossrefActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_changed_works",
+    operationType: "read",
     description: "Page through Crossref works created, updated by members, or re-indexed since a point in time.",
     inputSchema: s.object("Input parameters for incrementally synchronizing Crossref works.", {
       changeSource: s.optional(
@@ -354,6 +359,7 @@ export const crossrefActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_scoped_works",
+    operationType: "read",
     description: "List works associated with one Crossref journal, member, funder, DOI prefix, or work type.",
     inputSchema: createWorkListInputSchema(
       "Input parameters for listing scoped Crossref works in one supported pagination mode.",
@@ -368,6 +374,7 @@ export const crossrefActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_resource",
+    operationType: "read",
     description: "Get one Crossref journal, member, funder, DOI prefix, or work type record.",
     inputSchema: s.object(
       "Input parameters for retrieving one Crossref resource.",
@@ -386,6 +393,7 @@ export const crossrefActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_resources",
+    operationType: "read",
     description: "List or search Crossref journals, members, funders, work types, or licenses.",
     inputSchema: listResourcesInputSchema,
     outputSchema: s.object("The normalized Crossref resource list response.", {
@@ -395,6 +403,7 @@ export const crossrefActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "export_work_citation",
+    operationType: "read",
     description: "Export one DOI as BibTeX, RIS, CSL JSON, a formatted citation, RDF, Turtle, or UNIXREF XML.",
     inputSchema: s.object("Input parameters for exporting one Crossref work.", {
       doi: doiSchema,
@@ -416,6 +425,7 @@ export const crossrefActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_citation_styles",
+    operationType: "read",
     description: "List the CSL style identifiers accepted for formatted Crossref citations.",
     inputSchema: s.object(
       "Input parameters for listing Crossref citation styles.",
@@ -426,6 +436,7 @@ export const crossrefActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_citation_locales",
+    operationType: "read",
     description: "List the locale identifiers accepted for formatted Crossref citations.",
     inputSchema: s.object(
       "Input parameters for listing Crossref citation locales.",

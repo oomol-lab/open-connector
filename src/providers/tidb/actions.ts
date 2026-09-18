@@ -139,6 +139,7 @@ const listServerlessTasksInputSchema = s.object(
 export const tidbActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_api_keys",
+    operationType: "read",
     description: "List TiDB Cloud API keys visible to the connected organization API key.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -157,6 +158,7 @@ export const tidbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_api_key",
+    operationType: "read",
     description: "Fetch one TiDB Cloud API key by access key.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for fetching one TiDB Cloud API key.", {
@@ -166,6 +168,7 @@ export const tidbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_audit_logs",
+    operationType: "read",
     description: "List TiDB Cloud console audit logs for security and change tracking.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -188,6 +191,7 @@ export const tidbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_clusters",
+    operationType: "read",
     description: "List TiDB Cloud Starter, Essential, or Dedicated clusters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -215,6 +219,7 @@ export const tidbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_cluster",
+    operationType: "read",
     description: "Fetch one TiDB Cloud Starter, Essential, or Dedicated cluster by ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -230,6 +235,7 @@ export const tidbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_regions",
+    operationType: "read",
     description: "List TiDB Cloud regions available to the connected organization API key.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -252,6 +258,7 @@ export const tidbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "show_node_quota",
+    operationType: "read",
     description: "List TiDB Cloud Dedicated node quotas for the organization.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Dedicated node quotas.", {}),
@@ -267,6 +274,7 @@ export const tidbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "show_cloud_providers",
+    operationType: "read",
     description: "List cloud providers available for TiDB Cloud Dedicated clusters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -285,6 +293,7 @@ export const tidbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_region",
+    operationType: "read",
     description: "Fetch one TiDB Cloud Dedicated region by region ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -299,6 +308,7 @@ export const tidbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_node_specs",
+    operationType: "read",
     description: "List TiDB Cloud Dedicated node specs available in a region.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -322,6 +332,7 @@ export const tidbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_node_spec",
+    operationType: "read",
     description: "Fetch one TiDB Cloud Dedicated node spec by region, component type, and key.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -339,6 +350,7 @@ export const tidbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_imports",
+    operationType: "read",
     description: "List TiDB Cloud Starter, Essential, or Dedicated import tasks.",
     requiredScopes: [],
     inputSchema: listTasksInputSchema,
@@ -350,6 +362,7 @@ export const tidbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_import",
+    operationType: "read",
     description: "Fetch one TiDB Cloud Starter, Essential, or Dedicated import task.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for fetching one TiDB Cloud import task.", {
@@ -361,6 +374,7 @@ export const tidbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_exports",
+    operationType: "read",
     description: "List TiDB Cloud Starter or Essential export tasks.",
     requiredScopes: [],
     inputSchema: listServerlessTasksInputSchema,
@@ -372,6 +386,7 @@ export const tidbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_export",
+    operationType: "read",
     description: "Fetch one TiDB Cloud Starter or Essential export task.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for fetching one TiDB Cloud export task.", {
@@ -382,6 +397,7 @@ export const tidbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_branches",
+    operationType: "read",
     description: "List TiDB Cloud Starter or Essential branches for a cluster.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -401,6 +417,7 @@ export const tidbActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_branch",
+    operationType: "read",
     description: "Fetch one TiDB Cloud Starter or Essential branch by branch ID.",
     requiredScopes: [],
     inputSchema: s.object(

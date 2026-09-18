@@ -115,6 +115,7 @@ const licenseInputSchema = s.object("Request parameters for a Payhip license key
 export const payhipActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_coupon",
+    operationType: "write",
     description: "Create a Payhip coupon for a fixed amount or percentage discount.",
     requiredScopes: [],
     inputSchema: writeCouponInputSchema,
@@ -124,6 +125,7 @@ export const payhipActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_coupon",
+    operationType: "read",
     description: "Retrieve a Payhip coupon by ID.",
     requiredScopes: [],
     inputSchema: getCouponInputSchema,
@@ -133,6 +135,7 @@ export const payhipActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_coupons",
+    operationType: "read",
     description: "List Payhip coupons, optionally starting from a specific results page.",
     requiredScopes: [],
     inputSchema: s.object("Request parameters for listing Payhip coupons.", listCouponsInputProperties, {
@@ -148,6 +151,7 @@ export const payhipActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_coupon",
+    operationType: "write",
     description: "Update a Payhip coupon using the same fields accepted by coupon creation.",
     requiredScopes: [],
     inputSchema: {
@@ -169,6 +173,7 @@ export const payhipActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_coupon",
+    operationType: "destructive",
     description: "Delete a Payhip coupon by ID.",
     requiredScopes: [],
     inputSchema: deleteCouponInputSchema,
@@ -176,6 +181,7 @@ export const payhipActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "verify_license",
+    operationType: "read",
     description: "Verify a Payhip license key using the product secret key.",
     requiredScopes: [],
     inputSchema: licenseInputSchema,
@@ -185,6 +191,7 @@ export const payhipActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "enable_license",
+    operationType: "write",
     description: "Enable a Payhip license key using the product secret key.",
     requiredScopes: [],
     inputSchema: licenseInputSchema,
@@ -194,6 +201,7 @@ export const payhipActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "disable_license",
+    operationType: "destructive",
     description: "Disable a Payhip license key using the product secret key.",
     requiredScopes: [],
     inputSchema: licenseInputSchema,
@@ -203,6 +211,7 @@ export const payhipActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "decrease_license_uses",
+    operationType: "write",
     description: "Decrease the available uses for a Payhip license key.",
     requiredScopes: [],
     inputSchema: licenseInputSchema,

@@ -89,6 +89,7 @@ const queryTimeProperties: Record<string, JsonSchema> = {
 export const aliyunSlsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Projects visible through one Alibaba Cloud Simple Log Service regional endpoint.",
     providerPermissions: ["log:ListProject"],
     inputSchema: s.object(
@@ -107,6 +108,7 @@ export const aliyunSlsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects_across_regions",
+    operationType: "read",
     description:
       "List all Projects from the explicitly supplied regional endpoints with bounded concurrency and optional partial-failure results.",
     providerPermissions: ["log:ListProject"],
@@ -145,6 +147,7 @@ export const aliyunSlsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_logstores",
+    operationType: "read",
     description: "List Logstores in one Simple Log Service Project.",
     providerPermissions: ["log:ListLogStores"],
     inputSchema: s.object(
@@ -163,6 +166,7 @@ export const aliyunSlsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_logs",
+    operationType: "read",
     description: "Query logs from one Simple Log Service Logstore with the GetLogs API.",
     providerPermissions: ["log:GetLogStoreLogs"],
     inputSchema: s.object(
@@ -201,6 +205,7 @@ export const aliyunSlsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_histograms",
+    operationType: "read",
     description: "Query the time distribution of matching logs in one Simple Log Service Logstore.",
     providerPermissions: ["log:GetLogStoreLogs"],
     inputSchema: s.object(

@@ -100,6 +100,7 @@ const registerAttendeeInputSchema = s.object(
 export const demioActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_events",
+    operationType: "read",
     description: "List active Demio events, optionally filtered to upcoming, past, or automated events.",
     inputSchema: s.object(
       "Optional filtering for the Demio event list.",
@@ -112,6 +113,7 @@ export const demioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_event",
+    operationType: "read",
     description: "Get one Demio event with its public registration URL and complete scheduled session list.",
     inputSchema: s.object(
       "Input identifying a Demio event.",
@@ -125,6 +127,7 @@ export const demioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_event_session",
+    operationType: "read",
     description: "Get scheduling and status information for one Demio event session.",
     inputSchema: s.requiredObject("Input identifying a Demio event session.", {
       id: s.integer("The unique event identifier."),
@@ -134,6 +137,7 @@ export const demioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "register_attendee",
+    operationType: "write",
     description: "Register one attendee for a Demio event and return the attendee hash and unique join link.",
     inputSchema: registerAttendeeInputSchema,
     outputSchema: s.looseRequiredObject(
@@ -147,6 +151,7 @@ export const demioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_event_participants",
+    operationType: "read",
     description: "List participants for one Demio event session, optionally filtered by participation status.",
     inputSchema: s.object(
       "Input identifying a Demio event session participation report.",

@@ -144,6 +144,7 @@ const listDealsInputSchema = s.object(
 export const onePageCrmActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List OnePageCRM contacts with pagination, search, ownership, tag, and sorting filters.",
     inputSchema: listContactsInputSchema,
     outputSchema: s.object(
@@ -160,6 +161,7 @@ export const onePageCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Retrieve a single OnePageCRM contact by ID.",
     inputSchema: s.requiredObject("Identifier for getting a OnePageCRM contact.", {
       contactId: idField("ID of the OnePageCRM contact to retrieve."),
@@ -171,6 +173,7 @@ export const onePageCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a OnePageCRM contact using JSON-safe contact fields.",
     inputSchema: s.object("Fields for creating a OnePageCRM contact.", contactFields, {
       optional: Object.keys(contactFields),
@@ -182,6 +185,7 @@ export const onePageCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_deals",
+    operationType: "read",
     description: "List OnePageCRM deals with pagination, search, status, contact, owner, tag, and sorting filters.",
     inputSchema: listDealsInputSchema,
     outputSchema: s.object(
@@ -198,6 +202,7 @@ export const onePageCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_deal",
+    operationType: "read",
     description: "Retrieve a single OnePageCRM deal by ID.",
     inputSchema: s.requiredObject("Identifier for getting a OnePageCRM deal.", {
       dealId: idField("ID of the OnePageCRM deal to retrieve."),
@@ -209,6 +214,7 @@ export const onePageCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_deal",
+    operationType: "write",
     description: "Create a OnePageCRM deal using JSON-safe deal fields.",
     inputSchema: s.object("Fields for creating a OnePageCRM deal.", dealFields, {
       optional: [

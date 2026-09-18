@@ -111,6 +111,7 @@ function input(properties: Record<string, JsonSchema>, required: string[], descr
 export const whatsappActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_phone_numbers",
+    operationType: "read",
     description: "List phone numbers for a WhatsApp Business Account.",
     providerPermissions: [managementPermission],
     inputSchema: input(
@@ -128,6 +129,7 @@ export const whatsappActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_phone_number",
+    operationType: "read",
     description: "Get metadata for a specific WhatsApp Business phone number.",
     providerPermissions: [managementPermission],
     inputSchema: input({ phone_number_id: phoneNumberId, fields }, ["phone_number_id"], "Input for a phone number."),
@@ -135,6 +137,7 @@ export const whatsappActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_business_profile",
+    operationType: "read",
     description: "Get the business profile configured for a WhatsApp Business phone number.",
     providerPermissions: [managementPermission],
     inputSchema: input(
@@ -158,6 +161,7 @@ export const whatsappActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_message_templates",
+    operationType: "read",
     description: "List message templates for a WhatsApp Business Account.",
     providerPermissions: [managementPermission],
     inputSchema: input(
@@ -180,6 +184,7 @@ export const whatsappActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_template_status",
+    operationType: "read",
     description: "Get status details for a specific message template.",
     providerPermissions: [managementPermission],
     inputSchema: input(
@@ -191,6 +196,7 @@ export const whatsappActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_message_template",
+    operationType: "write",
     description: "Create a new WhatsApp message template for a WABA.",
     providerPermissions: [managementPermission],
     inputSchema: input(
@@ -214,6 +220,7 @@ export const whatsappActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_message_template",
+    operationType: "destructive",
     description: "Delete all message template variants that share the same name.",
     providerPermissions: [managementPermission],
     inputSchema: input(
@@ -225,6 +232,7 @@ export const whatsappActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send a text message to a WhatsApp user.",
     providerPermissions: [messagingPermission],
     inputSchema: input(
@@ -245,6 +253,7 @@ export const whatsappActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_template_message",
+    operationType: "write",
     description: "Send an approved WhatsApp template message.",
     providerPermissions: [messagingPermission],
     inputSchema: input(
@@ -262,6 +271,7 @@ export const whatsappActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_media",
+    operationType: "write",
     description: "Send a media message by public URL.",
     providerPermissions: [messagingPermission],
     inputSchema: input(
@@ -279,6 +289,7 @@ export const whatsappActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_media_by_id",
+    operationType: "write",
     description: "Send previously uploaded media by Meta media ID.",
     providerPermissions: [messagingPermission],
     inputSchema: input(
@@ -298,6 +309,7 @@ export const whatsappActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upload_media",
+    operationType: "write",
     description: "Upload media to Meta and return the resulting media record.",
     providerPermissions: [messagingPermission],
     followUpActions: ["whatsapp.send_media_by_id"],
@@ -314,6 +326,7 @@ export const whatsappActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_media_info",
+    operationType: "read",
     description: "Get metadata and a short-lived download URL for uploaded media.",
     providerPermissions: [messagingPermission],
     inputSchema: input({ media_id: s.nonEmptyString("Meta media ID.") }, ["media_id"], "Input for reading media info."),
@@ -321,6 +334,7 @@ export const whatsappActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_location",
+    operationType: "write",
     description: "Send a location message to a WhatsApp user.",
     providerPermissions: [messagingPermission],
     inputSchema: input(
@@ -339,6 +353,7 @@ export const whatsappActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_contacts",
+    operationType: "write",
     description: "Send one or more contacts to a WhatsApp user.",
     providerPermissions: [messagingPermission],
     inputSchema: input(
@@ -354,6 +369,7 @@ export const whatsappActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_interactive_buttons",
+    operationType: "write",
     description: "Send an interactive reply-button message.",
     providerPermissions: [messagingPermission],
     inputSchema: input(
@@ -373,6 +389,7 @@ export const whatsappActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_interactive_list",
+    operationType: "write",
     description: "Send an interactive list message with sections and rows.",
     providerPermissions: [messagingPermission],
     inputSchema: input(

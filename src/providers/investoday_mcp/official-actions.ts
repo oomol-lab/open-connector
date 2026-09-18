@@ -1,11 +1,20 @@
-import type { ActionDefinition } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const officialTools = [
+interface OfficialTool {
+  name: string;
+  operationType: ActionDefinition["operationType"];
+  description: string;
+  inputSchema: JsonSchema;
+  toolName: string;
+}
+
+const officialTools: OfficialTool[] = [
   {
     name: "search",
+    operationType: "read",
     description: "Search securities, funds, indices, industries and concepts by name or code.",
     inputSchema: {
       type: "object",
@@ -40,6 +49,7 @@ const officialTools = [
   },
   {
     name: "get_stock_basic_info",
+    operationType: "read",
     description: "Get basic information for one or multiple Shanghai, Shenzhen or Beijing stocks.",
     inputSchema: {
       type: "object",
@@ -87,6 +97,7 @@ const officialTools = [
   },
   {
     name: "get_stock_quote_realtime",
+    operationType: "read",
     description: "Get the latest realtime quote for one Shanghai, Shenzhen or Beijing stock.",
     inputSchema: {
       type: "object",
@@ -105,6 +116,7 @@ const officialTools = [
   },
   {
     name: "list_stock_adjusted_quotes",
+    operationType: "read",
     description: "Get forward-adjusted daily stock prices over a date range, including batch queries and pagination.",
     inputSchema: {
       type: "object",
@@ -162,6 +174,7 @@ const officialTools = [
   },
   {
     name: "get_stock_val_indicators",
+    operationType: "read",
     description: "Get stock valuation indicators including market capitalization, PE, PB and PS over a date range.",
     inputSchema: {
       type: "object",
@@ -219,6 +232,7 @@ const officialTools = [
   },
   {
     name: "list_report_research",
+    operationType: "read",
     description:
       "Find research reports by stock, industry, institution or category, with optional keywords and publication dates.",
     inputSchema: {
@@ -319,6 +333,7 @@ const officialTools = [
   },
   {
     name: "search_announcements",
+    operationType: "read",
     description:
       "Search announcement passages by meaning, optionally filtering by stock, announcement ID and publication dates.",
     inputSchema: {
@@ -358,6 +373,7 @@ const officialTools = [
   },
   {
     name: "get_market_change_ratio_status",
+    operationType: "read",
     description: "Get current market breadth, including rising, falling and limit-up or limit-down stock counts.",
     inputSchema: {
       type: "object",
@@ -377,6 +393,7 @@ export const investodayOfficialToolNames: Map<string, string> = new Map<string, 
 export const investodayOfficialActions: ActionDefinition[] = officialTools.map((tool) =>
   defineProviderAction("investoday_mcp", {
     name: tool.name,
+    operationType: tool.operationType,
 
     description: tool.description,
     requiredScopes: [],

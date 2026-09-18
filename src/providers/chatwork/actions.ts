@@ -14,6 +14,7 @@ const empty = s.object({}, { description: "This action does not require addition
 export const chatworkActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_me",
+    operationType: "read",
     description: "Get the authenticated Chatwork profile.",
     requiredScopes: [],
     inputSchema: empty,
@@ -21,6 +22,7 @@ export const chatworkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contacts",
+    operationType: "read",
     description: "List Chatwork contacts visible to the authenticated account.",
     requiredScopes: [],
     inputSchema: empty,
@@ -28,6 +30,7 @@ export const chatworkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_rooms",
+    operationType: "read",
     description: "List Chatwork rooms visible to the authenticated account.",
     requiredScopes: [],
     inputSchema: empty,
@@ -35,6 +38,7 @@ export const chatworkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_room",
+    operationType: "read",
     description: "Get metadata for one Chatwork room.",
     requiredScopes: [],
     inputSchema: s.object({ roomId }, { required: ["roomId"] }),
@@ -42,6 +46,7 @@ export const chatworkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_room_members",
+    operationType: "read",
     description: "List all members in one Chatwork room.",
     requiredScopes: [],
     inputSchema: s.object({ roomId }, { required: ["roomId"] }),
@@ -49,6 +54,7 @@ export const chatworkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_room_messages",
+    operationType: "read",
     description: "List messages in one Chatwork room.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -59,6 +65,7 @@ export const chatworkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_message",
+    operationType: "read",
     description: "Get one message from a Chatwork room.",
     requiredScopes: [],
     inputSchema: s.object({ roomId, messageId }, { required: ["roomId", "messageId"] }),
@@ -66,6 +73,7 @@ export const chatworkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "post_message",
+    operationType: "write",
     description: "Post a message to a Chatwork room.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -80,6 +88,7 @@ export const chatworkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_message",
+    operationType: "write",
     description: "Update one message in a Chatwork room.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -90,6 +99,7 @@ export const chatworkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_message",
+    operationType: "destructive",
     description: "Delete one message in a Chatwork room.",
     requiredScopes: [],
     inputSchema: s.object({ roomId, messageId }, { required: ["roomId", "messageId"] }),
@@ -97,6 +107,7 @@ export const chatworkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_my_tasks",
+    operationType: "read",
     description: "List Chatwork tasks assigned to the authenticated account.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -110,6 +121,7 @@ export const chatworkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_room_tasks",
+    operationType: "read",
     description: "List tasks in one Chatwork room.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -125,6 +137,7 @@ export const chatworkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task",
+    operationType: "read",
     description: "Get one task from a Chatwork room.",
     requiredScopes: [],
     inputSchema: s.object({ roomId, taskId }, { required: ["roomId", "taskId"] }),
@@ -132,6 +145,7 @@ export const chatworkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_task",
+    operationType: "write",
     description: "Create a task in a Chatwork room.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -148,6 +162,7 @@ export const chatworkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_task_status",
+    operationType: "write",
     description: "Update the completion status of one Chatwork task.",
     requiredScopes: [],
     inputSchema: s.object(

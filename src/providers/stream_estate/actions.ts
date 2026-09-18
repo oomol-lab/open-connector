@@ -49,6 +49,7 @@ const orderSchema = s.stringEnum("The sort direction.", ["asc", "desc"]);
 export const streamEstateActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_properties",
+    operationType: "read",
     description: "Search Stream Estate property inventory with common filters and optional advanced query parameters.",
     inputSchema: s.object(
       "Filters and pagination for searching Stream Estate properties.",
@@ -112,6 +113,7 @@ export const streamEstateActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_property",
+    operationType: "read",
     description: "Retrieve one Stream Estate property document by UUID.",
     inputSchema: s.requiredObject("The property to retrieve.", { propertyId: propertyIdSchema }),
     outputSchema: s.requiredObject("A retrieved Stream Estate property.", {
@@ -120,6 +122,7 @@ export const streamEstateActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_similar_properties",
+    operationType: "read",
     description: "List Stream Estate properties similar to a selected property.",
     inputSchema: s.object(
       "The source property and pagination for similar properties.",
@@ -153,6 +156,7 @@ export const streamEstateActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_locations",
+    operationType: "read",
     description: "Search Stream Estate cities and departments for property-filter identifiers.",
     inputSchema: s.object(
       "Text and optional exclusions for Stream Estate location autocomplete.",
@@ -175,6 +179,7 @@ export const streamEstateActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_cities",
+    operationType: "read",
     description: "List Stream Estate cities using official geographic and name filters.",
     inputSchema: s.object(
       "Filters and pagination for listing Stream Estate cities.",

@@ -13,12 +13,14 @@ const deleteOutput = s.object("Response returned after deleting a Pushbullet res
 export const pushbulletActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the currently authenticated Pushbullet user profile.",
     inputSchema: s.object("Input parameters for getting the current user.", {}),
     outputSchema: raw,
   }),
   defineProviderAction(service, {
     name: "list_devices",
+    operationType: "read",
     description: "List all registered devices for the current Pushbullet user.",
     inputSchema: s.object("Input parameters for listing Pushbullet devices.", {}),
     outputSchema: s.looseObject("Response returned when listing Pushbullet devices.", {
@@ -27,24 +29,28 @@ export const pushbulletActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_device",
+    operationType: "write",
     description: "Create a new Pushbullet device for the current user.",
     inputSchema: s.looseObject("Input parameters for creating a device."),
     outputSchema: raw,
   }),
   defineProviderAction(service, {
     name: "update_device",
+    operationType: "write",
     description: "Update metadata for an existing Pushbullet device.",
     inputSchema: s.looseObject("Input parameters for updating a Pushbullet device.", { iden }),
     outputSchema: raw,
   }),
   defineProviderAction(service, {
     name: "delete_device",
+    operationType: "destructive",
     description: "Delete one Pushbullet device by identifier.",
     inputSchema: s.object("Input parameters for deleting a Pushbullet device.", { iden }),
     outputSchema: deleteOutput,
   }),
   defineProviderAction(service, {
     name: "list_pushes",
+    operationType: "read",
     description: "List Pushbullet pushes with optional active, modified-after, and cursor filters.",
     inputSchema: s.object(
       "Input parameters for listing Pushbullet pushes.",
@@ -63,30 +69,35 @@ export const pushbulletActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_push",
+    operationType: "write",
     description: "Send a Pushbullet note, link, file, or list push to the current user or a selected target.",
     inputSchema: s.looseObject("Input parameters for creating a Pushbullet push."),
     outputSchema: raw,
   }),
   defineProviderAction(service, {
     name: "update_push",
+    operationType: "destructive",
     description: "Update an existing Pushbullet push by identifier.",
     inputSchema: s.looseObject("Input parameters for updating a Pushbullet push.", { iden }),
     outputSchema: raw,
   }),
   defineProviderAction(service, {
     name: "delete_push",
+    operationType: "destructive",
     description: "Delete one Pushbullet push by identifier.",
     inputSchema: s.object("Input parameters for deleting a Pushbullet push.", { iden }),
     outputSchema: deleteOutput,
   }),
   defineProviderAction(service, {
     name: "delete_all_pushes",
+    operationType: "destructive",
     description: "Delete all Pushbullet pushes for the current account.",
     inputSchema: s.object("Input parameters for deleting all Pushbullet pushes.", {}),
     outputSchema: deleteOutput,
   }),
   defineProviderAction(service, {
     name: "list_chats",
+    operationType: "read",
     description: "List Pushbullet chats for the current account.",
     inputSchema: s.object("Input parameters for listing Pushbullet chats.", {}),
     outputSchema: s.looseObject("Response returned when listing Pushbullet chats.", {
@@ -95,6 +106,7 @@ export const pushbulletActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_chat",
+    operationType: "write",
     description: "Create a Pushbullet chat with another user by email address.",
     inputSchema: s.object("Input parameters for creating a Pushbullet chat.", {
       email: s.email("Email address for the chat participant."),
@@ -103,6 +115,7 @@ export const pushbulletActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_chat",
+    operationType: "write",
     description: "Update an existing Pushbullet chat by identifier.",
     inputSchema: s.object(
       "Input parameters for updating a Pushbullet chat.",
@@ -116,6 +129,7 @@ export const pushbulletActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_chat",
+    operationType: "destructive",
     description: "Delete one Pushbullet chat by identifier.",
     inputSchema: s.object("Input parameters for deleting a Pushbullet chat.", { iden }),
     outputSchema: deleteOutput,

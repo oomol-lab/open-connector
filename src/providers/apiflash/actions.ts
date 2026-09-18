@@ -100,18 +100,21 @@ const metadataOutputSchema = s.object(
 export const apiflashActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "capture_website_screenshot",
+    operationType: "read",
     description: "Capture a website screenshot with ApiFlash and return the generated screenshot URL.",
     inputSchema: captureInputSchema,
     outputSchema: captureOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_quota_information",
+    operationType: "read",
     description: "Retrieve the current ApiFlash screenshot quota and reset time.",
     inputSchema: s.object("The input payload for retrieving the current ApiFlash quota.", {}),
     outputSchema: quotaOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_screenshot_metadata",
+    operationType: "read",
     description: "Read HTTP metadata for a screenshot URL previously returned by ApiFlash.",
     inputSchema: s.object(
       "The input payload for reading screenshot metadata.",

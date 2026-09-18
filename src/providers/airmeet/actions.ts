@@ -12,6 +12,7 @@ const item = (description: string) => s.looseRequiredObject(description, {});
 export const airmeetActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_airmeets",
+    operationType: "read",
     description: "List Airmeet events accessible to the connected community API key.",
     inputSchema: s.object(
       "Pagination options for listing Airmeet events.",
@@ -29,6 +30,7 @@ export const airmeetActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sessions",
+    operationType: "read",
     description: "List sessions configured for an Airmeet event.",
     inputSchema: airmeetIdInput,
     outputSchema: s.requiredObject("The sessions configured for the Airmeet event.", {
@@ -37,6 +39,7 @@ export const airmeetActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_booths",
+    operationType: "read",
     description: "List booths configured for an Airmeet event.",
     inputSchema: airmeetIdInput,
     outputSchema: s.requiredObject("The booths configured for the Airmeet event.", {
@@ -45,6 +48,7 @@ export const airmeetActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tracks",
+    operationType: "read",
     description: "List tracks configured for an Airmeet event.",
     inputSchema: airmeetIdInput,
     outputSchema: s.requiredObject("The tracks configured for the Airmeet event.", {
@@ -53,6 +57,7 @@ export const airmeetActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_custom_registration_fields",
+    operationType: "read",
     description: "List custom registration fields configured for an Airmeet event.",
     inputSchema: airmeetIdInput,
     outputSchema: s.requiredObject("The custom registration fields configured for the Airmeet event.", {

@@ -94,6 +94,7 @@ const shiftOutputSchema = s.object("The Sling shift returned by the connector.",
 export const slingActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_session",
+    operationType: "read",
     description: "Retrieve the current Sling API session, including user and organization details.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The current Sling session returned by the connector.", {
@@ -102,12 +103,14 @@ export const slingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Sling users in the current organization with optional filters.",
     inputSchema: listUsersInputSchema,
     outputSchema: listUsersOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Retrieve one Sling user by id.",
     inputSchema: s.object("Input parameters for retrieving one Sling user.", {
       userId: s.positiveInteger("The Sling user identifier."),
@@ -118,6 +121,7 @@ export const slingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List Sling groups in the current organization with optional filters.",
     inputSchema: listGroupsInputSchema,
     outputSchema: s.object("The Sling groups returned by the connector.", {
@@ -126,6 +130,7 @@ export const slingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_group",
+    operationType: "read",
     description: "Retrieve one Sling group by id.",
     inputSchema: s.object("Input parameters for retrieving one Sling group.", {
       groupId: s.positiveInteger("The Sling group identifier."),
@@ -136,6 +141,7 @@ export const slingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_calendar_events",
+    operationType: "read",
     description: "List Sling calendar events for one user and organization within an ISO interval.",
     inputSchema: calendarEventsInputSchema,
     outputSchema: s.object("The Sling calendar events returned by the connector.", {
@@ -147,6 +153,7 @@ export const slingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_shift",
+    operationType: "read",
     description: "Retrieve one Sling shift by id.",
     inputSchema: s.object(
       "Input parameters for retrieving one Sling shift.",
@@ -160,12 +167,14 @@ export const slingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_detailed_shift",
+    operationType: "read",
     description: "Retrieve supplementary details for one Sling shift.",
     inputSchema: shiftIdInputSchema,
     outputSchema: shiftOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_shift_coworkers",
+    operationType: "read",
     description: "List coworkers for one Sling shift.",
     inputSchema: shiftIdInputSchema,
     outputSchema: s.object("The Sling shift coworkers returned by the connector.", {
@@ -174,12 +183,14 @@ export const slingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_current_shift",
+    operationType: "read",
     description: "Retrieve the current shift for the connected Sling user.",
     inputSchema: emptyInputSchema,
     outputSchema: shiftOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_next_shift",
+    operationType: "read",
     description: "Retrieve the next shift for the connected Sling user.",
     inputSchema: s.object(
       "Input parameters for retrieving the next Sling shift for the current user.",
@@ -190,6 +201,7 @@ export const slingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_working_users",
+    operationType: "read",
     description: "List Sling users working on a specific date.",
     inputSchema: s.object("Input parameters for listing users working on a day.", {
       date: s.nonEmptyString("The ISO date for the working-users query."),
@@ -198,6 +210,7 @@ export const slingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "List Sling tasks with optional type and cursor-like id filters.",
     inputSchema: s.object(
       "Input parameters for listing Sling tasks.",
@@ -215,6 +228,7 @@ export const slingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task",
+    operationType: "read",
     description: "Retrieve one Sling task by id.",
     inputSchema: s.object("Input parameters for retrieving one Sling task.", {
       taskId: s.positiveInteger("The Sling task identifier."),

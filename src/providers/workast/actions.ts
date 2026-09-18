@@ -110,6 +110,7 @@ const taskOutputSchema = s.object("A Workast task response.", {
 
 const getMyDetailsAction = defineProviderAction(service, {
   name: "get_my_details",
+  operationType: "read",
   description: "Get the Workast user represented by the connected API token.",
   requiredScopes: [],
   inputSchema: emptyInputSchema,
@@ -118,6 +119,7 @@ const getMyDetailsAction = defineProviderAction(service, {
 
 const searchSpacesAction = defineProviderAction(service, {
   name: "search_spaces",
+  operationType: "read",
   description: "Search Workast spaces available to the connected user with filters and pagination.",
   requiredScopes: [],
   inputSchema: searchSpacesInputSchema,
@@ -126,6 +128,7 @@ const searchSpacesAction = defineProviderAction(service, {
 
 const getSpaceDetailsAction = defineProviderAction(service, {
   name: "get_space_details",
+  operationType: "read",
   description: "Get the details of one Workast space by ID.",
   requiredScopes: [],
   inputSchema: spaceIdInputSchema,
@@ -134,6 +137,7 @@ const getSpaceDetailsAction = defineProviderAction(service, {
 
 const getSpaceTasksAction = defineProviderAction(service, {
   name: "get_space_tasks",
+  operationType: "read",
   description: "List tasks in a Workast space with status, pagination, and ordering controls.",
   requiredScopes: [],
   inputSchema: getSpaceTasksInputSchema,
@@ -142,6 +146,7 @@ const getSpaceTasksAction = defineProviderAction(service, {
 
 const getTaskDetailsAction = defineProviderAction(service, {
   name: "get_task_details",
+  operationType: "read",
   description: "Get the details of one Workast task by ID.",
   requiredScopes: [],
   inputSchema: taskIdInputSchema,
@@ -150,6 +155,7 @@ const getTaskDetailsAction = defineProviderAction(service, {
 
 const createTaskAction = defineProviderAction(service, {
   name: "create_task",
+  operationType: "write",
   description: "Create a task in a Workast space with common assignment and scheduling fields.",
   requiredScopes: [],
   inputSchema: createTaskInputSchema,
@@ -158,6 +164,7 @@ const createTaskAction = defineProviderAction(service, {
 
 const updateTaskAction = defineProviderAction(service, {
   name: "update_task",
+  operationType: "write",
   description: "Update one or more common fields on an existing Workast task.",
   requiredScopes: [],
   inputSchema: updateTaskInputSchema,
@@ -166,6 +173,7 @@ const updateTaskAction = defineProviderAction(service, {
 
 const completeTaskAction = defineProviderAction(service, {
   name: "complete_task",
+  operationType: "write",
   description: "Mark an existing Workast task as completed.",
   requiredScopes: [],
   inputSchema: taskIdInputSchema,

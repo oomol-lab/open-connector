@@ -50,6 +50,7 @@ const actionSchema = s.looseObject(
 export const digitalOceanActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve the current DigitalOcean account profile and team context for the connected token.",
     requiredScopes: ["account:read"],
     inputSchema: noInputSchema,
@@ -57,6 +58,7 @@ export const digitalOceanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_droplets",
+    operationType: "read",
     description: "List DigitalOcean Droplets with pagination and optional filtering by tag, name, or droplet type.",
     requiredScopes: ["droplet:read"],
     inputSchema: s.object(
@@ -84,6 +86,7 @@ export const digitalOceanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_droplet",
+    operationType: "read",
     description: "Retrieve one DigitalOcean Droplet by numeric droplet ID.",
     requiredScopes: ["droplet:read"],
     inputSchema: s.requiredObject("Input for retrieving a DigitalOcean Droplet.", { dropletId: dropletIdField }),
@@ -91,6 +94,7 @@ export const digitalOceanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "manage_droplet_lifecycle",
+    operationType: "destructive",
     description: "Initiate a basic DigitalOcean Droplet lifecycle action such as reboot, shutdown, or power cycle.",
     requiredScopes: ["droplet:update"],
     inputSchema: s.requiredObject("Input for initiating a DigitalOcean Droplet lifecycle action.", {
@@ -103,6 +107,7 @@ export const digitalOceanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_apps",
+    operationType: "read",
     description: "List DigitalOcean App Platform apps with pagination and optional project enrichment.",
     requiredScopes: ["app:read"],
     inputSchema: s.object(
@@ -114,6 +119,7 @@ export const digitalOceanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_databases",
+    operationType: "read",
     description: "List DigitalOcean managed database clusters, optionally filtered by tag.",
     requiredScopes: ["database:read"],
     inputSchema: s.object({ tagName: tagNameField }, { optional: ["tagName"], description: "Database list filters." }),
@@ -123,6 +129,7 @@ export const digitalOceanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_firewalls",
+    operationType: "read",
     description: "List DigitalOcean cloud firewalls with pagination.",
     requiredScopes: ["firewall:read"],
     inputSchema: paginationInputSchema,
@@ -130,6 +137,7 @@ export const digitalOceanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_load_balancers",
+    operationType: "read",
     description: "List DigitalOcean load balancers with pagination.",
     requiredScopes: ["load_balancer:read"],
     inputSchema: paginationInputSchema,
@@ -137,6 +145,7 @@ export const digitalOceanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_domains",
+    operationType: "read",
     description: "List DigitalOcean DNS domains with pagination.",
     requiredScopes: ["domain:read"],
     inputSchema: paginationInputSchema,
@@ -144,6 +153,7 @@ export const digitalOceanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_domain_records",
+    operationType: "read",
     description: "List DNS records for one DigitalOcean domain, optionally filtered by record name or type.",
     requiredScopes: ["domain:read"],
     inputSchema: s.object(
@@ -163,6 +173,7 @@ export const digitalOceanActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_vpcs",
+    operationType: "read",
     description: "List DigitalOcean VPC networks with pagination.",
     requiredScopes: ["vpc:read"],
     inputSchema: paginationInputSchema,

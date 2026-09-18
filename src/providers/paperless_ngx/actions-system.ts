@@ -134,6 +134,7 @@ const logNamesDescription = "Log file key: paperless, mail or celery. Only files
 export const paperlessNgxSystemActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_statistics",
+    operationType: "read",
     description:
       "Get document statistics for the connected user: document totals, inbox counts, MIME type breakdown, character count, object counts and the current archive serial number. Users with the global statistics permission see instance-wide numbers, everyone else sees only the documents they can access.",
     requiredScopes: [],
@@ -142,6 +143,7 @@ export const paperlessNgxSystemActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_system_status",
+    operationType: "read",
     description:
       "Get the Paperless-ngx system status: server version, install type, storage usage, database and migration state, Redis and Celery health, search index, classifier, sanity check and LLM index status plus a 30 day task summary. Requires the system status permission (superuser or a user with the view_paperlesstask permission).",
     requiredScopes: [],
@@ -150,6 +152,7 @@ export const paperlessNgxSystemActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_remote_version",
+    operationType: "read",
     description:
       "Check the latest released Paperless-ngx version on GitHub and whether it is newer than the connected instance. The instance performs the GitHub lookup and caches it for 15 minutes; when the lookup fails it reports version 0.0.0 with update_available false.",
     requiredScopes: [],
@@ -161,6 +164,7 @@ export const paperlessNgxSystemActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ui_settings",
+    operationType: "read",
     description:
       "Get the UI settings, effective permissions and basic identity (id, username, staff and superuser flags, groups) of the user that owns the API token. The settings object also carries server facts such as the Paperless-ngx version, app title, trash delay, audit log, email and AI availability.",
     requiredScopes: [],
@@ -169,6 +173,7 @@ export const paperlessNgxSystemActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_ui_settings",
+    operationType: "destructive",
     description:
       "Replace the stored UI settings of the connected user with the given settings object. Paperless-ngx overwrites the whole settings document, so send the complete object as returned by get_ui_settings with your changes applied; the update_checking.backend_setting value is never stored.",
     requiredScopes: [],
@@ -184,6 +189,7 @@ export const paperlessNgxSystemActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_application_config",
+    operationType: "read",
     description:
       "Get the instance-wide application configuration (OCR, archive generation, barcode, remote OCR and AI settings, app title and logo). Values set to null fall back to the corresponding environment variable. Requires the view_applicationconfiguration permission.",
     requiredScopes: [],
@@ -192,6 +198,7 @@ export const paperlessNgxSystemActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_application_config",
+    operationType: "destructive",
     description:
       "Partially update the instance-wide application configuration. Only the fields in values are changed; pass null to reset a field to its environment default. Changing the AI embedding settings makes Paperless-ngx rebuild the LLM index in the background. Requires the change_applicationconfiguration permission.",
     requiredScopes: [],
@@ -209,6 +216,7 @@ export const paperlessNgxSystemActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_logs",
+    operationType: "read",
     description:
       "List the log files available on the Paperless-ngx server (paperless, mail and celery when present). Requires admin (staff) access.",
     requiredScopes: [],
@@ -219,6 +227,7 @@ export const paperlessNgxSystemActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_log",
+    operationType: "read",
     description:
       "Read the lines of one Paperless-ngx log file, optionally limited to the last N entries. Requires admin (staff) access.",
     requiredScopes: [],
@@ -236,6 +245,7 @@ export const paperlessNgxSystemActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "global_search",
+    operationType: "read",
     description:
       "Search across documents, saved views, tags, correspondents, document types, storage paths, users, groups, mail rules, mail accounts, workflows and custom fields by name or title, returning at most three matches per object type. Documents are matched through the full text index unless db_only is true, in which case only titles are compared.",
     requiredScopes: [],
@@ -267,6 +277,7 @@ export const paperlessNgxSystemActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "autocomplete_search",
+    operationType: "read",
     description:
       "Get search term completions for a partial word from the full text index, ordered by how many of the user's documents contain each candidate.",
     requiredScopes: [],

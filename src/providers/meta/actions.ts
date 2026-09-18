@@ -164,6 +164,7 @@ const getInsightsInputSchema: JsonSchema = {
 export const metaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Retrieve the current Meta Graph API user for the connected access token.",
     inputSchema: s.object("The input payload for retrieving the current Meta user.", {}),
     outputSchema: s.object("The response returned when retrieving the current Meta user.", {
@@ -172,6 +173,7 @@ export const metaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_ad_accounts",
+    operationType: "read",
     description: "List Meta ad accounts available to the connected access token.",
     inputSchema: s.object(
       "The input payload for listing Meta ad accounts.",
@@ -187,6 +189,7 @@ export const metaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_campaigns",
+    operationType: "read",
     description: "List campaigns under one Meta ad account with optional delivery status filters.",
     inputSchema: s.object(
       "The input payload for listing Meta campaigns.",
@@ -210,6 +213,7 @@ export const metaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_insights",
+    operationType: "read",
     description: "Retrieve Meta Ads insights for an ad account, campaign, ad set, or ad object.",
     inputSchema: getInsightsInputSchema,
     outputSchema: s.object("The response returned when retrieving Meta insights.", {

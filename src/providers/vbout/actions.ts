@@ -43,6 +43,7 @@ const contactWriteProperties = {
 export const vboutActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Get the business profile associated with the current VBOUT API key.",
     requiredScopes: [],
     inputSchema: emptyInput,
@@ -50,6 +51,7 @@ export const vboutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_lists",
+    operationType: "read",
     description: "List email marketing lists available in the connected VBOUT account.",
     requiredScopes: [],
     inputSchema: emptyInput,
@@ -60,6 +62,7 @@ export const vboutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_list",
+    operationType: "read",
     description: "Get one VBOUT email marketing list and its configured custom fields.",
     requiredScopes: [],
     inputSchema: s.object("The list lookup input.", {
@@ -69,6 +72,7 @@ export const vboutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List contacts belonging to a specific VBOUT email marketing list.",
     requiredScopes: [],
     inputSchema: s.object("The contact collection input.", {
@@ -81,6 +85,7 @@ export const vboutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get one VBOUT contact by its numeric contact identifier.",
     requiredScopes: [],
     inputSchema: s.object("The contact lookup input.", {
@@ -90,6 +95,7 @@ export const vboutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a contact in a VBOUT email marketing list.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -107,6 +113,7 @@ export const vboutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update standard or custom fields for an existing VBOUT contact.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -121,6 +128,7 @@ export const vboutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete a contact from a specific VBOUT email marketing list.",
     requiredScopes: [],
     inputSchema: s.object("The contact deletion input.", {

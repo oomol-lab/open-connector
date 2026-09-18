@@ -17,6 +17,7 @@ const pageRankResultSchema = s.object("A single OpenPageRank lookup result.", {
 export const openPageRankActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_page_rank",
+    operationType: "read",
     description: "Look up OpenPageRank scores for one or more domains and return normalized rank metadata.",
     inputSchema: s.object(
       "Input parameters for looking up OpenPageRank scores.",

@@ -258,6 +258,7 @@ const recordListOutputSchema = s.object(
 export const softrActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_databases",
+    operationType: "read",
     description: "List the Softr databases accessible to the connected Personal Access Token.",
     followUpActions: ["softr.list_tables"],
     inputSchema: s.object({}, { description: "Input for listing accessible Softr databases." }),
@@ -269,6 +270,7 @@ export const softrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_database",
+    operationType: "read",
     description: "Get one Softr database by ID.",
     followUpActions: ["softr.list_tables"],
     inputSchema: databaseInputSchema,
@@ -276,6 +278,7 @@ export const softrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tables",
+    operationType: "read",
     description: "List all tables in a Softr database, including their field definitions.",
     followUpActions: ["softr.list_records", "softr.list_table_views"],
     inputSchema: databaseInputSchema,
@@ -287,6 +290,7 @@ export const softrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_table",
+    operationType: "read",
     description: "Get one Softr table and its field definitions by database ID and table ID.",
     followUpActions: ["softr.list_records", "softr.get_table_field"],
     inputSchema: tableInputSchema,
@@ -294,6 +298,7 @@ export const softrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_table_views",
+    operationType: "read",
     description: "List the configured views for one Softr table.",
     followUpActions: ["softr.list_records"],
     inputSchema: tableInputSchema,
@@ -305,12 +310,14 @@ export const softrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_table_field",
+    operationType: "read",
     description: "Get one Softr table field definition by ID.",
     inputSchema: fieldInputSchema,
     outputSchema: singlePropertyOutput("field", tableFieldSchema, "A single Softr table field result."),
   }),
   defineProviderAction(service, {
     name: "list_records",
+    operationType: "read",
     description: "List a paginated page of records from one Softr table, optionally filtered by a table view.",
     followUpActions: ["softr.get_record", "softr.search_records"],
     inputSchema: listRecordsInputSchema,
@@ -318,6 +325,7 @@ export const softrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_records",
+    operationType: "read",
     description: "Search records in one Softr table using optional filters, sorting, and pagination.",
     followUpActions: ["softr.get_record"],
     inputSchema: searchRecordsInputSchema,
@@ -325,6 +333,7 @@ export const softrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_record",
+    operationType: "read",
     description: "Get one Softr table record by ID.",
     followUpActions: ["softr.update_record", "softr.delete_record"],
     inputSchema: recordInputSchema,
@@ -332,6 +341,7 @@ export const softrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_record",
+    operationType: "write",
     description: "Create one record in a Softr table.",
     followUpActions: ["softr.get_record"],
     inputSchema: createRecordInputSchema,
@@ -339,6 +349,7 @@ export const softrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_record",
+    operationType: "write",
     description: "Partially update the supplied fields of one Softr table record.",
     followUpActions: ["softr.get_record"],
     inputSchema: updateRecordInputSchema,
@@ -346,6 +357,7 @@ export const softrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_record",
+    operationType: "destructive",
     description: "Permanently delete one Softr table record by ID.",
     inputSchema: s.object(
       { databaseId: databaseIdSchema, tableId: tableIdSchema, recordId: recordIdSchema },

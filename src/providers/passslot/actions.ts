@@ -83,6 +83,7 @@ const passIdentityInputSchema = s.actionInput(
 export const passslotActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List PassSlot pass templates available to the connected App Key.",
     inputSchema: s.actionInput({}, [], "Input parameters for listing PassSlot templates."),
     outputSchema: s.actionOutput(
@@ -92,6 +93,7 @@ export const passslotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pass_types",
+    operationType: "read",
     description: "List Apple Wallet pass type identifiers available in PassSlot.",
     inputSchema: s.actionInput({}, [], "Input parameters for listing PassSlot pass types."),
     outputSchema: s.actionOutput(
@@ -101,6 +103,7 @@ export const passslotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_passes",
+    operationType: "read",
     description: "List PassSlot Wallet passes, optionally limited to one pass type identifier.",
     inputSchema: s.actionInput(
       { passTypeIdentifier: passTypeIdentifierSchema },
@@ -114,6 +117,7 @@ export const passslotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_pass_from_template",
+    operationType: "write",
     description:
       "Create a Wallet pass from a PassSlot template using JSON placeholder values and return its installation URL.",
     inputSchema: s.actionInput(
@@ -128,6 +132,7 @@ export const passslotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_pass_url",
+    operationType: "read",
     description: "Get the short installation URL for an existing PassSlot Wallet pass.",
     inputSchema: passIdentityInputSchema,
     outputSchema: s.actionOutput(
@@ -137,6 +142,7 @@ export const passslotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_pass_values",
+    operationType: "read",
     description: "Get the current placeholder values of an existing PassSlot Wallet pass.",
     inputSchema: passIdentityInputSchema,
     outputSchema: s.actionOutput(
@@ -146,6 +152,7 @@ export const passslotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_pass_values",
+    operationType: "write",
     description: "Update the placeholder values of an existing PassSlot Wallet pass.",
     inputSchema: s.actionInput(
       {
@@ -163,6 +170,7 @@ export const passslotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_pass",
+    operationType: "destructive",
     description: "Permanently delete a PassSlot Wallet pass.",
     inputSchema: passIdentityInputSchema,
     outputSchema: s.actionOutput(

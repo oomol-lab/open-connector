@@ -314,6 +314,7 @@ const listScorecardsInputSchema = s.object(
 export const clariCopilotActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List current users in the Clari Copilot workspace.",
     inputSchema: s.actionInput({}, [], "No input is required to list Clari Copilot users."),
     outputSchema: s.looseRequiredObject(
@@ -326,6 +327,7 @@ export const clariCopilotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_topics",
+    operationType: "read",
     description: "List Clari Copilot topics, optionally filtered by last modified time.",
     inputSchema: listTopicsInputSchema,
     outputSchema: s.looseRequiredObject(
@@ -338,6 +340,7 @@ export const clariCopilotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_calls",
+    operationType: "read",
     description: "List Clari Copilot calls with supported filters, sorting, and pagination.",
     inputSchema: listCallsInputSchema,
     outputSchema: s.looseRequiredObject(
@@ -351,6 +354,7 @@ export const clariCopilotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_call_details",
+    operationType: "read",
     description: "Retrieve one Clari Copilot call with transcript, summary, and optional media URLs.",
     inputSchema: getCallDetailsInputSchema,
     outputSchema: s.looseRequiredObject(
@@ -363,6 +367,7 @@ export const clariCopilotActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_scorecards",
+    operationType: "read",
     description: "List Clari Copilot scorecards with pagination and scorer filters.",
     inputSchema: listScorecardsInputSchema,
     outputSchema: s.looseRequiredObject(

@@ -46,6 +46,7 @@ listRecordsInputSchema.not = { required: ["filter", "filterViewId"] };
 export const attioActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "identify",
+    operationType: "read",
     description: "Identify the current Attio access token, its workspace, and the scopes attached to it.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to identify an Attio token.", {}),
@@ -60,6 +61,7 @@ export const attioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_objects",
+    operationType: "read",
     description: "List all system-defined and user-defined objects in an Attio workspace.",
     requiredScopes: ["object_configuration:read"],
     inputSchema: s.object("No input is required to list Attio objects.", {}),
@@ -69,6 +71,7 @@ export const attioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_object",
+    operationType: "read",
     description: "Get one Attio object by object ID or API slug.",
     requiredScopes: ["object_configuration:read"],
     inputSchema: s.object("Input for retrieving an Attio object.", {
@@ -80,6 +83,7 @@ export const attioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_attributes",
+    operationType: "read",
     description: "List attributes defined on an Attio object or list.",
     requiredScopes: ["object_configuration:read"],
     inputSchema: s.object(
@@ -100,6 +104,7 @@ export const attioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_records",
+    operationType: "read",
     description:
       "List Attio records for an object with optional filtering, view filtering, sorting, limit, and offset.",
     requiredScopes: ["record_permission:read", "object_configuration:read"],
@@ -111,6 +116,7 @@ export const attioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_record",
+    operationType: "read",
     description: "Get a single Attio record by object and record ID.",
     requiredScopes: ["record_permission:read", "object_configuration:read"],
     inputSchema: s.object("Input for retrieving an Attio record.", {
@@ -121,6 +127,7 @@ export const attioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_record",
+    operationType: "write",
     description: "Create a record for an Attio object using documented attribute value shapes.",
     requiredScopes: ["record_permission:read-write", "object_configuration:read"],
     inputSchema: s.object("Input for creating an Attio record.", {
@@ -131,6 +138,7 @@ export const attioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_record",
+    operationType: "write",
     description: "Create or update an Attio record for an object using a unique matching attribute.",
     requiredScopes: ["record_permission:read-write", "object_configuration:read"],
     inputSchema: s.object("Input for upserting an Attio record.", {
@@ -142,6 +150,7 @@ export const attioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_record",
+    operationType: "write",
     description:
       "Update an Attio record by appending or overwriting multiselect values according to Attio's PATCH and PUT semantics.",
     requiredScopes: ["record_permission:read-write", "object_configuration:read"],
@@ -162,6 +171,7 @@ export const attioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_record",
+    operationType: "destructive",
     description: "Delete a single Attio record by object and record ID.",
     requiredScopes: ["record_permission:read-write", "object_configuration:read"],
     inputSchema: s.object("Input for deleting an Attio record.", {

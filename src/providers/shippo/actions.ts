@@ -114,6 +114,7 @@ const trackOutputSchema = s.object("Shippo tracking action output.", { track: tr
 export const shippoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_addresses",
+    operationType: "read",
     description: "List address objects created in the connected Shippo account.",
     inputSchema: paginationInputSchema,
     outputSchema: s.object("Paginated Shippo address output.", {
@@ -123,24 +124,28 @@ export const shippoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_address",
+    operationType: "write",
     description: "Create a Shippo address object and optionally validate it.",
     inputSchema: addressCreateInputSchema,
     outputSchema: addressOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_address",
+    operationType: "read",
     description: "Retrieve a Shippo address by object ID.",
     inputSchema: addressIdInputSchema,
     outputSchema: addressOutputSchema,
   }),
   defineProviderAction(service, {
     name: "validate_address",
+    operationType: "read",
     description: "Validate an existing Shippo address by object ID.",
     inputSchema: addressIdInputSchema,
     outputSchema: addressOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_parcels",
+    operationType: "read",
     description: "List parcel objects created in the connected Shippo account.",
     inputSchema: paginationInputSchema,
     outputSchema: s.object("Paginated Shippo parcel output.", {
@@ -150,18 +155,21 @@ export const shippoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_parcel",
+    operationType: "write",
     description: "Create a Shippo parcel object from dimensions or a template.",
     inputSchema: parcelCreateInputSchema,
     outputSchema: parcelOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_parcel",
+    operationType: "read",
     description: "Retrieve a Shippo parcel by object ID.",
     inputSchema: parcelIdInputSchema,
     outputSchema: parcelOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_tracking_status",
+    operationType: "read",
     description: "Retrieve Shippo tracking status using a carrier and tracking number.",
     inputSchema: trackingInputSchema,
     outputSchema: trackOutputSchema,

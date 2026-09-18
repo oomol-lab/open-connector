@@ -36,12 +36,14 @@ const resource = (description: string) => s.unknownObject(description);
 export const airfocusActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_profile",
+    operationType: "read",
     description: "Get the profile associated with the connected airfocus personal access token.",
     inputSchema: s.actionInput({}, [], "No input is required for this airfocus request."),
     outputSchema: s.actionOutput({ profile: resource("The airfocus user profile returned by the API.") }),
   }),
   defineProviderAction(service, {
     name: "search_workspaces",
+    operationType: "read",
     description: "Search airfocus workspaces with optional archived, filter, and sort criteria.",
     inputSchema: s.actionInput(
       {
@@ -59,12 +61,14 @@ export const airfocusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workspace",
+    operationType: "read",
     description: "Get one airfocus workspace by ID.",
     inputSchema: s.actionInput({ workspaceId: workspaceIdSchema }, ["workspaceId"]),
     outputSchema: s.actionOutput({ workspace: resource("The airfocus workspace returned by the API.") }),
   }),
   defineProviderAction(service, {
     name: "search_items",
+    operationType: "read",
     description: "Search items in an airfocus workspace with optional filter and sort criteria.",
     inputSchema: s.actionInput(
       {
@@ -83,12 +87,14 @@ export const airfocusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_item",
+    operationType: "read",
     description: "Get one item from an airfocus workspace by ID.",
     inputSchema: s.actionInput({ workspaceId: workspaceIdSchema, itemId: itemIdSchema }, ["workspaceId", "itemId"]),
     outputSchema: s.actionOutput({ item: resource("The airfocus item returned by the API.") }),
   }),
   defineProviderAction(service, {
     name: "create_item",
+    operationType: "write",
     description: "Create an item in an airfocus workspace.",
     inputSchema: s.actionInput(
       { workspaceId: workspaceIdSchema, ...itemWriteFields, name: s.nonEmptyString("The item name or title.") },
@@ -99,6 +105,7 @@ export const airfocusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_item",
+    operationType: "write",
     description: "Update the supplied fields of an existing airfocus item.",
     inputSchema: s.actionInput(
       { workspaceId: workspaceIdSchema, itemId: itemIdSchema, ...itemWriteFields },
@@ -109,6 +116,7 @@ export const airfocusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_item",
+    operationType: "destructive",
     description: "Permanently delete an item from an airfocus workspace.",
     inputSchema: s.actionInput({ workspaceId: workspaceIdSchema, itemId: itemIdSchema }, ["workspaceId", "itemId"]),
     outputSchema: s.actionOutput({

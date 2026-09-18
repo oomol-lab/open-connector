@@ -142,6 +142,7 @@ const identitySchema = s.object("Previously configured identity to use for the b
 export const anchorBrowserActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_billing_info",
+    operationType: "read",
     description: "Retrieve Anchor Browser project billing balance, usage, tier, and browser limits.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving Anchor Browser billing information.", {}),
@@ -152,6 +153,7 @@ export const anchorBrowserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_browser_session",
+    operationType: "write",
     description: "Start an Anchor Browser session and return its CDP and live-view connection URLs.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -171,6 +173,7 @@ export const anchorBrowserActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project_metadata",
+    operationType: "read",
     description: "Retrieve lightweight Anchor Browser project metadata by project ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving Anchor Browser project metadata.", {

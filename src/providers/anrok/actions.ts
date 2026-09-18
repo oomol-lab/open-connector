@@ -106,6 +106,7 @@ const paginationOutputFields = {
 export const anrokActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List Anrok customers with cursor pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -123,6 +124,7 @@ export const anrokActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Retrieve one Anrok customer by customer ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -136,6 +138,7 @@ export const anrokActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_transactions",
+    operationType: "read",
     description: "List Anrok transactions with optional cursor pagination and filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -156,6 +159,7 @@ export const anrokActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_filings",
+    operationType: "read",
     description: "List Anrok filings with optional cursor pagination and filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -183,6 +187,7 @@ export const anrokActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Retrieve one Anrok product by external ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -196,6 +201,7 @@ export const anrokActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_product_tax_categories",
+    operationType: "read",
     description: "List product tax categories available on the Anrok seller account.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Anrok product tax categories.", {}),
@@ -208,6 +214,7 @@ export const anrokActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_product_mappings",
+    operationType: "read",
     description: "List Product ID mappings for one Anrok integration.",
     requiredScopes: [],
     inputSchema: s.object(

@@ -1,9 +1,10 @@
-import type { ActionDefinition, JsonSchema } from "../../../core/types.ts";
+import type { ActionDefinition, ActionOperationType, JsonSchema } from "../../../core/types.ts";
 
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
 interface AddActionInput {
   readonly name: string;
+  readonly operationType: ActionOperationType;
   readonly description: string;
   readonly permission: string;
   readonly inputSchema: Record<string, unknown>;
@@ -12,11 +13,13 @@ interface AddActionInput {
 }
 interface NamedActionInput {
   readonly name: string;
+  readonly operationType: ActionOperationType;
   readonly description: string;
 }
 interface ToggleActionInput {
   readonly name: string;
   readonly enabled: boolean;
+  readonly operationType: ActionOperationType;
 }
 const baseToken = s.nonEmptyString("The Base app token.");
 const tableId = s.nonEmptyString("The Base table ID.");
@@ -101,6 +104,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
     actions.push(
       defineProviderAction(service, {
         name: input.name,
+        operationType: input.operationType,
         description: input.description,
         requiredScopes: [input.permission],
         providerPermissions: [input.permission],
@@ -111,6 +115,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   };
   add({
     name: "list_base_blocks",
+    operationType: "read",
     description: "List folders, tables, documents, dashboards, and workflows in a Base.",
     permission: "base:block:read",
     inputSchema: baseInput("Filter the Base resource directory.", {
@@ -121,6 +126,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "create_base_block",
+    operationType: "write",
     description: "Create a folder, table, document, dashboard, or workflow block.",
     permission: "base:block:create",
     write: true,
@@ -132,6 +138,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "move_base_block",
+    operationType: "destructive",
     description: "Move and order a Base resource block.",
     permission: "base:block:update",
     write: true,
@@ -144,6 +151,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "rename_base_block",
+    operationType: "write",
     description: "Rename a Base resource block.",
     permission: "base:block:update",
     write: true,
@@ -154,6 +162,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "delete_base_block",
+    operationType: "destructive",
     description: "Delete a Base resource block.",
     permission: "base:block:delete",
     write: true,
@@ -162,6 +171,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "list_base_record_history",
+    operationType: "read",
     description: "List the change history for one Base record.",
     permission: "base:history:read",
     inputSchema: tableInput("Identify the record and history page.", {
@@ -173,6 +183,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "create_base_record_share_links",
+    operationType: "write",
     description: "Generate share links for up to 100 Base records.",
     permission: "base:record:read",
     inputSchema: tableInput("Identify records to share.", {
@@ -185,26 +196,32 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   const viewProperties: readonly NamedActionInput[] = [
     {
       name: "get_base_view_filter",
+      operationType: "read",
       description: "Get the filter configuration of a Base view.",
     },
     {
       name: "get_base_view_visible_fields",
+      operationType: "read",
       description: "Get the visible field IDs of a Base view.",
     },
     {
       name: "get_base_view_group",
+      operationType: "read",
       description: "Get the grouping configuration of a Base view.",
     },
     {
       name: "get_base_view_sort",
+      operationType: "read",
       description: "Get the sorting configuration of a Base view.",
     },
     {
       name: "get_base_view_timebar",
+      operationType: "read",
       description: "Get the timeline configuration of a Base view.",
     },
     {
       name: "get_base_view_card",
+      operationType: "read",
       description: "Get the card configuration of a Base view.",
     },
   ];
@@ -218,26 +235,32 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   const viewSetters: readonly NamedActionInput[] = [
     {
       name: "set_base_view_filter",
+      operationType: "destructive",
       description: "Replace the filter configuration of a Base view.",
     },
     {
       name: "set_base_view_visible_fields",
+      operationType: "destructive",
       description: "Replace the visible field configuration of a Base view.",
     },
     {
       name: "set_base_view_group",
+      operationType: "destructive",
       description: "Replace the grouping configuration of a Base view.",
     },
     {
       name: "set_base_view_sort",
+      operationType: "destructive",
       description: "Replace the sorting configuration of a Base view.",
     },
     {
       name: "set_base_view_timebar",
+      operationType: "destructive",
       description: "Replace the timeline configuration of a Base view.",
     },
     {
       name: "set_base_view_card",
+      operationType: "destructive",
       description: "Replace the card configuration of a Base view.",
     },
   ];
@@ -253,6 +276,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   }
   add({
     name: "rename_base_view",
+    operationType: "write",
     description: "Rename a Base view.",
     permission: "base:view:write_only",
     write: true,
@@ -262,6 +286,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "list_base_roles",
+    operationType: "read",
     description: "List roles configured for Base advanced permissions.",
     permission: "base:role:read",
     inputSchema: baseInput("Identify the Base."),
@@ -269,12 +294,14 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "get_base_role",
+    operationType: "read",
     description: "Get a Base role and its complete permission configuration.",
     permission: "base:role:read",
     inputSchema: baseInput("Identify the Base role.", { roleId }),
   });
   add({
     name: "create_base_role",
+    operationType: "write",
     description: "Create a custom Base role from a complete permission configuration.",
     permission: "base:role:create",
     write: true,
@@ -282,6 +309,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "update_base_role",
+    operationType: "write",
     description: "Delta-merge changes into a Base role configuration.",
     permission: "base:role:update",
     write: true,
@@ -292,6 +320,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "delete_base_role",
+    operationType: "destructive",
     description: "Delete a custom Base role; system roles cannot be deleted.",
     permission: "base:role:delete",
     write: true,
@@ -299,12 +328,13 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
     outputSchema: deleteOutput,
   });
   const advancedPermissionActions: readonly ToggleActionInput[] = [
-    { name: "enable_base_advanced_permissions", enabled: true },
-    { name: "disable_base_advanced_permissions", enabled: false },
+    { name: "enable_base_advanced_permissions", enabled: true, operationType: "write" },
+    { name: "disable_base_advanced_permissions", enabled: false, operationType: "destructive" },
   ];
-  for (const { name, enabled } of advancedPermissionActions) {
+  for (const { name, enabled, operationType } of advancedPermissionActions) {
     add({
       name,
+      operationType,
       description: `${enabled ? "Enable" : "Disable"} advanced permissions for a Base.`,
       permission: "base:app:update",
       write: true,
@@ -313,6 +343,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   }
   add({
     name: "list_base_workflows",
+    operationType: "read",
     description: "List and optionally filter workflows in a Base.",
     permission: "base:workflow:read",
     inputSchema: baseInput("Filter the workflow list.", {
@@ -323,6 +354,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "get_base_workflow",
+    operationType: "read",
     description: "Get a Base workflow including its steps.",
     permission: "base:workflow:read",
     inputSchema: baseInput("Identify the workflow.", {
@@ -332,6 +364,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "create_base_workflow",
+    operationType: "write",
     description: "Create a disabled Base workflow from a complete definition.",
     permission: "base:workflow:create",
     write: true,
@@ -341,6 +374,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "update_base_workflow",
+    operationType: "destructive",
     description: "Replace a Base workflow definition while preserving its enabled state.",
     permission: "base:workflow:update",
     write: true,
@@ -350,12 +384,13 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
     }),
   });
   const workflowStateActions: readonly ToggleActionInput[] = [
-    { name: "enable_base_workflow", enabled: true },
-    { name: "disable_base_workflow", enabled: false },
+    { name: "enable_base_workflow", enabled: true, operationType: "write" },
+    { name: "disable_base_workflow", enabled: false, operationType: "destructive" },
   ];
-  for (const { name, enabled } of workflowStateActions) {
+  for (const { name, enabled, operationType } of workflowStateActions) {
     add({
       name,
+      operationType,
       description: `${enabled ? "Enable" : "Disable"} a Base workflow without changing its steps.`,
       permission: "base:workflow:update",
       write: true,
@@ -364,6 +399,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   }
   add({
     name: "list_base_forms",
+    operationType: "read",
     description: "List forms configured for a Base table.",
     permission: "base:form:read",
     inputSchema: tableInput("Identify the table and page forms.", pageFields),
@@ -371,12 +407,14 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "get_base_form",
+    operationType: "read",
     description: "Get a form configured for a Base table.",
     permission: "base:form:read",
     inputSchema: formInput("Identify the form."),
   });
   add({
     name: "get_base_form_detail",
+    operationType: "read",
     description: "Get public form questions and submission metadata by share token.",
     permission: "base:form:read",
     inputSchema: s.object(
@@ -391,6 +429,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "create_base_form",
+    operationType: "write",
     description: "Create a form in a Base table.",
     permission: "base:form:create",
     write: true,
@@ -401,6 +440,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "update_base_form",
+    operationType: "write",
     description: "Update the name or description of a Base form.",
     permission: "base:form:update",
     write: true,
@@ -411,6 +451,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "delete_base_form",
+    operationType: "destructive",
     description: "Delete a form from a Base table.",
     permission: "base:form:delete",
     write: true,
@@ -419,6 +460,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "list_base_form_questions",
+    operationType: "read",
     description: "List questions configured for a Base form.",
     permission: "base:form:read",
     inputSchema: formInput("Identify the form."),
@@ -430,6 +472,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "create_base_form_questions",
+    operationType: "write",
     description: "Create up to ten questions in a Base form.",
     permission: "base:form:update",
     write: true,
@@ -439,6 +482,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "update_base_form_questions",
+    operationType: "write",
     description: "Update up to ten Base form questions by question ID.",
     permission: "base:form:update",
     write: true,
@@ -448,6 +492,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "delete_base_form_questions",
+    operationType: "destructive",
     description: "Delete up to ten questions from a Base form.",
     permission: "base:form:update",
     write: true,
@@ -460,6 +505,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "submit_base_form",
+    operationType: "write",
     description: "Submit JSON field values to a shared Base form.",
     permission: "base:form:update",
     write: true,
@@ -478,6 +524,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "list_base_dashboards",
+    operationType: "read",
     description: "List dashboards in a Base.",
     permission: "base:dashboard:read",
     inputSchema: baseInput("Page Base dashboards.", pageFields),
@@ -485,12 +532,14 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "get_base_dashboard",
+    operationType: "read",
     description: "Get a Base dashboard.",
     permission: "base:dashboard:read",
     inputSchema: dashboardInput("Identify the dashboard."),
   });
   add({
     name: "create_base_dashboard",
+    operationType: "write",
     description: "Create a dashboard in a Base.",
     permission: "base:dashboard:create",
     write: true,
@@ -501,6 +550,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "update_base_dashboard",
+    operationType: "write",
     description: "Update a Base dashboard name or theme.",
     permission: "base:dashboard:update",
     write: true,
@@ -511,6 +561,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "delete_base_dashboard",
+    operationType: "destructive",
     description: "Delete a Base dashboard and its blocks.",
     permission: "base:dashboard:delete",
     write: true,
@@ -519,6 +570,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "arrange_base_dashboard",
+    operationType: "write",
     description: "Ask Feishu to automatically arrange dashboard blocks.",
     permission: "base:dashboard:update",
     write: true,
@@ -528,6 +580,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "list_base_dashboard_blocks",
+    operationType: "read",
     description: "List blocks in a Base dashboard.",
     permission: "base:dashboard:read",
     inputSchema: dashboardInput("Page dashboard blocks.", pageFields),
@@ -535,6 +588,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "get_base_dashboard_block",
+    operationType: "read",
     description: "Get a Base dashboard block and its data configuration.",
     permission: "base:dashboard:read",
     inputSchema: dashboardInput("Identify the dashboard block.", {
@@ -544,12 +598,14 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "get_base_dashboard_block_data",
+    operationType: "read",
     description: "Get the computed chart data for a Base dashboard block.",
     permission: "base:dashboard:read",
     inputSchema: baseInput("Identify the dashboard block.", { blockId }),
   });
   add({
     name: "create_base_dashboard_block",
+    operationType: "write",
     description: "Create a chart, metric, or text block in a Base dashboard.",
     permission: "base:dashboard:create",
     write: true,
@@ -562,6 +618,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "update_base_dashboard_block",
+    operationType: "write",
     description: "Update a Base dashboard block name or data configuration.",
     permission: "base:dashboard:update",
     write: true,
@@ -574,6 +631,7 @@ export function createFeishuBaseAdvancedActions(service: string): readonly Actio
   });
   add({
     name: "delete_base_dashboard_block",
+    operationType: "destructive",
     description: "Delete a block from a Base dashboard.",
     permission: "base:dashboard:delete",
     write: true,

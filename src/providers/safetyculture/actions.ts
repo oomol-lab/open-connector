@@ -56,6 +56,7 @@ const fieldValueSchema = s.looseRequiredObject("A SafetyCulture custom field val
 export const safetycultureActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_inspections",
+    operationType: "read",
     description:
       "Search SafetyCulture inspections by modification time, template, archive state, completion state, and owner.",
     inputSchema: s.object(
@@ -100,6 +101,7 @@ export const safetycultureActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_inspection",
+    operationType: "read",
     description: "Get a SafetyCulture inspection by ID.",
     inputSchema: s.object("Input for reading one SafetyCulture inspection.", {
       inspectionId: s.string("The SafetyCulture inspection ID.", { minLength: 1 }),
@@ -111,6 +113,7 @@ export const safetycultureActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_actions",
+    operationType: "read",
     description: "List SafetyCulture actions using pagination, sorting, and optional filters.",
     inputSchema: s.object(
       "Input for listing SafetyCulture actions.",
@@ -149,6 +152,7 @@ export const safetycultureActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_action",
+    operationType: "read",
     description: "Get a SafetyCulture action by ID.",
     inputSchema: s.object("Input for reading one SafetyCulture action.", {
       actionId: s.string("The SafetyCulture action ID.", { minLength: 1 }),
@@ -165,6 +169,7 @@ export const safetycultureActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_action",
+    operationType: "write",
     description: "Create a SafetyCulture action and return the created action ID.",
     inputSchema: s.object(
       "Input for creating a SafetyCulture action.",

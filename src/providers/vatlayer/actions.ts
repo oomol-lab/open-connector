@@ -31,6 +31,7 @@ const getRateInputSchema = s.actionInput(
 export const vatlayerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "validate_vat_number",
+    operationType: "read",
     description: "Validate a VAT number and return company information when vatlayer finds it.",
     inputSchema: s.actionInput(
       {
@@ -52,6 +53,7 @@ export const vatlayerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_rate",
+    operationType: "read",
     description: "Retrieve VAT rates for one country selected by country code, IP address, or client IP.",
     inputSchema: getRateInputSchema,
     outputSchema: s.looseRequiredObject("Single-country VAT rate response returned by vatlayer.", {
@@ -64,6 +66,7 @@ export const vatlayerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_rates",
+    operationType: "read",
     description: "Retrieve VAT rates for all EU member states from vatlayer.",
     inputSchema: s.actionInput(
       {},
@@ -77,6 +80,7 @@ export const vatlayerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "calculate_price",
+    operationType: "read",
     description: "Calculate VAT-compliant inclusive and exclusive prices with vatlayer.",
     inputSchema: s.actionInput(
       {
@@ -100,6 +104,7 @@ export const vatlayerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_types",
+    operationType: "read",
     description: "List vatlayer reduced VAT rate type identifiers for price calculations.",
     inputSchema: s.actionInput({}, [], "Input parameters for listing vatlayer reduced VAT rate types."),
     outputSchema: s.looseRequiredObject("Reduced VAT rate types returned by vatlayer.", {

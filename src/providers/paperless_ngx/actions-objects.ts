@@ -150,6 +150,7 @@ const tagListOutputSchema = paginatedOutputSchema("A page of tags.", tagSchema, 
 const tagActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description:
       "List tags visible to the connected user with their document counts and nested children. Supports id and case-insensitive name filters, the is_root flag for top-level tags only, ordering and pagination. Requires the view_tag permission.",
     requiredScopes: [],
@@ -163,6 +164,7 @@ const tagActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tag",
+    operationType: "read",
     description:
       "Get one tag by id, including its document count, parent and nested children. Requires the view_tag permission on the tag.",
     requiredScopes: [],
@@ -171,6 +173,7 @@ const tagActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_tag",
+    operationType: "write",
     description:
       "Create a tag with an optional color, matching rule, inbox flag and parent tag. The owner defaults to the connected user. Requires the add_tag permission.",
     requiredScopes: [],
@@ -179,6 +182,7 @@ const tagActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_tag",
+    operationType: "write",
     description:
       "Partially update a tag; only the provided fields are changed and null clears nullable fields such as parent. Requires the change_tag permission on the tag; changing owner or set_permissions additionally requires being the owner or a superuser.",
     requiredScopes: [],
@@ -187,6 +191,7 @@ const tagActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_tag",
+    operationType: "destructive",
     description:
       "Delete a tag. Documents keep their other tags; child tags are re-parented by the tree model. Requires the delete_tag permission on the tag.",
     requiredScopes: [],
@@ -206,6 +211,7 @@ const correspondentInputFields = {
 const correspondentActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_correspondents",
+    operationType: "read",
     description:
       "List correspondents visible to the connected user with their document counts. Supports id and case-insensitive name filters, ordering and pagination; set last_correspondence to true to include the date of the newest document per correspondent. Requires the view_correspondent permission.",
     requiredScopes: [],
@@ -219,6 +225,7 @@ const correspondentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_correspondent",
+    operationType: "read",
     description:
       "Get one correspondent by id, including its document count and last_correspondence date. Requires the view_correspondent permission on the correspondent.",
     requiredScopes: [],
@@ -227,6 +234,7 @@ const correspondentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_correspondent",
+    operationType: "write",
     description:
       "Create a correspondent with an optional matching rule. The owner defaults to the connected user. Requires the add_correspondent permission.",
     requiredScopes: [],
@@ -235,6 +243,7 @@ const correspondentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_correspondent",
+    operationType: "write",
     description:
       "Partially update a correspondent; only the provided fields are changed. Requires the change_correspondent permission on the correspondent; changing owner or set_permissions additionally requires being the owner or a superuser.",
     requiredScopes: [],
@@ -247,6 +256,7 @@ const correspondentActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_correspondent",
+    operationType: "destructive",
     description:
       "Delete a correspondent. Documents that used it keep no correspondent. Requires the delete_correspondent permission on the correspondent.",
     requiredScopes: [],
@@ -266,6 +276,7 @@ const documentTypeInputFields = {
 const documentTypeActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_document_types",
+    operationType: "read",
     description:
       "List document types visible to the connected user with their document counts. Supports id and case-insensitive name filters, ordering and pagination. Requires the view_documenttype permission.",
     requiredScopes: [],
@@ -274,6 +285,7 @@ const documentTypeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document_type",
+    operationType: "read",
     description:
       "Get one document type by id, including its document count. Requires the view_documenttype permission on the document type.",
     requiredScopes: [],
@@ -282,6 +294,7 @@ const documentTypeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_document_type",
+    operationType: "write",
     description:
       "Create a document type with an optional matching rule. The owner defaults to the connected user. Requires the add_documenttype permission.",
     requiredScopes: [],
@@ -290,6 +303,7 @@ const documentTypeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_document_type",
+    operationType: "write",
     description:
       "Partially update a document type; only the provided fields are changed. Requires the change_documenttype permission on the document type; changing owner or set_permissions additionally requires being the owner or a superuser.",
     requiredScopes: [],
@@ -302,6 +316,7 @@ const documentTypeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_document_type",
+    operationType: "destructive",
     description:
       "Delete a document type. Documents that used it keep no document type. Requires the delete_documenttype permission on the document type.",
     requiredScopes: [],
@@ -327,6 +342,7 @@ const storagePathInputFields = {
 const storagePathActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_storage_paths",
+    operationType: "read",
     description:
       "List storage paths visible to the connected user with their document counts. Supports id and case-insensitive name and path filters, ordering and pagination. Requires the view_storagepath permission.",
     requiredScopes: [],
@@ -338,6 +354,7 @@ const storagePathActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_storage_path",
+    operationType: "read",
     description:
       "Get one storage path by id, including its document count. Requires the view_storagepath permission on the storage path.",
     requiredScopes: [],
@@ -346,6 +363,7 @@ const storagePathActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_storage_path",
+    operationType: "write",
     description:
       "Create a storage path from a filename template and an optional matching rule. Use test_storage_path first to preview how the template renders. The owner defaults to the connected user. Requires the add_storagepath permission.",
     requiredScopes: [],
@@ -354,6 +372,7 @@ const storagePathActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_storage_path",
+    operationType: "write",
     description:
       "Partially update a storage path; only the provided fields are changed. Changing path schedules a background task that renames and moves every document using the storage path. Requires the change_storagepath permission on the storage path; changing owner or set_permissions additionally requires being the owner or a superuser.",
     requiredScopes: [],
@@ -366,6 +385,7 @@ const storagePathActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_storage_path",
+    operationType: "destructive",
     description:
       "Delete a storage path. Documents that used it fall back to the default filename format and are moved in the background. Requires the delete_storagepath permission on the storage path.",
     requiredScopes: [],
@@ -374,6 +394,7 @@ const storagePathActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "test_storage_path",
+    operationType: "read",
     description:
       "Render a storage path template against an existing document to preview the resulting file path, including the document's file extension, without saving anything. Only requires that the document is visible to the connected user; invalid templates are rejected with a validation error.",
     requiredScopes: [],
@@ -449,6 +470,7 @@ const customFieldOutputSchema = extendObject(
 const customFieldActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_custom_fields",
+    operationType: "read",
     description:
       "List custom field definitions with the number of documents using each one. Supports id and case-insensitive name filters, ordering and pagination. Custom fields carry no object-level permissions; requires the view_customfield permission.",
     requiredScopes: [],
@@ -459,6 +481,7 @@ const customFieldActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_custom_field",
+    operationType: "read",
     description:
       "Get one custom field definition by id, including its select options or default currency and the number of documents using it. Requires the view_customfield permission.",
     requiredScopes: [],
@@ -469,6 +492,7 @@ const customFieldActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_custom_field",
+    operationType: "write",
     description:
       "Create a custom field definition. Select fields need extra_data.select_options with at least one labelled option (ids are generated), monetary fields may set extra_data.default_currency. Requires the add_customfield permission.",
     requiredScopes: [],
@@ -477,6 +501,7 @@ const customFieldActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_custom_field",
+    operationType: "write",
     description:
       "Partially update a custom field definition; only the provided fields are changed. For select fields extra_data.select_options must be sent in full on every update, even when only renaming the field, keeping existing option ids so document values survive. Changing data_type of a field that already has values is not supported by the Paperless-ngx UI and can make stored values unreadable. Requires the change_customfield permission.",
     requiredScopes: [],
@@ -489,6 +514,7 @@ const customFieldActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_custom_field",
+    operationType: "destructive",
     description:
       "Delete a custom field definition together with every value stored for it on documents. Requires the delete_customfield permission.",
     requiredScopes: [],
@@ -611,6 +637,7 @@ const savedViewInputFields = {
 const savedViewActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_saved_views",
+    operationType: "read",
     description:
       "List saved document views visible to the connected user with their filter rules and display settings. Only ordering by name and pagination are supported; there are no field filters. Requires the view_savedview permission.",
     requiredScopes: [],
@@ -619,6 +646,7 @@ const savedViewActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_saved_view",
+    operationType: "read",
     description:
       "Get one saved view by id with its filter rules and display settings. Requires the view_savedview permission on the view.",
     requiredScopes: [],
@@ -627,6 +655,7 @@ const savedViewActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_saved_view",
+    operationType: "write",
     description:
       "Create a saved document view from a name and a list of filter rules, optionally with sort order, page size, display mode and display fields. Dashboard and sidebar visibility are user preferences stored through update_ui_settings, not view fields. The owner defaults to the connected user. Requires the add_savedview permission.",
     requiredScopes: [],
@@ -635,6 +664,7 @@ const savedViewActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_saved_view",
+    operationType: "write",
     description:
       "Partially update a saved view; only the provided fields are changed and filter_rules, when given, replaces the whole rule list. Requires the change_savedview permission on the view; changing owner or set_permissions additionally requires being the owner or a superuser.",
     requiredScopes: [],
@@ -647,6 +677,7 @@ const savedViewActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_saved_view",
+    operationType: "destructive",
     description:
       "Delete a saved view together with its filter rules. Requires the delete_savedview permission on the view.",
     requiredScopes: [],
@@ -695,6 +726,7 @@ const bulkEditObjectsInputSchema = s.object(
 
 const bulkEditObjectsAction = defineProviderAction(service, {
   name: "bulk_edit_objects",
+  operationType: "destructive",
   description:
     "Set the owner and permissions of, or delete, many tags, correspondents, document types or storage paths at once. Non-superusers need the change or delete model permission and must own (or the objects must be unowned) every targeted object, otherwise Paperless-ngx answers 403 Insufficient permissions. Deletion is immediate and not reversible.",
   requiredScopes: [],

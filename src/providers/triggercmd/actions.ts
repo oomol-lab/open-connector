@@ -31,6 +31,7 @@ const commandSchema = s.looseRequiredObject(
 export const triggercmdActions: ProviderActionDefinition<TriggercmdActionName>[] = [
   defineProviderAction(service, {
     name: "list_commands",
+    operationType: "read",
     description:
       "List the commands available in the connected TRIGGERcmd account and the computer that owns each command.",
     requiredScopes: [],
@@ -48,6 +49,7 @@ export const triggercmdActions: ProviderActionDefinition<TriggercmdActionName>[]
   }),
   defineProviderAction(service, {
     name: "trigger_command",
+    operationType: "write",
     description:
       "Trigger a saved TRIGGERcmd command on a named computer, with optional parameters when that command permits them.",
     requiredScopes: [],

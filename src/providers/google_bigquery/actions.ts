@@ -14,6 +14,7 @@ const service = "google_bigquery";
 
 interface BigQueryActionSource {
   name: GoogleBigQueryActionName;
+  readonly operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -230,7 +231,7 @@ const actions: BigQueryActionSource[] = [
     ),
     output({ jobs: s.array(rawObject), nextPageToken: s.nullable(s.string()), raw: rawObject }),
   ),
-  write(
+  destructive(
     "cancel_job",
     "Cancel a BigQuery job.",
     input({ projectId, jobId, location }, ["projectId", "jobId"]),
@@ -330,13 +331,13 @@ const actions: BigQueryActionSource[] = [
     datasetInput(["projectId", "datasetId"]),
     output({ dataset: rawObject }),
   ),
-  write(
+  destructive(
     "update_dataset",
     "Replace BigQuery dataset metadata.",
     datasetInput(["projectId", "datasetId"]),
     output({ dataset: rawObject }),
   ),
-  write(
+  destructive(
     "delete_dataset",
     "Delete a BigQuery dataset.",
     input(
@@ -361,13 +362,13 @@ const actions: BigQueryActionSource[] = [
     tableInput(["projectId", "datasetId", "tableId"]),
     output({ table: rawObject }),
   ),
-  write(
+  destructive(
     "update_table",
     "Replace BigQuery table metadata.",
     tableInput(["projectId", "datasetId", "tableId"]),
     output({ table: rawObject }),
   ),
-  write(
+  destructive(
     "delete_table",
     "Delete a BigQuery table.",
     input({ projectId, datasetId, tableId }, ["projectId", "datasetId", "tableId"]),
@@ -418,13 +419,13 @@ const actions: BigQueryActionSource[] = [
     routineInput(["projectId", "datasetId", "routineId", "routineType", "definitionBody"]),
     output({ routine: rawObject }),
   ),
-  write(
+  destructive(
     "update_routine",
     "Replace BigQuery routine metadata.",
     routineInput(["projectId", "datasetId", "routineId", "routineType", "definitionBody"]),
     output({ routine: rawObject }),
   ),
-  write(
+  destructive(
     "delete_routine",
     "Delete a BigQuery routine.",
     input({ projectId, datasetId, routineId: s.string({ minLength: 1 }) }, ["projectId", "datasetId", "routineId"]),
@@ -458,7 +459,7 @@ const actions: BigQueryActionSource[] = [
     ),
     output({ model: rawObject }),
   ),
-  write(
+  destructive(
     "delete_model",
     "Delete a BigQuery model.",
     input({ projectId, datasetId, modelId: s.string({ minLength: 1 }) }, ["projectId", "datasetId", "modelId"]),
@@ -503,6 +504,7 @@ export type GoogleBigQueryActionName =
 export const googleBigQueryActions: ActionDefinition[] = actions.map((source) =>
   defineProviderAction(service, {
     name: source.name,
+    operationType: source.operationType,
     description: source.description,
     requiredScopes: source.requiredScopes,
     providerPermissions: source.requiredScopes,
@@ -517,7 +519,14 @@ function read(
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): BigQueryActionSource {
-  return { name, description, requiredScopes: googleBigQueryReadScopes, inputSchema, outputSchema };
+  return {
+    name,
+    operationType: "read",
+    description,
+    requiredScopes: googleBigQueryReadScopes,
+    inputSchema,
+    outputSchema,
+  };
 }
 
 function insertData(
@@ -526,7 +535,14 @@ function insertData(
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): BigQueryActionSource {
-  return { name, description, requiredScopes: googleBigQueryInsertDataScopes, inputSchema, outputSchema };
+  return {
+    name,
+    operationType: "write",
+    description,
+    requiredScopes: googleBigQueryInsertDataScopes,
+    inputSchema,
+    outputSchema,
+  };
 }
 
 function write(
@@ -535,7 +551,30 @@ function write(
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): BigQueryActionSource {
-  return { name, description, requiredScopes: googleBigQueryWriteScopes, inputSchema, outputSchema };
+  return {
+    name,
+    operationType: "write",
+    description,
+    requiredScopes: googleBigQueryWriteScopes,
+    inputSchema,
+    outputSchema,
+  };
+}
+
+function destructive(
+  name: GoogleBigQueryActionName,
+  description: string,
+  inputSchema: JsonSchema,
+  outputSchema: JsonSchema,
+): BigQueryActionSource {
+  return {
+    name,
+    operationType: "destructive",
+    description,
+    requiredScopes: googleBigQueryWriteScopes,
+    inputSchema,
+    outputSchema,
+  };
 }
 
 function loadJob(
@@ -544,7 +583,14 @@ function loadJob(
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): BigQueryActionSource {
-  return { name, description, requiredScopes: googleBigQueryLoadJobScopes, inputSchema, outputSchema };
+  return {
+    name,
+    operationType: "write",
+    description,
+    requiredScopes: googleBigQueryLoadJobScopes,
+    inputSchema,
+    outputSchema,
+  };
 }
 
 function extractJob(
@@ -553,7 +599,14 @@ function extractJob(
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): BigQueryActionSource {
-  return { name, description, requiredScopes: googleBigQueryExtractJobScopes, inputSchema, outputSchema };
+  return {
+    name,
+    operationType: "write",
+    description,
+    requiredScopes: googleBigQueryExtractJobScopes,
+    inputSchema,
+    outputSchema,
+  };
 }
 
 function input(properties: Record<string, JsonSchema>, required: string[] = []): JsonSchema {

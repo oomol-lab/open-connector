@@ -136,6 +136,7 @@ const usageSchema = s.looseObject("A DiscoLike API usage response.", {
 export const discolikeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "discover_companies",
+    operationType: "read",
     description:
       "Discover companies in DiscoLike from a natural-language ICP prompt, seed domains, or company filters.",
     inputSchema: discoverInputSchema,
@@ -145,6 +146,7 @@ export const discolikeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "count_matching_domains",
+    operationType: "read",
     description: "Estimate how many DiscoLike company domains match the provided filters.",
     inputSchema: countInputSchema,
     outputSchema: s.object("The DiscoLike count response.", {
@@ -153,6 +155,7 @@ export const discolikeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_business_profile",
+    operationType: "read",
     description: "Get DiscoLike firmographic data for a single company domain.",
     inputSchema: domainInputSchema,
     outputSchema: s.object("The DiscoLike business profile response.", {
@@ -161,6 +164,7 @@ export const discolikeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_digital_footprint_score",
+    operationType: "read",
     description: "Get DiscoLike digital footprint score details for a company domain.",
     inputSchema: domainInputSchema,
     outputSchema: s.object("The DiscoLike digital footprint score response.", {
@@ -169,6 +173,7 @@ export const discolikeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_growth_metrics",
+    operationType: "read",
     description: "Get DiscoLike quarterly growth metrics for a company domain.",
     inputSchema: domainInputSchema,
     outputSchema: s.object("The DiscoLike growth metrics response.", {
@@ -177,6 +182,7 @@ export const discolikeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_certificate_metrics",
+    operationType: "read",
     description: "Get DiscoLike SSL certificate registration metrics for a company domain.",
     inputSchema: domainInputSchema,
     outputSchema: s.object("The DiscoLike certificate metrics response.", {
@@ -185,6 +191,7 @@ export const discolikeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_usage",
+    operationType: "read",
     description: "Get DiscoLike API usage and billing counters for the current key.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The DiscoLike usage response.", {

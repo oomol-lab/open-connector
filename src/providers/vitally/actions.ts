@@ -22,6 +22,7 @@ const listAccountsOutputSchema = s.actionOutput({
 export const vitallyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_accounts",
+    operationType: "read",
     description: "List Vitally accounts with optional status and cursor pagination filters.",
     inputSchema: s.actionInput({
       limit: s.integer("The maximum number of accounts to return, up to 100.", {
@@ -35,6 +36,7 @@ export const vitallyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Get a Vitally account by its Vitally ID or external ID.",
     inputSchema: s.actionInput(
       {
@@ -46,6 +48,7 @@ export const vitallyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_account",
+    operationType: "write",
     description: "Create a Vitally account with an external ID, name, optional organization, and traits.",
     inputSchema: s.actionInput(
       {
@@ -60,6 +63,7 @@ export const vitallyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_account",
+    operationType: "write",
     description: "Update a Vitally account name, organization relationship, or traits by Vitally ID or external ID.",
     inputSchema: s.actionInput(
       {
@@ -78,6 +82,7 @@ export const vitallyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_account",
+    operationType: "destructive",
     description: "Delete a Vitally account by its Vitally ID or external ID.",
     inputSchema: s.actionInput(
       {

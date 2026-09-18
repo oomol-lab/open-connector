@@ -38,6 +38,7 @@ const expandSchema = { expand: s.boolean("Whether to expand named relations in t
 export const zammadActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Retrieve the Zammad user associated with the connected access token.",
     requiredScopes: [],
     inputSchema: s.object("The input for retrieving the current Zammad user.", {}),
@@ -45,6 +46,7 @@ export const zammadActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tickets",
+    operationType: "read",
     description: "List tickets visible to the connected Zammad user.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -58,6 +60,7 @@ export const zammadActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_tickets",
+    operationType: "read",
     description: "Search Zammad tickets with the endpoint search syntax.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -77,6 +80,7 @@ export const zammadActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ticket",
+    operationType: "read",
     description: "Retrieve one Zammad ticket by ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -88,6 +92,7 @@ export const zammadActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_ticket",
+    operationType: "write",
     description: "Create a Zammad ticket with its initial text article.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -113,6 +118,7 @@ export const zammadActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_ticket",
+    operationType: "write",
     description: "Update documented mutable fields on a Zammad ticket.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -133,6 +139,7 @@ export const zammadActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_ticket_articles",
+    operationType: "read",
     description: "List articles belonging to a Zammad ticket.",
     requiredScopes: [],
     inputSchema: s.object("The input for listing Zammad ticket articles.", { ticketId: idSchema }),
@@ -142,6 +149,7 @@ export const zammadActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_ticket_article",
+    operationType: "write",
     description: "Add a text article to an existing Zammad ticket.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -163,6 +171,7 @@ export const zammadActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_users",
+    operationType: "read",
     description: "Search Zammad users by login, email, name, or endpoint search expression.",
     requiredScopes: [],
     inputSchema: s.object(

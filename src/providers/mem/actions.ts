@@ -103,6 +103,7 @@ const lifecycleResponseSchema = s.object(
 
 const createNoteAction = defineProviderAction(service, {
   name: "create_note",
+  operationType: "write",
   description: "Create a Mem note from a complete markdown body and optional collection links.",
   inputSchema: s.object(
     "The markdown body and optional metadata for a new Mem note.",
@@ -128,6 +129,7 @@ const createNoteAction = defineProviderAction(service, {
 
 const listNotesAction = defineProviderAction(service, {
   name: "list_notes",
+  operationType: "read",
   description: "List Mem notes with cursor pagination, chronological ordering, and filters.",
   inputSchema: s.object(
     "Cursor pagination and filters for listing Mem notes.",
@@ -178,6 +180,7 @@ const listNotesAction = defineProviderAction(service, {
 
 const readNoteAction = defineProviderAction(service, {
   name: "read_note",
+  operationType: "read",
   description: "Read the full current state of one Mem note, including trash state.",
   inputSchema: s.requiredObject("The UUID of the Mem note to read.", {
     note_id: s.uuid("UUID of the target Mem note."),
@@ -187,6 +190,7 @@ const readNoteAction = defineProviderAction(service, {
 
 const searchNotesAction = defineProviderAction(service, {
   name: "search_notes",
+  operationType: "read",
   description: "Search Mem notes by relevance with filters and bounded snapshot pagination.",
   inputSchema: s.object(
     "Search query, filters, and bounded snapshot pagination settings.",
@@ -250,6 +254,7 @@ const searchNotesAction = defineProviderAction(service, {
 
 const updateNoteAction = defineProviderAction(service, {
   name: "update_note",
+  operationType: "destructive",
   description: "Replace a Mem note's markdown body using its exact current content version.",
   inputSchema: s.object(
     "The note UUID, complete replacement body, and optimistic concurrency version.",
@@ -266,6 +271,7 @@ const updateNoteAction = defineProviderAction(service, {
 
 const trashNoteAction = defineProviderAction(service, {
   name: "trash_note",
+  operationType: "destructive",
   description: "Move a Mem note to trash so it can be restored later.",
   inputSchema: s.requiredObject("The UUID of the Mem note to move to trash.", {
     note_id: s.uuid("UUID of the target Mem note."),
@@ -275,6 +281,7 @@ const trashNoteAction = defineProviderAction(service, {
 
 const restoreNoteAction = defineProviderAction(service, {
   name: "restore_note",
+  operationType: "write",
   description: "Restore a previously trashed Mem note to the active note set.",
   inputSchema: s.requiredObject("The UUID of the trashed Mem note to restore.", {
     note_id: s.uuid("UUID of the target Mem note."),
@@ -284,6 +291,7 @@ const restoreNoteAction = defineProviderAction(service, {
 
 const deleteNoteAction = defineProviderAction(service, {
   name: "delete_note",
+  operationType: "destructive",
   description: "Permanently delete a Mem note; this operation cannot be restored.",
   inputSchema: s.requiredObject("The UUID of the Mem note to permanently delete.", {
     note_id: s.uuid("UUID of the target Mem note."),

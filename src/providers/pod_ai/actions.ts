@@ -15,6 +15,7 @@ const callResponseSchema = s.looseObject("The outbound call object returned by t
 export const podAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_outbound_call",
+    operationType: "write",
     description: "Create an outbound phone call with a Pod AI voice agent.",
     requiredScopes: [],
     inputSchema: s.object(

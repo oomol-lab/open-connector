@@ -27,6 +27,7 @@ const languageSchema = s.object("One supported language returned by Detect Langu
 export const detectLanguageActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "detect_text",
+    operationType: "read",
     description: "Detect the language of a single text string with confidence scores.",
     inputSchema: s.object("Input parameters for detecting the language of one text string.", {
       text: nonEmptyTextSchema,
@@ -37,6 +38,7 @@ export const detectLanguageActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "detect_texts",
+    operationType: "read",
     description: "Detect languages for multiple text strings in one batch request.",
     inputSchema: s.object("Input parameters for detecting languages for multiple texts.", {
       texts: s.array("The UTF-8 texts to detect, preserving output order.", nonEmptyTextSchema, {
@@ -52,6 +54,7 @@ export const detectLanguageActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_account_status",
+    operationType: "read",
     description: "Get the current Detect Language account usage, limits, plan, and status.",
     inputSchema: s.object("Input parameters for retrieving Detect Language account status.", {}),
     outputSchema: s.object("Detect Language account status.", {
@@ -67,6 +70,7 @@ export const detectLanguageActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_languages",
+    operationType: "read",
     description: "List languages supported by Detect Language.",
     inputSchema: s.object("Input parameters for listing Detect Language supported languages.", {}),
     outputSchema: s.object("Detect Language supported languages.", {

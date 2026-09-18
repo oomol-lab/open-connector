@@ -58,6 +58,7 @@ updateServiceMockTemplateInputSchema.anyOf = [
 export const blazeMeterServiceVirtualizationActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_service_mock_templates",
+    operationType: "read",
     description: "List BlazeMeter Service Virtualization service mock templates in a workspace.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -71,6 +72,7 @@ export const blazeMeterServiceVirtualizationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_service_mock_template",
+    operationType: "read",
     description: "Get one BlazeMeter Service Virtualization service mock template by template ID.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -85,6 +87,7 @@ export const blazeMeterServiceVirtualizationActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_service_mock_template",
+    operationType: "write",
     description: "Update JSON-safe configuration fields for one BlazeMeter service mock template.",
     requiredScopes: [],
     inputSchema: updateServiceMockTemplateInputSchema,

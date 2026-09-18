@@ -133,6 +133,7 @@ export const theCatApiActions: ActionDefinition[] = [
   defineAction({
     service,
     name: "search_images",
+    operationType: "read",
     description: "Search for cat images with optional breed, category, type, size, and paging filters.",
     requiredScopes: [],
     inputSchema: searchImagesInputSchema,
@@ -141,6 +142,7 @@ export const theCatApiActions: ActionDefinition[] = [
   defineAction({
     service,
     name: "get_image",
+    operationType: "read",
     description: "Get one cat image by its The Cat API image identifier.",
     requiredScopes: [],
     inputSchema: getImageInputSchema,
@@ -149,6 +151,7 @@ export const theCatApiActions: ActionDefinition[] = [
   defineAction({
     service,
     name: "list_breeds",
+    operationType: "read",
     description: "List cat breeds supported by The Cat API.",
     requiredScopes: [],
     inputSchema: listBreedsInputSchema,
@@ -157,6 +160,7 @@ export const theCatApiActions: ActionDefinition[] = [
   defineAction({
     service,
     name: "search_breeds",
+    operationType: "read",
     description: "Search cat breeds by breed name.",
     requiredScopes: [],
     inputSchema: searchBreedsInputSchema,
@@ -165,6 +169,7 @@ export const theCatApiActions: ActionDefinition[] = [
   defineAction({
     service,
     name: "get_breed",
+    operationType: "read",
     description: "Get one cat breed by its The Cat API breed identifier.",
     requiredScopes: [],
     inputSchema: getBreedInputSchema,

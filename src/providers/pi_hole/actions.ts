@@ -69,6 +69,7 @@ const deletedOutputSchema = s.actionOutput(
 export const piHoleActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_overview",
+    operationType: "read",
     description:
       "Fetch the Pi-hole activity overview: total and blocked queries, blocked query percentage, unique clients and domains, and the blocking and gravity list status.",
     inputSchema: emptyInputSchema,
@@ -79,12 +80,14 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dns_blocking_status",
+    operationType: "read",
     description: "Fetch whether Pi-hole DNS blocking is currently enabled, disabled, failed, or unknown.",
     inputSchema: emptyInputSchema,
     outputSchema: blockingStatusOutput,
   }),
   defineProviderAction(service, {
     name: "set_dns_blocking",
+    operationType: "destructive",
     description:
       "Enable or disable Pi-hole DNS blocking, optionally for a limited time after which the opposite mode is restored automatically.",
     inputSchema: s.actionInput(
@@ -103,6 +106,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_queries",
+    operationType: "read",
     description:
       "Query the Pi-hole DNS log with optional filters. By default returns the most recent queries; each response exposes a cursor for the next chunk.",
     inputSchema: s.actionInput(
@@ -145,6 +149,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_query_types",
+    operationType: "read",
     description: "Fetch the number of queries of each DNS query type that Pi-hole has seen.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -154,6 +159,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_top_domains",
+    operationType: "read",
     description: "Fetch the domains Pi-hole has handled the most, optionally limited to blocked ones.",
     inputSchema: topQueryInput,
     outputSchema: s.actionOutput(
@@ -167,6 +173,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_top_clients",
+    operationType: "read",
     description: "Fetch the clients that have queried Pi-hole the most, optionally limited to blocked ones.",
     inputSchema: topQueryInput,
     outputSchema: s.actionOutput(
@@ -180,6 +187,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_recent_blocked",
+    operationType: "read",
     description: "Fetch the domains most recently blocked by Pi-hole.",
     inputSchema: s.actionInput(
       {
@@ -195,6 +203,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_upstreams",
+    operationType: "read",
     description: "Fetch metrics about Pi-hole's DNS upstream destinations, including response times.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -208,6 +217,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_history",
+    operationType: "read",
     description:
       "Fetch the Pi-hole activity graph data: query totals over time with cached, blocked, and forwarded splits.",
     inputSchema: emptyInputSchema,
@@ -218,6 +228,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_domain",
+    operationType: "read",
     description:
       "Search whether a domain appears in Pi-hole's allowlists, blocklists, or gravity lists, to understand why it is blocked or allowed.",
     inputSchema: s.actionInput(
@@ -236,6 +247,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_config",
+    operationType: "read",
     description: "Fetch the current Pi-hole configuration, such as DNS settings, privacy level, and API settings.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -245,6 +257,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_config",
+    operationType: "destructive",
     description:
       "Change part of the Pi-hole configuration, for example DNS upstreams, the privacy level, or API settings. The provided fields are merged into the current configuration.",
     inputSchema: s.actionInput(
@@ -266,6 +279,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_gravity",
+    operationType: "write",
     description:
       "Run the Pi-hole gravity update to refresh the blocklists. The instance streams the gravity log; the action reports a best-effort status from the log plus the tail of the stream.",
     inputSchema: emptyInputSchema,
@@ -281,6 +295,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "restart_dns",
+    operationType: "write",
     description: "Restart Pi-hole's DNS server and reload its DNS configuration.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -290,6 +305,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "flush_dns_logs",
+    operationType: "destructive",
     description: "Flush the Pi-hole DNS query log.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -299,6 +315,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List all Pi-hole groups and their memberships.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -308,6 +325,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_group",
+    operationType: "write",
     description: "Create one or more Pi-hole groups, optionally with a comment and enabled state.",
     inputSchema: s.actionInput(
       {
@@ -322,6 +340,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_group",
+    operationType: "destructive",
     description: "Update one Pi-hole group: rename it, or change its comment or enabled state.",
     inputSchema: s.actionInput(
       {
@@ -337,6 +356,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_group",
+    operationType: "destructive",
     description: "Delete one Pi-hole group by name.",
     inputSchema: s.actionInput(
       { name: s.nonEmptyString("The name of the group to delete.") },
@@ -347,6 +367,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_lists",
+    operationType: "read",
     description: "List the Pi-hole allowlists and blocklists (subscription lists).",
     inputSchema: s.actionInput(
       { type: listTypeSchema },
@@ -360,6 +381,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_list",
+    operationType: "write",
     description: "Add one or more allowlist or blocklist entries (addresses) to Pi-hole.",
     inputSchema: s.actionInput(
       {
@@ -379,6 +401,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_list",
+    operationType: "destructive",
     description: "Update one Pi-hole list: change its comment, enabled state, or group memberships.",
     inputSchema: s.actionInput(
       {
@@ -395,6 +418,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_list",
+    operationType: "destructive",
     description: "Delete one Pi-hole allowlist or blocklist entry by address.",
     inputSchema: s.actionInput(
       {
@@ -408,6 +432,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_domains",
+    operationType: "read",
     description: "List the individual Pi-hole domain entries, optionally restricted to one type or kind.",
     inputSchema: s.actionInput(
       {
@@ -424,6 +449,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_domain",
+    operationType: "write",
     description: "Add one or more allow or deny domain entries to Pi-hole, either exact or as regular expressions.",
     inputSchema: s.actionInput(
       {
@@ -441,6 +467,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_domain",
+    operationType: "destructive",
     description: "Update one Pi-hole domain entry: change its comment, enabled state, or group memberships.",
     inputSchema: s.actionInput(
       {
@@ -458,6 +485,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_domain",
+    operationType: "destructive",
     description: "Delete one Pi-hole allow or deny domain entry.",
     inputSchema: s.actionInput(
       {
@@ -472,6 +500,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_clients",
+    operationType: "read",
     description: "List all Pi-hole clients and their group memberships.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -481,6 +510,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_client",
+    operationType: "write",
     description: "Register one or more Pi-hole clients identified by IP address, MAC address, hostname, or interface.",
     inputSchema: s.actionInput(
       {
@@ -498,6 +528,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_client",
+    operationType: "destructive",
     description: "Update one Pi-hole client's comment or group memberships.",
     inputSchema: s.actionInput(
       {
@@ -512,6 +543,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_client",
+    operationType: "destructive",
     description: "Delete one Pi-hole client entry by identifier.",
     inputSchema: s.actionInput(
       {
@@ -524,6 +556,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "batch_delete_groups",
+    operationType: "destructive",
     description:
       "Delete multiple Pi-hole groups by name in one request. Reports deleted=false when none of the groups exist.",
     inputSchema: s.actionInput(
@@ -535,6 +568,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "batch_delete_lists",
+    operationType: "destructive",
     description:
       "Delete multiple Pi-hole allowlist or blocklist entries in one request. Reports deleted=false when none of the entries exist.",
     inputSchema: s.actionInput(
@@ -554,6 +588,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "batch_delete_domains",
+    operationType: "destructive",
     description:
       "Delete multiple Pi-hole domain entries in one request. Reports deleted=false when none of the entries exist.",
     inputSchema: s.actionInput(
@@ -574,6 +609,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "batch_delete_clients",
+    operationType: "destructive",
     description:
       "Delete multiple Pi-hole client entries in one request. Reports deleted=false when none of the clients exist.",
     inputSchema: s.actionInput(
@@ -590,6 +626,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dhcp_leases",
+    operationType: "read",
     description: "Fetch the currently active DHCP leases assigned by the Pi-hole DHCP server.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -599,6 +636,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_network_devices",
+    operationType: "read",
     description: "Fetch the devices seen on the local network by Pi-hole.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -608,6 +646,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "export_backup",
+    operationType: "read",
     description:
       "Create a complete Pi-hole teleporter backup archive (teleporter.zip) with all settings, lists, and clients.",
     inputSchema: emptyInputSchema,
@@ -627,6 +666,7 @@ export const piHoleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "import_backup",
+    operationType: "destructive",
     description: "Restore a Pi-hole teleporter backup archive (a previously exported teleporter.zip) to this instance.",
     inputSchema: s.actionInput(
       { file: s.transitFile("The teleporter archive to restore.") },

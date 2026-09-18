@@ -55,6 +55,7 @@ const idempotencyKeySchema = nonEmptyString(
 
 const listPostsAction = defineProviderAction(service, {
   name: "list_posts",
+  operationType: "read",
   description: "List The Colony posts with optional feed filters and pagination.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -94,6 +95,7 @@ const listPostsAction = defineProviderAction(service, {
 
 const getPostAction = defineProviderAction(service, {
   name: "get_post",
+  operationType: "read",
   description: "Get one The Colony post by UUID.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for retrieving one The Colony post.", {
@@ -107,6 +109,7 @@ const getPostAction = defineProviderAction(service, {
 
 const getPostContextAction = defineProviderAction(service, {
   name: "get_post_context",
+  operationType: "read",
   description: "Get The Colony context for a post, including comments and related content.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for retrieving The Colony post context.", {
@@ -120,6 +123,7 @@ const getPostContextAction = defineProviderAction(service, {
 
 const getPostConversationAction = defineProviderAction(service, {
   name: "get_post_conversation",
+  operationType: "read",
   description: "Get The Colony post comments as a threaded conversation tree.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for retrieving The Colony post conversation.", {
@@ -133,6 +137,7 @@ const getPostConversationAction = defineProviderAction(service, {
 
 const createPostAction = defineProviderAction(service, {
   name: "create_post",
+  operationType: "write",
   description: "Create a The Colony post in a colony.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -156,6 +161,7 @@ const createPostAction = defineProviderAction(service, {
 
 const listCommentsAction = defineProviderAction(service, {
   name: "list_comments",
+  operationType: "read",
   description: "List comments on a The Colony post.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -177,6 +183,7 @@ const listCommentsAction = defineProviderAction(service, {
 
 const createCommentAction = defineProviderAction(service, {
   name: "create_comment",
+  operationType: "write",
   description: "Create a comment on a The Colony post.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -197,6 +204,7 @@ const createCommentAction = defineProviderAction(service, {
 
 const votePostAction = defineProviderAction(service, {
   name: "vote_post",
+  operationType: "write",
   description: "Upvote or downvote a The Colony post.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for voting on a The Colony post.", {
@@ -211,6 +219,7 @@ const votePostAction = defineProviderAction(service, {
 
 const voteCommentAction = defineProviderAction(service, {
   name: "vote_comment",
+  operationType: "write",
   description: "Upvote or downvote a The Colony comment.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for voting on a The Colony comment.", {
@@ -225,6 +234,7 @@ const voteCommentAction = defineProviderAction(service, {
 
 const listColoniesAction = defineProviderAction(service, {
   name: "list_colonies",
+  operationType: "read",
   description: "List The Colony colonies.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for listing The Colony colonies.", {}),
@@ -236,6 +246,7 @@ const listColoniesAction = defineProviderAction(service, {
 
 const searchAction = defineProviderAction(service, {
   name: "search",
+  operationType: "read",
   description: "Search The Colony posts and users.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -265,6 +276,7 @@ const searchAction = defineProviderAction(service, {
 
 const getMeAction = defineProviderAction(service, {
   name: "get_me",
+  operationType: "read",
   description: "Get the current The Colony API user profile.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for retrieving the current The Colony user.", {}),

@@ -8,6 +8,7 @@ const service = "googletasks";
 
 interface GoogleTasksActionSource {
   name: GoogleTasksActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -135,6 +136,7 @@ const updateTaskFullInput = input({ tasklistId, taskId, ...taskWriteFields }, ["
 const actions: GoogleTasksActionSource[] = [
   action(
     "list_task_lists",
+    "read",
     "List Google Tasks task lists visible to the current connection.",
     googleTasksReadScopes,
     input({
@@ -148,6 +150,7 @@ const actions: GoogleTasksActionSource[] = [
   ),
   action(
     "get_task_list",
+    "read",
     "Fetch a Google Tasks task list by ID.",
     googleTasksReadScopes,
     input({ tasklistId }, ["tasklistId"]),
@@ -155,6 +158,7 @@ const actions: GoogleTasksActionSource[] = [
   ),
   action(
     "create_task_list",
+    "write",
     "Create a new Google Tasks task list.",
     googleTasksWriteScopes,
     input(
@@ -167,6 +171,7 @@ const actions: GoogleTasksActionSource[] = [
   ),
   action(
     "patch_task_list",
+    "write",
     "Partially update the title of a Google Tasks task list.",
     googleTasksWriteScopes,
     input(
@@ -180,6 +185,7 @@ const actions: GoogleTasksActionSource[] = [
   ),
   action(
     "update_task_list",
+    "write",
     "Replace the mutable fields of a Google Tasks task list.",
     googleTasksWriteScopes,
     input(
@@ -193,6 +199,7 @@ const actions: GoogleTasksActionSource[] = [
   ),
   action(
     "delete_task_list",
+    "destructive",
     "Delete a Google Tasks task list.",
     googleTasksWriteScopes,
     input({ tasklistId }, ["tasklistId"]),
@@ -200,6 +207,7 @@ const actions: GoogleTasksActionSource[] = [
   ),
   action(
     "list_tasks",
+    "read",
     "List tasks from a Google Tasks task list.",
     googleTasksReadScopes,
     listTasksInput,
@@ -210,6 +218,7 @@ const actions: GoogleTasksActionSource[] = [
   ),
   action(
     "list_all_tasks",
+    "read",
     "List tasks across every Google Tasks task list visible to the current connection.",
     googleTasksReadScopes,
     listAllTasksInput,
@@ -223,6 +232,7 @@ const actions: GoogleTasksActionSource[] = [
   ),
   action(
     "get_task",
+    "read",
     "Fetch a Google Tasks task by task list ID and task ID.",
     googleTasksReadScopes,
     taskIdInput,
@@ -230,6 +240,7 @@ const actions: GoogleTasksActionSource[] = [
   ),
   action(
     "insert_task",
+    "write",
     "Create a task in a Google Tasks task list.",
     googleTasksWriteScopes,
     input(
@@ -246,6 +257,7 @@ const actions: GoogleTasksActionSource[] = [
   ),
   action(
     "patch_task",
+    "write",
     "Partially update a Google Tasks task.",
     googleTasksWriteScopes,
     updateTaskInput,
@@ -253,6 +265,7 @@ const actions: GoogleTasksActionSource[] = [
   ),
   action(
     "update_task_full",
+    "write",
     "Replace the mutable fields of a Google Tasks task with a full update.",
     googleTasksWriteScopes,
     updateTaskFullInput,
@@ -260,6 +273,7 @@ const actions: GoogleTasksActionSource[] = [
   ),
   action(
     "update_task",
+    "write",
     "Deprecated alias for update_task_full. Fully replace the mutable fields of a Google Tasks task.",
     googleTasksWriteScopes,
     updateTaskFullInput,
@@ -267,6 +281,7 @@ const actions: GoogleTasksActionSource[] = [
   ),
   action(
     "move_task",
+    "destructive",
     "Move a Google Tasks task within a list or into another task list.",
     googleTasksWriteScopes,
     input(
@@ -281,9 +296,10 @@ const actions: GoogleTasksActionSource[] = [
     ),
     output({ task }),
   ),
-  action("delete_task", "Delete a Google Tasks task.", googleTasksWriteScopes, taskIdInput, success),
+  action("delete_task", "destructive", "Delete a Google Tasks task.", googleTasksWriteScopes, taskIdInput, success),
   action(
     "clear_tasks",
+    "destructive",
     "Clear every completed task from a Google Tasks task list.",
     googleTasksWriteScopes,
     input({ tasklistId }, ["tasklistId"]),
@@ -318,6 +334,7 @@ export type GoogleTasksActionName =
 
 function action(
   name: GoogleTasksActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   requiredScopes: string[],
   inputSchema: JsonSchema,
@@ -325,6 +342,7 @@ function action(
 ): GoogleTasksActionSource {
   return {
     name,
+    operationType,
     description,
     requiredScopes,
     inputSchema,

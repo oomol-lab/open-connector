@@ -69,6 +69,7 @@ const timeMatrixSchema = s.record(
 export const simplybookMeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_company_info",
+    operationType: "read",
     description: "Get public company profile and configuration details from SimplyBook.me.",
     inputSchema: s.object("Input for fetching SimplyBook.me company information.", {}),
     outputSchema: s.requiredObject("The SimplyBook.me company information response.", {
@@ -77,6 +78,7 @@ export const simplybookMeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_services",
+    operationType: "read",
     description: "List SimplyBook.me public service events available for booking.",
     inputSchema: visibleListInputSchema,
     outputSchema: s.requiredObject("The SimplyBook.me service list response.", {
@@ -85,6 +87,7 @@ export const simplybookMeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_performers",
+    operationType: "read",
     description: "List SimplyBook.me service performers that can provide services.",
     inputSchema: visibleListInputSchema,
     outputSchema: s.requiredObject("The SimplyBook.me performer list response.", {
@@ -93,6 +96,7 @@ export const simplybookMeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_available_units",
+    operationType: "read",
     description: "Get performer ids available for a SimplyBook.me service at a specific date-time.",
     inputSchema: availableUnitsInputSchema,
     outputSchema: s.requiredObject("The SimplyBook.me available units response.", {
@@ -104,6 +108,7 @@ export const simplybookMeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_start_time_matrix",
+    operationType: "read",
     description: "Get available SimplyBook.me start times for a service and performer over a date range.",
     inputSchema: startTimeMatrixInputSchema,
     outputSchema: s.requiredObject("The SimplyBook.me start time matrix response.", {

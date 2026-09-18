@@ -90,6 +90,7 @@ const assetSchema = s.object("The normalized cloudlayer.io asset payload.", {
 export const cloudlayerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Get the current cloudlayer.io account usage, limits, and job totals for the API key.",
     inputSchema: s.object("No input parameters are required for retrieving the current account.", {}),
     outputSchema: s.object("The normalized output payload for retrieving the current cloudlayer.io account.", {
@@ -98,6 +99,7 @@ export const cloudlayerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_html_pdf_job",
+    operationType: "write",
     description:
       "Create an asynchronous cloudlayer.io HTML-to-PDF job from base64-encoded HTML and return the new job status.",
     inputSchema: s.object(
@@ -112,6 +114,7 @@ export const cloudlayerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_url_pdf_job",
+    operationType: "write",
     description:
       "Create an asynchronous cloudlayer.io URL-to-PDF job for one public webpage and return the new job status.",
     inputSchema: s.object(
@@ -126,6 +129,7 @@ export const cloudlayerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_template_pdf_job",
+    operationType: "write",
     description:
       "Create an asynchronous cloudlayer.io template-to-PDF job from a base64-encoded template and JSON data.",
     inputSchema: s.object(
@@ -141,6 +145,7 @@ export const cloudlayerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job",
+    operationType: "read",
     description: "Get one cloudlayer.io job by job ID to inspect status, timing, and request metadata.",
     inputSchema: s.object(
       "Input parameters for retrieving one cloudlayer.io job.",
@@ -155,6 +160,7 @@ export const cloudlayerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_jobs",
+    operationType: "read",
     description: "List recent cloudlayer.io jobs for the current account with optional cursor pagination.",
     inputSchema: s.object(
       "Input parameters for listing recent cloudlayer.io jobs.",
@@ -170,6 +176,7 @@ export const cloudlayerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_asset",
+    operationType: "read",
     description: "Get one generated cloudlayer.io asset by asset ID, including its direct download URL.",
     inputSchema: s.object(
       "Input parameters for retrieving one generated cloudlayer.io asset.",
@@ -184,6 +191,7 @@ export const cloudlayerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_assets",
+    operationType: "read",
     description: "List recent generated cloudlayer.io assets for the current account with optional cursor pagination.",
     inputSchema: s.object(
       "Input parameters for listing recent cloudlayer.io assets.",

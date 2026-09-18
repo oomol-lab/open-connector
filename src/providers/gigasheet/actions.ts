@@ -145,6 +145,7 @@ function emptyInput(description: string): JsonSchema {
 export const gigasheetActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_home_files",
+    operationType: "read",
     description: "List the suggested recent files shown on the Gigasheet home page.",
     requiredScopes: [],
     inputSchema: emptyInput("The input payload for listing Gigasheet home files."),
@@ -152,6 +153,7 @@ export const gigasheetActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_exports",
+    operationType: "read",
     description: "List exports owned by the current Gigasheet user across all locations.",
     requiredScopes: [],
     inputSchema: listExportsInputSchema,
@@ -159,6 +161,7 @@ export const gigasheetActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_library",
+    operationType: "read",
     description: "Search Gigasheet library metadata without reading file contents.",
     requiredScopes: [],
     inputSchema: searchLibraryInputSchema,
@@ -166,6 +169,7 @@ export const gigasheetActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_library_path",
+    operationType: "read",
     description: "Return the parent directory chain for one Gigasheet file or folder handle.",
     requiredScopes: [],
     inputSchema: handleInputSchema,
@@ -178,6 +182,7 @@ export const gigasheetActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "describe_dataset",
+    operationType: "read",
     description: "Describe one Gigasheet dataset, including status and file metadata.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for describing a Gigasheet dataset.", {
@@ -192,6 +197,7 @@ export const gigasheetActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_space_used",
+    operationType: "read",
     description: "Get the current storage usage reported for the authenticated Gigasheet user.",
     requiredScopes: [],
     inputSchema: emptyInput("The input payload for retrieving Gigasheet storage usage."),
@@ -204,6 +210,7 @@ export const gigasheetActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_enrichment_credits",
+    operationType: "read",
     description: "Get the current enrichment credit usage for the authenticated Gigasheet user.",
     requiredScopes: [],
     inputSchema: emptyInput("The input payload for retrieving Gigasheet enrichment credits."),

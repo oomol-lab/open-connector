@@ -45,6 +45,7 @@ const distanceRecordSchema = s.looseObject("A distance result returned by Zipcod
 export const zipcodebaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_status",
+    operationType: "read",
     description: "Return Zipcodebase account status and remaining request credits.",
     inputSchema: s.object("The input payload for checking Zipcodebase account status.", {}),
     outputSchema: s.looseObject("The status payload returned by Zipcodebase.", {
@@ -53,6 +54,7 @@ export const zipcodebaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_postal_codes",
+    operationType: "read",
     description: "Look up location information for one or more postal codes.",
     inputSchema: s.object(
       "The input payload for looking up postal code location information.",
@@ -68,6 +70,7 @@ export const zipcodebaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "calculate_distance",
+    operationType: "read",
     description: "Calculate distance from one postal code to one or more comparison postal codes.",
     inputSchema: s.object(
       "The input payload for calculating postal code distances.",
@@ -85,6 +88,7 @@ export const zipcodebaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_postal_codes_within_radius",
+    operationType: "read",
     description: "List postal codes located within a radius of a postal code.",
     inputSchema: s.object(
       "The input payload for finding postal codes within a radius.",
@@ -102,6 +106,7 @@ export const zipcodebaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "match_postal_codes_by_distance",
+    operationType: "read",
     description: "Find submitted postal code pairs that are within a given distance.",
     inputSchema: s.object(
       "The input payload for matching postal codes by distance.",
@@ -122,6 +127,7 @@ export const zipcodebaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_postal_codes_by_city",
+    operationType: "read",
     description: "List postal codes associated with a city and optional state or province.",
     inputSchema: s.object(
       "The input payload for listing postal codes by city.",
@@ -138,6 +144,7 @@ export const zipcodebaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_postal_codes_by_state",
+    operationType: "read",
     description: "List postal codes associated with a state or province.",
     inputSchema: s.object("The input payload for listing postal codes by state.", {
       state_name: stateNameSchema,

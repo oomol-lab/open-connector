@@ -56,6 +56,7 @@ const productSchema = s.looseObject("A ShipBob product object returned by the Pr
 export const shipBobActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_channels",
+    operationType: "read",
     description: "List ShipBob channels available to the authenticated Personal Access Token.",
     requiredScopes: [],
     inputSchema: s.actionInput({}, [], "The input payload for listing ShipBob channels."),
@@ -68,6 +69,7 @@ export const shipBobActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_inventory_levels",
+    operationType: "read",
     description: "List ShipBob inventory levels with optional item and product filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -96,6 +98,7 @@ export const shipBobActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_inventory_level",
+    operationType: "read",
     description: "Get aggregated ShipBob inventory levels for one inventory item.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -110,6 +113,7 @@ export const shipBobActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List ShipBob products with optional catalog filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -184,6 +188,7 @@ export const shipBobActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_locations",
+    operationType: "read",
     description: "List ShipBob fulfillment network locations.",
     requiredScopes: [],
     inputSchema: s.object(

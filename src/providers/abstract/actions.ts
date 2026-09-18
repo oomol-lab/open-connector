@@ -21,6 +21,7 @@ const checkResult = s.object(
 export const abstractActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "validate_email",
+    operationType: "read",
     description:
       "Validate an email address with Abstract Email Validation and return deliverability, quality, and risk checks.",
     inputSchema: s.object(

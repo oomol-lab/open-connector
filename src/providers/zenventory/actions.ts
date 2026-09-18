@@ -118,6 +118,7 @@ const itemWriteOptionalFields: readonly (keyof typeof itemWriteShape)[] = [
 export const zenventoryActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_items",
+    operationType: "read",
     description: "Search and page through items in Zenventory.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -178,6 +179,7 @@ export const zenventoryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_item",
+    operationType: "read",
     description: "Get one Zenventory item by its identifier.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -193,6 +195,7 @@ export const zenventoryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_item",
+    operationType: "write",
     description: "Create an item in Zenventory.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -224,6 +227,7 @@ export const zenventoryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_item",
+    operationType: "destructive",
     description: "Replace the editable fields of an existing Zenventory item.",
     requiredScopes: [],
     inputSchema: s.object(

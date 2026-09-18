@@ -158,6 +158,7 @@ const commentSchema = s.looseObject("A Nozbe task comment resource.", {
 
 const listTeamsAction = defineProviderAction(service, {
   name: "list_teams",
+  operationType: "read",
   description: "List teams accessible with the connected Nozbe API token.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -174,6 +175,7 @@ const listTeamsAction = defineProviderAction(service, {
 
 const listProjectsAction = defineProviderAction(service, {
   name: "list_projects",
+  operationType: "read",
   description: "List Nozbe projects with pagination, sorting, and team filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -192,6 +194,7 @@ const listProjectsAction = defineProviderAction(service, {
 
 const getProjectAction = defineProviderAction(service, {
   name: "get_project",
+  operationType: "read",
   description: "Get a Nozbe project by ID.",
   requiredScopes: [],
   inputSchema: s.requiredObject("The input for getting a Nozbe project.", { id: idSchema }),
@@ -200,6 +203,7 @@ const getProjectAction = defineProviderAction(service, {
 
 const createProjectAction = defineProviderAction(service, {
   name: "create_project",
+  operationType: "write",
   description: "Create a Nozbe project in a team.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -272,6 +276,7 @@ const updateProjectInputSchema = s.object(
 
 const updateProjectAction = defineProviderAction(service, {
   name: "update_project",
+  operationType: "write",
   description: "Update writable fields on a Nozbe project.",
   requiredScopes: [],
   inputSchema: updateProjectInputSchema,
@@ -280,6 +285,7 @@ const updateProjectAction = defineProviderAction(service, {
 
 const deleteProjectAction = defineProviderAction(service, {
   name: "delete_project",
+  operationType: "destructive",
   description: "Delete a Nozbe project by ID.",
   requiredScopes: [],
   inputSchema: s.requiredObject("The input for deleting a Nozbe project.", { id: idSchema }),
@@ -291,6 +297,7 @@ const deleteProjectAction = defineProviderAction(service, {
 
 const listTasksAction = defineProviderAction(service, {
   name: "list_tasks",
+  operationType: "read",
   description: "List Nozbe tasks with pagination, sorting, and project filtering.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -308,6 +315,7 @@ const listTasksAction = defineProviderAction(service, {
 
 const getTaskAction = defineProviderAction(service, {
   name: "get_task",
+  operationType: "read",
   description: "Get a Nozbe task by ID.",
   requiredScopes: [],
   inputSchema: s.requiredObject("The input for getting a Nozbe task.", { id: idSchema }),
@@ -316,6 +324,7 @@ const getTaskAction = defineProviderAction(service, {
 
 const createTaskAction = defineProviderAction(service, {
   name: "create_task",
+  operationType: "write",
   description: "Create a task in Nozbe.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -392,6 +401,7 @@ const updateTaskInputSchema = s.object(
 
 const updateTaskAction = defineProviderAction(service, {
   name: "update_task",
+  operationType: "write",
   description: "Update writable fields on a Nozbe task.",
   requiredScopes: [],
   inputSchema: updateTaskInputSchema,
@@ -400,6 +410,7 @@ const updateTaskAction = defineProviderAction(service, {
 
 const deleteTaskAction = defineProviderAction(service, {
   name: "delete_task",
+  operationType: "destructive",
   description: "Delete a Nozbe task by ID.",
   requiredScopes: [],
   inputSchema: s.requiredObject("The input for deleting a Nozbe task.", { id: idSchema }),
@@ -411,6 +422,7 @@ const deleteTaskAction = defineProviderAction(service, {
 
 const listCommentsAction = defineProviderAction(service, {
   name: "list_comments",
+  operationType: "read",
   description: "List Nozbe task comments with pagination, sorting, and task filtering.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -428,6 +440,7 @@ const listCommentsAction = defineProviderAction(service, {
 
 const getCommentAction = defineProviderAction(service, {
   name: "get_comment",
+  operationType: "read",
   description: "Get a Nozbe task comment by ID.",
   requiredScopes: [],
   inputSchema: s.requiredObject("The input for getting a Nozbe comment.", { id: idSchema }),
@@ -436,6 +449,7 @@ const getCommentAction = defineProviderAction(service, {
 
 const createCommentAction = defineProviderAction(service, {
   name: "create_comment",
+  operationType: "write",
   description: "Add a comment to a Nozbe task.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -466,6 +480,7 @@ const updateCommentInputSchema = s.object(
 
 const updateCommentAction = defineProviderAction(service, {
   name: "update_comment",
+  operationType: "write",
   description: "Update writable fields on a Nozbe task comment.",
   requiredScopes: [],
   inputSchema: updateCommentInputSchema,
@@ -474,6 +489,7 @@ const updateCommentAction = defineProviderAction(service, {
 
 const deleteCommentAction = defineProviderAction(service, {
   name: "delete_comment",
+  operationType: "destructive",
   description: "Delete a Nozbe task comment and return the updated comment resource.",
   requiredScopes: [],
   inputSchema: s.requiredObject("The input for deleting a Nozbe task comment.", { id: idSchema }),

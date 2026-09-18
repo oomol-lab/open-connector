@@ -8,6 +8,7 @@ const service = "gitlab";
 
 interface GitlabActionSource {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -165,6 +166,7 @@ function input(properties: Record<string, JsonSchema>, required: string[] = []):
 const actions: GitlabActionSource[] = [
   {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current authenticated GitLab user profile.",
     requiredScopes: [gitlabReadApiScope],
     inputSchema: input({}),
@@ -172,6 +174,7 @@ const actions: GitlabActionSource[] = [
   },
   {
     name: "list_projects",
+    operationType: "read",
     description:
       "List GitLab projects visible to the authenticated personal access token, with optional search and membership filters.",
     requiredScopes: [gitlabReadApiScope],
@@ -190,6 +193,7 @@ const actions: GitlabActionSource[] = [
   },
   {
     name: "get_project",
+    operationType: "read",
     description: "Get a GitLab project by numeric ID or URL-encoded path with namespace.",
     requiredScopes: [gitlabReadApiScope],
     inputSchema: input({ projectId }, ["projectId"]),
@@ -197,6 +201,7 @@ const actions: GitlabActionSource[] = [
   },
   {
     name: "list_project_issues",
+    operationType: "read",
     description: "List issues for a GitLab project with common state, label, assignee, and search filters.",
     requiredScopes: [gitlabReadApiScope],
     inputSchema: input(
@@ -229,6 +234,7 @@ const actions: GitlabActionSource[] = [
   },
   {
     name: "create_project_issue",
+    operationType: "write",
     description: "Create a new issue in a GitLab project.",
     requiredScopes: [gitlabApiScope],
     inputSchema: input(
@@ -249,6 +255,7 @@ const actions: GitlabActionSource[] = [
   },
   {
     name: "get_project_issue",
+    operationType: "read",
     description: "Get a single issue from a GitLab project by its internal issue ID.",
     requiredScopes: [gitlabReadApiScope],
     inputSchema: input({ projectId, issueIid: s.positiveInteger("The internal issue ID within the project.") }, [
@@ -259,6 +266,7 @@ const actions: GitlabActionSource[] = [
   },
   {
     name: "update_project_issue",
+    operationType: "write",
     description: "Update a GitLab project issue, including its title, labels, assignees, or open/closed state.",
     requiredScopes: [gitlabApiScope],
     inputSchema: input(
@@ -282,6 +290,7 @@ const actions: GitlabActionSource[] = [
   },
   {
     name: "delete_project_issue",
+    operationType: "destructive",
     description: "Delete a GitLab project issue.",
     requiredScopes: [gitlabApiScope],
     inputSchema: input({ projectId, issueIid: s.positiveInteger("The internal issue ID within the project.") }, [
@@ -292,6 +301,7 @@ const actions: GitlabActionSource[] = [
   },
   {
     name: "create_project",
+    operationType: "write",
     description: "Create a new GitLab project owned by the authenticated user.",
     requiredScopes: [gitlabApiScope],
     inputSchema: input(
@@ -310,6 +320,7 @@ const actions: GitlabActionSource[] = [
   },
   {
     name: "update_project",
+    operationType: "write",
     description: "Update basic settings for an existing GitLab project.",
     requiredScopes: [gitlabApiScope],
     inputSchema: input(
@@ -332,6 +343,7 @@ const actions: GitlabActionSource[] = [
   },
   {
     name: "delete_project",
+    operationType: "destructive",
     description: "Mark a GitLab project for deletion.",
     requiredScopes: [gitlabApiScope],
     inputSchema: input({ projectId }, ["projectId"]),
@@ -339,6 +351,7 @@ const actions: GitlabActionSource[] = [
   },
   {
     name: "list_project_merge_requests",
+    operationType: "read",
     description: "List merge requests for a GitLab project with state, branch, search, and pagination filters.",
     requiredScopes: [gitlabReadApiScope],
     inputSchema: input(
@@ -358,6 +371,7 @@ const actions: GitlabActionSource[] = [
   },
   {
     name: "create_merge_request",
+    operationType: "write",
     description: "Create a GitLab merge request from a source branch into a target branch.",
     requiredScopes: [gitlabApiScope],
     inputSchema: input(
@@ -380,6 +394,7 @@ const actions: GitlabActionSource[] = [
   },
   {
     name: "update_merge_request",
+    operationType: "write",
     description: "Update a GitLab merge request's title, description, branches, reviewers, labels, or state.",
     requiredScopes: [gitlabApiScope],
     inputSchema: input(
@@ -404,6 +419,7 @@ const actions: GitlabActionSource[] = [
   },
   {
     name: "merge_merge_request",
+    operationType: "write",
     description: "Accept and merge a GitLab merge request, optionally waiting for pipelines or squashing commits.",
     requiredScopes: [gitlabApiScope],
     inputSchema: input(

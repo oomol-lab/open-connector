@@ -39,6 +39,7 @@ function paginatedOutput(description: string) {
 export const stackOverflowForTeamsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search",
+    operationType: "read",
     description: "Search questions, answers, and articles in the connected Stack Internal team.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -55,6 +56,7 @@ export const stackOverflowForTeamsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_questions",
+    operationType: "read",
     description: "List questions from the connected Stack Internal team with optional filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -78,6 +80,7 @@ export const stackOverflowForTeamsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_question",
+    operationType: "read",
     description: "Retrieve one question from the connected Stack Internal team by ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a Stack Internal question.", {
@@ -89,6 +92,7 @@ export const stackOverflowForTeamsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_answers",
+    operationType: "read",
     description: "List answers for one question in the connected Stack Internal team.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -106,6 +110,7 @@ export const stackOverflowForTeamsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List tags from the connected Stack Internal team with optional filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -125,6 +130,7 @@ export const stackOverflowForTeamsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Retrieve the user represented by the connected Stack Internal personal access token.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to retrieve the current Stack Internal user.", {}),

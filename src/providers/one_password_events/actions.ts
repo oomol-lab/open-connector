@@ -38,6 +38,7 @@ const eventStreamOutputSchema = s.object("A normalized 1Password Events API stre
 export const onePasswordEventsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_audit_events",
+    operationType: "read",
     description: "List 1Password audit events using the official cursor-based Events API.",
     requiredScopes: ["auditevents"],
     inputSchema: cursorEventInputSchema,
@@ -45,6 +46,7 @@ export const onePasswordEventsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_item_usages",
+    operationType: "read",
     description: "List 1Password item usage events using the official cursor-based Events API.",
     requiredScopes: ["itemusages"],
     inputSchema: cursorEventInputSchema,
@@ -52,6 +54,7 @@ export const onePasswordEventsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sign_in_attempts",
+    operationType: "read",
     description: "List 1Password sign-in attempts using the official cursor-based Events API.",
     requiredScopes: ["signinattempts"],
     inputSchema: cursorEventInputSchema,

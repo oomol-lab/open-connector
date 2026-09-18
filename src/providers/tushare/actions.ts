@@ -121,6 +121,7 @@ const datedMarketDataInputSchema = (actionName: string): JsonSchema =>
 export const tushareActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_data",
+    operationType: "read",
     description: "Call a Tushare data API through the official HTTP interface and return normalized table rows.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -160,6 +161,7 @@ export const tushareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_stocks",
+    operationType: "read",
     description: "List A-share stock basic information through Tushare stock_basic with normalized rows.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -182,6 +184,7 @@ export const tushareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_trade_calendar",
+    operationType: "read",
     description: "Get exchange trading calendar rows through Tushare trade_cal with normalized dates.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -208,6 +211,7 @@ export const tushareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_daily_quotes",
+    operationType: "read",
     description: "Get A-share daily quote rows through Tushare daily with normalized rows.",
     requiredScopes: [],
     inputSchema: datedMarketDataInputSchema("get_daily_quotes"),
@@ -222,6 +226,7 @@ export const tushareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_daily_basic",
+    operationType: "read",
     description: "Get A-share daily valuation and share indicators through Tushare daily_basic.",
     requiredScopes: [],
     inputSchema: datedMarketDataInputSchema("get_daily_basic"),
@@ -236,6 +241,7 @@ export const tushareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_adjustment_factors",
+    operationType: "read",
     description: "Get A-share adjustment factor rows through Tushare adj_factor.",
     requiredScopes: [],
     inputSchema: datedMarketDataInputSchema("get_adjustment_factors"),
@@ -250,6 +256,7 @@ export const tushareActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_shareholder_trades",
+    operationType: "read",
     description: "Get A-share important shareholder increases and decreases through Tushare stk_holdertrade.",
     requiredScopes: [],
     inputSchema: shareholderTradesInputSchema,

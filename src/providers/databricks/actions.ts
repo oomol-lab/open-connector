@@ -20,11 +20,12 @@ const key = s.nonEmptyString("The Databricks secret key name.");
 
 function action(
   name: DatabricksActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): ActionDefinition {
-  return defineProviderAction(service, { name, description, inputSchema, outputSchema });
+  return defineProviderAction(service, { name, operationType, description, inputSchema, outputSchema });
 }
 
 export type DatabricksActionName =
@@ -68,12 +69,14 @@ export type DatabricksActionName =
 export const databricksActions: ActionDefinition[] = [
   action(
     "get_current_user",
+    "read",
     "Get the current Databricks workspace principal profile.",
     emptyInput,
     s.actionOutput({ user: rawObject }),
   ),
   action(
     "list_jobs",
+    "read",
     "List Databricks jobs in the connected workspace.",
     s.object(
       {
@@ -100,18 +103,21 @@ export const databricksActions: ActionDefinition[] = [
   ),
   action(
     "get_job",
+    "read",
     "Get one Databricks job.",
     s.object({ jobId, pageToken }, { required: ["jobId"] }),
     s.actionOutput({ job: rawObject, nextPageToken: pageToken }, "Databricks job response.", ["job"]),
   ),
   action(
     "create_job",
+    "write",
     "Create a Databricks job from a raw Jobs API settings object.",
     s.actionInput({ settings: rawObject }, ["settings"]),
     s.actionOutput({ jobId }),
   ),
   action(
     "update_job_by_id",
+    "write",
     "Update an existing Databricks job by ID.",
     s.object(
       { jobId, newSettings: rawObject, fieldsToRemove: s.stringArray("Settings paths to remove.") },
@@ -121,12 +127,14 @@ export const databricksActions: ActionDefinition[] = [
   ),
   action(
     "delete_job",
+    "destructive",
     "Delete a Databricks job by ID.",
     s.actionInput({ jobId }, ["jobId"]),
     s.actionOutput({ jobId, deleted: s.boolean("Whether the delete was accepted.") }),
   ),
   action(
     "run_now_job",
+    "write",
     "Trigger an immediate run for a Databricks job.",
     s.object(
       {
@@ -160,6 +168,7 @@ export const databricksActions: ActionDefinition[] = [
   ),
   action(
     "list_runs",
+    "read",
     "List Databricks job runs.",
     s.object(
       {
@@ -195,30 +204,35 @@ export const databricksActions: ActionDefinition[] = [
   ),
   action(
     "get_run_by_id",
+    "read",
     "Get one Databricks job run by run ID.",
     s.actionInput({ runId }, ["runId"]),
     s.actionOutput({ run: rawObject }),
   ),
   action(
     "get_run_output",
+    "read",
     "Get the output payload for one Databricks run.",
     s.actionInput({ runId }, ["runId"]),
     s.actionOutput({ runOutput: rawObject }),
   ),
   action(
     "cancel_run",
+    "destructive",
     "Cancel a Databricks job run by run ID.",
     s.actionInput({ runId }, ["runId"]),
     s.actionOutput({ runId, cancelled: s.boolean("Whether the cancel was accepted.") }),
   ),
   action(
     "submit_run",
+    "write",
     "Submit a one-time Databricks run.",
     s.actionInput({ run: rawObject }, ["run"]),
     s.actionOutput({ runId }),
   ),
   action(
     "list_clusters",
+    "read",
     "List Databricks clusters.",
     s.object(
       {
@@ -235,42 +249,49 @@ export const databricksActions: ActionDefinition[] = [
   ),
   action(
     "get_cluster",
+    "read",
     "Get one Databricks cluster by cluster ID.",
     s.actionInput({ clusterId }, ["clusterId"]),
     s.actionOutput({ cluster: rawObject }),
   ),
   action(
     "create_cluster",
+    "write",
     "Create a Databricks cluster from a raw clusters/create payload.",
     s.actionInput({ cluster: rawObject }, ["cluster"]),
     s.actionOutput({ clusterId }),
   ),
   action(
     "edit_cluster",
+    "write",
     "Edit an existing Databricks cluster by cluster ID.",
     s.actionInput({ clusterId, cluster: rawObject }, ["clusterId", "cluster"]),
     s.actionOutput({ clusterId, edited: s.boolean("Whether the edit was accepted.") }),
   ),
   action(
     "start_cluster",
+    "write",
     "Start a terminated Databricks cluster by cluster ID.",
     s.actionInput({ clusterId }, ["clusterId"]),
     s.actionOutput({ clusterId, started: s.boolean("Whether the start was accepted.") }),
   ),
   action(
     "permanent_delete_cluster",
+    "destructive",
     "Permanently delete a Databricks cluster by cluster ID.",
     s.actionInput({ clusterId }, ["clusterId"]),
     s.actionOutput({ clusterId, deleted: s.boolean("Whether the delete was accepted.") }),
   ),
   action(
     "list_cluster_node_types",
+    "read",
     "List Databricks cluster node types.",
     emptyInput,
     s.actionOutput({ nodeTypes: rawList }),
   ),
   action(
     "list_cluster_zones",
+    "read",
     "List Databricks cluster availability zones.",
     emptyInput,
     s.actionOutput(
@@ -284,24 +305,28 @@ export const databricksActions: ActionDefinition[] = [
   ),
   action(
     "list_cluster_spark_versions",
+    "read",
     "List Databricks Runtime and Spark versions.",
     emptyInput,
     s.actionOutput({ versions: rawList }),
   ),
   action(
     "workspace_list",
+    "read",
     "List direct Databricks workspace objects under a workspace path.",
     s.actionInput({ path }, ["path"]),
     s.actionOutput({ objects: rawList }),
   ),
   action(
     "workspace_get_status",
+    "read",
     "Get metadata for one Databricks workspace object.",
     s.actionInput({ path }, ["path"]),
     s.actionOutput({ object: rawObject }),
   ),
   action(
     "workspace_export",
+    "read",
     "Export one Databricks workspace object.",
     s.object(
       {
@@ -326,6 +351,7 @@ export const databricksActions: ActionDefinition[] = [
   ),
   action(
     "workspace_import",
+    "write",
     "Import base64 content into the Databricks workspace.",
     s.object(
       {
@@ -343,12 +369,14 @@ export const databricksActions: ActionDefinition[] = [
   ),
   action(
     "workspace_mkdirs",
+    "write",
     "Create a Databricks workspace directory.",
     s.actionInput({ path }, ["path"]),
     s.actionOutput({ path, created: s.boolean("Whether mkdirs was accepted.") }),
   ),
   action(
     "workspace_delete",
+    "destructive",
     "Delete a Databricks workspace object or directory.",
     s.object(
       { path, recursive: s.boolean("Whether to recursively delete.") },
@@ -358,6 +386,7 @@ export const databricksActions: ActionDefinition[] = [
   ),
   action(
     "create_repo",
+    "write",
     "Create a Databricks workspace repo linked to a Git remote.",
     s.object(
       {
@@ -374,6 +403,7 @@ export const databricksActions: ActionDefinition[] = [
   ),
   action(
     "update_repo",
+    "write",
     "Update a Databricks workspace repo.",
     s.object(
       {
@@ -388,21 +418,30 @@ export const databricksActions: ActionDefinition[] = [
   ),
   action(
     "delete_repo",
+    "destructive",
     "Delete a Databricks workspace repo by repo ID.",
     s.actionInput({ repoId: s.anyOf("The Databricks repo ID.", [s.string(), s.positiveInteger("Repo ID.")]) }, [
       "repoId",
     ]),
     s.actionOutput({ repoId: s.string("Deleted repo ID."), deleted: s.boolean("Whether delete was accepted.") }),
   ),
-  action("list_secret_scopes", "List Databricks secret scopes.", emptyInput, s.actionOutput({ scopes: rawList })),
+  action(
+    "list_secret_scopes",
+    "read",
+    "List Databricks secret scopes.",
+    emptyInput,
+    s.actionOutput({ scopes: rawList }),
+  ),
   action(
     "list_secrets",
+    "read",
     "List Databricks secret metadata rows in one secret scope.",
     s.actionInput({ scope }, ["scope"]),
     s.actionOutput({ secrets: rawList }),
   ),
   action(
     "create_secret_scope",
+    "write",
     "Create a Databricks secret scope.",
     s.object(
       {
@@ -417,12 +456,14 @@ export const databricksActions: ActionDefinition[] = [
   ),
   action(
     "delete_secret_scope",
+    "destructive",
     "Delete a Databricks secret scope by scope name.",
     s.actionInput({ scope }, ["scope"]),
     s.actionOutput({ scope, deleted: s.boolean("Whether delete was accepted.") }),
   ),
   action(
     "put_secret",
+    "destructive",
     "Create or overwrite a Databricks secret value.",
     s.object(
       { scope, key, stringValue: s.string("UTF-8 secret value."), bytesValue: s.string("Bytes secret value.") },
@@ -432,6 +473,7 @@ export const databricksActions: ActionDefinition[] = [
   ),
   action(
     "delete_secret",
+    "destructive",
     "Delete one Databricks secret value.",
     s.actionInput({ scope, key }, ["scope", "key"]),
     s.actionOutput({ scope, key, deleted: s.boolean("Whether delete was accepted.") }),

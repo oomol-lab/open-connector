@@ -42,6 +42,7 @@ function recordOutput(description: string, key: string, itemDescription: string)
 export const precoroActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_purchase_orders",
+    operationType: "read",
     description: "List Precoro purchase orders with pagination and optional status/date filters.",
     inputSchema: s.object(
       "Precoro purchase order list filters.",
@@ -66,6 +67,7 @@ export const precoroActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_purchase_order",
+    operationType: "read",
     description: "Get one Precoro purchase order by its company-visible IDN.",
     inputSchema: s.object("Input parameters for getting a Precoro purchase order.", { idn }),
     outputSchema: recordOutput(
@@ -76,36 +78,42 @@ export const precoroActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_suppliers",
+    operationType: "read",
     description: "List Precoro suppliers with pagination and optional modified-since filtering.",
     inputSchema: s.object("Common Precoro list filters.", commonFilters, { optional: commonOptional }),
     outputSchema: listOutput("A page of Precoro suppliers.", "A Precoro supplier returned by the API."),
   }),
   defineProviderAction(service, {
     name: "get_supplier",
+    operationType: "read",
     description: "Get one Precoro supplier by numeric supplier ID.",
     inputSchema: s.object("Input parameters for getting a Precoro supplier.", { id }),
     outputSchema: recordOutput("A Precoro supplier response.", "supplier", "A Precoro supplier returned by the API."),
   }),
   defineProviderAction(service, {
     name: "list_items",
+    operationType: "read",
     description: "List Precoro catalog items with pagination and optional modified-since filtering.",
     inputSchema: s.object("Common Precoro list filters.", commonFilters, { optional: commonOptional }),
     outputSchema: listOutput("A page of Precoro catalog items.", "A Precoro item returned by the API."),
   }),
   defineProviderAction(service, {
     name: "get_item",
+    operationType: "read",
     description: "Get one Precoro catalog item by numeric item ID.",
     inputSchema: s.object("Input parameters for getting a Precoro catalog item.", { id }),
     outputSchema: recordOutput("A Precoro catalog item response.", "item", "A Precoro item returned by the API."),
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Precoro users visible to the connected API user.",
     inputSchema: s.object("Input parameters for listing Precoro users.", {}),
     outputSchema: listOutput("A page of Precoro users.", "A Precoro user returned by the API."),
   }),
   defineProviderAction(service, {
     name: "list_warehouses",
+    operationType: "read",
     description: "List Precoro warehouses configured in the connected company.",
     inputSchema: s.object("Input parameters for listing Precoro warehouses.", {}),
     outputSchema: listOutput("A page of Precoro warehouses.", "A Precoro warehouse returned by the API."),

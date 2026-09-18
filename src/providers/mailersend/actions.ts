@@ -152,6 +152,7 @@ const idInputSchema = (description: string, field: string, schema: JsonSchema) =
 export const mailersendActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_email",
+    operationType: "write",
     description: "Send a transactional email through MailerSend.",
     inputSchema: sendEmailInputSchema,
     outputSchema: s.object("Submission result returned after sending a MailerSend email.", {
@@ -162,42 +163,49 @@ export const mailersendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_messages",
+    operationType: "read",
     description: "List messages available to the current MailerSend API token.",
     inputSchema: messageListInputSchema,
     outputSchema: listOutputSchema("Message object returned by MailerSend."),
   }),
   defineProviderAction(service, {
     name: "get_message",
+    operationType: "read",
     description: "Get a single MailerSend message by ID.",
     inputSchema: idInputSchema("Path parameters for fetching a MailerSend message.", "message_id", messageId),
     outputSchema: s.looseObject("Message object returned by MailerSend."),
   }),
   defineProviderAction(service, {
     name: "list_domains",
+    operationType: "read",
     description: "List MailerSend domains available to the current API token.",
     inputSchema: listDomainsInputSchema,
     outputSchema: listOutputSchema("Domain object returned by MailerSend."),
   }),
   defineProviderAction(service, {
     name: "get_domain",
+    operationType: "read",
     description: "Get a single MailerSend domain by ID.",
     inputSchema: idInputSchema("Path parameters for fetching a MailerSend domain.", "domain_id", domainId),
     outputSchema: s.looseObject("Domain object returned by MailerSend."),
   }),
   defineProviderAction(service, {
     name: "list_domain_recipients",
+    operationType: "read",
     description: "List recipients associated with a MailerSend domain.",
     inputSchema: listDomainRecipientsInputSchema,
     outputSchema: listOutputSchema("Domain recipient object returned by MailerSend."),
   }),
   defineProviderAction(service, {
     name: "get_domain_dns_records",
+    operationType: "read",
     description: "Get DNS records required for a MailerSend domain.",
     inputSchema: idInputSchema("Path parameters for fetching MailerSend domain DNS records.", "domain_id", domainId),
     outputSchema: s.looseObject("Domain DNS records returned by MailerSend."),
   }),
   defineProviderAction(service, {
     name: "get_domain_verification_status",
+    operationType: "read",
     description: "Get the verification status for a MailerSend domain.",
     inputSchema: idInputSchema(
       "Path parameters for fetching a MailerSend domain verification status.",
@@ -208,24 +216,28 @@ export const mailersendActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List MailerSend templates available to the current API token.",
     inputSchema: listTemplatesInputSchema,
     outputSchema: listOutputSchema("Template object returned by MailerSend."),
   }),
   defineProviderAction(service, {
     name: "get_template",
+    operationType: "read",
     description: "Get a single MailerSend template by ID.",
     inputSchema: idInputSchema("Path parameters for fetching a MailerSend template.", "template_id", templateId),
     outputSchema: s.looseObject("Template object returned by MailerSend."),
   }),
   defineProviderAction(service, {
     name: "list_sender_identities",
+    operationType: "read",
     description: "List MailerSend sender identities available to the current API token.",
     inputSchema: listSenderIdentitiesInputSchema,
     outputSchema: listOutputSchema("Sender identity object returned by MailerSend."),
   }),
   defineProviderAction(service, {
     name: "get_sender_identity",
+    operationType: "read",
     description: "Get a single MailerSend sender identity by ID.",
     inputSchema: idInputSchema("Path parameters for fetching a MailerSend sender identity.", "identity_id", identityId),
     outputSchema: s.looseObject("Sender identity object returned by MailerSend."),

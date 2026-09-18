@@ -22,6 +22,7 @@ function enumString(description: string, values: readonly string[]): ActionJsonS
 
 const searchCompaniesAction = defineProviderAction(service, {
   name: "search_companies",
+  operationType: "read",
   description: "Search Intrinio companies by ticker or company name.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -41,6 +42,7 @@ const searchCompaniesAction = defineProviderAction(service, {
 
 const lookupCompanyAction = defineProviderAction(service, {
   name: "lookup_company",
+  operationType: "read",
   description: "Look up Intrinio company reference data and metadata by identifier.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for looking up an Intrinio company.", {
@@ -53,6 +55,7 @@ const lookupCompanyAction = defineProviderAction(service, {
 
 const lookupSecurityAction = defineProviderAction(service, {
   name: "lookup_security",
+  operationType: "read",
   description: "Look up Intrinio security reference data by identifier.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for looking up an Intrinio security.", {
@@ -65,6 +68,7 @@ const lookupSecurityAction = defineProviderAction(service, {
 
 const getSecurityStockPricesAction = defineProviderAction(service, {
   name: "get_security_stock_prices",
+  operationType: "read",
   description: "Get historical end-of-day stock prices for an Intrinio security.",
   requiredScopes: [],
   inputSchema: s.object(

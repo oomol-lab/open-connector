@@ -85,6 +85,7 @@ const runListItemSchema = s.looseRequiredObject(
 export const skyvernActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "run_task",
+    operationType: "write",
     description:
       "Start a high-level Skyvern browser automation task and return a run ID that can be polled until completion.",
     requiredScopes: [],
@@ -136,6 +137,7 @@ export const skyvernActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_run",
+    operationType: "read",
     description: "Get the current state, output, hosted files, screenshots, and recording URLs for one Skyvern run.",
     requiredScopes: [],
     inputSchema: s.object("The Skyvern run to retrieve.", {
@@ -145,6 +147,7 @@ export const skyvernActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_runs",
+    operationType: "read",
     description: "List Skyvern task and workflow runs with pagination and optional status, type, or text filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -167,6 +170,7 @@ export const skyvernActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "cancel_run",
+    operationType: "destructive",
     description: "Cancel one active Skyvern task or workflow run.",
     requiredScopes: [],
     inputSchema: s.object("The Skyvern run to cancel.", {

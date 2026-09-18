@@ -65,6 +65,7 @@ const cloudflareR2ManagedDomainSchema = s.requiredObject("The r2.dev managed dom
 export const cloudflareR2DomainActions: ActionDefinition[] = [
   defineProviderAction("cloudflare_r2", {
     name: "list_custom_domains",
+    operationType: "read",
     description: "List the custom domains attached to an R2 bucket.",
     requiredScopes: ["workers-r2.read"],
     providerPermissions: [...cloudflareR2ReadPermissions],
@@ -82,6 +83,7 @@ export const cloudflareR2DomainActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "get_custom_domain",
+    operationType: "read",
     description: "Get the settings of one custom domain attached to an R2 bucket.",
     requiredScopes: ["workers-r2.read"],
     providerPermissions: [...cloudflareR2ReadPermissions],
@@ -100,6 +102,7 @@ export const cloudflareR2DomainActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "add_custom_domain",
+    operationType: "write",
     description: "Attach a custom domain from a Cloudflare zone to an R2 bucket.",
     requiredScopes: ["workers-r2.write"],
     providerPermissions: [...cloudflareR2WritePermissions],
@@ -124,6 +127,7 @@ export const cloudflareR2DomainActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "update_custom_domain",
+    operationType: "write",
     description: "Update the public access, TLS version, or cipher settings of a custom domain.",
     requiredScopes: ["workers-r2.write"],
     providerPermissions: [...cloudflareR2WritePermissions],
@@ -145,6 +149,7 @@ export const cloudflareR2DomainActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "delete_custom_domain",
+    operationType: "destructive",
     description: "Detach a custom domain from an R2 bucket.",
     requiredScopes: ["workers-r2.write"],
     providerPermissions: [...cloudflareR2WritePermissions],
@@ -164,6 +169,7 @@ export const cloudflareR2DomainActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "get_managed_domain",
+    operationType: "read",
     description: "Get the r2.dev managed domain and its public access state for an R2 bucket.",
     requiredScopes: ["workers-r2.read"],
     providerPermissions: [...cloudflareR2ReadPermissions],
@@ -179,6 +185,7 @@ export const cloudflareR2DomainActions: ActionDefinition[] = [
   }),
   defineProviderAction("cloudflare_r2", {
     name: "update_managed_domain",
+    operationType: "destructive",
     description: "Enable or disable public access to an R2 bucket through its r2.dev domain.",
     requiredScopes: ["workers-r2.write"],
     providerPermissions: [...cloudflareR2WritePermissions],

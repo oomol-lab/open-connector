@@ -26,6 +26,7 @@ const timeRangeWithLimitInputSchema = s.object(
 export const mezmoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_ingestion_status",
+    operationType: "read",
     description: "Get whether the Mezmo ingestion service is currently ingesting data for the authenticated account.",
     requiredScopes: [],
     inputSchema: s.object({}, { description: "This action does not require any input parameters." }),
@@ -35,6 +36,7 @@ export const mezmoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_usage_summary",
+    operationType: "read",
     description:
       "Get the Mezmo usage summary for a required time window without flattening the upstream usage payload.",
     requiredScopes: [],
@@ -45,6 +47,7 @@ export const mezmoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_app_usages",
+    operationType: "read",
     description: "List Mezmo usage entries grouped by app for a required time window and optional result limit.",
     requiredScopes: [],
     inputSchema: timeRangeWithLimitInputSchema,
@@ -54,6 +57,7 @@ export const mezmoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_host_usages",
+    operationType: "read",
     description: "List Mezmo usage entries grouped by host for a required time window and optional result limit.",
     requiredScopes: [],
     inputSchema: timeRangeWithLimitInputSchema,
@@ -63,6 +67,7 @@ export const mezmoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tag_usages",
+    operationType: "read",
     description: "List Mezmo usage entries grouped by tag for a required time window and optional result limit.",
     requiredScopes: [],
     inputSchema: timeRangeWithLimitInputSchema,

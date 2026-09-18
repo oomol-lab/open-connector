@@ -71,6 +71,7 @@ export function createFeishuImOrganizeActions(service: string): readonly ActionD
   return [
     defineProviderAction(service, {
       name: "create_message_flag",
+      operationType: "write",
       description: "Bookmark a message in the message or feed layer, automatically detecting thread type when needed.",
       requiredScopes: flagLookupPermissions,
       providerPermissions: flagLookupPermissions,
@@ -98,6 +99,7 @@ export function createFeishuImOrganizeActions(service: string): readonly ActionD
     }),
     defineProviderAction(service, {
       name: "cancel_message_flag",
+      operationType: "destructive",
       description: "Cancel a targeted message flag or best-effort cancel both message and feed layers.",
       requiredScopes: flagLookupPermissions,
       providerPermissions: flagLookupPermissions,
@@ -127,6 +129,7 @@ export function createFeishuImOrganizeActions(service: string): readonly ActionD
     }),
     defineProviderAction(service, {
       name: "list_message_flags",
+      operationType: "read",
       description:
         "List active and canceled user message flags, optionally auto-paginating and enriching feed flags with messages.",
       requiredScopes: [
@@ -156,6 +159,7 @@ export function createFeishuImOrganizeActions(service: string): readonly ActionD
     }),
     defineProviderAction(service, {
       name: "create_feed_shortcuts",
+      operationType: "write",
       description: "Add up to 10 chats to the authorized user's feed shortcuts at the head or tail.",
       requiredScopes: [feishuImOrganizeProviderPermissions.shortcutWrite],
       providerPermissions: [feishuImOrganizeProviderPermissions.shortcutWrite],
@@ -183,6 +187,7 @@ export function createFeishuImOrganizeActions(service: string): readonly ActionD
     }),
     defineProviderAction(service, {
       name: "remove_feed_shortcuts",
+      operationType: "destructive",
       description: "Remove up to 10 chats from the authorized user's feed shortcuts.",
       requiredScopes: [feishuImOrganizeProviderPermissions.shortcutWrite],
       providerPermissions: [feishuImOrganizeProviderPermissions.shortcutWrite],
@@ -209,6 +214,7 @@ export function createFeishuImOrganizeActions(service: string): readonly ActionD
     }),
     defineProviderAction(service, {
       name: "list_feed_shortcuts",
+      operationType: "read",
       description: "List one version-locked page of user feed shortcuts and optionally attach complete chat details.",
       requiredScopes: [feishuImOrganizeProviderPermissions.shortcutRead, feishuImOrganizeProviderPermissions.chatRead],
       providerPermissions: [
@@ -240,6 +246,7 @@ export function createFeishuImOrganizeActions(service: string): readonly ActionD
     }),
     defineProviderAction(service, {
       name: "list_feed_groups",
+      operationType: "read",
       description: "List user feed groups, preserving both active and soft-deleted groups across auto-pagination.",
       requiredScopes: [feishuImOrganizeProviderPermissions.feedGroupRead],
       providerPermissions: [feishuImOrganizeProviderPermissions.feedGroupRead],
@@ -248,6 +255,7 @@ export function createFeishuImOrganizeActions(service: string): readonly ActionD
     }),
     defineProviderAction(service, {
       name: "list_feed_group_items",
+      operationType: "read",
       description: "List active and deleted feed cards in one group, optionally resolving each chat.",
       requiredScopes: [feishuImOrganizeProviderPermissions.feedGroupRead, feishuImOrganizeProviderPermissions.chatRead],
       providerPermissions: [
@@ -274,6 +282,7 @@ export function createFeishuImOrganizeActions(service: string): readonly ActionD
     }),
     defineProviderAction(service, {
       name: "query_feed_group_items",
+      operationType: "read",
       description: "Look up specific chat feed cards in one group and optionally attach complete chat details.",
       requiredScopes: [feishuImOrganizeProviderPermissions.feedGroupRead, feishuImOrganizeProviderPermissions.chatRead],
       providerPermissions: [

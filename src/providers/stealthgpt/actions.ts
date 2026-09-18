@@ -82,18 +82,21 @@ const paygSchema = s.requiredObject("StealthGPT pay-as-you-go billing status.", 
 export const stealthgptActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "generate_text",
+    operationType: "write",
     description: "Generate text from instructions with StealthGPT and return usage details.",
     inputSchema: generateTextInputSchema,
     outputSchema: textResultSchema,
   }),
   defineProviderAction(service, {
     name: "humanize_text",
+    operationType: "write",
     description: "Humanize existing text with StealthGPT and return usage details.",
     inputSchema: humanizeTextInputSchema,
     outputSchema: textResultSchema,
   }),
   defineProviderAction(service, {
     name: "detect_ai_text",
+    operationType: "read",
     description: "Score how likely text is to be flagged as AI-generated with StealthGPT.",
     inputSchema: s.requiredObject("Input for detecting AI-generated text with StealthGPT.", {
       text: s.nonEmptyString("Text to analyze, up to 3,000 words."),
@@ -102,6 +105,7 @@ export const stealthgptActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_balance",
+    operationType: "read",
     description: "Get the current StealthGPT prepaid and pay-as-you-go word balance.",
     inputSchema: s.requiredObject("This action does not require input parameters.", {}),
     outputSchema: s.looseRequiredObject("Current StealthGPT account balance.", {

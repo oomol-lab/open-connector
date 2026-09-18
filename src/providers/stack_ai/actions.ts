@@ -18,6 +18,7 @@ const runResultSchema = s.object("The normalized StackAI run payload returned by
 export const stackAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "run_flow",
+    operationType: "write",
     description: "Run a deployed StackAI flow with JSON variables and return its normalized result.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -32,6 +33,7 @@ export const stackAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_run_metadata",
+    operationType: "read",
     description: "Fetch metadata for one previously started StackAI run.",
     requiredScopes: [],
     inputSchema: s.actionInput(

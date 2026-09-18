@@ -171,6 +171,7 @@ const paymentOutput = s.looseObject("An Invoice Ninja payment object.", {
 export const invoiceNinjaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_clients",
+    operationType: "read",
     description: "List Invoice Ninja clients with optional search and pagination filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -190,6 +191,7 @@ export const invoiceNinjaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_client",
+    operationType: "read",
     description: "Retrieve one Invoice Ninja client by hashed ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -201,6 +203,7 @@ export const invoiceNinjaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_client",
+    operationType: "write",
     description: "Create an Invoice Ninja client.",
     requiredScopes: [],
     inputSchema: createClientInput,
@@ -210,6 +213,7 @@ export const invoiceNinjaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_client",
+    operationType: "destructive",
     description: "Update an Invoice Ninja client while replacing its complete contact list.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -241,6 +245,7 @@ export const invoiceNinjaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_invoices",
+    operationType: "read",
     description: "List Invoice Ninja invoices with optional client, status, date, and search filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -286,6 +291,7 @@ export const invoiceNinjaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_invoice",
+    operationType: "read",
     description: "Retrieve one Invoice Ninja invoice by hashed ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -297,6 +303,7 @@ export const invoiceNinjaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_invoice",
+    operationType: "write",
     description: "Create an Invoice Ninja invoice for a client.",
     requiredScopes: [],
     inputSchema: s.object("The input for creating an Invoice Ninja invoice.", invoiceWriteFields, {
@@ -325,6 +332,7 @@ export const invoiceNinjaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_invoice",
+    operationType: "destructive",
     description: "Update documented fields or status actions on an Invoice Ninja invoice.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -358,6 +366,7 @@ export const invoiceNinjaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_payments",
+    operationType: "read",
     description: "List Invoice Ninja payments with optional client and search filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -378,6 +387,7 @@ export const invoiceNinjaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_payment",
+    operationType: "read",
     description: "Retrieve one Invoice Ninja payment by hashed ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -389,6 +399,7 @@ export const invoiceNinjaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_payment",
+    operationType: "write",
     description: "Record a payment in Invoice Ninja and optionally apply it to invoices.",
     requiredScopes: [],
     inputSchema: s.object(

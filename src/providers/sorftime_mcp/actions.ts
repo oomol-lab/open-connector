@@ -56,9 +56,15 @@ const outputSchema = s.object(
   },
 );
 
-function action(name: string, description: string, inputSchema: JsonSchema) {
+function action(
+  name: string,
+  operationType: ActionDefinition["operationType"],
+  description: string,
+  inputSchema: JsonSchema,
+) {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     requiredScopes: [],
     inputSchema,
@@ -69,6 +75,7 @@ function action(name: string, description: string, inputSchema: JsonSchema) {
 export const sorftimeMcpActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tools",
+    operationType: "read",
     description: "List all tools available to your Sorftime MCP account with their descriptions and argument schemas.",
     requiredScopes: [],
     inputSchema: s.object("No input is required.", {}),
@@ -88,6 +95,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "call_tool",
+    operationType: "destructive",
     description:
       "Run a tool from list_tools with its required arguments. Supports research queries and changes to favorites, including deletion. Credit cost depends on the tool.",
     requiredScopes: [],
@@ -106,6 +114,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   }),
   action(
     "ali1688_search_products",
+    "read",
     "Search 1688 products by name to find sourcing suppliers and procurement prices.",
     s.object("Research parameters for 1688.", {
       query: s.nonEmptyString("Product name or search phrase."),
@@ -114,6 +123,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "ali1688_get_product",
+    "read",
     "Inspect one 1688 product using its ID from ali1688_search_products.",
     s.object("Research parameters for 1688.", {
       productId,
@@ -121,6 +131,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "ali1688_list_categories",
+    "read",
     "Browse 1688 categories. Omit parentId for the top levels, then pass a returned category ID to explore its children.",
     s.object("Research parameters for 1688.", {
       parentId,
@@ -128,6 +139,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "amazon_search_products",
+    "read",
     "Find Amazon products by name.",
     s.object("Research parameters for Amazon.", {
       site: amazonSite,
@@ -137,6 +149,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "amazon_get_product",
+    "read",
     "Inspect one Amazon product using its ID from amazon_search_products.",
     s.object("Research parameters for Amazon.", {
       site: amazonSite,
@@ -145,6 +158,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "amazon_get_product_trend",
+    "read",
     "Inspect historical Amazon product performance. Select one metric.",
     s.object("Research parameters for Amazon.", {
       site: amazonSite,
@@ -160,6 +174,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "amazon_list_categories",
+    "read",
     "Browse Amazon categories. Omit parentId for the top levels, then pass a returned category ID to explore its children.",
     s.object("Research parameters for Amazon.", {
       site: amazonSite,
@@ -168,6 +183,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "amazon_get_category_report",
+    "read",
     "Research an Amazon category market using a category ID from amazon_list_categories.",
     s.object("Research parameters for Amazon.", {
       site: amazonSite,
@@ -176,6 +192,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "amazon_list_keywords",
+    "read",
     "Discover Amazon keywords ranked by weekly search volume. Supports optional rank and search-volume bounds.",
     s.object("Research parameters for Amazon.", {
       site: amazonKeywordSite,
@@ -188,6 +205,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "amazon_get_keyword",
+    "read",
     "Inspect demand for a specific Amazon keyword.",
     s.object("Research parameters for Amazon.", {
       site: amazonKeywordSite,
@@ -196,6 +214,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "amazon_find_related_keywords",
+    "read",
     "Expand an Amazon keyword into related and long-tail search terms.",
     s.object("Research parameters for Amazon.", {
       site: amazonKeywordSite,
@@ -205,6 +224,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "walmart_search_products",
+    "read",
     "Find Walmart US products by name.",
     s.object("Research parameters for Walmart US.", {
       query: s.nonEmptyString("Product name or search phrase."),
@@ -213,6 +233,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "walmart_get_product",
+    "read",
     "Inspect one Walmart US product using its ID from walmart_search_products.",
     s.object("Research parameters for Walmart US.", {
       productId,
@@ -220,6 +241,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "walmart_get_product_trend",
+    "read",
     "Inspect historical Walmart US product performance. Select one metric.",
     s.object("Research parameters for Walmart US.", {
       productId,
@@ -236,6 +258,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "walmart_list_categories",
+    "read",
     "Browse Walmart US categories. Omit parentId for the top levels, then pass a returned category ID to explore its children.",
     s.object("Research parameters for Walmart US.", {
       parentId,
@@ -243,6 +266,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "walmart_get_category_report",
+    "read",
     "Research a Walmart US category market using a category ID from walmart_list_categories.",
     s.object("Research parameters for Walmart US.", {
       categoryId,
@@ -250,6 +274,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "walmart_list_keywords",
+    "read",
     "Discover Walmart US keywords ranked by monthly search volume. Requires minRank and maxRank.",
     s.object("Research parameters for Walmart US.", {
       page,
@@ -259,6 +284,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "walmart_get_keyword",
+    "read",
     "Inspect demand for a specific Walmart US keyword.",
     s.object("Research parameters for Walmart US.", {
       keyword,
@@ -266,6 +292,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "walmart_find_related_keywords",
+    "read",
     "Expand a Walmart US keyword into related and long-tail search terms.",
     s.object("Research parameters for Walmart US.", {
       keyword,
@@ -274,6 +301,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "shopee_search_products",
+    "read",
     "Find Shopee products by name.",
     s.object("Research parameters for Shopee.", {
       site: shopeeSite,
@@ -283,6 +311,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "shopee_get_product",
+    "read",
     "Inspect one Shopee product using its ID from shopee_search_products.",
     s.object("Research parameters for Shopee.", {
       site: shopeeSite,
@@ -291,6 +320,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "shopee_get_product_trend",
+    "read",
     "Inspect historical Shopee product performance. Returns available dimensions together. Ranges beyond one year cost 10 credits.",
     s.object("Research parameters for Shopee.", {
       site: shopeeSite,
@@ -300,6 +330,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "shopee_list_categories",
+    "read",
     "Browse Shopee categories. Omit parentId for the top levels, then pass a returned category ID to explore its children.",
     s.object("Research parameters for Shopee.", {
       site: shopeeSite,
@@ -308,6 +339,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "shopee_list_category_products",
+    "read",
     "Find best-selling products in a Shopee category. Optionally query historical natural-week snapshots for leaf categories.",
     s.object("Research parameters for Shopee.", {
       site: shopeeSite,
@@ -318,6 +350,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "shopee_list_keywords",
+    "read",
     "Discover Shopee keywords ranked by monthly search volume. Supports optional rank and search-volume bounds.",
     s.object("Research parameters for Shopee.", {
       site: shopeeSite,
@@ -331,6 +364,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "tiktok_search_products",
+    "read",
     "Find TikTok products by name.",
     s.object("Research parameters for TikTok.", {
       site: tiktokSite,
@@ -350,6 +384,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "tiktok_get_product",
+    "read",
     "Inspect one TikTok product using its ID from tiktok_search_products.",
     s.object("Research parameters for TikTok.", {
       site: tiktokSite,
@@ -358,6 +393,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "tiktok_get_product_trend",
+    "read",
     "Inspect historical TikTok product performance. Returns available dimensions together.",
     s.object("Research parameters for TikTok.", {
       site: tiktokSite,
@@ -366,6 +402,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "tiktok_list_categories",
+    "read",
     "Browse TikTok categories. Omit parentId for the top levels, then pass a returned category ID to explore its children.",
     s.object("Research parameters for TikTok.", {
       site: tiktokSite,
@@ -374,6 +411,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "tiktok_get_category_report",
+    "read",
     "Research a TikTok category market using a category ID from tiktok_list_categories.",
     s.object("Research parameters for TikTok.", {
       site: tiktokSite,
@@ -382,6 +420,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "temu_search_products",
+    "read",
     "Find Temu products by name.",
     s.object("Research parameters for Temu.", {
       site: temuSite,
@@ -391,6 +430,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "temu_get_product",
+    "read",
     "Inspect one Temu product using its ID from temu_search_products.",
     s.object("Research parameters for Temu.", {
       site: temuSite,
@@ -399,6 +439,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "temu_get_product_trend",
+    "read",
     "Inspect historical Temu product performance. Returns available dimensions together. Ranges beyond one year cost 10 credits.",
     s.object("Research parameters for Temu.", {
       site: temuSite,
@@ -408,6 +449,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "temu_list_categories",
+    "read",
     "Browse Temu categories. Omit parentId for the top levels, then pass a returned category ID to explore its children.",
     s.object("Research parameters for Temu.", {
       site: temuSite,
@@ -416,6 +458,7 @@ export const sorftimeMcpActions: ActionDefinition[] = [
   ),
   action(
     "temu_list_category_products",
+    "read",
     "Find best-selling products in a Temu category.",
     s.object("Research parameters for Temu.", {
       site: temuSite,

@@ -37,6 +37,7 @@ const synchronousImageOutputSchema = s.object(
 export const htmlToImageActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "convert_html_to_image",
+    operationType: "read",
     description: "Convert raw HTML and optional CSS to an image with HTML to Image and return the generated image URL.",
     inputSchema: s.object(
       "Input parameters for synchronously converting raw HTML and CSS into an image.",
@@ -50,6 +51,7 @@ export const htmlToImageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "capture_website_screenshot",
+    operationType: "read",
     description: "Capture a public webpage with HTML to Image and return the generated screenshot URL.",
     inputSchema: s.object(
       "Input parameters for synchronously capturing a website screenshot.",

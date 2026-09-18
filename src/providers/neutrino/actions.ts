@@ -189,30 +189,35 @@ const checkIpBlocklistOutputSchema = outputObject("IP blocklist payload returned
 export const neutrinoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "validate_email",
+    operationType: "read",
     description: "Parse, validate, and clean an email address with Neutrino.",
     inputSchema: validateEmailInputSchema,
     outputSchema: validateEmailOutputSchema,
   }),
   defineProviderAction(service, {
     name: "validate_phone",
+    operationType: "read",
     description: "Parse, validate, format, and locate a phone number with Neutrino.",
     inputSchema: validatePhoneInputSchema,
     outputSchema: validatePhoneOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_ip_info",
+    operationType: "read",
     description: "Get Neutrino geolocation and reverse-DNS details for an IP address.",
     inputSchema: getIpInfoInputSchema,
     outputSchema: getIpInfoOutputSchema,
   }),
   defineProviderAction(service, {
     name: "lookup_domain",
+    operationType: "read",
     description: "Get Neutrino domain registration, DNS, mail, website, and blocklist details.",
     inputSchema: lookupDomainInputSchema,
     outputSchema: lookupDomainOutputSchema,
   }),
   defineProviderAction(service, {
     name: "check_ip_blocklist",
+    operationType: "read",
     description: "Check whether an IP address is listed on Neutrino security blocklists.",
     inputSchema: checkIpBlocklistInputSchema,
     outputSchema: checkIpBlocklistOutputSchema,

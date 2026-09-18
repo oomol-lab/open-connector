@@ -93,6 +93,7 @@ const teamSchema = s.looseRequiredObject(
 export const lemlistActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_team",
+    operationType: "read",
     description: "Retrieve information about the lemlist team for the API key.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for retrieving the lemlist team.", {}),
@@ -102,6 +103,7 @@ export const lemlistActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_campaigns",
+    operationType: "read",
     description: "List lemlist campaigns with optional pagination and status filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -126,6 +128,7 @@ export const lemlistActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign",
+    operationType: "read",
     description: "Retrieve one lemlist campaign by campaign ID.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for retrieving a lemlist campaign.", {
@@ -137,6 +140,7 @@ export const lemlistActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_campaign_leads",
+    operationType: "read",
     description: "List leads from a lemlist campaign with optional state filtering.",
     requiredScopes: [],
     inputSchema: s.object(

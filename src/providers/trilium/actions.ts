@@ -99,6 +99,7 @@ const attachmentSchema = s.looseObject("Trilium attachment metadata.", {
 
 const searchNotes = defineProviderAction(service, {
   name: "search_notes",
+  operationType: "read",
   description: "Search Trilium notes using full text, labels, subtree constraints, and ordering options.",
   requiredScopes: [],
   followUpActions: ["trilium.get_note"],
@@ -142,6 +143,7 @@ const searchNotes = defineProviderAction(service, {
 
 const createNote = defineProviderAction(service, {
   name: "create_note",
+  operationType: "write",
   description: "Create a note and place it under a parent in the Trilium note tree.",
   requiredScopes: [],
   followUpActions: ["trilium.get_note", "trilium.create_attribute"],
@@ -176,6 +178,7 @@ const createNote = defineProviderAction(service, {
 
 const getNote = defineProviderAction(service, {
   name: "get_note",
+  operationType: "read",
   description: "Get Trilium note metadata by note id.",
   requiredScopes: [],
   followUpActions: ["trilium.get_note_content"],
@@ -197,6 +200,7 @@ const getNote = defineProviderAction(service, {
 
 const updateNote = defineProviderAction(service, {
   name: "update_note",
+  operationType: "write",
   description: "Update mutable metadata on a Trilium note.",
   requiredScopes: [],
   inputSchema: requireAnyField(
@@ -225,6 +229,7 @@ const updateNote = defineProviderAction(service, {
 
 const deleteNote = defineProviderAction(service, {
   name: "delete_note",
+  operationType: "destructive",
   description: "Delete a Trilium note and all of its placements from the note tree.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -246,6 +251,7 @@ const deleteNote = defineProviderAction(service, {
 
 const getNoteContent = defineProviderAction(service, {
   name: "get_note_content",
+  operationType: "read",
   description: "Read the text content of a text-based Trilium note.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -268,6 +274,7 @@ const getNoteContent = defineProviderAction(service, {
 
 const updateNoteContent = defineProviderAction(service, {
   name: "update_note_content",
+  operationType: "destructive",
   description: "Replace the text content of a text-based Trilium note.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -290,6 +297,7 @@ const updateNoteContent = defineProviderAction(service, {
 
 const createBranch = defineProviderAction(service, {
   name: "create_branch",
+  operationType: "write",
   description: "Place an existing Trilium note under another parent, or update that placement if it exists.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -314,6 +322,7 @@ const createBranch = defineProviderAction(service, {
 
 const getBranch = defineProviderAction(service, {
   name: "get_branch",
+  operationType: "read",
   description: "Get a Trilium note-tree branch by branch id.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -334,6 +343,7 @@ const getBranch = defineProviderAction(service, {
 
 const updateBranch = defineProviderAction(service, {
   name: "update_branch",
+  operationType: "write",
   description: "Update the position, prefix, or expanded state of a Trilium branch.",
   requiredScopes: [],
   inputSchema: requireAnyField(
@@ -360,6 +370,7 @@ const updateBranch = defineProviderAction(service, {
 
 const deleteBranch = defineProviderAction(service, {
   name: "delete_branch",
+  operationType: "destructive",
   description: "Delete a Trilium branch; deleting a note's final branch also deletes the note.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -404,6 +415,7 @@ createAttributeInputSchema.allOf = [
 
 const createAttribute = defineProviderAction(service, {
   name: "create_attribute",
+  operationType: "write",
   description: "Create a label or relation attribute on a Trilium note.",
   requiredScopes: [],
   inputSchema: createAttributeInputSchema,
@@ -418,6 +430,7 @@ const createAttribute = defineProviderAction(service, {
 
 const getAttribute = defineProviderAction(service, {
   name: "get_attribute",
+  operationType: "read",
   description: "Get a Trilium label or relation attribute by attribute id.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -438,6 +451,7 @@ const getAttribute = defineProviderAction(service, {
 
 const updateAttribute = defineProviderAction(service, {
   name: "update_attribute",
+  operationType: "write",
   description: "Update the value or position of a Trilium label, or the position of a relation.",
   requiredScopes: [],
   inputSchema: requireAnyField(
@@ -463,6 +477,7 @@ const updateAttribute = defineProviderAction(service, {
 
 const deleteAttribute = defineProviderAction(service, {
   name: "delete_attribute",
+  operationType: "destructive",
   description: "Delete a Trilium label or relation attribute.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -484,6 +499,7 @@ const deleteAttribute = defineProviderAction(service, {
 
 const listNoteAttachments = defineProviderAction(service, {
   name: "list_note_attachments",
+  operationType: "read",
   description: "List attachment metadata owned by a Trilium note.",
   requiredScopes: [],
   followUpActions: ["trilium.get_attachment"],
@@ -505,6 +521,7 @@ const listNoteAttachments = defineProviderAction(service, {
 
 const uploadAttachment = defineProviderAction(service, {
   name: "upload_attachment",
+  operationType: "write",
   description: "Download a public file URL and upload it as a Trilium note attachment.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -530,6 +547,7 @@ const uploadAttachment = defineProviderAction(service, {
 
 const getAttachment = defineProviderAction(service, {
   name: "get_attachment",
+  operationType: "read",
   description: "Get Trilium attachment metadata by attachment id.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -550,6 +568,7 @@ const getAttachment = defineProviderAction(service, {
 
 const updateAttachment = defineProviderAction(service, {
   name: "update_attachment",
+  operationType: "write",
   description: "Update mutable metadata on a Trilium attachment.",
   requiredScopes: [],
   inputSchema: requireAnyField(
@@ -577,6 +596,7 @@ const updateAttachment = defineProviderAction(service, {
 
 const deleteAttachment = defineProviderAction(service, {
   name: "delete_attachment",
+  operationType: "destructive",
   description: "Delete a Trilium attachment.",
   requiredScopes: [],
   inputSchema: s.object(

@@ -176,12 +176,14 @@ const fetchArticleOutputSchema = s.object(
 export const autobloggerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_article",
+    operationType: "write",
     description: "Create an Autoblogging.ai article generation job and return the article ID plus credit metadata.",
     inputSchema: createArticleInputSchema,
     outputSchema: createArticleOutputSchema,
   }),
   defineProviderAction(service, {
     name: "fetch_article",
+    operationType: "read",
     description:
       "Fetch an Autoblogging.ai article generation job by article ID and return pending, completed, or failed status.",
     inputSchema: s.actionInput({

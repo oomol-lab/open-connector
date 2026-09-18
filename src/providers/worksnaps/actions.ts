@@ -126,12 +126,14 @@ const currentUserSchema = s.looseRequiredObject(
 export const worksnapsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Read the current Worksnaps user profile for the connected API token.",
     inputSchema: s.actionInput({}, [], "Input parameters for reading the current Worksnaps user."),
     outputSchema: s.actionOutput({ user: currentUserSchema }, "The Worksnaps current user response."),
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Worksnaps projects that the current user is involved in.",
     inputSchema: s.object(
       "Input parameters for listing Worksnaps projects.",
@@ -149,6 +151,7 @@ export const worksnapsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Read one Worksnaps project by project ID.",
     inputSchema: s.object(
       "Input parameters for reading one Worksnaps project.",
@@ -164,6 +167,7 @@ export const worksnapsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_project_tasks",
+    operationType: "read",
     description: "List tasks that belong to one Worksnaps project.",
     inputSchema: s.object(
       "Input parameters for listing tasks in one Worksnaps project.",
@@ -180,6 +184,7 @@ export const worksnapsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task",
+    operationType: "read",
     description: "Read one Worksnaps task by project ID and task ID.",
     inputSchema: s.actionInput(
       {
@@ -193,6 +198,7 @@ export const worksnapsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_project_user_assignments",
+    operationType: "read",
     description: "List user assignments for one Worksnaps project.",
     inputSchema: s.actionInput(
       { projectId: positiveIdSchema("The Worksnaps project ID whose members should be listed.") },
@@ -206,6 +212,7 @@ export const worksnapsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_project_task_assignments",
+    operationType: "read",
     description: "List task assignments for one Worksnaps project.",
     inputSchema: s.actionInput(
       { projectId: positiveIdSchema("The Worksnaps project ID whose task assignments should be listed.") },
@@ -219,6 +226,7 @@ export const worksnapsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_project_time_entries",
+    operationType: "read",
     description: "List Worksnaps time entries in one project for one or more users.",
     inputSchema: s.object(
       "Input parameters for listing Worksnaps time entries in one project.",
@@ -239,6 +247,7 @@ export const worksnapsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project_time_entry",
+    operationType: "read",
     description: "Read one Worksnaps time entry by project ID and time entry ID.",
     inputSchema: s.actionInput(
       {
@@ -252,6 +261,7 @@ export const worksnapsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project_time_report",
+    operationType: "read",
     description: "Read a Worksnaps project report for a bounded time window and user set.",
     inputSchema: s.object(
       "Input parameters for reading a Worksnaps project report.",

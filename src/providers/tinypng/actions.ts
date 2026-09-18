@@ -84,6 +84,7 @@ const outputImageInputSchema = s.object(
 export const tinypngActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "shrink_image",
+    operationType: "write",
     description: "Create a TinyPNG compressed image resource from a public URL or base64-encoded image bytes.",
     requiredScopes: [],
     inputSchema: shrinkImageInputSchema,
@@ -107,6 +108,7 @@ export const tinypngActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "output_image",
+    operationType: "read",
     description: "Transform a TinyPNG output image and return a transit URL for the resulting file.",
     requiredScopes: [],
     inputSchema: outputImageInputSchema,

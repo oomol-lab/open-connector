@@ -40,6 +40,7 @@ const sendMessageOutputSchema = s.looseObject("The response returned by the Orim
 export const orimonActions: readonly ActionDefinition[] = [
   defineProviderAction("orimon", {
     name: "send_message",
+    operationType: "write",
     description: "Send a text message to an Orimon chatbot and return its response.",
 
     requiredScopes: [],

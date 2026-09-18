@@ -82,6 +82,7 @@ const nextPageTokenSchema = s.nullable(
 
 const createMemo = defineProviderAction(service, {
   name: "create_memo",
+  operationType: "write",
   description: "Create a Markdown memo on the connected Memos instance.",
   requiredScopes: [],
   followUpActions: ["memos.get_memo", "memos.upload_attachment"],
@@ -108,6 +109,7 @@ const createMemo = defineProviderAction(service, {
 
 const listMemos = defineProviderAction(service, {
   name: "list_memos",
+  operationType: "read",
   description: "List memos with pagination, state selection, ordering, and CEL filtering.",
   requiredScopes: [],
   followUpActions: ["memos.get_memo"],
@@ -140,6 +142,7 @@ const listMemos = defineProviderAction(service, {
 
 const getMemo = defineProviderAction(service, {
   name: "get_memo",
+  operationType: "read",
   description: "Retrieve one memo by its Memos resource name.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -176,6 +179,7 @@ updateMemoInputSchema.anyOf = updateMemoFields.map((field) => ({ required: [fiel
 
 const updateMemo = defineProviderAction(service, {
   name: "update_memo",
+  operationType: "write",
   description: "Update selected content, visibility, pin, state, time, or location fields on a memo.",
   requiredScopes: [],
   followUpActions: ["memos.get_memo"],
@@ -191,6 +195,7 @@ const updateMemo = defineProviderAction(service, {
 
 const deleteMemo = defineProviderAction(service, {
   name: "delete_memo",
+  operationType: "destructive",
   description: "Delete one memo, optionally forcing deletion when associated data exists.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -213,6 +218,7 @@ const deleteMemo = defineProviderAction(service, {
 
 const uploadAttachment = defineProviderAction(service, {
   name: "upload_attachment",
+  operationType: "write",
   description: "Download a public file URL and upload its bytes to the connected Memos instance.",
   requiredScopes: [],
   followUpActions: ["memos.get_attachment"],
@@ -243,6 +249,7 @@ const uploadAttachment = defineProviderAction(service, {
 
 const listAttachments = defineProviderAction(service, {
   name: "list_attachments",
+  operationType: "read",
   description: "List attachment metadata with pagination, filtering, and ordering.",
   requiredScopes: [],
   followUpActions: ["memos.get_attachment"],
@@ -270,6 +277,7 @@ const listAttachments = defineProviderAction(service, {
 
 const getAttachment = defineProviderAction(service, {
   name: "get_attachment",
+  operationType: "read",
   description: "Retrieve one attachment's metadata by resource name.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -290,6 +298,7 @@ const getAttachment = defineProviderAction(service, {
 
 const deleteAttachment = defineProviderAction(service, {
   name: "delete_attachment",
+  operationType: "destructive",
   description: "Delete one attachment by resource name.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -311,6 +320,7 @@ const deleteAttachment = defineProviderAction(service, {
 
 const listMemoAttachments = defineProviderAction(service, {
   name: "list_memo_attachments",
+  operationType: "read",
   description: "List attachments associated with one memo.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -334,6 +344,7 @@ const listMemoAttachments = defineProviderAction(service, {
 
 const setMemoAttachments = defineProviderAction(service, {
   name: "set_memo_attachments",
+  operationType: "destructive",
   description: "Replace the complete attachment set associated with one memo.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -360,6 +371,7 @@ const setMemoAttachments = defineProviderAction(service, {
 
 const getCurrentUser = defineProviderAction(service, {
   name: "get_current_user",
+  operationType: "read",
   description: "Retrieve the Memos user associated with the connected personal access token.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for reading the current Memos user.", {}),
@@ -374,6 +386,7 @@ const getCurrentUser = defineProviderAction(service, {
 
 const listUsers = defineProviderAction(service, {
   name: "list_users",
+  operationType: "read",
   description: "List users visible to the connected Memos account.",
   requiredScopes: [],
   followUpActions: ["memos.get_user"],
@@ -401,6 +414,7 @@ const listUsers = defineProviderAction(service, {
 
 const getUser = defineProviderAction(service, {
   name: "get_user",
+  operationType: "read",
   description: "Retrieve one Memos user by resource name.",
   requiredScopes: [],
   inputSchema: s.object(

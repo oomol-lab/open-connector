@@ -251,6 +251,7 @@ const askAttentionOutputSchema = s.object("Answers returned by Attention.", {
 export const attentionActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_conversations",
+    operationType: "read",
     description:
       "Retrieve a paginated list of Attention conversations with optional owner, participant, team, CRM, and status filters.",
     inputSchema: listConversationsInputSchema,
@@ -258,24 +259,28 @@ export const attentionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_conversation",
+    operationType: "read",
     description: "Retrieve one Attention conversation by internal conversation ID or external import ID.",
     inputSchema: getConversationInputSchema,
     outputSchema: getConversationOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Attention users with optional user ID, email, team, and deleted-user filters.",
     inputSchema: listUsersInputSchema,
     outputSchema: listUsersOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_teams",
+    operationType: "read",
     description: "List teams in the Attention organization.",
     inputSchema: s.object("Input parameters for listing Attention teams.", {}),
     outputSchema: listTeamsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "ask_attention",
+    operationType: "write",
     description: "Ask Attention to analyze selected conversations or a deal using a natural-language prompt.",
     inputSchema: askAttentionInputSchema,
     outputSchema: askAttentionOutputSchema,

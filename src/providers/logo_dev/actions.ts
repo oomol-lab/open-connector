@@ -67,6 +67,7 @@ export type LogoDevActionName =
 export const logoDevActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_logo_by_domain",
+    operationType: "read",
     description: "Build a Logo.dev image URL for a company domain.",
     inputSchema: s.object(
       "The input payload for building a logo URL from a domain.",
@@ -80,6 +81,7 @@ export const logoDevActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_logo_by_name",
+    operationType: "read",
     description: "Build a Logo.dev image URL for a brand name.",
     inputSchema: s.object(
       "The input payload for building a logo URL from a brand name.",
@@ -93,6 +95,7 @@ export const logoDevActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_logo_by_ticker",
+    operationType: "read",
     description: "Build a Logo.dev image URL for a stock ticker.",
     inputSchema: s.object(
       "The input payload for building a logo URL from a stock ticker.",
@@ -106,6 +109,7 @@ export const logoDevActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_logo_by_crypto",
+    operationType: "read",
     description: "Build a Logo.dev image URL for a crypto symbol.",
     inputSchema: s.object(
       "The input payload for building a logo URL from a crypto symbol.",
@@ -119,6 +123,7 @@ export const logoDevActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_logo_by_isin",
+    operationType: "read",
     description: "Build a Logo.dev image URL for an ISIN identifier.",
     inputSchema: s.object(
       "The input payload for building a logo URL from an ISIN identifier.",
@@ -132,6 +137,7 @@ export const logoDevActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_brands",
+    operationType: "read",
     description: "Search Logo.dev brands by query text and return candidate brands.",
     inputSchema: s.object(
       "The input payload for searching brands.",
@@ -147,6 +153,7 @@ export const logoDevActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "describe_brand",
+    operationType: "read",
     description: "Fetch structured Logo.dev brand metadata for a domain.",
     inputSchema: s.object("The input payload for describing a brand.", {
       domain: s.nonEmptyString("The company domain to describe."),

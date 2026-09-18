@@ -126,12 +126,14 @@ const myIpOutputSchema = s.object("The public IP address observed by DNSFilter."
 export const dnsFilterActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the DNSFilter user associated with the API key.",
     inputSchema: emptyInputSchema,
     outputSchema: currentUserOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_categories",
+    operationType: "read",
     description: "List DNSFilter domain categories with optional pagination.",
     inputSchema: paginatedInputSchema,
     outputSchema: listOutputSchema(
@@ -141,12 +143,14 @@ export const dnsFilterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_category",
+    operationType: "read",
     description: "Get one DNSFilter domain category by ID.",
     inputSchema: getResourceInputSchema,
     outputSchema: resourceOutputSchema("The DNSFilter category response."),
   }),
   defineProviderAction(service, {
     name: "list_application_categories",
+    operationType: "read",
     description: "List DNSFilter application categories with optional pagination.",
     inputSchema: paginatedInputSchema,
     outputSchema: listOutputSchema(
@@ -156,6 +160,7 @@ export const dnsFilterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_applications",
+    operationType: "read",
     description: "List DNSFilter applications with optional category filtering and pagination.",
     inputSchema: listApplicationsInputSchema,
     outputSchema: listOutputSchema(
@@ -165,12 +170,14 @@ export const dnsFilterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_policies",
+    operationType: "read",
     description: "List DNSFilter policies with optional organization and global-policy filters.",
     inputSchema: listPoliciesInputSchema,
     outputSchema: listOutputSchema("The DNSFilter policies response.", "DNSFilter policies returned by the request."),
   }),
   defineProviderAction(service, {
     name: "list_networks",
+    operationType: "read",
     description: "List DNSFilter networks with optional search and policy assignment filters.",
     inputSchema: listNetworksInputSchema,
     outputSchema: s.object(
@@ -185,6 +192,7 @@ export const dnsFilterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_ip_addresses",
+    operationType: "read",
     description: "List DNSFilter IP address records with optional search and pagination.",
     inputSchema: listIpAddressesInputSchema,
     outputSchema: listOutputSchema(
@@ -194,6 +202,7 @@ export const dnsFilterActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_my_ip",
+    operationType: "read",
     description: "Get the public IP address observed by DNSFilter for the current request.",
     inputSchema: emptyInputSchema,
     outputSchema: myIpOutputSchema,

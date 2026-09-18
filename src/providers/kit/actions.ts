@@ -173,6 +173,7 @@ const tagsOutputSchema = s.object("The response returned when listing Kit tags."
 
 const getCurrentAccountAction = defineProviderAction(service, {
   name: "get_current_account",
+  operationType: "read",
   description: "Get the current Kit account and authenticated user details.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for getting the current Kit account.", {}),
@@ -184,6 +185,7 @@ const getCurrentAccountAction = defineProviderAction(service, {
 
 const listSubscribersAction = defineProviderAction(service, {
   name: "list_subscribers",
+  operationType: "read",
   description: "List Kit subscribers with optional filtering, sorting, and pagination.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -223,6 +225,7 @@ const listSubscribersAction = defineProviderAction(service, {
 
 const getSubscriberAction = defineProviderAction(service, {
   name: "get_subscriber",
+  operationType: "read",
   description: "Get one Kit subscriber by ID.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for getting a Kit subscriber.", {
@@ -233,6 +236,7 @@ const getSubscriberAction = defineProviderAction(service, {
 
 const createSubscriberAction = defineProviderAction(service, {
   name: "create_subscriber",
+  operationType: "write",
   description: "Create a Kit subscriber, or update the existing subscriber with the same email address.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -250,6 +254,7 @@ const createSubscriberAction = defineProviderAction(service, {
 
 const updateSubscriberAction = defineProviderAction(service, {
   name: "update_subscriber",
+  operationType: "write",
   description: "Update a Kit subscriber's email address, first name, and custom fields.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -267,6 +272,7 @@ const updateSubscriberAction = defineProviderAction(service, {
 
 const listFormsAction = defineProviderAction(service, {
   name: "list_forms",
+  operationType: "read",
   description: "List Kit forms and landing pages with optional filters and pagination.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -283,6 +289,7 @@ const listFormsAction = defineProviderAction(service, {
 
 const listTagsAction = defineProviderAction(service, {
   name: "list_tags",
+  operationType: "read",
   description: "List Kit tags with optional pagination.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for listing Kit tags.", paginationInputSchema, {
@@ -293,6 +300,7 @@ const listTagsAction = defineProviderAction(service, {
 
 const listFormSubscribersAction = defineProviderAction(service, {
   name: "list_form_subscribers",
+  operationType: "read",
   description: "List Kit subscribers who joined through a specific form.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -325,6 +333,7 @@ const listFormSubscribersAction = defineProviderAction(service, {
 
 const listTagSubscribersAction = defineProviderAction(service, {
   name: "list_tag_subscribers",
+  operationType: "read",
   description: "List Kit subscribers who have a specific tag.",
   requiredScopes: [],
   inputSchema: s.object(

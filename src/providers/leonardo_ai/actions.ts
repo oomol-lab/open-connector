@@ -39,6 +39,7 @@ const imageSchema = s.object(
 export const leonardoAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",
+    operationType: "read",
     description: "List Leonardo.Ai production API models and their model-specific parameter schemas.",
     inputSchema: s.actionInput({}, [], "Input for listing Leonardo.Ai production models."),
     outputSchema: s.looseRequiredObject(
@@ -52,6 +53,7 @@ export const leonardoAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_generation",
+    operationType: "write",
     description: "Create a Leonardo.Ai image, video, audio, or 3D generation job using JSON model parameters.",
     followUpActions: ["leonardo_ai.get_generation"],
     asyncLifecycle: {
@@ -79,6 +81,7 @@ export const leonardoAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_generation",
+    operationType: "read",
     description: "Retrieve a Leonardo.Ai generation job status and normalized generated image URLs.",
     asyncLifecycle: {
       startActionId: "leonardo_ai.create_generation",

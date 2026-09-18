@@ -160,6 +160,7 @@ const rejectionReasonResource = resourceObject(
 export const appleAdsAppActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_apps",
+    operationType: "read",
     description:
       "Search the App Store for apps by name or content provider, or list the apps the organization owns. Supply at least one of query, cpids or returnOwnedApps set to true. Campaigns can only promote apps the ad account owns, so use returnOwnedApps to find a usable promotedObjectId.",
     requiredScopes: [],
@@ -198,6 +199,7 @@ export const appleAdsAppActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_app",
+    operationType: "read",
     description:
       "Read the App Store metadata of one app by its Adam ID, including its genres, supported device classes and the countries or regions it is available in. Apple Ads answers with 404 when no app matches the Adam ID.",
     requiredScopes: [],
@@ -214,6 +216,7 @@ export const appleAdsAppActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_supported_app_languages",
+    operationType: "read",
     description:
       "List the App Store countries or regions along with the languages that Apple Ads supports in each market. Use it to validate a locale before setting it on an ad group or a creative. An empty query returns every market.",
     requiredScopes: [],
@@ -240,6 +243,7 @@ export const appleAdsAppActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_app_eligibilities",
+    operationType: "read",
     description:
       "Check whether apps are eligible to run App Store ads, one row per combination of app, supply placement, supply source, country or region and device class. Run it before creating a campaign in a new market, because an ineligible market delivers nothing. Apple Maps brand promotion is not covered here.",
     requiredScopes: [],
@@ -268,6 +272,7 @@ export const appleAdsAppActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_app_rejection_reasons",
+    operationType: "read",
     description:
       "Search the rejection reasons recorded for the App Store ad creatives of an app, explaining why each creative failed Apple review. Filter by adamId to scope the search to one app.",
     requiredScopes: [],
@@ -296,6 +301,7 @@ export const appleAdsAppActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_app_rejection_reasons",
+    operationType: "read",
     description:
       "Read one ad creative rejection reason by identifier, including its reason code, the level it applies at and the reviewer comment.",
     requiredScopes: [],

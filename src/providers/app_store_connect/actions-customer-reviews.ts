@@ -17,6 +17,7 @@ import {
 export const appStoreConnectCustomerReviewActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_customer_reviews",
+    operationType: "read",
     description:
       "List the App Store reviews of one app together with the developer response published for each review.",
     requiredScopes: [],
@@ -50,6 +51,7 @@ export const appStoreConnectCustomerReviewActions: readonly ProviderActionDefini
   }),
   defineProviderAction(service, {
     name: "get_customer_review",
+    operationType: "read",
     description: "Read one App Store review together with the developer response published for it.",
     requiredScopes: [],
     providerPermissions: [...viewReviewsRoles],
@@ -62,6 +64,7 @@ export const appStoreConnectCustomerReviewActions: readonly ProviderActionDefini
   }),
   defineProviderAction(service, {
     name: "respond_to_customer_review",
+    operationType: "destructive",
     description:
       "Publish a developer response to an App Store review. App Store Connect treats this as an upsert: an existing response for the same review is replaced, and publication is asynchronous.",
     requiredScopes: [],
@@ -86,6 +89,7 @@ export const appStoreConnectCustomerReviewActions: readonly ProviderActionDefini
   }),
   defineProviderAction(service, {
     name: "delete_customer_review_response",
+    operationType: "destructive",
     description: "Remove a published developer response from an App Store review.",
     requiredScopes: [],
     providerPermissions: [...respondToReviewsRoles],

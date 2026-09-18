@@ -67,6 +67,7 @@ export type LapostaActionName =
 export const lapostaActions: readonly ProviderActionDefinition<LapostaActionName>[] = [
   defineProviderAction(service, {
     name: "list_lists",
+    operationType: "read",
     description: "List all mailing lists available to the authenticated Laposta account.",
     inputSchema: s.actionInput({}, [], "No input is required to list Laposta lists."),
     outputSchema: s.actionOutput(
@@ -76,6 +77,7 @@ export const lapostaActions: readonly ProviderActionDefinition<LapostaActionName
   }),
   defineProviderAction(service, {
     name: "get_list",
+    operationType: "read",
     description: "Get one Laposta mailing list by ID.",
     inputSchema: s.actionInput(
       { list_id: s.nonEmptyString("ID of the list to retrieve.") },
@@ -86,12 +88,14 @@ export const lapostaActions: readonly ProviderActionDefinition<LapostaActionName
   }),
   defineProviderAction(service, {
     name: "create_list",
+    operationType: "write",
     description: "Create a Laposta mailing list.",
     inputSchema: s.actionInput(listWriteFields, ["name"], "Fields for creating a Laposta list."),
     outputSchema: singleListOutputSchema(),
   }),
   defineProviderAction(service, {
     name: "update_list",
+    operationType: "write",
     description: "Update selected fields on a Laposta mailing list.",
     inputSchema: s.actionInput(
       {
@@ -105,6 +109,7 @@ export const lapostaActions: readonly ProviderActionDefinition<LapostaActionName
   }),
   defineProviderAction(service, {
     name: "list_members",
+    operationType: "read",
     description: "List members of a Laposta mailing list, optionally filtered by state.",
     inputSchema: s.actionInput(
       {
@@ -121,6 +126,7 @@ export const lapostaActions: readonly ProviderActionDefinition<LapostaActionName
   }),
   defineProviderAction(service, {
     name: "get_member",
+    operationType: "read",
     description: "Get one Laposta member by member ID or email address.",
     inputSchema: s.actionInput(
       {
@@ -134,6 +140,7 @@ export const lapostaActions: readonly ProviderActionDefinition<LapostaActionName
   }),
   defineProviderAction(service, {
     name: "create_member",
+    operationType: "write",
     description: "Add a member to a Laposta mailing list.",
     inputSchema: s.actionInput(
       {
@@ -166,6 +173,7 @@ export const lapostaActions: readonly ProviderActionDefinition<LapostaActionName
   }),
   defineProviderAction(service, {
     name: "update_member",
+    operationType: "write",
     description: "Update selected fields on a Laposta mailing list member.",
     inputSchema: s.actionInput(
       {

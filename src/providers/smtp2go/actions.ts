@@ -260,6 +260,7 @@ const getEmailTemplateOutputSchema = s.object("The normalized SMTP2GO email temp
 export const smtp2goActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_email",
+    operationType: "write",
     description: "Send a standard JSON email through SMTP2GO without Base64 attachments or inline files.",
     requiredScopes: [],
     inputSchema: sendEmailInputSchema,
@@ -267,6 +268,7 @@ export const smtp2goActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_activity",
+    operationType: "read",
     description: "Search SMTP2GO email activity events with optional filters and pagination.",
     requiredScopes: [],
     inputSchema: searchActivityInputSchema,
@@ -274,6 +276,7 @@ export const smtp2goActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_email_summary",
+    operationType: "read",
     description: "Retrieve SMTP2GO account email statistics and current sending cycle summary.",
     requiredScopes: [],
     inputSchema: emailSummaryInputSchema,
@@ -281,6 +284,7 @@ export const smtp2goActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "view_api_key_permissions",
+    operationType: "read",
     description: "List the SMTP2GO API endpoint permissions available to the connected API key.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -288,6 +292,7 @@ export const smtp2goActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sender_domains",
+    operationType: "read",
     description: "List SMTP2GO sender domains and their verification metadata.",
     requiredScopes: [],
     inputSchema: senderDomainInputSchema,
@@ -295,6 +300,7 @@ export const smtp2goActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_single_sender_emails",
+    operationType: "read",
     description: "List SMTP2GO single sender email addresses and verification status.",
     requiredScopes: [],
     inputSchema: singleSenderInputSchema,
@@ -302,6 +308,7 @@ export const smtp2goActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_email_templates",
+    operationType: "read",
     description: "Search SMTP2GO email templates by terms, tags, sorting, and pagination.",
     requiredScopes: [],
     inputSchema: searchEmailTemplatesInputSchema,
@@ -309,6 +316,7 @@ export const smtp2goActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_email_template",
+    operationType: "read",
     description: "Retrieve details for a single SMTP2GO email template by ID.",
     requiredScopes: [],
     inputSchema: getEmailTemplateInputSchema,

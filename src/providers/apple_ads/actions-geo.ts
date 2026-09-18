@@ -245,6 +245,7 @@ const locationIdsInput = s.array(
 export const appleAdsGeoActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_geo_locations",
+    operationType: "read",
     description:
       "Look up geo targeting locations by identifier. Pass the geo location ids or pipe-delimited legacy ids you already have, and Apple Ads returns their metadata and eligibility scoped to one supply source. Use it to batch-validate targeting values before applying them to an ad group; this endpoint never filters soft-blocked geos out.",
     requiredScopes: [],
@@ -283,6 +284,7 @@ export const appleAdsGeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_geo_locations",
+    operationType: "read",
     description:
       "Search geo targeting locations by name. Use it to discover the geo location ids to put in an ad group's country, adminArea, locality or postalCode targeting dimension. Soft-blocked geos are returned with their eligibility data unless eligible is true.",
     requiredScopes: [],
@@ -322,6 +324,7 @@ export const appleAdsGeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_locations",
+    operationType: "read",
     description:
       "Search the advertiser's business locations, the physical stores and venues an Apple Maps campaign promotes. Filter by brandId to scope results to one brand, and collect the returned ids to build a location group.",
     requiredScopes: [],
@@ -349,6 +352,7 @@ export const appleAdsGeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_location",
+    operationType: "read",
     description:
       "Read one business location by identifier. Use it to confirm the address, coordinates, operational status and eligibility of a store before adding it to a location group.",
     requiredScopes: [],
@@ -365,6 +369,7 @@ export const appleAdsGeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_location_group",
+    operationType: "write",
     description:
       "Create a location group, a named set of the advertiser's business locations that an ad group can target. brandId and the owning ad account are fixed at creation: move a group to another brand by deleting it and creating a new one. A STATIC group becomes usable immediately, while a DYNAMIC group stays PENDING until Apple Ads finishes evaluating its rules.",
     requiredScopes: [],
@@ -389,6 +394,7 @@ export const appleAdsGeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_location_groups",
+    operationType: "read",
     description:
       "Search the location groups of one ad account with filters, sorting and offset pagination. Soft-deleted groups are excluded unless a filter on deleted asks for them.",
     requiredScopes: [],
@@ -416,6 +422,7 @@ export const appleAdsGeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_location_group",
+    operationType: "read",
     description:
       "Read one location group by identifier, including its membership definition, systemStatus, location count and eligibility. A soft-deleted group is still readable and comes back with systemStatus DELETED.",
     requiredScopes: [],
@@ -432,6 +439,7 @@ export const appleAdsGeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_location_group",
+    operationType: "destructive",
     description:
       "Change the mutable fields of one location group. Only the fields you pass are changed, but locationIds and rules replace the stored array entirely rather than merging into it. Changing rules sends a DYNAMIC group back to PENDING while Apple Ads re-evaluates membership. A group whose systemStatus is INVALID or PENDING cannot be updated.",
     requiredScopes: [],
@@ -456,6 +464,7 @@ export const appleAdsGeoActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_location_group",
+    operationType: "destructive",
     description:
       "Soft-delete one location group. Deletion is permanent and there is no restore: ad groups targeting the group lose that constraint immediately and keep serving only if they target another location group. A group whose systemStatus is INVALID or PENDING cannot be deleted.",
     requiredScopes: [],

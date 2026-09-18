@@ -29,6 +29,7 @@ const referenceInputSchema = {
 export const waiverFileActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_site_details",
+    operationType: "read",
     description: "Get details for the connected WaiverFile site.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving WaiverFile site details.", {}),
@@ -36,6 +37,7 @@ export const waiverFileActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_waiver_forms",
+    operationType: "read",
     description: "List active waiver forms for the connected WaiverFile site.",
     requiredScopes: [],
     inputSchema: s.object("Input for listing active WaiverFile waiver forms.", {}),
@@ -43,6 +45,7 @@ export const waiverFileActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_waiver",
+    operationType: "read",
     description: "Get one signed WaiverFile waiver by its identifier.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving one WaiverFile waiver.", {
@@ -52,6 +55,7 @@ export const waiverFileActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_waivers",
+    operationType: "read",
     description: "Search signed WaiverFile waivers by text.",
     requiredScopes: [],
     inputSchema: s.object("Input for searching WaiverFile waivers.", {
@@ -61,6 +65,7 @@ export const waiverFileActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_waivers_by_reference",
+    operationType: "read",
     description: "List WaiverFile waivers matching one or more external reference identifiers.",
     requiredScopes: [],
     inputSchema: referenceInputSchema,
@@ -68,6 +73,7 @@ export const waiverFileActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_upcoming_events",
+    operationType: "read",
     description: "List upcoming WaiverFile events within a UTC date range.",
     requiredScopes: [],
     inputSchema: s.object("Input for listing upcoming WaiverFile events.", {

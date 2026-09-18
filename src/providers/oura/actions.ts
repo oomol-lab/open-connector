@@ -51,6 +51,7 @@ const personalInfoSchema = s.looseObject("The personal information stored on the
 export const ouraActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_personal_info",
+    operationType: "read",
     description: "Get personal information for the authenticated Oura account.",
     requiredScopes: ["personal"],
     inputSchema: s.object("No input parameters are required for this action.", {}),
@@ -65,6 +66,7 @@ function collectionActions(collection: OuraDocumentCollection): ActionDefinition
   const actions: ActionDefinition[] = [
     defineProviderAction(service, {
       name: `list_${collection.name}`,
+      operationType: "read",
       description: describe(collection, `List ${collection.label} documents from Oura.`),
       requiredScopes: [collection.scope],
       inputSchema: listInputSchema(collection),
@@ -82,6 +84,7 @@ function collectionActions(collection: OuraDocumentCollection): ActionDefinition
     actions.push(
       defineProviderAction(service, {
         name: `get_${collection.name}`,
+        operationType: "read",
         description: describe(collection, `Get one ${collection.label} document from Oura by document ID.`),
         requiredScopes: [collection.scope],
         inputSchema: documentIdInputSchema,

@@ -121,6 +121,7 @@ const brandRejectionReasonResource = resourceObject(
 export const appleAdsBrandActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_brands",
+    operationType: "read",
     description:
       "Search the brands accessible to one ad account with filters, sorting and offset pagination. A brand must reach eligibility.status ELIGIBLE before an Apple Maps campaign can promote it.",
     requiredScopes: [],
@@ -143,6 +144,7 @@ export const appleAdsBrandActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_brand",
+    operationType: "read",
     description: "Read one brand by identifier, including its categories and its current ad serving eligibility.",
     requiredScopes: [],
     providerPermissions: [...readCampaignsRoles],
@@ -158,6 +160,7 @@ export const appleAdsBrandActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_business_categories",
+    operationType: "read",
     description:
       "Search the Apple Maps business category taxonomy with filters, sorting and offset pagination. Only categories with eligibility.status ELIGIBLE can be used by an active Apple Maps campaign.",
     requiredScopes: [],
@@ -185,6 +188,7 @@ export const appleAdsBrandActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_business_category",
+    operationType: "read",
     description:
       "Read one Apple Maps business category by its MUID, including its qualifiedId taxonomy path and eligibility status.",
     requiredScopes: [],
@@ -201,6 +205,7 @@ export const appleAdsBrandActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_brand_rejection_reasons",
+    operationType: "read",
     description:
       "Search the policy assignments that explain why Apple Ads rejected a brand, one of its creatives or one of its assets. Filter on promotedObjectId to scope the results to a single brand.",
     requiredScopes: [],

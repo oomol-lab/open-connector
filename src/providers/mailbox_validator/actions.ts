@@ -94,18 +94,21 @@ const freeEmailOutputSchema = s.object(
 export const mailboxValidatorActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "validate_email",
+    operationType: "read",
     description: "Validate a single email address and return MailboxValidator deliverability signals.",
     inputSchema: emailInputSchema("Input parameters for validating one email address."),
     outputSchema: validateEmailOutputSchema,
   }),
   defineProviderAction(service, {
     name: "check_disposable_email",
+    operationType: "read",
     description: "Check whether an email address belongs to a disposable email provider.",
     inputSchema: emailInputSchema("Input parameters for checking a disposable email address."),
     outputSchema: disposableEmailOutputSchema,
   }),
   defineProviderAction(service, {
     name: "check_free_email",
+    operationType: "read",
     description: "Check whether an email address belongs to a free email provider.",
     inputSchema: emailInputSchema("Input parameters for checking a free email provider."),
     outputSchema: freeEmailOutputSchema,

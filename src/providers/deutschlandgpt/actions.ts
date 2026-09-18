@@ -150,6 +150,7 @@ const embeddingOutputSchema = s.looseRequiredObject("The OpenAI-compatible embed
 export const deutschlandgptActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",
+    operationType: "read",
     description: "List text models enabled for the connected DeutschlandGPT workspace.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list available models.", {}),
@@ -157,6 +158,7 @@ export const deutschlandgptActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_chat_completion",
+    operationType: "read",
     description: "Create a synchronous text chat completion through DeutschlandGPT.",
     requiredScopes: [],
     inputSchema: chatInputSchema,
@@ -164,6 +166,7 @@ export const deutschlandgptActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_embeddings",
+    operationType: "read",
     description: "Create embedding vectors for one or more text inputs through DeutschlandGPT.",
     requiredScopes: [],
     inputSchema: embeddingInputSchema,

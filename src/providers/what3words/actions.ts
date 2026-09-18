@@ -67,6 +67,7 @@ const availableLanguagesResponseSchema = s.looseRequiredObject(
 export const what3wordsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "convert_to_coordinates",
+    operationType: "read",
     description: "Convert a three word address into coordinates and square metadata.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -82,6 +83,7 @@ export const what3wordsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "convert_to_3wa",
+    operationType: "read",
     description: "Convert coordinates into a three word address.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -98,6 +100,7 @@ export const what3wordsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "autosuggest",
+    operationType: "read",
     description: "Return ranked three word address suggestions for partial or mistyped input.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -129,6 +132,7 @@ export const what3wordsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "grid_section",
+    operationType: "read",
     description: "Return what3words grid line segments for a bounding box.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -146,6 +150,7 @@ export const what3wordsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "available_languages",
+    operationType: "read",
     description: "List the languages supported by the what3words API.",
     requiredScopes: [],
     inputSchema: s.actionInput({}, [], "Input for listing available what3words languages."),

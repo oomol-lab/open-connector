@@ -324,6 +324,7 @@ export type JimengAiActionName =
 
 function submitAction(input: {
   name: JimengAiActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   followUpActionId: string;
   inputSchema: JsonSchema;
@@ -331,6 +332,7 @@ function submitAction(input: {
 }): ActionDefinition {
   return defineProviderAction(service, {
     name: input.name,
+    operationType: input.operationType,
     description: input.description,
     followUpActions: [input.followUpActionId],
     inputSchema: input.inputSchema,
@@ -340,12 +342,14 @@ function submitAction(input: {
 
 function getResultAction(input: {
   name: JimengAiActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   outputSchema?: JsonSchema;
   inputSchema?: JsonSchema;
 }): ActionDefinition {
   return defineProviderAction(service, {
     name: input.name,
+    operationType: input.operationType,
     description: input.description,
     inputSchema: input.inputSchema ?? imageGetResultInputSchema,
     outputSchema: input.outputSchema ?? imageResultOutputSchema,
@@ -355,158 +359,186 @@ function getResultAction(input: {
 export const jimengAiActions: ActionDefinition[] = [
   submitAction({
     name: "submit_image_generation_4_0",
+    operationType: "write",
     description: "Submit a Jimeng AI Image Generation 4.0 async task.",
     followUpActionId: "jimeng_ai.get_image_generation_4_0_result",
     inputSchema: imageGeneration40InputSchema,
   }),
   getResultAction({
     name: "get_image_generation_4_0_result",
+    operationType: "read",
     description: "Get the result of a Jimeng AI Image Generation 4.0 async task.",
   }),
   submitAction({
     name: "submit_image_generation_4_6",
+    operationType: "write",
     description: "Submit a Jimeng AI Image Generation 4.6 async task.",
     followUpActionId: "jimeng_ai.get_image_generation_4_6_result",
     inputSchema: imageGeneration46InputSchema,
   }),
   getResultAction({
     name: "get_image_generation_4_6_result",
+    operationType: "read",
     description: "Get the result of a Jimeng AI Image Generation 4.6 async task.",
   }),
   submitAction({
     name: "submit_smart_upscale",
+    operationType: "write",
     description: "Submit a Jimeng AI Smart Upscale async task.",
     followUpActionId: "jimeng_ai.get_smart_upscale_result",
     inputSchema: upscaleInputSchema,
   }),
   getResultAction({
     name: "get_smart_upscale_result",
+    operationType: "read",
     description: "Get the result of a Jimeng AI Smart Upscale async task.",
   }),
   submitAction({
     name: "submit_text_to_image_3_1",
+    operationType: "write",
     description: "Submit a Jimeng Text-to-Image 3.1 async task.",
     followUpActionId: "jimeng_ai.get_text_to_image_3_1_result",
     inputSchema: textToImageInputSchema,
   }),
   getResultAction({
     name: "get_text_to_image_3_1_result",
+    operationType: "read",
     description: "Get the result of a Jimeng Text-to-Image 3.1 async task.",
   }),
   submitAction({
     name: "submit_text_to_image_3_0",
+    operationType: "write",
     description: "Submit a Jimeng Text-to-Image 3.0 async task.",
     followUpActionId: "jimeng_ai.get_text_to_image_3_0_result",
     inputSchema: textToImageInputSchema,
   }),
   getResultAction({
     name: "get_text_to_image_3_0_result",
+    operationType: "read",
     description: "Get the result of a Jimeng Text-to-Image 3.0 async task.",
   }),
   submitAction({
     name: "submit_video_generation_3_0_pro",
+    operationType: "write",
     description: "Submit a Jimeng AI Video Generation 3.0 Pro async task.",
     followUpActionId: "jimeng_ai.get_video_generation_3_0_pro_result",
     inputSchema: videoGeneration30ProInputSchema,
   }),
   getResultAction({
     name: "get_video_generation_3_0_pro_result",
+    operationType: "read",
     description: "Get the result of a Jimeng AI Video Generation 3.0 Pro async task.",
     inputSchema: videoGetResultInputSchema,
     outputSchema: videoResultOutputSchema,
   }),
   submitAction({
     name: "submit_video_generation_3_0_720p",
+    operationType: "write",
     description: "Submit a Jimeng AI Video Generation 3.0 720P async task.",
     followUpActionId: "jimeng_ai.get_video_generation_3_0_720p_result",
     inputSchema: videoGeneration30TextInputSchema,
   }),
   getResultAction({
     name: "get_video_generation_3_0_720p_result",
+    operationType: "read",
     description: "Get the result of a Jimeng AI Video Generation 3.0 720P async task.",
     inputSchema: videoGetResultInputSchema,
     outputSchema: videoResultOutputSchema,
   }),
   submitAction({
     name: "submit_video_generation_3_0_1080p",
+    operationType: "write",
     description: "Submit a Jimeng AI Video Generation 3.0 1080P async task.",
     followUpActionId: "jimeng_ai.get_video_generation_3_0_1080p_result",
     inputSchema: videoGeneration30TextInputSchema,
   }),
   getResultAction({
     name: "get_video_generation_3_0_1080p_result",
+    operationType: "read",
     description: "Get the result of a Jimeng AI Video Generation 3.0 1080P async task.",
     inputSchema: videoGetResultInputSchema,
     outputSchema: videoResultOutputSchema,
   }),
   submitAction({
     name: "submit_image_to_video_first_frame_3_0_720p",
+    operationType: "write",
     description: "Submit a Jimeng AI Video Generation 3.0 720P image-to-video first-frame async task.",
     followUpActionId: "jimeng_ai.get_video_generation_3_0_720p_result",
     inputSchema: imageToVideoFirstFrameInputSchema,
   }),
   submitAction({
     name: "submit_image_to_video_first_tail_frame_3_0_720p",
+    operationType: "write",
     description: "Submit a Jimeng AI Video Generation 3.0 720P image-to-video first-and-last-frame async task.",
     followUpActionId: "jimeng_ai.get_video_generation_3_0_720p_result",
     inputSchema: imageToVideoFirstTailFrameInputSchema,
   }),
   submitAction({
     name: "submit_image_to_video_first_frame_3_0_1080p",
+    operationType: "write",
     description: "Submit a Jimeng AI Video Generation 3.0 1080P image-to-video first-frame async task.",
     followUpActionId: "jimeng_ai.get_video_generation_3_0_1080p_result",
     inputSchema: imageToVideoFirstFrameInputSchema,
   }),
   submitAction({
     name: "submit_image_to_video_first_tail_frame_3_0_1080p",
+    operationType: "write",
     description: "Submit a Jimeng AI Video Generation 3.0 1080P image-to-video first-and-last-frame async task.",
     followUpActionId: "jimeng_ai.get_video_generation_3_0_1080p_result",
     inputSchema: imageToVideoFirstTailFrameInputSchema,
   }),
   submitAction({
     name: "submit_smart_video_agent_1_0",
+    operationType: "write",
     description: "Submit a Lilinque Smart Video Agent 1.0 async task.",
     followUpActionId: "jimeng_ai.get_smart_video_agent_1_0_result",
     inputSchema: smartVideoAgent10InputSchema,
   }),
   getResultAction({
     name: "get_smart_video_agent_1_0_result",
+    operationType: "read",
     description: "Get the result of a Lilinque Smart Video Agent 1.0 async task.",
     inputSchema: videoGetResultInputSchema,
     outputSchema: videoResultOutputSchema,
   }),
   submitAction({
     name: "submit_smart_video_agent_2_0_with_reference",
+    operationType: "write",
     description: "Submit a Lilinque Smart Video Agent 2.0 async task with reference videos.",
     followUpActionId: "jimeng_ai.get_smart_video_agent_2_0_with_reference_result",
     inputSchema: smartVideoAgent20WithReferenceInputSchema,
   }),
   getResultAction({
     name: "get_smart_video_agent_2_0_with_reference_result",
+    operationType: "read",
     description: "Get the result of a Lilinque Smart Video Agent 2.0 async task with reference videos.",
     inputSchema: videoGetResultInputSchema,
     outputSchema: videoResultOutputSchema,
   }),
   submitAction({
     name: "submit_smart_video_agent_2_0_without_reference",
+    operationType: "write",
     description: "Submit a Lilinque Smart Video Agent 2.0 async task without reference videos.",
     followUpActionId: "jimeng_ai.get_smart_video_agent_2_0_without_reference_result",
     inputSchema: smartVideoAgent20WithoutReferenceInputSchema,
   }),
   getResultAction({
     name: "get_smart_video_agent_2_0_without_reference_result",
+    operationType: "read",
     description: "Get the result of a Lilinque Smart Video Agent 2.0 async task without reference videos.",
     inputSchema: videoGetResultInputSchema,
     outputSchema: videoResultOutputSchema,
   }),
   submitAction({
     name: "submit_marketing_video_agent",
+    operationType: "write",
     description: "Submit a Lilinque Marketing Video Agent async task.",
     followUpActionId: "jimeng_ai.get_marketing_video_agent_result",
     inputSchema: marketingVideoAgentInputSchema,
   }),
   getResultAction({
     name: "get_marketing_video_agent_result",
+    operationType: "read",
     description: "Get the result of a Lilinque Marketing Video Agent async task.",
     inputSchema: videoGetResultInputSchema,
     outputSchema: videoResultOutputSchema,

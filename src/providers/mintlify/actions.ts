@@ -27,6 +27,7 @@ const deploymentStatusOutputSchema = s.looseRequiredObject(
 export const mintlifyActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "trigger_deployment",
+    operationType: "write",
     description: "Queue a production deployment for a Mintlify documentation project.",
     requiredScopes: [],
     asyncLifecycle: { startActionId: "mintlify.trigger_deployment", statusActionId: "mintlify.get_deployment_status" },
@@ -37,6 +38,7 @@ export const mintlifyActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "trigger_preview_deployment",
+    operationType: "write",
     description: "Create or redeploy a Mintlify preview for a specific Git branch.",
     requiredScopes: [],
     asyncLifecycle: {
@@ -54,6 +56,7 @@ export const mintlifyActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_deployment_status",
+    operationType: "read",
     description: "Get the current status and details of a Mintlify deployment.",
     requiredScopes: [],
     inputSchema: s.object("The Mintlify deployment status to retrieve.", {

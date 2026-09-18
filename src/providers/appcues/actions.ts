@@ -61,6 +61,7 @@ const publishResultSchema = s.object("The Appcues publish-state change result.",
 export const appcuesActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_flows",
+    operationType: "read",
     description: "List Appcues Flow 2.0 experiences for the connected account.",
     requiredScopes: [],
     inputSchema: s.object("Input for listing Appcues Flow 2.0 experiences.", {}),
@@ -70,6 +71,7 @@ export const appcuesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_flow",
+    operationType: "read",
     description: "Get one Appcues Flow 2.0 experience by identifier.",
     requiredScopes: [],
     inputSchema: flowIdInputSchema,
@@ -77,6 +79,7 @@ export const appcuesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "publish_flow",
+    operationType: "write",
     description: "Publish one Appcues Flow 2.0 experience.",
     requiredScopes: [],
     inputSchema: flowIdInputSchema,
@@ -84,6 +87,7 @@ export const appcuesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "unpublish_flow",
+    operationType: "destructive",
     description: "Unpublish one Appcues Flow 2.0 experience.",
     requiredScopes: [],
     inputSchema: flowIdInputSchema,
@@ -91,6 +95,7 @@ export const appcuesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List content tags for the connected Appcues account.",
     requiredScopes: [],
     inputSchema: s.object("Input for listing Appcues tags.", {}),
@@ -100,6 +105,7 @@ export const appcuesActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tag",
+    operationType: "read",
     description: "Get one Appcues content tag by identifier.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving one Appcues tag.", {

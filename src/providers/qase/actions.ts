@@ -24,6 +24,7 @@ const pageOutputSchema = (description: string, entityDescription: string) =>
 export const qaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Qase projects accessible to the connected account.",
     requiredScopes: [],
     inputSchema: s.object("Controls project pagination.", paginationFields, {
@@ -33,6 +34,7 @@ export const qaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Retrieve a Qase project by its code.",
     requiredScopes: [],
     inputSchema: s.object("Identifies the Qase project.", { projectCode: projectCodeSchema }),
@@ -42,6 +44,7 @@ export const qaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_cases",
+    operationType: "read",
     description: "List test cases in a Qase project with common filters and pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -61,6 +64,7 @@ export const qaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_case",
+    operationType: "read",
     description: "Retrieve one test case from a Qase project.",
     requiredScopes: [],
     inputSchema: s.object("Identifies the Qase test case.", {
@@ -73,6 +77,7 @@ export const qaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_case",
+    operationType: "write",
     description: "Create a test case in a Qase project.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -98,6 +103,7 @@ export const qaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_runs",
+    operationType: "read",
     description: "List test runs in a Qase project with common filters and pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -114,6 +120,7 @@ export const qaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_run",
+    operationType: "read",
     description: "Retrieve one test run from a Qase project.",
     requiredScopes: [],
     inputSchema: s.object("Identifies the Qase test run.", {
@@ -126,6 +133,7 @@ export const qaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_run",
+    operationType: "write",
     description: "Create a test run in a Qase project.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -151,6 +159,7 @@ export const qaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "complete_run",
+    operationType: "destructive",
     description: "Complete an active test run in a Qase project.",
     requiredScopes: [],
     inputSchema: s.object("Identifies the Qase test run to complete.", {

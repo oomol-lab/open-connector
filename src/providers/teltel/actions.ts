@@ -36,6 +36,7 @@ const smsReportSchema = s.actionOutput(
 export const teltelActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_balance",
+    operationType: "read",
     description: "Get the current TelTel account balance, credit, and credit limit.",
     inputSchema: s.actionInput({}),
     outputSchema: s.actionOutput({
@@ -46,6 +47,7 @@ export const teltelActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_sms",
+    operationType: "write",
     description: "Send a single outbound SMS message through the TelTel SMS outbox API.",
     inputSchema: s.actionInput(
       {
@@ -62,6 +64,7 @@ export const teltelActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sms_reports",
+    operationType: "read",
     description: "List outbound TelTel SMS delivery reports with optional paging and filter parameters.",
     inputSchema: s.actionInput({
       limit: s.integer("Maximum number of reports to return, up to 5000.", { minimum: 1, maximum: 5000 }),
@@ -76,6 +79,7 @@ export const teltelActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_sms_report",
+    operationType: "read",
     description: "Get the delivery report for one outbound TelTel SMS message.",
     inputSchema: s.actionInput(
       {

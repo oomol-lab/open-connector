@@ -210,6 +210,7 @@ export type DockerHubActionName =
 export const dockerHubActions: ActionDefinition[] = [
   action(
     "list_repositories",
+    "read",
     "List Docker Hub repositories in a namespace with optional name filtering and ordering.",
     {
       namespace: s.nonEmptyString("The namespace that owns the repositories."),
@@ -225,6 +226,7 @@ export const dockerHubActions: ActionDefinition[] = [
   ),
   action(
     "get_repository",
+    "read",
     "Get detailed metadata for a Docker Hub repository within a namespace.",
     repositoryInput(),
     ["namespace", "repository"],
@@ -232,6 +234,7 @@ export const dockerHubActions: ActionDefinition[] = [
   ),
   action(
     "create_repository",
+    "write",
     "Create a Docker Hub repository inside a namespace.",
     {
       namespace: s.nonEmptyString("The namespace where the repository should be created."),
@@ -246,6 +249,7 @@ export const dockerHubActions: ActionDefinition[] = [
   ),
   action(
     "get_tag",
+    "read",
     "Get metadata and image variants for a specific Docker Hub repository tag.",
     { ...repositoryInput(), tag: s.nonEmptyString("The tag name to retrieve.") },
     ["namespace", "repository", "tag"],
@@ -253,6 +257,7 @@ export const dockerHubActions: ActionDefinition[] = [
   ),
   action(
     "get_image",
+    "read",
     "Find a Docker Hub image variant by digest by scanning the repository's published tags.",
     {
       ...repositoryInput(),
@@ -265,6 +270,7 @@ export const dockerHubActions: ActionDefinition[] = [
   ),
   action(
     "list_org_members",
+    "read",
     "List Docker Hub organization members with optional filtering and pagination.",
     {
       orgName: s.nonEmptyString("The Docker Hub organization name."),
@@ -280,6 +286,7 @@ export const dockerHubActions: ActionDefinition[] = [
   ),
   action(
     "add_org_member",
+    "write",
     "Invite a Docker ID or email address to join a Docker Hub organization.",
     {
       orgName: s.nonEmptyString("The Docker Hub organization name."),
@@ -300,6 +307,7 @@ export const dockerHubActions: ActionDefinition[] = [
   ),
   action(
     "remove_org_member",
+    "destructive",
     "Remove a member from a Docker Hub organization.",
     {
       orgName: s.nonEmptyString("The Docker Hub organization name."),
@@ -310,6 +318,7 @@ export const dockerHubActions: ActionDefinition[] = [
   ),
   action(
     "list_org_access_tokens",
+    "read",
     "List Docker Hub organization access tokens for an organization.",
     {
       orgName: s.nonEmptyString("The Docker Hub organization name."),
@@ -332,6 +341,7 @@ export const dockerHubActions: ActionDefinition[] = [
   ),
   action(
     "list_teams",
+    "read",
     "List Docker Hub teams for an organization.",
     {
       orgName: s.nonEmptyString("The Docker Hub organization name."),
@@ -345,6 +355,7 @@ export const dockerHubActions: ActionDefinition[] = [
   ),
   action(
     "get_team",
+    "read",
     "Get a Docker Hub team within an organization.",
     teamInput(),
     ["orgName", "teamName"],
@@ -352,6 +363,7 @@ export const dockerHubActions: ActionDefinition[] = [
   ),
   action(
     "delete_team",
+    "destructive",
     "Delete a Docker Hub team within an organization.",
     teamInput(),
     ["orgName", "teamName"],
@@ -359,6 +371,7 @@ export const dockerHubActions: ActionDefinition[] = [
   ),
   action(
     "list_team_members",
+    "read",
     "List members of a Docker Hub team within an organization.",
     {
       ...teamInput(),
@@ -371,6 +384,7 @@ export const dockerHubActions: ActionDefinition[] = [
   ),
   action(
     "remove_team_member",
+    "destructive",
     "Remove a user from a Docker Hub team within an organization.",
     {
       ...teamInput(),
@@ -383,6 +397,7 @@ export const dockerHubActions: ActionDefinition[] = [
 
 function action(
   name: DockerHubActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   input: Record<string, JsonSchema>,
   required: string[],
@@ -390,6 +405,7 @@ function action(
 ): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     requiredScopes: [],
     inputSchema: s.actionInput(input, required, "The input payload for this action."),

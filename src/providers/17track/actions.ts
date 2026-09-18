@@ -127,6 +127,7 @@ const quotaOutputSchema = s.object("The normalized quota counters for the 17TRAC
 export const seventeenTrackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "register_trackings",
+    operationType: "write",
     description: "Register up to 40 tracking numbers for automatic tracking by 17TRACK.",
     requiredScopes: [],
     inputSchema: s.object("The tracking numbers to register with 17TRACK.", {
@@ -139,6 +140,7 @@ export const seventeenTrackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tracking_details",
+    operationType: "read",
     description: "Get current tracking details for up to 40 registered tracking numbers.",
     requiredScopes: [],
     inputSchema: s.object("The tracking numbers whose details should be retrieved.", {
@@ -151,6 +153,7 @@ export const seventeenTrackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_trackings",
+    operationType: "read",
     description: "List registered 17TRACK shipments with status, time, and pagination filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -222,6 +225,7 @@ export const seventeenTrackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_quota",
+    operationType: "read",
     description: "Get the current tracking and email quota counters for the 17TRACK account.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to retrieve quota counters.", {}),

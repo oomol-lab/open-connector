@@ -57,6 +57,7 @@ const successOutputSchema = s.object("A successful Jibble operation response.", 
 export const jibbleActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_organizations",
+    operationType: "read",
     description: "List the Jibble organizations accessible to the personal access token.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Jibble organizations.", {}),
@@ -64,6 +65,7 @@ export const jibbleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_members",
+    operationType: "read",
     description: "List people in the Jibble organization with optional OData filtering and pagination.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Jibble organization members.", odataInputFields, {
@@ -73,6 +75,7 @@ export const jibbleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_locations",
+    operationType: "read",
     description: "List Jibble work locations with optional OData filtering and pagination.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Jibble locations.", odataInputFields, {
@@ -82,6 +85,7 @@ export const jibbleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_location",
+    operationType: "write",
     description: "Create a work location in Jibble.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for creating a Jibble location.", locationFields, {
@@ -91,6 +95,7 @@ export const jibbleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_location",
+    operationType: "destructive",
     description: "Update or archive an existing Jibble work location.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -105,6 +110,7 @@ export const jibbleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_location",
+    operationType: "destructive",
     description: "Permanently delete a Jibble work location.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for deleting a Jibble location.", {

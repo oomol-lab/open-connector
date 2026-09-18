@@ -84,6 +84,7 @@ const executeFunctionOutputSchema = s.object(
 export const appdragActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "execute_function",
+    operationType: "write",
     description:
       "Execute one AppDrag Cloud Backend API function by folder, function name, HTTP method, and optional parameters.",
     inputSchema: executeFunctionInputSchema,

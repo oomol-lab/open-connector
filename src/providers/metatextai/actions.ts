@@ -30,6 +30,7 @@ const scanResponseSchema = s.looseObject("The raw MetatextAI red-team scan respo
 export const metatextaiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_policies",
+    operationType: "read",
     description: "List all guardrail policies configured for the connected MetatextAI application.",
     requiredScopes: [],
     inputSchema: s.object({}, { description: "This action does not require any input parameters." }),
@@ -39,6 +40,7 @@ export const metatextaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_policy",
+    operationType: "write",
     description: "Create one guardrail policy for the connected MetatextAI application.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -59,6 +61,7 @@ export const metatextaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "evaluate",
+    operationType: "read",
     description: "Evaluate one chat transcript against the connected MetatextAI application's configured guardrails.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -81,6 +84,7 @@ export const metatextaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_test_scan",
+    operationType: "write",
     description: "Run a MetatextAI red-team test scan for the connected application with the selected probes.",
     requiredScopes: [],
     inputSchema: s.object(

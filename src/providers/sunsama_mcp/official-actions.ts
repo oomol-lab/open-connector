@@ -14,6 +14,7 @@ const service = "sunsama_mcp";
 export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_task",
+    operationType: "write",
     description:
       "Creates a single task with a title, optional notes (markdown), and estimated time. Scheduled to a day by default; pass `backlog` instead to stage it in the backlog. This is also the tool for a task that links to an item in another tool — pass `integrationUrl`, which works for a backlog task too.",
     requiredScopes: ["execute"],
@@ -600,6 +601,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reposition_task_in_backlog",
+    operationType: "write",
     description:
       "Repositions a task within the backlog by moving it to a specific time bucket (horizon) and position (append/prepend).",
     requiredScopes: ["execute"],
@@ -642,6 +644,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "change_backlog_folder",
+    operationType: "write",
     description:
       "Moves one or more tasks to a backlog folder. If folderId is null, removes tasks from their current folder.",
     requiredScopes: ["execute"],
@@ -688,6 +691,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "align_task_with_objective",
+    operationType: "write",
     description: "Aligns a task with an objective.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -714,6 +718,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_task_to_channel",
+    operationType: "write",
     description: "Adds a task to a channel.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -741,6 +746,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "move_task_to_day",
+    operationType: "write",
     description: "Moves or defers a task to a specific date.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -772,6 +778,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "move_task_from_backlog",
+    operationType: "write",
     description: "Moves a task out of the backlog and onto a specific date.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -803,6 +810,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "unarchive_task",
+    operationType: "write",
     description: "Unarchives a task and moves it to a specific date or the backlog if no date is provided.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -834,6 +842,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "move_task_to_backlog",
+    operationType: "write",
     description:
       "Moves a task to the backlog. IF THE USER ASKS YOU TO MOVE A TASK TO A SPECIFIC DAY THEN YOU SHOULD USE THE move_task_to_day TOOL NOT THIS ONE.",
     requiredScopes: ["execute"],
@@ -857,6 +866,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task_time_estimate",
+    operationType: "read",
     description: "Gets the time estimate for a task in minutes.",
     requiredScopes: ["read"],
     inputSchema: {
@@ -879,6 +889,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "edit_task_recurrence_rule",
+    operationType: "write",
     description:
       "Updates the recurrence rule of an existing task. This is the preferred tool for temporarily pausing or skipping a recurring task for a specific period (e.g. vacation, leave). By combining deleteOldInstancesAfter (to clear instances during the skip period) and firstOccurrenceOnOrAfter (to restart the series afterwards), you can maintain the recurrence while accommodating temporary breaks — unlike delete_all_incomplete_recurring_task_instances which permanently terminates the series. When firstOccurrenceOnOrAfter is provided, this forks the recurring series: a new series begins from that date and the old series ends the day before.",
     requiredScopes: ["execute"],
@@ -928,6 +939,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "edit_task_title",
+    operationType: "write",
     description: "Updates the title of an existing task.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -954,6 +966,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "edit_task_due_date",
+    operationType: "write",
     description:
       "Sets or clears the due date of a task. This is the hard deadline, not the day the task is planned/scheduled for (use move_task_to_day for that).",
     requiredScopes: ["execute"],
@@ -989,6 +1002,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "edit_task_time_estimate",
+    operationType: "write",
     description: "Updates the time estimate of an existing task.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -1023,6 +1037,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "edit_task_notes",
+    operationType: "write",
     description:
       "Replaces the notes body of an existing task with new Markdown content. The full notes field is overwritten — use append_task_notes to add to existing notes without replacing them.",
     requiredScopes: ["execute"],
@@ -1051,6 +1066,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "append_task_notes",
+    operationType: "write",
     description:
       "Appends Markdown content to the end of an existing task's notes. Existing notes are preserved; the new content is added below them with a horizontal rule separator. Use edit_task_notes to replace the notes body entirely.",
     requiredScopes: ["execute"],
@@ -1079,6 +1095,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_task",
+    operationType: "destructive",
     description: "Deletes an existing task.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -1101,6 +1118,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_subtasks_to_task",
+    operationType: "write",
     description: "Adds multiple subtasks to an existing task. Do not use for merging existing tasks in as subtasks.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -1374,6 +1392,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "restore_task",
+    operationType: "write",
     description: "Changes a task from deleted to not deleted.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -1396,6 +1415,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "mark_task_as_completed",
+    operationType: "write",
     description:
       "Marks a task as completed. Can also be used to move a task to a previous day which auto-completes the task.",
     requiredScopes: ["execute"],
@@ -1423,6 +1443,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "mark_task_as_incomplete",
+    operationType: "write",
     description: "Marks a task as incomplete.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -1445,6 +1466,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "edit_subtask_title",
+    operationType: "write",
     description: "Updates the title of an existing subtask.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -1475,6 +1497,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "mark_subtask_as_completed",
+    operationType: "write",
     description: "Marks a subtask of an existing task as completed.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -1501,6 +1524,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "mark_subtask_as_incomplete",
+    operationType: "write",
     description: "Marks a subtask of an existing task as incomplete.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -1527,6 +1551,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reorder_tasks",
+    operationType: "write",
     description: "Reorders tasks for the calendar day according to the provided order of taskIds.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -1556,6 +1581,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_backlog_tasks",
+    operationType: "read",
     description: "Fetches the users backlog tasks",
     requiredScopes: ["read"],
     inputSchema: {
@@ -1597,6 +1623,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_archived_tasks",
+    operationType: "read",
     description: "Fetches the users archived tasks",
     requiredScopes: ["read"],
     inputSchema: {
@@ -1619,6 +1646,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_tasks",
+    operationType: "read",
     description: "Searches for tasks. Returns tasks that match the search term or are similar to the search term.",
     requiredScopes: ["read"],
     inputSchema: {
@@ -1641,6 +1669,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_all_incomplete_recurring_task_instances",
+    operationType: "write",
     description:
       "Updates all incomplete instances of a recurring task to match the current task. This is useful when you want to apply changes made to one instance of a recurring task to all future incomplete instances.",
     requiredScopes: ["execute"],
@@ -1674,6 +1703,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_all_incomplete_recurring_task_instances",
+    operationType: "destructive",
     description:
       "PERMANENTLY deletes incomplete instances of a recurring task and TERMINATES the series, preventing any future instances from ever being created. This is irreversible. When afterDate is provided, only instances after that date are deleted and the series is terminated at that date. When omitted, all incomplete instances are deleted. WARNING: If the user wants to temporarily skip a period (e.g. vacation) and resume the series afterwards, do NOT use this tool — use edit_task_recurrence_rule with deleteOldInstancesAfter and firstOccurrenceOnOrAfter instead.",
     requiredScopes: ["execute"],
@@ -1705,6 +1735,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_task_timer",
+    operationType: "write",
     description:
       "Starts the timer for a task or subtask. If a subtaskId is provided, starts the timer for that specific subtask.",
     requiredScopes: ["execute"],
@@ -1733,6 +1764,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "stop_task_timer",
+    operationType: "destructive",
     description:
       "Stops the timer for a task or subtask. If a subtaskId is provided, stops the timer for that specific subtask.",
     requiredScopes: ["execute"],
@@ -1761,6 +1793,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_backlog_priority",
+    operationType: "write",
     description:
       'Sets the backlog priority of a task. Backlog priority persists and is used for tasks in the backlog. Valid values: "urgent", "high", "medium", "low", "none". Set to null to clear.',
     requiredScopes: ["execute"],
@@ -1796,6 +1829,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_daily_priority",
+    operationType: "write",
     description:
       'Sets the daily priority of a task. Daily priority is tied to a specific day and decays after that day. Valid values: "urgent", "important", "normal", "low". Set to null to clear. The date is automatically determined from the task.',
     requiredScopes: ["execute"],
@@ -1831,6 +1865,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task_by_id",
+    operationType: "read",
     description:
       "Fetches a single task by its Sunsama task ID. Returns full task details including integration information.",
     requiredScopes: ["read"],
@@ -1854,6 +1889,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "move_calendar_event",
+    operationType: "write",
     description: "Updates a calendar event's date, time, and/or duration.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -1894,6 +1930,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_calendar_event",
+    operationType: "write",
     description: "Creates a new calendar event.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -1945,6 +1982,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "timebox_a_task_to_calendar",
+    operationType: "write",
     description:
       'Timeboxes a task to the calendar. This will create a timebox event for the task. This may also be referred to as "scheduling" a task or "adding a task to the calendar".',
     requiredScopes: ["execute"],
@@ -1983,6 +2021,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_calendar_event",
+    operationType: "destructive",
     description:
       "Removes a calendar event and deletes all associated tasks. If the event is a meeting then any access role can remove the event. Otherwise only owners or writers can remove the event. Note: If the event is a meeting and the user is an owner or write this will remove the event for ALL attendees.",
     requiredScopes: ["execute"],
@@ -2006,6 +2045,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "import_task_from_calendar_event",
+    operationType: "write",
     description: "Imports a calendar event as a task.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -2028,6 +2068,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "accept_meeting_invite",
+    operationType: "write",
     description: "Confirms attendance to a meeting that the user is invited to.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -2050,6 +2091,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "decline_meeting_invite",
+    operationType: "write",
     description: "Decline attendance to a meeting that the user is invited to.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -2072,6 +2114,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_calendar_event_allow_task_projections",
+    operationType: "write",
     description:
       "Sets whether tasks are allowed to be automatically projected (scheduled) at the same time as a calendar event. When set to true, tasks can be automatically projected during the event. When set to false, tasks cannot be automatically projected during the event. Note: This only affects automatic projections; users can still manually timebox tasks during this event.",
     requiredScopes: ["execute"],
@@ -2103,6 +2146,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "toggle_auto_import_events",
+    operationType: "write",
     description: "Enables or disables automatic importing of calendar events to the daily task list.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -2125,6 +2169,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_import_event_filters",
+    operationType: "write",
     description:
       "Updates the exclusion filters that determine which calendar events are excluded from automatic import. Events matching any of these filters will NOT be automatically imported.",
     requiredScopes: ["execute"],
@@ -2153,6 +2198,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_calendar_preferences",
+    operationType: "write",
     description:
       "Updates preferences for a specific calendar including whether it is the default for tasks, default for events, and whether it is included in auto-importing of events.",
     requiredScopes: ["execute"],
@@ -2191,6 +2237,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_weekly_objective",
+    operationType: "write",
     description: "Creates a new weekly objective.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -2226,6 +2273,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_daily_highlights",
+    operationType: "read",
     description:
       "Gets a list of daily highlights (end of day journal entries of your work day) for the user. Returns published daily wraps in Markdown format. If startDate and endDate are omitted, returns only the most recent one.",
     requiredScopes: ["read"],
@@ -2254,6 +2302,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_shutdown_time",
+    operationType: "write",
     description: "Sets the shutdown time for a specific day.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -2289,6 +2338,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_channel",
+    operationType: "write",
     description: "Creates a new channel for the user.",
     requiredScopes: ["execute"],
     inputSchema: {
@@ -2322,6 +2372,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "rename_channel",
+    operationType: "write",
     description:
       "Renames one of the user's channels. Takes a channel ID, not a channel name — use the search_channels tool to resolve a name the user mentions into an ID first. Renaming only changes the channel's label; the tasks, objectives, and calendar events assigned to it stay assigned.",
     requiredScopes: ["execute"],
@@ -2349,6 +2400,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_channel",
+    operationType: "destructive",
     description:
       "Deletes one of the user's channels. Takes a channel ID, not a channel name — use the search_channels tool to resolve a name the user mentions into an ID first. Tasks, objectives, and calendar events in the channel are not deleted, but they lose their channel assignment and cannot be reassigned by undoing this. Deleting a category also uncategorizes the channels inside it. This cannot be undone, so confirm with the user before calling it.",
     requiredScopes: ["execute"],
@@ -2372,6 +2424,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_channels",
+    operationType: "read",
     description:
       'Searches the user\'s channels by meaning, not just by exact name. Returns the closest matching channels ordered by relevance, so "client work" can match a channel named "Acme Corp". Use this to resolve a channel a user mentions into a channel ID before assigning tasks to it.',
     requiredScopes: ["read"],
@@ -2415,6 +2468,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_resources",
+    operationType: "read",
     description:
       "Lists all available resources and resource templates exposed by this MCP server. Use this tool to discover what data sources are available when the client doesn't support the MCP resources protocol natively.\n\nReturns an array of resources, where each resource has:\n- name: The resource identifier\n- uri: The static URI (for fixed resources) OR uri_template (for parameterized resources)\n- description: What the resource provides\n- mimeType: The content type returned",
     requiredScopes: ["read"],
@@ -2432,6 +2486,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "read_resource",
+    operationType: "read",
     description:
       'Reads a specific resource by URI. Use this tool to fetch data from resources when the client doesn\'t support the MCP resources protocol natively.\n\nFor static resources, pass the exact URI from list_resources.\nFor templated resources, fill in the placeholders with actual values.\n\nExample: If list_resources shows uri_template "sunsama://tasks/{calendarDay}", \nyou would call this with uri "sunsama://tasks/2025-01-15" to get tasks for that day.',
     requiredScopes: ["read"],
@@ -2455,6 +2510,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_help_articles",
+    operationType: "read",
     description:
       'Lists Sunsama\'s help center articles as a catalog: each entry has an id, title, description, category, and url. Use this whenever the user asks how a Sunsama feature works, what Sunsama can or cannot do, or whenever you are unsure about product behavior or a limitation. Pick the most relevant article from the list, then call "get_help_article" with its id to read it and answer from the docs instead of guessing. You can also share the article url with the user.',
     requiredScopes: ["read"],
@@ -2472,6 +2528,7 @@ export const sunsamaMcpOfficialActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_help_article",
+    operationType: "read",
     description:
       'Fetches the full text of a single Sunsama help center article. First call "list_help_articles" to find the relevant article, then pass its id here. Returns the article title, url, and plain-text body so you can answer the user\'s question from the docs.',
     requiredScopes: ["read"],

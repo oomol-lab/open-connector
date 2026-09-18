@@ -196,6 +196,7 @@ const currentUserOutputSchema = s.object("The current Snipe-IT API user.", {
 export const snipeItActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get details for the Snipe-IT user associated with the API key.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -203,6 +204,7 @@ export const snipeItActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_hardware",
+    operationType: "read",
     description: "List Snipe-IT hardware assets with optional search and filters.",
     requiredScopes: [],
     inputSchema: listHardwareInputSchema,
@@ -210,6 +212,7 @@ export const snipeItActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Snipe-IT users with optional search and filters.",
     requiredScopes: [],
     inputSchema: listUsersInputSchema,
@@ -217,6 +220,7 @@ export const snipeItActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_companies",
+    operationType: "read",
     description: "List Snipe-IT companies.",
     requiredScopes: [],
     inputSchema: listCompaniesInputSchema,
@@ -224,6 +228,7 @@ export const snipeItActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_categories",
+    operationType: "read",
     description: "List Snipe-IT categories with optional search and filters.",
     requiredScopes: [],
     inputSchema: listCategoriesInputSchema,
@@ -231,6 +236,7 @@ export const snipeItActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_status_labels",
+    operationType: "read",
     description: "List Snipe-IT status labels with optional search and filters.",
     requiredScopes: [],
     inputSchema: listStatusLabelsInputSchema,

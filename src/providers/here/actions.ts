@@ -156,6 +156,7 @@ const lookupOutputSchema = s.looseRequiredObject(
 export const hereActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "geocode",
+    operationType: "read",
     description:
       "Geocode a free-form address, place, locality, or administrative-area query with HERE Geocoding and Search API v7.",
     inputSchema: geocodeInputSchema,
@@ -163,18 +164,21 @@ export const hereActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reverse_geocode",
+    operationType: "read",
     description: "Find the nearest HERE address or place result for a latitude,longitude location.",
     inputSchema: reverseGeocodeInputSchema,
     outputSchema: itemsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "discover",
+    operationType: "read",
     description: "Search HERE places or addresses with a free-form Discover query and required spatial context.",
     inputSchema: discoverInputSchema,
     outputSchema: itemsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "autosuggest",
+    operationType: "read",
     description:
       "Get HERE query and entity suggestions for incomplete or misspelled address and place text with required spatial context.",
     inputSchema: autosuggestInputSchema,
@@ -182,12 +186,14 @@ export const hereActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "autocomplete",
+    operationType: "read",
     description: "Get HERE address and administrative-area completions for entered text.",
     inputSchema: autocompleteInputSchema,
     outputSchema: itemsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "lookup",
+    operationType: "read",
     description: "Look up a HERE place or location object by an identifier returned from another HERE search result.",
     inputSchema: lookupInputSchema,
     outputSchema: lookupOutputSchema,

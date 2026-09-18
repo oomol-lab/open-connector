@@ -224,6 +224,7 @@ const postInput = (properties: Record<string, JsonSchema>, description: string):
 export const esaActions: ActionDefinition[] = [
   readAction(
     "get_teams",
+    "read",
     "List esa teams available to the authenticated user.",
     s.object(
       {
@@ -237,18 +238,21 @@ export const esaActions: ActionDefinition[] = [
   ),
   readAction(
     "get_team_stats",
+    "read",
     "Get member, post, comment, star, watch, and activity statistics for an esa team.",
     postInput({}, "Team-statistics input."),
     s.unknownObject("Team statistics returned by esa."),
   ),
   readAction(
     "get_team_tags",
+    "read",
     "List tags used by posts in an esa team with their counts.",
     postInput({ page: optionalPage, perPage: optionalPerPage }, "Team-tag-list input."),
     tagListSchema,
   ),
   readAction(
     "get_team_members",
+    "read",
     "List members of an esa team with their roles and profiles.",
     postInput(
       {
@@ -263,6 +267,7 @@ export const esaActions: ActionDefinition[] = [
   ),
   readAction(
     "get_post",
+    "read",
     "Get one esa post by number. The body is truncated by default to keep agent context bounded.",
     postInput(
       {
@@ -280,6 +285,7 @@ export const esaActions: ActionDefinition[] = [
   ),
   readAction(
     "search_posts",
+    "read",
     "Search posts in an esa team with esa query syntax and pagination.",
     postInput(
       {
@@ -299,6 +305,7 @@ export const esaActions: ActionDefinition[] = [
   ),
   writeAction(
     "create_post",
+    "write",
     "Create a new esa post with optional Markdown body, tags, category, WIP state, and revision message.",
     postInput(
       {
@@ -318,6 +325,7 @@ export const esaActions: ActionDefinition[] = [
   ),
   writeAction(
     "update_post",
+    "write",
     "Update selected fields of an existing esa post. Use append_post or prepend_post to add Markdown without fetching the body.",
     postInput(
       {
@@ -337,6 +345,7 @@ export const esaActions: ActionDefinition[] = [
   ),
   writeAction(
     "append_post",
+    "write",
     "Append Markdown content to an esa post without first fetching its current body.",
     postInput(
       {
@@ -352,6 +361,7 @@ export const esaActions: ActionDefinition[] = [
   ),
   writeAction(
     "prepend_post",
+    "write",
     "Prepend Markdown content to an esa post without first fetching its current body.",
     postInput(
       {
@@ -367,6 +377,7 @@ export const esaActions: ActionDefinition[] = [
   ),
   readAction(
     "get_comment",
+    "read",
     "Get one esa comment by ID, optionally including its stargazers.",
     postInput(
       {
@@ -379,6 +390,7 @@ export const esaActions: ActionDefinition[] = [
   ),
   writeAction(
     "create_comment",
+    "write",
     "Create a Markdown comment on an existing esa post.",
     postInput(
       {
@@ -393,6 +405,7 @@ export const esaActions: ActionDefinition[] = [
   ),
   writeAction(
     "update_comment",
+    "write",
     "Update an existing esa comment.",
     postInput(
       {
@@ -407,6 +420,7 @@ export const esaActions: ActionDefinition[] = [
   ),
   writeAction(
     "delete_comment",
+    "destructive",
     "Permanently delete an esa comment by ID.",
     postInput({ commentId }, "Comment-deletion input."),
     s.requiredObject("Comment deletion result.", {
@@ -416,24 +430,28 @@ export const esaActions: ActionDefinition[] = [
   ),
   readAction(
     "get_post_backlinks",
+    "read",
     "List posts that link to a specific esa post.",
     postInput({ postNumber, page: optionalPage, perPage: optionalPerPage }, "Post-backlink-list input."),
     postSummaryListSchema,
   ),
   readAction(
     "get_post_comments",
+    "read",
     "List comments on an esa post with pagination.",
     postInput({ postNumber, page: optionalPage, perPage: optionalPerPage }, "Post-comment-list input."),
     commentListSchema,
   ),
   readAction(
     "get_team_comments",
+    "read",
     "List comments in an esa team with pagination.",
     postInput({ page: optionalPage, perPage: optionalPerPage }, "Team-comment-list input."),
     commentListSchema,
   ),
   readAction(
     "get_categories",
+    "read",
     "Get an esa category, its child categories, and optional posts or parents.",
     postInput(
       {
@@ -451,12 +469,14 @@ export const esaActions: ActionDefinition[] = [
   ),
   readAction(
     "get_top_categories",
+    "read",
     "Get all top-level esa categories for a team.",
     postInput({}, "Top-category-list input."),
     categoryListSchema,
   ),
   readAction(
     "get_all_category_paths",
+    "read",
     "List esa category paths with pagination and optional path filters.",
     postInput(
       {
@@ -473,6 +493,7 @@ export const esaActions: ActionDefinition[] = [
   ),
   writeAction(
     "archive_post",
+    "destructive",
     "Archive an esa post by moving it to the Archived category.",
     postInput(
       { postNumber, message: s.optional(s.string("Optional archive revision message.")) },
@@ -492,6 +513,7 @@ export const esaActions: ActionDefinition[] = [
   ),
   writeAction(
     "ship_post",
+    "write",
     "Mark an esa post as shipped without changing other fields.",
     postInput({ postNumber }, "Post-shipping input."),
     postSchema,
@@ -499,6 +521,7 @@ export const esaActions: ActionDefinition[] = [
   ),
   writeAction(
     "duplicate_post",
+    "write",
     "Duplicate an esa post into a new WIP post in the same or another accessible team.",
     postInput(
       {
@@ -512,6 +535,7 @@ export const esaActions: ActionDefinition[] = [
   ),
   writeAction(
     "rollback_post_revision",
+    "write",
     "Restore an esa post to a selected revision and create a new revision from it.",
     postInput(
       {
@@ -527,18 +551,21 @@ export const esaActions: ActionDefinition[] = [
   ),
   readAction(
     "get_search_options_help",
+    "read",
     "Get esa's official search-syntax documentation post.",
     s.object({}, { description: "Search-help input." }),
     postSchema,
   ),
   readAction(
     "get_markdown_syntax_help",
+    "read",
     "Get esa's official Markdown-syntax documentation post.",
     s.object({}, { description: "Markdown-help input." }),
     postSchema,
   ),
   readAction(
     "search_help",
+    "read",
     "Search esa's official documentation team with esa query syntax.",
     s.object(
       {
@@ -552,6 +579,7 @@ export const esaActions: ActionDefinition[] = [
   ),
   readAction(
     "get_attachment",
+    "read",
     "Get an esa attachment as a local transit file when possible, otherwise return its downloadable URL.",
     postInput(
       {
@@ -587,12 +615,14 @@ export const esaActions: ActionDefinition[] = [
   ),
   readAction(
     "list_recent_posts",
+    "read",
     "List recently updated esa posts. This is the action equivalent of the esa_recent_posts MCP resource.",
     postInput({ page: optionalPage, perPage: optionalPerPage }, "Recent-posts input."),
     postListSchema,
   ),
   readAction(
     "get_post_summary_prompt",
+    "read",
     "Build the summary prompt for an esa post. The caller supplies the returned prompt to its model.",
     postInput({ postNumber }, "Post-summary-prompt input."),
     s.requiredObject("Post-summary prompt result.", {
@@ -603,6 +633,7 @@ export const esaActions: ActionDefinition[] = [
 
 function readAction(
   name: string,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
@@ -610,6 +641,7 @@ function readAction(
 ): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     requiredScopes: esaReadScopes,
     inputSchema,
@@ -620,6 +652,7 @@ function readAction(
 
 function writeAction(
   name: string,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
@@ -627,6 +660,7 @@ function writeAction(
 ): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     requiredScopes: esaWriteScopes,
     inputSchema,

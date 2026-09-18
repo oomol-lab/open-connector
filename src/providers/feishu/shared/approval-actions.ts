@@ -81,6 +81,7 @@ export function createFeishuApprovalActions(service: string): readonly ActionDef
   return [
     defineProviderAction(service, {
       name: "search_approvals",
+      operationType: "read",
       description: "Search approval definitions the connected user can initiate.",
       requiredScopes: [feishuApprovalProviderPermissions.approvalRead],
       providerPermissions: [feishuApprovalProviderPermissions.approvalRead],
@@ -99,6 +100,7 @@ export function createFeishuApprovalActions(service: string): readonly ActionDef
     }),
     defineProviderAction(service, {
       name: "get_approval",
+      operationType: "read",
       description: "Get an approval definition, form snapshot, and approval nodes.",
       requiredScopes: [feishuApprovalProviderPermissions.approvalRead],
       providerPermissions: [feishuApprovalProviderPermissions.approvalRead],
@@ -124,6 +126,7 @@ export function createFeishuApprovalActions(service: string): readonly ActionDef
     }),
     defineProviderAction(service, {
       name: "create_approval_instance",
+      operationType: "write",
       description: "Create an approval instance from structured form controls.",
       requiredScopes: [feishuApprovalProviderPermissions.instanceWrite],
       providerPermissions: [feishuApprovalProviderPermissions.instanceWrite],
@@ -154,6 +157,7 @@ export function createFeishuApprovalActions(service: string): readonly ActionDef
     }),
     defineProviderAction(service, {
       name: "get_approval_instance",
+      operationType: "read",
       description: "Get an approval instance with its nodes, tasks, form, and history.",
       requiredScopes: [feishuApprovalProviderPermissions.instanceRead],
       providerPermissions: [feishuApprovalProviderPermissions.instanceRead],
@@ -180,6 +184,7 @@ export function createFeishuApprovalActions(service: string): readonly ActionDef
     }),
     defineProviderAction(service, {
       name: "cancel_approval_instance",
+      operationType: "destructive",
       description: "Recall an approval instance initiated by the connected user.",
       requiredScopes: [feishuApprovalProviderPermissions.instanceWrite],
       providerPermissions: [feishuApprovalProviderPermissions.instanceWrite],
@@ -196,6 +201,7 @@ export function createFeishuApprovalActions(service: string): readonly ActionDef
     }),
     defineProviderAction(service, {
       name: "add_approval_cc",
+      operationType: "write",
       description: "Add CC recipients to an active approval instance.",
       requiredScopes: [feishuApprovalProviderPermissions.instanceWrite],
       providerPermissions: [feishuApprovalProviderPermissions.instanceWrite],
@@ -217,6 +223,7 @@ export function createFeishuApprovalActions(service: string): readonly ActionDef
     }),
     defineProviderAction(service, {
       name: "list_initiated_approval_instances",
+      operationType: "read",
       description: "List approval instances initiated by the connected user.",
       requiredScopes: [feishuApprovalProviderPermissions.instanceRead],
       providerPermissions: [feishuApprovalProviderPermissions.instanceRead],
@@ -225,6 +232,7 @@ export function createFeishuApprovalActions(service: string): readonly ActionDef
     }),
     defineProviderAction(service, {
       name: "list_approval_tasks",
+      operationType: "read",
       description: "List approval tasks grouped by pending, completed, initiated, or CC status.",
       requiredScopes: [feishuApprovalProviderPermissions.taskRead],
       providerPermissions: [feishuApprovalProviderPermissions.taskRead],
@@ -256,6 +264,7 @@ export function createFeishuApprovalActions(service: string): readonly ActionDef
     }),
     defineProviderAction(service, {
       name: "approve_approval_task",
+      operationType: "write",
       description: "Approve a pending approval task with optional form controls.",
       requiredScopes: [feishuApprovalProviderPermissions.taskWrite],
       providerPermissions: [feishuApprovalProviderPermissions.taskWrite],
@@ -274,6 +283,7 @@ export function createFeishuApprovalActions(service: string): readonly ActionDef
     }),
     defineProviderAction(service, {
       name: "reject_approval_task",
+      operationType: "destructive",
       description: "Reject a pending approval task.",
       requiredScopes: [feishuApprovalProviderPermissions.taskWrite],
       providerPermissions: [feishuApprovalProviderPermissions.taskWrite],
@@ -291,6 +301,7 @@ export function createFeishuApprovalActions(service: string): readonly ActionDef
     }),
     defineProviderAction(service, {
       name: "transfer_approval_task",
+      operationType: "write",
       description: "Transfer a pending approval task to another user.",
       requiredScopes: [feishuApprovalProviderPermissions.taskWrite],
       providerPermissions: [feishuApprovalProviderPermissions.taskWrite],
@@ -310,6 +321,7 @@ export function createFeishuApprovalActions(service: string): readonly ActionDef
     }),
     defineProviderAction(service, {
       name: "add_sign_approval_task",
+      operationType: "write",
       description: "Add users before, after, or alongside the current approval task.",
       requiredScopes: [feishuApprovalProviderPermissions.taskWrite],
       providerPermissions: [feishuApprovalProviderPermissions.taskWrite],
@@ -333,6 +345,7 @@ export function createFeishuApprovalActions(service: string): readonly ActionDef
     }),
     defineProviderAction(service, {
       name: "rollback_approval_task",
+      operationType: "destructive",
       description: "Roll back an approval task to one or more earlier nodes.",
       requiredScopes: [feishuApprovalProviderPermissions.taskWrite],
       providerPermissions: [feishuApprovalProviderPermissions.taskWrite],
@@ -355,6 +368,7 @@ export function createFeishuApprovalActions(service: string): readonly ActionDef
     }),
     defineProviderAction(service, {
       name: "remind_approval_tasks",
+      operationType: "write",
       description: "Send reminders for one or more tasks in an approval instance.",
       requiredScopes: [feishuApprovalProviderPermissions.instanceWrite],
       providerPermissions: [feishuApprovalProviderPermissions.instanceWrite],

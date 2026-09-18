@@ -64,6 +64,7 @@ export interface LongbridgeReadonlyDerivedQueryDefaultSpec {
 
 export interface LongbridgeReadonlyActionSpec {
   readonly name: string;
+  readonly operationType: ActionDefinition["operationType"];
   readonly description: string;
   readonly method?: LongbridgeReadonlyHttpMethod;
   readonly path: string;
@@ -192,6 +193,7 @@ export function defineLongbridgeReadonlyActions(requiredScopes: string[]): Actio
   return longbridgeReadonlyActionSpecs.map((spec) =>
     defineProviderAction(service, {
       name: spec.name,
+      operationType: spec.operationType,
       description: spec.description,
       requiredScopes,
       providerPermissions: ["openapi"],
@@ -223,6 +225,7 @@ const optionalSymbols = param(
 export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpec[] = [
   {
     name: "market_status",
+    operationType: "read",
     description: "Get Longbridge market trading status for supported markets.",
     path: "/v1/quote/market-status",
     outputKey: "status",
@@ -230,6 +233,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "broker_holding",
+    operationType: "read",
     description: "List top Longbridge broker holdings for a security.",
     path: "/v1/quote/broker-holding",
     queryParams: [
@@ -249,6 +253,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "broker_holding_detail",
+    operationType: "read",
     description: "Get detailed Longbridge broker holdings for a security.",
     path: "/v1/quote/broker-holding/detail",
     queryParams: [requiredSymbol],
@@ -257,6 +262,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "broker_holding_daily",
+    operationType: "read",
     description: "List daily Longbridge broker holding history for a broker and security.",
     path: "/v1/quote/broker-holding/daily",
     queryParams: [
@@ -270,6 +276,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "ah_premium",
+    operationType: "read",
     description: "List Longbridge A/H premium K-line records for a dual-listed security.",
     path: "/v1/quote/ahpremium/klines",
     queryParams: [
@@ -285,6 +292,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "ah_premium_intraday",
+    operationType: "read",
     description: "List Longbridge intraday A/H premium records for a dual-listed security.",
     path: "/v1/quote/ahpremium/timeshares",
     queryDefaults: { days: "1" },
@@ -294,6 +302,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "trade_stats",
+    operationType: "read",
     description: "Get Longbridge trade statistics for a security.",
     path: "/v1/quote/trades-statistics",
     queryParams: [requiredSymbol],
@@ -302,6 +311,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "anomaly",
+    operationType: "read",
     description: "List Longbridge quote change and anomaly records.",
     path: "/v1/quote/changes",
     queryDefaults: { category: "0", size: "50" },
@@ -312,6 +322,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "market_stock_events",
+    operationType: "read",
     description: "List Longbridge market stock events.",
     method: "POST",
     path: "/v1/quote/market/stock-events",
@@ -333,6 +344,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "constituent",
+    operationType: "read",
     description: "List Longbridge index constituents.",
     path: "/v1/quote/index-constituents",
     queryParams: [
@@ -346,6 +358,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "finance_calendar",
+    operationType: "read",
     description: "List Longbridge finance calendar events.",
     path: "/v1/quote/finance_calendar",
     queryDefaults: { next: "later", offset: "0" },
@@ -374,6 +387,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "rank_categories",
+    operationType: "read",
     description: "List Longbridge market ranking categories.",
     path: "/v1/quote/market/rank/categories",
     outputKey: "categories",
@@ -381,6 +395,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "rank_list",
+    operationType: "read",
     description: "List Longbridge ranked securities for a market ranking category.",
     path: "/v1/quote/market/rank/list",
     queryDefaults: { delay_bmp: "false", need_article: "false", size: "20" },
@@ -399,6 +414,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "short_positions",
+    operationType: "read",
     description: "List Longbridge short interest records for a US or HK security.",
     path: "/v1/quote/short-positions/us",
     symbolMarketPath: {
@@ -426,6 +442,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "short_trades",
+    operationType: "read",
     description: "List Longbridge short sale trade records for a US or HK security.",
     path: "/v1/quote/short-trades/us",
     symbolMarketPath: {
@@ -453,6 +470,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "short_margin",
+    operationType: "read",
     description: "Get Longbridge short margin information for the connected account.",
     path: "/v1/asset/cash/short-margin",
     outputKey: "margin",
@@ -460,6 +478,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "option_volume",
+    operationType: "read",
     description: "List Longbridge real-time option volume statistics for an underlying security.",
     path: "/v1/quote/option-volume-stats",
     queryParams: [
@@ -473,6 +492,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "option_volume_daily",
+    operationType: "read",
     description: "List Longbridge historical daily option volume statistics for an underlying security.",
     path: "/v1/quote/option-volume-stats/daily",
     queryDefaults: { direction: "1", line_num: "20" },
@@ -487,6 +507,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "financial_report",
+    operationType: "read",
     description: "Get Longbridge financial report data for a security.",
     path: "/v1/quote/financial-reports",
     queryDefaults: { kind: "ALL" },
@@ -501,6 +522,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "financial_report_latest",
+    operationType: "read",
     description: "Get the latest Longbridge financial report summary for a security.",
     path: "/v1/quote/financials/latest-report",
     queryParams: [requiredSymbol],
@@ -509,6 +531,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "financial_report_snapshot",
+    operationType: "read",
     description: "Get Longbridge earnings snapshot data for a security.",
     path: "/v1/quote/financials/earnings-snapshot",
     queryParams: [
@@ -527,6 +550,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "financial_statement",
+    operationType: "read",
     description: "Get Longbridge company financial statement data for a security.",
     path: "/v1/quote/financials/statements",
     queryDefaults: { kind: "IS", report: "af" },
@@ -540,6 +564,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "dividend",
+    operationType: "read",
     description: "List Longbridge dividend history for a security.",
     path: "/v1/quote/dividends",
     queryParams: [
@@ -554,6 +579,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "dividend_detail",
+    operationType: "read",
     description: "Get detailed Longbridge dividend information for a security.",
     path: "/v1/quote/dividends/details",
     queryParams: [requiredSymbol],
@@ -562,6 +588,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "forecast_eps",
+    operationType: "read",
     description: "Get Longbridge EPS forecast data for a security.",
     path: "/v1/quote/forecast-eps",
     queryParams: [requiredSymbol],
@@ -570,6 +597,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "consensus",
+    operationType: "read",
     description: "Get Longbridge financial consensus estimates for a security.",
     path: "/v1/quote/financial-consensus-detail",
     queryParams: [requiredSymbol],
@@ -578,6 +606,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "valuation",
+    operationType: "read",
     description: "Get Longbridge valuation metrics for a security.",
     path: "/v1/quote/valuation",
     queryDefaults: { indicator: "pe", range: "1" },
@@ -591,6 +620,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "valuation_history",
+    operationType: "read",
     description: "List Longbridge historical valuation detail data for a security.",
     path: "/v1/quote/valuation/detail",
     queryParams: [
@@ -602,6 +632,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "valuation_rank",
+    operationType: "read",
     description: "Get Longbridge valuation rank data for a security.",
     path: "/v1/quote/valuation/rank",
     queryParams: [requiredSymbol, optionalStartDate, optionalEndDate],
@@ -610,6 +641,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "valuation_comparison",
+    operationType: "read",
     description: "Compare Longbridge valuation metrics between a security and optional peers.",
     path: "/v1/quote/compare/valuation",
     queryParams: [
@@ -628,6 +660,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "industry_valuation",
+    operationType: "read",
     description: "Get Longbridge industry peer valuation comparison for a security.",
     path: "/v1/quote/industry-valuation-comparison",
     queryParams: [
@@ -639,6 +672,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "industry_valuation_dist",
+    operationType: "read",
     description: "Get Longbridge industry valuation distribution for a security.",
     path: "/v1/quote/industry-valuation-distribution",
     queryParams: [requiredSymbol],
@@ -647,6 +681,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "industry_peers",
+    operationType: "read",
     description: "List Longbridge industry peer securities for a security.",
     path: "/v1/quote/industries/peers",
     queryDefaults: { type: "1", industry_id: "" },
@@ -656,6 +691,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "company",
+    operationType: "read",
     description: "Get Longbridge company overview and profile data for a security.",
     path: "/v1/quote/comp-overview",
     queryParams: [requiredSymbol],
@@ -664,6 +700,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "executive",
+    operationType: "read",
     description: "List Longbridge company executives and board members for a security.",
     path: "/v1/quote/company-professionals",
     queryParams: [
@@ -677,6 +714,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "shareholder",
+    operationType: "read",
     description: "List Longbridge shareholder records for a security.",
     path: "/v1/quote/shareholders",
     queryDefaults: { position: "detail" },
@@ -691,6 +729,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "shareholder_top",
+    operationType: "read",
     description: "List Longbridge top shareholder records for a security.",
     path: "/v1/quote/shareholders/top",
     queryParams: [requiredSymbol],
@@ -699,6 +738,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "shareholder_detail",
+    operationType: "read",
     description: "Get Longbridge shareholder holding detail for a security and shareholder object.",
     path: "/v1/quote/shareholders/holding",
     queryParams: [
@@ -710,6 +750,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "fund_holder",
+    operationType: "read",
     description: "List Longbridge funds and ETFs holding a security.",
     path: "/v1/quote/fund-holders",
     queryParams: [requiredSymbol, optionalLimit],
@@ -718,6 +759,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "corp_action",
+    operationType: "read",
     description: "List Longbridge corporate actions for a security.",
     path: "/v1/quote/company-act",
     queryDefaults: { req_type: "1", version: "3" },
@@ -727,6 +769,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "invest_relation",
+    operationType: "read",
     description: "List Longbridge investor relations records for a security.",
     path: "/v1/quote/invest-relations",
     queryDefaults: { count: "0" },
@@ -736,6 +779,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "operating",
+    operationType: "read",
     description: "Get Longbridge operating metrics for a security.",
     path: "/v1/quote/operatings",
     queryParams: [requiredSymbol, param("report", "report", reportPeriodSchema, "string")],
@@ -744,6 +788,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "business_segments",
+    operationType: "read",
     description: "Get Longbridge business segment data for a security.",
     path: "/v1/quote/fundamentals/business-segments",
     queryParams: [requiredSymbol],
@@ -752,6 +797,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "business_segments_history",
+    operationType: "read",
     description: "List Longbridge business segment history for a security.",
     path: "/v1/quote/fundamentals/business-segments/history",
     queryParams: [
@@ -764,6 +810,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "buyback",
+    operationType: "read",
     description: "Get Longbridge buyback data for a security.",
     path: "/v1/quote/buy-backs",
     queryParams: [requiredSymbol],
@@ -772,6 +819,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "institution_rating",
+    operationType: "read",
     description: "Get the latest Longbridge institution analyst rating summary for a security.",
     path: "/v1/quote/institution-rating-latest",
     queryParams: [requiredSymbol],
@@ -780,6 +828,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "institution_rating_detail",
+    operationType: "read",
     description: "Get Longbridge institution analyst rating detail for a security.",
     path: "/v1/quote/institution-ratings/detail",
     queryParams: [requiredSymbol],
@@ -788,6 +837,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "institution_rating_history",
+    operationType: "read",
     description: "List Longbridge institution analyst rating history for a security.",
     path: "/v1/quote/institution-ratings",
     queryParams: [requiredSymbol],
@@ -796,6 +846,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "institution_rating_industry_rank",
+    operationType: "read",
     description: "Get Longbridge institution rating industry rank for a security.",
     path: "/v1/quote/institution-ratings/industry-rank",
     queryDefaults: { page: "1", size: "20" },
@@ -805,6 +856,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "institutional_views",
+    operationType: "read",
     description: "List Longbridge institutional views for a security.",
     path: "/v1/quote/ratings/institutional",
     queryParams: [requiredSymbol],
@@ -813,6 +865,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "stock_ratings",
+    operationType: "read",
     description: "List Longbridge stock rating records for a security.",
     path: "/v1/quote/ratings",
     queryParams: [requiredSymbol],
@@ -821,6 +874,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "stock_rating_history",
+    operationType: "read",
     description: "List Longbridge stock rating history records for a security.",
     path: "/v1/quote/ratings/history",
     queryParams: [requiredSymbol],
@@ -829,6 +883,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "news",
+    operationType: "read",
     description: "List Longbridge news articles for a symbol.",
     path: "/v1/content/{symbol}/news",
     pathParam: {
@@ -843,6 +898,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "screener_indicators",
+    operationType: "read",
     description: "List Longbridge screener indicator definitions.",
     path: "/v1/quote/ai/screener/indicators",
     outputKey: "indicators",
@@ -850,6 +906,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "screener_search",
+    operationType: "read",
     description: "Search Longbridge securities with screener filters.",
     method: "POST",
     path: "/v1/quote/ai/screener/search",
@@ -907,6 +964,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "screener_recommend_strategies",
+    operationType: "read",
     description: "List Longbridge recommended screener strategies.",
     path: "/v1/quote/ai/screener/strategies/recommend",
     queryParams: [param("market", "market", marketSchema, "string", { required: true })],
@@ -915,6 +973,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "screener_user_strategies",
+    operationType: "read",
     description: "List Longbridge saved screener strategies for the connected user.",
     path: "/v1/quote/ai/screener/strategies/mine",
     queryParams: [param("market", "market", marketSchema, "string", { required: true })],
@@ -923,6 +982,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "screener_strategy",
+    operationType: "read",
     description: "Get one Longbridge screener strategy by ID.",
     path: "/v1/quote/ai/screener/strategy/{id}",
     pathParam: {
@@ -936,6 +996,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "exchange_rate",
+    operationType: "read",
     description: "Get Longbridge exchange rates for supported currencies.",
     path: "/v1/asset/exchange_rates",
     outputKey: "rates",
@@ -943,6 +1004,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "profit_analysis",
+    operationType: "read",
     description: "Get Longbridge portfolio profit and loss analysis summary.",
     path: "/v1/portfolio/profit-analysis-summary",
     queryParams: [optionalUnixStartDate, optionalUnixEndDate],
@@ -951,6 +1013,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "profit_analysis_detail",
+    operationType: "read",
     description: "Get Longbridge portfolio profit and loss detail for a security.",
     path: "/v1/portfolio/profit-analysis/detail",
     queryParams: [requiredSymbol, optionalUnixStartDate, optionalUnixEndDate],
@@ -959,6 +1022,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "profit_analysis_by_market",
+    operationType: "read",
     description: "List Longbridge portfolio profit and loss analysis grouped by market.",
     path: "/v1/portfolio/profit-analysis/by-market",
     queryDefaults: { page: "1", size: "50" },
@@ -975,6 +1039,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "profit_analysis_flows",
+    operationType: "read",
     description: "List Longbridge portfolio profit and loss flow records for a security.",
     path: "/v1/portfolio/profit-analysis/flows",
     queryParams: [
@@ -992,6 +1057,7 @@ export const longbridgeReadonlyActionSpecs: readonly LongbridgeReadonlyActionSpe
   },
   {
     name: "profit_analysis_sublist",
+    operationType: "read",
     description: "List Longbridge portfolio profit and loss analysis sublist records.",
     path: "/v1/portfolio/profit-analysis-sublist",
     queryDefaults: { profit_or_loss: "all" },

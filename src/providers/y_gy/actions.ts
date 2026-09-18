@@ -88,6 +88,7 @@ const updateFields = [
 export const yGyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_link",
+    operationType: "write",
     description: "Create a Y.GY short link with optional QR, security, and routing settings.",
     followUpActions: ["y_gy.get_link", "y_gy.update_link", "y_gy.delete_link"],
     inputSchema: s.object(
@@ -140,6 +141,7 @@ export const yGyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_link",
+    operationType: "read",
     description: "Get one Y.GY short link by its identifier.",
     followUpActions: ["y_gy.update_link", "y_gy.delete_link"],
     inputSchema: s.requiredObject("Input payload for reading a Y.GY short link.", {
@@ -149,6 +151,7 @@ export const yGyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_links",
+    operationType: "read",
     description: "List Y.GY short links with offset pagination.",
     inputSchema: s.object(
       "Input payload for listing Y.GY short links.",
@@ -165,6 +168,7 @@ export const yGyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_link",
+    operationType: "write",
     description: "Update the documented mutable settings of a Y.GY short link.",
     followUpActions: ["y_gy.get_link"],
     inputSchema: {
@@ -192,6 +196,7 @@ export const yGyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_link",
+    operationType: "destructive",
     description: "Delete a Y.GY short link by its identifier.",
     inputSchema: s.requiredObject("Input payload for deleting a Y.GY short link.", {
       id: linkIdInputSchema,

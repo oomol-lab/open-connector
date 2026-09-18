@@ -15,6 +15,7 @@ export type OtterAiActionName =
 
 interface OtterAiActionDefinition {
   name: OtterAiActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
@@ -90,6 +91,7 @@ const includeSchema = s.array(
 const actions: OtterAiActionDefinition[] = [
   {
     name: "get_workspace",
+    operationType: "read",
     description: "Get the current Otter.ai workspace for the connected API key.",
     inputSchema: noInputSchema,
     outputSchema: s.object("The current Otter.ai workspace response.", {
@@ -99,6 +101,7 @@ const actions: OtterAiActionDefinition[] = [
   },
   {
     name: "list_channels",
+    operationType: "read",
     description: "List Otter.ai channels available to the connected workspace.",
     inputSchema: noInputSchema,
     outputSchema: s.object("The Otter.ai channels response.", {
@@ -108,6 +111,7 @@ const actions: OtterAiActionDefinition[] = [
   },
   {
     name: "list_channel_members",
+    operationType: "read",
     description: "List members of an Otter.ai channel.",
     inputSchema: s.object(
       "Input parameters for listing Otter.ai channel members.",
@@ -123,6 +127,7 @@ const actions: OtterAiActionDefinition[] = [
   },
   {
     name: "list_conversations",
+    operationType: "read",
     description: "List Otter.ai conversations with optional channel and pagination filters.",
     inputSchema: s.object(
       "Query parameters for listing Otter.ai conversations.",
@@ -143,6 +148,7 @@ const actions: OtterAiActionDefinition[] = [
   },
   {
     name: "get_conversation",
+    operationType: "read",
     description: "Get one Otter.ai conversation by ID with requested related data.",
     inputSchema: s.object(
       "Input parameters for getting an Otter.ai conversation.",
@@ -160,6 +166,7 @@ const actions: OtterAiActionDefinition[] = [
   },
   {
     name: "get_conversation_audio",
+    operationType: "read",
     description: "Get the temporary Otter.ai audio download URL for a conversation.",
     inputSchema: s.object(
       "Input parameters for getting Otter.ai conversation audio.",

@@ -152,6 +152,7 @@ const callOutcomesOutputSchema = s.object("Gong call outcomes response.", {
 export const gongActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Gong users with optional cursor pagination and avatar inclusion.",
     requiredScopes: [],
     inputSchema: listUsersInputSchema,
@@ -159,6 +160,7 @@ export const gongActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get one Gong user by Gong user ID.",
     requiredScopes: [],
     inputSchema: getUserInputSchema,
@@ -166,6 +168,7 @@ export const gongActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_calls",
+    operationType: "read",
     description: "List Gong calls that started within a specified date-time range.",
     requiredScopes: [],
     inputSchema: listCallsInputSchema,
@@ -173,6 +176,7 @@ export const gongActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_call",
+    operationType: "read",
     description: "Get one Gong call by Gong call ID.",
     requiredScopes: [],
     inputSchema: getCallInputSchema,
@@ -180,6 +184,7 @@ export const gongActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_call_transcripts",
+    operationType: "read",
     description: "Get Gong call transcript JSON for calls within a specified date-time range.",
     requiredScopes: [],
     inputSchema: getCallTranscriptsInputSchema,
@@ -187,6 +192,7 @@ export const gongActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_call_outcomes",
+    operationType: "read",
     description: "List Gong call outcomes configured for the company.",
     requiredScopes: [],
     inputSchema: noInputSchema,

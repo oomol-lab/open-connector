@@ -63,6 +63,7 @@ const paginationSchema = s.object("Confluence pagination metadata.", {
 export const confluenceActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_content",
+    operationType: "read",
     description: "Search Confluence content with CQL and return normalized result metadata plus pagination.",
     requiredScopes: [confluenceSearchScope],
     inputSchema: s.object(
@@ -81,6 +82,7 @@ export const confluenceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_spaces",
+    operationType: "read",
     description: "List Confluence spaces and return normalized space metadata plus pagination.",
     requiredScopes: [confluenceSpaceReadScope],
     inputSchema: s.object(
@@ -100,6 +102,7 @@ export const confluenceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_page",
+    operationType: "read",
     description: "Get a Confluence page by ID and optionally include its body representation.",
     requiredScopes: [confluencePageReadScope],
     inputSchema: s.object(
@@ -122,6 +125,7 @@ export const confluenceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_page",
+    operationType: "write",
     description: "Create a Confluence page using a JSON-friendly body value and return the created page.",
     requiredScopes: [confluencePageWriteScope],
     inputSchema: s.object(
@@ -142,6 +146,7 @@ export const confluenceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_page",
+    operationType: "write",
     description: "Update a Confluence page title, body, or status using an explicit next version number.",
     requiredScopes: [confluencePageWriteScope],
     inputSchema: s.object(

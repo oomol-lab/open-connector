@@ -106,6 +106,7 @@ const refundSchema = s.object("A normalized Razorpay refund.", {
 
 const createOrderAction = defineProviderAction(service, {
   name: "create_order",
+  operationType: "write",
   description: "Create a Razorpay order for an amount, currency, and optional receipt metadata.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -129,6 +130,7 @@ const createOrderAction = defineProviderAction(service, {
 
 const listOrdersAction = defineProviderAction(service, {
   name: "list_orders",
+  operationType: "read",
   description: "List Razorpay orders with optional receipt, status-window, and expansion filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -161,6 +163,7 @@ const listOrdersAction = defineProviderAction(service, {
 
 const getOrderAction = defineProviderAction(service, {
   name: "get_order",
+  operationType: "read",
   description: "Fetch one Razorpay order by its order identifier.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for fetching a Razorpay order.", {
@@ -173,6 +176,7 @@ const getOrderAction = defineProviderAction(service, {
 
 const getPaymentAction = defineProviderAction(service, {
   name: "get_payment",
+  operationType: "read",
   description: "Fetch one Razorpay payment by its payment identifier.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for fetching a Razorpay payment.", {
@@ -185,6 +189,7 @@ const getPaymentAction = defineProviderAction(service, {
 
 const listPaymentsAction = defineProviderAction(service, {
   name: "list_payments",
+  operationType: "read",
   description: "List Razorpay payments within an optional time window and pagination range.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -209,6 +214,7 @@ const listPaymentsAction = defineProviderAction(service, {
 
 const createRefundAction = defineProviderAction(service, {
   name: "create_refund",
+  operationType: "destructive",
   description: "Create a Razorpay refund for a payment, with optional amount, speed, and notes.",
   requiredScopes: [],
   inputSchema: s.object(

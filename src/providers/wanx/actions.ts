@@ -73,6 +73,7 @@ const videoLifecycle = {
 export const wanxActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "generate_image",
+    operationType: "write",
     description: "Generate or edit images with the Wan Image 2.7 family.",
     inputSchema: s.actionInput(
       {
@@ -107,6 +108,7 @@ export const wanxActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_video_generation",
+    operationType: "write",
     description: "Submit a unified asynchronous Wan 3.0 video generation task.",
     followUpActions: [videoLifecycle.statusActionId],
     asyncLifecycle: videoLifecycle,
@@ -142,6 +144,7 @@ export const wanxActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_video_generation",
+    operationType: "read",
     description: "Retrieve a Wan 3.0 video task state and output.",
     asyncLifecycle: videoLifecycle,
     inputSchema: s.actionInput({ taskId: taskIdSchema }, ["taskId"], "A Wan 3.0 task lookup."),

@@ -17,6 +17,7 @@ const agencySchema = s.object("A normalized Check agency.", {
 export const checkActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "validate_address",
+    operationType: "read",
     description: "Validate a US address using Check's address validation endpoint.",
     inputSchema: s.actionInput(
       {
@@ -36,6 +37,7 @@ export const checkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_agencies",
+    operationType: "read",
     description: "List Check tax agencies with optional ID, jurisdiction, label, and page size filters.",
     inputSchema: s.object(
       "Input parameters for listing Check agencies.",
@@ -65,6 +67,7 @@ export const checkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_agency",
+    operationType: "read",
     description: "Get one Check tax agency by ID.",
     inputSchema: s.actionInput(
       {

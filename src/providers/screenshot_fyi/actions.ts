@@ -10,6 +10,7 @@ const positiveIntegerSchema = (description: string) => s.integer(description, { 
 export const screenshotFyiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "take_screenshot",
+    operationType: "read",
     description: "Capture a website screenshot with screenshot.fyi and return the generated URL.",
     inputSchema: s.object(
       "The input payload for capturing a website screenshot with screenshot.fyi.",

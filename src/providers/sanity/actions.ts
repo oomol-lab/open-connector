@@ -17,6 +17,7 @@ const mutationSchema = s.looseRequiredObject(
 export const sanityActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_documents",
+    operationType: "read",
     description: "Run a GROQ query against a Sanity Content Lake dataset.",
     inputSchema: s.object(
       "A GROQ query and optional parameters for a Sanity dataset.",
@@ -47,6 +48,7 @@ export const sanityActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_documents",
+    operationType: "read",
     description: "Retrieve the latest Sanity documents by ID while bypassing the query cache.",
     inputSchema: s.object(
       "Dataset and document identifiers for a direct Sanity document read.",
@@ -69,6 +71,7 @@ export const sanityActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "mutate_documents",
+    operationType: "destructive",
     description: "Execute an atomic transaction of Sanity document mutations.",
     inputSchema: s.object(
       "A Sanity dataset, mutation transaction, and response options.",

@@ -44,6 +44,7 @@ export function createFeishuContactActions(input: FeishuContactActionOptions): r
   const actions: ActionDefinition[] = [
     defineProviderAction(input.service, {
       name: "get_user",
+      operationType: "read",
       description: "Get a Feishu user profile. User identity may omit userId to return the authenticated user.",
       requiredScopes: getUserPermissions,
       providerPermissions: getUserPermissions,
@@ -64,6 +65,7 @@ export function createFeishuContactActions(input: FeishuContactActionOptions): r
     }),
     defineProviderAction(input.service, {
       name: "list_departments",
+      operationType: "read",
       description: "List child departments below a Feishu department visible to the app.",
       requiredScopes: directoryPermissions,
       providerPermissions: directoryPermissions,
@@ -85,6 +87,7 @@ export function createFeishuContactActions(input: FeishuContactActionOptions): r
     }),
     defineProviderAction(input.service, {
       name: "list_department_users",
+      operationType: "read",
       description: "List users in a Feishu department visible to the app.",
       requiredScopes: directoryPermissions,
       providerPermissions: directoryPermissions,
@@ -108,6 +111,7 @@ export function createFeishuContactActions(input: FeishuContactActionOptions): r
     actions.push(
       defineProviderAction(input.service, {
         name: "search_users",
+        operationType: "read",
         description: "Search Feishu users by keyword, open_id list, or relationship filters using user identity.",
         requiredScopes: ["contact:user:search"],
         providerPermissions: ["contact:user:search"],

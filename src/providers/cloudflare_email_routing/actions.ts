@@ -106,6 +106,7 @@ const listRulesInput: JsonSchema = {
 export const cloudflareEmailRoutingActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_routing_rules",
+    operationType: "read",
     description: "List Cloudflare Email Routing rules for a zone or account.",
     requiredScopes: [rulesRead],
     providerPermissions: [rulesRead],
@@ -118,6 +119,7 @@ export const cloudflareEmailRoutingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_routing_rule",
+    operationType: "write",
     description:
       "Create a Cloudflare Email Routing rule in a zone. Forward actions require verified destination addresses.",
     requiredScopes: [rulesWrite],
@@ -127,6 +129,7 @@ export const cloudflareEmailRoutingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_routing_rule",
+    operationType: "destructive",
     description: "Replace a Cloudflare Email Routing rule in a zone.",
     requiredScopes: [rulesWrite],
     providerPermissions: [rulesWrite],
@@ -135,6 +138,7 @@ export const cloudflareEmailRoutingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_routing_rule",
+    operationType: "destructive",
     description: "Delete a Cloudflare Email Routing rule from a zone.",
     requiredScopes: [rulesWrite],
     providerPermissions: [rulesWrite],
@@ -150,6 +154,7 @@ export const cloudflareEmailRoutingActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_destination_addresses",
+    operationType: "read",
     description:
       "List Cloudflare Email Routing destination addresses. Use addresses with a non-null verified timestamp for forward actions.",
     requiredScopes: [addressesRead],

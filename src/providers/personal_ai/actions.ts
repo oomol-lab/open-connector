@@ -71,6 +71,7 @@ const conversationInputFields = {
 export const personalAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send a message to a Personal AI persona and receive a response.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -90,6 +91,7 @@ export const personalAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_instruction",
+    operationType: "write",
     description: "Send a chatgpt or search instruction to a Personal AI persona.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -105,6 +107,7 @@ export const personalAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upload_memory",
+    operationType: "write",
     description: "Upload one plain text memory to a Personal AI persona memory stack.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -123,6 +126,7 @@ export const personalAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upload_text_document",
+    operationType: "write",
     description: "Upload a text document to a Personal AI persona memory library.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -142,6 +146,7 @@ export const personalAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upload_url",
+    operationType: "write",
     description: "Upload public URL content to a Personal AI persona memory library.",
     requiredScopes: [],
     inputSchema: s.object(

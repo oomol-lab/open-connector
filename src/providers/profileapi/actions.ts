@@ -17,6 +17,7 @@ const outputSchema = s.object("The profileAPI reverse lookup response.", { data 
 export const profileapiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "reverse_lookup_email",
+    operationType: "read",
     description: "Resolve a profileAPI person identifier and basic profile link from one email address.",
     requiredScopes: [],
     inputSchema: s.object("The email reverse lookup request.", {
@@ -26,6 +27,7 @@ export const profileapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reverse_lookup_phone",
+    operationType: "read",
     description: "Resolve a profileAPI person identifier and basic profile link from one E.164 phone number.",
     requiredScopes: [],
     inputSchema: s.object("The phone reverse lookup request.", {

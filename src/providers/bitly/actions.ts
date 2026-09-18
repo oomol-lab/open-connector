@@ -79,6 +79,7 @@ updateBitlinkInputSchema.anyOf = ["title", "archived", "tags", "longUrl", "expir
 export const bitlyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get the authenticated Bitly user details.",
     requiredScopes: [],
     inputSchema: s.object("No input is required.", {}),
@@ -91,6 +92,7 @@ export const bitlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List Bitly groups available to the authenticated user.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -109,6 +111,7 @@ export const bitlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_group",
+    operationType: "read",
     description: "Get details for a Bitly group.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -127,6 +130,7 @@ export const bitlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "shorten_link",
+    operationType: "write",
     description: "Create a short Bitly link for a destination URL.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -148,6 +152,7 @@ export const bitlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_bitlink",
+    operationType: "read",
     description: "Get details for an existing Bitly Bitlink.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -166,6 +171,7 @@ export const bitlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_bitlink",
+    operationType: "write",
     description: "Update editable fields on an existing Bitly Bitlink.",
     requiredScopes: [],
     inputSchema: updateBitlinkInputSchema,

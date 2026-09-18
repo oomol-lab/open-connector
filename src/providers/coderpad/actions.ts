@@ -73,6 +73,7 @@ const statusOutputFields = {
 export const coderpadActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_pads",
+    operationType: "read",
     description: "List interview pads owned by the authenticated CoderPad user.",
     requiredScopes: [],
     inputSchema: s.object("Pagination and sorting options for listing pads.", paginationFields, {
@@ -92,6 +93,7 @@ export const coderpadActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_pad",
+    operationType: "read",
     description: "Retrieve current details for one CoderPad interview pad.",
     requiredScopes: [],
     inputSchema: s.object("The pad to retrieve.", {
@@ -101,6 +103,7 @@ export const coderpadActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_pad",
+    operationType: "write",
     description: "Create a CoderPad interview pad with optional initial content and notes.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -117,6 +120,7 @@ export const coderpadActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pad_events",
+    operationType: "read",
     description: "List recorded participant and execution events for a CoderPad interview pad.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -158,6 +162,7 @@ export const coderpadActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_questions",
+    operationType: "read",
     description: "List interview questions owned by the authenticated CoderPad user.",
     requiredScopes: [],
     inputSchema: s.object("Pagination and sorting options for listing questions.", paginationFields, {
@@ -177,6 +182,7 @@ export const coderpadActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_question",
+    operationType: "read",
     description: "Retrieve one CoderPad interview question by its numeric identifier.",
     requiredScopes: [],
     inputSchema: s.object("The question to retrieve.", {
@@ -186,6 +192,7 @@ export const coderpadActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_organization",
+    operationType: "read",
     description: "Retrieve profile, users, teams, and sign-on settings for the CoderPad organization.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to retrieve the organization.", {}),
@@ -207,6 +214,7 @@ export const coderpadActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_organization_stats",
+    operationType: "read",
     description: "Retrieve CoderPad pad usage statistics for an optional time range.",
     requiredScopes: [],
     inputSchema: s.object(

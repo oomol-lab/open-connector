@@ -82,6 +82,7 @@ const resultSchema = s.looseRequiredObject(
 export const duneActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_queries",
+    operationType: "read",
     description: "List queries owned by the Dune account associated with the API key.",
     requiredScopes: ["Read"],
     inputSchema: s.object(
@@ -110,6 +111,7 @@ export const duneActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_query",
+    operationType: "read",
     description: "Get SQL, parameters, ownership, and state for a Dune query.",
     requiredScopes: ["Read"],
     inputSchema: s.requiredObject("Dune query lookup.", { queryId }),
@@ -127,6 +129,7 @@ export const duneActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "execute_query",
+    operationType: "write",
     description: "Execute a saved Dune query and return an execution ID for status polling and result retrieval.",
     requiredScopes: ["Read"],
     inputSchema: s.object(
@@ -154,6 +157,7 @@ export const duneActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_latest_query_result",
+    operationType: "read",
     description: "Get the latest stored JSON result for a Dune query without starting a new execution.",
     requiredScopes: ["Read"],
     inputSchema: s.object(
@@ -167,6 +171,7 @@ export const duneActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_execution_status",
+    operationType: "read",
     description: "Get the current state and metadata for a Dune query execution.",
     requiredScopes: ["Read"],
     inputSchema: s.requiredObject("Dune execution status request.", { executionId }),
@@ -195,6 +200,7 @@ export const duneActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_execution_result",
+    operationType: "read",
     description: "Get the JSON result and metadata for a Dune execution.",
     requiredScopes: ["Read"],
     inputSchema: s.object(

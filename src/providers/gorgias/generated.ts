@@ -1,7 +1,8 @@
-import type { JsonSchema } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 export interface GorgiasGeneratedActionSchema {
   name: string;
+  readonly operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   providerPermissions: string[];
@@ -12,6 +13,7 @@ export interface GorgiasGeneratedActionSchema {
 export const gorgiasGeneratedActionSchemas: GorgiasGeneratedActionSchema[] = [
   {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve the current Gorgias helpdesk account.",
     requiredScopes: [],
     providerPermissions: [],
@@ -54,6 +56,7 @@ export const gorgiasGeneratedActionSchemas: GorgiasGeneratedActionSchema[] = [
   },
   {
     name: "list_users",
+    operationType: "read",
     description: "List Gorgias users with documented filters and ordering.",
     requiredScopes: [],
     providerPermissions: [],
@@ -167,6 +170,7 @@ export const gorgiasGeneratedActionSchemas: GorgiasGeneratedActionSchema[] = [
   },
   {
     name: "list_customers",
+    operationType: "read",
     description: "List Gorgias customers with cursor pagination and lookup filters.",
     requiredScopes: [],
     providerPermissions: [],
@@ -269,6 +273,7 @@ export const gorgiasGeneratedActionSchemas: GorgiasGeneratedActionSchema[] = [
   },
   {
     name: "list_tickets",
+    operationType: "read",
     description: "List Gorgias tickets with cursor pagination and common filters.",
     requiredScopes: [],
     providerPermissions: [],
@@ -439,6 +444,7 @@ export const gorgiasGeneratedActionSchemas: GorgiasGeneratedActionSchema[] = [
   },
   {
     name: "get_ticket",
+    operationType: "read",
     description: "Retrieve one Gorgias ticket by identifier.",
     requiredScopes: [],
     providerPermissions: [],
@@ -544,6 +550,7 @@ export const gorgiasGeneratedActionSchemas: GorgiasGeneratedActionSchema[] = [
   },
   {
     name: "list_tags",
+    operationType: "read",
     description: "List Gorgias tags with cursor pagination, search, and ordering.",
     requiredScopes: [],
     providerPermissions: [],

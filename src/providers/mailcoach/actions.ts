@@ -315,6 +315,7 @@ const successOutputSchema = s.requiredObject("Successful Mailcoach no-content op
 
 const listEmailListsAction = defineProviderAction(service, {
   name: "list_email_lists",
+  operationType: "read",
   description: "List email lists available to the connected Mailcoach API token.",
   requiredScopes: [],
   inputSchema: listEmailListsInputSchema,
@@ -323,6 +324,7 @@ const listEmailListsAction = defineProviderAction(service, {
 
 const getEmailListAction = defineProviderAction(service, {
   name: "get_email_list",
+  operationType: "read",
   description: "Get one Mailcoach email list by UUID.",
   requiredScopes: [],
   inputSchema: emailListUuidInputSchema,
@@ -331,6 +333,7 @@ const getEmailListAction = defineProviderAction(service, {
 
 const createEmailListAction = defineProviderAction(service, {
   name: "create_email_list",
+  operationType: "write",
   description: "Create a Mailcoach email list.",
   requiredScopes: [],
   inputSchema: emailListWriteSchema,
@@ -339,6 +342,7 @@ const createEmailListAction = defineProviderAction(service, {
 
 const updateEmailListAction = defineProviderAction(service, {
   name: "update_email_list",
+  operationType: "write",
   description: "Update a Mailcoach email list by UUID.",
   requiredScopes: [],
   inputSchema: updateEmailListInputSchema,
@@ -347,6 +351,7 @@ const updateEmailListAction = defineProviderAction(service, {
 
 const deleteEmailListAction = defineProviderAction(service, {
   name: "delete_email_list",
+  operationType: "destructive",
   description: "Delete a Mailcoach email list by UUID.",
   requiredScopes: [],
   inputSchema: emailListUuidInputSchema,
@@ -355,6 +360,7 @@ const deleteEmailListAction = defineProviderAction(service, {
 
 const listSubscribersAction = defineProviderAction(service, {
   name: "list_subscribers",
+  operationType: "read",
   description: "List subscribers in a Mailcoach email list.",
   requiredScopes: [],
   inputSchema: listSubscribersInputSchema,
@@ -363,6 +369,7 @@ const listSubscribersAction = defineProviderAction(service, {
 
 const getSubscriberAction = defineProviderAction(service, {
   name: "get_subscriber",
+  operationType: "read",
   description: "Get one Mailcoach subscriber by UUID.",
   requiredScopes: [],
   inputSchema: subscriberUuidInputSchema,
@@ -371,6 +378,7 @@ const getSubscriberAction = defineProviderAction(service, {
 
 const subscribeAction = defineProviderAction(service, {
   name: "subscribe",
+  operationType: "write",
   description: "Subscribe an email address to a Mailcoach email list.",
   requiredScopes: [],
   inputSchema: subscribeInputSchema,
@@ -379,6 +387,7 @@ const subscribeAction = defineProviderAction(service, {
 
 const updateSubscriberAction = defineProviderAction(service, {
   name: "update_subscriber",
+  operationType: "write",
   description: "Update a Mailcoach subscriber by UUID.",
   requiredScopes: [],
   inputSchema: updateSubscriberInputSchema,
@@ -387,6 +396,7 @@ const updateSubscriberAction = defineProviderAction(service, {
 
 const deleteSubscriberAction = defineProviderAction(service, {
   name: "delete_subscriber",
+  operationType: "destructive",
   description: "Permanently delete a Mailcoach subscriber by UUID.",
   requiredScopes: [],
   inputSchema: subscriberUuidInputSchema,
@@ -395,6 +405,7 @@ const deleteSubscriberAction = defineProviderAction(service, {
 
 const confirmSubscriberAction = defineProviderAction(service, {
   name: "confirm_subscriber",
+  operationType: "write",
   description: "Confirm a pending Mailcoach subscriber by UUID.",
   requiredScopes: [],
   inputSchema: subscriberUuidInputSchema,
@@ -403,6 +414,7 @@ const confirmSubscriberAction = defineProviderAction(service, {
 
 const unsubscribeSubscriberAction = defineProviderAction(service, {
   name: "unsubscribe_subscriber",
+  operationType: "destructive",
   description: "Unsubscribe a Mailcoach subscriber by UUID.",
   requiredScopes: [],
   inputSchema: subscriberUuidInputSchema,
@@ -411,6 +423,7 @@ const unsubscribeSubscriberAction = defineProviderAction(service, {
 
 const resendSubscriberConfirmationAction = defineProviderAction(service, {
   name: "resend_subscriber_confirmation",
+  operationType: "write",
   description: "Resend the confirmation email for a Mailcoach subscriber by UUID.",
   requiredScopes: [],
   inputSchema: subscriberUuidInputSchema,

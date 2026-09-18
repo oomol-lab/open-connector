@@ -9,11 +9,12 @@ const noInput = s.object("No input parameters are required for this action.", {}
 
 function action(
   name: string,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): ActionDefinition {
-  return defineProviderAction(service, { name, description, inputSchema, outputSchema });
+  return defineProviderAction(service, { name, operationType, description, inputSchema, outputSchema });
 }
 
 const analysisInput = s.looseObject(
@@ -47,6 +48,7 @@ const analysisOutput = s.looseObject(
 export const textrazorActions: ActionDefinition[] = [
   action(
     "account_info",
+    "read",
     "Read TextRazor account quota and plan information.",
     noInput,
     s.looseObject(
@@ -58,9 +60,16 @@ export const textrazorActions: ActionDefinition[] = [
       { description: "The TextRazor account summary." },
     ),
   ),
-  action("analyze_content", "Analyze text with one or more TextRazor extractors.", analysisInput, analysisOutput),
+  action(
+    "analyze_content",
+    "read",
+    "Analyze text with one or more TextRazor extractors.",
+    analysisInput,
+    analysisOutput,
+  ),
   action(
     "extract_entities",
+    "read",
     "Extract entities from text with TextRazor.",
     s.looseObject(
       {
@@ -76,6 +85,7 @@ export const textrazorActions: ActionDefinition[] = [
   ),
   action(
     "classify_text",
+    "read",
     "Classify text with TextRazor classifiers.",
     s.looseObject(
       {
@@ -88,6 +98,7 @@ export const textrazorActions: ActionDefinition[] = [
   ),
   action(
     "custom_classifier_manager",
+    "destructive",
     "Create, update, inspect, or delete a TextRazor custom classifier.",
     s.looseObject(
       {
@@ -106,6 +117,7 @@ export const textrazorActions: ActionDefinition[] = [
   ),
   action(
     "dictionary_manager",
+    "destructive",
     "Create, inspect, update, or delete TextRazor custom entity dictionaries.",
     s.looseObject(
       {

@@ -93,6 +93,7 @@ const usageSchema = s.looseRequiredObject("The ZenRows API usage details.", {
 export const zenrowsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "fetch_html",
+    operationType: "read",
     description: "Fetch raw HTML from one public URL with optional JavaScript rendering and proxy controls.",
     inputSchema: s.object(
       "The input payload for fetching raw HTML with ZenRows.",
@@ -112,6 +113,7 @@ export const zenrowsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "fetch_plaintext",
+    operationType: "read",
     description: "Fetch plain text extracted from one public URL with ZenRows.",
     inputSchema: s.object("The input payload for fetching plain text with ZenRows.", commonScrapeProperties, {
       optional: optionalScrapeFields,
@@ -124,6 +126,7 @@ export const zenrowsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "extract_css",
+    operationType: "read",
     description: "Extract structured values from one public URL with ZenRows CSS selectors.",
     inputSchema: s.object(
       "The input payload for extracting CSS selector values with ZenRows.",
@@ -143,6 +146,7 @@ export const zenrowsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_usage",
+    operationType: "read",
     description: "Retrieve usage and plan details for the connected ZenRows API key.",
     inputSchema: s.object("The input payload for retrieving ZenRows usage details.", {}),
     outputSchema: s.object("The response returned when retrieving ZenRows usage details.", {

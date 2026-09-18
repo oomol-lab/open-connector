@@ -3,6 +3,7 @@ import type { UnifapiOperationDefinition } from "../operations.ts";
 export const eventsOperations: readonly UnifapiOperationDefinition[] = [
   {
     name: "search_events",
+    operationType: "read",
     operationId: "postEventsSearch",
     description: "Search Events.",
     method: "POST",

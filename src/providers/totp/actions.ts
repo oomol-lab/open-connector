@@ -8,6 +8,7 @@ const service = "totp";
 export const totpActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "generate_code",
+    operationType: "read",
     description: "Generate the current six-digit TOTP code for the configured website account.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for generating the current TOTP code.", {}),

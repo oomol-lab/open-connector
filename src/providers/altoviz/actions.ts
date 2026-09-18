@@ -94,12 +94,14 @@ const createCustomerInputSchema = s.object(
 export const altovizActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List Altoviz customers with full-text search, ordering, and stable pagination metadata.",
     inputSchema: listCustomersInputSchema,
     outputSchema: customerListOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Retrieve one Altoviz customer by its numeric customer ID.",
     inputSchema: s.object("The Altoviz customer to retrieve.", {
       customerId: s.positiveInteger("The numeric Altoviz customer ID."),
@@ -108,6 +110,7 @@ export const altovizActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_customers",
+    operationType: "read",
     description: "Find Altoviz customers by email, external-system ID, or customer number.",
     inputSchema: findCustomersInputSchema,
     outputSchema: s.object("Customers matching the supplied criteria.", {
@@ -116,6 +119,7 @@ export const altovizActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_customer",
+    operationType: "write",
     description: "Create a business, consumer, or government customer in Altoviz.",
     inputSchema: createCustomerInputSchema,
     outputSchema: s.object("The customer created by Altoviz.", { customer: customerSchema }),

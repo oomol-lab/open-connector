@@ -11,6 +11,7 @@ const sourceId = s.anyOf("The source ID returned by PingBell.", [
 export const pingbellActions: ActionDefinition[] = [
   defineProviderAction("pingbell", {
     name: "list_sources",
+    operationType: "read",
     description: "List the sources available to the connected PingBell account.",
     inputSchema: s.object("Input for listing PingBell sources.", {}),
     outputSchema: s.object("The available PingBell sources.", {
@@ -25,6 +26,7 @@ export const pingbellActions: ActionDefinition[] = [
   }),
   defineProviderAction("pingbell", {
     name: "ring_source",
+    operationType: "write",
     description: "Ring a PingBell source so its counter and subscribed devices update.",
     inputSchema: s.object(
       "Input for sending a PingBell notification.",

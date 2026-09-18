@@ -27,6 +27,7 @@ const databaseNameSchema = s.nonEmptyString("The Turso database name.");
 export const tursoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_organizations",
+    operationType: "read",
     description: "List organizations visible to the current Turso Platform API token.",
     requiredScopes: [],
     inputSchema: s.actionInput({}, [], "The input payload for listing Turso organizations."),
@@ -37,6 +38,7 @@ export const tursoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_organization",
+    operationType: "read",
     description: "Retrieve one Turso organization by slug.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -51,6 +53,7 @@ export const tursoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_locations",
+    operationType: "read",
     description: "List available Turso locations that can host groups.",
     requiredScopes: [],
     inputSchema: s.actionInput({}, [], "The input payload for listing Turso locations."),
@@ -61,6 +64,7 @@ export const tursoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List Turso groups for one organization.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -75,6 +79,7 @@ export const tursoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_group",
+    operationType: "read",
     description: "Retrieve one Turso group by name within an organization.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -86,6 +91,7 @@ export const tursoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_group",
+    operationType: "write",
     description: "Create a Turso group in one organization with a primary location.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -108,6 +114,7 @@ export const tursoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_databases",
+    operationType: "read",
     description: "List Turso databases for one organization.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -122,6 +129,7 @@ export const tursoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_database",
+    operationType: "read",
     description: "Retrieve one Turso database by name within an organization.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -133,6 +141,7 @@ export const tursoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_database",
+    operationType: "write",
     description: "Create a Turso database in one organization and group.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -148,6 +157,7 @@ export const tursoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_database",
+    operationType: "destructive",
     description: "Delete a Turso database from one organization.",
     requiredScopes: [],
     inputSchema: s.actionInput(

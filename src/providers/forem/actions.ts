@@ -192,6 +192,7 @@ const listCommentsInputSchema = {
 export const foremActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Retrieve the Forem user associated with the connected API key.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving the current Forem user.", {}),
@@ -202,6 +203,7 @@ export const foremActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_articles",
+    operationType: "read",
     description: "List published Forem articles with optional filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -224,6 +226,7 @@ export const foremActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_my_articles",
+    operationType: "read",
     description: "List articles owned by the authenticated Forem user.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -243,6 +246,7 @@ export const foremActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_article",
+    operationType: "read",
     description: "Retrieve one published Forem article by numeric ID.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving a Forem article by ID.", {
@@ -252,6 +256,7 @@ export const foremActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_article_by_path",
+    operationType: "read",
     description: "Retrieve one published Forem article by username and slug.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving a Forem article by path.", {
@@ -262,6 +267,7 @@ export const foremActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_article",
+    operationType: "write",
     description: "Create a Forem article for the authenticated user.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for creating a Forem article.", articleWriteFields, {
@@ -271,6 +277,7 @@ export const foremActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_article",
+    operationType: "write",
     description: "Update an existing Forem article by numeric ID.",
     requiredScopes: [],
     inputSchema: updateArticleInputSchema,
@@ -278,6 +285,7 @@ export const foremActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_comments",
+    operationType: "read",
     description: "List Forem comments for an article or podcast episode as threaded conversations.",
     requiredScopes: [],
     inputSchema: listCommentsInputSchema,
@@ -288,6 +296,7 @@ export const foremActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_comment",
+    operationType: "read",
     description: "Retrieve one Forem comment thread by numeric ID.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving a Forem comment.", {
@@ -300,6 +309,7 @@ export const foremActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List Forem tags ordered by popularity.",
     requiredScopes: [],
     inputSchema: s.object(

@@ -95,6 +95,7 @@ const filterInputFields = {
 export const qdrantActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_collections",
+    operationType: "read",
     description: "List the Qdrant collections visible to the authenticated API key.",
     inputSchema: s.actionInput({}, [], "Input parameters for listing Qdrant collections."),
     outputSchema: s.actionOutput(
@@ -110,6 +111,7 @@ export const qdrantActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_collection",
+    operationType: "read",
     description: "Retrieve configuration and status information for one Qdrant collection.",
     inputSchema: s.actionInput(
       { collectionName: collectionNameSchema },
@@ -121,6 +123,7 @@ export const qdrantActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_collection",
+    operationType: "write",
     description: "Create a Qdrant Cloud collection with one unnamed dense vector configuration.",
     inputSchema: s.actionInput(
       {
@@ -141,6 +144,7 @@ export const qdrantActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_points",
+    operationType: "destructive",
     description: "Insert or replace dense-vector points in a Qdrant collection and wait for the write to commit.",
     inputSchema: s.actionInput(
       {
@@ -165,6 +169,7 @@ export const qdrantActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_point",
+    operationType: "read",
     description: "Retrieve one point by numeric ID or UUID from a Qdrant collection.",
     inputSchema: s.actionInput(
       { collectionName: collectionNameSchema, id: pointIdSchema },
@@ -175,6 +180,7 @@ export const qdrantActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_points",
+    operationType: "read",
     description: "Search a dense-vector Qdrant collection with an optional payload filter.",
     inputSchema: s.actionInput(
       {
@@ -195,6 +201,7 @@ export const qdrantActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "scroll_points",
+    operationType: "read",
     description: "Read one page of points from a Qdrant collection with an optional payload filter.",
     inputSchema: s.actionInput(
       { collectionName: collectionNameSchema, offset: pointIdSchema, ...filterInputFields },

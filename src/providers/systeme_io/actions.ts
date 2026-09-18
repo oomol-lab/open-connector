@@ -31,9 +31,14 @@ export type SystemeIoActionName =
   | "list_subscriptions"
   | "cancel_subscription";
 
-function action(name: SystemeIoActionName, description: string): ActionDefinition {
+function action(
+  name: SystemeIoActionName,
+  operationType: ActionDefinition["operationType"],
+  description: string,
+): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     inputSchema: s.looseObject(`Input parameters for ${name}.`),
     outputSchema: s.looseObject(`Systeme.io response for ${name}.`),
@@ -41,28 +46,28 @@ function action(name: SystemeIoActionName, description: string): ActionDefinitio
 }
 
 export const systemeIoActions: ActionDefinition[] = [
-  action("list_contacts", "List Systeme.io contacts."),
-  action("get_contact", "Get a Systeme.io contact."),
-  action("create_contact", "Create a Systeme.io contact."),
-  action("update_contact", "Update a Systeme.io contact."),
-  action("delete_contact", "Delete a Systeme.io contact."),
-  action("attach_contact_tag", "Attach a tag to a Systeme.io contact."),
-  action("detach_contact_tag", "Detach a tag from a Systeme.io contact."),
-  action("list_contact_fields", "List Systeme.io contact fields."),
-  action("list_tags", "List Systeme.io tags."),
-  action("get_tag", "Get a Systeme.io tag."),
-  action("create_tag", "Create a Systeme.io tag."),
-  action("delete_tag", "Delete a Systeme.io tag."),
-  action("update_tag", "Update a Systeme.io tag."),
-  action("list_webhooks", "List Systeme.io webhooks."),
-  action("get_webhook", "Get a Systeme.io webhook."),
-  action("create_webhook", "Create a Systeme.io webhook."),
-  action("update_webhook", "Update a Systeme.io webhook."),
-  action("delete_webhook", "Delete a Systeme.io webhook."),
-  action("list_courses", "List Systeme.io courses."),
-  action("list_enrollments", "List course enrollments in Systeme.io."),
-  action("create_enrollment", "Create a course enrollment in Systeme.io."),
-  action("delete_enrollment", "Delete a course enrollment in Systeme.io."),
-  action("list_subscriptions", "List Systeme.io subscriptions."),
-  action("cancel_subscription", "Cancel a Systeme.io subscription."),
+  action("list_contacts", "read", "List Systeme.io contacts."),
+  action("get_contact", "read", "Get a Systeme.io contact."),
+  action("create_contact", "write", "Create a Systeme.io contact."),
+  action("update_contact", "write", "Update a Systeme.io contact."),
+  action("delete_contact", "destructive", "Delete a Systeme.io contact."),
+  action("attach_contact_tag", "write", "Attach a tag to a Systeme.io contact."),
+  action("detach_contact_tag", "destructive", "Detach a tag from a Systeme.io contact."),
+  action("list_contact_fields", "read", "List Systeme.io contact fields."),
+  action("list_tags", "read", "List Systeme.io tags."),
+  action("get_tag", "read", "Get a Systeme.io tag."),
+  action("create_tag", "write", "Create a Systeme.io tag."),
+  action("delete_tag", "destructive", "Delete a Systeme.io tag."),
+  action("update_tag", "write", "Update a Systeme.io tag."),
+  action("list_webhooks", "read", "List Systeme.io webhooks."),
+  action("get_webhook", "read", "Get a Systeme.io webhook."),
+  action("create_webhook", "write", "Create a Systeme.io webhook."),
+  action("update_webhook", "write", "Update a Systeme.io webhook."),
+  action("delete_webhook", "destructive", "Delete a Systeme.io webhook."),
+  action("list_courses", "read", "List Systeme.io courses."),
+  action("list_enrollments", "read", "List course enrollments in Systeme.io."),
+  action("create_enrollment", "write", "Create a course enrollment in Systeme.io."),
+  action("delete_enrollment", "destructive", "Delete a course enrollment in Systeme.io."),
+  action("list_subscriptions", "read", "List Systeme.io subscriptions."),
+  action("cancel_subscription", "destructive", "Cancel a Systeme.io subscription."),
 ];

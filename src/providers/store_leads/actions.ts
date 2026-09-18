@@ -35,6 +35,7 @@ const technologySchema = s.looseObject("A Store Leads technology object.", {
 export const storeLeadsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_domain",
+    operationType: "read",
     description: "Retrieve Store Leads details for one ecommerce domain name.",
     inputSchema: s.object(
       {
@@ -51,6 +52,7 @@ export const storeLeadsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_domains",
+    operationType: "read",
     description: "List Store Leads domains with optional advanced search and cursor pagination.",
     inputSchema: s.object(
       {
@@ -71,6 +73,7 @@ export const storeLeadsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_app",
+    operationType: "read",
     description: "Retrieve Store Leads details for one ecommerce app.",
     inputSchema: s.object(
       {
@@ -83,6 +86,7 @@ export const storeLeadsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_apps",
+    operationType: "read",
     description: "List Store Leads ecommerce apps with optional filters and page pagination.",
     inputSchema: s.object(
       {
@@ -108,6 +112,7 @@ export const storeLeadsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_technology",
+    operationType: "read",
     description: "Retrieve Store Leads details for one detected technology.",
     inputSchema: s.object(
       {
@@ -123,6 +128,7 @@ export const storeLeadsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_technologies",
+    operationType: "read",
     description: "List Store Leads technologies with optional search and page pagination.",
     inputSchema: s.object(
       {

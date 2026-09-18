@@ -36,7 +36,7 @@ function action(
   inputSchema: ActionDefinition["inputSchema"],
   outputSchema: ActionDefinition["outputSchema"],
 ): ActionDefinition {
-  return defineProviderAction(service, { name, description, inputSchema, outputSchema });
+  return defineProviderAction(service, { name, operationType: "read", description, inputSchema, outputSchema });
 }
 
 export const baiduMapsActions: ActionDefinition[] = [

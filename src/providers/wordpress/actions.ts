@@ -256,6 +256,7 @@ const commentSchema = s.looseRequiredObject("A WordPress comment object.", {
 export const wordpressActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the authenticated WordPress user.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for getting the authenticated WordPress user.", {}),
@@ -265,6 +266,7 @@ export const wordpressActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_posts",
+    operationType: "read",
     description: "List WordPress posts with optional filters and pagination.",
     requiredScopes: [],
     inputSchema: postListInputSchema,
@@ -275,6 +277,7 @@ export const wordpressActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_post",
+    operationType: "read",
     description: "Get a WordPress post by ID.",
     requiredScopes: [],
     inputSchema: getInputSchema,
@@ -282,6 +285,7 @@ export const wordpressActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_post",
+    operationType: "write",
     description: "Create a WordPress post.",
     requiredScopes: [],
     inputSchema: postInputSchema,
@@ -289,6 +293,7 @@ export const wordpressActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_post",
+    operationType: "write",
     description: "Update a WordPress post by ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -302,6 +307,7 @@ export const wordpressActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_post",
+    operationType: "destructive",
     description: "Delete a WordPress post by ID.",
     requiredScopes: [],
     inputSchema: deleteInputSchema,
@@ -309,6 +315,7 @@ export const wordpressActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pages",
+    operationType: "read",
     description: "List WordPress pages with optional filters and pagination.",
     requiredScopes: [],
     inputSchema: pageListInputSchema,
@@ -319,6 +326,7 @@ export const wordpressActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_page",
+    operationType: "read",
     description: "Get a WordPress page by ID.",
     requiredScopes: [],
     inputSchema: getInputSchema,
@@ -326,6 +334,7 @@ export const wordpressActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_page",
+    operationType: "write",
     description: "Create a WordPress page.",
     requiredScopes: [],
     inputSchema: pageInputSchema,
@@ -333,6 +342,7 @@ export const wordpressActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_page",
+    operationType: "write",
     description: "Update a WordPress page by ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -346,6 +356,7 @@ export const wordpressActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_page",
+    operationType: "destructive",
     description: "Delete a WordPress page by ID.",
     requiredScopes: [],
     inputSchema: deleteInputSchema,
@@ -353,6 +364,7 @@ export const wordpressActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_categories",
+    operationType: "read",
     description: "List WordPress categories with optional filters and pagination.",
     requiredScopes: [],
     inputSchema: termListInputSchema,
@@ -363,6 +375,7 @@ export const wordpressActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_category",
+    operationType: "write",
     description: "Create a WordPress category.",
     requiredScopes: [],
     inputSchema: termInputSchema,
@@ -370,6 +383,7 @@ export const wordpressActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List WordPress tags with optional filters and pagination.",
     requiredScopes: [],
     inputSchema: termListInputSchema,
@@ -380,6 +394,7 @@ export const wordpressActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_tag",
+    operationType: "write",
     description: "Create a WordPress tag.",
     requiredScopes: [],
     inputSchema: termInputSchema,
@@ -387,6 +402,7 @@ export const wordpressActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_comments",
+    operationType: "read",
     description: "List WordPress comments with optional filters and pagination.",
     requiredScopes: [],
     inputSchema: commentListInputSchema,
@@ -397,6 +413,7 @@ export const wordpressActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_comment",
+    operationType: "write",
     description: "Update a WordPress comment by ID.",
     requiredScopes: [],
     inputSchema: commentUpdateInputSchema,
@@ -404,6 +421,7 @@ export const wordpressActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_comment",
+    operationType: "destructive",
     description: "Delete a WordPress comment by ID.",
     requiredScopes: [],
     inputSchema: deleteInputSchema,

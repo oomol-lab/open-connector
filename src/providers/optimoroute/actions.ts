@@ -211,18 +211,21 @@ const deleteOrdersOutputSchema = s.object("The normalized OptimoRoute delete_ord
 export const optimorouteActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_or_update_orders",
+    operationType: "write",
     description: "Create, update, merge, or sync one or more OptimoRoute orders in one request.",
     inputSchema: createOrUpdateOrdersInputSchema,
     outputSchema: createOrUpdateOrdersOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_orders",
+    operationType: "read",
     description: "Retrieve one or more OptimoRoute orders by orderNo or id.",
     inputSchema: getOrdersInputSchema,
     outputSchema: getOrdersOutputSchema,
   }),
   defineProviderAction(service, {
     name: "delete_orders",
+    operationType: "destructive",
     description: "Delete one or more OptimoRoute orders by orderNo or id.",
     inputSchema: deleteOrdersInputSchema,
     outputSchema: deleteOrdersOutputSchema,

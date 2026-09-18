@@ -29,6 +29,7 @@ const recordIdentityInputFields = {
 export const smartsuiteActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_solutions",
+    operationType: "read",
     description: "List the Solutions accessible in the connected SmartSuite workspace.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -38,6 +39,7 @@ export const smartsuiteActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tables",
+    operationType: "read",
     description: "List SmartSuite Tables, optionally limited to one Solution.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -53,6 +55,7 @@ export const smartsuiteActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_records",
+    operationType: "read",
     description: "List records in a SmartSuite Table with optional pagination, sorting, and filtering.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -80,6 +83,7 @@ export const smartsuiteActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_record",
+    operationType: "read",
     description: "Retrieve one record from a SmartSuite Table.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -96,6 +100,7 @@ export const smartsuiteActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_record",
+    operationType: "write",
     description: "Create a record in a SmartSuite Table using its field slugs.",
     requiredScopes: [],
     inputSchema: s.object("Defines the SmartSuite record to create.", {
@@ -108,6 +113,7 @@ export const smartsuiteActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_record",
+    operationType: "write",
     description: "Partially update fields on a SmartSuite record without clearing omitted fields.",
     requiredScopes: [],
     inputSchema: s.object("Defines the SmartSuite record fields to update.", {
@@ -120,6 +126,7 @@ export const smartsuiteActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_record",
+    operationType: "destructive",
     description: "Delete one record from a SmartSuite Table.",
     requiredScopes: [],
     inputSchema: s.object("Identifies the SmartSuite record to delete.", recordIdentityInputFields),

@@ -88,6 +88,7 @@ const getInputSchema = s.object(
 export const jumpcloudActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_system_users",
+    operationType: "read",
     description: "List JumpCloud system users through the v1 Systemusers API.",
     inputSchema: listInputSchema,
     outputSchema: s.object("Response returned when listing JumpCloud system users.", {
@@ -98,6 +99,7 @@ export const jumpcloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_system_user",
+    operationType: "read",
     description: "Get a JumpCloud system user by ID through the v1 Systemusers API.",
     inputSchema: getInputSchema,
     outputSchema: s.object("Response returned when reading a JumpCloud system user.", {
@@ -106,6 +108,7 @@ export const jumpcloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_systems",
+    operationType: "read",
     description: "List JumpCloud systems through the v1 Systems API.",
     inputSchema: listInputSchema,
     outputSchema: s.object("Response returned when listing JumpCloud systems.", {
@@ -116,6 +119,7 @@ export const jumpcloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_system",
+    operationType: "read",
     description: "Get a JumpCloud system by ID through the v1 Systems API.",
     inputSchema: getInputSchema,
     outputSchema: s.object("Response returned when reading a JumpCloud system.", {

@@ -176,6 +176,7 @@ const errorGroupOutputSchema = outputObject("A Raygun error group result.", {
 export const raygunActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_applications",
+    operationType: "read",
     description: "List Raygun applications available to the personal access token.",
     requiredScopes: [],
     inputSchema: listApplicationsInputSchema,
@@ -183,6 +184,7 @@ export const raygunActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_application",
+    operationType: "read",
     description: "Retrieve a Raygun application by identifier.",
     requiredScopes: [],
     inputSchema: getApplicationInputSchema,
@@ -190,6 +192,7 @@ export const raygunActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_deployments",
+    operationType: "read",
     description: "List deployments for a Raygun application.",
     requiredScopes: [],
     inputSchema: listDeploymentsInputSchema,
@@ -197,6 +200,7 @@ export const raygunActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_latest_deployment",
+    operationType: "read",
     description: "Retrieve the latest deployment for a Raygun application.",
     requiredScopes: [],
     inputSchema: inputObject("The input for retrieving the latest Raygun deployment.", {
@@ -206,6 +210,7 @@ export const raygunActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_deployment",
+    operationType: "read",
     description: "Retrieve a Raygun deployment by identifier.",
     requiredScopes: [],
     inputSchema: deploymentPathInputSchema,
@@ -213,6 +218,7 @@ export const raygunActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_deployment",
+    operationType: "write",
     description: "Create a deployment for a Raygun application.",
     requiredScopes: [],
     inputSchema: createDeploymentInputSchema,
@@ -220,6 +226,7 @@ export const raygunActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_deployment",
+    operationType: "write",
     description: "Update a Raygun deployment.",
     requiredScopes: [],
     inputSchema: updateDeploymentInputSchema,
@@ -227,6 +234,7 @@ export const raygunActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_deployment",
+    operationType: "destructive",
     description: "Delete a Raygun deployment.",
     requiredScopes: [],
     inputSchema: deploymentPathInputSchema,
@@ -234,6 +242,7 @@ export const raygunActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_error_groups",
+    operationType: "read",
     description: "List crash reporting error groups for a Raygun application.",
     requiredScopes: [],
     inputSchema: listErrorGroupsInputSchema,
@@ -241,6 +250,7 @@ export const raygunActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_error_group",
+    operationType: "read",
     description: "Retrieve a Raygun error group by identifier.",
     requiredScopes: [],
     inputSchema: getErrorGroupInputSchema,

@@ -153,6 +153,7 @@ export const sellerspaceToolNameByAction = {
 export const sellerspaceActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_stores",
+    operationType: "read",
     description:
       "List Amazon stores and marketplaces authorized in SellerSpace so their seller IDs and marketplace codes can be used in subsequent queries.",
     requiredScopes: [],
@@ -198,6 +199,7 @@ export const sellerspaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_ads",
+    operationType: "read",
     description:
       "Query SellerSpace Amazon advertising campaigns, ad groups, promoted products, keywords, targets, search terms, or negative targeting with filters and pagination.",
     requiredScopes: [],
@@ -250,6 +252,7 @@ export const sellerspaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_products",
+    operationType: "read",
     description:
       "Query SellerSpace product performance or long-term storage fee data across one or more Amazon store-marketplace stations.",
     requiredScopes: [],
@@ -318,6 +321,7 @@ export const sellerspaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_store_performance",
+    operationType: "read",
     description:
       "Query SellerSpace store or marketplace performance, including orders, revenue, profit, refunds, advertising spend, FBA fees, ROI, and ACoS.",
     requiredScopes: [],
@@ -352,6 +356,7 @@ export const sellerspaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "discover_fields",
+    operationType: "read",
     description:
       "Discover current SellerSpace fields for advanced selection, filtering, sorting, or output interpretation in a supported data domain.",
     requiredScopes: [],
@@ -370,6 +375,7 @@ export const sellerspaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ad_metric_history",
+    operationType: "read",
     description:
       "Get time-series or placement-level metrics for one SellerSpace advertising campaign, ad group, promoted product, keyword, target, or search term.",
     requiredScopes: [],
@@ -435,6 +441,7 @@ export const sellerspaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_fba_shipments",
+    operationType: "read",
     description:
       "List SellerSpace FBA inbound shipments with status, warehouse, quantities, and SKU-level receiving differences for one Amazon store and marketplace.",
     requiredScopes: [],
@@ -488,6 +495,7 @@ export const sellerspaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tools",
+    operationType: "read",
     description:
       "Discover SellerSpace tools approved by Connector for read-only dynamic calls, including their live input schemas and behavior annotations.",
     requiredScopes: [],
@@ -499,6 +507,7 @@ export const sellerspaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "call_tool",
+    operationType: "read",
     description:
       "Call an explicitly approved SellerSpace MCP read tool with JSON arguments after discovering its live schema. Write, export, and browser-task tools are unavailable through this action.",
     requiredScopes: [],

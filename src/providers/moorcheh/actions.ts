@@ -120,6 +120,7 @@ const searchOutputSchema = s.looseRequiredObject("The semantic search result fro
 export const moorchehActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_text_namespace",
+    operationType: "write",
     description: "Create a text namespace in Moorcheh for storing searchable documents.",
     inputSchema: s.actionInput(
       {
@@ -132,6 +133,7 @@ export const moorchehActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_namespaces",
+    operationType: "read",
     description: "List Moorcheh namespaces with their types, sizes, and creation times.",
     inputSchema: s.actionInput({}, [], "Input for listing Moorcheh namespaces."),
     outputSchema: s.actionOutput(
@@ -143,6 +145,7 @@ export const moorchehActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upload_text_documents",
+    operationType: "write",
     description: "Upload text documents and flat metadata to a Moorcheh text namespace.",
     inputSchema: s.actionInput(
       {
@@ -156,6 +159,7 @@ export const moorchehActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_documents",
+    operationType: "read",
     description: "Retrieve up to 100 Moorcheh text documents by identifier.",
     inputSchema: s.actionInput(
       {
@@ -169,6 +173,7 @@ export const moorchehActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "fetch_text_data",
+    operationType: "read",
     description: "Fetch one cursor-paginated page of text chunks from a Moorcheh namespace.",
     inputSchema: s.actionInput(
       {
@@ -186,6 +191,7 @@ export const moorchehActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_documents",
+    operationType: "destructive",
     description: "Permanently delete up to 1,000 documents from a Moorcheh text namespace.",
     inputSchema: s.actionInput(
       {
@@ -202,6 +208,7 @@ export const moorchehActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_text",
+    operationType: "read",
     description: "Search one or more Moorcheh text namespaces with a semantic text query.",
     inputSchema: s.actionInput(
       {

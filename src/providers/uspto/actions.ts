@@ -24,6 +24,7 @@ const xmlOutputSchema = (description: string) =>
 export const usptoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_trademark_case_status",
+    operationType: "read",
     description: "Get the official TSDR case status record for a trademark application serial number as XML.",
     requiredScopes: [],
     inputSchema: s.object("A USPTO trademark application selector.", {
@@ -33,6 +34,7 @@ export const usptoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_trademark_documents_metadata",
+    operationType: "read",
     description: "Get TSDR metadata for documents associated with a trademark application serial number.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -49,6 +51,7 @@ export const usptoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_trademark_case_last_update",
+    operationType: "read",
     description: "Get the latest recorded TSDR update dates for a trademark application serial number.",
     requiredScopes: [],
     inputSchema: s.object("A USPTO trademark application selector.", {

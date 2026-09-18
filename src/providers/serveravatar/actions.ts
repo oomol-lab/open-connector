@@ -92,6 +92,7 @@ function paginatedResourceSchema(description: string, itemDescription: string, i
 
 const listOrganizationsAction = defineProviderAction(service, {
   name: "list_organizations",
+  operationType: "read",
   description: "List the organizations available to the connected ServerAvatar API token.",
   inputSchema: s.object("No input is required to list ServerAvatar organizations.", {}),
   outputSchema: s.requiredObject("The ServerAvatar organization list.", {
@@ -101,6 +102,7 @@ const listOrganizationsAction = defineProviderAction(service, {
 
 const getOrganizationAction = defineProviderAction(service, {
   name: "get_organization",
+  operationType: "read",
   description: "Get one ServerAvatar organization by its ID.",
   inputSchema: s.requiredObject("Input parameters for getting a ServerAvatar organization.", {
     organizationId: organizationIdSchema,
@@ -112,6 +114,7 @@ const getOrganizationAction = defineProviderAction(service, {
 
 const listServersAction = defineProviderAction(service, {
   name: "list_servers",
+  operationType: "read",
   description: "List the servers managed in a ServerAvatar organization.",
   inputSchema: s.object(
     "Input parameters for listing servers in a ServerAvatar organization.",
@@ -132,6 +135,7 @@ const listServersAction = defineProviderAction(service, {
 
 const listApplicationsAction = defineProviderAction(service, {
   name: "list_applications",
+  operationType: "read",
   description: "List applications across a ServerAvatar organization.",
   inputSchema: s.object(
     "Input parameters for listing applications in a ServerAvatar organization.",
@@ -152,6 +156,7 @@ const listApplicationsAction = defineProviderAction(service, {
 
 const listDatabasesAction = defineProviderAction(service, {
   name: "list_databases",
+  operationType: "read",
   description: "List or search databases across a ServerAvatar organization.",
   inputSchema: s.object(
     "Input parameters for listing databases in a ServerAvatar organization.",

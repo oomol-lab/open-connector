@@ -72,6 +72,7 @@ const getPricesOutputSchema = s.object("The price breakdowns returned by FinerWo
 export const finerworksActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_product_types",
+    operationType: "read",
     description: "List FinerWorks print product types, optionally filtered by product type IDs.",
     requiredScopes: [],
     inputSchema: catalogInputSchema,
@@ -79,6 +80,7 @@ export const finerworksActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_media_types",
+    operationType: "read",
     description: "List FinerWorks print media types and their compatible product and style information.",
     requiredScopes: [],
     inputSchema: listMediaTypesInputSchema,
@@ -86,6 +88,7 @@ export const finerworksActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_style_types",
+    operationType: "read",
     description: "List FinerWorks print style types, sizing constraints, and framing options.",
     requiredScopes: [],
     inputSchema: catalogInputSchema,
@@ -93,6 +96,7 @@ export const finerworksActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_prices",
+    operationType: "read",
     description: "Get FinerWorks price breakdowns for one to fifty product codes or inventory SKUs.",
     requiredScopes: [],
     inputSchema: getPricesInputSchema,

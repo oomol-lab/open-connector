@@ -75,6 +75,7 @@ const returnDetailsSchema = s.object("A normalized Loop Returns return detail re
 export const loopReturnsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_returns",
+    operationType: "read",
     description: "List Loop Returns returns created or updated within an optional timeframe.",
     inputSchema: s.object(
       "Input for listing Loop Returns returns.",
@@ -98,6 +99,7 @@ export const loopReturnsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_return_details",
+    operationType: "read",
     description: "Get Loop Returns return details by return ID, order ID, or order name.",
     inputSchema: s.object(
       "Input for retrieving one Loop Returns return.",
@@ -120,6 +122,7 @@ export const loopReturnsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_destinations",
+    operationType: "read",
     description: "List Loop Returns destinations configured for return shipments.",
     inputSchema: s.object("No input is required for listing Loop Returns destinations.", {}),
     outputSchema: s.object("The response returned when listing Loop Returns destinations.", {
@@ -128,6 +131,7 @@ export const loopReturnsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_destination",
+    operationType: "read",
     description: "Get one Loop Returns destination by ID.",
     inputSchema: s.object("Input for retrieving one Loop Returns destination.", {
       destinationId: s.positiveInteger("The Loop Returns destination ID."),

@@ -81,6 +81,7 @@ const customFieldCollectionOutput = collectionOutput(
 export const sendlaneActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_lists",
+    operationType: "read",
     description: "List Sendlane contact lists.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -92,6 +93,7 @@ export const sendlaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_list",
+    operationType: "read",
     description: "Get a Sendlane contact list by ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a Sendlane list.", { listId: id("list") }),
@@ -99,6 +101,7 @@ export const sendlaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_list",
+    operationType: "write",
     description: "Create a Sendlane contact list.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -113,6 +116,7 @@ export const sendlaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_list",
+    operationType: "write",
     description: "Update a Sendlane contact list.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -128,6 +132,7 @@ export const sendlaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_list",
+    operationType: "destructive",
     description: "Delete a Sendlane contact list by ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for deleting a Sendlane list.", { listId: id("list") }),
@@ -135,6 +140,7 @@ export const sendlaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List Sendlane contact tags.",
     requiredScopes: [],
     inputSchema: s.object("Input for listing Sendlane tags.", {}),
@@ -142,6 +148,7 @@ export const sendlaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tag",
+    operationType: "read",
     description: "Get a Sendlane contact tag by ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a Sendlane tag.", { tagId: id("tag") }),
@@ -149,6 +156,7 @@ export const sendlaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_tag",
+    operationType: "write",
     description: "Create a Sendlane contact tag.",
     requiredScopes: [],
     inputSchema: s.object("Input for creating a Sendlane tag.", { name: name("tag") }),
@@ -156,6 +164,7 @@ export const sendlaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_tag",
+    operationType: "write",
     description: "Update a Sendlane contact tag.",
     requiredScopes: [],
     inputSchema: s.object("Input for updating a Sendlane tag.", {
@@ -166,6 +175,7 @@ export const sendlaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_tag",
+    operationType: "destructive",
     description: "Delete a Sendlane contact tag by ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for deleting a Sendlane tag.", { tagId: id("tag") }),
@@ -173,6 +183,7 @@ export const sendlaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_campaigns",
+    operationType: "read",
     description: "List Sendlane email campaigns.",
     requiredScopes: [],
     inputSchema: s.object("Input for listing Sendlane campaigns.", {}),
@@ -180,6 +191,7 @@ export const sendlaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign",
+    operationType: "read",
     description: "Get a Sendlane email campaign by ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a Sendlane campaign.", {
@@ -189,6 +201,7 @@ export const sendlaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_custom_fields",
+    operationType: "read",
     description: "List Sendlane custom fields.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -200,6 +213,7 @@ export const sendlaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_custom_field",
+    operationType: "read",
     description: "Get a Sendlane custom field by ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a Sendlane custom field.", {
@@ -209,6 +223,7 @@ export const sendlaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_custom_field",
+    operationType: "write",
     description: "Create a Sendlane custom field.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -223,6 +238,7 @@ export const sendlaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_custom_field",
+    operationType: "write",
     description: "Update a Sendlane custom field.",
     requiredScopes: [],
     inputSchema: s.object(

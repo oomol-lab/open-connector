@@ -37,6 +37,7 @@ const paginationSchema = s.object("Pagination metadata returned by Nimble.", {
 export const nimbleActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List or search Nimble contacts with pagination and optional field selection.",
     inputSchema: s.object(
       "Filters and pagination for listing Nimble contacts.",
@@ -61,6 +62,7 @@ export const nimbleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Retrieve one Nimble contact by its contact ID.",
     inputSchema: s.object(
       "The contact lookup parameters.",
@@ -79,6 +81,7 @@ export const nimbleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a person or company contact in Nimble using native contact fields.",
     inputSchema: s.object(
       "The Nimble contact to create.",
@@ -93,6 +96,7 @@ export const nimbleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update fields, importance, or avatar information on a Nimble contact.",
     inputSchema: s.requireAnyProperty(
       s.object(

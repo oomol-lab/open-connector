@@ -90,6 +90,7 @@ export function createFeishuFileActions(service: string): readonly ActionDefinit
   return [
     defineProviderAction(service, {
       name: "upload_drive_file",
+      operationType: "write",
       description:
         "Upload a file from a public URL to Feishu Drive, automatically using the three-step multipart protocol above 20 MB.",
       requiredScopes: [feishuFileProviderPermissions.driveUpload, feishuFileProviderPermissions.driveMetadataRead],
@@ -115,6 +116,7 @@ export function createFeishuFileActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "download_drive_file",
+      operationType: "read",
       description: "Download a Feishu Drive file into local transit storage.",
       requiredScopes: [feishuFileProviderPermissions.driveDownload],
       providerPermissions: [feishuFileProviderPermissions.driveDownload],
@@ -132,6 +134,7 @@ export function createFeishuFileActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "download_message_resource",
+      operationType: "read",
       description: "Download one image or file resource attached to a Feishu message into local transit storage.",
       requiredScopes: [feishuFileProviderPermissions.messageRead],
       providerPermissions: [feishuFileProviderPermissions.messageRead],
@@ -155,6 +158,7 @@ export function createFeishuFileActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "submit_drive_export",
+      operationType: "write",
       description: "Submit an asynchronous Feishu Drive document export and return a handle for status polling.",
       requiredScopes: [feishuFileProviderPermissions.documentExport, feishuFileProviderPermissions.documentContentRead],
       providerPermissions: [
@@ -194,6 +198,7 @@ export function createFeishuFileActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "get_drive_export",
+      operationType: "read",
       description: "Get the normalized status and generated file token of a Drive export task.",
       requiredScopes: [feishuFileProviderPermissions.documentExport],
       providerPermissions: [feishuFileProviderPermissions.documentExport],
@@ -231,6 +236,7 @@ export function createFeishuFileActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "download_drive_export",
+      operationType: "read",
       description: "Download a generated Drive export file into local transit storage.",
       requiredScopes: [feishuFileProviderPermissions.documentExport],
       providerPermissions: [feishuFileProviderPermissions.documentExport],
@@ -248,6 +254,7 @@ export function createFeishuFileActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "submit_drive_import",
+      operationType: "write",
       description:
         "Fetch a source file, upload it as Feishu import media, and submit an asynchronous Drive import task.",
       requiredScopes: [feishuFileProviderPermissions.documentMediaUpload, feishuFileProviderPermissions.documentImport],
@@ -294,6 +301,7 @@ export function createFeishuFileActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "get_drive_import",
+      operationType: "read",
       description: "Get the normalized status and created document token of a Drive import task.",
       requiredScopes: [feishuFileProviderPermissions.documentImport],
       providerPermissions: [feishuFileProviderPermissions.documentImport],
@@ -326,6 +334,7 @@ export function createFeishuFileActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "upload_base_attachments",
+      operationType: "write",
       description:
         "Validate a Base attachment field, upload one or more files from public URLs, and append them to one record cell.",
       requiredScopes: [
@@ -389,6 +398,7 @@ export function createFeishuFileActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "download_base_attachments",
+      operationType: "read",
       description:
         "Read Base attachment metadata and download selected or all record attachments into local transit storage.",
       requiredScopes: [
@@ -441,6 +451,7 @@ export function createFeishuFileActions(service: string): readonly ActionDefinit
     }),
     defineProviderAction(service, {
       name: "remove_base_attachments",
+      operationType: "destructive",
       description: "Validate a Base attachment field and remove selected file tokens from one record cell.",
       requiredScopes: [feishuFileProviderPermissions.baseFieldRead, feishuFileProviderPermissions.baseRecordUpdate],
       providerPermissions: [

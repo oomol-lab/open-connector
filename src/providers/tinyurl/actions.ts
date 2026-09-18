@@ -22,6 +22,7 @@ const tinyurlListItem = s.object(
 export const tinyurlActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_short_url",
+    operationType: "write",
     description: "Create a TinyURL short link for a destination URL.",
     inputSchema: s.object(
       "The input payload for creating a TinyURL short link.",
@@ -50,6 +51,7 @@ export const tinyurlActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_urls",
+    operationType: "read",
     description: "List TinyURLs from the TinyURL account by availability status.",
     inputSchema: s.object(
       "The input payload for listing TinyURLs from the TinyURL API.",

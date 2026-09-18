@@ -195,6 +195,7 @@ const idInputSchema = s.requiredObject("Input parameters for fetching one Envoy 
 export const envoyActions: ProviderActionDefinition<EnvoyActionName>[] = [
   defineProviderAction(service, {
     name: "list_locations",
+    operationType: "read",
     description: "List Envoy locations with optional filters and pagination.",
     inputSchema: listLocationsInputSchema,
     outputSchema: s.requiredObject("The Envoy locations list response.", {
@@ -204,6 +205,7 @@ export const envoyActions: ProviderActionDefinition<EnvoyActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "get_location",
+    operationType: "read",
     description: "Fetch one Envoy location by ID.",
     inputSchema: idInputSchema,
     outputSchema: s.requiredObject("The Envoy location response.", {
@@ -213,6 +215,7 @@ export const envoyActions: ProviderActionDefinition<EnvoyActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "list_employees",
+    operationType: "read",
     description: "List Envoy employees with optional search filters and pagination.",
     inputSchema: listEmployeesInputSchema,
     outputSchema: s.requiredObject("The Envoy employees list response.", {
@@ -222,6 +225,7 @@ export const envoyActions: ProviderActionDefinition<EnvoyActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "get_employee",
+    operationType: "read",
     description: "Fetch one Envoy employee by ID.",
     inputSchema: idInputSchema,
     outputSchema: s.requiredObject("The Envoy employee response.", {
@@ -231,6 +235,7 @@ export const envoyActions: ProviderActionDefinition<EnvoyActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "list_flows",
+    operationType: "read",
     description: "List Envoy sign-in flows with optional filters and pagination.",
     inputSchema: listFlowsInputSchema,
     outputSchema: s.requiredObject("The Envoy flows list response.", {
@@ -240,6 +245,7 @@ export const envoyActions: ProviderActionDefinition<EnvoyActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "get_flow",
+    operationType: "read",
     description: "Fetch one Envoy sign-in flow by ID.",
     inputSchema: idInputSchema,
     outputSchema: s.requiredObject("The Envoy flow response.", {
@@ -249,6 +255,7 @@ export const envoyActions: ProviderActionDefinition<EnvoyActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "list_invites",
+    operationType: "read",
     description: "List Envoy invites with optional filters and pagination.",
     inputSchema: listInvitesInputSchema,
     outputSchema: s.requiredObject("The Envoy invites list response.", {
@@ -258,6 +265,7 @@ export const envoyActions: ProviderActionDefinition<EnvoyActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "get_invite",
+    operationType: "read",
     description: "Fetch one Envoy invite by ID.",
     inputSchema: idInputSchema,
     outputSchema: s.requiredObject("The Envoy invite response.", {

@@ -22,12 +22,14 @@ const sifToolResultSchema = s.requiredObject("The normalized result returned by 
 
 function defineSifToolAction<const TName extends string>(input: {
   name: TName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   followUpActions?: string[];
 }) {
   return defineProviderAction(service, {
     name: input.name,
+    operationType: input.operationType,
     description: input.description,
     followUpActions: input.followUpActions,
     inputSchema: input.inputSchema,
@@ -43,6 +45,7 @@ const sifToolSchema = s.requiredObject("A tool currently exposed by the connecte
 const sifMarketActions: ActionDefinition[] = [
   defineSifToolAction({
     name: "market_get_keyword_history",
+    operationType: "read",
     description:
       "Get raw historical ABA search volume, rank, and Top-3 click and conversion concentration for up to 10 keywords. Costs 1 Sif point.",
     followUpActions: ["sif.market_get_keyword_root_trend", "sif.market_screen_keyword_opportunities"],
@@ -61,6 +64,7 @@ const sifMarketActions: ActionDefinition[] = [
   }),
   defineSifToolAction({
     name: "market_get_keyword_demand",
+    operationType: "read",
     description: "Diagnose demand lifecycle and seasonal timing for up to 20 keywords. Costs 2 Sif points.",
     followUpActions: ["sif.market_get_keyword_competition"],
     inputSchema: s.object(
@@ -77,6 +81,7 @@ const sifMarketActions: ActionDefinition[] = [
   }),
   defineSifToolAction({
     name: "market_get_keyword_root_trend",
+    operationType: "read",
     description:
       "Compare exact-keyword demand with aggregate keyword-root demand to assess market size and demand concentration. Costs 3 Sif points.",
     followUpActions: ["sif.market_screen_keyword_opportunities"],
@@ -92,6 +97,7 @@ const sifMarketActions: ActionDefinition[] = [
   }),
   defineSifToolAction({
     name: "market_get_keyword_competition",
+    operationType: "read",
     description:
       "Analyze a keyword's traffic-share leaders, ABA Top-3 concentration, market accessibility, and optional ASIN competitive position. Costs 2 Sif points.",
     inputSchema: s.object(
@@ -109,6 +115,7 @@ const sifMarketActions: ActionDefinition[] = [
   }),
   defineSifToolAction({
     name: "market_get_keyword_root_competitors",
+    operationType: "read",
     description:
       "Discover the leading ASIN competitors across a keyword root using ABA buyer click behavior. Costs 2 Sif points.",
     followUpActions: ["sif.market_discover_competitors"],
@@ -127,6 +134,7 @@ const sifMarketActions: ActionDefinition[] = [
   }),
   defineSifToolAction({
     name: "market_screen_keyword_opportunities",
+    operationType: "read",
     description:
       "Rank keyword-root variants by demand and click-concentration opportunity signals. Costs 3 Sif points.",
     followUpActions: ["sif.market_get_keyword_competition"],
@@ -145,6 +153,7 @@ const sifMarketActions: ActionDefinition[] = [
   }),
   defineSifToolAction({
     name: "market_discover_competitors",
+    operationType: "read",
     description:
       "Analyze and filter a keyword's Top-100 competitor pool by price, review threshold, sales, and competitive posture. Costs 3 Sif points.",
     followUpActions: ["sif.market_get_asin_profile", "sif.market_get_asin_aba_footprint"],
@@ -178,6 +187,7 @@ const sifMarketActions: ActionDefinition[] = [
   }),
   defineSifToolAction({
     name: "market_get_asin_profile",
+    operationType: "read",
     description:
       "Get product-positioning profiles such as price, rating, reviews, BSR, brand, listing age, variants, and dimensions for up to 20 ASINs. Costs 2 Sif points per input ASIN.",
     followUpActions: ["sif.market_get_asin_keyword_signals", "sif.market_get_asin_aba_footprint"],
@@ -195,6 +205,7 @@ const sifMarketActions: ActionDefinition[] = [
   }),
   defineSifToolAction({
     name: "market_get_asin_keyword_signals",
+    operationType: "read",
     description:
       "Analyze an ASIN's keyword traffic contribution, organic and paid dependence, rank stability, and health signals. Costs 3 Sif points.",
     followUpActions: ["sif.market_get_keyword_demand", "sif.market_get_keyword_competition"],
@@ -218,6 +229,7 @@ const sifMarketActions: ActionDefinition[] = [
   }),
   defineSifToolAction({
     name: "market_get_asin_aba_footprint",
+    operationType: "read",
     description: "Reverse-map an ASIN to search terms where it occupies an ABA Top-3 position. Costs 2 Sif points.",
     inputSchema: s.object(
       "Parameters for retrieving an ASIN's ABA Top-3 footprint.",
@@ -237,6 +249,7 @@ const sifMarketActions: ActionDefinition[] = [
 export const sifActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tools",
+    operationType: "read",
     description:
       "Discover the current Sif Amazon analysis tools and their live input schemas before choosing a tool to call.",
     followUpActions: ["sif.call_tool"],
@@ -247,6 +260,7 @@ export const sifActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "call_tool",
+    operationType: "read",
     description:
       "Call a current Sif MCP Amazon analysis tool with JSON arguments after discovering its live input schema.",
     followUpActions: ["sif.list_tools"],

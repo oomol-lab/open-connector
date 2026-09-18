@@ -47,6 +47,7 @@ const selectorFields = {
 export const justCallActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List JustCall contacts with optional agent, phone, name, status, and pagination filters.",
     inputSchema: s.object(
       "Filters and pagination for listing JustCall contacts.",
@@ -87,12 +88,14 @@ export const justCallActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get one JustCall contact by its numeric ID.",
     inputSchema: s.requiredObject("The JustCall contact to retrieve.", { id: identifierSchema }),
     outputSchema: recordOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a contact in JustCall for the owner, selected agents, or the whole team.",
     inputSchema: s.object(
       "Fields for creating a JustCall contact.",
@@ -112,6 +115,7 @@ export const justCallActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update a JustCall contact selected by ID or primary phone number.",
     inputSchema: s.object(
       "Selector and fields for updating a JustCall contact.",
@@ -129,6 +133,7 @@ export const justCallActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact_status",
+    operationType: "destructive",
     description: "Add or remove a JustCall contact from DND, DNM, or blacklist suppression lists.",
     inputSchema: s.object(
       "Selector and suppression-list changes for a JustCall contact.",
@@ -146,6 +151,7 @@ export const justCallActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete a JustCall contact selected by ID or primary phone number.",
     inputSchema: s.object(
       "Selector for deleting a JustCall contact.",
@@ -159,6 +165,7 @@ export const justCallActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List users in a JustCall account with availability, group, role, and pagination filters.",
     inputSchema: s.object(
       "Filters and pagination for listing JustCall users.",
@@ -180,6 +187,7 @@ export const justCallActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get one JustCall user by numeric agent ID.",
     inputSchema: s.requiredObject("The JustCall user to retrieve.", { id: identifierSchema }),
     outputSchema: recordOutputSchema,

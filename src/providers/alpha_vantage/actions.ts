@@ -141,6 +141,7 @@ const csvCalendarInputSchema = s.object(
 export const alphaVantageActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_symbols",
+    operationType: "read",
     description: "Search supported stocks, ETFs, and mutual funds by keyword and return the best matching symbols.",
     requiredScopes: [],
     inputSchema: s.object("The input for searching supported symbols.", {
@@ -150,6 +151,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_global_quote",
+    operationType: "read",
     description: "Retrieve the latest end-of-day quote snapshot for a single stock symbol from Alpha Vantage.",
     requiredScopes: [],
     inputSchema: stockSymbolInputSchema,
@@ -157,6 +159,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_intraday_time_series",
+    operationType: "read",
     description: "Retrieve raw intraday OHLCV time series data for a stock symbol from Alpha Vantage.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -176,6 +179,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_daily_time_series",
+    operationType: "read",
     description: "Retrieve the raw daily OHLCV time series for a single stock symbol from Alpha Vantage.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -190,6 +194,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_daily_adjusted_time_series",
+    operationType: "read",
     description: "Retrieve raw daily adjusted OHLCV, dividend, and split data for a stock symbol from Alpha Vantage.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -205,6 +210,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_weekly_time_series",
+    operationType: "read",
     description: "Retrieve the raw weekly OHLCV time series for a single stock symbol from Alpha Vantage.",
     requiredScopes: [],
     inputSchema: stockSymbolInputSchema,
@@ -212,6 +218,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_weekly_adjusted_time_series",
+    operationType: "read",
     description: "Retrieve raw weekly adjusted OHLCV and dividend data for a stock symbol from Alpha Vantage.",
     requiredScopes: [],
     inputSchema: stockSymbolInputSchema,
@@ -219,6 +226,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_monthly_time_series",
+    operationType: "read",
     description: "Retrieve the raw monthly OHLCV time series for a single stock symbol from Alpha Vantage.",
     requiredScopes: [],
     inputSchema: stockSymbolInputSchema,
@@ -226,6 +234,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_monthly_adjusted_time_series",
+    operationType: "read",
     description: "Retrieve raw monthly adjusted OHLCV and dividend data for a stock symbol from Alpha Vantage.",
     requiredScopes: [],
     inputSchema: stockSymbolInputSchema,
@@ -233,6 +242,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_realtime_bulk_quotes",
+    operationType: "read",
     description: "Retrieve raw realtime bulk quotes for up to 100 stock symbols.",
     requiredScopes: [],
     inputSchema: s.object("The input for retrieving realtime bulk quotes.", {
@@ -242,6 +252,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_top_gainers_losers",
+    operationType: "read",
     description: "Retrieve the raw Alpha Vantage top gainers, losers, and most active stocks.",
     requiredScopes: [],
     inputSchema: s.object("The input for retrieving top gainers and losers.", {}),
@@ -249,6 +260,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_market_status",
+    operationType: "read",
     description: "Retrieve the current open or closed status for major equity, forex, and cryptocurrency markets.",
     requiredScopes: [],
     inputSchema: s.object("The input for retrieving the global market status.", {}),
@@ -256,6 +268,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_currency_exchange_rate",
+    operationType: "read",
     description: "Retrieve the raw realtime exchange rate for a currency pair.",
     requiredScopes: [],
     inputSchema: fromToCurrencyInputSchema,
@@ -263,6 +276,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_fx_intraday",
+    operationType: "read",
     description: "Retrieve raw intraday forex OHLC data for a currency pair.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -280,6 +294,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_fx_daily",
+    operationType: "read",
     description: "Retrieve raw daily forex OHLC data for a currency pair.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -296,6 +311,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_fx_weekly",
+    operationType: "read",
     description: "Retrieve raw weekly forex OHLC data for a currency pair.",
     requiredScopes: [],
     inputSchema: fromToCurrencyInputSchema,
@@ -303,6 +319,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_fx_monthly",
+    operationType: "read",
     description: "Retrieve raw monthly forex OHLC data for a currency pair.",
     requiredScopes: [],
     inputSchema: fromToCurrencyInputSchema,
@@ -310,6 +327,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_crypto_intraday",
+    operationType: "read",
     description: "Retrieve raw intraday OHLCV data for a cryptocurrency market pair.",
     requiredScopes: [],
     inputSchema: s.object("The input for retrieving intraday cryptocurrency data.", {
@@ -321,6 +339,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_digital_currency_daily",
+    operationType: "read",
     description: "Retrieve raw daily historical time series data for a digital currency.",
     requiredScopes: [],
     inputSchema: s.object("The input for retrieving daily digital currency data.", {
@@ -331,6 +350,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_digital_currency_weekly",
+    operationType: "read",
     description: "Retrieve raw weekly historical time series data for a digital currency.",
     requiredScopes: [],
     inputSchema: s.object("The input for retrieving weekly digital currency data.", {
@@ -341,6 +361,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_digital_currency_monthly",
+    operationType: "read",
     description: "Retrieve raw monthly historical time series data for a digital currency.",
     requiredScopes: [],
     inputSchema: s.object("The input for retrieving monthly digital currency data.", {
@@ -351,6 +372,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company_overview",
+    operationType: "read",
     description: "Retrieve raw company overview and fundamental data for a stock symbol.",
     requiredScopes: [],
     inputSchema: stockSymbolInputSchema,
@@ -358,6 +380,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_etf_profile",
+    operationType: "read",
     description: "Retrieve raw ETF profile and holdings data for an ETF symbol.",
     requiredScopes: [],
     inputSchema: stockSymbolInputSchema,
@@ -365,6 +388,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_income_statement",
+    operationType: "read",
     description: "Retrieve raw annual and quarterly income statement data for a company.",
     requiredScopes: [],
     inputSchema: stockSymbolInputSchema,
@@ -372,6 +396,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_balance_sheet",
+    operationType: "read",
     description: "Retrieve raw annual and quarterly balance sheet data for a company.",
     requiredScopes: [],
     inputSchema: stockSymbolInputSchema,
@@ -379,6 +404,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_cash_flow",
+    operationType: "read",
     description: "Retrieve raw annual and quarterly cash flow data for a company.",
     requiredScopes: [],
     inputSchema: stockSymbolInputSchema,
@@ -386,6 +412,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_earnings",
+    operationType: "read",
     description: "Retrieve raw annual and quarterly earnings data for a company.",
     requiredScopes: [],
     inputSchema: stockSymbolInputSchema,
@@ -393,6 +420,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_earnings_estimates",
+    operationType: "read",
     description: "Retrieve raw analyst earnings estimates for a company.",
     requiredScopes: [],
     inputSchema: stockSymbolInputSchema,
@@ -400,6 +428,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_listing_status",
+    operationType: "read",
     description: "Retrieve raw active or delisted listing status data as CSV.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -414,6 +443,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_earnings_calendar",
+    operationType: "read",
     description: "Retrieve raw upcoming earnings calendar data as CSV.",
     requiredScopes: [],
     inputSchema: csvCalendarInputSchema,
@@ -421,6 +451,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ipo_calendar",
+    operationType: "read",
     description: "Retrieve raw upcoming IPO calendar data as CSV.",
     requiredScopes: [],
     inputSchema: s.object("The input for retrieving IPO calendar data.", {}),
@@ -428,6 +459,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dividends",
+    operationType: "read",
     description: "Retrieve raw historical and future dividend data for a stock symbol.",
     requiredScopes: [],
     inputSchema: stockSymbolInputSchema,
@@ -435,6 +467,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_splits",
+    operationType: "read",
     description: "Retrieve raw historical split data for a stock symbol.",
     requiredScopes: [],
     inputSchema: stockSymbolInputSchema,
@@ -442,6 +475,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_insider_transactions",
+    operationType: "read",
     description: "Retrieve raw insider transaction data for a stock symbol.",
     requiredScopes: [],
     inputSchema: stockSymbolInputSchema,
@@ -449,6 +483,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_institutional_holdings",
+    operationType: "read",
     description: "Retrieve raw institutional holding data for a stock symbol.",
     requiredScopes: [],
     inputSchema: stockSymbolInputSchema,
@@ -456,6 +491,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_earnings_call_transcript",
+    operationType: "read",
     description: "Retrieve a raw earnings call transcript for a symbol, quarter, and fiscal year.",
     requiredScopes: [],
     inputSchema: s.object("The input for retrieving an earnings call transcript.", {
@@ -467,6 +503,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_historical_options",
+    operationType: "read",
     description: "Retrieve raw historical options data for a stock symbol.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -481,6 +518,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_realtime_options",
+    operationType: "read",
     description: "Retrieve raw realtime options data for a stock symbol.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -496,6 +534,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_news_sentiment",
+    operationType: "read",
     description: "Retrieve raw live and historical market news and sentiment data.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -517,6 +556,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_sector_performance",
+    operationType: "read",
     description: "Retrieve raw realtime and historical sector performance data.",
     requiredScopes: [],
     inputSchema: s.object("The input for retrieving sector performance data.", {}),
@@ -524,6 +564,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_commodity_data",
+    operationType: "read",
     description: "Retrieve raw commodity time series data from an Alpha Vantage commodity endpoint.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -551,6 +592,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_macro_indicator",
+    operationType: "read",
     description: "Retrieve raw macroeconomic indicator data from Alpha Vantage.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -592,6 +634,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_technical_indicator",
+    operationType: "read",
     description: "Retrieve raw technical indicator data using an official Alpha Vantage indicator function.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -724,6 +767,7 @@ export const alphaVantageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "call_official_function",
+    operationType: "write",
     description:
       "Call a documented Alpha Vantage query function with raw JSON-facing parameters for advanced coverage.",
     requiredScopes: [],

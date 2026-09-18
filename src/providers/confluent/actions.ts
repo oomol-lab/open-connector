@@ -54,6 +54,7 @@ const governancePackageSchema = s.stringEnum("The Stream Governance package for 
 export const confluentActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_organizations",
+    operationType: "read",
     description: "List Confluent Cloud organizations visible to the connected Cloud API key.",
     requiredScopes: [],
     inputSchema: paginatedInputSchema("Input for listing Confluent Cloud organizations."),
@@ -61,6 +62,7 @@ export const confluentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_organization",
+    operationType: "read",
     description: "Retrieve one Confluent Cloud organization by ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a Confluent Cloud organization.", {
@@ -70,6 +72,7 @@ export const confluentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_environments",
+    operationType: "read",
     description: "List Confluent Cloud environments visible to the connected Cloud API key.",
     requiredScopes: [],
     inputSchema: paginatedInputSchema("Input for listing Confluent Cloud environments."),
@@ -77,6 +80,7 @@ export const confluentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_environment",
+    operationType: "read",
     description: "Retrieve one Confluent Cloud environment by ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a Confluent Cloud environment.", {
@@ -86,6 +90,7 @@ export const confluentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_environment",
+    operationType: "write",
     description: "Create a Confluent Cloud environment.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -100,6 +105,7 @@ export const confluentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_environment",
+    operationType: "write",
     description: "Update the display name or Stream Governance package of an environment.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -115,6 +121,7 @@ export const confluentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_environment",
+    operationType: "destructive",
     description: "Delete a Confluent Cloud environment by ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for deleting a Confluent Cloud environment.", {
@@ -126,6 +133,7 @@ export const confluentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_kafka_clusters",
+    operationType: "read",
     description: "List Kafka clusters in a Confluent Cloud environment.",
     requiredScopes: [],
     inputSchema: paginatedInputSchema("Input for listing Confluent Cloud Kafka clusters.", {
@@ -135,6 +143,7 @@ export const confluentActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_kafka_cluster",
+    operationType: "read",
     description: "Retrieve one Kafka cluster in a Confluent Cloud environment.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a Confluent Cloud Kafka cluster.", {

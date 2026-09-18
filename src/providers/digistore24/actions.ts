@@ -110,12 +110,14 @@ const purchaseSearchSchema = s.object(
 export const digistore24Actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user_info",
+    operationType: "read",
     description: "Retrieve information about the Digistore24 user that owns the API key.",
     inputSchema: s.object("Input parameters for retrieving the current Digistore24 user.", {}),
     outputSchema: userInfoSchema,
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List products from the connected Digistore24 account.",
     inputSchema: s.object(
       "Input parameters for listing Digistore24 products.",
@@ -130,6 +132,7 @@ export const digistore24Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Retrieve details for a Digistore24 product.",
     inputSchema: s.requiredObject("Input parameters for retrieving a Digistore24 product.", {
       productId: s.integer("Numeric ID of the product to retrieve.", { minimum: 1 }),
@@ -140,6 +143,7 @@ export const digistore24Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_buyers",
+    operationType: "read",
     description: "List buyers from the connected Digistore24 account.",
     inputSchema: s.object(
       "Input parameters for listing Digistore24 buyers.",
@@ -160,6 +164,7 @@ export const digistore24Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_buyer",
+    operationType: "read",
     description: "Retrieve details for a Digistore24 buyer.",
     inputSchema: s.requiredObject("Input parameters for retrieving a Digistore24 buyer.", {
       buyerId: s.integer("Numeric ID of the buyer to retrieve.", { minimum: 1 }),
@@ -170,6 +175,7 @@ export const digistore24Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_purchases",
+    operationType: "read",
     description: "List purchases and sales from the connected Digistore24 account.",
     inputSchema: s.object(
       "Input parameters for listing Digistore24 purchases.",
@@ -196,6 +202,7 @@ export const digistore24Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_purchase",
+    operationType: "read",
     description: "Retrieve details for one or more Digistore24 purchases.",
     inputSchema: s.requiredObject("Input parameters for retrieving Digistore24 purchase details.", {
       purchaseId: s.nonEmptyString("Single purchase ID or comma-separated purchase IDs to retrieve."),

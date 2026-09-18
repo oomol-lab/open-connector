@@ -78,6 +78,7 @@ const ratesOutputSchema = s.object(
 export const currencyapiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_api_status",
+    operationType: "read",
     description: "Retrieve current currencyapi account quota usage.",
     inputSchema: s.object({}, { description: "Input parameters for retrieving current currencyapi quota usage." }),
     outputSchema: s.object(
@@ -96,6 +97,7 @@ export const currencyapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_supported_currencies",
+    operationType: "read",
     description: "Retrieve supported currency metadata from currencyapi.",
     inputSchema: s.object(
       {
@@ -114,6 +116,7 @@ export const currencyapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_latest_rates",
+    operationType: "read",
     description: "Retrieve the latest exchange rates from currencyapi.",
     inputSchema: s.object(
       {
@@ -130,6 +133,7 @@ export const currencyapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_historical_rates",
+    operationType: "read",
     description: "Retrieve historical exchange rates for a specific date from currencyapi.",
     inputSchema: s.object(
       {
@@ -148,6 +152,7 @@ export const currencyapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "convert_currency",
+    operationType: "read",
     description: "Convert a monetary amount into one or more currencies with currencyapi.",
     inputSchema: s.object(
       {

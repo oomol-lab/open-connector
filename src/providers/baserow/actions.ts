@@ -31,6 +31,7 @@ const sizeSchema = s.integer("Number of rows to request per page, from 1 to 200.
 export const baserowActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tables",
+    operationType: "read",
     description: "List the Baserow tables accessible to the authenticated database token.",
     requiredScopes: [],
     followUpActions: ["baserow.list_table_fields", "baserow.list_table_rows"],
@@ -41,6 +42,7 @@ export const baserowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_table_fields",
+    operationType: "read",
     description: "List the field definitions for one Baserow table.",
     requiredScopes: [],
     followUpActions: ["baserow.list_table_rows"],
@@ -53,6 +55,7 @@ export const baserowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_table_rows",
+    operationType: "read",
     description: "List rows from one Baserow table with optional search, ordering, filters, and pagination.",
     requiredScopes: [],
     followUpActions: ["baserow.get_table_row", "baserow.update_table_row"],
@@ -79,6 +82,7 @@ export const baserowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_table_row",
+    operationType: "read",
     description: "Read one Baserow row by table ID and row ID.",
     requiredScopes: [],
     followUpActions: ["baserow.update_table_row", "baserow.delete_table_row"],
@@ -97,6 +101,7 @@ export const baserowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_table_row",
+    operationType: "write",
     description: "Create one row in a Baserow table.",
     requiredScopes: [],
     followUpActions: ["baserow.get_table_row"],
@@ -115,6 +120,7 @@ export const baserowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_table_row",
+    operationType: "write",
     description: "Update one existing Baserow row.",
     requiredScopes: [],
     followUpActions: ["baserow.get_table_row"],
@@ -134,6 +140,7 @@ export const baserowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_table_row",
+    operationType: "destructive",
     description: "Delete one Baserow row by row ID.",
     requiredScopes: [],
     inputSchema: s.object("Input payload for deleting one Baserow row.", {

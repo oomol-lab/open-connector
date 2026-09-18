@@ -103,12 +103,14 @@ const analyticsInputProperties: Record<string, JsonSchema> = {
 export const nextDnsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_profiles",
+    operationType: "read",
     description: "List NextDNS profiles available to the authenticated account.",
     inputSchema: s.object({}, { description: "The input payload for listing NextDNS profiles." }),
     outputSchema: listResponseSchema("The response returned when listing NextDNS profiles.", profileItemSchema),
   }),
   defineProviderAction(service, {
     name: "get_profile",
+    operationType: "read",
     description: "Get one NextDNS profile with its current settings and setup details.",
     inputSchema: s.object(
       {
@@ -132,6 +134,7 @@ export const nextDnsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_logs",
+    operationType: "read",
     description: "List DNS query logs for a NextDNS profile with optional filters.",
     inputSchema: s.object(
       {
@@ -172,6 +175,7 @@ export const nextDnsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_analytics_domains",
+    operationType: "read",
     description: "List per-domain DNS query analytics for a NextDNS profile.",
     inputSchema: s.object(
       {
@@ -192,6 +196,7 @@ export const nextDnsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_analytics_devices",
+    operationType: "read",
     description: "List per-device DNS query analytics for a NextDNS profile.",
     inputSchema: s.object(analyticsInputProperties, {
       required: ["profileId"],
@@ -205,6 +210,7 @@ export const nextDnsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_analytics_status",
+    operationType: "read",
     description: "List DNS query counts grouped by status for a NextDNS profile.",
     inputSchema: s.object(analyticsInputProperties, {
       required: ["profileId"],
@@ -218,6 +224,7 @@ export const nextDnsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_analytics_reasons",
+    operationType: "read",
     description: "List DNS query counts grouped by blocking reason for a NextDNS profile.",
     inputSchema: s.object(analyticsInputProperties, {
       required: ["profileId"],

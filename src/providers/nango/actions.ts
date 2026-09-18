@@ -256,18 +256,21 @@ const successOutputSchema = s.object(
 export const nangoActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_providers",
+    operationType: "read",
     description: "List provider configurations available in Nango.",
     inputSchema: s.object("Input parameters for listing Nango providers.", {}),
     outputSchema: providersOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_provider",
+    operationType: "read",
     description: "Retrieve a provider configuration from Nango.",
     inputSchema: providerNameInputSchema,
     outputSchema: providerOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_integrations",
+    operationType: "read",
     description: "List integrations configured in the Nango environment.",
     requiredScopes: ["environment:integrations:list"],
     inputSchema: s.object("Input parameters for listing Nango integrations.", {}),
@@ -275,6 +278,7 @@ export const nangoActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_integration",
+    operationType: "read",
     description: "Retrieve a Nango integration by unique key.",
     requiredScopes: ["environment:integrations:read"],
     inputSchema: integrationInputSchema,
@@ -282,6 +286,7 @@ export const nangoActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_connections",
+    operationType: "read",
     description: "List Nango connections without credentials.",
     requiredScopes: ["environment:connections:list"],
     inputSchema: listConnectionsInputSchema,
@@ -289,6 +294,7 @@ export const nangoActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_connection",
+    operationType: "read",
     description: "Retrieve a Nango connection and its credentials when permitted.",
     requiredScopes: ["environment:connections:read"],
     inputSchema: connectionInputSchema,
@@ -296,6 +302,7 @@ export const nangoActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_connection_metadata",
+    operationType: "destructive",
     description: "Replace metadata for one or more Nango connections.",
     requiredScopes: ["environment:connections:update"],
     inputSchema: setConnectionMetadataInputSchema,
@@ -303,6 +310,7 @@ export const nangoActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "patch_connection_tags",
+    operationType: "write",
     description: "Edit tags for a Nango connection.",
     requiredScopes: ["environment:connections:update"],
     inputSchema: patchConnectionTagsInputSchema,
@@ -310,6 +318,7 @@ export const nangoActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_connection",
+    operationType: "destructive",
     description: "Delete a Nango connection.",
     requiredScopes: ["environment:connections:delete"],
     inputSchema: deleteConnectionInputSchema,

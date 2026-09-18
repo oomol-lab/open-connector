@@ -27,6 +27,7 @@ const mcpToolSummarySchema = s.object(
 export const btMcpActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tools",
+    operationType: "read",
     description:
       "Discover the current server-management tools, behavior annotations, and live input schemas exposed by this BT Panel MCP connection.",
     requiredScopes: [],
@@ -38,6 +39,7 @@ export const btMcpActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "call_tool",
+    operationType: "destructive",
     description:
       "Call a current BT Panel MCP tool with JSON arguments. Discover the tool first and obtain explicit confirmation because the server may expose command execution, firewall changes, file writes, or irreversible deletion operations.",
     requiredScopes: [],

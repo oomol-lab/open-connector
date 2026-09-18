@@ -73,6 +73,7 @@ const checkoutIdInput = (description: string) =>
 
 const createCustomerAction = defineProviderAction(service, {
   name: "create_customer",
+  operationType: "write",
   description: "Create a saved customer in SumUp for future payment workflows.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -88,6 +89,7 @@ const createCustomerAction = defineProviderAction(service, {
 
 const getCustomerAction = defineProviderAction(service, {
   name: "get_customer",
+  operationType: "read",
   description: "Retrieve a saved SumUp customer by its merchant-scoped identifier.",
   requiredScopes: [],
   inputSchema: customerIdInput("The input payload for retrieving a SumUp customer."),
@@ -96,6 +98,7 @@ const getCustomerAction = defineProviderAction(service, {
 
 const updateCustomerAction = defineProviderAction(service, {
   name: "update_customer",
+  operationType: "write",
   description: "Update the supplied personal details of a saved SumUp customer.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for updating a SumUp customer.", {
@@ -107,6 +110,7 @@ const updateCustomerAction = defineProviderAction(service, {
 
 const listPaymentInstrumentsAction = defineProviderAction(service, {
   name: "list_payment_instruments",
+  operationType: "read",
   description: "List payment instruments saved for a SumUp customer.",
   requiredScopes: [],
   inputSchema: customerIdInput("The input payload for listing a SumUp customer's payment instruments."),
@@ -120,6 +124,7 @@ const listPaymentInstrumentsAction = defineProviderAction(service, {
 
 const createCheckoutAction = defineProviderAction(service, {
   name: "create_checkout",
+  operationType: "write",
   description: "Create a SumUp checkout, optionally enabling the SumUp-hosted payment page.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -162,6 +167,7 @@ const createCheckoutAction = defineProviderAction(service, {
 
 const getCheckoutAction = defineProviderAction(service, {
   name: "get_checkout",
+  operationType: "read",
   description: "Retrieve a SumUp checkout and its current payment status.",
   requiredScopes: [],
   inputSchema: checkoutIdInput("The input payload for retrieving a SumUp checkout."),
@@ -170,6 +176,7 @@ const getCheckoutAction = defineProviderAction(service, {
 
 const listCheckoutsAction = defineProviderAction(service, {
   name: "list_checkouts",
+  operationType: "read",
   description: "List SumUp checkouts, optionally filtered by checkout reference.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -186,6 +193,7 @@ const listCheckoutsAction = defineProviderAction(service, {
 
 const deactivateCheckoutAction = defineProviderAction(service, {
   name: "deactivate_checkout",
+  operationType: "destructive",
   description: "Deactivate a pending SumUp checkout so it can no longer be processed.",
   requiredScopes: [],
   inputSchema: checkoutIdInput("The input payload for deactivating a SumUp checkout."),

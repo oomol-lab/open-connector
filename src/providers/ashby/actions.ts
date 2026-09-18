@@ -93,6 +93,7 @@ candidateSearchInputSchema.anyOf = [{ required: ["email"] }, { required: ["name"
 export const ashbyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "api_key_info",
+    operationType: "read",
     description: "Retrieve information about the Ashby API key used for this connection.",
     requiredScopes: [],
     inputSchema: s.object("Input payload for retrieving Ashby API key information.", {}),
@@ -102,6 +103,7 @@ export const ashbyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_jobs",
+    operationType: "read",
     description: "List Ashby jobs with optional status, timestamp, expansion, pagination, and sync filters.",
     requiredScopes: ["jobsRead"],
     inputSchema: jobListInputSchema,
@@ -112,6 +114,7 @@ export const ashbyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_candidates",
+    operationType: "read",
     description: "List Ashby candidates with optional pagination and incremental sync filters.",
     requiredScopes: ["candidatesRead"],
     inputSchema: listInputSchema,
@@ -122,6 +125,7 @@ export const ashbyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_candidates",
+    operationType: "read",
     description: "Search Ashby candidates by email and/or name for small result sets such as autocomplete.",
     requiredScopes: ["candidatesRead"],
     inputSchema: candidateSearchInputSchema,

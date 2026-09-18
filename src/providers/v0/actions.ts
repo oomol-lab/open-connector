@@ -628,6 +628,7 @@ const usageReportInputSchema = inputObject(
 export const v0Actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get the authenticated v0 user profile for the connected API key.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -635,6 +636,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_projects",
+    operationType: "read",
     description: "List v0 projects available to the connected account.",
     requiredScopes: [],
     inputSchema: inputObject({ limit: limitField, offset: offsetField }, ["limit", "offset"]),
@@ -648,6 +650,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create a new v0 project container for chats, environment variables, and deployments.",
     requiredScopes: [],
     inputSchema: inputObject(
@@ -669,6 +672,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get a single v0 project by project ID.",
     requiredScopes: [],
     inputSchema: inputObject({ projectId: projectIdField }),
@@ -676,6 +680,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_project",
+    operationType: "write",
     description: "Update a v0 project's metadata, instructions, visibility, or linked Vercel project.",
     requiredScopes: [],
     inputSchema: requireAtLeastOneUpdateField(
@@ -697,6 +702,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project_by_chat",
+    operationType: "read",
     description: "Get the v0 project currently linked to a chat.",
     requiredScopes: [],
     inputSchema: inputObject({ chatId: chatIdField }),
@@ -706,6 +712,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "assign_project_to_chat",
+    operationType: "write",
     description: "Assign an existing v0 chat to a project container.",
     requiredScopes: [],
     inputSchema: inputObject({ projectId: projectIdField, chatId: chatIdField }),
@@ -713,6 +720,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_project",
+    operationType: "destructive",
     description: "Delete a v0 project by project ID.",
     requiredScopes: [],
     inputSchema: inputObject({ projectId: projectIdField }),
@@ -722,6 +730,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_env_vars",
+    operationType: "read",
     description: "List environment variables configured on a v0 project.",
     requiredScopes: [],
     inputSchema: inputObject({ projectId: projectIdField, decrypted: decryptedField }, ["decrypted"]),
@@ -731,6 +740,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_env_var",
+    operationType: "read",
     description: "Get a single environment variable from a v0 project.",
     requiredScopes: [],
     inputSchema: inputObject(
@@ -747,6 +757,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_env_vars",
+    operationType: "write",
     description: "Create one or more environment variables on a v0 project.",
     requiredScopes: [],
     inputSchema: inputObject(
@@ -766,6 +777,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_env_vars",
+    operationType: "write",
     description: "Update existing environment variables on a v0 project.",
     requiredScopes: [],
     inputSchema: inputObject(
@@ -784,6 +796,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_env_vars",
+    operationType: "destructive",
     description: "Delete one or more environment variables from a v0 project.",
     requiredScopes: [],
     inputSchema: inputObject({
@@ -800,6 +813,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_chat",
+    operationType: "write",
     description: "Create a new v0 chat and immediately send the first message.",
     requiredScopes: [],
     inputSchema: createChatInputSchema,
@@ -807,6 +821,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "init_chat",
+    operationType: "write",
     description: "Initialize a new v0 chat from files, a repository, a registry, a zip archive, or a template.",
     requiredScopes: [],
     inputSchema: initChatInputSchema,
@@ -814,6 +829,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send a follow-up message to an existing v0 chat.",
     requiredScopes: [],
     inputSchema: sendMessageInputSchema,
@@ -823,6 +839,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_chats",
+    operationType: "read",
     description: "List chats in the connected v0 workspace with optional filters.",
     requiredScopes: [],
     inputSchema: inputObject(
@@ -846,6 +863,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_chat",
+    operationType: "read",
     description: "Get a single v0 chat, including the current messages when v0 returns them.",
     requiredScopes: [],
     inputSchema: inputObject({ chatId: chatIdField }),
@@ -853,6 +871,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_chat",
+    operationType: "write",
     description: "Update a v0 chat's metadata such as its name or privacy.",
     requiredScopes: [],
     inputSchema: requireAtLeastOneUpdateField(
@@ -870,6 +889,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "favorite_chat",
+    operationType: "write",
     description: "Mark or unmark a v0 chat as favorite.",
     requiredScopes: [],
     inputSchema: inputObject({
@@ -880,6 +900,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "fork_chat",
+    operationType: "write",
     description: "Fork an existing v0 chat into a new chat workspace.",
     requiredScopes: [],
     inputSchema: inputObject(
@@ -894,6 +915,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_chat",
+    operationType: "destructive",
     description: "Delete a v0 chat by chat ID.",
     requiredScopes: [],
     inputSchema: inputObject({ chatId: chatIdField }),
@@ -903,6 +925,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_messages",
+    operationType: "read",
     description: "List messages for a v0 chat.",
     requiredScopes: [],
     inputSchema: inputObject(
@@ -923,6 +946,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_message",
+    operationType: "read",
     description: "Get a single message from a v0 chat.",
     requiredScopes: [],
     inputSchema: inputObject({ chatId: chatIdField, messageId: messageIdField }),
@@ -930,6 +954,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "resume_message",
+    operationType: "write",
     description: "Resume a previously asynchronous v0 message generation.",
     requiredScopes: [],
     inputSchema: inputObject({ chatId: chatIdField, messageId: messageIdField }),
@@ -939,6 +964,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_versions",
+    operationType: "read",
     description: "List generated versions for a v0 chat.",
     requiredScopes: [],
     inputSchema: inputObject(
@@ -959,6 +985,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_version",
+    operationType: "read",
     description: "Get a single v0 chat version, optionally including default deployment files.",
     requiredScopes: [],
     inputSchema: inputObject(
@@ -973,6 +1000,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_version",
+    operationType: "write",
     description: "Update the files of an existing v0 chat version.",
     requiredScopes: [],
     inputSchema: inputObject({
@@ -984,6 +1012,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_deployment",
+    operationType: "write",
     description: "Create a deployment for a specific v0 chat version.",
     requiredScopes: [],
     inputSchema: inputObject({
@@ -997,6 +1026,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_deployments",
+    operationType: "read",
     description: "List deployments for a specific project, chat, and version combination.",
     requiredScopes: [],
     inputSchema: inputObject({
@@ -1010,6 +1040,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_deployment",
+    operationType: "read",
     description: "Get a single deployment by deployment ID.",
     requiredScopes: [],
     inputSchema: inputObject({ deploymentId: deploymentIdField }),
@@ -1019,6 +1050,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_deployment_logs",
+    operationType: "read",
     description: "List logs for a v0 deployment, optionally continuing from a previous timestamp.",
     requiredScopes: [],
     inputSchema: inputObject(
@@ -1038,6 +1070,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_deployment_errors",
+    operationType: "read",
     description: "Get the current error summary for a v0 deployment.",
     requiredScopes: [],
     inputSchema: inputObject({ deploymentId: deploymentIdField }),
@@ -1045,6 +1078,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_hooks",
+    operationType: "read",
     description: "List webhook hooks configured in the connected v0 workspace.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -1052,6 +1086,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_hook",
+    operationType: "write",
     description: "Create a webhook hook in v0 for chat or message events.",
     requiredScopes: [],
     inputSchema: inputObject(
@@ -1068,6 +1103,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_hook",
+    operationType: "read",
     description: "Get a single webhook hook by hook ID.",
     requiredScopes: [],
     inputSchema: inputObject({ hookId: hookIdField }),
@@ -1075,6 +1111,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_hook",
+    operationType: "write",
     description: "Update an existing webhook hook in v0.",
     requiredScopes: [],
     inputSchema: requireAtLeastOneUpdateField(
@@ -1093,6 +1130,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_hook",
+    operationType: "destructive",
     description: "Delete a webhook hook by hook ID.",
     requiredScopes: [],
     inputSchema: inputObject({ hookId: hookIdField }),
@@ -1102,6 +1140,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_rate_limit",
+    operationType: "read",
     description: "Get current v0 rate-limit information for the workspace or a specific scope.",
     requiredScopes: [],
     inputSchema: inputObject({ scope: s.string("Workspace, project, or billing scope in v0.") }, ["scope"]),
@@ -1109,6 +1148,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_billing",
+    operationType: "read",
     description: "Get current v0 billing and quota information.",
     requiredScopes: [],
     inputSchema: inputObject({ scope: s.string("Workspace, project, or billing scope in v0.") }, ["scope"]),
@@ -1116,6 +1156,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_plan",
+    operationType: "read",
     description: "Get the current subscription plan for the connected v0 user.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -1123,6 +1164,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_scopes",
+    operationType: "read",
     description: "List workspaces and scopes accessible to the connected v0 user.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -1130,6 +1172,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_usage_report",
+    operationType: "read",
     description: "Get usage events and pagination information from the v0 usage report API.",
     requiredScopes: [],
     inputSchema: usageReportInputSchema,
@@ -1144,6 +1187,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_vercel_project",
+    operationType: "write",
     description: "Create and link a Vercel project from a v0 project.",
     requiredScopes: [],
     inputSchema: inputObject({
@@ -1156,6 +1200,7 @@ export const v0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_vercel_projects",
+    operationType: "read",
     description: "List Vercel projects linked to the connected v0 workspace.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,

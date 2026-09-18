@@ -55,6 +55,7 @@ const variablesSchema = s.record(
 export const axiomActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_datasets",
+    operationType: "read",
     description: "List Axiom datasets visible to the current token.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Axiom datasets.", {}),
@@ -64,6 +65,7 @@ export const axiomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dataset",
+    operationType: "read",
     description: "Get an Axiom dataset by ID or unique name.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for getting an Axiom dataset.", {
@@ -75,6 +77,7 @@ export const axiomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_dataset",
+    operationType: "write",
     description: "Create an Axiom dataset.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -98,6 +101,7 @@ export const axiomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_dataset",
+    operationType: "destructive",
     description: "Delete an Axiom dataset by ID or unique name.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for deleting an Axiom dataset.", {
@@ -109,6 +113,7 @@ export const axiomActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_apl_query",
+    operationType: "read",
     description: "Run an Axiom Processing Language query through the global API endpoint.",
     requiredScopes: [],
     inputSchema: s.object(

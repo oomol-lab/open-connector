@@ -8,6 +8,7 @@ const service = "unifapi";
 export const unifapiActions: ProviderActionDefinition[] = unifapiOperations.map((operation) =>
   defineProviderAction(service, {
     name: operation.name,
+    operationType: operation.operationType,
     description: operation.description,
     inputSchema: operation.inputSchema,
     outputSchema: operation.outputSchema,

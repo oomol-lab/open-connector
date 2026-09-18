@@ -71,6 +71,7 @@ function input(properties: Record<string, JsonSchema>, required: string[], descr
 export const witAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "analyze_message",
+    operationType: "read",
     description: "Analyze a text message and return the intents, entities, and traits inferred by Wit.ai.",
     inputSchema: input(
       {
@@ -93,6 +94,7 @@ export const witAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "detect_language",
+    operationType: "read",
     description: "Detect the most likely locales for a text message using Wit.ai language identification.",
     inputSchema: input({ text: textField, topN: topNField }, ["text"], "Input parameters for detecting locales."),
     outputSchema: s.actionOutput({
@@ -101,6 +103,7 @@ export const witAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_apps",
+    operationType: "read",
     description: "List the Wit.ai apps accessible by the current bearer token.",
     inputSchema: input(
       {
@@ -116,12 +119,14 @@ export const witAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_app",
+    operationType: "read",
     description: "Retrieve details and training status for a specific Wit.ai app.",
     inputSchema: input({ appId: s.nonEmptyString("Wit.ai app ID.") }, ["appId"], "Input for retrieving a Wit.ai app."),
     outputSchema: s.looseObject("A Wit.ai app detail.", {}),
   }),
   defineProviderAction(service, {
     name: "list_intents",
+    operationType: "read",
     description: "List all intents defined in the current Wit.ai app.",
     inputSchema: input(
       {
@@ -135,12 +140,14 @@ export const witAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_intent",
+    operationType: "write",
     description: "Create a new Wit.ai intent for labeling user messages.",
     inputSchema: input({ name: intentNameField }, ["name"], "Input for creating a new Wit.ai intent."),
     outputSchema: intentOutput,
   }),
   defineProviderAction(service, {
     name: "get_intent",
+    operationType: "read",
     description: "Retrieve a Wit.ai intent together with the entity bindings it uses.",
     inputSchema: input({ intentName: intentNameField }, ["intentName"], "Input for retrieving a Wit.ai intent."),
     outputSchema: s.looseObject("A Wit.ai intent with entity bindings.", {
@@ -151,12 +158,14 @@ export const witAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_entities",
+    operationType: "read",
     description: "List all entities defined in the current Wit.ai app.",
     inputSchema: emptyInput,
     outputSchema: s.actionOutput({ entities: s.array("Entities defined in the app.", entitySummaryOutput) }),
   }),
   defineProviderAction(service, {
     name: "create_entity",
+    operationType: "write",
     description: "Create a new Wit.ai entity with optional lookups and keywords.",
     inputSchema: input(
       {
@@ -172,12 +181,14 @@ export const witAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_entity",
+    operationType: "read",
     description: "Retrieve a Wit.ai entity including its roles, lookups, and keywords.",
     inputSchema: input({ entityName: entityNameField }, ["entityName"], "Input for retrieving a Wit.ai entity."),
     outputSchema: entityDetailOutput,
   }),
   defineProviderAction(service, {
     name: "update_entity",
+    operationType: "write",
     description: "Update a Wit.ai entity by sending the desired end-state definition for its schema and keywords.",
     inputSchema: input(
       {
@@ -194,6 +205,7 @@ export const witAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_entity_keyword",
+    operationType: "write",
     description: "Add a keyword and optional synonyms to an existing Wit.ai entity.",
     inputSchema: input(
       {
@@ -208,6 +220,7 @@ export const witAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_keyword_synonym",
+    operationType: "write",
     description: "Add a synonym to a specific keyword on a Wit.ai entity.",
     inputSchema: input(
       {
@@ -222,12 +235,14 @@ export const witAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_traits",
+    operationType: "read",
     description: "List all traits defined in the current Wit.ai app.",
     inputSchema: emptyInput,
     outputSchema: s.actionOutput({ traits: s.array("Traits defined in the app.", traitSummaryOutput) }),
   }),
   defineProviderAction(service, {
     name: "create_trait",
+    operationType: "write",
     description: "Create a new Wit.ai trait with one or more canonical values.",
     inputSchema: input(
       {
@@ -247,12 +262,14 @@ export const witAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_trait",
+    operationType: "read",
     description: "Retrieve a Wit.ai trait together with its configured values.",
     inputSchema: input({ traitName: traitNameField }, ["traitName"], "Input for retrieving a Wit.ai trait."),
     outputSchema: traitDetailOutput,
   }),
   defineProviderAction(service, {
     name: "add_trait_value",
+    operationType: "write",
     description: "Add a canonical value to an existing Wit.ai trait.",
     inputSchema: input(
       { traitName: traitNameField, value: valueField },
@@ -263,6 +280,7 @@ export const witAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_utterances",
+    operationType: "read",
     description: "List validated utterances already stored in the current Wit.ai app.",
     inputSchema: input(
       {
@@ -281,6 +299,7 @@ export const witAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_utterances",
+    operationType: "write",
     description: "Asynchronously enqueue validated utterances for training in Wit.ai.",
     inputSchema: input(
       {
@@ -293,6 +312,7 @@ export const witAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_utterances",
+    operationType: "destructive",
     description: "Asynchronously delete validated utterances from the current Wit.ai app.",
     inputSchema: input(
       {

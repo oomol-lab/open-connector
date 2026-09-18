@@ -86,6 +86,7 @@ const sendMessageOutputSchema = s.object("The normalized FlowiseAI prediction re
 export const flowiseaiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_chatflow",
+    operationType: "read",
     description: "Fetch the FlowiseAI chatflow currently protected by the connected API key.",
     requiredScopes: [],
     inputSchema: s.object("No input is required for this action.", {}),
@@ -93,6 +94,7 @@ export const flowiseaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send a JSON-only prediction request to the FlowiseAI chatflow protected by the connected API key.",
     requiredScopes: [],
     inputSchema: sendMessageInputSchema,

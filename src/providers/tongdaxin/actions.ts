@@ -41,6 +41,7 @@ const mcpToolSummarySchema = s.object(
 export const tongdaxinActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tools",
+    operationType: "read",
     description:
       "Discover the supported Tongdaxin market data, screening, news, announcement, and research MCP tools with their live input schemas.",
     requiredScopes: [],
@@ -55,6 +56,7 @@ export const tongdaxinActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "call_tool",
+    operationType: "read",
     description:
       "Call one supported read-only Tongdaxin financial data MCP tool with arguments matching its live input schema.",
     requiredScopes: [],

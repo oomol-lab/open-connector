@@ -64,6 +64,7 @@ const orttoMergePeopleOutputSchema = s.actionOutput(
 export const orttoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_people",
+    operationType: "read",
     description:
       "Retrieve people from Ortto's customer data platform with optional fields, filters, pagination, and sorting.",
     inputSchema: s.actionInput(
@@ -91,6 +92,7 @@ export const orttoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_people_by_ids",
+    operationType: "read",
     description: "Retrieve Ortto contacts by their contact IDs and return the requested fields.",
     inputSchema: s.actionInput(
       {
@@ -110,6 +112,7 @@ export const orttoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "merge_people",
+    operationType: "write",
     description:
       "Create or update one or more Ortto people using Ortto's person/merge endpoint and merge strategy options.",
     inputSchema: s.actionInput(

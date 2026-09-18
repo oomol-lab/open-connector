@@ -70,6 +70,7 @@ const metricMetadata = looseRequiredObject(
 export const datadogActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "validate_api_key",
+    operationType: "read",
     description: "Validate the configured Datadog API key.",
     inputSchema: s.actionInput({}, [], "Input for validating the configured Datadog API key."),
     outputSchema: s.actionOutput(
@@ -82,6 +83,7 @@ export const datadogActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_monitors",
+    operationType: "read",
     description: "List Datadog monitors with optional group state and tag filters.",
     requiredScopes: [datadogMonitorsReadScope],
     providerPermissions: [datadogMonitorsReadScope],
@@ -109,6 +111,7 @@ export const datadogActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_monitor",
+    operationType: "read",
     description: "Retrieve one Datadog monitor by ID.",
     requiredScopes: [datadogMonitorsReadScope],
     providerPermissions: [datadogMonitorsReadScope],
@@ -125,6 +128,7 @@ export const datadogActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_monitors",
+    operationType: "read",
     description: "Search Datadog monitors by query, page, and sort options.",
     requiredScopes: [datadogMonitorsReadScope],
     providerPermissions: [datadogMonitorsReadScope],
@@ -150,6 +154,7 @@ export const datadogActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_timeseries_points",
+    operationType: "read",
     description: "Query Datadog timeseries points for a metric expression and time window.",
     requiredScopes: [datadogTimeseriesQueryScope],
     providerPermissions: [datadogTimeseriesQueryScope],
@@ -174,6 +179,7 @@ export const datadogActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_metrics",
+    operationType: "read",
     description: "List Datadog metric names active since a given Unix timestamp.",
     requiredScopes: [datadogMetricsReadScope],
     providerPermissions: [datadogMetricsReadScope],
@@ -198,6 +204,7 @@ export const datadogActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_metric_metadata",
+    operationType: "read",
     description: "Retrieve Datadog metadata for one metric.",
     requiredScopes: [datadogMetricsReadScope],
     providerPermissions: [datadogMetricsReadScope],

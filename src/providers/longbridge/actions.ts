@@ -125,6 +125,7 @@ const stockPositionGroupSchema = s.looseObject("A Longbridge stock position grou
 export const longbridgeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_securities",
+    operationType: "read",
     description: "List Longbridge tradable securities for a market and category.",
     requiredScopes: longbridgeOAuthScopes,
     providerPermissions: ["openapi"],
@@ -141,6 +142,7 @@ export const longbridgeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_account_cash",
+    operationType: "read",
     description: "List Longbridge account cash balances visible to the connected OAuth user.",
     requiredScopes: longbridgeOAuthScopes,
     providerPermissions: ["openapi"],
@@ -158,6 +160,7 @@ export const longbridgeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_stock_positions",
+    operationType: "read",
     description: "List Longbridge stock positions visible to the connected OAuth user.",
     requiredScopes: longbridgeOAuthScopes,
     providerPermissions: ["openapi"],
@@ -179,6 +182,7 @@ export const longbridgeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_market_temperature",
+    operationType: "read",
     description: "Get the current Longbridge market sentiment temperature for a market.",
     requiredScopes: longbridgeOAuthScopes,
     providerPermissions: ["openapi"],
@@ -193,6 +197,7 @@ export const longbridgeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_market_temperature",
+    operationType: "read",
     description: "List historical Longbridge market sentiment temperature values for a market and date range.",
     requiredScopes: longbridgeOAuthScopes,
     providerPermissions: ["openapi"],
@@ -209,6 +214,7 @@ export const longbridgeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_filings",
+    operationType: "read",
     description: "List Longbridge regulatory filings and disclosure documents for a symbol.",
     requiredScopes: longbridgeOAuthScopes,
     providerPermissions: ["openapi"],
@@ -223,6 +229,7 @@ export const longbridgeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_news",
+    operationType: "read",
     description: "List Longbridge news articles for a symbol.",
     requiredScopes: longbridgeOAuthScopes,
     providerPermissions: ["openapi"],
@@ -237,6 +244,7 @@ export const longbridgeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_watchlist_groups",
+    operationType: "read",
     description: "List Longbridge watchlist groups for the connected OAuth user.",
     requiredScopes: longbridgeOAuthScopes,
     providerPermissions: ["openapi"],
@@ -249,6 +257,7 @@ export const longbridgeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_cash_flow",
+    operationType: "read",
     description: "List Longbridge account cash flow records visible to the connected OAuth user.",
     requiredScopes: longbridgeOAuthScopes,
     providerPermissions: ["openapi"],
@@ -272,6 +281,7 @@ export const longbridgeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_fund_positions",
+    operationType: "read",
     description: "List Longbridge fund positions visible to the connected OAuth user.",
     requiredScopes: longbridgeOAuthScopes,
     providerPermissions: ["openapi"],
@@ -290,6 +300,7 @@ export const longbridgeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_history_executions",
+    operationType: "read",
     description: "List historical Longbridge execution records visible to the connected OAuth user.",
     requiredScopes: longbridgeOAuthScopes,
     providerPermissions: ["openapi"],
@@ -312,6 +323,7 @@ export const longbridgeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_order_detail",
+    operationType: "read",
     description: "Get a Longbridge order detail record by order ID.",
     requiredScopes: longbridgeOAuthScopes,
     providerPermissions: ["openapi"],
@@ -326,6 +338,7 @@ export const longbridgeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "estimate_max_buy_quantity",
+    operationType: "read",
     description: "Estimate the maximum Longbridge buy quantity for a security without submitting an order.",
     requiredScopes: longbridgeOAuthScopes,
     providerPermissions: ["openapi"],
@@ -351,6 +364,7 @@ export const longbridgeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_history_orders",
+    operationType: "read",
     description: "List historical Longbridge orders visible to the connected OAuth user.",
     requiredScopes: longbridgeOAuthScopes,
     providerPermissions: ["openapi"],
@@ -376,6 +390,7 @@ export const longbridgeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_today_executions",
+    operationType: "read",
     description: "List today's Longbridge execution records visible to the connected OAuth user.",
     requiredScopes: longbridgeOAuthScopes,
     providerPermissions: ["openapi"],
@@ -395,6 +410,7 @@ export const longbridgeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_today_orders",
+    operationType: "read",
     description: "List today's Longbridge orders visible to the connected OAuth user.",
     requiredScopes: longbridgeOAuthScopes,
     providerPermissions: ["openapi"],

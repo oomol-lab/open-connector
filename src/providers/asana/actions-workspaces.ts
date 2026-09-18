@@ -19,6 +19,7 @@ const service = "asana";
 export const asanaWorkspaceActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_workspaces",
+    operationType: "read",
     description: "List the Asana workspaces and organizations visible to the connected account.",
     requiredScopes: ["workspaces:read"],
     inputSchema: s.object(
@@ -36,6 +37,7 @@ export const asanaWorkspaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workspace",
+    operationType: "read",
     description: "Get an Asana workspace or organization by gid.",
     requiredScopes: ["workspaces:read"],
     inputSchema: s.object(
@@ -52,6 +54,7 @@ export const asanaWorkspaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_workspace",
+    operationType: "write",
     description: "Rename an existing Asana workspace or organization.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -69,6 +72,7 @@ export const asanaWorkspaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_workspace_user",
+    operationType: "write",
     description: "Add or invite a user to an Asana workspace or organization.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -86,6 +90,7 @@ export const asanaWorkspaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_workspace_user",
+    operationType: "destructive",
     description: "Remove a user from an Asana workspace or organization.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -100,6 +105,7 @@ export const asanaWorkspaceActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workspace_events",
+    operationType: "read",
     description:
       "Read the Enterprise workspace event stream from an optional sync token and return Asana's next sync state.",
     requiredScopes: [],

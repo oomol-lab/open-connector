@@ -161,6 +161,7 @@ const optionalCommonDocumentOptions: readonly string[] = [
 export const eversignActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_businesses",
+    operationType: "read",
     description: "List businesses available to the connected Xodo Sign API key.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Input for listing Xodo Sign businesses.", {}),
@@ -170,6 +171,7 @@ export const eversignActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_document",
+    operationType: "write",
     description: "Create an Xodo Sign document from public file URLs or existing Xodo Sign file IDs.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -210,6 +212,7 @@ export const eversignActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_document_from_template",
+    operationType: "write",
     description: "Create an Xodo Sign document from an existing template, role assignments, and merge fields.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -234,6 +237,7 @@ export const eversignActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document",
+    operationType: "read",
     description: "Retrieve an Xodo Sign document or template by its document hash.",
     requiredScopes: [],
     inputSchema: documentSelectionInputSchema,
@@ -243,6 +247,7 @@ export const eversignActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_documents",
+    operationType: "read",
     description: "List Xodo Sign documents for a business, optionally filtering by documented status.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -270,6 +275,7 @@ export const eversignActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List active, archived, or draft Xodo Sign templates for a business.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -290,6 +296,7 @@ export const eversignActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_reminder",
+    operationType: "write",
     description: "Send a reminder to one signer of a Xodo Sign document.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Input for sending a Xodo Sign reminder.", {
@@ -304,6 +311,7 @@ export const eversignActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reassign_signer",
+    operationType: "destructive",
     description: "Replace a signer on a Xodo Sign document and notify the affected participants.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -325,6 +333,7 @@ export const eversignActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_audit_log",
+    operationType: "read",
     description: "Retrieve the complete audit event history for a Xodo Sign document.",
     requiredScopes: [],
     inputSchema: documentSelectionInputSchema,

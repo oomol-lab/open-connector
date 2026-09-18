@@ -50,6 +50,7 @@ const nonNegativeInteger = (description: string): JsonSchema => s.nonNegativeInt
 export const geocodioActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "single_geocode",
+    operationType: "read",
     description: "Geocode a single address and return the official Geocodio response payload.",
     inputSchema: s.actionInput(
       {
@@ -72,6 +73,7 @@ export const geocodioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "geocode_batch",
+    operationType: "read",
     description: "Geocode multiple addresses in one batch request and return Geocodio batch results.",
     inputSchema: s.actionInput(
       {
@@ -93,6 +95,7 @@ export const geocodioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "single_reverse_geocode",
+    operationType: "read",
     description:
       "Reverse geocode a single latitude and longitude pair and return the official Geocodio response payload.",
     inputSchema: s.actionInput(
@@ -110,6 +113,7 @@ export const geocodioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "batch_reverse_geocode",
+    operationType: "read",
     description: "Reverse geocode multiple coordinate pairs in one batch request and return Geocodio batch results.",
     inputSchema: s.actionInput(
       {

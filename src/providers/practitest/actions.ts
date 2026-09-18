@@ -101,6 +101,7 @@ const testOutputSchema = s.object("The test returned by PractiTest.", {
 export const practitestActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List projects available to the connected PractiTest token.",
     requiredScopes: [],
     inputSchema: s.object("Pagination options for the project list.", pageInputFields, {
@@ -113,6 +114,7 @@ export const practitestActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Retrieve a PractiTest project by ID.",
     requiredScopes: [],
     inputSchema: projectIdInputSchema,
@@ -122,6 +124,7 @@ export const practitestActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tests",
+    operationType: "read",
     description: "List and filter tests in a PractiTest project.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -160,6 +163,7 @@ export const practitestActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_test",
+    operationType: "read",
     description: "Retrieve a PractiTest test by ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -174,6 +178,7 @@ export const practitestActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_test",
+    operationType: "write",
     description: "Create a test in a PractiTest project.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -191,6 +196,7 @@ export const practitestActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_test",
+    operationType: "write",
     description: "Update the documented attributes of a PractiTest test.",
     requiredScopes: [],
     inputSchema: s.requireAnyProperty(
@@ -205,6 +211,7 @@ export const practitestActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_test",
+    operationType: "destructive",
     description: "Permanently delete a test from a PractiTest project.",
     requiredScopes: [],
     inputSchema: s.object("The PractiTest test to delete.", testIdInputFields),

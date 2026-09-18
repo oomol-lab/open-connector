@@ -53,12 +53,14 @@ const searchOptional = ["match", "caseSensitive", ...readOptional];
 export const sheetDbActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_rows",
+    operationType: "read",
     description: "List rows from the connected SheetDB spreadsheet with optional paging and sorting.",
     inputSchema: s.actionInput(readOptions, [], "Input parameters for listing SheetDB rows."),
     outputSchema: s.actionOutput({ rows: rowsSchema }, "Rows returned by SheetDB."),
   }),
   defineProviderAction(service, {
     name: "get_keys",
+    operationType: "read",
     description: "Get the column names from the first row of the connected spreadsheet.",
     inputSchema: s.actionInput({ sheet: sheetSchema }, [], "Input parameters for getting spreadsheet column names."),
     outputSchema: s.actionOutput(
@@ -70,6 +72,7 @@ export const sheetDbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document_name",
+    operationType: "read",
     description: "Get the Google Sheets document name for the connected SheetDB API.",
     inputSchema: s.actionInput({}, [], "Input parameters for getting the document name."),
     outputSchema: s.actionOutput(
@@ -81,6 +84,7 @@ export const sheetDbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "count_rows",
+    operationType: "read",
     description: "Count data rows in the connected spreadsheet, excluding the header row.",
     inputSchema: s.actionInput({ sheet: sheetSchema }, [], "Input parameters for counting spreadsheet rows."),
     outputSchema: s.actionOutput(
@@ -92,6 +96,7 @@ export const sheetDbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_rows",
+    operationType: "read",
     description: "Search spreadsheet rows using dynamic column conditions and AND or OR matching.",
     inputSchema: s.object(
       "Input parameters for searching SheetDB rows.",
@@ -118,6 +123,7 @@ export const sheetDbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_rows",
+    operationType: "write",
     description: "Append one or more JSON rows to the connected spreadsheet.",
     inputSchema: s.actionInput(
       {
@@ -140,6 +146,7 @@ export const sheetDbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_rows",
+    operationType: "write",
     description: "Update all rows matching one spreadsheet column and value.",
     inputSchema: s.actionInput(
       {
@@ -161,6 +168,7 @@ export const sheetDbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_rows",
+    operationType: "destructive",
     description: "Delete all rows matching one spreadsheet column and value.",
     inputSchema: s.actionInput(
       {

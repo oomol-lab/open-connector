@@ -96,6 +96,7 @@ const listFormResponsesInputSchema = s.object(
 export const byteformsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_forms",
+    operationType: "read",
     description: "List forms available to the authenticated ByteForms account.",
     inputSchema: s.actionInput({}, [], "No input parameters are required for this action."),
     outputSchema: s.actionOutput(
@@ -107,6 +108,7 @@ export const byteformsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form",
+    operationType: "read",
     description: "Get one ByteForms form by form ID.",
     inputSchema: getFormInputSchema,
     outputSchema: s.actionOutput(
@@ -118,6 +120,7 @@ export const byteformsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_form_responses",
+    operationType: "read",
     description:
       "List responses for one ByteForms form with the documented cursor, query, order, and limit parameters.",
     inputSchema: listFormResponsesInputSchema,

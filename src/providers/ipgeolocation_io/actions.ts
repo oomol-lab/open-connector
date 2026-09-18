@@ -95,6 +95,7 @@ const astronomySchema = s.object("The normalized IPGeolocation.io astronomy resu
 export const ipgeolocationIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "lookup_ip",
+    operationType: "read",
     description: "Look up IP geolocation data with optional field controls.",
     inputSchema: s.object(
       "The input payload for looking up an IP address.",
@@ -129,6 +130,7 @@ export const ipgeolocationIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_timezone",
+    operationType: "read",
     description: "Get time zone information by IP address, coordinates, location, or time zone name.",
     inputSchema: s.object(
       "The input payload for getting IPGeolocation.io time zone data.",
@@ -147,6 +149,7 @@ export const ipgeolocationIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_astronomy",
+    operationType: "read",
     description: "Get sunrise, sunset, moonrise, moonset, and moon phase data for a location.",
     inputSchema: s.object(
       "The input payload for getting IPGeolocation.io astronomy data.",

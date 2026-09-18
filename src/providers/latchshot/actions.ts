@@ -168,6 +168,7 @@ const usageOutputSchema = s.requiredObject("The current Latchshot plan and quota
 export const latchshotActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "capture_page",
+    operationType: "write",
     description:
       "Render a public web page as a PNG, JPEG, or PDF and store the bounded artifact in local transit storage.",
     inputSchema: captureInputSchema,
@@ -175,6 +176,7 @@ export const latchshotActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_usage",
+    operationType: "read",
     description:
       "Read the current Latchshot plan, successful-render quota, reset time, upgrade-request status, and owner-managed paid-plan links. This action never initiates payment or an upgrade.",
     inputSchema: s.object("No input is required to read usage for the configured API key.", {}),

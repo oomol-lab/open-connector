@@ -294,30 +294,35 @@ const depotSchema = s.looseRequiredObject(
 export const detrackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_jobs",
+    operationType: "read",
     description: "List and filter delivery or collection jobs from Detrack API V2.",
     inputSchema: listJobsInputSchema,
     outputSchema: jobListOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_job",
+    operationType: "write",
     description: "Create a delivery or collection job in Detrack API V2.",
     inputSchema: createJobInputSchema,
     outputSchema: jobOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_job",
+    operationType: "read",
     description: "Retrieve one Detrack job by D.O. number and date.",
     inputSchema: jobIdentityInputSchema,
     outputSchema: jobOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_job",
+    operationType: "write",
     description: "Update selected fields on one Detrack job identified by D.O. number and date.",
     inputSchema: updateJobInputSchema,
     outputSchema: jobOutputSchema,
   }),
   defineProviderAction(service, {
     name: "delete_job",
+    operationType: "destructive",
     description: "Delete one Detrack job identified by D.O. number and date.",
     inputSchema: jobIdentityInputSchema,
     outputSchema: s.requiredObject("The Detrack deletion acknowledgement.", {
@@ -326,12 +331,14 @@ export const detrackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_jobs",
+    operationType: "read",
     description: "Search Detrack jobs with structured operational and customer filters.",
     inputSchema: searchJobsInputSchema,
     outputSchema: jobListOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_depots",
+    operationType: "read",
     description: "List depots available in the connected Detrack account.",
     inputSchema: listDepotsInputSchema,
     outputSchema: s.requiredObject("A page of Detrack depots.", {

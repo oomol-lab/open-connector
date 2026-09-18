@@ -32,6 +32,7 @@ const listMessagesOutputSchema = s.looseRequiredObject(
 export const wire2AirActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Queue an SMS message or comma-separated bulk SMS messages with Wire2Air.",
     inputSchema: s.object(
       "Input for sending an SMS message with Wire2Air.",
@@ -53,6 +54,7 @@ export const wire2AirActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_inbound_messages",
+    operationType: "read",
     description: "List inbound SMS and MMS messages from the Wire2Air inbox.",
     inputSchema: s.object(
       "Filters and pagination for listing Wire2Air inbox messages.",

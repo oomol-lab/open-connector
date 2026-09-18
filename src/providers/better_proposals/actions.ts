@@ -66,6 +66,7 @@ function resourceOutputSchema(description: string, resourceDescription: string):
 export const betterProposalsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_settings",
+    operationType: "read",
     description: "Get current Better Proposals account settings such as tax and timezone defaults.",
     inputSchema: noInputSchema("No input parameters are required to get account settings."),
     outputSchema: resourceOutputSchema(
@@ -75,6 +76,7 @@ export const betterProposalsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_brand_settings",
+    operationType: "read",
     description: "Get default Better Proposals brand settings such as brand name and tax defaults.",
     inputSchema: noInputSchema("No input parameters are required to get brand settings."),
     outputSchema: resourceOutputSchema(
@@ -84,6 +86,7 @@ export const betterProposalsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_proposals",
+    operationType: "read",
     description: "List Better Proposals proposals with optional pagination and document type filtering.",
     inputSchema: proposalListInputSchema,
     outputSchema: listOutputSchema(
@@ -93,6 +96,7 @@ export const betterProposalsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_new_proposals",
+    operationType: "read",
     description: "List Better Proposals proposals that are currently in the new proposal lifecycle state.",
     inputSchema: proposalListInputSchema,
     outputSchema: listOutputSchema(
@@ -102,6 +106,7 @@ export const betterProposalsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sent_proposals",
+    operationType: "read",
     description: "List Better Proposals proposals that have been sent to recipients.",
     inputSchema: proposalListInputSchema,
     outputSchema: listOutputSchema(
@@ -111,6 +116,7 @@ export const betterProposalsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_opened_proposals",
+    operationType: "read",
     description: "List Better Proposals proposals that have been opened by recipients.",
     inputSchema: proposalListInputSchema,
     outputSchema: listOutputSchema(
@@ -120,6 +126,7 @@ export const betterProposalsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_signed_proposals",
+    operationType: "read",
     description: "List Better Proposals proposals that have been signed by recipients.",
     inputSchema: proposalListInputSchema,
     outputSchema: listOutputSchema(
@@ -129,6 +136,7 @@ export const betterProposalsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_paid_proposals",
+    operationType: "read",
     description: "List Better Proposals proposals that have been paid.",
     inputSchema: proposalListInputSchema,
     outputSchema: listOutputSchema(
@@ -138,6 +146,7 @@ export const betterProposalsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_proposal",
+    operationType: "read",
     description: "Get details for a single Better Proposals proposal by ID.",
     inputSchema: resourceInputSchema,
     outputSchema: resourceOutputSchema(
@@ -147,6 +156,7 @@ export const betterProposalsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_proposal_count",
+    operationType: "read",
     description: "Get the total Better Proposals proposal count for the connected account.",
     inputSchema: noInputSchema("No input parameters are required to get proposal count."),
     outputSchema: s.object(
@@ -162,6 +172,7 @@ export const betterProposalsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List Better Proposals templates with optional pagination.",
     inputSchema: pagedInputSchema,
     outputSchema: listOutputSchema(
@@ -171,6 +182,7 @@ export const betterProposalsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_template",
+    operationType: "read",
     description: "Get details for a single Better Proposals template by ID.",
     inputSchema: resourceInputSchema,
     outputSchema: resourceOutputSchema(
@@ -180,6 +192,7 @@ export const betterProposalsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_document_types",
+    operationType: "read",
     description: "List Better Proposals document types with optional pagination.",
     inputSchema: pagedInputSchema,
     outputSchema: listOutputSchema(
@@ -189,6 +202,7 @@ export const betterProposalsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_quotes",
+    operationType: "read",
     description: "List Better Proposals quotes with optional pagination.",
     inputSchema: pagedInputSchema,
     outputSchema: listOutputSchema(
@@ -198,6 +212,7 @@ export const betterProposalsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_quote",
+    operationType: "read",
     description: "Get details for a single Better Proposals quote by ID.",
     inputSchema: resourceInputSchema,
     outputSchema: resourceOutputSchema(
@@ -207,6 +222,7 @@ export const betterProposalsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_companies",
+    operationType: "read",
     description: "List Better Proposals companies with optional pagination.",
     inputSchema: pagedInputSchema,
     outputSchema: listOutputSchema(
@@ -216,6 +232,7 @@ export const betterProposalsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description: "Get details for a single Better Proposals company by ID.",
     inputSchema: resourceInputSchema,
     outputSchema: resourceOutputSchema(
@@ -225,6 +242,7 @@ export const betterProposalsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_currencies",
+    operationType: "read",
     description: "List Better Proposals currencies with optional pagination.",
     inputSchema: pagedInputSchema,
     outputSchema: listOutputSchema(
@@ -234,6 +252,7 @@ export const betterProposalsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_currency",
+    operationType: "read",
     description: "Get details for a single Better Proposals currency by ID.",
     inputSchema: resourceInputSchema,
     outputSchema: resourceOutputSchema(
@@ -243,6 +262,7 @@ export const betterProposalsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_merge_tags",
+    operationType: "read",
     description: "List Better Proposals custom merge tags with optional pagination.",
     inputSchema: pagedInputSchema,
     outputSchema: listOutputSchema(

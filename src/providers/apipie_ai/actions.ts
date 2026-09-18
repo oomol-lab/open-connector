@@ -185,24 +185,28 @@ const embeddingOutputSchema = s.looseObject("The response payload for APIpie AI 
 export const apipieAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",
+    operationType: "read",
     description: "List the APIpie AI models available to the current API key.",
     inputSchema: noInputSchema,
     outputSchema: modelListOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_detailed_models",
+    operationType: "read",
     description: "List detailed APIpie AI model metadata available to the current API key.",
     inputSchema: noInputSchema,
     outputSchema: modelListOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_chat_completion",
+    operationType: "read",
     description: "Create a non-streaming APIpie AI OpenAI-compatible chat completion.",
     inputSchema: chatCompletionInputSchema,
     outputSchema: chatCompletionOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_embedding",
+    operationType: "write",
     description: "Generate APIpie AI embeddings for one or more text inputs.",
     inputSchema: embeddingInputSchema,
     outputSchema: embeddingOutputSchema,

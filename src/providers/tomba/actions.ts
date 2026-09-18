@@ -20,12 +20,14 @@ const account = s.object("The authenticated Tomba account response.", {
 export const tombaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve information about the authenticated Tomba account.",
     inputSchema: emptyInput,
     outputSchema: account,
   }),
   defineProviderAction(service, {
     name: "domain_search",
+    operationType: "read",
     description: "Search for email addresses and company intelligence for a domain.",
     inputSchema: s.object(
       "Input for searching email addresses by company domain.",
@@ -40,6 +42,7 @@ export const tombaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "email_finder",
+    operationType: "read",
     description: "Find the most likely professional email address for a person at a domain.",
     inputSchema: s.object("Input for finding one professional email address by person and company.", {
       domain: trimmedString("The company domain to search."),
@@ -50,6 +53,7 @@ export const tombaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "email_verifier",
+    operationType: "read",
     description: "Verify deliverability and metadata for an email address.",
     inputSchema: s.object("Input for verifying one email address.", {
       email: s.email("The email address to verify."),
@@ -58,6 +62,7 @@ export const tombaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "email_sources",
+    operationType: "read",
     description: "Retrieve public source URLs where Tomba found an email address.",
     inputSchema: s.object("Input for retrieving public sources for an email.", {
       email: s.email("The email address whose sources should be returned."),
@@ -66,6 +71,7 @@ export const tombaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "email_count",
+    operationType: "read",
     description: "Count known email addresses and related breakdowns for a domain.",
     inputSchema: s.object("Input for counting known emails for a domain.", {
       domain: trimmedString("The domain name to count email addresses for."),
@@ -74,6 +80,7 @@ export const tombaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "technology",
+    operationType: "read",
     description: "Detect technologies and tools used by a company domain.",
     inputSchema: s.object("Input for detecting technologies used by a domain.", {
       domain: trimmedString("The domain name to inspect for technologies."),
@@ -82,6 +89,7 @@ export const tombaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "linkedin",
+    operationType: "read",
     description: "Find contact data associated with a public LinkedIn profile URL.",
     inputSchema: s.object("Input for finding contact data from a LinkedIn URL.", {
       url: s.url("The public LinkedIn profile URL to search."),
@@ -90,6 +98,7 @@ export const tombaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "enrich",
+    operationType: "read",
     description: "Enrich a known email address with person and company attributes.",
     inputSchema: s.object("Input for enriching a known email address.", {
       email: s.email("The email address to enrich."),
@@ -98,6 +107,7 @@ export const tombaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_companies",
+    operationType: "read",
     description: "Search companies with Tomba Reveal using a natural-language query or filters.",
     inputSchema: s.object(
       "Input for searching companies with Tomba Reveal.",

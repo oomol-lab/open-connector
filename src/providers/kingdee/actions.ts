@@ -34,6 +34,7 @@ const businessOutputSchema = s.object("Business operation outcome, preserving pa
 export const kingdeeActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_records",
+    operationType: "read",
     description: "Query business records by fields, filters and row offset.",
     inputSchema: s.object("The business object and operation parameters.", {
       formId: s.string("The official business object FormId, not a catalog node ID.", {
@@ -72,6 +73,7 @@ export const kingdeeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_record",
+    operationType: "read",
     description: "View a record by its internal ID or number.",
     inputSchema: s.object("The business object and operation parameters.", {
       formId: s.string("The official business object FormId, not a catalog node ID.", {
@@ -95,6 +97,7 @@ export const kingdeeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_report",
+    operationType: "read",
     description: "Query a report using its form-specific filters.",
     inputSchema: s.object("The business object and operation parameters.", {
       formId: s.string("The official business object FormId, not a catalog node ID.", {
@@ -134,6 +137,7 @@ export const kingdeeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "save_record",
+    operationType: "destructive",
     description: "Save a record, including updates to existing records.",
     inputSchema: s.object("The business object and operation parameters.", {
       formId: s.string("The official business object FormId, not a catalog node ID.", {
@@ -175,6 +179,7 @@ export const kingdeeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "batch_save_records",
+    operationType: "destructive",
     description: "Save multiple records, including updates, and preserve partial results.",
     inputSchema: s.object("The business object and operation parameters.", {
       formId: s.string("The official business object FormId, not a catalog node ID.", {
@@ -218,6 +223,7 @@ export const kingdeeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "draft_record",
+    operationType: "destructive",
     description: "Save a draft, including changes to an existing draft.",
     inputSchema: s.object("The business object and operation parameters.", {
       formId: s.string("The official business object FormId, not a catalog node ID.", {
@@ -259,6 +265,7 @@ export const kingdeeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_records",
+    operationType: "write",
     description: "Submit records for approval.",
     inputSchema: s.object("The business object and operation parameters.", {
       formId: s.string("The official business object FormId, not a catalog node ID.", {
@@ -289,6 +296,7 @@ export const kingdeeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "audit_records",
+    operationType: "write",
     description: "Approve records through the audit operation.",
     inputSchema: s.object("The business object and operation parameters.", {
       formId: s.string("The official business object FormId, not a catalog node ID.", {
@@ -319,6 +327,7 @@ export const kingdeeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "unaudit_records",
+    operationType: "destructive",
     description: "Reverse the audit status of records.",
     inputSchema: s.object("The business object and operation parameters.", {
       formId: s.string("The official business object FormId, not a catalog node ID.", {
@@ -348,6 +357,7 @@ export const kingdeeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_records",
+    operationType: "destructive",
     description: "Delete records by internal IDs or numbers.",
     inputSchema: s.object("The business object and operation parameters.", {
       formId: s.string("The official business object FormId, not a catalog node ID.", {
@@ -373,6 +383,7 @@ export const kingdeeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "push_records",
+    operationType: "write",
     description: "Convert source records or entries into target records using a conversion rule.",
     inputSchema: s.object("The business object and operation parameters.", {
       formId: s.string("The official business object FormId, not a catalog node ID.", {
@@ -407,6 +418,7 @@ export const kingdeeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "allocate_records",
+    operationType: "write",
     description: "Allocate master data to target organizations.",
     inputSchema: s.object("The business object and operation parameters.", {
       formId: s.string("The official business object FormId, not a catalog node ID.", {

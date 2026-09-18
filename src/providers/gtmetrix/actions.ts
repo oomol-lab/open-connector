@@ -281,12 +281,14 @@ const collectionOutput = (key: string, itemSchema = resourceSchema(`A GTmetrix $
 export const gtmetrixActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_status",
+    operationType: "read",
     description: "Get the current GTmetrix account status, credits, and plan capabilities.",
     inputSchema: s.actionInput({}, [], "Input payload for reading GTmetrix account status."),
     outputSchema: s.actionOutput({ status: statusSchema }, "The GTmetrix account status result."),
   }),
   defineProviderAction(service, {
     name: "list_locations",
+    operationType: "read",
     description: "List GTmetrix test locations available to the connected account.",
     inputSchema: s.actionInput({}, [], "Input payload for listing GTmetrix locations."),
     outputSchema: s.actionOutput(
@@ -296,12 +298,14 @@ export const gtmetrixActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_location",
+    operationType: "read",
     description: "Get a single GTmetrix test location by ID.",
     inputSchema: s.actionInput({ location_id: locationIdSchema }, ["location_id"], "Input payload for a location."),
     outputSchema: s.actionOutput({ location: locationSchema }, "The GTmetrix location lookup result."),
   }),
   defineProviderAction(service, {
     name: "list_browsers",
+    operationType: "read",
     description: "List GTmetrix browsers that can be used for tests.",
     inputSchema: s.actionInput({}, [], "Input payload for listing GTmetrix browsers."),
     outputSchema: s.actionOutput(
@@ -311,12 +315,14 @@ export const gtmetrixActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_browser",
+    operationType: "read",
     description: "Get a single GTmetrix browser by ID.",
     inputSchema: s.actionInput({ browser_id: browserIdSchema }, ["browser_id"], "Input payload for a browser."),
     outputSchema: s.actionOutput({ browser: browserSchema }, "The GTmetrix browser lookup result."),
   }),
   defineProviderAction(service, {
     name: "list_simulated_devices",
+    operationType: "read",
     description: "List GTmetrix simulated devices that can be used for tests.",
     inputSchema: s.actionInput({}, [], "Input payload for listing GTmetrix simulated devices."),
     outputSchema: s.actionOutput(
@@ -328,6 +334,7 @@ export const gtmetrixActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_simulated_device",
+    operationType: "read",
     description: "Get a single GTmetrix simulated device by ID.",
     inputSchema: s.actionInput(
       { simulated_device_id: simulatedDeviceIdSchema },
@@ -341,6 +348,7 @@ export const gtmetrixActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_test",
+    operationType: "write",
     description: "Start a new GTmetrix performance test for a URL.",
     followUpActions: ["gtmetrix.get_test"],
     asyncLifecycle: { startActionId: "gtmetrix.start_test", statusActionId: "gtmetrix.get_test" },
@@ -356,12 +364,14 @@ export const gtmetrixActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tests",
+    operationType: "read",
     description: "List GTmetrix tests for the connected account.",
     inputSchema: listTestsInputSchema,
     outputSchema: collectionOutput("tests", testSchema),
   }),
   defineProviderAction(service, {
     name: "get_test",
+    operationType: "read",
     description: "Get the current state of a GTmetrix test and detect when it has completed.",
     followUpActions: ["gtmetrix.get_report"],
     asyncLifecycle: { startActionId: "gtmetrix.start_test", statusActionId: "gtmetrix.get_test" },
@@ -379,12 +389,14 @@ export const gtmetrixActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pages",
+    operationType: "read",
     description: "List GTmetrix pages associated with the connected account.",
     inputSchema: listPagesInputSchema,
     outputSchema: collectionOutput("pages", pageSchema),
   }),
   defineProviderAction(service, {
     name: "get_page",
+    operationType: "read",
     description: "Get a single GTmetrix page by slug.",
     followUpActions: ["gtmetrix.get_latest_page_report", "gtmetrix.list_page_reports"],
     inputSchema: s.actionInput({ page_id: pageIdSchema }, ["page_id"], "Input payload for a GTmetrix page."),
@@ -392,18 +404,21 @@ export const gtmetrixActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_page_reports",
+    operationType: "read",
     description: "List GTmetrix reports associated with a single page.",
     inputSchema: listPageReportsInputSchema,
     outputSchema: collectionOutput("reports", reportSchema),
   }),
   defineProviderAction(service, {
     name: "get_latest_page_report",
+    operationType: "read",
     description: "Get the latest GTmetrix report associated with a page.",
     inputSchema: s.actionInput({ page_id: pageIdSchema }, ["page_id"], "Input payload for the latest page report."),
     outputSchema: s.actionOutput({ report: reportSchema }, "The latest GTmetrix page report result."),
   }),
   defineProviderAction(service, {
     name: "get_report",
+    operationType: "read",
     description: "Get a single GTmetrix report by slug.",
     inputSchema: s.actionInput({ report_slug: reportSlugSchema }, ["report_slug"], "Input payload for a report."),
     outputSchema: s.actionOutput({ report: reportSchema }, "The GTmetrix report lookup result."),

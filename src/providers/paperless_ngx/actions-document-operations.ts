@@ -149,6 +149,7 @@ const listTasksFollowUp = "paperless_ngx.list_tasks";
 export const paperlessNgxDocumentOperationActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "bulk_edit_documents",
+    operationType: "destructive",
     description:
       "Apply one metadata change to many documents at once: set the correspondent, document type or storage path, add or remove tags, add or remove custom fields, or replace owner and permissions. Select documents explicitly or with all plus filters. Metadata methods require the global change_document permission plus change access on every document; set_permissions additionally requires that the connected user owns every document (or it is unowned) unless they are a superuser. Legacy document-editing methods (delete, reprocess, rotate, merge, split, delete_pages, edit_pdf, remove_password) are still accepted but deprecated; use the dedicated actions instead.",
     requiredScopes: [],
@@ -157,6 +158,7 @@ export const paperlessNgxDocumentOperationActions: ProviderActionDefinition[] = 
   }),
   defineProviderAction(service, {
     name: "delete_documents",
+    operationType: "destructive",
     description: `Move documents to the trash (soft delete). Versions of a selected root document are trashed with it. Trashed documents can be listed with list_trash and brought back with restore_trash_documents until the trash is emptied, which happens automatically after the instance's trash delay (30 days by default). ${changePermissionNote} Also requires the global delete_document permission and that the connected user owns every document (or it is unowned).`,
     requiredScopes: [],
     inputSchema: s.object(
@@ -169,6 +171,7 @@ export const paperlessNgxDocumentOperationActions: ProviderActionDefinition[] = 
   }),
   defineProviderAction(service, {
     name: "reprocess_documents",
+    operationType: "destructive",
     description: `Re-run parsing (text extraction, OCR and archive PDF generation) for documents from their original files. Each document is queued as a separate background task and its content and archive file are replaced when the task finishes; the response is OK as soon as the tasks are queued. ${changePermissionNote}`,
     requiredScopes: [],
     inputSchema: s.object(
@@ -186,6 +189,7 @@ export const paperlessNgxDocumentOperationActions: ProviderActionDefinition[] = 
   }),
   defineProviderAction(service, {
     name: "rotate_documents",
+    operationType: "write",
     description: `Rotate every page of the selected PDF documents by the given number of degrees. The rotated file is consumed in the background as a new version of each root document, keeping its metadata; documents that are not PDFs are skipped with a warning while the response is still OK. ${changePermissionNote} Also requires that the connected user owns every document (or it is unowned).`,
     requiredScopes: [],
     inputSchema: s.object(
@@ -204,6 +208,7 @@ export const paperlessNgxDocumentOperationActions: ProviderActionDefinition[] = 
   }),
   defineProviderAction(service, {
     name: "merge_documents",
+    operationType: "write",
     description: `Merge the PDFs of the given documents, in the given order, into a single new document that is consumed in the background and owned by the connected user. Documents whose file cannot be read as a PDF are skipped. With metadata_document_id the new document copies that document's metadata and takes its title with " (merged)" appended. ${changePermissionNote} Also requires the global add_document permission; with delete_originals the global delete_document permission and ownership of every document are required as well.`,
     requiredScopes: [],
     inputSchema: s.object(
@@ -231,6 +236,7 @@ export const paperlessNgxDocumentOperationActions: ProviderActionDefinition[] = 
   }),
   defineProviderAction(service, {
     name: "merge_documents_as_versions",
+    operationType: "destructive",
     description: `Turn existing top-level documents into file versions of one root document without creating a new file. The source documents disappear from the document list, give up their archive serial numbers (the root takes the first one if it has none) and become versions of the root, effective immediately. Only top-level documents can be selected and the sources must not have versions of their own. ${changePermissionNote} Also requires ownership of every document (or that it is unowned) and the global delete_document permission.`,
     requiredScopes: [],
     inputSchema: s.object(
@@ -252,6 +258,7 @@ export const paperlessNgxDocumentOperationActions: ProviderActionDefinition[] = 
   }),
   defineProviderAction(service, {
     name: "edit_document_pdf",
+    operationType: "destructive",
     description: `Rebuild the PDF of one document from a list of page operations: keep, reorder, duplicate, rotate or drop pages, and optionally split them into several output documents. By default each output is consumed in the background as a new document owned by the connected user (metadata copied when include_metadata is true), and delete_original then trashes the source afterwards, handing its archive serial number over when there is a single output. With update_document true, a single output is consumed as a new version of the same document instead. ${changePermissionNote} Also requires ownership of the document (or that it is unowned), the global add_document permission unless update_document is true, and the global delete_document permission when delete_original is true.`,
     requiredScopes: [],
     inputSchema: s.object(
@@ -279,6 +286,7 @@ export const paperlessNgxDocumentOperationActions: ProviderActionDefinition[] = 
   }),
   defineProviderAction(service, {
     name: "remove_document_password",
+    operationType: "destructive",
     description: `Remove the password protection from encrypted PDF documents using the given password. Documents that are not encrypted are skipped. By default the unprotected PDF is consumed in the background as a new document owned by the connected user (metadata copied when include_metadata is true) and delete_original then trashes the protected original; with update_document true it becomes a new version of the same document instead. A wrong password fails the whole request with 400. ${changePermissionNote} Also requires ownership of every document (or that it is unowned), the global add_document permission unless update_document is true, and the global delete_document permission when delete_original is true without update_document.`,
     requiredScopes: [],
     inputSchema: s.object(
@@ -298,6 +306,7 @@ export const paperlessNgxDocumentOperationActions: ProviderActionDefinition[] = 
   }),
   defineProviderAction(service, {
     name: "bulk_download_documents",
+    operationType: "read",
     description:
       "Download several documents as one zip archive handed back as a local transit file. Select documents explicitly or with all plus filters; the latest version of each root document is packed. content chooses archived PDFs (falling back to the original when a document has no archive version), original files, or both, and follow_formatting names the entries after the configured filename format instead of the document title. The zip is built on the instance and may take a while; it must stay under the 500 MiB connector limit. Requires view access to every document (403 otherwise).",
     requiredScopes: [],
@@ -327,6 +336,7 @@ export const paperlessNgxDocumentOperationActions: ProviderActionDefinition[] = 
   }),
   defineProviderAction(service, {
     name: "get_selection_data",
+    operationType: "read",
     description:
       "For a set of documents, count how many of them use each correspondent, tag, document type, storage path and custom field. Every object of each kind is returned, including those used by none of the documents, so a caller can tell whether an object applies to all, some or none of the selection before a bulk edit. Every document must exist (400 otherwise) and be visible to the connected user (403 otherwise).",
     requiredScopes: [],
@@ -340,6 +350,7 @@ export const paperlessNgxDocumentOperationActions: ProviderActionDefinition[] = 
   }),
   defineProviderAction(service, {
     name: "list_trash",
+    operationType: "read",
     description:
       "List the documents currently in the trash (soft deleted), newest created first, with the same fields as a regular document plus deleted_at. Superusers see every trashed document; other users only see trashed documents they own or that are unowned, explicit shares do not count. This endpoint supports pagination only, no filters or ordering.",
     requiredScopes: [],
@@ -356,6 +367,7 @@ export const paperlessNgxDocumentOperationActions: ProviderActionDefinition[] = 
   }),
   defineProviderAction(service, {
     name: "restore_trash_documents",
+    operationType: "write",
     description:
       "Restore documents from the trash so they appear in the document list again and are re-added to the search index. Every id must be a trashed document (400 otherwise) and the connected user needs delete permission on each of them (403 otherwise).",
     requiredScopes: [],
@@ -366,6 +378,7 @@ export const paperlessNgxDocumentOperationActions: ProviderActionDefinition[] = 
   }),
   defineProviderAction(service, {
     name: "empty_trash",
+    operationType: "destructive",
     description:
       "Permanently delete trashed documents together with their files. When documents is omitted, every trashed document the connected user sees in list_trash is deleted (all of them for a superuser). This cannot be undone. The connected user needs delete permission on each affected document (403 otherwise).",
     requiredScopes: [],
@@ -383,6 +396,7 @@ export const paperlessNgxDocumentOperationActions: ProviderActionDefinition[] = 
   }),
   defineProviderAction(service, {
     name: "chat_with_documents",
+    operationType: "read",
     description:
       "Ask the Paperless-ngx AI assistant a question that is answered from your documents (retrieval-augmented generation over the LLM index). With document_id the answer is based only on that document, which must exist (400 Document not found otherwise) and be viewable by the connected user (403 otherwise); without it every document visible to the user is searched. Requires AI to be enabled in the application configuration (400 AI is required for this feature otherwise), the global view_document permission and a built LLM index. Paperless-ngx streams the reply; the connector waits for the stream to finish and returns the whole text.",
     requiredScopes: [],

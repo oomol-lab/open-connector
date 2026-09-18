@@ -170,24 +170,28 @@ const creditsOutputSchema = s.looseObject("The output payload for ScrapeGraphAI 
 export const scrapeGraphAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "scrape",
+    operationType: "read",
     description: "Fetch a public URL with ScrapeGraphAI and return one or more content formats.",
     inputSchema: scrapeInputSchema,
     outputSchema: scrapeOutputSchema,
   }),
   defineProviderAction(service, {
     name: "extract",
+    operationType: "read",
     description: "Extract structured JSON from a URL, raw HTML, or markdown with a natural-language prompt.",
     inputSchema: extractInputSchema,
     outputSchema: extractOutputSchema,
   }),
   defineProviderAction(service, {
     name: "search",
+    operationType: "read",
     description: "Run a web search with ScrapeGraphAI, fetch the top results, and optionally extract JSON from them.",
     inputSchema: searchInputSchema,
     outputSchema: searchOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_history",
+    operationType: "read",
     description: "List recent ScrapeGraphAI request history entries with optional filters.",
     inputSchema: listHistoryInputSchema,
     outputSchema: s.object("The output payload for listing ScrapeGraphAI history entries.", {
@@ -201,6 +205,7 @@ export const scrapeGraphAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_history",
+    operationType: "read",
     description: "Retrieve one ScrapeGraphAI history entry by request ID.",
     inputSchema: s.object("The input payload for retrieving one history entry.", {
       id: s.uuid("The UUID of the ScrapeGraphAI history entry to retrieve."),
@@ -209,6 +214,7 @@ export const scrapeGraphAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_credits",
+    operationType: "read",
     description: "Check ScrapeGraphAI remaining credits, plan, and job quotas.",
     inputSchema: s.object("No input is required.", {}),
     outputSchema: creditsOutputSchema,

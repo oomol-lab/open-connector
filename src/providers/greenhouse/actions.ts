@@ -138,6 +138,7 @@ const noteSchema = s.looseObject("A Greenhouse candidate activity feed note.", {
 export const greenhouseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_jobs",
+    operationType: "read",
     description: "List Greenhouse jobs with optional status, department, and timestamp filters.",
     inputSchema: listJobsInputSchema,
     outputSchema: s.object("Greenhouse job list output.", {
@@ -148,6 +149,7 @@ export const greenhouseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job",
+    operationType: "read",
     description: "Retrieve one Greenhouse job by ID.",
     inputSchema: getByIdInputSchema("Input for retrieving one Greenhouse job.", "The job ID."),
     outputSchema: s.object("Greenhouse job output.", {
@@ -157,6 +159,7 @@ export const greenhouseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_candidates",
+    operationType: "read",
     description: "List Greenhouse candidates with optional job, email, candidate ID, and timestamp filters.",
     inputSchema: listCandidatesInputSchema,
     outputSchema: s.object("Greenhouse candidate list output.", {
@@ -167,6 +170,7 @@ export const greenhouseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_candidate",
+    operationType: "read",
     description: "Retrieve one Greenhouse candidate by ID.",
     inputSchema: getByIdInputSchema("Input for retrieving one Greenhouse candidate.", "The candidate ID."),
     outputSchema: s.object("Greenhouse candidate output.", {
@@ -176,6 +180,7 @@ export const greenhouseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_applications",
+    operationType: "read",
     description: "List Greenhouse applications with optional candidate, job, and status filters.",
     inputSchema: listApplicationsInputSchema,
     outputSchema: s.object("Greenhouse application list output.", {
@@ -186,6 +191,7 @@ export const greenhouseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_application",
+    operationType: "read",
     description: "Retrieve one Greenhouse application by ID.",
     inputSchema: getByIdInputSchema("Input for retrieving one Greenhouse application.", "The application ID."),
     outputSchema: s.object("Greenhouse application output.", {
@@ -195,6 +201,7 @@ export const greenhouseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_candidate_note",
+    operationType: "write",
     description: "Create a Greenhouse candidate activity feed note using an explicit On-Behalf-Of audit user.",
     inputSchema: addCandidateNoteInputSchema,
     outputSchema: s.object("Greenhouse candidate note output.", {

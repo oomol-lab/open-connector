@@ -53,6 +53,7 @@ const projectInput = (description: string, properties: Record<string, object>, r
 export const revenueCatActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List RevenueCat projects accessible to the configured secret API key.",
     requiredScopes: ["project_configuration:projects:read"],
     inputSchema: s.object("Pagination for RevenueCat projects.", paginationFields),
@@ -60,6 +61,7 @@ export const revenueCatActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List customers in a RevenueCat project, optionally searching by email or customer identifier.",
     requiredScopes: ["customer_information:customers:read"],
     inputSchema: projectInput("Filters for RevenueCat customers.", {
@@ -73,6 +75,7 @@ export const revenueCatActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Retrieve a RevenueCat customer and optionally expand the customer's attributes.",
     requiredScopes: ["customer_information:customers:read"],
     inputSchema: projectInput(
@@ -87,6 +90,7 @@ export const revenueCatActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customer_subscriptions",
+    operationType: "read",
     description: "List subscriptions belonging to a RevenueCat customer.",
     requiredScopes: ["customer_information:subscriptions:read"],
     inputSchema: projectInput(
@@ -101,6 +105,7 @@ export const revenueCatActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_subscription",
+    operationType: "read",
     description: "Retrieve a RevenueCat subscription by its subscription ID.",
     requiredScopes: ["customer_information:subscriptions:read"],
     inputSchema: projectInput(
@@ -114,6 +119,7 @@ export const revenueCatActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_subscriptions",
+    operationType: "read",
     description:
       "Find subscriptions by a store subscription identifier such as an Apple transaction ID or Google order ID.",
     requiredScopes: ["customer_information:subscriptions:read"],
@@ -129,6 +135,7 @@ export const revenueCatActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customer_active_entitlements",
+    operationType: "read",
     description: "List the entitlements currently active for a RevenueCat customer.",
     requiredScopes: ["customer_information:customers:read"],
     inputSchema: projectInput(
@@ -146,6 +153,7 @@ export const revenueCatActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_entitlements",
+    operationType: "read",
     description: "List entitlement definitions configured in a RevenueCat project.",
     requiredScopes: ["project_configuration:entitlements:read"],
     inputSchema: projectInput("Pagination for RevenueCat entitlements.", paginationFields),
@@ -153,6 +161,7 @@ export const revenueCatActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_offerings",
+    operationType: "read",
     description: "List offerings configured in a RevenueCat project, optionally expanding packages and products.",
     requiredScopes: ["project_configuration:offerings:read"],
     inputSchema: projectInput("Pagination and expansion options for RevenueCat offerings.", {
@@ -163,6 +172,7 @@ export const revenueCatActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List products configured in a RevenueCat project.",
     requiredScopes: ["project_configuration:products:read"],
     inputSchema: projectInput("Pagination for RevenueCat products.", paginationFields),
@@ -170,6 +180,7 @@ export const revenueCatActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_overview_metrics",
+    operationType: "read",
     description: "Retrieve overview metrics for a RevenueCat project.",
     requiredScopes: ["charts_metrics:overview:read"],
     inputSchema: projectInput("Input for retrieving RevenueCat overview metrics.", { currency }),
@@ -181,6 +192,7 @@ export const revenueCatActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_revenue_metric",
+    operationType: "read",
     description: "Retrieve total RevenueCat project revenue for an inclusive date range.",
     requiredScopes: ["charts_metrics:overview:read"],
     inputSchema: projectInput(

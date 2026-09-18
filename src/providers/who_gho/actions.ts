@@ -25,6 +25,7 @@ const pagedOutput = (description: string, itemDescription: string) =>
 export const whoGhoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_dimensions",
+    operationType: "read",
     description: "List dimensions available in the WHO Global Health Observatory OData API.",
     requiredScopes: [],
     inputSchema: s.object("Pagination options for listing GHO dimensions.", paginationInput, {
@@ -34,6 +35,7 @@ export const whoGhoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_dimension_values",
+    operationType: "read",
     description: "List the available values for one WHO GHO dimension.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -51,6 +53,7 @@ export const whoGhoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_indicators",
+    operationType: "read",
     description: "Search WHO GHO indicators by partial or exact indicator name.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -66,6 +69,7 @@ export const whoGhoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_indicator_data",
+    operationType: "read",
     description: "Retrieve WHO GHO observations for an indicator with structured dimension and year filters.",
     requiredScopes: [],
     inputSchema: s.object(

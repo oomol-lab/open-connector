@@ -7,6 +7,7 @@ const service = "openai";
 
 interface OpenAiActionSource {
   name: OpenAiActionName;
+  readonly operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
@@ -239,6 +240,7 @@ const batchObject = s.object(
 const actions: OpenAiActionSource[] = [
   action(
     "list_models",
+    "read",
     "List the OpenAI models available to the current API key.",
     noInput,
     s.object(
@@ -256,6 +258,7 @@ const actions: OpenAiActionSource[] = [
   ),
   action(
     "get_model",
+    "read",
     "Retrieve the metadata for a single OpenAI model by ID.",
     input(
       "The input payload for retrieving a single OpenAI model.",
@@ -268,12 +271,14 @@ const actions: OpenAiActionSource[] = [
   ),
   action(
     "create_response",
+    "write",
     "Create a non-streaming OpenAI response through the Responses API.",
     createResponseInput,
     responsePayload,
   ),
   action(
     "get_response",
+    "read",
     "Retrieve one stored OpenAI response by its identifier.",
     input(
       "The input payload for retrieving one stored OpenAI response.",
@@ -287,6 +292,7 @@ const actions: OpenAiActionSource[] = [
   ),
   action(
     "list_input_items",
+    "read",
     "List the stored input items for one OpenAI response.",
     input(
       "The input payload for listing stored response input items.",
@@ -316,6 +322,7 @@ const actions: OpenAiActionSource[] = [
   ),
   action(
     "get_input_token_counts",
+    "read",
     "Count how many input tokens a Responses-style OpenAI request would consume.",
     input("The input payload for counting input tokens for a Responses-style request.", {
       model: s.string({ description: "The model used for counting the input tokens." }),
@@ -339,6 +346,7 @@ const actions: OpenAiActionSource[] = [
   ),
   action(
     "create_embeddings",
+    "write",
     "Create embeddings with an OpenAI embedding model.",
     input(
       "The input payload for creating OpenAI embeddings.",
@@ -355,6 +363,7 @@ const actions: OpenAiActionSource[] = [
   ),
   action(
     "create_moderation",
+    "write",
     "Classify text or image inputs with the OpenAI Moderations API.",
     input(
       "The input payload for creating an OpenAI moderation request.",
@@ -385,6 +394,7 @@ const actions: OpenAiActionSource[] = [
   ),
   action(
     "create_image",
+    "write",
     "Generate images with the OpenAI image generation API.",
     input(
       "The input payload for creating one or more OpenAI images.",
@@ -432,6 +442,7 @@ const actions: OpenAiActionSource[] = [
   ),
   action(
     "create_speech",
+    "write",
     "Synthesize speech audio from text with the OpenAI audio speech API.",
     input(
       "The input payload for creating OpenAI speech audio.",
@@ -457,6 +468,7 @@ const actions: OpenAiActionSource[] = [
   ),
   action(
     "create_audio_transcription",
+    "write",
     "Transcribe one uploaded audio file with the OpenAI audio transcription API.",
     input(
       "The input payload for creating an OpenAI audio transcription.",
@@ -487,6 +499,7 @@ const actions: OpenAiActionSource[] = [
   ),
   action(
     "create_audio_translation",
+    "write",
     "Translate one uploaded audio file into English with the OpenAI audio translation API.",
     input(
       "The input payload for creating an OpenAI audio translation.",
@@ -503,6 +516,7 @@ const actions: OpenAiActionSource[] = [
   ),
   action(
     "create_batch",
+    "write",
     "Create an OpenAI batch job from an uploaded input file.",
     input(
       "The input payload for creating an OpenAI batch.",
@@ -516,8 +530,14 @@ const actions: OpenAiActionSource[] = [
     ),
     batchObject,
   ),
-  action("get_batch", "Fetch one OpenAI batch job by its identifier.", batchIdInput(), batchObject),
-  action("cancel_batch", "Cancel one in-progress OpenAI batch job by its identifier.", batchIdInput(), batchObject),
+  action("get_batch", "read", "Fetch one OpenAI batch job by its identifier.", batchIdInput(), batchObject),
+  action(
+    "cancel_batch",
+    "destructive",
+    "Cancel one in-progress OpenAI batch job by its identifier.",
+    batchIdInput(),
+    batchObject,
+  ),
 ];
 
 export type OpenAiActionName =
@@ -540,6 +560,7 @@ export type OpenAiActionName =
 export const openaiActions: ActionDefinition[] = actions.map((source) =>
   defineProviderAction(service, {
     name: source.name,
+    operationType: source.operationType,
     description: source.description,
     requiredScopes: [],
     providerPermissions: [],
@@ -551,12 +572,13 @@ export const openaiActions: ActionDefinition[] = actions.map((source) =>
 
 function action(
   name: OpenAiActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
   followUpActions?: string[],
 ): OpenAiActionSource {
-  return { name, description, inputSchema, outputSchema, followUpActions };
+  return { name, operationType, description, inputSchema, outputSchema, followUpActions };
 }
 
 function input(description: string, properties: Record<string, JsonSchema>, required: string[] = []): JsonSchema {

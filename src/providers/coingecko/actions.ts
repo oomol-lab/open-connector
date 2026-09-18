@@ -397,6 +397,7 @@ export const coingeckoActions: ActionDefinition[] = [
   ...coingeckoOnchainActions,
   defineProviderAction(service, {
     name: "search",
+    operationType: "read",
     description: "Search coins, categories, exchanges and NFTs listed on CoinGecko.",
     requiredScopes: [],
     inputSchema: searchInput,
@@ -404,6 +405,7 @@ export const coingeckoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_supported_currencies",
+    operationType: "read",
     description: "List supported quote currencies for CoinGecko price and market queries.",
     requiredScopes: [],
     inputSchema: listSupportedCurrenciesInput,
@@ -411,6 +413,7 @@ export const coingeckoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_coins",
+    operationType: "read",
     description: "List CoinGecko coin IDs, symbols and names, optionally including platform contract addresses.",
     requiredScopes: [],
     inputSchema: listCoinsInput,
@@ -418,6 +421,7 @@ export const coingeckoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_prices",
+    operationType: "read",
     description:
       "Get current coin prices by ID, name or symbol, with optional market metrics. At least one selector is required; CoinGecko prioritizes IDs, then names, then symbols.",
     requiredScopes: [],
@@ -429,6 +433,7 @@ export const coingeckoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_coin_markets",
+    operationType: "read",
     description:
       "List paginated coin prices, market capitalization, volume and price changes. Plan-specific filters are enforced by CoinGecko.",
     requiredScopes: [],
@@ -437,6 +442,7 @@ export const coingeckoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_coin",
+    operationType: "read",
     description: "Get coin metadata and optional market data, tickers and seven-day sparkline.",
     requiredScopes: [],
     inputSchema: getCoinInput,
@@ -444,6 +450,7 @@ export const coingeckoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_market_chart",
+    operationType: "read",
     description:
       "Get historical price, market capitalization and volume series by number of days. Historical access and interval availability depend on your CoinGecko plan.",
     requiredScopes: [],
@@ -452,6 +459,7 @@ export const coingeckoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_market_chart_range",
+    operationType: "read",
     description:
       "Get historical price, market capitalization and volume series within a date or UNIX timestamp range. Historical access and interval availability depend on your CoinGecko plan.",
     requiredScopes: [],
@@ -460,6 +468,7 @@ export const coingeckoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_trending",
+    operationType: "read",
     description:
       "Get trending coins, NFTs and categories by CoinGecko search volume over the last 24 hours. The show_max option requires an eligible plan.",
     requiredScopes: [],
@@ -468,6 +477,7 @@ export const coingeckoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_global_market_data",
+    operationType: "read",
     description: "Get global cryptocurrency market capitalization, trading volume and market share.",
     requiredScopes: [],
     inputSchema: getGlobalMarketDataInput,

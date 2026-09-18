@@ -266,6 +266,7 @@ const deleteItemOutputSchema = s.object("The acknowledgement for a deleted Zoter
 export const zoteroActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List Zotero groups accessible to the user connected by the current API key.",
     requiredScopes: [],
     inputSchema: listGroupsInputSchema,
@@ -273,6 +274,7 @@ export const zoteroActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_collections",
+    operationType: "read",
     description: "List collections in a Zotero user or group library.",
     requiredScopes: [],
     inputSchema: listCollectionsInputSchema,
@@ -280,6 +282,7 @@ export const zoteroActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_collection",
+    operationType: "read",
     description: "Retrieve one collection from a Zotero user or group library.",
     requiredScopes: [],
     inputSchema: getCollectionInputSchema,
@@ -287,6 +290,7 @@ export const zoteroActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_collection",
+    operationType: "write",
     description: "Create one collection in a Zotero user or group library.",
     requiredScopes: [],
     inputSchema: createCollectionInputSchema,
@@ -294,6 +298,7 @@ export const zoteroActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_collection",
+    operationType: "destructive",
     description: "Replace the editable fields of one Zotero collection at a known version.",
     requiredScopes: [],
     inputSchema: updateCollectionInputSchema,
@@ -301,6 +306,7 @@ export const zoteroActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_collection",
+    operationType: "destructive",
     description: "Delete one Zotero collection at a known version.",
     requiredScopes: [],
     inputSchema: deleteCollectionInputSchema,
@@ -308,6 +314,7 @@ export const zoteroActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_items",
+    operationType: "read",
     description: "List or search items in a Zotero user or group library.",
     requiredScopes: [],
     inputSchema: listItemsInputSchema,
@@ -315,6 +322,7 @@ export const zoteroActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_item",
+    operationType: "read",
     description: "Retrieve one item from a Zotero user or group library.",
     requiredScopes: [],
     inputSchema: getItemInputSchema,
@@ -322,6 +330,7 @@ export const zoteroActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_item",
+    operationType: "write",
     description: "Create one bibliographic item in a Zotero user or group library.",
     requiredScopes: [],
     inputSchema: createItemInputSchema,
@@ -329,6 +338,7 @@ export const zoteroActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_item",
+    operationType: "write",
     description: "Partially update one Zotero item at a known version.",
     requiredScopes: [],
     inputSchema: updateItemInputSchema,
@@ -336,6 +346,7 @@ export const zoteroActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_item",
+    operationType: "destructive",
     description: "Delete one Zotero item at a known version.",
     requiredScopes: [],
     inputSchema: deleteItemInputSchema,

@@ -73,6 +73,7 @@ const updateDocumentInputSchema = s.object(
 export const formstackDocumentsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_documents",
+    operationType: "read",
     description: "List Formstack Documents templates, optionally filtered by search text or folder.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -89,6 +90,7 @@ export const formstackDocumentsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document",
+    operationType: "read",
     description: "Get one Formstack Documents template by its document ID.",
     requiredScopes: [],
     inputSchema: documentIdInputSchema,
@@ -96,6 +98,7 @@ export const formstackDocumentsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document_fields",
+    operationType: "read",
     description: "List merge fields detected in a Formstack Documents template.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -112,6 +115,7 @@ export const formstackDocumentsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_document",
+    operationType: "write",
     description: "Create a Formstack Documents template from HTML or a public file URL.",
     requiredScopes: [],
     inputSchema: createDocumentInputSchema,
@@ -121,6 +125,7 @@ export const formstackDocumentsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_document",
+    operationType: "write",
     description: "Update mutable fields or source content for a Formstack Documents template.",
     requiredScopes: [],
     inputSchema: updateDocumentInputSchema,
@@ -130,6 +135,7 @@ export const formstackDocumentsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "copy_document",
+    operationType: "write",
     description: "Create a named copy of a Formstack Documents template.",
     requiredScopes: [],
     inputSchema: s.object("Parameters for copying a Formstack Documents template.", {
@@ -142,6 +148,7 @@ export const formstackDocumentsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_document",
+    operationType: "destructive",
     description: "Delete a Formstack Documents template by its document ID.",
     requiredScopes: [],
     inputSchema: documentIdInputSchema,

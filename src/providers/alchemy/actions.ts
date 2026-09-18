@@ -171,6 +171,7 @@ const getNftMetadataOutputSchema = s.object("NFT metadata payload returned by Al
 export const alchemyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_token_balances",
+    operationType: "read",
     description: "Retrieve ERC-20 token balances for a wallet address from Alchemy Ethereum mainnet.",
     requiredScopes: [],
     inputSchema: getTokenBalancesInputSchema,
@@ -178,6 +179,7 @@ export const alchemyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_token_metadata",
+    operationType: "read",
     description: "Retrieve ERC-20 token metadata for one contract from Alchemy Ethereum mainnet.",
     requiredScopes: [],
     inputSchema: getTokenMetadataInputSchema,
@@ -185,6 +187,7 @@ export const alchemyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_asset_transfers",
+    operationType: "read",
     description: "Retrieve historical asset transfers for Ethereum mainnet addresses through Alchemy.",
     requiredScopes: [],
     inputSchema: getAssetTransfersInputSchema,
@@ -192,6 +195,7 @@ export const alchemyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_nfts_for_owner",
+    operationType: "read",
     description: "Retrieve NFTs currently owned by an address from Alchemy Ethereum mainnet.",
     requiredScopes: [],
     inputSchema: getNftsForOwnerInputSchema,
@@ -199,6 +203,7 @@ export const alchemyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_nft_metadata",
+    operationType: "read",
     description: "Retrieve metadata for a specific NFT from Alchemy Ethereum mainnet.",
     requiredScopes: [],
     inputSchema: getNftMetadataInputSchema,

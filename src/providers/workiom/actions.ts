@@ -61,6 +61,7 @@ const listMetadataSchema = s.looseRequiredObject(
 export const workiomActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_apps",
+    operationType: "read",
     description: "List Workiom apps available to the connected API key.",
     inputSchema: s.actionInput({}, [], "The input payload for listing Workiom apps."),
     outputSchema: s.actionOutput(
@@ -73,6 +74,7 @@ export const workiomActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_lists",
+    operationType: "read",
     description: "List Workiom lists in an app.",
     inputSchema: s.actionInput({ appId: idSchema }, ["appId"], "The input payload for listing Workiom lists."),
     outputSchema: s.actionOutput(
@@ -86,6 +88,7 @@ export const workiomActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_list_metadata",
+    operationType: "read",
     description: "Get Workiom list metadata including fields, views, or filters.",
     inputSchema: s.actionInput(
       {
@@ -105,6 +108,7 @@ export const workiomActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_records",
+    operationType: "read",
     description: "List records from a Workiom list with optional filters, sorting, and pagination.",
     inputSchema: s.actionInput(
       {
@@ -129,6 +133,7 @@ export const workiomActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_record",
+    operationType: "write",
     description: "Create a record in a Workiom list from a JSON object keyed by field ID.",
     inputSchema: s.actionInput(
       {

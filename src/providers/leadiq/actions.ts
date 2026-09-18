@@ -166,6 +166,7 @@ const searchCompanyInputSchema = s.object(
 export const leadiqActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve LeadIQ subscription plans and current Data Hub and Universal credit balances.",
     inputSchema: s.requiredObject("No input parameters are required.", {}),
     outputSchema: s.object(
@@ -180,6 +181,7 @@ export const leadiqActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_people",
+    operationType: "read",
     description: "Find and enrich people in LeadIQ by person ID, LinkedIn URL, email, or name and company.",
     inputSchema: searchPeopleInputSchema,
     outputSchema: s.requiredObject("The LeadIQ people search result.", {
@@ -190,6 +192,7 @@ export const leadiqActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_company",
+    operationType: "read",
     description: "Find companies in LeadIQ by company ID, name, domain, or LinkedIn ID.",
     inputSchema: searchCompanyInputSchema,
     outputSchema: s.requiredObject("The LeadIQ company search result.", {
@@ -199,6 +202,7 @@ export const leadiqActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "flat_advanced_search",
+    operationType: "read",
     description: "Search for people using documented role, seniority, and location filters and return a flat list.",
     inputSchema: advancedSearchInputSchema,
     outputSchema: s.requiredObject("The flat LeadIQ advanced search result.", {
@@ -213,6 +217,7 @@ export const leadiqActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "grouped_advanced_search",
+    operationType: "read",
     description: "Search for people using documented filters and return matches grouped by company.",
     inputSchema: advancedSearchInputSchema,
     outputSchema: s.requiredObject("The company-grouped LeadIQ advanced search result.", {

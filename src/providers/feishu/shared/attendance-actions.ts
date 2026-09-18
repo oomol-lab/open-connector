@@ -9,6 +9,7 @@ export function createFeishuAttendanceActions(service: string): readonly ActionD
   return [
     defineProviderAction(service, {
       name: "query_my_attendance_tasks",
+      operationType: "read",
       description: "Query the current authorized user's attendance tasks and clock-in records for a work-date range.",
       requiredScopes: [feishuAttendanceProviderScopes.read],
       providerPermissions: [feishuAttendanceProviderScopes.read],

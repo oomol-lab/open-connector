@@ -103,6 +103,7 @@ const activateSceneInputSchema = s.object(
 export const lifxActions: ProviderActionDefinition<LifxActionName>[] = [
   defineProviderAction(service, {
     name: "list_lights",
+    operationType: "read",
     description: "List LIFX lights visible to the API token, optionally limited by a selector.",
     inputSchema: s.object(
       "Input parameters for listing LIFX lights.",
@@ -117,12 +118,14 @@ export const lifxActions: ProviderActionDefinition<LifxActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "set_state",
+    operationType: "write",
     description: "Set power, color, brightness, infrared, or transition duration for LIFX lights matching a selector.",
     inputSchema: setStateInputSchema,
     outputSchema: actionResponseSchema,
   }),
   defineProviderAction(service, {
     name: "toggle_power",
+    operationType: "write",
     description: "Toggle the power state for LIFX lights matching a selector.",
     inputSchema: s.object(
       "Input parameters for toggling LIFX light power.",
@@ -136,6 +139,7 @@ export const lifxActions: ProviderActionDefinition<LifxActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "list_scenes",
+    operationType: "read",
     description: "List scenes available to the authenticated LIFX account.",
     inputSchema: s.object("Input parameters for listing LIFX scenes.", {}),
     outputSchema: s.requiredObject("The LIFX scenes available to the account.", {
@@ -144,12 +148,14 @@ export const lifxActions: ProviderActionDefinition<LifxActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "activate_scene",
+    operationType: "write",
     description: "Activate a LIFX scene by UUID, optionally overriding or ignoring state fields.",
     inputSchema: activateSceneInputSchema,
     outputSchema: actionResponseSchema,
   }),
   defineProviderAction(service, {
     name: "validate_color",
+    operationType: "read",
     description:
       "Validate a LIFX color string and return the hue, saturation, brightness, and kelvin values LIFX will use.",
     inputSchema: s.requiredObject("Input parameters for validating a LIFX color string.", {
@@ -164,6 +170,7 @@ export const lifxActions: ProviderActionDefinition<LifxActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "turn_effects_off",
+    operationType: "write",
     description: "Turn off running LIFX effects for lights matching a selector, optionally powering the lights off.",
     inputSchema: s.object(
       "Input parameters for turning LIFX effects off.",

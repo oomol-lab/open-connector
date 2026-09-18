@@ -150,6 +150,7 @@ export type DocsautomatorActionName =
 export const docsautomatorActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_document",
+    operationType: "write",
     description:
       "Generate one DocsAutomator document synchronously and return the resulting file URLs plus signing metadata when available.",
     requiredScopes: [],
@@ -160,6 +161,7 @@ export const docsautomatorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_document_async",
+    operationType: "write",
     description: "Queue one DocsAutomator document generation job and return the job handle for later polling.",
     requiredScopes: [],
     followUpActions: ["docsautomator.get_document_job"],
@@ -174,6 +176,7 @@ export const docsautomatorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document_job",
+    operationType: "read",
     description:
       "Get the current status of a DocsAutomator async document generation job and return the finished document result when available.",
     requiredScopes: [],
@@ -191,6 +194,7 @@ export const docsautomatorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_queue_stats",
+    operationType: "read",
     description: "Return current DocsAutomator queue statistics for the connected workspace.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving DocsAutomator queue statistics.", {}),
@@ -200,6 +204,7 @@ export const docsautomatorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_automations",
+    operationType: "read",
     description:
       "List DocsAutomator automations in the current workspace with the core fields needed for document generation setup.",
     requiredScopes: [],
@@ -210,6 +215,7 @@ export const docsautomatorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_automation",
+    operationType: "read",
     description:
       "Get one DocsAutomator automation by automationId or docId and return its current generation-related settings.",
     requiredScopes: [],
@@ -220,6 +226,7 @@ export const docsautomatorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_template_placeholders",
+    operationType: "read",
     description: "List the placeholder groups extracted from a DocsAutomator Google Doc template for one automation.",
     requiredScopes: [],
     inputSchema: automationIdInputSchema,

@@ -180,6 +180,7 @@ const textContentOutputSchema = s.requiredObject("A raw Agenty text content resp
 export const agentyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_page_content",
+    operationType: "read",
     description: "Fetch the rendered HTML content for one web page.",
     inputSchema: urlInputSchema,
     outputSchema: s.requiredObject("The rendered page content returned by Agenty.", {
@@ -188,6 +189,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "extract_structured_data",
+    operationType: "read",
     description: "Extract structured metadata such as JSON-LD, RDFa, microdata, and meta tags.",
     inputSchema: urlInputSchema,
     outputSchema: s.requiredObject("The structured data payload returned by Agenty.", {
@@ -199,6 +201,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "capture_screenshot",
+    operationType: "read",
     description: "Capture a screenshot for one web page and return a downloadable file.",
     inputSchema: urlInputSchema,
     outputSchema: s.requiredObject("The screenshot payload returned by Agenty.", {
@@ -207,6 +210,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "convert_url_to_pdf",
+    operationType: "read",
     description: "Convert one web page into a PDF document and return a downloadable file.",
     inputSchema: urlInputSchema,
     outputSchema: s.requiredObject("The PDF payload returned by Agenty.", {
@@ -215,6 +219,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_redirects",
+    operationType: "read",
     description: "Return the ordered redirect chain for one URL.",
     inputSchema: urlInputSchema,
     outputSchema: s.requiredObject("The redirect chain payload returned by Agenty.", {
@@ -229,12 +234,14 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_agents",
+    operationType: "read",
     description: "List Agenty agents with optional pagination and sorting parameters.",
     inputSchema: s.object("The input payload for listing Agenty agents.", paginationInputFields),
     outputSchema: pagedAgentsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_agent",
+    operationType: "read",
     description: "Get one Agenty agent by agent identifier.",
     inputSchema: s.object(
       "The input payload for retrieving one Agenty agent.",
@@ -249,6 +256,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_agent",
+    operationType: "write",
     description: "Create one Agenty agent with the provided configuration.",
     inputSchema: s.object(
       "The input payload for creating one Agenty agent.",
@@ -270,6 +278,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_agent",
+    operationType: "write",
     description: "Update one Agenty agent by agent identifier.",
     inputSchema: s.object(
       "The input payload for updating one Agenty agent.",
@@ -291,6 +300,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "copy_agent",
+    operationType: "write",
     description: "Clone one Agenty agent by agent identifier.",
     inputSchema: s.object(
       "The input payload for cloning one Agenty agent.",
@@ -305,6 +315,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_agent",
+    operationType: "destructive",
     description: "Delete one Agenty agent by agent identifier.",
     inputSchema: s.object(
       "The input payload for deleting one Agenty agent.",
@@ -317,12 +328,14 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_agent_templates",
+    operationType: "read",
     description: "List public Agenty agent templates with optional pagination and sorting parameters.",
     inputSchema: s.object("The input payload for listing Agenty agent templates.", paginationInputFields),
     outputSchema: pagedTemplatesOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_agent_inputs",
+    operationType: "read",
     description: "Get the current Agenty input configuration for one agent.",
     inputSchema: s.object(
       "The input payload for retrieving one Agenty input configuration.",
@@ -337,6 +350,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_agent_inputs",
+    operationType: "write",
     description: "Update the Agenty input configuration for one agent.",
     inputSchema: s.object(
       "The input payload for updating one Agenty input configuration.",
@@ -354,6 +368,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_list",
+    operationType: "write",
     description: "Create one Agenty list.",
     inputSchema: s.object(
       "The input payload for creating one Agenty list.",
@@ -369,6 +384,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_list",
+    operationType: "read",
     description: "Get one Agenty list by list identifier.",
     inputSchema: s.object(
       "The input payload for retrieving one Agenty list.",
@@ -383,6 +399,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_list_rows",
+    operationType: "write",
     description: "Insert one or more rows into one Agenty list.",
     inputSchema: s.object(
       "The input payload for inserting Agenty list rows.",
@@ -398,6 +415,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_list_row",
+    operationType: "read",
     description: "Get one Agenty list row by list and row identifiers.",
     inputSchema: s.object(
       "The input payload for retrieving one Agenty list row.",
@@ -413,6 +431,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_list_row",
+    operationType: "destructive",
     description: "Delete one Agenty list row by list and row identifiers.",
     inputSchema: s.object(
       "The input payload for deleting one Agenty list row.",
@@ -426,6 +445,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_list_rows",
+    operationType: "destructive",
     description: "Delete multiple Agenty list rows by list identifier and row identifiers.",
     inputSchema: s.object(
       "The input payload for deleting multiple Agenty list rows.",
@@ -445,6 +465,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "clear_list_rows",
+    operationType: "destructive",
     description: "Delete all rows from one Agenty list.",
     inputSchema: s.object(
       "The input payload for clearing one Agenty list.",
@@ -457,6 +478,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "download_list_rows",
+    operationType: "read",
     description: "Download all rows from one Agenty list as raw text content.",
     inputSchema: s.object(
       "The input payload for downloading Agenty list rows.",
@@ -469,6 +491,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_job",
+    operationType: "write",
     description: "Start one Agenty job for an existing agent.",
     inputSchema: s.object(
       "The input payload for starting one Agenty job.",
@@ -483,6 +506,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job",
+    operationType: "read",
     description: "Get one Agenty job by job identifier.",
     inputSchema: s.object(
       "The input payload for retrieving one Agenty job.",
@@ -497,6 +521,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_jobs",
+    operationType: "read",
     description: "List Agenty jobs with optional pagination, sorting, and agent filtering parameters.",
     inputSchema: s.object("The input payload for listing Agenty jobs.", {
       ...paginationInputFields,
@@ -506,6 +531,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "stop_job",
+    operationType: "destructive",
     description: "Stop one running Agenty job by job identifier.",
     inputSchema: s.object(
       "The input payload for stopping one Agenty job.",
@@ -520,6 +546,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job_logs",
+    operationType: "read",
     description: "Get raw log content for one Agenty job.",
     inputSchema: s.object(
       "The input payload for retrieving Agenty job logs.",
@@ -534,6 +561,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job_result",
+    operationType: "read",
     description: "Get paginated result rows for one Agenty job.",
     inputSchema: s.object(
       "The input payload for retrieving Agenty job results.",
@@ -556,6 +584,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "download_job_result",
+    operationType: "read",
     description: "Download one Agenty job export as raw text content.",
     inputSchema: s.object(
       "The input payload for downloading one Agenty job export.",
@@ -572,6 +601,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_job_files",
+    operationType: "read",
     description: "List the files generated for one Agenty job.",
     inputSchema: s.object(
       "The input payload for listing Agenty job files.",
@@ -584,6 +614,7 @@ export const agentyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "download_job_file",
+    operationType: "read",
     description: "Download one named Agenty job file and return a downloadable file.",
     inputSchema: s.object(
       "The input payload for downloading one Agenty job file.",

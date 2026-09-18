@@ -91,6 +91,7 @@ updateAssetInputSchema.anyOf = [{ required: ["displayName"] }, { required: ["ass
 export const cloudinaryActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "upload_asset",
+    operationType: "write",
     description:
       "Upload one asset to Cloudinary from a remote URL or Data URI and return the normalized uploaded asset record.",
     inputSchema: uploadAssetInputSchema,
@@ -100,6 +101,7 @@ export const cloudinaryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_asset",
+    operationType: "write",
     description: "Update selected mutable fields of one uploaded Cloudinary asset by public ID using the explicit API.",
     inputSchema: updateAssetInputSchema,
     outputSchema: s.object("The output payload for updating one uploaded Cloudinary asset.", {
@@ -108,6 +110,7 @@ export const cloudinaryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "rename_asset",
+    operationType: "write",
     description:
       "Rename one uploaded Cloudinary asset by changing its public ID and return the normalized asset record.",
     inputSchema: s.object(
@@ -125,6 +128,7 @@ export const cloudinaryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_assets",
+    operationType: "read",
     description:
       "List uploaded Cloudinary assets of one resource type with optional prefix filtering and cursor pagination.",
     inputSchema: s.object(
@@ -149,6 +153,7 @@ export const cloudinaryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_asset",
+    operationType: "read",
     description: "Fetch one Cloudinary asset by immutable asset ID and return the normalized asset record.",
     inputSchema: s.object(
       "The input payload for fetching one Cloudinary asset by asset ID.",

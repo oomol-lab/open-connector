@@ -22,6 +22,7 @@ const listInputSchema = s.object(
 
 const getCurrentUser = defineProviderAction(service, {
   name: "get_current_user",
+  operationType: "read",
   description: "Get the current user associated with the connected ONLYOFFICE DocSpace API key.",
   requiredScopes: [],
   inputSchema: s.object("Input for retrieving the current DocSpace user.", {}),
@@ -30,6 +31,7 @@ const getCurrentUser = defineProviderAction(service, {
 
 const listUsers = defineProviderAction(service, {
   name: "list_users",
+  operationType: "read",
   description: "List users in the connected ONLYOFFICE DocSpace portal.",
   requiredScopes: [],
   followUpActions: [`${service}.get_user`],
@@ -42,6 +44,7 @@ const listUsers = defineProviderAction(service, {
 
 const getUser = defineProviderAction(service, {
   name: "get_user",
+  operationType: "read",
   description: "Get one ONLYOFFICE DocSpace user by user ID.",
   requiredScopes: [],
   inputSchema: s.object("The ONLYOFFICE DocSpace user lookup.", {
@@ -52,6 +55,7 @@ const getUser = defineProviderAction(service, {
 
 const listRooms = defineProviderAction(service, {
   name: "list_rooms",
+  operationType: "read",
   description: "List rooms available to the connected ONLYOFFICE DocSpace API key.",
   requiredScopes: [],
   followUpActions: [`${service}.get_room`],
@@ -68,6 +72,7 @@ const roomIdInputSchema = s.object("The ONLYOFFICE DocSpace room lookup.", {
 
 const getRoom = defineProviderAction(service, {
   name: "get_room",
+  operationType: "read",
   description: "Get information about one ONLYOFFICE DocSpace room.",
   requiredScopes: [],
   followUpActions: [`${service}.get_folder_contents`],
@@ -77,6 +82,7 @@ const getRoom = defineProviderAction(service, {
 
 const getFolderContents = defineProviderAction(service, {
   name: "get_folder_contents",
+  operationType: "read",
   description: "List file and subfolder metadata in an ONLYOFFICE DocSpace folder or room.",
   requiredScopes: [],
   inputSchema: s.object(

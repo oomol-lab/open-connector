@@ -176,6 +176,7 @@ function paginatedSchema(description: string, field: string, item: Record<string
 
 function listAction(input: {
   name: string;
+  operationType: ActionDefinition["operationType"];
   description: string;
   scope: string;
   collection: string;
@@ -186,6 +187,7 @@ function listAction(input: {
   const fields = { ...(input.fields ?? {}), ...paginationFields };
   return defineProviderAction(service, {
     name: input.name,
+    operationType: input.operationType,
     description: input.description,
     requiredScopes: [input.scope],
 
@@ -208,6 +210,7 @@ const rawContentField = {
 export const bitbucketActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the currently authenticated Bitbucket user.",
     requiredScopes: [bitbucketScopes.accountRead],
     inputSchema: s.object("Input parameters for getting the current Bitbucket user.", {}),
@@ -215,6 +218,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_workspaces",
+    operationType: "read",
     description: "List workspaces available to the authenticated Bitbucket user.",
     scope: bitbucketScopes.accountRead,
     collection: "workspaces",
@@ -222,6 +226,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workspace",
+    operationType: "read",
     description: "Get a Bitbucket workspace by slug or UUID.",
     requiredScopes: [bitbucketScopes.workspaceRead],
     inputSchema: s.object("Input parameters for getting a Bitbucket workspace.", workspaceField),
@@ -229,6 +234,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_workspace_members",
+    operationType: "read",
     description: "List members of a Bitbucket workspace.",
     scope: bitbucketScopes.accountRead,
     collection: "members",
@@ -238,6 +244,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_workspace_projects",
+    operationType: "read",
     description: "List projects in a Bitbucket workspace.",
     scope: bitbucketScopes.projectRead,
     collection: "projects",
@@ -247,6 +254,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_repositories",
+    operationType: "read",
     description: "List repositories in a Bitbucket workspace.",
     scope: bitbucketScopes.repositoryRead,
     collection: "repositories",
@@ -256,6 +264,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_repository",
+    operationType: "read",
     description: "Get a Bitbucket repository by workspace and repository slug or UUID.",
     requiredScopes: [bitbucketScopes.repositoryRead],
     inputSchema: s.object("Input parameters for getting a Bitbucket repository.", repositoryFields),
@@ -263,6 +272,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_repository",
+    operationType: "destructive",
     description: "Permanently delete a Bitbucket repository.",
     requiredScopes: [bitbucketScopes.repositoryDelete],
     inputSchema: s.object("Input parameters for deleting a Bitbucket repository.", repositoryFields),
@@ -272,6 +282,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_branches",
+    operationType: "read",
     description: "List branches in a Bitbucket repository.",
     scope: bitbucketScopes.repositoryRead,
     collection: "branches",
@@ -281,6 +292,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_branch",
+    operationType: "read",
     description: "Get a branch in a Bitbucket repository.",
     requiredScopes: [bitbucketScopes.repositoryRead],
     inputSchema: s.object("Input parameters for getting a Bitbucket branch.", {
@@ -291,6 +303,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_branch",
+    operationType: "write",
     description: "Create a branch from a commit hash or existing revision in a Bitbucket repository.",
     requiredScopes: [bitbucketScopes.repositoryWrite],
     inputSchema: s.object("Input parameters for creating a Bitbucket branch.", {
@@ -302,6 +315,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_branch",
+    operationType: "destructive",
     description: "Delete a branch from a Bitbucket repository.",
     requiredScopes: [bitbucketScopes.repositoryWrite],
     inputSchema: s.object("Input parameters for deleting a Bitbucket branch.", {
@@ -314,6 +328,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_tags",
+    operationType: "read",
     description: "List tags in a Bitbucket repository.",
     scope: bitbucketScopes.repositoryRead,
     collection: "tags",
@@ -323,6 +338,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_commits",
+    operationType: "read",
     description: "List commits in a Bitbucket repository, optionally starting from a revision.",
     scope: bitbucketScopes.repositoryRead,
     collection: "commits",
@@ -337,6 +353,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_commit",
+    operationType: "read",
     description: "Get a commit from a Bitbucket repository.",
     requiredScopes: [bitbucketScopes.repositoryRead],
     inputSchema: s.object("Input parameters for getting a Bitbucket commit.", {
@@ -347,6 +364,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_pull_requests",
+    operationType: "read",
     description: "List pull requests in a Bitbucket repository.",
     scope: bitbucketScopes.pullRequestRead,
     collection: "pullRequests",
@@ -359,6 +377,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_pull_request",
+    operationType: "read",
     description: "Get a pull request from a Bitbucket repository.",
     requiredScopes: [bitbucketScopes.pullRequestRead],
     inputSchema: s.object("Input parameters for getting a Bitbucket pull request.", {
@@ -369,6 +388,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_pull_request",
+    operationType: "write",
     description: "Create a pull request in a Bitbucket repository.",
     requiredScopes: [bitbucketScopes.pullRequestWrite],
     inputSchema: s.object(
@@ -391,6 +411,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "merge_pull_request",
+    operationType: "destructive",
     description: "Merge a Bitbucket pull request.",
     requiredScopes: [bitbucketScopes.pullRequestWrite],
     inputSchema: s.object(
@@ -415,6 +436,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_pull_request_merge_task_status",
+    operationType: "read",
     description: "Get the status of an asynchronous Bitbucket pull request merge task.",
     requiredScopes: [bitbucketScopes.pullRequestRead],
     inputSchema: s.object("Input parameters for getting a pull request merge task status.", {
@@ -426,6 +448,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "decline_pull_request",
+    operationType: "destructive",
     description: "Decline a Bitbucket pull request.",
     requiredScopes: [bitbucketScopes.pullRequestWrite],
     inputSchema: s.object("Input parameters for declining a Bitbucket pull request.", {
@@ -436,6 +459,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "approve_pull_request",
+    operationType: "write",
     description: "Approve a Bitbucket pull request.",
     requiredScopes: [bitbucketScopes.pullRequestWrite],
     inputSchema: s.object("Input parameters for approving a Bitbucket pull request.", {
@@ -446,6 +470,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_pull_request_comments",
+    operationType: "read",
     description: "List comments on a Bitbucket pull request.",
     scope: bitbucketScopes.pullRequestRead,
     collection: "comments",
@@ -458,6 +483,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_pull_request_comment",
+    operationType: "write",
     description: "Create a comment on a Bitbucket pull request.",
     requiredScopes: [bitbucketScopes.pullRequestCommentWrite],
     inputSchema: s.object("Input parameters for commenting on a Bitbucket pull request.", {
@@ -469,6 +495,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_issues",
+    operationType: "read",
     description: "List issues in a repository that still supports the deprecated Bitbucket issue tracker.",
     scope: bitbucketScopes.issueRead,
     collection: "issues",
@@ -478,6 +505,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_issue",
+    operationType: "read",
     description: "Get an issue from a repository that still supports the deprecated Bitbucket issue tracker.",
     requiredScopes: [bitbucketScopes.issueRead],
     inputSchema: s.object("Input parameters for getting a Bitbucket issue.", {
@@ -488,6 +516,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_issue",
+    operationType: "write",
     description: "Create an issue in a repository that still supports the deprecated Bitbucket issue tracker.",
     requiredScopes: [bitbucketScopes.issueInteract],
     inputSchema: s.object(
@@ -505,6 +534,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_issue",
+    operationType: "destructive",
     description: "Update an issue in a repository that still supports the deprecated Bitbucket issue tracker.",
     requiredScopes: [bitbucketScopes.issueWrite],
     inputSchema: updateIssueInputSchema,
@@ -512,6 +542,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_issue_comments",
+    operationType: "read",
     description: "List issue comments in a repository that still supports the deprecated Bitbucket issue tracker.",
     scope: bitbucketScopes.issueRead,
     collection: "comments",
@@ -524,6 +555,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_issue_comment",
+    operationType: "write",
     description: "Create an issue comment in a repository that still supports the deprecated Bitbucket issue tracker.",
     requiredScopes: [bitbucketScopes.issueInteract],
     inputSchema: s.object("Input parameters for commenting on a Bitbucket issue.", {
@@ -538,6 +570,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_snippets",
+    operationType: "read",
     description: "List snippets owned by or visible through a Bitbucket workspace.",
     scope: bitbucketScopes.snippetRead,
     collection: "snippets",
@@ -549,6 +582,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_snippet",
+    operationType: "read",
     description: "Get a Bitbucket snippet by workspace and encoded snippet ID.",
     requiredScopes: [bitbucketScopes.snippetRead],
     inputSchema: s.object("Input parameters for getting a Bitbucket snippet.", {
@@ -559,6 +593,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_pipelines",
+    operationType: "read",
     description: "List Pipelines runs for a Bitbucket repository.",
     scope: bitbucketScopes.pipelineRead,
     collection: "pipelines",
@@ -568,6 +603,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_pipeline",
+    operationType: "read",
     description: "Get a Pipelines run from a Bitbucket repository.",
     requiredScopes: [bitbucketScopes.pipelineRead],
 
@@ -584,6 +620,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_pipeline",
+    operationType: "write",
     description: "Trigger a Bitbucket Pipelines run for a branch, tag, or commit.",
     requiredScopes: [bitbucketScopes.pipelineRun],
     asyncLifecycle: {
@@ -624,6 +661,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "stop_pipeline",
+    operationType: "destructive",
     description: "Stop a running Bitbucket pipeline.",
     requiredScopes: [bitbucketScopes.pipelineWrite],
     inputSchema: s.object("Input parameters for stopping a Bitbucket pipeline.", {
@@ -636,6 +674,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_pipeline_variables",
+    operationType: "read",
     description: "List repository-level Bitbucket Pipelines variables.",
     scope: bitbucketScopes.pipelineRead,
     collection: "variables",
@@ -645,6 +684,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_pipeline_variable",
+    operationType: "write",
     description: "Create a repository-level Bitbucket Pipelines variable.",
     requiredScopes: [bitbucketScopes.pipelineVariableWrite],
 
@@ -662,6 +702,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_pipeline_variable",
+    operationType: "destructive",
     description: "Replace a repository-level Bitbucket Pipelines variable.",
     requiredScopes: [bitbucketScopes.pipelineVariableWrite],
 
@@ -680,6 +721,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_pipeline_variable",
+    operationType: "destructive",
     description: "Delete a repository-level Bitbucket Pipelines variable.",
     requiredScopes: [bitbucketScopes.pipelineVariableWrite],
     inputSchema: s.object("Input parameters for deleting a repository pipeline variable.", {
@@ -692,6 +734,7 @@ export const bitbucketActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_repository_runners",
+    operationType: "read",
     description: "List Pipelines runners configured for a Bitbucket repository.",
     scope: bitbucketScopes.runnerRead,
     collection: "runners",

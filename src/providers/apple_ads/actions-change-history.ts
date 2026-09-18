@@ -179,6 +179,7 @@ const changeDetailsResource = looseResource("The field-level change record for o
 export const appleAdsChangeHistoryActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_change_history",
+    operationType: "read",
     description:
       "Search the change history of one ad account, returning one row per transaction, actor and entity type with a count of the entity changes it covers. A filter on eventTime is required and Apple Ads looks back at most 6 months. A summary row carries no entityId, so set metadata to latest or snapshot when you plan to expand rows with get_change_history_detail: each row's metas entries then include a ready-to-use detailId.",
     requiredScopes: [],
@@ -214,6 +215,7 @@ export const appleAdsChangeHistoryActions: readonly ProviderActionDefinition[] =
   }),
   defineProviderAction(service, {
     name: "get_change_history_detail",
+    operationType: "read",
     description:
       "Read the field-level before and after values of one entity change, addressed by the composite detailId that query_change_history returns in each row's metas entries when metadata is latest or snapshot.",
     requiredScopes: [],

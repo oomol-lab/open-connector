@@ -49,6 +49,7 @@ const companyPreviewRecordSchema = s.looseObject(
 export const coresignalActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_base_companies",
+    operationType: "read",
     description:
       "Search Coresignal Base Company records with documented search filters and return matching company IDs for follow-up collection.",
     inputSchema: s.object(companyFilters, {
@@ -65,6 +66,7 @@ export const coresignalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "preview_base_companies",
+    operationType: "read",
     description:
       "Preview top Coresignal Base Company matches with compact company profile fields using documented search filters.",
     inputSchema: s.object(
@@ -86,6 +88,7 @@ export const coresignalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "collect_base_company",
+    operationType: "read",
     description:
       "Collect a Coresignal Base Company record by company ID, profile URL, or shorthand name, optionally selecting specific fields.",
     inputSchema: s.object(

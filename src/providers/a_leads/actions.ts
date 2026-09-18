@@ -65,6 +65,7 @@ const findEmailInputSchema = {
 export const aLeadsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "find_email",
+    operationType: "read",
     description: "Find a business email address from a person's name and company website or A-Leads document ID.",
     inputSchema: findEmailInputSchema,
     outputSchema: s.object(
@@ -81,6 +82,7 @@ export const aLeadsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_personal_email",
+    operationType: "read",
     description: "Find a personal email address from a LinkedIn username or profile URL.",
     inputSchema: s.object(
       {
@@ -106,6 +108,7 @@ export const aLeadsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_phone",
+    operationType: "read",
     description: "Find a phone number from a LinkedIn username or profile URL.",
     inputSchema: s.object(
       {
@@ -131,6 +134,7 @@ export const aLeadsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "verify_email",
+    operationType: "read",
     description: "Verify an email address and return deliverability signals from A-Leads.",
     inputSchema: s.object(
       {

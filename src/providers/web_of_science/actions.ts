@@ -122,6 +122,7 @@ searchDocumentsInputSchema.allOf = [
 
 const searchDocumentsAction = defineProviderAction(service, {
   name: "search_documents",
+  operationType: "read",
   description: "Search Web of Science documents with Starter API advanced queries, filters, sorting, and pagination.",
   inputSchema: searchDocumentsInputSchema,
   outputSchema: s.actionOutput(
@@ -136,6 +137,7 @@ const searchDocumentsAction = defineProviderAction(service, {
 
 const getDocumentAction = defineProviderAction(service, {
   name: "get_document",
+  operationType: "read",
   description: "Get one Web of Science document by its accession number (UID).",
   inputSchema: s.actionInput(
     {
@@ -157,6 +159,7 @@ const getDocumentAction = defineProviderAction(service, {
 
 const searchJournalsAction = defineProviderAction(service, {
   name: "search_journals",
+  operationType: "read",
   description: "Search Web of Science journals, optionally by ISSN.",
   inputSchema: s.actionInput(
     {
@@ -181,6 +184,7 @@ const searchJournalsAction = defineProviderAction(service, {
 
 const getJournalAction = defineProviderAction(service, {
   name: "get_journal",
+  operationType: "read",
   description: "Get one Web of Science journal by its journal identifier.",
   inputSchema: s.actionInput(
     {

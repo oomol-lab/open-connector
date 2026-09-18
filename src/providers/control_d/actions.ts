@@ -88,6 +88,7 @@ const profileRuleSchema = s.looseObject(
 export const controlDActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_ip",
+    operationType: "read",
     description:
       "Return the current IP address and datacenter seen by the Control D API for troubleshooting API token allowed-IP issues.",
     inputSchema: s.object({}, { description: "No input parameters for retrieving the current Control D IP context." }),
@@ -104,6 +105,7 @@ export const controlDActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_profiles",
+    operationType: "read",
     description: "List the Control D profiles available to the authenticated API token.",
     inputSchema: s.object(
       { forceOrgId },
@@ -116,6 +118,7 @@ export const controlDActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_profile",
+    operationType: "read",
     description: "Fetch one Control D profile by primary key.",
     inputSchema: s.object(
       { profileId, forceOrgId },
@@ -125,6 +128,7 @@ export const controlDActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_service_categories",
+    operationType: "read",
     description: "List the Control D service categories that can be used for service discovery.",
     inputSchema: s.object({}, { description: "No input parameters for listing Control D service categories." }),
     outputSchema: s.object(
@@ -134,6 +138,7 @@ export const controlDActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_services_by_category",
+    operationType: "read",
     description: "List the Control D services available in one service category.",
     inputSchema: s.object(
       { category: s.nonEmptyString("The Control D service category primary key.") },
@@ -146,6 +151,7 @@ export const controlDActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_profile_rules",
+    operationType: "read",
     description: "List the root-folder custom DNS rules configured on a Control D profile.",
     inputSchema: s.object(
       { profileId, forceOrgId },
@@ -158,6 +164,7 @@ export const controlDActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_profile_rule",
+    operationType: "destructive",
     description:
       "Create or replace root-folder custom DNS rules on a Control D profile for one or more hostname patterns.",
     inputSchema: s.object(
@@ -186,6 +193,7 @@ export const controlDActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_profile_rule",
+    operationType: "destructive",
     description: "Delete one root-folder custom DNS rule from a Control D profile.",
     inputSchema: s.object(
       {

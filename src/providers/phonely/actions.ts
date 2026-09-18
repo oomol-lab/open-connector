@@ -20,6 +20,7 @@ const callSchema = s.looseObject("A Phonely call record returned by the API.");
 export const phonelyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_agents",
+    operationType: "read",
     description: "List the Phonely agents accessible to the connected user.",
     requiredScopes: [],
     inputSchema: s.object("The input for listing Phonely agents.", {}),
@@ -29,6 +30,7 @@ export const phonelyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_agent",
+    operationType: "read",
     description: "Get one Phonely agent by its agent ID.",
     requiredScopes: [],
     inputSchema: s.object("The input for getting one Phonely agent.", {
@@ -40,6 +42,7 @@ export const phonelyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_calls",
+    operationType: "read",
     description: "List calls for a Phonely agent with pagination and optional filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -110,6 +113,7 @@ export const phonelyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_call",
+    operationType: "read",
     description: "Get the detailed call summary and transcript for a Phonely call.",
     requiredScopes: [],
     inputSchema: s.object("The input for getting one Phonely call.", {

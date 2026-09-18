@@ -31,6 +31,7 @@ const generationOutputSchema = s.actionOutput(
 export const higgsfieldAiActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "submit_image_generation",
+    operationType: "write",
     description: "Submit a Higgsfield text-to-image generation request.",
     followUpActions: ["higgsfield_ai.get_request_status"],
     asyncLifecycle: {
@@ -55,6 +56,7 @@ export const higgsfieldAiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_video_generation",
+    operationType: "write",
     description: "Submit a Higgsfield image-to-video generation request.",
     followUpActions: ["higgsfield_ai.get_request_status"],
     asyncLifecycle: {
@@ -78,12 +80,14 @@ export const higgsfieldAiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_request_status",
+    operationType: "read",
     description: "Retrieve the current status and outputs for a Higgsfield generation request.",
     inputSchema: s.actionInput({ requestId: requestIdSchema }, ["requestId"], "The Higgsfield request status lookup."),
     outputSchema: generationOutputSchema,
   }),
   defineProviderAction(service, {
     name: "cancel_request",
+    operationType: "destructive",
     description: "Cancel a queued Higgsfield generation request.",
     inputSchema: s.actionInput(
       { requestId: requestIdSchema },

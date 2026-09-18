@@ -116,6 +116,7 @@ const listTicketConversationsOutputSchema = s.requiredObject("Freshdesk ticket c
 export const freshdeskActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Get Freshdesk account details for the current API key.",
     requiredScopes: [],
     inputSchema: accountInputSchema,
@@ -123,6 +124,7 @@ export const freshdeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tickets",
+    operationType: "read",
     description: "List Freshdesk tickets with optional filters and include expansions.",
     requiredScopes: [],
     inputSchema: listTicketsInputSchema,
@@ -130,6 +132,7 @@ export const freshdeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ticket",
+    operationType: "read",
     description: "Get a single Freshdesk ticket by identifier.",
     requiredScopes: [],
     inputSchema: getTicketInputSchema,
@@ -137,6 +140,7 @@ export const freshdeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_ticket_conversations",
+    operationType: "read",
     description: "List conversations attached to a Freshdesk ticket.",
     requiredScopes: [],
     inputSchema: listTicketConversationsInputSchema,

@@ -26,6 +26,7 @@ const blockableResourceSchema = s.stringEnum(
 export const zenscrapeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "fetch_url",
+    operationType: "read",
     description: "Fetch one public URL through Zenscrape with optional rendering, proxy, header, and wait controls.",
     inputSchema: {
       ...s.object(

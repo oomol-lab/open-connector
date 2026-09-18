@@ -63,6 +63,7 @@ const textSegmentSchema = s.looseObject("A sentence or paragraph segment returne
 export const assemblyaiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_transcript",
+    operationType: "write",
     description: "Create an AssemblyAI transcript from an audio or video file URL.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -115,6 +116,7 @@ export const assemblyaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_transcript",
+    operationType: "read",
     description: "Get one AssemblyAI transcript by ID.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving an AssemblyAI transcript.", {
@@ -126,6 +128,7 @@ export const assemblyaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_transcripts",
+    operationType: "read",
     description: "List AssemblyAI transcripts created by the current API key.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -147,6 +150,7 @@ export const assemblyaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_transcript",
+    operationType: "destructive",
     description: "Delete one AssemblyAI transcript by ID.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for deleting an AssemblyAI transcript.", {
@@ -158,6 +162,7 @@ export const assemblyaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_transcript_sentences",
+    operationType: "read",
     description: "Get an AssemblyAI transcript split into sentences.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving transcript sentences.", {
@@ -173,6 +178,7 @@ export const assemblyaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_transcript_paragraphs",
+    operationType: "read",
     description: "Get an AssemblyAI transcript split into paragraphs.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving transcript paragraphs.", {

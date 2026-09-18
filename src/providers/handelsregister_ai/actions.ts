@@ -206,6 +206,7 @@ const fetchOrganizationOutputSchema = s.looseRequiredObject(
 export const handelsregisterAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_organizations",
+    operationType: "read",
     description:
       "Search German commercial-register organizations by free text or structured filters and return a paginated result set.",
     requiredScopes: [],
@@ -214,6 +215,7 @@ export const handelsregisterAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "fetch_organization",
+    operationType: "read",
     description:
       "Retrieve a German company profile by name, register number, search query, or exact entity identifier, with optional paid enrichment features.",
     requiredScopes: [],

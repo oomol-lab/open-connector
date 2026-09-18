@@ -191,6 +191,7 @@ const listArrayOutputSchema = s.array("Contact lists returned by the official El
 
 const listContactsAction = defineProviderAction(service, {
   name: "list_contacts",
+  operationType: "read",
   description: "List contacts available to the current Elastic Email API key.",
   requiredScopes: [],
   inputSchema: queryPageInputSchema,
@@ -199,6 +200,7 @@ const listContactsAction = defineProviderAction(service, {
 
 const getContactAction = defineProviderAction(service, {
   name: "get_contact",
+  operationType: "read",
   description: "Fetch one Elastic Email contact by email address.",
   requiredScopes: [],
   inputSchema: contactEmailInputSchema,
@@ -207,6 +209,7 @@ const getContactAction = defineProviderAction(service, {
 
 const addContactsAction = defineProviderAction(service, {
   name: "add_contacts",
+  operationType: "write",
   description: "Add up to 1000 contacts to Elastic Email and optionally assign them to lists.",
   requiredScopes: [],
   inputSchema: addContactsInputSchema,
@@ -215,6 +218,7 @@ const addContactsAction = defineProviderAction(service, {
 
 const updateContactAction = defineProviderAction(service, {
   name: "update_contact",
+  operationType: "write",
   description: "Update an existing Elastic Email contact by email address.",
   requiredScopes: [],
   inputSchema: updateContactInputSchema,
@@ -223,6 +227,7 @@ const updateContactAction = defineProviderAction(service, {
 
 const deleteContactAction = defineProviderAction(service, {
   name: "delete_contact",
+  operationType: "destructive",
   description: "Delete one Elastic Email contact by email address.",
   requiredScopes: [],
   inputSchema: contactEmailInputSchema,
@@ -231,6 +236,7 @@ const deleteContactAction = defineProviderAction(service, {
 
 const listListsAction = defineProviderAction(service, {
   name: "list_lists",
+  operationType: "read",
   description: "List Elastic Email contact lists.",
   requiredScopes: [],
   inputSchema: queryPageInputSchema,
@@ -239,6 +245,7 @@ const listListsAction = defineProviderAction(service, {
 
 const getListAction = defineProviderAction(service, {
   name: "get_list",
+  operationType: "read",
   description: "Fetch one Elastic Email contact list by name.",
   requiredScopes: [],
   inputSchema: listNameInputSchema,
@@ -247,6 +254,7 @@ const getListAction = defineProviderAction(service, {
 
 const createListAction = defineProviderAction(service, {
   name: "create_list",
+  operationType: "write",
   description: "Create a new Elastic Email contact list.",
   requiredScopes: [],
   inputSchema: createListInputSchema,
@@ -255,6 +263,7 @@ const createListAction = defineProviderAction(service, {
 
 const updateListAction = defineProviderAction(service, {
   name: "update_list",
+  operationType: "write",
   description: "Update an existing Elastic Email contact list.",
   requiredScopes: [],
   inputSchema: updateListInputSchema,
@@ -263,6 +272,7 @@ const updateListAction = defineProviderAction(service, {
 
 const deleteListAction = defineProviderAction(service, {
   name: "delete_list",
+  operationType: "destructive",
   description: "Delete an Elastic Email list without deleting its contacts.",
   requiredScopes: [],
   inputSchema: listNameInputSchema,
@@ -271,6 +281,7 @@ const deleteListAction = defineProviderAction(service, {
 
 const listContactsInListAction = defineProviderAction(service, {
   name: "list_contacts_in_list",
+  operationType: "read",
   description: "List contacts that belong to an Elastic Email contact list.",
   requiredScopes: [],
   inputSchema: listContactsInListInputSchema,
@@ -279,6 +290,7 @@ const listContactsInListAction = defineProviderAction(service, {
 
 const addContactsToListAction = defineProviderAction(service, {
   name: "add_contacts_to_list",
+  operationType: "write",
   description: "Add existing Elastic Email contacts to a contact list.",
   requiredScopes: [],
   inputSchema: listMembershipInputSchema,
@@ -287,6 +299,7 @@ const addContactsToListAction = defineProviderAction(service, {
 
 const removeContactsFromListAction = defineProviderAction(service, {
   name: "remove_contacts_from_list",
+  operationType: "destructive",
   description: "Remove Elastic Email contacts from a contact list.",
   requiredScopes: [],
   inputSchema: listMembershipInputSchema,

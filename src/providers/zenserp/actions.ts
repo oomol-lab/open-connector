@@ -26,6 +26,7 @@ const optionalObjectArraySchema = (itemDescription: string, description: string)
 export const zenserpActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search",
+    operationType: "read",
     description: "Run a Google Search request through Zenserp and return the first-pass common result surfaces.",
     inputSchema: s.object(
       "Input parameters for running a Google Search request through Zenserp.",
@@ -52,6 +53,7 @@ export const zenserpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_news_search",
+    operationType: "read",
     description: "Run a Google News request through Zenserp.",
     inputSchema: s.object(
       "Input parameters for running a Google News request through Zenserp.",
@@ -73,6 +75,7 @@ export const zenserpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_maps_search",
+    operationType: "read",
     description: "Run a Google Maps local search request through Zenserp.",
     inputSchema: s.object(
       "Input parameters for running a Google Maps request through Zenserp.",
@@ -97,6 +100,7 @@ export const zenserpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_image_search",
+    operationType: "read",
     description: "Run a Google Image Search request through Zenserp.",
     inputSchema: s.object(
       "Input parameters for running a Google Image Search request through Zenserp.",

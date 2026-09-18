@@ -110,6 +110,7 @@ const deleteEnvelopeSchema = (resource: string) =>
 export const dialMyCallsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Get the current DialMyCalls account details and available credit balance.",
     inputSchema: s.requiredObject("This action does not require any input.", {}),
     outputSchema: s.requiredObject("The current DialMyCalls account response.", {
@@ -119,18 +120,21 @@ export const dialMyCallsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a contact in the current DialMyCalls account.",
     inputSchema: s.object("The input payload for creating a DialMyCalls contact.", contactMutationFields),
     outputSchema: contactEnvelopeSchema,
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get one DialMyCalls contact by identifier.",
     inputSchema: contactIdInputSchema,
     outputSchema: contactEnvelopeSchema,
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update one DialMyCalls contact by identifier.",
     inputSchema: s.requiredObject("The input payload for updating a DialMyCalls contact.", {
       contact_id: uuidSchema("The unique DialMyCalls contact identifier."),
@@ -140,18 +144,21 @@ export const dialMyCallsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete one DialMyCalls contact by identifier.",
     inputSchema: contactIdInputSchema,
     outputSchema: deleteEnvelopeSchema("contact"),
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List DialMyCalls contacts with a bounded records range.",
     inputSchema: paginationSchema("The input payload for listing DialMyCalls contacts."),
     outputSchema: contactsEnvelopeSchema,
   }),
   defineProviderAction(service, {
     name: "list_group_contacts",
+    operationType: "read",
     description: "List contacts assigned to one DialMyCalls group.",
     inputSchema: paginationSchema("The input payload for listing contacts in one DialMyCalls group.", {
       group_id: uuidSchema("The unique DialMyCalls group identifier."),
@@ -160,6 +167,7 @@ export const dialMyCallsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_group",
+    operationType: "write",
     description: "Create a contact group in the current DialMyCalls account.",
     inputSchema: s.requiredObject("The input payload for creating a DialMyCalls group.", {
       name: s.nonEmptyString("The contact group name."),
@@ -168,12 +176,14 @@ export const dialMyCallsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_group",
+    operationType: "read",
     description: "Get one DialMyCalls contact group by identifier.",
     inputSchema: groupIdInputSchema,
     outputSchema: groupEnvelopeSchema,
   }),
   defineProviderAction(service, {
     name: "update_group",
+    operationType: "write",
     description: "Update one DialMyCalls contact group by identifier.",
     inputSchema: s.requiredObject("The input payload for updating a DialMyCalls group.", {
       group_id: uuidSchema("The unique DialMyCalls group identifier."),
@@ -183,12 +193,14 @@ export const dialMyCallsActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_group",
+    operationType: "destructive",
     description: "Delete one DialMyCalls contact group by identifier.",
     inputSchema: groupIdInputSchema,
     outputSchema: deleteEnvelopeSchema("group"),
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List DialMyCalls contact groups with a bounded records range.",
     inputSchema: paginationSchema("The input payload for listing DialMyCalls groups."),
     outputSchema: groupsEnvelopeSchema,

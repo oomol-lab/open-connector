@@ -19,6 +19,7 @@ const status = s.stringEnum("The workflow task completion status to write.", ["N
 export const processStreetActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_workflows",
+    operationType: "read",
     description: "List Process Street workflows with optional name filtering and cursor pagination.",
     inputSchema: s.object(
       { name: s.nonEmptyString("A case-insensitive partial workflow name search."), cursor },
@@ -31,12 +32,14 @@ export const processStreetActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workflow",
+    operationType: "read",
     description: "Get one Process Street workflow by workflow ID.",
     inputSchema: s.object({ workflowId: id }),
     outputSchema: s.object({ workflow: normalized }),
   }),
   defineProviderAction(service, {
     name: "create_workflow_run",
+    operationType: "write",
     description: "Create one Process Street workflow run from an existing workflow.",
     inputSchema: s.object(
       {
@@ -55,6 +58,7 @@ export const processStreetActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workflow_runs",
+    operationType: "read",
     description: "List Process Street workflow runs with optional workflow, status, and cursor filters.",
     inputSchema: s.object(
       {
@@ -73,18 +77,21 @@ export const processStreetActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workflow_run",
+    operationType: "read",
     description: "Get one Process Street workflow run by workflow run ID.",
     inputSchema: s.object({ workflowRunId: id }),
     outputSchema: s.object({ workflowRun: normalized }),
   }),
   defineProviderAction(service, {
     name: "list_workflow_tasks",
+    operationType: "read",
     description: "List Process Street tasks for one workflow run.",
     inputSchema: s.object({ workflowRunId: id, cursor }, { optional: ["cursor"] }),
     outputSchema: s.object({ tasks: s.array("The Process Street tasks returned by the API.", normalized), links }),
   }),
   defineProviderAction(service, {
     name: "update_workflow_task",
+    operationType: "write",
     description: "Update one Process Street workflow task status and optional due date by workflow run ID and task ID.",
     inputSchema: s.object(
       {
@@ -99,6 +106,7 @@ export const processStreetActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workflow_form_fields",
+    operationType: "read",
     description: "List Process Street workflow form field definitions for one workflow.",
     inputSchema: s.object({ workflowId: id, cursor }, { optional: ["cursor"] }),
     outputSchema: s.object({
@@ -108,6 +116,7 @@ export const processStreetActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workflow_run_form_fields",
+    operationType: "read",
     description: "List Process Street workflow run form field values for one workflow run.",
     inputSchema: s.object({ workflowRunId: id, cursor }, { optional: ["cursor"] }),
     outputSchema: s.object({
@@ -117,6 +126,7 @@ export const processStreetActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_workflow_run_form_fields",
+    operationType: "write",
     description: "Batch update Process Street workflow run form field values for one workflow run.",
     inputSchema: s.object({
       workflowRunId: id,

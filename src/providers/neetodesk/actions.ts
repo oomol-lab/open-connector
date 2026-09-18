@@ -66,6 +66,7 @@ const commentSchema = s.looseRequiredObject(
 export const neetodeskActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tickets",
+    operationType: "read",
     description: "List tickets in a NeetoDesk workspace with pagination and optional filters.",
     inputSchema: s.object(
       "Filters for listing NeetoDesk tickets.",
@@ -85,6 +86,7 @@ export const neetodeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ticket",
+    operationType: "read",
     description: "Retrieve one NeetoDesk ticket by UUID or sequential ticket number.",
     inputSchema: s.requiredObject("The NeetoDesk ticket to retrieve.", {
       ticket_id: s.nonEmptyString("The ticket UUID or sequential ticket number."),
@@ -93,6 +95,7 @@ export const neetodeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_ticket",
+    operationType: "write",
     description: "Create a ticket in a NeetoDesk workspace.",
     inputSchema: s.object("The NeetoDesk ticket to create.", ticketWriteFields, {
       required: ["email", "subject", "description"],
@@ -101,6 +104,7 @@ export const neetodeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_ticket",
+    operationType: "write",
     description: "Update selected fields on an existing NeetoDesk ticket.",
     inputSchema: s.object(
       "The NeetoDesk ticket update.",
@@ -111,6 +115,7 @@ export const neetodeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_comments",
+    operationType: "read",
     description: "List comments for a NeetoDesk ticket.",
     inputSchema: s.object(
       "The ticket and page of comments to retrieve.",
@@ -124,6 +129,7 @@ export const neetodeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_comment",
+    operationType: "write",
     description: "Create a reply or private note on a NeetoDesk ticket.",
     inputSchema: s.object(
       "The NeetoDesk ticket comment to create.",
@@ -141,6 +147,7 @@ export const neetodeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_team_members",
+    operationType: "read",
     description: "List team members in a NeetoDesk workspace.",
     inputSchema: s.object(
       "Filters for listing NeetoDesk team members.",

@@ -204,24 +204,28 @@ const audioTranscriptOutputSchema = s.looseObject("The transcript payload return
 export const groqcloudActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",
+    operationType: "read",
     description: "List the GroqCloud models available to the current API key.",
     inputSchema: noInputSchema,
     outputSchema: listModelsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_model",
+    operationType: "read",
     description: "Fetch metadata for one GroqCloud model.",
     inputSchema: getModelInputSchema,
     outputSchema: groqcloudModelSchema,
   }),
   defineProviderAction(service, {
     name: "create_chat_completion",
+    operationType: "read",
     description: "Create a non-streaming GroqCloud OpenAI-compatible chat completion.",
     inputSchema: chatCompletionInputSchema,
     outputSchema: chatCompletionOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_audio_transcription",
+    operationType: "write",
     description:
       "Transcribe an audio file into text in its original language using a GroqCloud Whisper model. Supply the audio inline as base64 or as a public URL that GroqCloud downloads.",
     inputSchema: transcriptionInputSchema,
@@ -229,6 +233,7 @@ export const groqcloudActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_audio_translation",
+    operationType: "write",
     description:
       "Translate an audio file into English text using a GroqCloud Whisper model. Supply the audio inline as base64 or as a public URL that GroqCloud downloads.",
     inputSchema: translationInputSchema,

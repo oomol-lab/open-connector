@@ -251,6 +251,7 @@ const savedQueryWriteProperties = {
 export const datalustActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_events",
+    operationType: "read",
     description: "Search a page of Seq events using a filter, signal, time range, or cursor.",
     providerPermissions: readPermissions,
     inputSchema: searchEventsInputSchema,
@@ -259,6 +260,7 @@ export const datalustActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_event",
+    operationType: "read",
     description: "Read one Seq event by its event identifier.",
     providerPermissions: readPermissions,
     inputSchema: getEventInputSchema,
@@ -266,6 +268,7 @@ export const datalustActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "execute_query",
+    operationType: "read",
     description: "Execute a Seq SQL-style query and return its structured JSON result.",
     providerPermissions: readPermissions,
     inputSchema: executeQueryInputSchema,
@@ -273,6 +276,7 @@ export const datalustActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "ingest_event",
+    operationType: "write",
     description: "Ingest one structured log event into Seq using compact log event format.",
     providerPermissions: ingestPermissions,
     inputSchema: ingestEventInputSchema,
@@ -280,6 +284,7 @@ export const datalustActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "ingest_events",
+    operationType: "write",
     description: "Ingest a JSON array of structured log events as one newline-delimited CLEF batch.",
     providerPermissions: ingestPermissions,
     inputSchema: ingestEventsInputSchema,
@@ -287,6 +292,7 @@ export const datalustActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_signals",
+    operationType: "read",
     description: "List saved Seq signals visible to the API key.",
     providerPermissions: readPermissions,
     inputSchema: listSignalsInputSchema,
@@ -295,6 +301,7 @@ export const datalustActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_signal",
+    operationType: "read",
     description: "Read one saved Seq signal by its identifier.",
     providerPermissions: readPermissions,
     inputSchema: s.actionInput(
@@ -309,6 +316,7 @@ export const datalustActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_signal",
+    operationType: "write",
     description: "Create a Seq signal while preserving server-provided template defaults.",
     providerPermissions: writePermissions,
     inputSchema: createSignalInputSchema,
@@ -316,6 +324,7 @@ export const datalustActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_signal",
+    operationType: "write",
     description: "Update selected fields on a Seq signal while preserving unspecified fields.",
     providerPermissions: writePermissions,
     inputSchema: updateSignalInputSchema,
@@ -329,6 +338,7 @@ export const datalustActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_signal",
+    operationType: "destructive",
     description: "Delete a Seq signal by its identifier; protected signals also require Project permission.",
     providerPermissions: writePermissions,
     inputSchema: s.actionInput(
@@ -346,6 +356,7 @@ export const datalustActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_saved_queries",
+    operationType: "read",
     description: "List saved Seq SQL queries visible to the API key.",
     providerPermissions: readPermissions,
     inputSchema: s.actionInput(
@@ -369,6 +380,7 @@ export const datalustActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_saved_query",
+    operationType: "read",
     description: "Read one saved Seq SQL query by its identifier.",
     providerPermissions: readPermissions,
     inputSchema: s.actionInput(
@@ -380,6 +392,7 @@ export const datalustActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_saved_query",
+    operationType: "write",
     description: "Create a saved Seq SQL query while preserving server-provided template defaults.",
     providerPermissions: writePermissions,
     inputSchema: s.actionInput(
@@ -391,6 +404,7 @@ export const datalustActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_saved_query",
+    operationType: "write",
     description: "Update selected fields on a saved Seq SQL query while preserving unspecified fields.",
     providerPermissions: writePermissions,
     inputSchema: s.actionInput(
@@ -408,6 +422,7 @@ export const datalustActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_saved_query",
+    operationType: "destructive",
     description: "Delete a saved Seq SQL query; protected queries also require Project permission.",
     providerPermissions: writePermissions,
     inputSchema: s.actionInput(

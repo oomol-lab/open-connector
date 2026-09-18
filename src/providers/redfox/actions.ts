@@ -171,6 +171,7 @@ const wechatAiCreationSearchInputSchema = s.object(
 export const redfoxActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_douyin_works",
+    operationType: "read",
     description: "Search Douyin works by keyword.",
     requiredScopes: [],
     inputSchema: searchInputSchema("Input parameters for searching Douyin works."),
@@ -178,6 +179,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_douyin_users",
+    operationType: "read",
     description: "Search Douyin accounts by keyword.",
     requiredScopes: [],
     inputSchema: searchInputSchema("Input parameters for searching Douyin accounts."),
@@ -185,6 +187,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_douyin_work",
+    operationType: "read",
     description: "Get a Douyin work by its ID or URL.",
     requiredScopes: [],
     inputSchema: optionalIdInputSchema("Input parameters for getting a Douyin work.", {
@@ -195,6 +198,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_douyin_user",
+    operationType: "read",
     description: "Get details about a Douyin account.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for getting a Douyin account.", {
@@ -204,6 +208,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_douyin_user_works",
+    operationType: "read",
     description: "List works published by a Douyin account.",
     requiredScopes: [],
     inputSchema: listDouyinUserWorksInputSchema,
@@ -211,6 +216,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_douyin_ai_creations",
+    operationType: "read",
     description: "Search Douyin works related to AI creation.",
     requiredScopes: [],
     inputSchema: douyinAiCreationSearchInputSchema,
@@ -218,6 +224,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_xiaohongshu_works",
+    operationType: "read",
     description: "Search Xiaohongshu works in the curated database.",
     requiredScopes: [],
     inputSchema: xiaohongshuWorkSearchInputSchema,
@@ -225,6 +232,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_xiaohongshu_users",
+    operationType: "read",
     description: "Search Xiaohongshu accounts by keyword.",
     requiredScopes: [],
     inputSchema: searchInputSchema("Input parameters for searching Xiaohongshu accounts."),
@@ -232,6 +240,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_xiaohongshu_work",
+    operationType: "read",
     description: "Get a Xiaohongshu work by its ID or link.",
     requiredScopes: [],
     inputSchema: optionalIdInputSchema("Input parameters for getting a Xiaohongshu work.", {
@@ -242,6 +251,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_xiaohongshu_user",
+    operationType: "read",
     description: "Get details about a Xiaohongshu account.",
     requiredScopes: [],
     inputSchema: requiredWithOptionalInputSchema(
@@ -256,6 +266,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_xiaohongshu_ai_creations",
+    operationType: "read",
     description: "Search Xiaohongshu works related to AI creation.",
     requiredScopes: [],
     inputSchema: xiaohongshuAiCreationSearchInputSchema,
@@ -263,6 +274,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_wechat_articles",
+    operationType: "read",
     description: "Search WeChat Official Account articles by keyword.",
     requiredScopes: [],
     inputSchema: searchInputSchema("Input parameters for searching WeChat Official Account articles."),
@@ -270,6 +282,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_wechat_accounts",
+    operationType: "read",
     description: "Search WeChat Official Accounts by keyword.",
     requiredScopes: [],
     inputSchema: searchInputSchema("Input parameters for searching WeChat Official Accounts."),
@@ -277,6 +290,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_wechat_article",
+    operationType: "read",
     description: "Get a WeChat Official Account article by its UUID.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for getting a WeChat Official Account article.", {
@@ -286,6 +300,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_wechat_article_by_url",
+    operationType: "read",
     description: "Get a WeChat Official Account article by its URL.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for getting a WeChat Official Account article by URL.", {
@@ -295,6 +310,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_wechat_account",
+    operationType: "read",
     description: "Get details about a WeChat Official Account.",
     requiredScopes: [],
     inputSchema: requiredWithOptionalInputSchema(
@@ -309,6 +325,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_wechat_account_articles",
+    operationType: "read",
     description: "List articles published by a WeChat Official Account.",
     requiredScopes: [],
     inputSchema: listWechatAccountArticlesInputSchema,
@@ -316,6 +333,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_wechat_ai_creations",
+    operationType: "read",
     description: "Search WeChat Official Account articles related to AI creation.",
     requiredScopes: [],
     inputSchema: wechatAiCreationSearchInputSchema,
@@ -323,6 +341,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_bilibili_works",
+    operationType: "read",
     description: "Search Bilibili works by keyword.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -340,6 +359,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_bilibili_users",
+    operationType: "read",
     description: "Search Bilibili accounts by keyword.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -356,6 +376,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_bilibili_work",
+    operationType: "read",
     description: "Get a Bilibili work by its BV ID or URL.",
     requiredScopes: [],
     inputSchema: optionalIdInputSchema("Input parameters for getting a Bilibili work.", {
@@ -366,6 +387,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_bilibili_user",
+    operationType: "read",
     description: "Get details about a Bilibili account.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for getting a Bilibili account.", {
@@ -375,6 +397,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_bilibili_user_works",
+    operationType: "read",
     description: "List works published by a Bilibili account.",
     requiredScopes: [],
     inputSchema: requireOneOfFields(
@@ -393,6 +416,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_wechat_channel_works",
+    operationType: "read",
     description: "Search WeChat Channel works by keyword.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -410,6 +434,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_wechat_channel_users",
+    operationType: "read",
     description: "Search WeChat Channel accounts by name.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -425,6 +450,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_wechat_channel_work",
+    operationType: "read",
     description: "Get details about a WeChat Channel work.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for getting a WeChat Channel work.", {
@@ -434,6 +460,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_wechat_channel_user_works",
+    operationType: "read",
     description: "List works published by a WeChat Channel account.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -449,6 +476,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_kuaishou_works",
+    operationType: "read",
     description: "Search Kuaishou works by keyword.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -465,6 +493,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_kuaishou_users",
+    operationType: "read",
     description: "Search Kuaishou accounts by name.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -480,6 +509,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_kuaishou_work",
+    operationType: "read",
     description: "Get details about a Kuaishou work.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for getting a Kuaishou work.", {
@@ -489,6 +519,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_kuaishou_user_works",
+    operationType: "read",
     description: "List works published by a Kuaishou account.",
     requiredScopes: [],
     inputSchema: requireOneOfFields(
@@ -506,6 +537,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_toutiao_works",
+    operationType: "read",
     description: "Search Toutiao works by keyword.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for searching Toutiao works.", {
@@ -516,6 +548,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_toutiao_users",
+    operationType: "read",
     description: "Search Toutiao accounts by keyword.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -531,6 +564,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_toutiao_work",
+    operationType: "read",
     description: "Get details about a Toutiao work.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for getting a Toutiao work.", {
@@ -540,6 +574,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_toutiao_work_comments",
+    operationType: "read",
     description: "List comments on a Toutiao work.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -554,6 +589,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_toutiao_user_works",
+    operationType: "read",
     description: "List works published by a Toutiao account.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for listing works published by a Toutiao account.", {
@@ -565,6 +601,7 @@ export const redfoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_tiktok_users",
+    operationType: "read",
     description: "Search TikTok accounts by keyword.",
     requiredScopes: [],
     inputSchema: tiktokUserSearchInputSchema,

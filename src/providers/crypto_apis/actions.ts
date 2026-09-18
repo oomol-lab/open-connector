@@ -89,6 +89,7 @@ const exchangeRateTimestampSchema = s.integer(
 export const cryptoApisActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_supported_assets",
+    operationType: "read",
     description: "List fiat and cryptocurrency assets supported by Crypto APIs market data endpoints.",
     inputSchema: s.object(
       "The input for listing supported Crypto APIs assets.",
@@ -104,6 +105,7 @@ export const cryptoApisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_exchange_rate_by_symbols",
+    operationType: "read",
     description: "Get the exchange rate for one asset symbol versus another asset symbol from Crypto APIs.",
     inputSchema: s.object(
       "The input for retrieving an exchange rate by asset symbols.",
@@ -119,6 +121,7 @@ export const cryptoApisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_exchange_rate_by_asset_ids",
+    operationType: "read",
     description: "Get the exchange rate for one Crypto APIs asset reference ID versus another asset reference ID.",
     inputSchema: s.object(
       "The input for retrieving an exchange rate by asset reference IDs.",
@@ -134,6 +137,7 @@ export const cryptoApisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_asset_details_by_symbol",
+    operationType: "read",
     description: "Get detailed Crypto APIs market data for one asset by its asset symbol.",
     inputSchema: s.object(
       "The input for retrieving asset details by symbol.",
@@ -147,6 +151,7 @@ export const cryptoApisActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_asset_details_by_id",
+    operationType: "read",
     description: "Get detailed Crypto APIs market data for one asset by its Crypto APIs reference ID.",
     inputSchema: s.object(
       "The input for retrieving asset details by reference ID.",

@@ -79,6 +79,7 @@ const diagramIdInputSchema = s.object("Input identifying a diagram in an Eraser 
 export const eraserActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "generate_diagram_from_prompt",
+    operationType: "write",
     description: "Generate or revise an Eraser diagram from a natural-language prompt.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -97,6 +98,7 @@ export const eraserActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "generate_diagram_from_dsl",
+    operationType: "write",
     description: "Render Eraser DSL into a diagram image and optional editable Eraser file.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -116,6 +118,7 @@ export const eraserActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_files",
+    operationType: "read",
     description: "List files available to the authenticated Eraser team.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -144,6 +147,7 @@ export const eraserActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_file",
+    operationType: "write",
     description: "Create an Eraser file with optional Markdown content.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -160,6 +164,7 @@ export const eraserActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_file",
+    operationType: "read",
     description: "Get an Eraser file and its current content.",
     requiredScopes: [],
     inputSchema: fileIdInputSchema,
@@ -167,6 +172,7 @@ export const eraserActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_file",
+    operationType: "destructive",
     description: "Replace selected metadata or Markdown content of an Eraser file.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -183,6 +189,7 @@ export const eraserActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "archive_file",
+    operationType: "destructive",
     description: "Archive an Eraser file.",
     requiredScopes: [],
     inputSchema: fileIdInputSchema,
@@ -193,6 +200,7 @@ export const eraserActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_diagrams",
+    operationType: "read",
     description: "List diagrams contained in an Eraser file.",
     requiredScopes: [],
     inputSchema: fileIdInputSchema,
@@ -200,6 +208,7 @@ export const eraserActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_diagram",
+    operationType: "write",
     description: "Create a diagram from Eraser DSL inside an existing file.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -215,6 +224,7 @@ export const eraserActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_diagram",
+    operationType: "read",
     description: "Get one diagram from an Eraser file.",
     requiredScopes: [],
     inputSchema: diagramIdInputSchema,
@@ -222,6 +232,7 @@ export const eraserActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_diagram",
+    operationType: "destructive",
     description: "Replace the Eraser DSL source of a diagram in a file.",
     requiredScopes: [],
     inputSchema: s.object("Input for updating a diagram in an Eraser file.", {
@@ -233,6 +244,7 @@ export const eraserActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_diagram",
+    operationType: "destructive",
     description: "Delete a diagram from an Eraser file.",
     requiredScopes: [],
     inputSchema: diagramIdInputSchema,

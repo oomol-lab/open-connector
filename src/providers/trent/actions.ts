@@ -38,6 +38,7 @@ const chatOutputSchema = s.object("The normalized Trent chat response returned b
 export const trentActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_chat",
+    operationType: "write",
     description:
       "Send one message to Trent's chat endpoint and return the assembled response content plus thread metadata.",
     requiredScopes: [],

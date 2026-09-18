@@ -35,6 +35,7 @@ const supportedLanguage = s.object("One language supported by Tisane.", {
 export const tisaneActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "analyze_text",
+    operationType: "read",
     description:
       "Analyze text with Tisane for problematic content, sentiment, entities, topics, and other linguistic features.",
     inputSchema: s.object(
@@ -59,6 +60,7 @@ export const tisaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "detect_language",
+    operationType: "read",
     description:
       "Detect the language segments used in a text fragment with optional language hints and delimiter settings.",
     inputSchema: s.object(
@@ -77,6 +79,7 @@ export const tisaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_supported_languages",
+    operationType: "read",
     description: "List the languages currently supported by Tisane.",
     inputSchema: s.object("The input payload for listing Tisane supported languages.", {}),
     outputSchema: s.object("The supported languages returned by Tisane.", {
@@ -85,6 +88,7 @@ export const tisaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "extract_text",
+    operationType: "read",
     description: "Remove markup such as HTML, CSS, JavaScript, or JSON from UTF-8 text and return plain decoded text.",
     inputSchema: s.object("Input parameters for extracting text with Tisane.", {
       content: s.nonEmptyString("The UTF-8 markup content to clean up."),
@@ -95,6 +99,7 @@ export const tisaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "calculate_similarity",
+    operationType: "read",
     description:
       "Calculate the semantic similarity between two text fragments, either in one language or across languages.",
     inputSchema: s.object(
@@ -114,6 +119,7 @@ export const tisaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "transform_text",
+    operationType: "read",
     description:
       "Translate text between languages with Tisane, or paraphrase text when source and target languages match.",
     inputSchema: s.object(
@@ -134,6 +140,7 @@ export const tisaneActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "compare_entities",
+    operationType: "read",
     description: "Compare two compound person entities with Tisane and return whether they are the same or different.",
     inputSchema: s.object("Input parameters for comparing two Tisane person entities.", {
       language1: language,

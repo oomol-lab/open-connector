@@ -13,6 +13,7 @@ const rawResultSchema = s.requiredObject("The Datagma response payload.", {
 
 const getCreditAction = defineProviderAction(service, {
   name: "get_credit",
+  operationType: "read",
   description: "Get the remaining API credit balance for the connected Datagma account.",
   inputSchema: s.object(
     "The input payload for reading the connected Datagma account's credit balance.",
@@ -99,6 +100,7 @@ const enrichPersonOrCompanyInputSchema = s.object(
 
 const enrichPersonOrCompanyAction = defineProviderAction(service, {
   name: "enrich_person_or_company",
+  operationType: "read",
   description:
     "Enrich a person or company from an email, LinkedIn URL, domain, company identifier, or name-and-company combination.",
   inputSchema: enrichPersonOrCompanyInputSchema,
@@ -127,6 +129,7 @@ const findWorkEmailInputSchema = s.object(
 
 const findWorkEmailAction = defineProviderAction(service, {
   name: "find_work_email",
+  operationType: "read",
   description:
     "Find and verify a person's work email from their name plus a company domain, company name, or LinkedIn company URL.",
   inputSchema: findWorkEmailInputSchema,
@@ -146,6 +149,7 @@ const searchPhoneNumbersInputSchema = s.object(
 
 const searchPhoneNumbersAction = defineProviderAction(service, {
   name: "search_phone_numbers",
+  operationType: "read",
   description:
     "Find mobile phone numbers from an email address, a social-profile URL, or both, with optional confidence and WhatsApp checks.",
   inputSchema: searchPhoneNumbersInputSchema,
@@ -182,6 +186,7 @@ const detectJobChangeInputSchema = s.object(
 
 const detectJobChangeAction = defineProviderAction(service, {
   name: "detect_job_change",
+  operationType: "read",
   description: "Check whether a contact still works at their last-known company or appears to have changed jobs.",
   inputSchema: detectJobChangeInputSchema,
   outputSchema: rawResultSchema,

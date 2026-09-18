@@ -61,6 +61,7 @@ const voiceSchema = s.object("A normalized Bland AI voice.", {
 export const blandAiActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve Bland AI account status, billing balance, and total call count.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving Bland AI account details.", {}),
@@ -75,6 +76,7 @@ export const blandAiActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_calls",
+    operationType: "read",
     description: "List Bland AI calls with optional official filters and result-window controls.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -135,6 +137,7 @@ export const blandAiActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_call",
+    operationType: "read",
     description: "Retrieve detailed information and transcript phrases for a Bland AI call.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving a Bland AI call.", {
@@ -148,6 +151,7 @@ export const blandAiActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_voices",
+    operationType: "read",
     description: "List every Bland AI voice available to the authenticated account.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Bland AI voices.", {}),
@@ -158,6 +162,7 @@ export const blandAiActions: readonly ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_voice",
+    operationType: "read",
     description: "Retrieve details for a specific Bland AI voice by UUID or curated voice name.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving a Bland AI voice.", {

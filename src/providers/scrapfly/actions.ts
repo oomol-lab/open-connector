@@ -24,6 +24,7 @@ const responseMetadataSchema = s.object("Metadata collected from Scrapfly respon
 
 const scrapeAction = defineProviderAction(service, {
   name: "scrape",
+  operationType: "read",
   description: "Scrape one public URL through Scrapfly and return the documented JSON response envelope.",
   inputSchema: s.object(
     "The input payload for scraping a URL with Scrapfly.",
@@ -107,6 +108,7 @@ const scrapeAction = defineProviderAction(service, {
 
 const getMonitoringMetricsAction = defineProviderAction(service, {
   name: "get_monitoring_metrics",
+  operationType: "read",
   description: "Retrieve Scrapfly monitoring metrics for the connected API key.",
   inputSchema: s.object(
     "The input payload for retrieving Scrapfly monitoring metrics.",

@@ -146,6 +146,7 @@ const topicSchema = s.object(
 export const unsplashActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_photos",
+    operationType: "read",
     description: "List the latest public photos from Unsplash.",
     inputSchema: s.actionInput(
       {
@@ -165,6 +166,7 @@ export const unsplashActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_photos",
+    operationType: "read",
     description: "Search photos on Unsplash using keyword and filter inputs.",
     inputSchema: s.actionInput(
       {
@@ -191,6 +193,7 @@ export const unsplashActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_photo",
+    operationType: "read",
     description: "Fetch the detailed payload for a single Unsplash photo.",
     inputSchema: s.actionInput(
       {
@@ -208,6 +211,7 @@ export const unsplashActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_random_photo",
+    operationType: "read",
     description: "Fetch one or more random Unsplash photos using optional filters.",
     inputSchema: s.actionInput(
       {
@@ -234,6 +238,7 @@ export const unsplashActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_topics",
+    operationType: "read",
     description: "List topics curated by Unsplash.",
     inputSchema: s.actionInput(
       {
@@ -253,6 +258,7 @@ export const unsplashActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_topic_photos",
+    operationType: "read",
     description: "List photos from a specific Unsplash topic.",
     inputSchema: s.actionInput(
       {

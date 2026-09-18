@@ -74,12 +74,14 @@ const routeMatrixResponseSchema = s.looseObject("The Geoapify route matrix respo
 export const geoapifyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "forward_geocode",
+    operationType: "read",
     description: "Convert free-form text into geocoding results with Geoapify.",
     inputSchema: s.actionInput(commonTextInputShape, ["text"], "Input parameters for Geoapify forward geocoding."),
     outputSchema: commonGeocodingOutputSchema,
   }),
   defineProviderAction(service, {
     name: "reverse_geocode",
+    operationType: "read",
     description: "Convert latitude and longitude into place results with Geoapify.",
     inputSchema: s.actionInput(
       {
@@ -99,12 +101,14 @@ export const geoapifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "address_autocomplete",
+    operationType: "read",
     description: "Return address autocomplete suggestions from Geoapify.",
     inputSchema: s.actionInput(commonTextInputShape, ["text"], "Input parameters for Geoapify address autocomplete."),
     outputSchema: commonGeocodingOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_route",
+    operationType: "read",
     description: "Calculate a route between waypoints with the Geoapify Routing API.",
     inputSchema: s.actionInput(
       {
@@ -128,6 +132,7 @@ export const geoapifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_route_matrix",
+    operationType: "read",
     description: "Calculate a travel matrix between sources and targets with Geoapify.",
     inputSchema: s.actionInput(
       {

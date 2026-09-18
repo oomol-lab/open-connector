@@ -17,6 +17,7 @@ const dataOutput = (description: string) =>
 export const ablefyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Get the ablefy account associated with the configured API credentials.",
     requiredScopes: [],
     inputSchema: emptyInput,
@@ -24,6 +25,7 @@ export const ablefyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List products available in the connected ablefy account.",
     requiredScopes: [],
     inputSchema: emptyInput,
@@ -31,6 +33,7 @@ export const ablefyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Get an ablefy product and its related pricing and author information.",
     requiredScopes: [],
     inputSchema: resourceIdInput("product"),
@@ -38,6 +41,7 @@ export const ablefyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pricing_plans",
+    operationType: "read",
     description: "List pricing plans available in the connected ablefy account.",
     requiredScopes: [],
     inputSchema: emptyInput,
@@ -45,6 +49,7 @@ export const ablefyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_pricing_plan",
+    operationType: "read",
     description: "Get one ablefy pricing plan by its numeric identifier.",
     requiredScopes: [],
     inputSchema: resourceIdInput("pricing plan"),

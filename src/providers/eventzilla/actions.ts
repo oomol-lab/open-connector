@@ -89,6 +89,7 @@ const userSchema = s.looseObject("A normalized Eventzilla organizer or sub-organ
 export const eventzillaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_events",
+    operationType: "read",
     description:
       "List Eventzilla events visible to the authenticated organizer account with optional status or category filtering.",
     inputSchema: s.object(
@@ -107,6 +108,7 @@ export const eventzillaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_event",
+    operationType: "read",
     description: "Get one Eventzilla event by its event identifier.",
     inputSchema: s.object("The input payload for reading one Eventzilla event.", {
       eventid: positiveId("The Eventzilla event identifier."),
@@ -115,6 +117,7 @@ export const eventzillaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_event_tickets",
+    operationType: "read",
     description: "List Eventzilla ticket categories and donation entries for one event.",
     inputSchema: s.object("The input payload for listing Eventzilla tickets for one event.", {
       eventid: positiveId("The Eventzilla event identifier."),
@@ -126,6 +129,7 @@ export const eventzillaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_event_transactions",
+    operationType: "read",
     description: "List Eventzilla transactions for one event.",
     inputSchema: s.object(
       "The input payload for listing Eventzilla transactions for one event.",
@@ -142,6 +146,7 @@ export const eventzillaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_event_attendees",
+    operationType: "read",
     description: "List Eventzilla attendees for one event.",
     inputSchema: s.object(
       "The input payload for listing Eventzilla attendees for one event.",
@@ -157,6 +162,7 @@ export const eventzillaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Eventzilla organizers and sub-organizers visible to the authenticated account.",
     inputSchema: s.object("The input payload for listing Eventzilla users.", paginationInput, {
       optional: ["offset", "limit"],
@@ -168,6 +174,7 @@ export const eventzillaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get one Eventzilla organizer or sub-organizer by user identifier.",
     inputSchema: s.object("The input payload for reading one Eventzilla user.", {
       userid: positiveId("The Eventzilla user identifier."),
@@ -176,6 +183,7 @@ export const eventzillaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_transaction",
+    operationType: "read",
     description: "Get one Eventzilla transaction by checkout ID or order reference number.",
     inputSchema: s.object(
       "The input payload for reading one Eventzilla transaction. Provide exactly one of checkout_id or refno.",
@@ -191,6 +199,7 @@ export const eventzillaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_attendee",
+    operationType: "read",
     description: "Get one Eventzilla attendee by attendee identifier.",
     inputSchema: s.object("The input payload for reading one Eventzilla attendee.", {
       attendeeid: positiveId("The Eventzilla attendee identifier."),

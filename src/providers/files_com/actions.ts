@@ -63,6 +63,7 @@ const deleteOutputSchema = s.requiredObject("Files.com delete output.", {
 export const filesComActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_folder",
+    operationType: "read",
     description: "List files and folders under a Files.com folder path.",
     inputSchema: s.object(
       "Input for listing a Files.com folder.",
@@ -82,18 +83,21 @@ export const filesComActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_file",
+    operationType: "read",
     description: "Retrieve Files.com metadata for a single file or folder path.",
     inputSchema: pathInputSchema,
     outputSchema: fileOutputSchema,
   }),
   defineProviderAction(service, {
     name: "download_file",
+    operationType: "read",
     description: "Download one Files.com file into local transit file storage.",
     inputSchema: downloadFileInputSchema,
     outputSchema: downloadedFileSchema,
   }),
   defineProviderAction(service, {
     name: "create_folder",
+    operationType: "write",
     description: "Create a folder at a Files.com path.",
     inputSchema: s.object(
       "Input for creating a Files.com folder.",
@@ -107,6 +111,7 @@ export const filesComActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_metadata",
+    operationType: "write",
     description: "Update custom metadata for a Files.com file or folder path.",
     inputSchema: s.requiredObject("Input for updating Files.com custom metadata.", {
       path: pathSchema,
@@ -118,6 +123,7 @@ export const filesComActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_file",
+    operationType: "destructive",
     description: "Delete a Files.com file or folder path.",
     inputSchema: pathInputSchema,
     outputSchema: deleteOutputSchema,

@@ -81,6 +81,7 @@ const catalogOnlyProvider: ProviderDefinition = {
       service: "catalog_only",
       name: "query",
       description: "Query the catalog-only provider.",
+      operationType: "read",
       requiredScopes: [],
       providerPermissions: [],
       inputSchema: {},

@@ -125,6 +125,7 @@ const connectionSummaryProperties = {
 export const printavoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "identify",
+    operationType: "read",
     description: "Identify the current Printavo API token, user, and account.",
     inputSchema: s.actionInput({}, [], "No input is required to identify a Printavo API token."),
     outputSchema: s.actionOutput(
@@ -134,12 +135,14 @@ export const printavoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Get the Printavo account for the current API token.",
     inputSchema: s.actionInput({}, [], "No input is required to get the current Printavo account."),
     outputSchema: s.actionOutput({ account: accountSchema }, "The current Printavo account."),
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Printavo contacts with optional search and cursor pagination.",
     inputSchema: s.actionInput(
       {
@@ -160,6 +163,7 @@ export const printavoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List Printavo customers with cursor pagination.",
     inputSchema: s.actionInput(paginationProperties, [], "Cursor pagination parameters for Printavo customers."),
     outputSchema: s.actionOutput(
@@ -172,6 +176,7 @@ export const printavoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "List Printavo tasks with optional assignment, completion, due date, and pagination filters.",
     inputSchema: s.actionInput(
       {
@@ -194,6 +199,7 @@ export const printavoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description:
       "List Printavo quotes and invoices with optional search, status, tag, production date, and pagination filters.",
     inputSchema: s.actionInput(

@@ -83,6 +83,7 @@ const sttTaskSchema: JsonSchema = s.oneOf(
 export const doubaoSpeechActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "submit_tts",
+    operationType: "write",
     description: "Submit an asynchronous Doubao Speech 2.0 text-to-speech task.",
     followUpActions: [ttsLifecycle.statusActionId],
     asyncLifecycle: ttsLifecycle,
@@ -99,6 +100,7 @@ export const doubaoSpeechActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tts",
+    operationType: "read",
     description: "Retrieve a Doubao Speech 2.0 text-to-speech task state and output.",
     asyncLifecycle: ttsLifecycle,
     inputSchema: s.actionInput({ taskId: taskIdSchema }, ["taskId"], "A speech synthesis task lookup."),
@@ -106,6 +108,7 @@ export const doubaoSpeechActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_stt",
+    operationType: "write",
     description: "Submit an asynchronous Doubao recording-file speech recognition task.",
     followUpActions: [sttLifecycle.statusActionId],
     asyncLifecycle: sttLifecycle,
@@ -123,6 +126,7 @@ export const doubaoSpeechActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_stt",
+    operationType: "read",
     description: "Retrieve a Doubao recording-file speech recognition task state and output.",
     asyncLifecycle: sttLifecycle,
     inputSchema: s.actionInput({ taskId: taskIdSchema }, ["taskId"], "A speech recognition task lookup."),

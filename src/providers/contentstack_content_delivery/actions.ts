@@ -43,6 +43,7 @@ const looseRecordSchema = s.looseObject("The raw Contentstack JSON object.");
 export const contentstackContentDeliveryActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_content_types",
+    operationType: "read",
     description: "List content types available in a Contentstack stack.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -66,6 +67,7 @@ export const contentstackContentDeliveryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_content_type",
+    operationType: "read",
     description: "Retrieve one Contentstack content type schema by UID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -85,6 +87,7 @@ export const contentstackContentDeliveryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_entries",
+    operationType: "read",
     description: "List published Contentstack entries for a content type.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -134,6 +137,7 @@ export const contentstackContentDeliveryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_entry",
+    operationType: "read",
     description: "Retrieve one published Contentstack entry for a content type.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -173,6 +177,7 @@ export const contentstackContentDeliveryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_assets",
+    operationType: "read",
     description: "List published Contentstack assets in a stack.",
     requiredScopes: [],
     inputSchema: s.object(

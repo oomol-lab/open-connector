@@ -313,6 +313,7 @@ const getPromptTemplateInputSchema: JsonSchema = {
 export const promptLayerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_request",
+    operationType: "read",
     description: "Retrieve a logged PromptLayer request by request ID.",
     inputSchema: s.actionInput(
       { requestId: s.positiveInteger("The PromptLayer request ID to retrieve.") },
@@ -325,6 +326,7 @@ export const promptLayerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_prompt_templates",
+    operationType: "read",
     description: "List PromptLayer prompt templates in the authenticated workspace.",
     inputSchema: listPromptTemplatesInputSchema,
     outputSchema: s.requiredObject("The response returned when listing PromptLayer prompt templates.", {
@@ -341,6 +343,7 @@ export const promptLayerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_prompt_template",
+    operationType: "read",
     description: "Retrieve a PromptLayer prompt template by name or ID.",
     inputSchema: getPromptTemplateInputSchema,
     outputSchema: s.requiredObject("The response returned when retrieving a PromptLayer prompt template.", {
@@ -349,6 +352,7 @@ export const promptLayerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tables",
+    operationType: "read",
     description: "List PromptLayer Tables in the authenticated workspace.",
     inputSchema: s.object(
       "The input payload for listing PromptLayer Tables.",
@@ -375,6 +379,7 @@ export const promptLayerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_table_sheets",
+    operationType: "read",
     description: "List sheets for a PromptLayer Table.",
     inputSchema: s.object(
       "The input payload for listing PromptLayer Table sheets.",
@@ -398,6 +403,7 @@ export const promptLayerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_table_sheet_rows",
+    operationType: "read",
     description: "List rows for a PromptLayer Table sheet.",
     inputSchema: s.object(
       "The input payload for listing PromptLayer Table sheet rows.",

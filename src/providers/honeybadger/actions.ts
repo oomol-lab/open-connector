@@ -164,30 +164,35 @@ const reportCheckInWithPayloadInputSchema = s.actionInput(
 export const honeybadgerActions: ActionDefinition[] = [
   action(
     "report_exception",
+    "write",
     "Report an exception notice to Honeybadger.",
     reportExceptionInputSchema,
     reportExceptionOutputSchema,
   ),
   action(
     "report_event",
+    "write",
     "Report one or more Honeybadger Insights events.",
     reportEventInputSchema,
     reportEventOutputSchema,
   ),
   action(
     "report_deployment",
+    "write",
     "Report a deployment to Honeybadger.",
     reportDeploymentInputSchema,
     reportDeploymentOutputSchema,
   ),
   action(
     "report_check_in",
+    "write",
     "Report a Honeybadger check-in by id or slug.",
     reportCheckInInputSchema,
     reportCheckInOutputSchema,
   ),
   action(
     "report_check_in_with_payload",
+    "write",
     "Report a Honeybadger check-in with payload data.",
     reportCheckInWithPayloadInputSchema,
     reportCheckInOutputSchema,
@@ -203,12 +208,14 @@ export type HoneybadgerActionName =
 
 function action(
   name: HoneybadgerActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     inputSchema,
     outputSchema,

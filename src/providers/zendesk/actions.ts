@@ -85,6 +85,7 @@ const ticketMutationFields = {
 export const zendeskActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current authenticated Zendesk user.",
     requiredScopes: zendeskReadScopes,
     providerPermissions: [zendeskReadScope],
@@ -93,6 +94,7 @@ export const zendeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tickets",
+    operationType: "read",
     description: "List Zendesk tickets with offset or cursor pagination.",
     requiredScopes: zendeskReadScopes,
     providerPermissions: [zendeskReadScope],
@@ -113,6 +115,7 @@ export const zendeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ticket",
+    operationType: "read",
     description: "Get a Zendesk ticket and its comments by identifier.",
     requiredScopes: zendeskReadScopes,
     providerPermissions: [zendeskReadScope],
@@ -127,6 +130,7 @@ export const zendeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_ticket",
+    operationType: "write",
     description: "Create a Zendesk ticket with an initial comment.",
     requiredScopes: zendeskWriteScopes,
     providerPermissions: [zendeskWriteScope],
@@ -168,6 +172,7 @@ export const zendeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_ticket",
+    operationType: "write",
     description: "Update fields on an existing Zendesk ticket.",
     requiredScopes: zendeskWriteScopes,
     providerPermissions: [zendeskWriteScope],
@@ -207,6 +212,7 @@ export const zendeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reply_to_ticket",
+    operationType: "write",
     description: "Append a public reply or internal note to a Zendesk ticket.",
     requiredScopes: zendeskWriteScopes,
     providerPermissions: [zendeskWriteScope],
@@ -224,6 +230,7 @@ export const zendeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Zendesk users with optional role and pagination filters.",
     requiredScopes: zendeskReadScopes,
     providerPermissions: [zendeskReadScope],
@@ -260,6 +267,7 @@ export const zendeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get a Zendesk user by identifier.",
     requiredScopes: zendeskReadScopes,
     providerPermissions: [zendeskReadScope],
@@ -270,6 +278,7 @@ export const zendeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_users",
+    operationType: "read",
     description: "Search Zendesk users by email address or name.",
     requiredScopes: zendeskReadScopes,
     providerPermissions: [zendeskReadScope],
@@ -292,6 +301,7 @@ export const zendeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_organizations",
+    operationType: "read",
     description: "List Zendesk organizations with pagination.",
     requiredScopes: zendeskReadScopes,
     providerPermissions: [zendeskReadScope],
@@ -310,6 +320,7 @@ export const zendeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_organization",
+    operationType: "read",
     description: "Get a Zendesk organization by identifier.",
     requiredScopes: zendeskReadScopes,
     providerPermissions: [zendeskReadScope],

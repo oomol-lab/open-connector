@@ -84,6 +84,7 @@ const holidaySchema = s.object("A normalized Calendarific holiday.", {
 export const calendarificActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_supported_countries",
+    operationType: "read",
     description: "List countries currently supported by Calendarific.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Calendarific supported countries.", {}),
@@ -94,6 +95,7 @@ export const calendarificActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_supported_languages",
+    operationType: "read",
     description: "List languages currently supported by Calendarific.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Calendarific supported languages.", {}),
@@ -104,6 +106,7 @@ export const calendarificActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_holidays",
+    operationType: "read",
     description: "List Calendarific holidays for a given country and year with optional filters.",
     requiredScopes: [],
     inputSchema: s.object(

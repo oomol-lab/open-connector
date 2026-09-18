@@ -105,6 +105,7 @@ const rateLimitResourcesSchema = s.looseObject("The Qlty rate-limit resources ob
 export const qltyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_authenticated_user",
+    operationType: "read",
     description: "Get the Qlty user associated with the API token.",
     inputSchema: s.object("The input payload for getting the authenticated Qlty user.", {}, { required: [] }),
     outputSchema: s.object(
@@ -118,6 +119,7 @@ export const qltyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workspaces",
+    operationType: "read",
     description: "List Qlty workspaces accessible to the API token.",
     inputSchema: s.object(
       "The input payload for listing Qlty workspaces.",
@@ -139,6 +141,7 @@ export const qltyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workspace",
+    operationType: "read",
     description: "Get a Qlty workspace by key or ID.",
     inputSchema: s.object(
       "The input payload for getting a Qlty workspace.",
@@ -158,6 +161,7 @@ export const qltyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Qlty projects associated with a workspace or repository owner.",
     inputSchema: s.object(
       "The input payload for listing Qlty projects.",
@@ -180,6 +184,7 @@ export const qltyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get a Qlty project by workspace owner and project key or ID.",
     inputSchema: s.object(
       "The input payload for getting a Qlty project.",
@@ -200,6 +205,7 @@ export const qltyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_issues",
+    operationType: "read",
     description: "List Qlty issues for a project with optional category, level, status, and tool filters.",
     inputSchema: s.object(
       "The input payload for listing Qlty issues.",
@@ -230,6 +236,7 @@ export const qltyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project_metrics",
+    operationType: "read",
     description: "Get the latest Qlty metric values for a project's default branch.",
     inputSchema: s.object(
       "The input payload for getting Qlty project metrics.",
@@ -250,6 +257,7 @@ export const qltyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_rate_limit_status",
+    operationType: "read",
     description: "Get Qlty API rate-limit status for the API token.",
     inputSchema: s.object("The input payload for getting Qlty API rate-limit status.", {}, { required: [] }),
     outputSchema: s.object(

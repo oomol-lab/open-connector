@@ -105,6 +105,7 @@ const imageSchema = s.looseObject("One Bannerbear image.", {
 export const bannerbearActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_auth",
+    operationType: "read",
     description: "Verify a Bannerbear API key and return the project it is scoped to.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -121,6 +122,7 @@ export const bannerbearActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List Bannerbear templates in the connected project.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -141,6 +143,7 @@ export const bannerbearActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_template",
+    operationType: "read",
     description: "Retrieve one Bannerbear template by UID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -158,6 +161,7 @@ export const bannerbearActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_image_sync",
+    operationType: "write",
     description: "Create a Bannerbear image synchronously from a template and return the generated media URLs.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -178,6 +182,7 @@ export const bannerbearActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_image",
+    operationType: "read",
     description: "Retrieve one Bannerbear image by UID.",
     requiredScopes: [],
     inputSchema: s.object(

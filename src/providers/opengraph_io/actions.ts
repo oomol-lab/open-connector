@@ -161,6 +161,7 @@ const screenshotInputSchema = s.object(
 export const opengraphIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "extract_site",
+    operationType: "read",
     description:
       "Extract Open Graph, Twitter Card, oEmbed, and inferred metadata for a site through the OpenGraph.io Site endpoint.",
     inputSchema: s.object("The input payload for extracting OpenGraph.io site metadata.", siteInputFields, {
@@ -170,6 +171,7 @@ export const opengraphIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "scrape_site",
+    operationType: "read",
     description:
       "Retrieve a site's metadata through the OpenGraph.io Site endpoint with cache, proxy, render, and retry controls.",
     inputSchema: s.object(
@@ -188,6 +190,7 @@ export const opengraphIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "scrape_url",
+    operationType: "read",
     description:
       "Fetch the raw HTML for a page through the OpenGraph.io Scrape endpoint with optional render and proxy controls.",
     inputSchema: scrapeUrlInputSchema,
@@ -195,6 +198,7 @@ export const opengraphIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "capture_screenshot",
+    operationType: "read",
     description:
       "Capture a webpage screenshot through the OpenGraph.io Screenshot endpoint with configurable viewport, delay, and element selection.",
     inputSchema: screenshotInputSchema,

@@ -33,6 +33,7 @@ const pageSchema = s.object("LiveSession pagination metadata.", {
 export const livesessionActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_sessions",
+    operationType: "read",
     description: "List LiveSession session replays with pagination and common filters.",
     inputSchema: s.object(
       "Query parameters for listing LiveSession sessions.",

@@ -33,6 +33,7 @@ export type VercelActionName =
 
 interface VercelActionSource {
   name: VercelActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
@@ -244,12 +245,14 @@ const input = (properties: Record<string, JsonSchema>, required: string[] = []):
 const actionSources: readonly VercelActionSource[] = [
   {
     name: "get_auth_user",
+    operationType: "read",
     description: "Get the authenticated Vercel user.",
     inputSchema: emptyInput,
     outputSchema: s.object({ user }, { required: ["user"] }),
   },
   {
     name: "list_teams",
+    operationType: "read",
     description: "List Vercel teams available to the authenticated user.",
     inputSchema: unscopedInput({ limit: pageSize, since }),
     outputSchema: s.object({
@@ -259,12 +262,14 @@ const actionSources: readonly VercelActionSource[] = [
   },
   {
     name: "get_team",
+    operationType: "read",
     description: "Get a Vercel team by team ID or slug, defaulting to the team configured on the connection.",
     inputSchema: input({}),
     outputSchema: s.object({ team }, { required: ["team"] }),
   },
   {
     name: "list_projects",
+    operationType: "read",
     description: "List Vercel projects.",
     inputSchema: input({ limit: pageSize, since, until, repoUrl: s.url("Repository URL used to filter projects.") }),
     outputSchema: s.object({
@@ -274,18 +279,21 @@ const actionSources: readonly VercelActionSource[] = [
   },
   {
     name: "get_project",
+    operationType: "read",
     description: "Get a Vercel project.",
     inputSchema: input({ idOrName: projectIdOrName }, ["idOrName"]),
     outputSchema: s.object({ project }, { required: ["project"] }),
   },
   {
     name: "create_project",
+    operationType: "write",
     description: "Create a Vercel project.",
     inputSchema: input({ name: s.nonEmptyString("Vercel project name."), ...projectMutationFields }, ["name"]),
     outputSchema: s.object({ project }, { required: ["project"] }),
   },
   {
     name: "update_project",
+    operationType: "write",
     description: "Update a Vercel project.",
     inputSchema: input(
       { idOrName: projectIdOrName, name: s.nonEmptyString("Vercel project name."), ...projectMutationFields },
@@ -295,6 +303,7 @@ const actionSources: readonly VercelActionSource[] = [
   },
   {
     name: "list_deployments",
+    operationType: "read",
     description: "List Vercel deployments.",
     inputSchema: input({
       projectId: s.nonEmptyString("Vercel project ID."),
@@ -311,6 +320,7 @@ const actionSources: readonly VercelActionSource[] = [
   },
   {
     name: "get_deployment",
+    operationType: "read",
     description: "Get a Vercel deployment.",
     inputSchema: input(
       {
@@ -325,6 +335,7 @@ const actionSources: readonly VercelActionSource[] = [
   },
   {
     name: "get_deployment_events",
+    operationType: "read",
     description: "Get Vercel deployment events.",
     inputSchema: input(
       {
@@ -345,6 +356,7 @@ const actionSources: readonly VercelActionSource[] = [
   },
   {
     name: "get_runtime_logs",
+    operationType: "read",
     description: "Get runtime logs for a Vercel deployment.",
     inputSchema: input(
       {
@@ -357,12 +369,14 @@ const actionSources: readonly VercelActionSource[] = [
   },
   {
     name: "list_project_envs",
+    operationType: "read",
     description: "List environment variables for a Vercel project.",
     inputSchema: input({ idOrName: projectIdOrName, gitBranch, customEnvironmentId }, ["idOrName"]),
     outputSchema: s.object({ envs: s.array(env, { description: "Environment variables configured on the project." }) }),
   },
   {
     name: "create_project_env",
+    operationType: "write",
     description: "Create a Vercel project environment variable.",
     inputSchema: input({ idOrName: projectIdOrName, ...envWriteFields }, [
       "idOrName",
@@ -377,6 +391,7 @@ const actionSources: readonly VercelActionSource[] = [
   },
   {
     name: "update_project_env",
+    operationType: "write",
     description: "Update a Vercel project environment variable.",
     inputSchema: input(
       { idOrName: projectIdOrName, id: s.nonEmptyString("Vercel environment variable ID."), ...envWriteFields },
@@ -386,6 +401,7 @@ const actionSources: readonly VercelActionSource[] = [
   },
   {
     name: "delete_project_env",
+    operationType: "destructive",
     description: "Delete a Vercel project environment variable.",
     inputSchema: input({ idOrName: projectIdOrName, id: s.nonEmptyString("Vercel environment variable ID.") }, [
       "idOrName",
@@ -397,6 +413,7 @@ const actionSources: readonly VercelActionSource[] = [
   },
   {
     name: "list_project_domains",
+    operationType: "read",
     description: "List domains for a Vercel project.",
     inputSchema: input({ idOrName: projectIdOrName, limit: pageSize, since, until, gitBranch, customEnvironmentId }, [
       "idOrName",
@@ -408,12 +425,14 @@ const actionSources: readonly VercelActionSource[] = [
   },
   {
     name: "get_project_domain",
+    operationType: "read",
     description: "Get a Vercel project domain.",
     inputSchema: input({ idOrName: projectIdOrName, domain: s.nonEmptyString("Domain name.") }, ["idOrName", "domain"]),
     outputSchema: s.object({ domain }, { required: ["domain"] }),
   },
   {
     name: "add_project_domain",
+    operationType: "write",
     description: "Add a domain to a Vercel project.",
     inputSchema: input(
       {
@@ -429,30 +448,35 @@ const actionSources: readonly VercelActionSource[] = [
   },
   {
     name: "verify_project_domain",
+    operationType: "read",
     description: "Verify a Vercel project domain.",
     inputSchema: input({ idOrName: projectIdOrName, domain: s.nonEmptyString("Domain name.") }, ["idOrName", "domain"]),
     outputSchema: s.object({ domain }, { required: ["domain"] }),
   },
   {
     name: "get_domain_config",
+    operationType: "read",
     description: "Get domain configuration guidance from Vercel.",
     inputSchema: input({ domain: s.nonEmptyString("Domain name.") }, ["domain"]),
     outputSchema: domainConfig,
   },
   {
     name: "list_webhooks",
+    operationType: "read",
     description: "List Vercel webhooks.",
     inputSchema: input({}),
     outputSchema: s.object({ webhooks: s.array(webhook, { description: "Vercel webhooks." }) }),
   },
   {
     name: "get_webhook",
+    operationType: "read",
     description: "Get a Vercel webhook.",
     inputSchema: input({ id: s.nonEmptyString("Vercel webhook ID.") }, ["id"]),
     outputSchema: s.object({ webhook }, { required: ["webhook"] }),
   },
   {
     name: "create_webhook",
+    operationType: "write",
     description: "Create a Vercel webhook.",
     inputSchema: input(
       {
@@ -468,6 +492,7 @@ const actionSources: readonly VercelActionSource[] = [
   },
   {
     name: "delete_webhook",
+    operationType: "destructive",
     description:
       "Delete a Vercel webhook. The returned acknowledgement is generated locally because Vercel responds with 204 No Content.",
     inputSchema: input({ id: s.nonEmptyString("Vercel webhook ID.") }, ["id"]),

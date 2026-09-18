@@ -7,6 +7,7 @@ const service = "zhihu";
 
 function defineZhihuAction<const TName extends string>(input: {
   name: TName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: Record<string, unknown>;
   outputSchema: Record<string, unknown>;
@@ -105,6 +106,7 @@ const zhidaChoiceSchema = s.looseObject("A Zhida completion choice.", {
 
 const zhihuSearchAction = defineZhihuAction({
   name: "zhihu_search",
+  operationType: "read",
   description: "Search Zhihu content and return matching questions, answers, and articles.",
   inputSchema: s.object(
     "Input parameters for a Zhihu site search request.",
@@ -128,6 +130,7 @@ const zhihuSearchAction = defineZhihuAction({
 
 const globalSearchAction = defineZhihuAction({
   name: "global_search",
+  operationType: "read",
   description: "Search the global web index exposed by Zhihu Open Platform.",
   inputSchema: s.object(
     "Input parameters for a Zhihu global search request.",
@@ -151,6 +154,7 @@ const globalSearchAction = defineZhihuAction({
 
 const hotListAction = defineZhihuAction({
   name: "hot_list",
+  operationType: "read",
   description: "Get the current Zhihu hot list with titles, links, thumbnails, and summaries.",
   inputSchema: s.object(
     "Input parameters for a Zhihu hot list request.",
@@ -171,6 +175,7 @@ const hotListAction = defineZhihuAction({
 
 const zhidaAction = defineZhihuAction({
   name: "zhida",
+  operationType: "write",
   description: "Create a non-streaming Zhihu Zhida chat completion.",
   inputSchema: s.object("Input parameters for a non-streaming Zhida chat completion request.", {
     model: s.stringEnum("The Zhida model tier.", ["zhida-fast-1p5", "zhida-thinking-1p5", "zhida-agent"]),
@@ -189,6 +194,7 @@ const zhidaAction = defineZhihuAction({
 
 const userContentsAction = defineZhihuAction({
   name: "user_contents",
+  operationType: "read",
   description: "List the current Access Secret owner's public Zhihu creations.",
   inputSchema: s.object(
     "Filters and pagination for user creations.",
@@ -216,6 +222,7 @@ const userContentsAction = defineZhihuAction({
 
 const userFolloweesAction = defineZhihuAction({
   name: "user_followees",
+  operationType: "read",
   description: "List the current Access Secret owner's public Zhihu followees.",
   inputSchema: s.object(
     "Pagination for the followee list.",
@@ -233,6 +240,7 @@ const userFolloweesAction = defineZhihuAction({
 
 const userCollectionsAction = defineZhihuAction({
   name: "user_collections",
+  operationType: "read",
   description: "List the current Access Secret owner's recently favorited public content.",
   inputSchema: s.object(
     "Options for recent favorites.",
@@ -248,6 +256,7 @@ const userCollectionsAction = defineZhihuAction({
 
 const userFavlistsAction = defineZhihuAction({
   name: "user_favlists",
+  operationType: "read",
   description: "List the current Access Secret owner's public Zhihu collections.",
   inputSchema: s.object(
     "Options for listing collections.",
@@ -263,6 +272,7 @@ const userFavlistsAction = defineZhihuAction({
 
 const favlistContentsAction = defineZhihuAction({
   name: "favlist_contents",
+  operationType: "read",
   description: "List public content in one collection owned by the current Access Secret account.",
   inputSchema: s.object(
     "The collection identifier and pagination.",
@@ -281,6 +291,7 @@ const favlistContentsAction = defineZhihuAction({
 
 const knowledgeBasesAction = defineZhihuAction({
   name: "knowledge_bases",
+  operationType: "read",
   description: "List Zhida knowledge bases created by or subscribed to by the current account.",
   inputSchema: s.object(
     "Knowledge base list filters.",
@@ -296,6 +307,7 @@ const knowledgeBasesAction = defineZhihuAction({
 
 const knowledgeBaseItemsAction = defineZhihuAction({
   name: "knowledge_base_items",
+  operationType: "read",
   description: "List content in a Zhida knowledge base using cursor pagination.",
   inputSchema: s.object(
     "The knowledge base and page to retrieve.",
@@ -352,6 +364,7 @@ const knowledgeSearchInputSchema = {
 
 const knowledgeSearchAction = defineZhihuAction({
   name: "knowledge_search",
+  operationType: "read",
   description: "Retrieve relevant document fragments from Zhida knowledge bases with RAG search.",
   inputSchema: knowledgeSearchInputSchema,
   outputSchema: apiResponse("A knowledge retrieval response.", {
@@ -361,6 +374,7 @@ const knowledgeSearchAction = defineZhihuAction({
 
 const knowledgeFileUploadAction = defineZhihuAction({
   name: "knowledge_file_upload",
+  operationType: "write",
   description: "Download a file from an HTTP URL and upload it into a Zhida knowledge base.",
   inputSchema: s.object(
     "The source file and optional target knowledge base.",
@@ -384,6 +398,7 @@ const knowledgeFileUploadAction = defineZhihuAction({
 
 const submitPdfParseAction = defineZhihuAction({
   name: "submit_pdf_parse",
+  operationType: "write",
   description: "Download a PDF from an HTTP URL, upload it to Zhihu, and submit an asynchronous parse task.",
   asyncLifecycle: { startActionId: "zhihu.submit_pdf_parse", statusActionId: "zhihu.get_pdf_parse" },
   inputSchema: s.object(
@@ -403,6 +418,7 @@ const submitPdfParseAction = defineZhihuAction({
 
 const getPdfParseAction = defineZhihuAction({
   name: "get_pdf_parse",
+  operationType: "read",
   description: "Get the status and temporary result URL for a Zhihu PDF parsing task.",
   asyncLifecycle: { startActionId: "zhihu.submit_pdf_parse", statusActionId: "zhihu.get_pdf_parse" },
   inputSchema: s.object("The PDF parsing task to retrieve.", {
@@ -417,6 +433,7 @@ const getPdfParseAction = defineZhihuAction({
 
 const submitPptGenerationAction = defineZhihuAction({
   name: "submit_ppt_generation",
+  operationType: "write",
   description: "Submit a Zhihu answer or article URL for asynchronous PPTX generation.",
   asyncLifecycle: { startActionId: "zhihu.submit_ppt_generation", statusActionId: "zhihu.get_ppt_generation" },
   inputSchema: s.object(
@@ -439,6 +456,7 @@ const submitPptGenerationAction = defineZhihuAction({
 
 const getPptGenerationAction = defineZhihuAction({
   name: "get_ppt_generation",
+  operationType: "read",
   description: "Get the status and temporary PPTX download URL for a PPT generation task.",
   asyncLifecycle: { startActionId: "zhihu.submit_ppt_generation", statusActionId: "zhihu.get_ppt_generation" },
   inputSchema: s.object("The PPT generation task to retrieve.", {

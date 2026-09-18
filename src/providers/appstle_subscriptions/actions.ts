@@ -31,6 +31,7 @@ const customerDetailSchema = s.looseObject("Appstle customer detail object.");
 export const appstleSubscriptionsActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_customers_with_subscriptions",
+    operationType: "read",
     description: "List customers who have Appstle subscription contracts with optional filters and pagination.",
     inputSchema: s.object(
       "Filters and pagination for listing customers with subscriptions.",
@@ -52,6 +53,7 @@ export const appstleSubscriptionsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer_with_subscriptions",
+    operationType: "read",
     description: "Retrieve Appstle customer details including subscription contract information.",
     inputSchema: s.object(
       "Customer lookup parameters.",
@@ -67,6 +69,7 @@ export const appstleSubscriptionsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_valid_subscription_contract_ids",
+    operationType: "read",
     description: "Return valid Appstle subscription contract IDs for a Shopify customer.",
     inputSchema: s.object(
       "Customer identifier for valid subscription contract ID lookup.",
@@ -84,6 +87,7 @@ export const appstleSubscriptionsActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customer_subscription_details",
+    operationType: "read",
     description: "List detailed Appstle subscription contract records for a Shopify customer.",
     inputSchema: s.object(
       "Customer identifier for detailed subscription lookup.",

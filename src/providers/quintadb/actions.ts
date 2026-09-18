@@ -78,6 +78,7 @@ const recordSchema = s.looseRequiredObject(
 export const quintaDbActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_databases",
+    operationType: "read",
     description: "List QuintaDB databases accessible to the connected API key.",
     requiredScopes: [],
     followUpActions: ["quintadb.get_database", "quintadb.list_forms"],
@@ -94,6 +95,7 @@ export const quintaDbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_database",
+    operationType: "read",
     description: "Retrieve one QuintaDB database by ID.",
     requiredScopes: [],
     followUpActions: ["quintadb.list_forms"],
@@ -106,6 +108,7 @@ export const quintaDbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_forms",
+    operationType: "read",
     description: "List forms in one QuintaDB database.",
     requiredScopes: [],
     followUpActions: ["quintadb.list_fields", "quintadb.list_records"],
@@ -118,6 +121,7 @@ export const quintaDbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_fields",
+    operationType: "read",
     description: "List fields in one QuintaDB form.",
     requiredScopes: [],
     followUpActions: ["quintadb.create_record"],
@@ -131,6 +135,7 @@ export const quintaDbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_records",
+    operationType: "read",
     description: "List records from one QuintaDB form with optional paging and report filtering.",
     requiredScopes: [],
     followUpActions: ["quintadb.get_record", "quintadb.update_record"],
@@ -155,6 +160,7 @@ export const quintaDbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_record",
+    operationType: "read",
     description: "Retrieve one QuintaDB record by database ID and record ID.",
     requiredScopes: [],
     followUpActions: ["quintadb.update_record", "quintadb.delete_record"],
@@ -173,6 +179,7 @@ export const quintaDbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_record",
+    operationType: "write",
     description: "Create one record in a QuintaDB form.",
     requiredScopes: [],
     followUpActions: ["quintadb.get_record"],
@@ -187,6 +194,7 @@ export const quintaDbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_record",
+    operationType: "write",
     description: "Update the supplied field values on one QuintaDB record.",
     requiredScopes: [],
     followUpActions: ["quintadb.get_record"],
@@ -201,6 +209,7 @@ export const quintaDbActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_record",
+    operationType: "destructive",
     description: "Delete one QuintaDB record permanently.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Input for deleting a QuintaDB record.", {

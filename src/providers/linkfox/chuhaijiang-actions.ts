@@ -1,5 +1,5 @@
 import type { ProviderActionDefinition } from "../../core/provider-definition.ts";
-import type { JsonSchema } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
@@ -42,6 +42,7 @@ interface ChuhaijiangOperation {
 }
 function operation<const TName extends string>(
   name: TName,
+  operationType: ActionDefinition["operationType"],
   path: string,
   usage: number,
   description: string,
@@ -53,6 +54,7 @@ function operation<const TName extends string>(
     usage,
     action: defineProviderAction("linkfox", {
       name,
+      operationType,
       description,
       inputSchema,
       outputSchema: upload ? uploadOutput : dataOutput,
@@ -159,6 +161,7 @@ const videoIdField = s.nonEmptyString("The video ID from the corresponding searc
 export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   operation(
     "search_chuhaijiang_ads",
+    "read",
     "/chuhaijiang/ad-creative/ads/search",
     18,
     "Search TikTok ads through LinkFox and Chuhaijiang.",
@@ -181,6 +184,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "get_chuhaijiang_ad",
+    "read",
     "/chuhaijiang/ad-creative/ads/detail",
     9,
     "Get TikTok ad details through LinkFox and Chuhaijiang.",
@@ -192,6 +196,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_ad_products",
+    "read",
     "/chuhaijiang/ad-creative/ads/related-products",
     18,
     "List products associated with a TikTok ad through LinkFox and Chuhaijiang.",
@@ -204,6 +209,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "search_chuhaijiang_creatives",
+    "read",
     "/chuhaijiang/ad-creative/creatives/search",
     18,
     "Search TikTok creatives through LinkFox and Chuhaijiang.",
@@ -221,6 +227,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "get_chuhaijiang_creative",
+    "read",
     "/chuhaijiang/ad-creative/creatives/detail",
     9,
     "Get TikTok creative details through LinkFox and Chuhaijiang.",
@@ -239,6 +246,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "search_chuhaijiang_creators",
+    "read",
     "/chuhaijiang/creators/search",
     18,
     "Search TikTok creators through LinkFox and Chuhaijiang.",
@@ -262,6 +270,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "get_chuhaijiang_creator",
+    "read",
     "/chuhaijiang/creators/detail",
     9,
     "Get TikTok creator details through LinkFox and Chuhaijiang.",
@@ -291,6 +300,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_creator_lives",
+    "read",
     "/chuhaijiang/creators/related-lives",
     18,
     "List live streams associated with a TikTok creator through LinkFox and Chuhaijiang.",
@@ -303,6 +313,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_creator_products",
+    "read",
     "/chuhaijiang/creators/related-products",
     18,
     "List products associated with a TikTok creator through LinkFox and Chuhaijiang.",
@@ -315,6 +326,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_creator_videos",
+    "read",
     "/chuhaijiang/creators/related-videos",
     18,
     "List videos associated with a TikTok creator through LinkFox and Chuhaijiang.",
@@ -327,6 +339,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_creator_agencies",
+    "read",
     "/chuhaijiang/creators/rankings/agencies",
     18,
     "List TikTok creator agencies ranked by performance through LinkFox and Chuhaijiang.",
@@ -340,6 +353,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_commercial_creators",
+    "read",
     "/chuhaijiang/creators/rankings/commercial",
     18,
     "List commercial TikTok creator rankings through LinkFox and Chuhaijiang.",
@@ -360,6 +374,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_growing_creators",
+    "read",
     "/chuhaijiang/creators/rankings/growth",
     18,
     "List TikTok creator follower-growth rankings through LinkFox and Chuhaijiang.",
@@ -380,6 +395,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "search_chuhaijiang_lives",
+    "read",
     "/chuhaijiang/lives/search",
     18,
     "Search TikTok live streams through LinkFox and Chuhaijiang.",
@@ -403,6 +419,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "get_chuhaijiang_live",
+    "read",
     "/chuhaijiang/lives/detail",
     9,
     "Get TikTok live stream details through LinkFox and Chuhaijiang.",
@@ -414,6 +431,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_live_products",
+    "read",
     "/chuhaijiang/lives/related-products",
     18,
     "List products associated with a TikTok live stream through LinkFox and Chuhaijiang.",
@@ -426,6 +444,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "search_chuhaijiang_products",
+    "read",
     "/chuhaijiang/products/search",
     18,
     "Search TikTok products through LinkFox and Chuhaijiang.",
@@ -450,6 +469,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "get_chuhaijiang_product",
+    "read",
     "/chuhaijiang/products/detail",
     9,
     "Get TikTok product details through LinkFox and Chuhaijiang.",
@@ -461,6 +481,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_product_creators",
+    "read",
     "/chuhaijiang/products/related-creators",
     18,
     "List creators associated with a TikTok product through LinkFox and Chuhaijiang.",
@@ -473,6 +494,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_product_lives",
+    "read",
     "/chuhaijiang/products/related-lives",
     18,
     "List live streams associated with a TikTok product through LinkFox and Chuhaijiang.",
@@ -485,6 +507,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_product_reviews",
+    "read",
     "/chuhaijiang/products/reviews",
     18,
     "List TikTok product reviews through LinkFox and Chuhaijiang.",
@@ -497,6 +520,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_product_videos",
+    "read",
     "/chuhaijiang/products/related-videos",
     18,
     "List videos associated with a TikTok product through LinkFox and Chuhaijiang.",
@@ -509,6 +533,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_most_promoted_products",
+    "read",
     "/chuhaijiang/products/rankings/most-promoted",
     18,
     "List most-promoted TikTok product rankings through LinkFox and Chuhaijiang.",
@@ -525,6 +550,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_new_products",
+    "read",
     "/chuhaijiang/products/rankings/new-arrivals",
     18,
     "List newly listed TikTok product rankings through LinkFox and Chuhaijiang.",
@@ -546,6 +572,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_top_selling_products",
+    "read",
     "/chuhaijiang/products/rankings/top-selling",
     18,
     "List top-selling TikTok product rankings through LinkFox and Chuhaijiang.",
@@ -562,6 +589,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "search_chuhaijiang_products_by_image",
+    "write",
     "/chuhaijiang/products/image-search",
     30,
     "Find visually similar TikTok products using an image URL or an uploaded object key through LinkFox and Chuhaijiang.",
@@ -587,6 +615,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "create_chuhaijiang_image_upload_url",
+    "write",
     "/chuhaijiang/upload/presigned-url",
     0,
     "Create a temporary upload URL for a JPG, JPEG or PNG image through LinkFox and Chuhaijiang.",
@@ -599,6 +628,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "search_chuhaijiang_shops",
+    "read",
     "/chuhaijiang/sellers/search",
     18,
     "Search TikTok shops through LinkFox and Chuhaijiang.",
@@ -622,6 +652,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "get_chuhaijiang_shop",
+    "read",
     "/chuhaijiang/sellers/detail",
     9,
     "Get TikTok shop details through LinkFox and Chuhaijiang.",
@@ -633,6 +664,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_shop_creators",
+    "read",
     "/chuhaijiang/sellers/related-creators",
     18,
     "List creators associated with a TikTok shop through LinkFox and Chuhaijiang.",
@@ -645,6 +677,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_shop_products",
+    "read",
     "/chuhaijiang/sellers/related-products",
     18,
     "List products associated with a TikTok shop through LinkFox and Chuhaijiang.",
@@ -657,6 +690,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_shop_videos",
+    "read",
     "/chuhaijiang/sellers/related-videos",
     18,
     "List videos associated with a TikTok shop through LinkFox and Chuhaijiang.",
@@ -669,6 +703,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_most_promoted_shops",
+    "read",
     "/chuhaijiang/sellers/rankings/most-promoted",
     18,
     "List most-promoted TikTok shop rankings through LinkFox and Chuhaijiang.",
@@ -685,6 +720,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_top_selling_shops",
+    "read",
     "/chuhaijiang/sellers/rankings/top-selling",
     18,
     "List top-selling TikTok shop rankings through LinkFox and Chuhaijiang.",
@@ -701,6 +737,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "search_chuhaijiang_videos",
+    "read",
     "/chuhaijiang/videos/search",
     18,
     "Search TikTok videos through LinkFox and Chuhaijiang.",
@@ -735,6 +772,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "get_chuhaijiang_video",
+    "read",
     "/chuhaijiang/videos/detail",
     9,
     "Get TikTok video details through LinkFox and Chuhaijiang.",
@@ -746,6 +784,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_video_products",
+    "read",
     "/chuhaijiang/videos/related-products",
     18,
     "List products associated with a TikTok video through LinkFox and Chuhaijiang.",
@@ -758,6 +797,7 @@ export const chuhaijiangOperations: ChuhaijiangOperation[] = [
   ),
   operation(
     "list_chuhaijiang_video_reviews",
+    "read",
     "/chuhaijiang/videos/reviews",
     18,
     "List TikTok video comments through LinkFox and Chuhaijiang.",

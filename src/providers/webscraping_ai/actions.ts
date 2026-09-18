@@ -89,6 +89,7 @@ const accountSchema = s.looseObject("The WebScraping.AI account limits payload."
 export const webscrapingAiActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_info",
+    operationType: "read",
     description: "Retrieve WebScraping.AI account email, quota, reset, and concurrency details.",
     inputSchema: s.actionInput({}, [], "The input payload for retrieving WebScraping.AI account info."),
     outputSchema: s.actionOutput(
@@ -100,6 +101,7 @@ export const webscrapingAiActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "fetch_html",
+    operationType: "read",
     description: "Fetch the rendered HTML content of one target page with WebScraping.AI.",
     inputSchema: s.actionInput(
       {
@@ -113,6 +115,7 @@ export const webscrapingAiActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "extract_text",
+    operationType: "read",
     description: "Extract visible text from one target page with WebScraping.AI.",
     inputSchema: s.object(
       "The input payload for extracting page text with WebScraping.AI.",
@@ -127,6 +130,7 @@ export const webscrapingAiActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "select_html",
+    operationType: "read",
     description: "Fetch HTML for one selected target page area with WebScraping.AI.",
     inputSchema: s.object(
       "The input payload for selecting one page area with WebScraping.AI.",
@@ -140,6 +144,7 @@ export const webscrapingAiActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "select_multiple_html",
+    operationType: "read",
     description: "Fetch HTML for multiple selected target page areas with WebScraping.AI.",
     inputSchema: s.object(
       "The input payload for selecting multiple page areas with WebScraping.AI.",

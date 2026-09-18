@@ -108,6 +108,7 @@ const recentResultsOutputSchema = s.object("Recent ClassMarker results.", {
 export const classmarkerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_groups_links_and_tests",
+    operationType: "read",
     description: "List the ClassMarker groups, links, and assigned tests that the current API key can access.",
     inputSchema: s.actionInput({}, [], "No input is required for listing ClassMarker groups and links."),
     outputSchema: s.object("The groups, links, and assigned tests available to the API key.", {
@@ -119,18 +120,21 @@ export const classmarkerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_recent_group_results",
+    operationType: "read",
     description: "List recent ClassMarker results across all groups the current API key can access.",
     inputSchema: recentResultsInputSchema,
     outputSchema: recentResultsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_recent_link_results",
+    operationType: "read",
     description: "List recent ClassMarker results across all links the current API key can access.",
     inputSchema: recentResultsInputSchema,
     outputSchema: recentResultsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_recent_results_for_group_test",
+    operationType: "read",
     description: "List recent ClassMarker results for one specific group and assigned test pair.",
     inputSchema: s.actionInput(
       {
@@ -148,6 +152,7 @@ export const classmarkerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_recent_results_for_link_test",
+    operationType: "read",
     description: "List recent ClassMarker results for one specific link and assigned test pair.",
     inputSchema: s.actionInput(
       {

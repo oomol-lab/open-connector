@@ -98,6 +98,7 @@ const deleteRecordOutputSchema = s.object("The normalized Knack record deletion 
 export const knackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_records",
+    operationType: "read",
     description:
       "List records from one Knack object with optional pagination, sorting, formatting, and filter query parameters.",
     requiredScopes: [],
@@ -107,6 +108,7 @@ export const knackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_record",
+    operationType: "read",
     description: "Retrieve one Knack record by object key and record ID.",
     requiredScopes: [],
     followUpActions: ["knack.update_record", "knack.delete_record"],
@@ -115,6 +117,7 @@ export const knackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_record",
+    operationType: "write",
     description: "Create one Knack record in the selected object with a raw JSON record payload.",
     requiredScopes: [],
     followUpActions: ["knack.get_record", "knack.update_record"],
@@ -123,6 +126,7 @@ export const knackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_record",
+    operationType: "write",
     description: "Update one Knack record by sending a partial JSON payload for the selected object and record ID.",
     requiredScopes: [],
     followUpActions: ["knack.get_record"],
@@ -131,6 +135,7 @@ export const knackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_record",
+    operationType: "destructive",
     description: "Delete one Knack record by object key and record ID.",
     requiredScopes: [],
     inputSchema: deleteRecordInputSchema,

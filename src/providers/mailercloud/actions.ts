@@ -155,36 +155,42 @@ const deletePropertyInputSchema = s.object(
 export const mailercloudActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a Mailercloud contact in a recipient list with optional standard and custom fields.",
     inputSchema: createContactInputSchema,
     outputSchema: mailercloudResponseSchema,
   }),
   defineProviderAction(service, {
     name: "create_list",
+    operationType: "write",
     description: "Create a Mailercloud recipient list for storing and managing contacts.",
     inputSchema: createListInputSchema,
     outputSchema: mailercloudResponseSchema,
   }),
   defineProviderAction(service, {
     name: "list_contact_properties",
+    operationType: "read",
     description: "List Mailercloud contact custom properties.",
     inputSchema: listPropertiesInputSchema,
     outputSchema: mailercloudResponseSchema,
   }),
   defineProviderAction(service, {
     name: "create_contact_property",
+    operationType: "write",
     description: "Create a custom property for Mailercloud contact records.",
     inputSchema: createPropertyInputSchema,
     outputSchema: mailercloudResponseSchema,
   }),
   defineProviderAction(service, {
     name: "update_contact_property",
+    operationType: "write",
     description: "Update the name or description of a Mailercloud contact custom property.",
     inputSchema: updatePropertyInputSchema,
     outputSchema: mailercloudResponseSchema,
   }),
   defineProviderAction(service, {
     name: "delete_contact_property",
+    operationType: "destructive",
     description: "Delete a Mailercloud contact custom property by ID.",
     inputSchema: deletePropertyInputSchema,
     outputSchema: mailercloudResponseSchema,

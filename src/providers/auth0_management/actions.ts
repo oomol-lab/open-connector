@@ -51,6 +51,7 @@ export type Auth0ManagementActionName =
 export const auth0ManagementActions: ActionDefinition[] = [
   action(
     "list_users",
+    "read",
     "List Auth0 users with pagination and optional Lucene search query.",
     {
       ...pagination,
@@ -62,6 +63,7 @@ export const auth0ManagementActions: ActionDefinition[] = [
   ),
   action(
     "search_users_by_email",
+    "read",
     "Search Auth0 users by email with the official users-by-email endpoint.",
     { email: s.email("The email address to search for.") },
     ["email"],
@@ -70,6 +72,7 @@ export const auth0ManagementActions: ActionDefinition[] = [
   ),
   action(
     "get_user",
+    "read",
     "Retrieve one Auth0 user by user ID.",
     { userId },
     ["userId"],
@@ -78,6 +81,7 @@ export const auth0ManagementActions: ActionDefinition[] = [
   ),
   action(
     "list_roles",
+    "read",
     "List Auth0 roles with pagination and optional name filter.",
     {
       ...pagination,
@@ -89,6 +93,7 @@ export const auth0ManagementActions: ActionDefinition[] = [
   ),
   action(
     "get_role",
+    "read",
     "Retrieve one Auth0 role by role ID.",
     { roleId },
     ["roleId"],
@@ -97,6 +102,7 @@ export const auth0ManagementActions: ActionDefinition[] = [
   ),
   action(
     "list_user_roles",
+    "read",
     "List Auth0 roles assigned to a user.",
     { userId, ...pagination },
     ["userId"],
@@ -105,6 +111,7 @@ export const auth0ManagementActions: ActionDefinition[] = [
   ),
   action(
     "list_user_permissions",
+    "read",
     "List permissions directly assigned to an Auth0 user.",
     { userId, ...pagination },
     ["userId"],
@@ -113,6 +120,7 @@ export const auth0ManagementActions: ActionDefinition[] = [
   ),
   action(
     "list_user_effective_permissions",
+    "read",
     "List Auth0 permissions granted to a user directly or through roles or groups.",
     { userId, ...pagination },
     ["userId"],
@@ -121,6 +129,7 @@ export const auth0ManagementActions: ActionDefinition[] = [
   ),
   action(
     "list_user_effective_roles",
+    "read",
     "List Auth0 roles granted to a user directly or through group membership.",
     { userId, ...pagination },
     ["userId"],
@@ -129,6 +138,7 @@ export const auth0ManagementActions: ActionDefinition[] = [
   ),
   action(
     "assign_roles_to_user",
+    "write",
     "Assign one or more Auth0 roles to a user.",
     roleIdsInput(),
     ["userId", "roleIds"],
@@ -137,6 +147,7 @@ export const auth0ManagementActions: ActionDefinition[] = [
   ),
   action(
     "remove_roles_from_user",
+    "destructive",
     "Remove one or more Auth0 roles from a user.",
     roleIdsInput(),
     ["userId", "roleIds"],
@@ -145,6 +156,7 @@ export const auth0ManagementActions: ActionDefinition[] = [
   ),
   action(
     "list_role_permissions",
+    "read",
     "List permissions granted by an Auth0 role.",
     { roleId, ...pagination },
     ["roleId"],
@@ -153,6 +165,7 @@ export const auth0ManagementActions: ActionDefinition[] = [
   ),
   action(
     "add_permissions_to_role",
+    "write",
     "Associate one or more Auth0 permissions with a role.",
     rolePermissionsInput(),
     ["roleId", "permissions"],
@@ -161,6 +174,7 @@ export const auth0ManagementActions: ActionDefinition[] = [
   ),
   action(
     "remove_permissions_from_role",
+    "destructive",
     "Remove one or more Auth0 permissions from a role.",
     rolePermissionsInput(),
     ["roleId", "permissions"],
@@ -169,6 +183,7 @@ export const auth0ManagementActions: ActionDefinition[] = [
   ),
   action(
     "list_role_users",
+    "read",
     "List users assigned to an Auth0 role with offset or checkpoint pagination.",
     {
       roleId,
@@ -188,6 +203,7 @@ export const auth0ManagementActions: ActionDefinition[] = [
 
 function action(
   name: Auth0ManagementActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   input: Record<string, JsonSchema>,
   required: string[],
@@ -196,6 +212,7 @@ function action(
 ): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     requiredScopes: [],
     providerPermissions,

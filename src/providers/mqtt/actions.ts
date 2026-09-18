@@ -16,6 +16,7 @@ const aliyunRuntimeDeviceCredentialSchemas = {
 export const mqttActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "publish_message",
+    operationType: "write",
     description: "Publish one UTF-8 or base64-encoded message through a short-lived MQTT-over-WebSocket connection.",
     inputSchema: s.object(
       "The message to publish to the connected MQTT broker.",
@@ -43,6 +44,7 @@ export const mqttActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "receive_messages",
+    operationType: "read",
     description:
       "Wait briefly for new messages on an MQTT topic filter. This is not a persistent subscription and can miss messages between action calls.",
     inputSchema: s.object(

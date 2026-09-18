@@ -312,6 +312,7 @@ const appInfoIdInput = nonEmptyString("App Store Connect identifier of the app i
 export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "update_app",
+    operationType: "destructive",
     description:
       "Update app-level settings such as the primary locale, third-party content rights declaration, server notification URLs, or accessibility URL. Overwrites the given attributes; pass null for a URL to clear it. Pass at least one attribute.",
     requiredScopes: [],
@@ -351,6 +352,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_app_infos",
+    operationType: "read",
     description:
       "List the app info records of an app, each with its review state, derived age ratings, and the identifiers of its App Store categories. An app usually has one editable record plus the record of the version on the App Store.",
     requiredScopes: [],
@@ -368,6 +370,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_app_info",
+    operationType: "read",
     description:
       "Read one app info record with its review state, derived age ratings, and App Store category identifiers.",
     requiredScopes: [],
@@ -376,6 +379,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "update_app_info",
+    operationType: "destructive",
     description:
       "Set the App Store categories of an app info record. Each given category replaces the current one; subcategories only apply when the matching category is Games or Stickers. Pass at least one category. Use list_app_categories to find identifiers.",
     requiredScopes: [],
@@ -400,6 +404,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_app_info_localizations",
+    operationType: "read",
     description:
       "List the localized names, subtitles, and privacy URLs of an app info record, optionally narrowed to some locales.",
     requiredScopes: [],
@@ -424,6 +429,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_app_info_localization",
+    operationType: "read",
     description: "Read one app info localization by its identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -440,6 +446,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "create_app_info_localization",
+    operationType: "write",
     description:
       "Add a locale to an app info record with the app name and optional subtitle and privacy URLs shown in that locale. App Store Connect rejects a locale the record already has.",
     requiredScopes: [],
@@ -464,6 +471,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "update_app_info_localization",
+    operationType: "destructive",
     description:
       "Change the name, subtitle, or privacy URLs of an app info localization. Overwrites the given fields; pass null to clear a subtitle, URL, or privacy text. Pass at least one field.",
     requiredScopes: [],
@@ -487,6 +495,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "delete_app_info_localization",
+    operationType: "destructive",
     description:
       "Remove a locale from an app info record. The app stops being listed in that language once the change is submitted.",
     requiredScopes: [],
@@ -505,6 +514,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_app_categories",
+    operationType: "read",
     description:
       "List App Store categories with their platforms, parent, and subcategory identifiers. Filter by platform or list only top-level categories or only subcategories.",
     requiredScopes: [],
@@ -526,6 +536,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_app_category",
+    operationType: "read",
     description: "Read one App Store category with its platforms, parent category, and subcategory identifiers.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -537,6 +548,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_age_rating_declaration",
+    operationType: "read",
     description:
       "Read the age rating questionnaire answers attached to an app info record, including any manual rating overrides.",
     requiredScopes: [],
@@ -552,6 +564,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "update_age_rating_declaration",
+    operationType: "destructive",
     description:
       "Answer or change questions of the age rating questionnaire. Only the given answers are overwritten; App Store Connect recalculates the derived age ratings. Pass at least one answer.",
     requiredScopes: [],
@@ -622,6 +635,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_accessibility_declarations",
+    operationType: "read",
     description:
       "List the accessibility declarations (Accessibility Nutrition Labels) of an app, optionally filtered by device family or publication state.",
     requiredScopes: [],
@@ -652,6 +666,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_accessibility_declaration",
+    operationType: "read",
     description: "Read one accessibility declaration by its identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -668,6 +683,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "create_accessibility_declaration",
+    operationType: "write",
     description:
       "Create a draft accessibility declaration for one device family of an app. The draft is not shown on the App Store until update_accessibility_declaration publishes it.",
     requiredScopes: [],
@@ -688,6 +704,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "update_accessibility_declaration",
+    operationType: "destructive",
     description:
       "Change the supported accessibility features of a declaration, or publish it by passing publish: true, which replaces the currently published declaration for that device family. Pass at least one field.",
     requiredScopes: [],
@@ -708,6 +725,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "delete_accessibility_declaration",
+    operationType: "destructive",
     description: "Delete an accessibility declaration.",
     requiredScopes: [],
     providerPermissions: [...manageAppStoreRoles],
@@ -725,6 +743,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_app_encryption_declarations",
+    operationType: "read",
     description:
       "List the export compliance (encryption) declarations of an app with their review state and compliance code, optionally filtered by platform or by the builds they cover.",
     requiredScopes: [],
@@ -750,6 +769,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_app_encryption_declaration",
+    operationType: "read",
     description: "Read one export compliance (encryption) declaration by its identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -766,6 +786,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "create_app_encryption_declaration",
+    operationType: "write",
     description:
       "Create an export compliance declaration for an app that uses non-exempt encryption. App Store Connect reviews it and assigns a compliance code; the declaration cannot be edited afterwards, only replaced by a new one. Supporting documents must be uploaded separately.",
     requiredScopes: [],
@@ -798,6 +819,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_end_user_license_agreement",
+    operationType: "read",
     description:
       "Read the custom end user license agreement of an app together with the territories it applies in. Returns null when the app uses Apple's standard EULA everywhere.",
     requiredScopes: [],
@@ -811,6 +833,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "create_end_user_license_agreement",
+    operationType: "write",
     description:
       "Attach a custom end user license agreement to an app for the given territories. Apple's standard EULA keeps applying elsewhere. App Store Connect rejects a second agreement for the same app.",
     requiredScopes: [],
@@ -834,6 +857,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "update_end_user_license_agreement",
+    operationType: "destructive",
     description:
       "Replace the text of a custom end user license agreement or the full set of territories it applies in. Pass at least one of agreementText or territoryIds.",
     requiredScopes: [],
@@ -859,6 +883,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "delete_end_user_license_agreement",
+    operationType: "destructive",
     description:
       "Remove the custom end user license agreement of an app so Apple's standard EULA applies in every territory.",
     requiredScopes: [],
@@ -877,6 +902,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_territories",
+    operationType: "read",
     description:
       "List every App Store territory with its currency. Territory identifiers are used for license agreements, availability, and pricing.",
     requiredScopes: [],
@@ -892,6 +918,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_app_tags",
+    operationType: "read",
     description:
       "List the tags App Store Connect assigned to an app for App Store discovery, optionally only those shown or hidden on the App Store.",
     requiredScopes: [],
@@ -911,6 +938,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "list_android_to_ios_app_mapping_details",
+    operationType: "read",
     description:
       "List the Android app mappings of an app, which link an Android package to this app for Android to iPhone migration.",
     requiredScopes: [],
@@ -928,6 +956,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "get_android_to_ios_app_mapping_detail",
+    operationType: "read",
     description: "Read one Android app mapping by its identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -944,6 +973,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "create_android_to_ios_app_mapping_detail",
+    operationType: "write",
     description:
       "Map an Android app to this app by its package name and signing certificate fingerprints, so Android users migrating to iPhone are offered this app.",
     requiredScopes: [],
@@ -967,6 +997,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "update_android_to_ios_app_mapping_detail",
+    operationType: "destructive",
     description:
       "Change the package name or replace the full list of signing certificate fingerprints of an Android app mapping. Pass at least one field.",
     requiredScopes: [],
@@ -990,6 +1021,7 @@ export const appStoreConnectAppInfoActions: readonly ProviderActionDefinition[] 
   }),
   defineProviderAction(service, {
     name: "delete_android_to_ios_app_mapping_detail",
+    operationType: "destructive",
     description: "Delete an Android app mapping.",
     requiredScopes: [],
     providerPermissions: [...manageAppStoreRoles],

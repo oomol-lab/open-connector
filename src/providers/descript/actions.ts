@@ -25,6 +25,7 @@ const submitOutputSchema = s.looseObject("A newly submitted Descript job.", {
 export const descriptActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List projects accessible to the Drive associated with the Descript API token.",
     inputSchema: s.object(
       "Filters and pagination for listing Descript projects.",
@@ -78,6 +79,7 @@ export const descriptActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get a Descript project with its media, compositions, and published links.",
     inputSchema: s.requiredObject("The project to retrieve.", { projectId: idSchema("The project UUID.") }),
     outputSchema: s.requiredObject("A Descript project response.", {
@@ -86,6 +88,7 @@ export const descriptActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_jobs",
+    operationType: "read",
     description: "List recent Descript jobs with optional project, type, time, and pagination filters.",
     inputSchema: s.object(
       "Filters and pagination for listing Descript jobs.",
@@ -111,6 +114,7 @@ export const descriptActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job",
+    operationType: "read",
     description: "Get the current state and type-specific result of a Descript job.",
     inputSchema: s.requiredObject("The job to retrieve.", { jobId: idSchema("The job UUID.") }),
     outputSchema: s.requiredObject("The normalized state and raw Descript job.", {
@@ -120,6 +124,7 @@ export const descriptActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "cancel_job",
+    operationType: "destructive",
     description: "Cancel a running Descript job.",
     inputSchema: s.requiredObject("The job to cancel.", { jobId: idSchema("The running job UUID.") }),
     outputSchema: s.requiredObject("Confirmation that Descript accepted the cancellation.", {
@@ -128,6 +133,7 @@ export const descriptActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_agent_models",
+    operationType: "read",
     description: "List the current Descript Underlord models and stable aliases.",
     inputSchema: s.requiredObject("No input is required.", {}),
     outputSchema: s.requiredObject("The live Descript agent model catalog.", {
@@ -138,6 +144,7 @@ export const descriptActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "prompt_agent",
+    operationType: "write",
     description: "Submit an asynchronous Underlord request to create or edit a Descript project.",
     followUpActions: ["descript.get_job"],
     inputSchema: s.object(
@@ -164,6 +171,7 @@ export const descriptActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "import_media",
+    operationType: "write",
     description: "Import URL-hosted media into a new or existing Descript project asynchronously.",
     followUpActions: ["descript.get_job"],
     inputSchema: s.object(
@@ -200,6 +208,7 @@ export const descriptActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "publish_project",
+    operationType: "destructive",
     description: "Publish or republish a Descript composition and produce share and download URLs asynchronously.",
     followUpActions: ["descript.get_job"],
     inputSchema: s.object(

@@ -50,6 +50,7 @@ const deleteOutputSchema = s.object("The Paymo delete action result.", {
 
 const accountAction = defineProviderAction(service, {
   name: "get_current_user",
+  operationType: "read",
   description: "Get the Paymo user associated with the current API key.",
   requiredScopes: [],
   inputSchema: emptyInputSchema,
@@ -60,6 +61,7 @@ const accountAction = defineProviderAction(service, {
 
 const listClientsAction = defineProviderAction(service, {
   name: "list_clients",
+  operationType: "read",
   description: "List Paymo clients with optional where and include query parameters.",
   requiredScopes: [],
   inputSchema: listInputSchema,
@@ -70,6 +72,7 @@ const listClientsAction = defineProviderAction(service, {
 
 const getClientAction = defineProviderAction(service, {
   name: "get_client",
+  operationType: "read",
   description: "Get one Paymo client by ID.",
   requiredScopes: [],
   inputSchema: getInputSchema,
@@ -80,6 +83,7 @@ const getClientAction = defineProviderAction(service, {
 
 const createClientAction = defineProviderAction(service, {
   name: "create_client",
+  operationType: "write",
   description: "Create one Paymo client from a JSON client payload.",
   requiredScopes: [],
   inputSchema: s.object("Input parameters for creating one Paymo client.", {
@@ -92,6 +96,7 @@ const createClientAction = defineProviderAction(service, {
 
 const updateClientAction = defineProviderAction(service, {
   name: "update_client",
+  operationType: "write",
   description: "Update one Paymo client by ID from a JSON client payload.",
   requiredScopes: [],
   inputSchema: s.object("Input parameters for updating one Paymo client.", {
@@ -105,6 +110,7 @@ const updateClientAction = defineProviderAction(service, {
 
 const deleteClientAction = defineProviderAction(service, {
   name: "delete_client",
+  operationType: "destructive",
   description: "Delete one Paymo client by ID.",
   requiredScopes: [],
   inputSchema: s.object("Input parameters for deleting one Paymo client.", {
@@ -115,6 +121,7 @@ const deleteClientAction = defineProviderAction(service, {
 
 const listProjectsAction = defineProviderAction(service, {
   name: "list_projects",
+  operationType: "read",
   description: "List Paymo projects with optional where and include query parameters.",
   requiredScopes: [],
   inputSchema: listInputSchema,
@@ -125,6 +132,7 @@ const listProjectsAction = defineProviderAction(service, {
 
 const getProjectAction = defineProviderAction(service, {
   name: "get_project",
+  operationType: "read",
   description: "Get one Paymo project by ID.",
   requiredScopes: [],
   inputSchema: getInputSchema,
@@ -135,6 +143,7 @@ const getProjectAction = defineProviderAction(service, {
 
 const createProjectAction = defineProviderAction(service, {
   name: "create_project",
+  operationType: "write",
   description: "Create one Paymo project from a JSON project payload.",
   requiredScopes: [],
   inputSchema: s.object("Input parameters for creating one Paymo project.", {
@@ -147,6 +156,7 @@ const createProjectAction = defineProviderAction(service, {
 
 const updateProjectAction = defineProviderAction(service, {
   name: "update_project",
+  operationType: "write",
   description: "Update one Paymo project by ID from a JSON project payload.",
   requiredScopes: [],
   inputSchema: s.object("Input parameters for updating one Paymo project.", {
@@ -160,6 +170,7 @@ const updateProjectAction = defineProviderAction(service, {
 
 const deleteProjectAction = defineProviderAction(service, {
   name: "delete_project",
+  operationType: "destructive",
   description: "Delete one Paymo project by ID.",
   requiredScopes: [],
   inputSchema: s.object("Input parameters for deleting one Paymo project.", {
@@ -170,6 +181,7 @@ const deleteProjectAction = defineProviderAction(service, {
 
 const listTasksAction = defineProviderAction(service, {
   name: "list_tasks",
+  operationType: "read",
   description: "List Paymo tasks with optional where and include query parameters.",
   requiredScopes: [],
   inputSchema: listInputSchema,
@@ -180,6 +192,7 @@ const listTasksAction = defineProviderAction(service, {
 
 const getTaskAction = defineProviderAction(service, {
   name: "get_task",
+  operationType: "read",
   description: "Get one Paymo task by ID.",
   requiredScopes: [],
   inputSchema: getInputSchema,
@@ -190,6 +203,7 @@ const getTaskAction = defineProviderAction(service, {
 
 const createTaskAction = defineProviderAction(service, {
   name: "create_task",
+  operationType: "write",
   description: "Create one Paymo task from a JSON task payload.",
   requiredScopes: [],
   inputSchema: s.object("Input parameters for creating one Paymo task.", {
@@ -202,6 +216,7 @@ const createTaskAction = defineProviderAction(service, {
 
 const updateTaskAction = defineProviderAction(service, {
   name: "update_task",
+  operationType: "write",
   description: "Update one Paymo task by ID from a JSON task payload.",
   requiredScopes: [],
   inputSchema: s.object("Input parameters for updating one Paymo task.", {
@@ -215,6 +230,7 @@ const updateTaskAction = defineProviderAction(service, {
 
 const deleteTaskAction = defineProviderAction(service, {
   name: "delete_task",
+  operationType: "destructive",
   description: "Delete one Paymo task by ID.",
   requiredScopes: [],
   inputSchema: s.object("Input parameters for deleting one Paymo task.", {

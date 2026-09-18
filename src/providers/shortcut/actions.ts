@@ -505,6 +505,7 @@ const searchStoriesInputSchema = s.object(
 export const shortcutActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_members",
+    operationType: "read",
     description: "List the members available in the connected Shortcut workspace.",
     requiredScopes: [],
     inputSchema: listMembersInputSchema,
@@ -514,6 +515,7 @@ export const shortcutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_member",
+    operationType: "read",
     description: "Get one Shortcut member by member UUID.",
     requiredScopes: [],
     inputSchema: getMemberInputSchema,
@@ -523,6 +525,7 @@ export const shortcutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workflows",
+    operationType: "read",
     description: "List the workflows available in the connected Shortcut workspace.",
     requiredScopes: [],
     inputSchema: listWorkflowsInputSchema,
@@ -532,6 +535,7 @@ export const shortcutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workflow",
+    operationType: "read",
     description: "Get one Shortcut workflow by workflow ID.",
     requiredScopes: [],
     inputSchema: getWorkflowInputSchema,
@@ -541,6 +545,7 @@ export const shortcutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List the projects available in the connected Shortcut workspace.",
     requiredScopes: [],
     inputSchema: listProjectsInputSchema,
@@ -550,6 +555,7 @@ export const shortcutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get one Shortcut project by project ID.",
     requiredScopes: [],
     inputSchema: getProjectInputSchema,
@@ -559,6 +565,7 @@ export const shortcutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_epics",
+    operationType: "read",
     description: "List the epics available in the connected Shortcut workspace.",
     requiredScopes: [],
     inputSchema: listEpicsInputSchema,
@@ -568,6 +575,7 @@ export const shortcutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_epic",
+    operationType: "read",
     description: "Get one Shortcut epic by epic ID.",
     requiredScopes: [],
     inputSchema: getEpicInputSchema,
@@ -577,6 +585,7 @@ export const shortcutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_epic",
+    operationType: "write",
     description: "Create one Shortcut epic with the first-pass supported fields.",
     requiredScopes: [],
     inputSchema: createEpicInputSchema,
@@ -586,6 +595,7 @@ export const shortcutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_epic",
+    operationType: "write",
     description: "Update one Shortcut epic with the first-pass supported fields.",
     requiredScopes: [],
     inputSchema: updateEpicInputSchema,
@@ -595,6 +605,7 @@ export const shortcutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_stories",
+    operationType: "read",
     description: "List the stories in one Shortcut project.",
     requiredScopes: [],
     inputSchema: listStoriesInputSchema,
@@ -604,6 +615,7 @@ export const shortcutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_story",
+    operationType: "read",
     description: "Get one Shortcut story by story ID.",
     requiredScopes: [],
     inputSchema: getStoryInputSchema,
@@ -613,6 +625,7 @@ export const shortcutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_story",
+    operationType: "write",
     description: "Create one Shortcut story with the first-pass supported fields.",
     requiredScopes: [],
     inputSchema: createStoryInputSchema,
@@ -622,6 +635,7 @@ export const shortcutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_story",
+    operationType: "write",
     description: "Update one Shortcut story with the first-pass supported fields.",
     requiredScopes: [],
     inputSchema: updateStoryInputSchema,
@@ -631,6 +645,7 @@ export const shortcutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_stories",
+    operationType: "read",
     description: "Search Shortcut stories with the official search endpoint and stable pagination.",
     requiredScopes: [],
     inputSchema: searchStoriesInputSchema,

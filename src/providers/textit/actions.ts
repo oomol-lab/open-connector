@@ -7,11 +7,12 @@ const service = "textit";
 
 function action(
   name: TextitActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): ActionDefinition {
-  return defineProviderAction(service, { name, description, inputSchema, outputSchema });
+  return defineProviderAction(service, { name, operationType, description, inputSchema, outputSchema });
 }
 
 const nonEmptyString = (description: string): JsonSchema => s.string({ description, minLength: 1 });
@@ -320,6 +321,7 @@ const broadcastOutputSchema = s.object("A TextIt broadcast response.", {
 export const textitActions: ActionDefinition[] = [
   action(
     "get_workspace",
+    "read",
     "Get the current TextIt workspace details for the API token.",
     s.object("No input parameters are required.", {}),
     s.object("The current TextIt workspace response.", {
@@ -329,42 +331,72 @@ export const textitActions: ActionDefinition[] = [
   ),
   action(
     "list_contacts",
+    "read",
     "List TextIt contacts with optional UUID, URN, group, date, and cursor filters.",
     contactListInputSchema,
     paginatedContactsOutputSchema,
   ),
   action(
     "create_contact",
+    "write",
     "Create a TextIt contact with optional URNs, groups, language, and fields.",
     createContactInputSchema,
     contactOutputSchema,
   ),
-  action("update_contact", "Update a TextIt contact by UUID or URN.", updateContactInputSchema, contactOutputSchema),
-  action("delete_contact", "Delete a TextIt contact by UUID or URN.", contactTargetInputSchema, deleteOutputSchema),
+  action(
+    "update_contact",
+    "write",
+    "Update a TextIt contact by UUID or URN.",
+    updateContactInputSchema,
+    contactOutputSchema,
+  ),
+  action(
+    "delete_contact",
+    "destructive",
+    "Delete a TextIt contact by UUID or URN.",
+    contactTargetInputSchema,
+    deleteOutputSchema,
+  ),
   action(
     "list_groups",
+    "read",
     "List TextIt contact groups with optional filters.",
     groupListInputSchema,
     paginatedGroupsOutputSchema,
   ),
-  action("create_group", "Create a TextIt contact group.", groupNameInputSchema, groupOutputSchema),
-  action("update_group", "Update a TextIt contact group name.", updateGroupInputSchema, groupOutputSchema),
-  action("delete_group", "Delete a TextIt contact group by UUID.", groupTargetInputSchema, deleteOutputSchema),
+  action("create_group", "write", "Create a TextIt contact group.", groupNameInputSchema, groupOutputSchema),
+  action("update_group", "write", "Update a TextIt contact group name.", updateGroupInputSchema, groupOutputSchema),
+  action(
+    "delete_group",
+    "destructive",
+    "Delete a TextIt contact group by UUID.",
+    groupTargetInputSchema,
+    deleteOutputSchema,
+  ),
   action(
     "list_messages",
+    "read",
     "List TextIt messages with optional folder, UUID, date, and cursor filters.",
     messageListInputSchema,
     paginatedMessagesOutputSchema,
   ),
-  action("send_message", "Send a TextIt message to a single contact.", sendMessageInputSchema, messageOutputSchema),
+  action(
+    "send_message",
+    "write",
+    "Send a TextIt message to a single contact.",
+    sendMessageInputSchema,
+    messageOutputSchema,
+  ),
   action(
     "list_broadcasts",
+    "read",
     "List TextIt broadcasts with optional UUID, date, and cursor filters.",
     broadcastListInputSchema,
     paginatedBroadcastsOutputSchema,
   ),
   action(
     "send_broadcast",
+    "write",
     "Create and send a TextIt broadcast to URNs, contacts, or groups.",
     sendBroadcastInputSchema,
     broadcastOutputSchema,

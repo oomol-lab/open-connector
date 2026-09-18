@@ -1,4 +1,4 @@
-import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
+import type { ActionDefinition, ActionOperationType, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
@@ -214,6 +214,7 @@ const existingContainerInput = s.object(
 
 interface ActionInput {
   name: string;
+  operationType: ActionOperationType;
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -228,6 +229,7 @@ function action(input: ActionInput): ActionDefinition {
 export const instagramActions: ActionDefinition[] = [
   action({
     name: "get_current_user",
+    operationType: "read",
     description: "Get the connected Instagram Business or Creator account profile and account counters.",
     requiredScopes: basicScopes,
     inputSchema: s.object({}, { description: "This action has no input fields." }),
@@ -256,6 +258,7 @@ export const instagramActions: ActionDefinition[] = [
   }),
   action({
     name: "list_media",
+    operationType: "read",
     description: "List media owned by the connected Instagram professional account using safe cursor pagination.",
     requiredScopes: basicScopes,
     inputSchema: paginationInput,
@@ -267,6 +270,7 @@ export const instagramActions: ActionDefinition[] = [
   }),
   action({
     name: "get_media",
+    operationType: "read",
     description: "Get normalized fields for one Instagram media item owned by the connected account.",
     requiredScopes: basicScopes,
     inputSchema: s.object(
@@ -277,6 +281,7 @@ export const instagramActions: ActionDefinition[] = [
   }),
   action({
     name: "list_media_comments",
+    operationType: "read",
     description:
       "List top-level comments on owned Instagram media. Reply metadata is included only when Meta returns it; this is not a complete reply tree.",
     requiredScopes: commentScopes,
@@ -293,6 +298,7 @@ export const instagramActions: ActionDefinition[] = [
   }),
   action({
     name: "get_media_insights",
+    operationType: "read",
     description:
       "Get structured insights for owned Instagram media. Meta validates metric, period, breakdown, and media-type compatibility.",
     requiredScopes: insightScopes,
@@ -341,6 +347,7 @@ export const instagramActions: ActionDefinition[] = [
   }),
   action({
     name: "publish_media",
+    operationType: "write",
     description:
       "Publish an image, feed video, Reel, or 2-10 item carousel through Meta's media-container workflow, or resume an existing container after an ambiguous failure.",
     requiredScopes: publishingScopes,
@@ -363,6 +370,7 @@ export const instagramActions: ActionDefinition[] = [
   }),
   action({
     name: "create_comment",
+    operationType: "write",
     description:
       "Create a top-level comment on owned Instagram media. Live-video comments are unsupported and provider errors are returned as failures.",
     requiredScopes: commentScopes,
@@ -380,6 +388,7 @@ export const instagramActions: ActionDefinition[] = [
   }),
   action({
     name: "reply_to_comment",
+    operationType: "write",
     description: "Reply to an existing Instagram media comment and return the new reply ID.",
     requiredScopes: commentScopes,
     inputSchema: s.object(
@@ -399,6 +408,7 @@ export const instagramActions: ActionDefinition[] = [
   }),
   action({
     name: "send_message",
+    operationType: "write",
     description:
       "Reply with text to an Instagram-scoped recipient who already initiated a conversation, normally within Meta's 24-hour messaging window. This does not support cold outreach, recipient discovery, bulk messaging, webhooks, or inbox sync.",
     requiredScopes: messagingScopes,

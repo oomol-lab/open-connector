@@ -406,6 +406,7 @@ const listItemsOutputSchema = s.object(
 export const botStarActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_bots",
+    operationType: "read",
     description: "List bots available to the configured BotStar API token.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object(
@@ -418,6 +419,7 @@ export const botStarActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_bot",
+    operationType: "write",
     description: "Create a new BotStar bot.",
     inputSchema: s.object(
       "Input for creating a BotStar bot.",
@@ -430,18 +432,21 @@ export const botStarActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_bot",
+    operationType: "read",
     description: "Get one BotStar bot by ID.",
     inputSchema: botIdInputSchema,
     outputSchema: botOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_bot_attributes",
+    operationType: "read",
     description: "List attributes configured for a BotStar bot.",
     inputSchema: listBotAttributesInputSchema,
     outputSchema: listBotAttributesOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_bot_attribute",
+    operationType: "write",
     description: "Create an attribute on a BotStar bot.",
     inputSchema: createBotAttributeInputSchema,
     outputSchema: s.object(
@@ -452,6 +457,7 @@ export const botStarActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_bot_attribute",
+    operationType: "write",
     description: "Update an existing BotStar bot attribute.",
     inputSchema: updateBotAttributeInputSchema,
     outputSchema: s.object(
@@ -462,24 +468,28 @@ export const botStarActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_bot_attribute",
+    operationType: "destructive",
     description: "Delete a BotStar bot attribute.",
     inputSchema: deleteBotAttributeInputSchema,
     outputSchema: successSchema,
   }),
   defineProviderAction(service, {
     name: "publish_bot",
+    operationType: "write",
     description: "Publish BotStar bot changes to the live environment.",
     inputSchema: botIdInputSchema,
     outputSchema: successSchema,
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Get a BotStar audience user by bot ID and user ID.",
     inputSchema: userInputSchema,
     outputSchema: userOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_user_attributes",
+    operationType: "write",
     description: "Update attributes on a BotStar audience user.",
     inputSchema: updateUserAttributesInputSchema,
     outputSchema: s.object(
@@ -492,66 +502,77 @@ export const botStarActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_user_attribute",
+    operationType: "write",
     description: "Create a custom user attribute field for a BotStar bot.",
     inputSchema: createUserAttributeInputSchema,
     outputSchema: userAttributeOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_cms_entities",
+    operationType: "read",
     description: "List CMS entities configured for a BotStar bot.",
     inputSchema: listCmsEntitiesInputSchema,
     outputSchema: listEntitiesOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_cms_entity",
+    operationType: "write",
     description: "Create a BotStar CMS entity.",
     inputSchema: createCmsEntityInputSchema,
     outputSchema: entityOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_cms_entity",
+    operationType: "read",
     description: "Get one BotStar CMS entity by ID.",
     inputSchema: cmsEntityInputSchema,
     outputSchema: entityOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_cms_entity",
+    operationType: "write",
     description: "Update a BotStar CMS entity.",
     inputSchema: updateCmsEntityInputSchema,
     outputSchema: successSchema,
   }),
   defineProviderAction(service, {
     name: "delete_cms_entity",
+    operationType: "destructive",
     description: "Delete a BotStar CMS entity.",
     inputSchema: deleteCmsEntityInputSchema,
     outputSchema: successSchema,
   }),
   defineProviderAction(service, {
     name: "list_cms_entity_items",
+    operationType: "read",
     description: "List items in a BotStar CMS entity.",
     inputSchema: listCmsEntityItemsInputSchema,
     outputSchema: listItemsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_cms_entity_item",
+    operationType: "write",
     description: "Create an item in a BotStar CMS entity.",
     inputSchema: createCmsEntityItemInputSchema,
     outputSchema: itemOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_cms_entity_item",
+    operationType: "read",
     description: "Get one item from a BotStar CMS entity.",
     inputSchema: getCmsEntityItemInputSchema,
     outputSchema: itemOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_cms_entity_item",
+    operationType: "write",
     description: "Update an item in a BotStar CMS entity.",
     inputSchema: updateCmsEntityItemInputSchema,
     outputSchema: successSchema,
   }),
   defineProviderAction(service, {
     name: "delete_cms_entity_item",
+    operationType: "destructive",
     description: "Delete an item from a BotStar CMS entity.",
     inputSchema: deleteCmsEntityItemInputSchema,
     outputSchema: successSchema,

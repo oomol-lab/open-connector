@@ -89,6 +89,7 @@ const filters = { locationId, fromDate: date, toDate: date };
 export const waitwhileActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_locations",
+    operationType: "read",
     description: "List accessible Waitwhile locations with cursor pagination.",
     inputSchema: s.object(
       "Location list filters and pagination.",
@@ -124,6 +125,7 @@ export const waitwhileActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List Waitwhile customers with location, external ID, date filters and cursor pagination.",
     inputSchema: s.object(
       "Customer list filters and pagination.",
@@ -140,6 +142,7 @@ export const waitwhileActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_customers",
+    operationType: "read",
     description: "Search Waitwhile customers by name, phone, email or identifier prefix with page-number pagination.",
     inputSchema: s.object(
       "Customer search filters and pagination.",
@@ -174,6 +177,7 @@ export const waitwhileActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_customer",
+    operationType: "write",
     description: "Create a Waitwhile customer with contact information, location associations, tags and metadata.",
     inputSchema: s.object("Customer creation request.", {
       customer: s.object(
@@ -186,12 +190,14 @@ export const waitwhileActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Retrieve one Waitwhile customer by ID.",
     inputSchema: s.object("Customer lookup request.", { customerId }),
     outputSchema: customer,
   }),
   defineProviderAction(service, {
     name: "update_customer",
+    operationType: "destructive",
     description:
       "Update a Waitwhile customer's contact information, location associations, tags or metadata; nullable fields can be cleared.",
     inputSchema: s.object("Customer update request.", {
@@ -204,6 +210,7 @@ export const waitwhileActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_customer",
+    operationType: "destructive",
     description: "Delete a Waitwhile customer by ID.",
     inputSchema: s.object("Customer deletion request.", { customerId }),
     outputSchema: s.looseRequiredObject(

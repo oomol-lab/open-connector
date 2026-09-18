@@ -142,6 +142,7 @@ export const appStoreVersionPromotionResource: JsonSchema = resourceObject(
 export const appStoreConnectProductPageActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_app_custom_product_pages",
+    operationType: "read",
     description: "List the custom product pages of one app, optionally only the visible or only the hidden ones.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -162,6 +163,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "get_app_custom_product_page",
+    operationType: "read",
     description: "Read one custom product page by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -178,6 +180,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "create_app_custom_product_page",
+    operationType: "write",
     description:
       "Create a custom product page for an app. Copy the metadata of an App Store version (appStoreVersionTemplateId) or of another custom product page (customProductPageTemplateId), or create the first page version inline with a deep link and localized promotional text. The page starts hidden until its first version passes App Review; use list_app_custom_product_page_versions to find the version to work on.",
     requiredScopes: [],
@@ -219,6 +222,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "update_app_custom_product_page",
+    operationType: "destructive",
     description:
       "Rename a custom product page or toggle its visibility on the App Store. Overwrites the given fields; pass at least one.",
     requiredScopes: [],
@@ -241,6 +245,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "delete_app_custom_product_page",
+    operationType: "destructive",
     description:
       "Delete a custom product page together with all of its versions and localizations. Its App Store URL stops working.",
     requiredScopes: [],
@@ -259,6 +264,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "list_app_custom_product_page_versions",
+    operationType: "read",
     description: "List the versions of one custom product page, optionally narrowed to some review states.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -283,6 +289,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "get_app_custom_product_page_version",
+    operationType: "read",
     description: "Read one custom product page version by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -301,6 +308,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "create_app_custom_product_page_version",
+    operationType: "write",
     description:
       "Create a new editable version of a custom product page, for example to change it after the current version was approved. App Store Connect rejects a new version while the page already has one that is still being prepared or reviewed.",
     requiredScopes: [],
@@ -320,6 +328,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "update_app_custom_product_page_version",
+    operationType: "destructive",
     description:
       "Set or clear the deep link of a custom product page version. Overwrites the existing deep link; pass null to remove it.",
     requiredScopes: [],
@@ -341,6 +350,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "list_app_custom_product_page_localizations",
+    operationType: "read",
     description: "List the localizations of one custom product page version, optionally narrowed to some locales.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -363,6 +373,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "get_app_custom_product_page_localization",
+    operationType: "read",
     description: "Read one custom product page localization by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -381,6 +392,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "create_app_custom_product_page_localization",
+    operationType: "write",
     description:
       "Add a locale to a custom product page version with optional promotional text. Screenshots and app previews for the locale are uploaded separately. App Store Connect rejects a locale the version already has.",
     requiredScopes: [],
@@ -406,6 +418,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "update_app_custom_product_page_localization",
+    operationType: "destructive",
     description: "Replace the promotional text of a custom product page localization, or clear it with null.",
     requiredScopes: [],
     providerPermissions: [...manageAppStoreRoles],
@@ -426,6 +439,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "delete_app_custom_product_page_localization",
+    operationType: "destructive",
     description:
       "Remove a locale from a custom product page version, including the screenshots and previews attached to it.",
     requiredScopes: [],
@@ -446,6 +460,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "list_app_store_version_experiments",
+    operationType: "read",
     description:
       "List the product page optimization tests of one app, optionally narrowed to some states, with the App Store version each test uses as its control.",
     requiredScopes: [],
@@ -471,6 +486,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "get_app_store_version_experiment",
+    operationType: "read",
     description: "Read one product page optimization test, including the App Store version that serves as its control.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -489,6 +505,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "create_app_store_version_experiment",
+    operationType: "write",
     description:
       "Create a product page optimization test for an app on one platform. The test starts in PREPARE_FOR_SUBMISSION; add treatments with create_app_store_version_experiment_treatment, then start it with update_app_store_version_experiment once its treatments are approved.",
     requiredScopes: [],
@@ -512,6 +529,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "update_app_store_version_experiment",
+    operationType: "destructive",
     description:
       "Rename a product page optimization test, change its traffic proportion, or start it by passing started true. Starting a test is not reversible: it begins serving treatments to App Store traffic and can only be stopped, not returned to draft. Pass at least one field.",
     requiredScopes: [],
@@ -537,6 +555,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "delete_app_store_version_experiment",
+    operationType: "destructive",
     description:
       "Delete a product page optimization test together with its treatments. A running test is stopped; results already collected are lost.",
     requiredScopes: [],
@@ -557,6 +576,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "list_app_store_version_experiment_treatments",
+    operationType: "read",
     description: "List the treatments of one product page optimization test.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -578,6 +598,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "get_app_store_version_experiment_treatment",
+    operationType: "read",
     description: "Read one treatment of a product page optimization test.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -594,6 +615,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "create_app_store_version_experiment_treatment",
+    operationType: "write",
     description:
       "Add a treatment to a product page optimization test, optionally using an alternate app icon bundled with the app. Add locales to the treatment with create_app_store_version_experiment_treatment_localization before uploading its screenshots.",
     requiredScopes: [],
@@ -618,6 +640,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "update_app_store_version_experiment_treatment",
+    operationType: "destructive",
     description:
       "Rename a treatment or change its alternate app icon. Overwrites the given fields; pass null as appIconName to return to the default icon. Pass at least one field.",
     requiredScopes: [],
@@ -638,6 +661,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "delete_app_store_version_experiment_treatment",
+    operationType: "destructive",
     description:
       "Delete a treatment from a product page optimization test, including its localizations and screenshots.",
     requiredScopes: [],
@@ -656,6 +680,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "list_app_store_version_experiment_treatment_localizations",
+    operationType: "read",
     description:
       "List the locales of one treatment, optionally narrowed to some locales. Screenshots and previews of a treatment are attached to these localizations.",
     requiredScopes: [],
@@ -677,6 +702,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "get_app_store_version_experiment_treatment_localization",
+    operationType: "read",
     description: "Read one treatment localization by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -697,6 +723,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "create_app_store_version_experiment_treatment_localization",
+    operationType: "write",
     description:
       "Add a locale to a treatment so screenshots and app previews can be uploaded for it. App Store Connect rejects a locale the treatment already has.",
     requiredScopes: [],
@@ -718,6 +745,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "delete_app_store_version_experiment_treatment_localization",
+    operationType: "destructive",
     description: "Remove a locale from a treatment, including the screenshots and previews attached to it.",
     requiredScopes: [],
     providerPermissions: [...manageAppStoreRoles],
@@ -737,6 +765,7 @@ export const appStoreConnectProductPageActions: readonly ProviderActionDefinitio
   }),
   defineProviderAction(service, {
     name: "create_app_store_version_promotion",
+    operationType: "destructive",
     description:
       "Promote the winning treatment of a product page optimization test to the default product page: its screenshots, previews, and app icon are applied to the given App Store version, replacing that version's current product page assets. Use list_app_store_version_experiments to find the control version (latestControlVersionId) the test ran against.",
     requiredScopes: [],

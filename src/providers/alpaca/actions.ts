@@ -165,6 +165,7 @@ const corporateActionFilterSchema = s.oneOf(
 
 const getAccountAction = defineProviderAction(service, {
   name: "get_account",
+  operationType: "read",
   description: "Get Alpaca Trading API account details for the connected paper or live account.",
   inputSchema: s.object("Input for getting Alpaca account details.", {}),
   outputSchema: s.object("Alpaca account details response.", {
@@ -174,6 +175,7 @@ const getAccountAction = defineProviderAction(service, {
 
 const listAssetsAction = defineProviderAction(service, {
   name: "list_assets",
+  operationType: "read",
   description: "List Alpaca assets with optional status, asset class, and attribute filters.",
   inputSchema: s.object(
     "Input for listing Alpaca assets.",
@@ -204,6 +206,7 @@ const listAssetsAction = defineProviderAction(service, {
 
 const getAssetAction = defineProviderAction(service, {
   name: "get_asset",
+  operationType: "read",
   description: "Get one Alpaca asset by symbol or asset ID.",
   inputSchema: s.object("Input for getting one Alpaca asset.", {
     symbolOrAssetId: nonBlankString("Asset symbol or asset ID."),
@@ -215,6 +218,7 @@ const getAssetAction = defineProviderAction(service, {
 
 const listPositionsAction = defineProviderAction(service, {
   name: "list_positions",
+  operationType: "read",
   description: "List open positions for the connected Alpaca trading account.",
   inputSchema: s.object("Input for listing Alpaca open positions.", {}),
   outputSchema: s.object("Alpaca open positions response.", {
@@ -224,6 +228,7 @@ const listPositionsAction = defineProviderAction(service, {
 
 const getPositionAction = defineProviderAction(service, {
   name: "get_position",
+  operationType: "read",
   description: "Get one open Alpaca position by symbol or asset ID.",
   inputSchema: s.object("Input for getting one Alpaca open position.", {
     symbolOrAssetId: nonBlankString("Position symbol or asset ID."),
@@ -235,6 +240,7 @@ const getPositionAction = defineProviderAction(service, {
 
 const listOrdersAction = defineProviderAction(service, {
   name: "list_orders",
+  operationType: "read",
   description: "List Alpaca orders for the connected account with optional filters.",
   inputSchema: s.object(
     "Input for listing Alpaca orders.",
@@ -256,6 +262,7 @@ const listOrdersAction = defineProviderAction(service, {
 
 const getOrderAction = defineProviderAction(service, {
   name: "get_order",
+  operationType: "read",
   description: "Get one Alpaca order by order ID or client order ID.",
   inputSchema: getOrderInputSchema,
   outputSchema: s.object("Alpaca order response.", {
@@ -265,6 +272,7 @@ const getOrderAction = defineProviderAction(service, {
 
 const getMarketClockAction = defineProviderAction(service, {
   name: "get_market_clock",
+  operationType: "read",
   description: "Get Alpaca Trading API US market clock information.",
   inputSchema: s.object("Input for getting Alpaca US market clock information.", {}),
   outputSchema: s.object("Alpaca US market clock response.", {
@@ -274,6 +282,7 @@ const getMarketClockAction = defineProviderAction(service, {
 
 const listWatchlistsAction = defineProviderAction(service, {
   name: "list_watchlists",
+  operationType: "read",
   description: "List Alpaca watchlists registered under the connected trading account.",
   inputSchema: s.object("Input for listing Alpaca watchlists.", {}),
   outputSchema: s.object("Alpaca watchlists response.", {
@@ -283,6 +292,7 @@ const listWatchlistsAction = defineProviderAction(service, {
 
 const getWatchlistAction = defineProviderAction(service, {
   name: "get_watchlist",
+  operationType: "read",
   description: "Get one Alpaca watchlist by watchlist ID or user-defined name.",
   inputSchema: getWatchlistInputSchema,
   outputSchema: s.object("Alpaca watchlist response.", {
@@ -292,6 +302,7 @@ const getWatchlistAction = defineProviderAction(service, {
 
 const listAccountActivitiesAction = defineProviderAction(service, {
   name: "list_account_activities",
+  operationType: "read",
   description: "List Alpaca account activities with optional type, category, date, and pagination filters.",
   inputSchema: s.oneOf(
     [
@@ -337,6 +348,7 @@ const listAccountActivitiesAction = defineProviderAction(service, {
 
 const getAccountConfigAction = defineProviderAction(service, {
   name: "get_account_config",
+  operationType: "read",
   description: "Get Alpaca account configuration values.",
   inputSchema: s.object("Input for getting Alpaca account configuration.", {}),
   outputSchema: s.object("Alpaca account configuration response.", {
@@ -346,6 +358,7 @@ const getAccountConfigAction = defineProviderAction(service, {
 
 const getAccountPortfolioHistoryAction = defineProviderAction(service, {
   name: "get_account_portfolio_history",
+  operationType: "read",
   description: "Get Alpaca account equity and profit/loss time series.",
   inputSchema: s.object(
     "Input for getting Alpaca account portfolio history.",
@@ -369,6 +382,7 @@ const getAccountPortfolioHistoryAction = defineProviderAction(service, {
 
 const getMarketCalendarAction = defineProviderAction(service, {
   name: "get_market_calendar",
+  operationType: "read",
   description: "Get Alpaca Trading API US market calendar days.",
   inputSchema: s.object(
     "Input for getting Alpaca US market calendar days.",
@@ -386,6 +400,7 @@ const getMarketCalendarAction = defineProviderAction(service, {
 
 const listCorporateActionsAction = defineProviderAction(service, {
   name: "list_corporate_actions",
+  operationType: "read",
   description: "List Alpaca corporate actions for symbols, CUSIPs, types, or IDs.",
   requiredScopes: [alpacaDataScope],
   inputSchema: corporateActionFilterSchema,
@@ -401,6 +416,7 @@ const listCorporateActionsAction = defineProviderAction(service, {
 
 const getStockBarsAction = defineProviderAction(service, {
   name: "get_stock_bars",
+  operationType: "read",
   description: "Get historical OHLC stock bars from Alpaca Market Data API.",
   requiredScopes: [alpacaDataScope],
   inputSchema: s.object(
@@ -434,6 +450,7 @@ const getStockBarsAction = defineProviderAction(service, {
 
 const getCryptoBarsAction = defineProviderAction(service, {
   name: "get_crypto_bars",
+  operationType: "read",
   description: "Get historical OHLC crypto bars from Alpaca Market Data API.",
   requiredScopes: [alpacaDataScope],
   inputSchema: s.object(
@@ -462,6 +479,7 @@ const getCryptoBarsAction = defineProviderAction(service, {
 
 const listOptionContractsAction = defineProviderAction(service, {
   name: "list_option_contracts",
+  operationType: "read",
   description: "List Alpaca option contracts with optional underlying and contract filters.",
   inputSchema: s.object(
     "Input for listing Alpaca option contracts.",
@@ -514,6 +532,7 @@ const listOptionContractsAction = defineProviderAction(service, {
 
 const getOptionContractAction = defineProviderAction(service, {
   name: "get_option_contract",
+  operationType: "read",
   description: "Get one Alpaca option contract by contract symbol or ID.",
   inputSchema: s.object("Input for getting one Alpaca option contract.", {
     symbolOrId: nonBlankString("Option contract symbol or ID."),
@@ -525,6 +544,7 @@ const getOptionContractAction = defineProviderAction(service, {
 
 const getStockSnapshotsAction = defineProviderAction(service, {
   name: "get_stock_snapshots",
+  operationType: "read",
   description: "Get latest stock snapshots from Alpaca Market Data API.",
   requiredScopes: [alpacaDataScope],
   inputSchema: s.object(
@@ -543,6 +563,7 @@ const getStockSnapshotsAction = defineProviderAction(service, {
 
 const getCryptoSnapshotsAction = defineProviderAction(service, {
   name: "get_crypto_snapshots",
+  operationType: "read",
   description: "Get latest crypto snapshots from Alpaca Market Data API.",
   requiredScopes: [alpacaDataScope],
   inputSchema: s.object(
@@ -560,6 +581,7 @@ const getCryptoSnapshotsAction = defineProviderAction(service, {
 
 const listNewsAction = defineProviderAction(service, {
   name: "list_news",
+  operationType: "read",
   description: "List latest Alpaca news articles across stocks and crypto.",
   requiredScopes: [alpacaDataScope],
   inputSchema: s.object(

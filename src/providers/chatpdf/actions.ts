@@ -20,6 +20,7 @@ const referenceSchema = s.looseRequiredObject("One PDF page referenced by ChatPD
 export const chatpdfActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "add_source_url",
+    operationType: "write",
     description: "Import a publicly reachable PDF URL into ChatPDF and return its source ID.",
     inputSchema: s.actionInput(
       {
@@ -37,6 +38,7 @@ export const chatpdfActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "chat",
+    operationType: "read",
     description: "Ask ChatPDF one or more stateless questions about an imported PDF source.",
     inputSchema: s.actionInput(
       {
@@ -61,6 +63,7 @@ export const chatpdfActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_sources",
+    operationType: "destructive",
     description: "Delete one or more imported PDF sources from ChatPDF.",
     inputSchema: s.actionInput(
       {

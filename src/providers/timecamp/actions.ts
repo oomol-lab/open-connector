@@ -201,6 +201,7 @@ const updateTimeEntryInputSchema = withAnyOfRequired(
 export const timecampActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the TimeCamp user associated with the current API token.",
     inputSchema: s.actionInput({}, [], "The input payload for retrieving the current TimeCamp user."),
     outputSchema: s.actionOutput(
@@ -212,6 +213,7 @@ export const timecampActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List users in the connected TimeCamp account.",
     inputSchema: s.actionInput(
       {
@@ -229,6 +231,7 @@ export const timecampActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "List TimeCamp tasks or projects with optional task and status filters.",
     inputSchema: s.actionInput(
       {
@@ -265,6 +268,7 @@ export const timecampActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_time_entries",
+    operationType: "read",
     description: "List TimeCamp time entries for a date or modification range.",
     inputSchema: listTimeEntriesInputSchema,
     outputSchema: s.actionOutput(
@@ -277,6 +281,7 @@ export const timecampActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_time_entry",
+    operationType: "write",
     description: "Create a TimeCamp time entry.",
     inputSchema: createTimeEntryInputSchema,
     outputSchema: s.actionOutput(
@@ -289,6 +294,7 @@ export const timecampActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_time_entry",
+    operationType: "write",
     description: "Update an existing TimeCamp time entry.",
     inputSchema: updateTimeEntryInputSchema,
     outputSchema: s.actionOutput(
@@ -300,6 +306,7 @@ export const timecampActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_timer_status",
+    operationType: "read",
     description: "Get the current TimeCamp timer status.",
     inputSchema: s.actionInput({}, [], "The input payload for reading the TimeCamp timer status."),
     outputSchema: s.actionOutput(
@@ -311,6 +318,7 @@ export const timecampActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "start_timer",
+    operationType: "write",
     description: "Start a TimeCamp timer, optionally attached to a task.",
     inputSchema: s.actionInput(
       {
@@ -329,6 +337,7 @@ export const timecampActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "stop_timer",
+    operationType: "destructive",
     description: "Stop the current TimeCamp timer and save the tracked time.",
     inputSchema: s.actionInput(
       {

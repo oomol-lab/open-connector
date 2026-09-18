@@ -11,6 +11,7 @@ const rawEntity = s.looseObject("Raw Streak entity fields returned by the API.")
 export const streakActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Read the Streak user associated with the authenticated API key.",
     inputSchema: s.object("No input is required to read the current Streak user.", {}),
     outputSchema: s.object("Current Streak user response.", {
@@ -20,6 +21,7 @@ export const streakActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pipelines",
+    operationType: "read",
     description: "List Streak pipelines visible to the authenticated API key.",
     followUpActions: ["streak.get_pipeline"],
     inputSchema: s.object(
@@ -39,6 +41,7 @@ export const streakActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_pipeline",
+    operationType: "read",
     description: "Read one Streak pipeline by key.",
     inputSchema: s.object("Request parameters for reading one Streak pipeline.", {
       pipelineKey: s.nonEmptyString("The Streak pipeline key."),
@@ -50,6 +53,7 @@ export const streakActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_box",
+    operationType: "read",
     description: "Read one Streak box by key.",
     inputSchema: s.object("Request parameters for reading one Streak box.", {
       boxKey: s.nonEmptyString("The Streak box key."),

@@ -116,6 +116,7 @@ const dealSchema = s.looseObject("A deal returned by Slickdeals.", {
 
 const listArticlesAction = defineProviderAction(service, {
   name: "list_articles",
+  operationType: "read",
   description: "List Slickdeals shopping articles with optional store, sorting, and pagination filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -137,6 +138,7 @@ const listArticlesAction = defineProviderAction(service, {
 
 const listBrandsAction = defineProviderAction(service, {
   name: "list_brands",
+  operationType: "read",
   description: "List Slickdeals brands that can be used to filter deals.",
   requiredScopes: [],
   inputSchema: s.object("No input is required to list Slickdeals brands.", {}),
@@ -147,6 +149,7 @@ const listBrandsAction = defineProviderAction(service, {
 
 const listCategoriesAction = defineProviderAction(service, {
   name: "list_categories",
+  operationType: "read",
   description: "List Slickdeals categories that can be used to filter deals and coupons.",
   requiredScopes: [],
   inputSchema: s.object("No input is required to list Slickdeals categories.", {}),
@@ -157,6 +160,7 @@ const listCategoriesAction = defineProviderAction(service, {
 
 const listCouponsAction = defineProviderAction(service, {
   name: "list_coupons",
+  operationType: "read",
   description: "List Slickdeals coupons with store, category, country, state, and sorting filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -199,6 +203,7 @@ const listCouponsAction = defineProviderAction(service, {
 
 const listDealsAction = defineProviderAction(service, {
   name: "list_deals",
+  operationType: "read",
   description: "List Slickdeals deals with store, category, brand, popularity, and date filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -258,6 +263,7 @@ const listStoresInputSchema = s.object(
 
 const listStoresAction = defineProviderAction(service, {
   name: "list_stores",
+  operationType: "read",
   description: "List Slickdeals stores with optional name, monetization, country, and pagination filters.",
   requiredScopes: [],
   inputSchema: listStoresInputSchema,
@@ -269,6 +275,7 @@ const listStoresAction = defineProviderAction(service, {
 
 const listTypesAction = defineProviderAction(service, {
   name: "list_types",
+  operationType: "read",
   description: "List the coupon and deal type values supported by the Slickdeals Syndication API.",
   requiredScopes: [],
   inputSchema: s.object("No input is required to list Slickdeals content types.", {}),

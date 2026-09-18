@@ -55,6 +55,7 @@ const customerInputProperties = {
 
 const createCustomerAction = defineProviderAction(service, {
   name: "create_customer",
+  operationType: "write",
   description: "Create a Checkout.com customer for storing reusable customer details.",
   requiredScopes: [],
   inputSchema: s.object("Input parameters for creating a Checkout.com customer.", customerInputProperties, {
@@ -67,6 +68,7 @@ const createCustomerAction = defineProviderAction(service, {
 
 const getCustomerAction = defineProviderAction(service, {
   name: "get_customer",
+  operationType: "read",
   description: "Get a Checkout.com customer and their linked payment instruments by ID or email.",
   requiredScopes: [],
   inputSchema: s.object("Input parameters for retrieving a Checkout.com customer.", {
@@ -97,6 +99,7 @@ const getCustomerAction = defineProviderAction(service, {
 
 const updateCustomerAction = defineProviderAction(service, {
   name: "update_customer",
+  operationType: "write",
   description: "Update stored details for a Checkout.com customer.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -111,6 +114,7 @@ const updateCustomerAction = defineProviderAction(service, {
 
 const deleteCustomerAction = defineProviderAction(service, {
   name: "delete_customer",
+  operationType: "destructive",
   description: "Delete a Checkout.com customer and all linked payment instruments.",
   requiredScopes: [],
   inputSchema: s.object("Input parameters for deleting a Checkout.com customer.", {

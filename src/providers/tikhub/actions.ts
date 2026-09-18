@@ -8,6 +8,7 @@ const tikhubUserScope = "/api/v1/tikhub/user/" as const;
 
 function defineTikHubUserAction<TName extends string>(input: {
   name: TName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
@@ -60,6 +61,7 @@ const userDataSchema = s.looseObject("TikHub account metadata returned for the c
 
 const getUserDailyUsageAction = defineTikHubUserAction({
   name: "get_user_daily_usage",
+  operationType: "read",
   description: "Get the current TikHub account daily API usage. Requires the /api/v1/tikhub/user/ TikHub path scope.",
   inputSchema: s.object("The input payload for getting TikHub daily usage.", {}),
   outputSchema: s.object("The response returned when getting TikHub daily usage.", {
@@ -72,6 +74,7 @@ const getUserDailyUsageAction = defineTikHubUserAction({
 
 const getUserInfoAction = defineTikHubUserAction({
   name: "get_user_info",
+  operationType: "read",
   description:
     "Get the current TikHub account and API key information. Requires the /api/v1/tikhub/user/ TikHub path scope.",
   inputSchema: s.object("The input payload for getting TikHub user information.", {}),
@@ -90,6 +93,7 @@ const getUserInfoAction = defineTikHubUserAction({
 
 const getEndpointInfoAction = defineTikHubUserAction({
   name: "get_endpoint_info",
+  operationType: "read",
   description: "Get TikHub cost and metadata for one endpoint. Requires the /api/v1/tikhub/user/ TikHub path scope.",
   inputSchema: s.object("The input payload for getting TikHub endpoint information.", {
     endpoint: endpointSchema,
@@ -104,6 +108,7 @@ const getEndpointInfoAction = defineTikHubUserAction({
 
 const getAllEndpointsInfoAction = defineTikHubUserAction({
   name: "get_all_endpoints_info",
+  operationType: "read",
   description: "Get TikHub cost and metadata for all endpoints. Requires the /api/v1/tikhub/user/ TikHub path scope.",
   inputSchema: s.object("The input payload for getting all TikHub endpoint information.", {}),
   outputSchema: s.object("The response returned when getting all TikHub endpoint information.", {
@@ -115,6 +120,7 @@ const getAllEndpointsInfoAction = defineTikHubUserAction({
 
 const calculatePriceAction = defineTikHubUserAction({
   name: "calculate_price",
+  operationType: "read",
   description:
     "Calculate TikHub daily request pricing for one endpoint. Requires the /api/v1/tikhub/user/ TikHub path scope.",
   inputSchema: s.object(
@@ -148,6 +154,7 @@ const discoveredEndpointSchema = s.object("One currently discovered TikHub endpo
 
 const discoverEndpointsAction = defineProviderAction(service, {
   name: "discover_endpoints",
+  operationType: "read",
   description:
     "Discover current TikHub functional API endpoints from the official OpenAPI catalog, excluding account APIs.",
   requiredScopes: [],
@@ -195,6 +202,7 @@ const invokeRequestSchema = s.object(
 
 const invokeEndpointAction = defineProviderAction(service, {
   name: "invoke_endpoint",
+  operationType: "read",
   description:
     "Invoke one TikHub functional API endpoint at the fixed TikHub API origin. TikHub account endpoints are excluded.",
   requiredScopes: [],

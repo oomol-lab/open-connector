@@ -210,6 +210,7 @@ const listInventoryProductsInputSchema = s.object(
 export const baseLinkerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_order_statuses",
+    operationType: "read",
     description: "List order statuses configured in the BaseLinker order manager.",
     inputSchema: emptyInputSchema("Input parameters for listing BaseLinker order statuses."),
     outputSchema: s.object(
@@ -219,6 +220,7 @@ export const baseLinkerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description: "List BaseLinker orders using official order manager filters, returning up to 100 orders.",
     inputSchema: listOrdersInputSchema,
     outputSchema: s.object(
@@ -228,6 +230,7 @@ export const baseLinkerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_order_events",
+    operationType: "read",
     description: "List recent BaseLinker order events from the order journal.",
     inputSchema: listOrderEventsInputSchema,
     outputSchema: s.object(
@@ -237,6 +240,7 @@ export const baseLinkerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_inventories",
+    operationType: "read",
     description: "List inventory catalogs available in BaseLinker storage.",
     inputSchema: emptyInputSchema("Input parameters for listing BaseLinker inventory catalogs."),
     outputSchema: s.object(
@@ -246,6 +250,7 @@ export const baseLinkerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_inventory_warehouses",
+    operationType: "read",
     description: "List warehouses available in BaseLinker inventories.",
     inputSchema: emptyInputSchema("Input parameters for listing BaseLinker inventory warehouses."),
     outputSchema: s.object(
@@ -255,6 +260,7 @@ export const baseLinkerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_inventory_products",
+    operationType: "read",
     description: "List basic product data from a BaseLinker inventory catalog.",
     inputSchema: listInventoryProductsInputSchema,
     outputSchema: s.object(

@@ -475,6 +475,7 @@ const perfPowerMetricsFilters = {
 export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "update_user",
+    operationType: "destructive",
     description:
       "Change the roles, app visibility, or provisioning access of a team member. Roles and visible apps replace the current values rather than adding to them. Pass at least one field to change.",
     requiredScopes: [],
@@ -496,6 +497,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "delete_user",
+    operationType: "destructive",
     description:
       "Remove a member from the App Store Connect team. They lose access to every app and to any API keys tied to their account.",
     requiredScopes: [],
@@ -512,6 +514,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "list_user_visible_apps",
+    operationType: "read",
     description:
       "List the apps a team member can see. For a user with allAppsVisible the list reflects every app on the team.",
     requiredScopes: [],
@@ -533,6 +536,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "add_visible_apps_to_user",
+    operationType: "write",
     description: "Make additional apps visible to a team member who does not have access to all apps.",
     requiredScopes: [],
     providerPermissions: [...usersAndAccessRoles],
@@ -555,6 +559,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "remove_visible_apps_from_user",
+    operationType: "destructive",
     description: "Hide apps from a team member so they can no longer open them in App Store Connect.",
     requiredScopes: [],
     providerPermissions: [...usersAndAccessRoles],
@@ -577,6 +582,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "replace_user_visible_apps",
+    operationType: "destructive",
     description:
       "Replace the whole set of apps a team member can see. Apps missing from the new list are hidden from the user.",
     requiredScopes: [],
@@ -600,6 +606,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "list_user_invitations",
+    operationType: "read",
     description:
       "List pending invitations to join the App Store Connect team, optionally narrowed by email, role, or visible app.",
     requiredScopes: [],
@@ -624,6 +631,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "get_user_invitation",
+    operationType: "read",
     description: "Read one pending team invitation by identifier.",
     requiredScopes: [],
     providerPermissions: [...usersAndAccessRoles],
@@ -636,6 +644,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "invite_user",
+    operationType: "write",
     description:
       "Invite someone to join the App Store Connect team with the given roles. Apple emails them an activation link that expires after three days; the invitation can be cancelled until it is accepted.",
     requiredScopes: [],
@@ -659,6 +668,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "cancel_user_invitation",
+    operationType: "destructive",
     description:
       "Cancel a pending team invitation. The activation link stops working; invite the person again if needed.",
     requiredScopes: [],
@@ -675,6 +685,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "list_user_invitation_visible_apps",
+    operationType: "read",
     description: "List the apps a pending invitation will make visible to the invited user.",
     requiredScopes: [],
     providerPermissions: [...usersAndAccessRoles],
@@ -695,6 +706,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "list_actors",
+    operationType: "read",
     description:
       "Resolve audit-log actor identifiers, such as the submitter of a review submission, to the team member, API key, or system that performed the action. App Store Connect requires at least one identifier.",
     requiredScopes: [],
@@ -713,6 +725,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "get_actor",
+    operationType: "read",
     description: "Read one audit-log actor by identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -724,6 +737,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "list_sandbox_testers",
+    operationType: "read",
     description:
       "List the Sandbox Apple Accounts of the team used to test in-app purchases. Sandbox accounts are created and deleted in App Store Connect, not through the API.",
     requiredScopes: [],
@@ -740,6 +754,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "update_sandbox_tester",
+    operationType: "destructive",
     description:
       "Change the territory, interrupted-purchase setting, or subscription renewal rate of a sandbox tester. Changes can take up to an hour to reach the sandbox environment. Pass at least one field to change.",
     requiredScopes: [],
@@ -764,6 +779,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "clear_sandbox_tester_purchase_history",
+    operationType: "destructive",
     description:
       "Erase the purchase history of sandbox testers so they can test first-time purchases again. The history cannot be restored.",
     requiredScopes: [],
@@ -791,6 +807,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "list_analytics_report_requests",
+    operationType: "read",
     description: "List the analytics report requests of one app, which are the entry point to its analytics reports.",
     requiredScopes: [],
     providerPermissions: [...viewAnalyticsReportsRoles],
@@ -812,6 +829,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "get_analytics_report_request",
+    operationType: "read",
     description: "Read one analytics report request by identifier.",
     requiredScopes: [],
     providerPermissions: [...viewAnalyticsReportsRoles],
@@ -829,6 +847,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "create_analytics_report_request",
+    operationType: "write",
     description:
       "Ask App Store Connect to generate analytics reports for an app. ONGOING produces new daily, weekly, and monthly reports until the request is deleted or stops for inactivity; ONE_TIME_SNAPSHOT delivers historical data once. Reports appear asynchronously, so list them later.",
     requiredScopes: [],
@@ -848,6 +867,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "delete_analytics_report_request",
+    operationType: "destructive",
     description:
       "Delete an analytics report request. App Store Connect stops producing its reports and the existing report instances are no longer listed.",
     requiredScopes: [],
@@ -866,6 +886,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "list_analytics_reports",
+    operationType: "read",
     description:
       "List the report types available under one analytics report request, optionally narrowed by category or exact name.",
     requiredScopes: [],
@@ -889,6 +910,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "get_analytics_report",
+    operationType: "read",
     description: "Read one analytics report type by identifier.",
     requiredScopes: [],
     providerPermissions: [...viewAnalyticsReportsRoles],
@@ -901,6 +923,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "list_analytics_report_instances",
+    operationType: "read",
     description:
       "List the processed instances of one analytics report, each covering a daily, weekly, or monthly period.",
     requiredScopes: [],
@@ -924,6 +947,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "get_analytics_report_instance",
+    operationType: "read",
     description: "Read one analytics report instance by identifier.",
     requiredScopes: [],
     providerPermissions: [...viewAnalyticsReportsRoles],
@@ -941,6 +965,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "list_analytics_report_segments",
+    operationType: "read",
     description:
       "List the downloadable segments of one analytics report instance. Each url points at a gzip-compressed file that the caller downloads itself; the links expire five minutes after they are issued, so call this action right before downloading.",
     requiredScopes: [],
@@ -962,6 +987,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "list_diagnostic_signatures",
+    operationType: "read",
     description:
       "List the diagnostic signatures App Store Connect collected for one build: recurring call patterns behind disk writes, hangs, or slow launches, weighted by how critical they are.",
     requiredScopes: [],
@@ -983,6 +1009,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "get_diagnostic_signature_logs",
+    operationType: "read",
     description:
       "Fetch the anonymized backtrace logs App Store Connect recorded for one diagnostic signature, including call stack trees and device metadata.",
     requiredScopes: [],
@@ -1045,6 +1072,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "get_app_perf_power_metrics",
+    operationType: "read",
     description:
       "Fetch the performance and power metrics of the most recent versions of an app, such as launch time, hang rate, memory, and battery use, in the xcodeMetrics document format. Use get_build_perf_power_metrics for one specific build.",
     requiredScopes: [],
@@ -1060,6 +1088,7 @@ export const appStoreConnectAccessAnalyticsActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "get_build_perf_power_metrics",
+    operationType: "read",
     description: "Fetch the performance and power metrics collected for one build in the xcodeMetrics document format.",
     requiredScopes: [],
     inputSchema: s.object(

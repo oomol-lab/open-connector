@@ -31,6 +31,7 @@ const sendResultSchema = s.actionOutput(
 const wecomBotWebhookActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_text_message",
+    operationType: "write",
     description: "Send a text message through the WeCom bot webhook.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -48,6 +49,7 @@ const wecomBotWebhookActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_markdown_message",
+    operationType: "write",
     description: "Send a markdown message through the WeCom bot webhook.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -59,6 +61,7 @@ const wecomBotWebhookActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_markdown_v2_message",
+    operationType: "write",
     description: "Send a markdown_v2 message through the WeCom bot webhook.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -74,6 +77,7 @@ const wecomBotWebhookActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_image_message",
+    operationType: "write",
     description: "Send an image message through the WeCom bot webhook.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -92,6 +96,7 @@ const wecomBotWebhookActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_news_message",
+    operationType: "write",
     description: "Send a news message through the WeCom bot webhook.",
     requiredScopes: [],
     inputSchema: s.actionInput(

@@ -49,9 +49,15 @@ const outputSchemas: Record<string, JsonSchema> = {
   capture_url_screenshot: webOutput("screenshot"),
 };
 
-function action(name: string, description: string, inputSchema: JsonSchema): ActionDefinition {
+function action(
+  name: string,
+  operationType: ActionDefinition["operationType"],
+  description: string,
+  inputSchema: JsonSchema,
+): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     requiredScopes: [],
     inputSchema,
@@ -71,6 +77,7 @@ function webOutput(kind: string): JsonSchema {
 export const tabapiActions: ActionDefinition[] = [
   action(
     "get_domain_traffic",
+    "read",
     "Get traffic estimates and acquisition channels for a domain.",
     s.actionInput(
       {
@@ -83,16 +90,19 @@ export const tabapiActions: ActionDefinition[] = [
   ),
   action(
     "get_domain_whois",
+    "read",
     "Get the raw port-43 WHOIS record for a domain.",
     s.actionInput({ domain }, ["domain"], "Input for retrieving WHOIS data."),
   ),
   action(
     "get_domain_rdap",
+    "read",
     "Get structured RDAP registration data for a domain.",
     s.actionInput({ domain }, ["domain"], "Input for retrieving RDAP data."),
   ),
   action(
     "get_dns_records",
+    "read",
     "Get DNS records for a domain.",
     s.actionInput(
       {
@@ -113,11 +123,13 @@ export const tabapiActions: ActionDefinition[] = [
   ),
   action(
     "get_domain_backlinks",
+    "read",
     "Get backlink metrics and representative source pages for a domain.",
     s.actionInput({ domain }, ["domain"], "Input for retrieving backlinks."),
   ),
   action(
     "google_search",
+    "read",
     "Search Google and return normalized result data.",
     s.actionInput(
       {
@@ -132,6 +144,7 @@ export const tabapiActions: ActionDefinition[] = [
   ),
   action(
     "find_adsense_publisher_sites",
+    "read",
     "Find domains associated with an AdSense publisher ID.",
     s.actionInput(
       {
@@ -146,6 +159,7 @@ export const tabapiActions: ActionDefinition[] = [
   ),
   action(
     "extract_url_markdown",
+    "read",
     "Extract a public web page as Markdown.",
     s.actionInput(
       {
@@ -161,6 +175,7 @@ export const tabapiActions: ActionDefinition[] = [
   ),
   action(
     "capture_url_screenshot",
+    "read",
     "Capture the first viewport of a public URL and return a hosted PNG URL.",
     s.actionInput(
       {

@@ -74,6 +74,7 @@ const splitOutputSchema = s.object(
 export const reductoActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "parse_document",
+    operationType: "read",
     description:
       "Parse a Reducto-supported document URL or file id into structured chunks, blocks, and document metadata.",
     inputSchema: s.object(
@@ -94,6 +95,7 @@ export const reductoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "extract_data",
+    operationType: "read",
     description:
       "Extract structured JSON from a Reducto-supported document URL or file id using a caller-supplied JSON Schema.",
     inputSchema: s.object(
@@ -117,6 +119,7 @@ export const reductoActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "split_document",
+    operationType: "read",
     description:
       "Split a Reducto-supported document URL or file id into named page sections using natural-language section descriptions.",
     inputSchema: s.object(

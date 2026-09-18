@@ -166,6 +166,7 @@ const noteResultSchema = s.object("The Pylon message identifiers returned after 
 
 const getMeAction = defineProviderAction(service, {
   name: "get_me",
+  operationType: "read",
   description: "Fetch the Pylon organization associated with the API token.",
   requiredScopes: [],
   inputSchema: s.object("Input for fetching the Pylon organization.", {}),
@@ -177,6 +178,7 @@ const getMeAction = defineProviderAction(service, {
 
 const listIssuesAction = defineProviderAction(service, {
   name: "list_issues",
+  operationType: "read",
   description: "List Pylon issues within a required time range of up to 30 days.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -201,6 +203,7 @@ const listIssuesAction = defineProviderAction(service, {
 
 const getIssueAction = defineProviderAction(service, {
   name: "get_issue",
+  operationType: "read",
   description: "Fetch one Pylon issue by ID or issue number.",
   requiredScopes: [],
   inputSchema: s.object("Input for fetching one Pylon issue.", {
@@ -214,6 +217,7 @@ const getIssueAction = defineProviderAction(service, {
 
 const createIssueAction = defineProviderAction(service, {
   name: "create_issue",
+  operationType: "write",
   description: "Create a Pylon issue with a title, HTML body, and requester or account context.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -267,6 +271,7 @@ const createIssueAction = defineProviderAction(service, {
 
 const updateIssueAction = defineProviderAction(service, {
   name: "update_issue",
+  operationType: "write",
   description: "Update mutable fields on one Pylon issue by ID or issue number.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -307,6 +312,7 @@ const updateIssueAction = defineProviderAction(service, {
 
 const listIssueMessagesAction = defineProviderAction(service, {
   name: "list_issue_messages",
+  operationType: "read",
   description: "List messages, replies, and internal notes on one Pylon issue.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -330,6 +336,7 @@ const listIssueMessagesAction = defineProviderAction(service, {
 
 const createIssueNoteAction = defineProviderAction(service, {
   name: "create_issue_note",
+  operationType: "write",
   description: "Create an internal note on a Pylon issue.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -353,6 +360,7 @@ const createIssueNoteAction = defineProviderAction(service, {
 
 const getAccountAction = defineProviderAction(service, {
   name: "get_account",
+  operationType: "read",
   description: "Fetch one Pylon account by account ID or external ID.",
   requiredScopes: [],
   inputSchema: s.object("Input for fetching one Pylon account.", {
@@ -366,6 +374,7 @@ const getAccountAction = defineProviderAction(service, {
 
 const searchAccountsAction = defineProviderAction(service, {
   name: "search_accounts",
+  operationType: "read",
   description: "Search Pylon accounts with a filter and optional fuzzy text search.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -390,6 +399,7 @@ const searchAccountsAction = defineProviderAction(service, {
 
 const createAccountAction = defineProviderAction(service, {
   name: "create_account",
+  operationType: "write",
   description: "Create a Pylon account.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -426,6 +436,7 @@ const createAccountAction = defineProviderAction(service, {
 
 const getContactAction = defineProviderAction(service, {
   name: "get_contact",
+  operationType: "read",
   description: "Fetch one Pylon contact by contact ID with optional paginated account context.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -452,6 +463,7 @@ const getContactAction = defineProviderAction(service, {
 
 const searchContactsAction = defineProviderAction(service, {
   name: "search_contacts",
+  operationType: "read",
   description: "Search Pylon contacts with a filter and optional fuzzy text search.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -476,6 +488,7 @@ const searchContactsAction = defineProviderAction(service, {
 
 const createContactAction = defineProviderAction(service, {
   name: "create_contact",
+  operationType: "write",
   description: "Create a Pylon contact.",
   requiredScopes: [],
   inputSchema: s.object(

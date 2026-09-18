@@ -55,6 +55,7 @@ const sortOrderSchema = s.stringEnum("The Guru sort order.", ["ASC", "DESC"]);
 export const guruActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_identity",
+    operationType: "read",
     description: "Get the Guru user or collection identity for the authenticated API token.",
     inputSchema: s.object("Input parameters for getting the current Guru identity.", {}),
     outputSchema: s.object("The response returned when getting the current Guru identity.", {
@@ -63,6 +64,7 @@ export const guruActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_cards",
+    operationType: "read",
     description: "Search Guru cards visible to the authenticated API token.",
     inputSchema: s.object(
       "Input parameters for searching Guru cards.",
@@ -102,6 +104,7 @@ export const guruActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_card",
+    operationType: "read",
     description: "Get a Guru card with additional details by card ID.",
     inputSchema: s.object("Input parameters for getting a Guru card.", {
       cardId: nonEmptyString("The Guru card ID."),
@@ -112,6 +115,7 @@ export const guruActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_collections",
+    operationType: "read",
     description: "List Guru collections visible to the authenticated API token.",
     inputSchema: s.object(
       "Input parameters for listing Guru collections.",
@@ -129,6 +133,7 @@ export const guruActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_team_stats",
+    operationType: "read",
     description: "Get Guru trust and card-count statistics for a team.",
     inputSchema: s.object("Input parameters for getting Guru team stats.", {
       teamId: nonEmptyString("The Guru team ID."),

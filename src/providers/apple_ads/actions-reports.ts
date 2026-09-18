@@ -593,6 +593,7 @@ const brandsSearchTermMetadata = looseResource(
 
 interface ReportActionOptions {
   name: string;
+  operationType: ProviderActionDefinition["operationType"];
   description: string;
   inputDescription: string;
   outputDescription: string;
@@ -613,6 +614,7 @@ interface ReportActionOptions {
 const defineReportAction = (options: ReportActionOptions) =>
   defineProviderAction(service, {
     name: options.name,
+    operationType: options.operationType,
     description: options.description,
     requiredScopes: [],
     providerPermissions: [...readCampaignsRoles],
@@ -648,6 +650,7 @@ const appsCampaignFilterNote =
 export const appleAdsReportActions: readonly ProviderActionDefinition[] = [
   defineReportAction({
     name: "get_campaign_report",
+    operationType: "read",
     description: `Retrieve App Store campaign performance, one row per campaign with metrics aggregated over the date range and optionally broken out by granularity and dimension. ${appsCampaignFilterNote}`,
     inputDescription: "Reporting query for App Store campaigns.",
     outputDescription: "A page of App Store campaign report rows.",
@@ -668,6 +671,7 @@ export const appleAdsReportActions: readonly ProviderActionDefinition[] = [
   }),
   defineReportAction({
     name: "get_ad_group_report",
+    operationType: "read",
     description: `Retrieve App Store ad group performance, one row per ad group with metrics aggregated over the date range and optionally broken out by granularity and dimension. ${appsCampaignFilterNote} Add an adGroupId filter to narrow the report further.`,
     inputDescription: "Reporting query for App Store ad groups.",
     outputDescription: "A page of App Store ad group report rows.",
@@ -688,6 +692,7 @@ export const appleAdsReportActions: readonly ProviderActionDefinition[] = [
   }),
   defineReportAction({
     name: "get_ad_report",
+    operationType: "read",
     description: `Retrieve App Store ad performance, one row per ad with metrics aggregated over the date range. ${appsCampaignFilterNote} Ad-level reports do not support HOURLY granularity or the demographic dimensions.`,
     inputDescription: "Reporting query for App Store ads.",
     outputDescription: "A page of App Store ad report rows.",
@@ -708,6 +713,7 @@ export const appleAdsReportActions: readonly ProviderActionDefinition[] = [
   }),
   defineReportAction({
     name: "get_keyword_report",
+    operationType: "read",
     description: `Retrieve App Store keyword performance, one row per keyword with metrics aggregated over the date range and an optional bid recommendation. ${appsCampaignFilterNote} Add an adGroupId filter to keep the report to a single ad group.`,
     inputDescription: "Reporting query for App Store keywords.",
     outputDescription: "A page of App Store keyword report rows.",
@@ -729,6 +735,7 @@ export const appleAdsReportActions: readonly ProviderActionDefinition[] = [
   }),
   defineReportAction({
     name: "get_search_term_report",
+    operationType: "read",
     description: `Retrieve the App Store search terms that matched a keyword and produced an impression, one row per search term with the keyword it matched. ${appsCampaignFilterNote} Apple Ads suppresses or aggregates low-volume terms to protect user privacy.`,
     inputDescription: "Reporting query for App Store search terms.",
     outputDescription: "A page of App Store search term report rows.",
@@ -749,6 +756,7 @@ export const appleAdsReportActions: readonly ProviderActionDefinition[] = [
   }),
   defineReportAction({
     name: "get_brand_campaign_report",
+    operationType: "read",
     description:
       "Retrieve Apple Maps campaign performance, one row per campaign with spend, engagement and Apple Maps action metrics aggregated over the date range. Filter on campaignId to scope the report to specific campaigns.",
     inputDescription: "Reporting query for Apple Maps campaigns.",
@@ -770,6 +778,7 @@ export const appleAdsReportActions: readonly ProviderActionDefinition[] = [
   }),
   defineReportAction({
     name: "get_brand_ad_group_report",
+    operationType: "read",
     description:
       "Retrieve Apple Maps ad group performance, one row per ad group with spend, engagement and Apple Maps action metrics aggregated over the date range. Filter on campaignId or adGroupId to scope the report.",
     inputDescription: "Reporting query for Apple Maps ad groups.",
@@ -791,6 +800,7 @@ export const appleAdsReportActions: readonly ProviderActionDefinition[] = [
   }),
   defineReportAction({
     name: "get_brand_ad_report",
+    operationType: "read",
     description:
       "Retrieve Apple Maps ad performance, one row per ad with its creative snapshot and metrics aggregated over the date range. Filter on campaignId or adGroupId to scope the report. Ad-level reports do not support HOURLY granularity.",
     inputDescription: "Reporting query for Apple Maps ads.",
@@ -811,6 +821,7 @@ export const appleAdsReportActions: readonly ProviderActionDefinition[] = [
   }),
   defineReportAction({
     name: "get_brand_keyword_report",
+    operationType: "read",
     description:
       "Retrieve Apple Maps keyword performance, one row per keyword with metrics aggregated over the date range and an optional bid recommendation. Always filter on campaignId or adGroupId so the report does not span every keyword in the ad account.",
     inputDescription: "Reporting query for Apple Maps keywords.",
@@ -833,6 +844,7 @@ export const appleAdsReportActions: readonly ProviderActionDefinition[] = [
   }),
   defineReportAction({
     name: "get_brand_search_term_report",
+    operationType: "read",
     description:
       "Retrieve the Apple Maps search terms that matched a keyword and produced an impression on the Search Results placement, one row per search term with the keyword it matched. Always filter on campaignId or adGroupId. Apple Ads suppresses or aggregates low-volume terms to protect user privacy.",
     inputDescription: "Reporting query for Apple Maps search terms.",

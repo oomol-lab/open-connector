@@ -72,6 +72,7 @@ const competitionInputSchema = s.object(
 export const footballDataActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_competitions",
+    operationType: "read",
     description: "List football competitions visible to the connected football-data.org API token.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing football-data.org competitions.", {}),
@@ -83,6 +84,7 @@ export const footballDataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_matches",
+    operationType: "read",
     description:
       "List football-data.org matches for a competition such as WC, with optional season, date, status, stage, and group filters.",
     requiredScopes: [],
@@ -97,6 +99,7 @@ export const footballDataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_all_matches",
+    operationType: "read",
     description:
       "List football-data.org matches across visible competitions with optional date, status, and competition filters.",
     requiredScopes: [],
@@ -111,6 +114,7 @@ export const footballDataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_match",
+    operationType: "read",
     description: "Retrieve one football-data.org match by identifier.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving a football-data.org match.", {
@@ -123,6 +127,7 @@ export const footballDataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_standings",
+    operationType: "read",
     description: "Get football-data.org standings for a competition such as WC.",
     requiredScopes: [],
     inputSchema: competitionInputSchema,
@@ -139,6 +144,7 @@ export const footballDataActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_teams",
+    operationType: "read",
     description: "List football-data.org teams for a competition such as WC.",
     requiredScopes: [],
     inputSchema: competitionInputSchema,

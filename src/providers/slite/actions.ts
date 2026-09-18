@@ -155,6 +155,7 @@ const searchNotesInputSchema = s.object(
 export const sliteActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_notes",
+    operationType: "read",
     description: "List Slite notes with optional owner, parent, ordering, and pagination filters.",
     inputSchema: listNotesInputSchema,
     outputSchema: s.object("The paginated Slite note list response.", {
@@ -166,6 +167,7 @@ export const sliteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_note",
+    operationType: "read",
     description: "Read one Slite note and return its content in Markdown, HTML, or SliteML.",
     inputSchema: s.object(
       "Input parameters for reading one Slite note.",
@@ -179,18 +181,21 @@ export const sliteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_note",
+    operationType: "write",
     description: "Create a Slite note with markdown or HTML content and optional collection attributes.",
     inputSchema: createNoteInputSchema,
     outputSchema: noteSummarySchema,
   }),
   defineProviderAction(service, {
     name: "update_note",
+    operationType: "write",
     description: "Update a Slite note title, body content, or collection attributes.",
     inputSchema: updateNoteInputSchema,
     outputSchema: noteSummarySchema,
   }),
   defineProviderAction(service, {
     name: "delete_note",
+    operationType: "destructive",
     description: "Delete a Slite note and its children by note identifier.",
     inputSchema: s.object("Input parameters for deleting a Slite note.", {
       noteId: s.nonEmptyString("The Slite note identifier to delete."),
@@ -201,6 +206,7 @@ export const sliteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_notes",
+    operationType: "read",
     description: "Search Slite notes by query string and optional review, depth, archive, and date filters.",
     inputSchema: searchNotesInputSchema,
     outputSchema: s.object("The normalized Slite note search response.", {
@@ -211,6 +217,7 @@ export const sliteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_groups",
+    operationType: "read",
     description: "Search Slite groups by name and return cursor-based pagination metadata.",
     inputSchema: s.object(
       "Input parameters for searching Slite groups.",
@@ -229,6 +236,7 @@ export const sliteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_group",
+    operationType: "read",
     description: "Read one Slite group by identifier.",
     inputSchema: s.object("Input parameters for reading one Slite group.", {
       groupId: s.nonEmptyString("The Slite group identifier to fetch."),

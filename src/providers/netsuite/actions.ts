@@ -31,6 +31,7 @@ const collectionSchema = s.looseRequiredObject("A NetSuite paged collection resp
 export const netsuiteActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "run_suiteql",
+    operationType: "write",
     description: "Execute a SuiteQL query through NetSuite REST Web Services.",
     inputSchema: s.object(
       "Input payload for executing a NetSuite SuiteQL query.",
@@ -47,6 +48,7 @@ export const netsuiteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_records",
+    operationType: "read",
     description: "List NetSuite records of one record type with optional REST filtering.",
     inputSchema: s.object(
       "Input payload for listing NetSuite records.",
@@ -64,6 +66,7 @@ export const netsuiteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_record",
+    operationType: "read",
     description: "Retrieve one NetSuite record by record type and ID.",
     inputSchema: s.object(
       "Input payload for retrieving a NetSuite record.",
@@ -80,6 +83,7 @@ export const netsuiteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_record",
+    operationType: "write",
     description: "Create one NetSuite record for a record type.",
     inputSchema: s.object("Input payload for creating a NetSuite record.", {
       recordType: recordTypeSchema,
@@ -97,6 +101,7 @@ export const netsuiteActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_record",
+    operationType: "write",
     description: "Update one NetSuite record by record type and ID.",
     inputSchema: s.object("Input payload for updating a NetSuite record.", {
       recordType: recordTypeSchema,

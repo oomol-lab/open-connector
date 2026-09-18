@@ -56,12 +56,14 @@ const groupChannelCountsSchema = s.object("The aggregated group channel counts b
 
 function defineSendbirdAction<TName extends string>(
   name: TName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): ProviderActionDefinition<TName> {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     requiredScopes: [],
     inputSchema,
@@ -71,6 +73,7 @@ function defineSendbirdAction<TName extends string>(
 
 const listUsers = defineSendbirdAction(
   "list_users",
+  "read",
   "List Sendbird users with common pagination and filtering controls.",
   s.object(
     "The input payload for listing Sendbird users.",
@@ -103,6 +106,7 @@ const listUsers = defineSendbirdAction(
 
 const viewUser = defineSendbirdAction(
   "view_user",
+  "read",
   "Get a single Sendbird user by user ID.",
   s.object("The input payload for getting a Sendbird user.", { user_id: userIdField }),
   sendbirdUserSchema,
@@ -110,6 +114,7 @@ const viewUser = defineSendbirdAction(
 
 const createUser = defineSendbirdAction(
   "create_user",
+  "write",
   "Create a Sendbird user with common profile and metadata fields.",
   s.object(
     "The input payload for creating a Sendbird user.",
@@ -132,6 +137,7 @@ const createUser = defineSendbirdAction(
 
 const updateUser = defineSendbirdAction(
   "update_user",
+  "write",
   "Update a Sendbird user's profile, metadata, or activation settings.",
   s.object(
     "The input payload for updating a Sendbird user.",
@@ -153,6 +159,7 @@ const updateUser = defineSendbirdAction(
 
 const deleteUser = defineSendbirdAction(
   "delete_user",
+  "destructive",
   "Delete a Sendbird user.",
   s.object(
     "The input payload for deleting a Sendbird user.",
@@ -167,6 +174,7 @@ const deleteUser = defineSendbirdAction(
 
 const issueSessionToken = defineSendbirdAction(
   "issue_session_token",
+  "write",
   "Issue a Sendbird session token for a user.",
   s.object(
     "The input payload for issuing a Sendbird session token.",
@@ -181,6 +189,7 @@ const issueSessionToken = defineSendbirdAction(
 
 const revokeAllSessionTokens = defineSendbirdAction(
   "revoke_all_session_tokens",
+  "destructive",
   "Revoke all Sendbird session tokens for a user.",
   s.object("The input payload for revoking all session tokens.", { user_id: userIdField }),
   successSchema,
@@ -188,6 +197,7 @@ const revokeAllSessionTokens = defineSendbirdAction(
 
 const getNumberOfUnreadItems = defineSendbirdAction(
   "get_number_of_unread_items",
+  "read",
   "Get unread message, mention, and invitation counts for a Sendbird user.",
   s.object(
     "The input payload for getting unread item counts.",
@@ -207,6 +217,7 @@ const getNumberOfUnreadItems = defineSendbirdAction(
 
 const getNumberOfChannelsByJoinStatus = defineSendbirdAction(
   "get_number_of_channels_by_join_status",
+  "read",
   "Get Sendbird group channel counts grouped by join status.",
   s.object(
     "The input payload for getting group channel counts by join status.",
@@ -232,6 +243,7 @@ const getNumberOfChannelsByJoinStatus = defineSendbirdAction(
 
 const markAllUserMessagesAsRead = defineSendbirdAction(
   "mark_all_user_messages_as_read",
+  "write",
   "Mark all messages as read for a Sendbird user.",
   s.object(
     "The input payload for marking all messages as read.",
@@ -246,6 +258,7 @@ const markAllUserMessagesAsRead = defineSendbirdAction(
 
 const leaveGroupChannels = defineSendbirdAction(
   "leave_group_channels",
+  "destructive",
   "Make a Sendbird user leave one or more joined group channels.",
   s.object(
     "The input payload for leaving group channels.",
@@ -262,6 +275,7 @@ const leaveGroupChannels = defineSendbirdAction(
 
 const listGroupChannels = defineSendbirdAction(
   "list_group_channels",
+  "read",
   "List Sendbird group channels in the application with common filtering controls.",
   s.object(
     "The input payload for listing group channels.",
@@ -307,6 +321,7 @@ const listGroupChannels = defineSendbirdAction(
 
 const viewGroupChannel = defineSendbirdAction(
   "view_group_channel",
+  "read",
   "Get a Sendbird group channel by channel URL.",
   s.object(
     "The input payload for getting a group channel.",
@@ -325,6 +340,7 @@ const viewGroupChannel = defineSendbirdAction(
 
 const createChannel = defineSendbirdAction(
   "create_channel",
+  "write",
   "Create a Sendbird group channel with common JSON body fields.",
   s.object(
     "The input payload for creating a group channel.",
@@ -354,6 +370,7 @@ const createChannel = defineSendbirdAction(
 
 const updateGroupChannel = defineSendbirdAction(
   "update_group_channel",
+  "write",
   "Update a Sendbird group channel with common JSON body fields.",
   s.object(
     "The input payload for updating a group channel.",
@@ -378,6 +395,7 @@ const updateGroupChannel = defineSendbirdAction(
 
 const deleteChannel = defineSendbirdAction(
   "delete_channel",
+  "destructive",
   "Delete a Sendbird group channel.",
   s.object("The input payload for deleting a group channel.", { channel_url: channelUrlField }),
   successSchema,
@@ -385,6 +403,7 @@ const deleteChannel = defineSendbirdAction(
 
 const listMembersGroupChannel = defineSendbirdAction(
   "list_members_group_channel",
+  "read",
   "List members of a Sendbird group channel.",
   s.object(
     "The input payload for listing group channel members.",
@@ -410,6 +429,7 @@ const listMembersGroupChannel = defineSendbirdAction(
 
 const addMembersGroupChannel = defineSendbirdAction(
   "add_members_group_channel",
+  "write",
   "Invite members into an existing Sendbird group channel.",
   s.object(
     "The input payload for adding members into a group channel.",
@@ -459,6 +479,7 @@ const listGroupChannelMessagesInputSchema = {
 
 const listGroupChannelMessages = defineSendbirdAction(
   "list_group_channel_messages",
+  "read",
   "List messages from a Sendbird group channel around a timestamp or message anchor.",
   listGroupChannelMessagesInputSchema,
   s.looseObject("The response returned when listing group channel messages.", {
@@ -469,6 +490,7 @@ const listGroupChannelMessages = defineSendbirdAction(
 
 const viewMessage = defineSendbirdAction(
   "view_message",
+  "read",
   "Get a single Sendbird group channel message by message ID.",
   s.object(
     "The input payload for getting a Sendbird message.",
@@ -484,6 +506,7 @@ const viewMessage = defineSendbirdAction(
 
 const sendMessage = defineSendbirdAction(
   "send_message",
+  "write",
   "Send a message into a Sendbird group channel.",
   s.object(
     "The input payload for sending a group channel message.",
@@ -517,6 +540,7 @@ const sendMessage = defineSendbirdAction(
 
 const updateMessage = defineSendbirdAction(
   "update_message",
+  "write",
   "Update an existing Sendbird group channel message.",
   s.object(
     "The input payload for updating a group channel message.",
@@ -540,6 +564,7 @@ const updateMessage = defineSendbirdAction(
 
 const deleteMessage = defineSendbirdAction(
   "delete_message",
+  "destructive",
   "Delete a Sendbird group channel message.",
   s.object(
     "The input payload for deleting a group channel message.",
@@ -554,6 +579,7 @@ const deleteMessage = defineSendbirdAction(
 
 const listBannedMembers = defineSendbirdAction(
   "list_banned_members",
+  "read",
   "List banned users from a Sendbird group channel.",
   s.object(
     "The input payload for listing banned users.",
@@ -572,6 +598,7 @@ const listBannedMembers = defineSendbirdAction(
 
 const banUserFromGroupChannel = defineSendbirdAction(
   "ban_user_from_group_channel",
+  "destructive",
   "Ban a user from a Sendbird group channel.",
   s.object(
     "The input payload for banning a user from a group channel.",
@@ -589,6 +616,7 @@ const banUserFromGroupChannel = defineSendbirdAction(
 
 const unbanUser = defineSendbirdAction(
   "unban_user",
+  "write",
   "Unban a user from a Sendbird group channel.",
   s.object(
     "The input payload for unbanning a user from a group channel.",
@@ -603,6 +631,7 @@ const unbanUser = defineSendbirdAction(
 
 const muteUser = defineSendbirdAction(
   "mute_user",
+  "write",
   "Mute a user in a Sendbird group channel.",
   s.object(
     "The input payload for muting a user in a group channel.",
@@ -621,6 +650,7 @@ const muteUser = defineSendbirdAction(
 
 const unmuteUser = defineSendbirdAction(
   "unmute_user",
+  "write",
   "Unmute a user in a Sendbird group channel.",
   s.object(
     "The input payload for unmuting a user in a group channel.",

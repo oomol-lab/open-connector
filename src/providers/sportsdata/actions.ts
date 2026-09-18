@@ -29,6 +29,7 @@ function listAction(input: {
     | "list_event_schedule_by_phase"
     | "list_event_results_by_date"
     | "list_live_event_results_by_date";
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: ReturnType<typeof s.object>;
   outputField: string;
@@ -36,6 +37,7 @@ function listAction(input: {
 }) {
   return defineProviderAction(service, {
     name: input.name,
+    operationType: input.operationType,
     description: input.description,
     requiredScopes: [],
     inputSchema: input.inputSchema,
@@ -70,6 +72,7 @@ const dateInputSchema = s.object("A SportsDataIO event date lookup.", {
 export const sportsdataActions: ActionDefinition[] = [
   listAction({
     name: "list_sports",
+    operationType: "read",
     description: "List sports available in the SportsDataIO Global Sports API.",
     inputSchema: emptyInputSchema,
     outputField: "sports",
@@ -77,6 +80,7 @@ export const sportsdataActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_competitions",
+    operationType: "read",
     description: "List SportsDataIO competitions for a sport.",
     inputSchema: sportInputSchema,
     outputField: "competitions",
@@ -84,6 +88,7 @@ export const sportsdataActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_seasons",
+    operationType: "read",
     description: "List SportsDataIO seasons for a competition.",
     inputSchema: competitionInputSchema,
     outputField: "seasons",
@@ -91,6 +96,7 @@ export const sportsdataActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_phases",
+    operationType: "read",
     description: "List SportsDataIO phases for a competition season.",
     inputSchema: seasonInputSchema,
     outputField: "phases",
@@ -98,6 +104,7 @@ export const sportsdataActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_teams",
+    operationType: "read",
     description: "List SportsDataIO teams active in a competition season.",
     inputSchema: seasonInputSchema,
     outputField: "teams",
@@ -105,6 +112,7 @@ export const sportsdataActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_athletes",
+    operationType: "read",
     description: "List SportsDataIO athletes for a competition.",
     inputSchema: competitionInputSchema,
     outputField: "athletes",
@@ -112,6 +120,7 @@ export const sportsdataActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_venues",
+    operationType: "read",
     description: "List SportsDataIO venues used by a competition.",
     inputSchema: competitionInputSchema,
     outputField: "venues",
@@ -119,6 +128,7 @@ export const sportsdataActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_event_schedule_by_date",
+    operationType: "read",
     description: "List SportsDataIO scheduled events for a competition on a UTC date.",
     inputSchema: dateInputSchema,
     outputField: "events",
@@ -126,6 +136,7 @@ export const sportsdataActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_event_schedule_by_phase",
+    operationType: "read",
     description: "List SportsDataIO scheduled events for a competition phase.",
     inputSchema: phaseInputSchema,
     outputField: "events",
@@ -133,6 +144,7 @@ export const sportsdataActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_event_results_by_date",
+    operationType: "read",
     description: "List final SportsDataIO event results for a competition on a UTC date.",
     inputSchema: dateInputSchema,
     outputField: "events",
@@ -140,6 +152,7 @@ export const sportsdataActions: ActionDefinition[] = [
   }),
   listAction({
     name: "list_live_event_results_by_date",
+    operationType: "read",
     description: "List live and final SportsDataIO event results for a competition on a UTC date.",
     inputSchema: dateInputSchema,
     outputField: "events",

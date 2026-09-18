@@ -160,18 +160,21 @@ const rerankOutputSchema = s.looseRequiredObject("The response returned by the C
 export const cohereActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "chat",
+    operationType: "read",
     description: "Generate a synchronous text response using the Cohere Chat API.",
     inputSchema: chatInputSchema,
     outputSchema: chatOutputSchema,
   }),
   defineProviderAction(service, {
     name: "embed_texts",
+    operationType: "write",
     description: "Generate embeddings for text inputs using the Cohere Embed API.",
     inputSchema: embedInputSchema,
     outputSchema: embedOutputSchema,
   }),
   defineProviderAction(service, {
     name: "rerank_documents",
+    operationType: "read",
     description: "Rank text documents by relevance to a query using the Cohere Rerank API.",
     inputSchema: rerankInputSchema,
     outputSchema: rerankOutputSchema,

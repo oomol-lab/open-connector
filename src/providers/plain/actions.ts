@@ -57,6 +57,7 @@ const onUpdateSchema = s.actionInput({
 export const plainActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_customer_by_email",
+    operationType: "read",
     description: "Fetch one Plain customer by exact email address.",
     providerPermissions: readPermission,
     inputSchema: s.actionInput({ email: s.email("The exact customer email address to look up in Plain.") }, ["email"]),
@@ -64,6 +65,7 @@ export const plainActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer_by_external_id",
+    operationType: "read",
     description: "Fetch one Plain customer by exact external ID.",
     providerPermissions: readPermission,
     inputSchema: s.actionInput({ externalId: s.nonEmptyString("The exact external ID to look up in Plain.") }, [
@@ -73,6 +75,7 @@ export const plainActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_customers",
+    operationType: "read",
     description:
       "Search Plain customers with one human-oriented term across full name, short name, email, and external ID.",
     providerPermissions: readPermission,
@@ -91,6 +94,7 @@ export const plainActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_customer",
+    operationType: "write",
     description: "Create or update one Plain customer using exactly one identifier plus create and update payloads.",
     providerPermissions: writePermission,
     inputSchema: s.actionInput(

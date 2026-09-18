@@ -22,6 +22,7 @@ const folderItem = s.object("A folder list entry.", {
 export const signaturelyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_folders",
+    operationType: "read",
     description: "List Signaturely folders from the root or from a selected parent folder.",
     inputSchema: s.actionInput(
       {
@@ -53,12 +54,14 @@ export const signaturelyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_folder",
+    operationType: "read",
     description: "Get one Signaturely folder or the virtual root folder.",
     inputSchema: s.actionInput({ id: s.nullable(uuid) }, ["id"], "Folder lookup input."),
     outputSchema: folder,
   }),
   defineProviderAction(service, {
     name: "create_folder",
+    operationType: "write",
     description: "Create a Signaturely folder at the root or inside another folder.",
     inputSchema: s.actionInput(
       { title: s.string("The title for the new folder.", { minLength: 1, pattern: "\\S" }), parentId: uuid },
@@ -69,6 +72,7 @@ export const signaturelyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "rename_folder",
+    operationType: "write",
     description: "Rename an existing Signaturely folder.",
     inputSchema: s.actionInput(
       { id: uuid, title: s.string("The new title.", { minLength: 1, pattern: "\\S" }) },

@@ -6,6 +6,7 @@ export const appleMapsActions: readonly ProviderActionDefinition[] = [
   {
     service: "apple_maps",
     name: "geocode_address",
+    operationType: "read",
     description:
       "Convert an address into coordinates with Apple Maps. Returns the places Apple matched to the address with their coordinate, map region and structured address. Pass limitToCountries, searchLocation, searchRegion or userLocation to steer an ambiguous address toward the right area.",
     inputSchema: {
@@ -265,8 +266,8 @@ export const appleMapsActions: readonly ProviderActionDefinition[] = [
   {
     service: "apple_maps",
     name: "reverse_geocode",
-    description: "Convert a latitude and longitude into the addresses at that point with Apple Maps.",
     operationType: "read",
+    description: "Convert a latitude and longitude into the addresses at that point with Apple Maps.",
     inputSchema: {
       type: "object",
       properties: {
@@ -1416,8 +1417,8 @@ export const appleMapsActions: readonly ProviderActionDefinition[] = [
   {
     service: "apple_maps",
     name: "get_place",
-    description: "Get one place by its Apple Maps Place ID.",
     operationType: "read",
+    description: "Get one place by its Apple Maps Place ID.",
     inputSchema: {
       type: "object",
       properties: {
@@ -2573,6 +2574,7 @@ export const appleMapsActions: readonly ProviderActionDefinition[] = [
 ].map((action) =>
   defineProviderAction(action.service, {
     name: action.name,
+    operationType: "read",
     description: action.description,
     inputSchema: action.inputSchema,
     outputSchema: action.outputSchema,

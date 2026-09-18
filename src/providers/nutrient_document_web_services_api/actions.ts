@@ -54,6 +54,7 @@ const requiredFeatureItemSchema = s.requiredObject(
 
 const getAccountInfoAction = defineProviderAction(service, {
   name: "get_account_info",
+  operationType: "read",
   description: "Retrieve sanitized account information for the connected Nutrient DWS API key.",
   inputSchema: s.object("Input for retrieving Nutrient DWS account information.", {}),
   outputSchema: s.requiredObject("A sanitized Nutrient DWS account information response.", {
@@ -63,6 +64,7 @@ const getAccountInfoAction = defineProviderAction(service, {
 
 const analyzeBuildAction = defineProviderAction(service, {
   name: "analyze_build",
+  operationType: "read",
   description:
     "Estimate Nutrient DWS Processor Build API credit usage and required features without executing the workflow.",
   inputSchema: s.requiredObject("Input for analyzing Nutrient DWS Build instructions.", {
@@ -80,6 +82,7 @@ const analyzeBuildAction = defineProviderAction(service, {
 
 const createAuthTokenAction = defineProviderAction(service, {
   name: "create_auth_token",
+  operationType: "write",
   description: "Create a Nutrient DWS JWT with optional operation, origin, and expiration restrictions.",
   inputSchema: s.object(
     "Input for creating a Nutrient DWS JWT.",
@@ -108,6 +111,7 @@ const createAuthTokenAction = defineProviderAction(service, {
 
 const deleteAuthTokenAction = defineProviderAction(service, {
   name: "delete_auth_token",
+  operationType: "destructive",
   description: "Revoke a Nutrient DWS JWT by token ID.",
   inputSchema: s.requiredObject("Input for deleting a Nutrient DWS JWT.", {
     tokenId: s.nonEmptyString("The Nutrient DWS token ID to revoke."),

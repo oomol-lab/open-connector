@@ -194,6 +194,7 @@ const paginatedTransactionsOutputSchema = s.object(
 export const fernActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List Fern customers with optional organization filtering and cursor pagination.",
     requiredScopes: ["customers:read"],
     inputSchema: listCustomersInputSchema,
@@ -201,6 +202,7 @@ export const fernActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Retrieve one Fern customer by ID.",
     requiredScopes: ["customers:read"],
     inputSchema: getCustomerInputSchema,
@@ -208,6 +210,7 @@ export const fernActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_payment_accounts",
+    operationType: "read",
     description: "List Fern payment accounts for a customer with cursor pagination.",
     requiredScopes: ["payment_accounts:read"],
     inputSchema: listPaymentAccountsInputSchema,
@@ -215,6 +218,7 @@ export const fernActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_payment_account",
+    operationType: "read",
     description: "Retrieve one Fern payment account by ID.",
     requiredScopes: ["payment_accounts:read"],
     inputSchema: getPaymentAccountInputSchema,
@@ -222,6 +226,7 @@ export const fernActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_exchange_rate",
+    operationType: "read",
     description: "Retrieve Fern exchange rate and fee details for source and destination currencies.",
     requiredScopes: ["exchange_rates:read"],
     inputSchema: getExchangeRateInputSchema,
@@ -229,6 +234,7 @@ export const fernActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_transactions",
+    operationType: "read",
     description: "List Fern transactions with optional customer, payment account, and organization filters.",
     requiredScopes: ["transactions:read"],
     inputSchema: listTransactionsInputSchema,
@@ -236,6 +242,7 @@ export const fernActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_transaction",
+    operationType: "read",
     description: "Retrieve one Fern transaction by ID.",
     requiredScopes: ["transactions:read"],
     inputSchema: getTransactionInputSchema,

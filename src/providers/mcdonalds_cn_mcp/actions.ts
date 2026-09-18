@@ -29,6 +29,7 @@ const mcpToolSummarySchema = s.object(
 export const mcdonaldsCnMcpActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tools",
+    operationType: "read",
     description:
       "Discover the current McDonald's China ordering, coupon, campaign, and points-mall MCP tools with their live input schemas and behavior annotations.",
     inputSchema: s.object("No input is required.", {}),
@@ -39,6 +40,7 @@ export const mcdonaldsCnMcpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "call_tool",
+    operationType: "write",
     description:
       "Call a current McDonald's China MCP tool with JSON arguments. Discover the tool first and confirm the user's intent before actions that create an address, claim coupons, redeem points, or create an order.",
     inputSchema: s.object(

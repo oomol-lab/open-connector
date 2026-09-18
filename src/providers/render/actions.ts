@@ -173,6 +173,7 @@ const triggerDeployInputSchema = s.object(
 export const renderActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the currently authenticated Render user profile.",
     inputSchema: s.object({}, { description: "Action input." }),
     outputSchema: userSchema,
@@ -180,6 +181,7 @@ export const renderActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workspaces",
+    operationType: "read",
     description: "List Render workspaces available to the authenticated API key.",
     inputSchema: optionalInput({
       name: nameFilterField,
@@ -191,6 +193,7 @@ export const renderActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_services",
+    operationType: "read",
     description: "List Render services with optional workspace, type, and suspension filters.",
     inputSchema: optionalInput({
       name: nameFilterField,
@@ -207,6 +210,7 @@ export const renderActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_service",
+    operationType: "read",
     description: "Get Render service details by service ID.",
     inputSchema: s.object({ serviceId: serviceIdField }),
     outputSchema: serviceSchema,
@@ -219,6 +223,7 @@ export const renderActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_deploys",
+    operationType: "read",
     description: "List recent Render deploys for a service.",
     inputSchema: s.object(
       {
@@ -233,30 +238,35 @@ export const renderActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "trigger_deploy",
+    operationType: "write",
     description: "Trigger a new deploy for a Render service.",
     inputSchema: triggerDeployInputSchema,
     outputSchema: s.union([deploySchema, queuedDeploySchema]),
   }),
   defineProviderAction(service, {
     name: "rollback_deploy",
+    operationType: "destructive",
     description: "Trigger a rollback to a previous deploy for a Render service.",
     inputSchema: s.object({ serviceId: serviceIdField, deployId: deployIdField }),
     outputSchema: deploySchema,
   }),
   defineProviderAction(service, {
     name: "restart_service",
+    operationType: "write",
     description: "Restart a Render service.",
     inputSchema: s.object({ serviceId: serviceIdField }),
     outputSchema: lifecycleAckSchema,
   }),
   defineProviderAction(service, {
     name: "suspend_service",
+    operationType: "destructive",
     description: "Suspend a Render service.",
     inputSchema: s.object({ serviceId: serviceIdField }),
     outputSchema: lifecycleAckSchema,
   }),
   defineProviderAction(service, {
     name: "resume_service",
+    operationType: "write",
     description: "Resume a suspended Render service.",
     inputSchema: s.object({ serviceId: serviceIdField }),
     outputSchema: lifecycleAckSchema,

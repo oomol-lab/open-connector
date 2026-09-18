@@ -12,6 +12,7 @@ const looseEntrySchema = s.looseObject(
 export const collegiateActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "lookup_word",
+    operationType: "read",
     description:
       "Look up a word in the Merriam-Webster Collegiate Dictionary and return matching entries or spelling suggestions.",
     inputSchema: s.object("The input payload for a Merriam-Webster Collegiate Dictionary lookup.", {

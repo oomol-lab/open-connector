@@ -32,6 +32,7 @@ const botClicksSchema = s.object(
 export const cuttLyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "shorten_url",
+    operationType: "write",
     description: "Create a short URL with the Cuttly Regular API.",
     inputSchema: s.object(
       {
@@ -65,6 +66,7 @@ export const cuttLyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_link_analytics",
+    operationType: "read",
     description: "Retrieve click analytics for a Cuttly short URL.",
     inputSchema: s.object(
       {

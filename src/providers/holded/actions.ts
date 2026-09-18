@@ -43,6 +43,7 @@ const productSchema = s.object("A normalized Holded product.", {
 export const holdedActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Holded contacts with exact-match filters and cursor pagination.",
     inputSchema: s.actionInput(
       {
@@ -68,6 +69,7 @@ export const holdedActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get a Holded contact by identifier.",
     inputSchema: s.actionInput(
       { contactId: idSchema },
@@ -84,6 +86,7 @@ export const holdedActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a basic Holded contact with JSON-friendly identity fields.",
     inputSchema: s.actionInput(
       {
@@ -108,6 +111,7 @@ export const holdedActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List Holded products with cursor pagination.",
     inputSchema: s.actionInput(
       {
@@ -128,6 +132,7 @@ export const holdedActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Get a Holded product by identifier.",
     inputSchema: s.actionInput(
       { productId: idSchema },

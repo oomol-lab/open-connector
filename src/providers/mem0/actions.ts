@@ -258,6 +258,7 @@ const getUsersInputSchema = s.object(
 export const mem0Actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "add_memories",
+    operationType: "write",
     description: "Add new memories to Mem0 from messages or direct memory text.",
     inputSchema: addMemoriesInputSchema,
     outputSchema: s.union(
@@ -272,30 +273,35 @@ export const mem0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_memories",
+    operationType: "read",
     description: "List memories from Mem0 with v2 advanced filters.",
     inputSchema: getMemoriesInputSchema,
     outputSchema: s.array("The list of Mem0 memories matching the advanced filters.", memorySchema),
   }),
   defineProviderAction(service, {
     name: "search_memories",
+    operationType: "read",
     description: "Search memories in Mem0 with semantic query and optional filters.",
     inputSchema: searchMemoriesInputSchema,
     outputSchema: s.array("The list of memories returned by semantic search.", memorySchema),
   }),
   defineProviderAction(service, {
     name: "get_memory",
+    operationType: "read",
     description: "Get a single memory from Mem0 by memory ID.",
     inputSchema: getMemoryInputSchema,
     outputSchema: memorySchema,
   }),
   defineProviderAction(service, {
     name: "update_memory",
+    operationType: "write",
     description: "Update text or metadata of a Mem0 memory by memory ID.",
     inputSchema: updateMemoryInputSchema,
     outputSchema: memorySchema,
   }),
   defineProviderAction(service, {
     name: "delete_memory",
+    operationType: "destructive",
     description: "Delete a Mem0 memory by memory ID.",
     inputSchema: deleteMemoryInputSchema,
     outputSchema: s.object("The explicit acknowledgment object returned after deleting a Mem0 memory.", {
@@ -306,24 +312,28 @@ export const mem0Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_memory_history",
+    operationType: "read",
     description: "Get the change history of a Mem0 memory by memory ID.",
     inputSchema: getMemoryHistoryInputSchema,
     outputSchema: s.array("The history entries for the requested memory.", historyEntrySchema),
   }),
   defineProviderAction(service, {
     name: "get_events",
+    operationType: "read",
     description: "List Mem0 events for the current API key.",
     inputSchema: getEventsInputSchema,
     outputSchema: eventListSchema,
   }),
   defineProviderAction(service, {
     name: "get_event",
+    operationType: "read",
     description: "Get a single Mem0 event by event ID.",
     inputSchema: getEventInputSchema,
     outputSchema: eventSchema,
   }),
   defineProviderAction(service, {
     name: "get_users",
+    operationType: "read",
     description: "List user entities from Mem0, optionally scoped by org and project.",
     inputSchema: getUsersInputSchema,
     outputSchema: userListSchema,

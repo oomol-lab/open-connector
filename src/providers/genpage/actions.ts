@@ -23,6 +23,7 @@ function rawResultOutput(description: string) {
 
 const listWorkspacesAction = defineProviderAction(service, {
   name: "list_workspaces",
+  operationType: "read",
   description: "List the GenPage workspaces accessible to the API token.",
   requiredScopes: [],
   inputSchema: s.object("The input for listing GenPage workspaces.", {}),
@@ -33,6 +34,7 @@ const listWorkspacesAction = defineProviderAction(service, {
 
 const listWorkspaceVariablesAction = defineProviderAction(service, {
   name: "list_workspace_variables",
+  operationType: "read",
   description: "List the default and custom lead variables in a GenPage workspace.",
   requiredScopes: [],
   inputSchema: workspaceInput("The input for listing GenPage workspace variables."),
@@ -43,6 +45,7 @@ const listWorkspaceVariablesAction = defineProviderAction(service, {
 
 const getCreditBalanceAction = defineProviderAction(service, {
   name: "get_credit_balance",
+  operationType: "read",
   description: "Get the account credit balance and usage for a GenPage workspace.",
   requiredScopes: [],
   inputSchema: workspaceInput("The input for getting a GenPage credit balance."),
@@ -51,6 +54,7 @@ const getCreditBalanceAction = defineProviderAction(service, {
 
 const listCampaignsAction = defineProviderAction(service, {
   name: "list_campaigns",
+  operationType: "read",
   description: "List campaigns in a GenPage workspace.",
   requiredScopes: [],
   inputSchema: workspaceInput("The input for listing GenPage campaigns."),
@@ -61,6 +65,7 @@ const listCampaignsAction = defineProviderAction(service, {
 
 const createCampaignAction = defineProviderAction(service, {
   name: "create_campaign",
+  operationType: "write",
   description: "Create an empty GenPage campaign for a workspace.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -78,6 +83,7 @@ const createCampaignAction = defineProviderAction(service, {
 
 const getCampaignAnalyticsAction = defineProviderAction(service, {
   name: "get_campaign_analytics",
+  operationType: "read",
   description: "Get visit and click performance metrics for GenPage campaigns.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -95,6 +101,7 @@ const getCampaignAnalyticsAction = defineProviderAction(service, {
 
 const listAudiencesAction = defineProviderAction(service, {
   name: "list_audiences",
+  operationType: "read",
   description: "List audiences in a GenPage workspace.",
   requiredScopes: [],
   inputSchema: workspaceInput("The input for listing GenPage audiences."),
@@ -105,6 +112,7 @@ const listAudiencesAction = defineProviderAction(service, {
 
 const createAudienceAction = defineProviderAction(service, {
   name: "create_audience",
+  operationType: "write",
   description: "Create a named audience in a GenPage workspace.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -131,6 +139,7 @@ function audienceLeadInput(description: string) {
 
 const addAudienceLeadsAction = defineProviderAction(service, {
   name: "add_audience_leads",
+  operationType: "write",
   description: "Add existing GenPage leads to an audience.",
   requiredScopes: [],
   inputSchema: audienceLeadInput("The input for adding leads to a GenPage audience."),
@@ -139,6 +148,7 @@ const addAudienceLeadsAction = defineProviderAction(service, {
 
 const removeAudienceLeadsAction = defineProviderAction(service, {
   name: "remove_audience_leads",
+  operationType: "destructive",
   description: "Remove leads from a GenPage audience without deleting the leads.",
   requiredScopes: [],
   inputSchema: audienceLeadInput("The input for removing leads from a GenPage audience."),
@@ -155,6 +165,7 @@ function audienceCampaignInput(description: string) {
 
 const linkAudienceToCampaignAction = defineProviderAction(service, {
   name: "link_audience_to_campaign",
+  operationType: "write",
   description: "Link a GenPage audience to a campaign so its leads receive campaign pages.",
   requiredScopes: [],
   inputSchema: audienceCampaignInput("The input for linking a GenPage audience to a campaign."),
@@ -163,6 +174,7 @@ const linkAudienceToCampaignAction = defineProviderAction(service, {
 
 const unlinkAudienceFromCampaignAction = defineProviderAction(service, {
   name: "unlink_audience_from_campaign",
+  operationType: "destructive",
   description: "Unlink a GenPage audience from a campaign without deleting leads or pages.",
   requiredScopes: [],
   inputSchema: audienceCampaignInput("The input for unlinking a GenPage audience from a campaign."),
@@ -171,6 +183,7 @@ const unlinkAudienceFromCampaignAction = defineProviderAction(service, {
 
 const deleteAudienceAction = defineProviderAction(service, {
   name: "delete_audience",
+  operationType: "destructive",
   description: "Delete a GenPage audience while keeping all leads in the workspace.",
   requiredScopes: [],
   inputSchema: s.object("The input for deleting a GenPage audience.", {

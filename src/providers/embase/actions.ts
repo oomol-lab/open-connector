@@ -18,6 +18,7 @@ const rawResponseSchema = s.looseObject("The raw JSON response returned by Elsev
 
 const searchArticlesAction = defineProviderAction(service, {
   name: "search_articles",
+  operationType: "read",
   description: "Search Embase biomedical literature with a CommandLanguage query or an encoded alert identifier.",
   inputSchema: s.object(
     "Input parameters for searching Embase articles.",
@@ -40,6 +41,7 @@ const searchArticlesAction = defineProviderAction(service, {
 
 const getArticleAction = defineProviderAction(service, {
   name: "get_article",
+  operationType: "read",
   description: "Get one Embase article record by a documented literature identifier.",
   inputSchema: s.object("Input parameters for retrieving one Embase article.", {
     identifierType: s.stringEnum("The identifier namespace used by the supplied value.", [

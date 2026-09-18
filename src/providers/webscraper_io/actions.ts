@@ -64,6 +64,7 @@ const scrapingJobSchema = s.object("A normalized scraping job record returned by
 export const webscraperIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_info",
+    operationType: "read",
     description: "Get the current Web Scraper Cloud account profile for the connected API token.",
     requiredScopes: [],
     inputSchema: s.actionInput({}, [], "The input payload for getting Web Scraper Cloud account info."),
@@ -80,6 +81,7 @@ export const webscraperIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_sitemap",
+    operationType: "write",
     description: "Create a new Web Scraper Cloud sitemap from a sitemap JSON document.",
     requiredScopes: [],
     inputSchema: sitemapJsonSchema,
@@ -90,6 +92,7 @@ export const webscraperIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_sitemap",
+    operationType: "read",
     description: "Get one Web Scraper Cloud sitemap by numeric sitemap ID.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -109,6 +112,7 @@ export const webscraperIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sitemaps",
+    operationType: "read",
     description: "List Web Scraper Cloud sitemaps with optional page and tag filters.",
     requiredScopes: [],
     inputSchema: s.actionInput(paginationInputSchema, [], "The input payload for listing Web Scraper Cloud sitemaps."),
@@ -122,6 +126,7 @@ export const webscraperIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_sitemap",
+    operationType: "write",
     description: "Update an existing Web Scraper Cloud sitemap by numeric sitemap ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -153,6 +158,7 @@ export const webscraperIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_sitemap",
+    operationType: "destructive",
     description: "Delete a Web Scraper Cloud sitemap by numeric sitemap ID.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -167,6 +173,7 @@ export const webscraperIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_scraping_job",
+    operationType: "write",
     description: "Create a Web Scraper Cloud scraping job for one sitemap.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -198,6 +205,7 @@ export const webscraperIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_scraping_job",
+    operationType: "read",
     description: "Get one Web Scraper Cloud scraping job by numeric scraping job ID.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -209,6 +217,7 @@ export const webscraperIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_scraping_jobs",
+    operationType: "read",
     description: "List Web Scraper Cloud scraping jobs with optional page, sitemap, and tag filters.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -230,6 +239,7 @@ export const webscraperIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_scraping_job",
+    operationType: "destructive",
     description: "Delete a Web Scraper Cloud scraping job by numeric scraping job ID.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -244,6 +254,7 @@ export const webscraperIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "download_scraping_job_json",
+    operationType: "read",
     description: "Download one Web Scraper Cloud scraping job result in JSON Lines format.",
     requiredScopes: [],
     inputSchema: s.actionInput(

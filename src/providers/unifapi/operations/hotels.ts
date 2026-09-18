@@ -3,6 +3,7 @@ import type { UnifapiOperationDefinition } from "../operations.ts";
 export const hotelsOperations: readonly UnifapiOperationDefinition[] = [
   {
     name: "get_hotel_info",
+    operationType: "read",
     operationId: "postHotelsInfo",
     description: "Get Hotels detail.",
     method: "POST",
@@ -118,6 +119,7 @@ export const hotelsOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_hotels",
+    operationType: "read",
     operationId: "postHotelsSearch",
     description: "Search Hotels.",
     method: "POST",

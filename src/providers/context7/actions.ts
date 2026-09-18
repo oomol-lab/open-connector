@@ -87,6 +87,7 @@ export type Context7ActionName = "search_libraries" | "get_documentation_context
 export const context7Actions: ProviderActionDefinition<Context7ActionName>[] = [
   defineProviderAction(service, {
     name: "search_libraries",
+    operationType: "read",
     description: "Search Context7 for libraries ranked against a question or task.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -115,6 +116,7 @@ export const context7Actions: ProviderActionDefinition<Context7ActionName>[] = [
   }),
   defineProviderAction(service, {
     name: "get_documentation_context",
+    operationType: "read",
     description: "Retrieve relevant Context7 documentation and code snippets for a library.",
     requiredScopes: [],
     inputSchema: s.object(

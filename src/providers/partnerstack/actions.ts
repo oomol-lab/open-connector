@@ -194,6 +194,7 @@ const dealListInputSchema = s.object(
 export const partnerstackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List PartnerStack customers with pagination and common filters.",
     requiredScopes: [],
     inputSchema: customerListInputSchema,
@@ -204,6 +205,7 @@ export const partnerstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Retrieve one PartnerStack customer by customer key.",
     requiredScopes: [],
     inputSchema: s.object("Path parameters for retrieving a PartnerStack customer.", {
@@ -215,6 +217,7 @@ export const partnerstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_customer",
+    operationType: "write",
     description: "Create a PartnerStack customer from JSON-friendly fields.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -242,6 +245,7 @@ export const partnerstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_partnerships",
+    operationType: "read",
     description: "List PartnerStack partnerships with pagination and common filters.",
     requiredScopes: [],
     inputSchema: partnershipListInputSchema,
@@ -252,6 +256,7 @@ export const partnerstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_partnership",
+    operationType: "read",
     description: "Retrieve one PartnerStack partnership by partner key, partnership key, or email.",
     requiredScopes: [],
     inputSchema: s.object("Path parameters for retrieving a PartnerStack partnership.", {
@@ -265,6 +270,7 @@ export const partnerstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_leads",
+    operationType: "read",
     description: "List PartnerStack leads with pagination and common filters.",
     requiredScopes: [],
     inputSchema: leadListInputSchema,
@@ -275,6 +281,7 @@ export const partnerstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_deals",
+    operationType: "read",
     description: "List PartnerStack deals with pagination and common filters.",
     requiredScopes: [],
     inputSchema: dealListInputSchema,

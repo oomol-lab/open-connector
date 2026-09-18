@@ -165,6 +165,7 @@ const routeInfoSchema = s.object(
 export const sfExpressFreightCoreActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "freight_create_ltl_order",
+    operationType: "write",
     description:
       "Place an SF Freight (快运) LTL order for bulky or heavy shipments. This is for 大件 special scenarios only; for regular parcels use sf_express.create_order. When waybill_no is provided, the order uses that reserved master waybill number instead of generating one.",
     requiredScopes: [],
@@ -264,6 +265,7 @@ export const sfExpressFreightCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_cancel_ltl_order",
+    operationType: "destructive",
     description: "Cancel an SF Freight LTL order. Only orders not yet picked up can be cancelled.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -280,6 +282,7 @@ export const sfExpressFreightCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_get_ltl_order_result",
+    operationType: "read",
     description:
       "Get the latest dispatch result of an SF Freight LTL order placed with courier call (下call), including the assigned waybill numbers.",
     requiredScopes: [],
@@ -290,6 +293,7 @@ export const sfExpressFreightCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_append_ltl_sub_waybill",
+    operationType: "write",
     description:
       "Append sub waybill numbers to an SF Freight LTL order, for shippers who finalize the package count after packing. Only own orders before pickup; at most 1200 sub waybills per order. Reprint the waybills afterwards if they were already printed.",
     requiredScopes: [],
@@ -301,6 +305,7 @@ export const sfExpressFreightCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_check_address_reachable",
+    operationType: "read",
     description: "Check whether an address is within SF Freight pickup or delivery coverage (订单筛单).",
     requiredScopes: [],
     inputSchema: s.object(
@@ -324,6 +329,7 @@ export const sfExpressFreightCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_query_standard_price",
+    operationType: "read",
     description:
       "Query the standard base freight price for an SF Freight product between two addresses. At least one of weight, size, or declare_value is required for pricing.",
     requiredScopes: [],
@@ -385,6 +391,7 @@ export const sfExpressFreightCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_register_ltl_picture_push",
+    operationType: "write",
     description:
       "Register an SF Freight waybill for waybill picture push. The picture push callback must be configured in the SF console before pushes arrive.",
     requiredScopes: [],
@@ -405,6 +412,7 @@ export const sfExpressFreightCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_query_crossborder_route",
+    operationType: "read",
     description:
       "Query the route of an SF cross-border bulky (大件跨境) waybill. For transfer waybill numbers (转单号), use freight_query_crossborder_transfer_routes.",
     requiredScopes: [],
@@ -459,6 +467,7 @@ export const sfExpressFreightCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_query_crossborder_transfer_routes",
+    operationType: "read",
     description: "Query the route events of a transfer waybill number (转单号) for an SF cross-border bulky shipment.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -475,6 +484,7 @@ export const sfExpressFreightCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_list_crossborder_transfer_nos",
+    operationType: "read",
     description: "List the transfer waybill numbers (转单号) of an SF cross-border bulky mother waybill.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -505,6 +515,7 @@ export const sfExpressFreightCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_report_work_order",
+    operationType: "write",
     description: "Report a work order (工单) about an SF Freight shipment to SF customer service.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -533,6 +544,7 @@ export const sfExpressFreightCoreActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "freight_reply_work_order",
+    operationType: "write",
     description: "Reply to an SF Freight work order, identified by work_order_id or report_source_no (at least one).",
     requiredScopes: [],
     inputSchema: s.requireAnyProperty(

@@ -135,6 +135,7 @@ const generatedFileSchema = s.actionOutput(
 export const elevenreaderActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user_info",
+    operationType: "read",
     description: "Get the current ElevenReader user profile and subscription snapshot.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -142,6 +143,7 @@ export const elevenreaderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_models",
+    operationType: "read",
     description: "List available ElevenLabs speech synthesis models for reading text aloud.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -154,6 +156,7 @@ export const elevenreaderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_voices",
+    operationType: "read",
     description: "Search available ElevenLabs voices with pagination and filters useful for reading text aloud.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -190,6 +193,7 @@ export const elevenreaderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_voice",
+    operationType: "read",
     description: "Get one ElevenLabs voice by voice ID before using it to read text aloud.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -204,6 +208,7 @@ export const elevenreaderActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "read_text",
+    operationType: "read",
     description:
       "Convert text to speech with an ElevenLabs voice and store the generated audio in local transit storage.",
     requiredScopes: [],

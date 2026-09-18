@@ -127,6 +127,7 @@ const googleLocationSchema = s.actionOutput(
 export const automActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_usage",
+    operationType: "read",
     description:
       "Get current Autom credit usage, subscription quota, rate limits, account metadata, and API key metadata.",
     inputSchema: s.actionInput({}, [], "Input parameters for getting Autom usage."),
@@ -134,6 +135,7 @@ export const automActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_google_countries",
+    operationType: "read",
     description: "Search supported Google countries in Autom and return matching country codes.",
     inputSchema: finderInputSchema,
     outputSchema: s.actionOutput(
@@ -145,6 +147,7 @@ export const automActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_google_languages",
+    operationType: "read",
     description: "Search supported Google languages in Autom and return matching language codes.",
     inputSchema: finderInputSchema,
     outputSchema: s.actionOutput(
@@ -156,6 +159,7 @@ export const automActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_google_locations",
+    operationType: "read",
     description: "Search supported Google locations in Autom and return matching location IDs.",
     inputSchema: finderInputSchema,
     outputSchema: s.actionOutput(

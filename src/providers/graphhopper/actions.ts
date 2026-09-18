@@ -247,30 +247,35 @@ const isochroneInputSchema = s.object(
 export const graphhopperActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "calculate_route",
+    operationType: "read",
     description: "Calculate the best route connecting two or more coordinates with the GraphHopper Routing API.",
     inputSchema: routeInputSchema,
     outputSchema: routeOutputSchema,
   }),
   defineProviderAction(service, {
     name: "geocode",
+    operationType: "read",
     description: "Convert text to coordinates or coordinates to place candidates with the GraphHopper Geocoding API.",
     inputSchema: geocodeInputSchema,
     outputSchema: geocodeOutputSchema,
   }),
   defineProviderAction(service, {
     name: "compute_matrix",
+    operationType: "read",
     description: "Compute a synchronous travel time, distance, or weight matrix with the GraphHopper Matrix API.",
     inputSchema: matrixInputSchema,
     outputSchema: matrixOutputSchema,
   }),
   defineProviderAction(service, {
     name: "compute_isochrone",
+    operationType: "read",
     description: "Compute GeoJSON isochrone polygons around a coordinate with the GraphHopper Isochrone API.",
     inputSchema: isochroneInputSchema,
     outputSchema: isochroneOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_profiles",
+    operationType: "read",
     description: "List custom routing profiles available to the GraphHopper API key.",
     inputSchema: s.object("Input parameters for listing GraphHopper custom profiles.", {}),
     outputSchema: profilesOutputSchema,

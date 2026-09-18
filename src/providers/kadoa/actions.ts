@@ -109,6 +109,7 @@ const workflowDataOutputSchema = s.object(
 export const kadoaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_workflows",
+    operationType: "read",
     description: "List Kadoa workflows with pagination and optional lifecycle, execution, and scheduling filters.",
     inputSchema: s.object(
       "The input payload for listing Kadoa workflows.",
@@ -152,6 +153,7 @@ export const kadoaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workflow",
+    operationType: "read",
     description: "Get the current configuration and execution status of a Kadoa workflow.",
     inputSchema: s.requiredObject("The input payload for retrieving a Kadoa workflow.", {
       workflowId: trimmedString("The unique identifier of the Kadoa workflow."),
@@ -169,12 +171,14 @@ export const kadoaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_workflow_data",
+    operationType: "read",
     description: "Retrieve a bounded JSON page of extracted records from the latest or a specific Kadoa workflow run.",
     inputSchema: workflowDataInputSchema,
     outputSchema: workflowDataOutputSchema,
   }),
   defineProviderAction(service, {
     name: "export_workflow_data",
+    operationType: "read",
     description: "Materialize all matching Kadoa workflow records and return a temporary signed download URL.",
     inputSchema: s.object(
       "The input payload for exporting Kadoa workflow data.",

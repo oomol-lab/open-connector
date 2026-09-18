@@ -24,6 +24,7 @@ const invitationOutput = s.object("The Linguapop placement test invitation resul
 
 function action(input: {
   name: LinguapopActionName;
+  operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: ActionDefinition["inputSchema"];
   outputSchema: ActionDefinition["outputSchema"];
@@ -34,6 +35,7 @@ function action(input: {
 export const linguapopActions: ActionDefinition[] = [
   action({
     name: "list_available_languages",
+    operationType: "read",
     description: "Fetch the available Linguapop placement test languages and their stable language codes.",
     inputSchema: s.object({}, { description: "No parameters are required to fetch Linguapop languages." }),
     outputSchema: s.object(
@@ -47,6 +49,7 @@ export const linguapopActions: ActionDefinition[] = [
   }),
   action({
     name: "send_invitation",
+    operationType: "write",
     description:
       "Create a Linguapop placement test invitation for a candidate, optionally send an email, generate a kiosk code, and configure callback or return URLs.",
     inputSchema: s.object(

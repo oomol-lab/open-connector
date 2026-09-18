@@ -21,9 +21,14 @@ export type SwaggerHubActionName =
   | "list_projects"
   | "get_project";
 
-function action(name: SwaggerHubActionName, description: string): ActionDefinition {
+function action(
+  name: SwaggerHubActionName,
+  operationType: ActionDefinition["operationType"],
+  description: string,
+): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     inputSchema: s.looseObject(`Input parameters for ${name}.`),
     outputSchema: s.looseObject(`SwaggerHub response for ${name}.`),
@@ -31,18 +36,18 @@ function action(name: SwaggerHubActionName, description: string): ActionDefiniti
 }
 
 export const swaggerhubActions: ActionDefinition[] = [
-  action("search_registry_specs", "Search SwaggerHub registry specs."),
-  action("search_apis", "Search SwaggerHub APIs."),
-  action("list_owner_apis", "List APIs for a SwaggerHub owner."),
-  action("list_api_versions", "List versions for a SwaggerHub API."),
-  action("get_api_definition", "Get a SwaggerHub API definition as JSON or YAML."),
-  action("search_domains", "Search SwaggerHub domains."),
-  action("list_owner_domains", "List domains for a SwaggerHub owner."),
-  action("list_domain_versions", "List versions for a SwaggerHub domain."),
-  action("get_domain_definition", "Get a SwaggerHub domain definition as JSON or YAML."),
-  action("list_templates", "List SwaggerHub templates."),
-  action("list_template_versions", "List versions for a SwaggerHub template."),
-  action("get_template_definition", "Get a SwaggerHub template definition as JSON or YAML."),
-  action("list_projects", "List SwaggerHub projects for an owner."),
-  action("get_project", "Get a SwaggerHub project."),
+  action("search_registry_specs", "read", "Search SwaggerHub registry specs."),
+  action("search_apis", "read", "Search SwaggerHub APIs."),
+  action("list_owner_apis", "read", "List APIs for a SwaggerHub owner."),
+  action("list_api_versions", "read", "List versions for a SwaggerHub API."),
+  action("get_api_definition", "read", "Get a SwaggerHub API definition as JSON or YAML."),
+  action("search_domains", "read", "Search SwaggerHub domains."),
+  action("list_owner_domains", "read", "List domains for a SwaggerHub owner."),
+  action("list_domain_versions", "read", "List versions for a SwaggerHub domain."),
+  action("get_domain_definition", "read", "Get a SwaggerHub domain definition as JSON or YAML."),
+  action("list_templates", "read", "List SwaggerHub templates."),
+  action("list_template_versions", "read", "List versions for a SwaggerHub template."),
+  action("get_template_definition", "read", "Get a SwaggerHub template definition as JSON or YAML."),
+  action("list_projects", "read", "List SwaggerHub projects for an owner."),
+  action("get_project", "read", "Get a SwaggerHub project."),
 ];

@@ -516,6 +516,7 @@ const companyListEntriesInputSchema = s.object(
 export const affinityActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the authenticated Affinity user, tenant, and API grant summary.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -523,6 +524,7 @@ export const affinityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_persons",
+    operationType: "read",
     description: "List Affinity persons with optional ID and field selectors.",
     requiredScopes: [],
     inputSchema: personFiltersInputSchema,
@@ -530,6 +532,7 @@ export const affinityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_person",
+    operationType: "read",
     description: "Get one Affinity person by ID with optional field selectors.",
     requiredScopes: [],
     inputSchema: personIdInputSchema,
@@ -537,6 +540,7 @@ export const affinityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_person_fields",
+    operationType: "read",
     description: "List non-list-specific Affinity person field metadata.",
     requiredScopes: [],
     inputSchema: pageInputSchema,
@@ -544,6 +548,7 @@ export const affinityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_person_lists",
+    operationType: "read",
     description: "List the Affinity lists that contain one person.",
     requiredScopes: [],
     inputSchema: personListsInputSchema,
@@ -551,6 +556,7 @@ export const affinityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_person_list_entries",
+    operationType: "read",
     description: "List all Affinity list entries for one person across lists.",
     requiredScopes: [],
     inputSchema: personListEntriesInputSchema,
@@ -558,6 +564,7 @@ export const affinityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_companies",
+    operationType: "read",
     description: "List Affinity companies with optional ID and field selectors.",
     requiredScopes: [],
     inputSchema: companyFiltersInputSchema,
@@ -565,6 +572,7 @@ export const affinityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description: "Get one Affinity company by ID with optional field selectors.",
     requiredScopes: [],
     inputSchema: companyIdInputSchema,
@@ -572,6 +580,7 @@ export const affinityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_company_fields",
+    operationType: "read",
     description: "List non-list-specific Affinity company field metadata.",
     requiredScopes: [],
     inputSchema: pageInputSchema,
@@ -579,6 +588,7 @@ export const affinityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_company_lists",
+    operationType: "read",
     description: "List the Affinity lists that contain one company.",
     requiredScopes: [],
     inputSchema: companyListsInputSchema,
@@ -586,6 +596,7 @@ export const affinityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_company_list_entries",
+    operationType: "read",
     description: "List all Affinity list entries for one company across lists.",
     requiredScopes: [],
     inputSchema: companyListEntriesInputSchema,
@@ -593,6 +604,7 @@ export const affinityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_opportunities",
+    operationType: "read",
     description: "List Affinity opportunities with optional ID filtering.",
     requiredScopes: [],
     inputSchema: opportunityFiltersInputSchema,
@@ -600,6 +612,7 @@ export const affinityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_opportunity",
+    operationType: "read",
     description: "Get one Affinity opportunity by ID.",
     requiredScopes: [],
     inputSchema: opportunityIdInputSchema,
@@ -607,6 +620,7 @@ export const affinityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_lists",
+    operationType: "read",
     description: "List the Affinity lists visible to the authenticated user.",
     requiredScopes: [],
     inputSchema: pageInputSchema,
@@ -614,6 +628,7 @@ export const affinityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_list",
+    operationType: "read",
     description: "Get one Affinity list by ID.",
     requiredScopes: [],
     inputSchema: listIdInputSchema,
@@ -621,6 +636,7 @@ export const affinityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_list_fields",
+    operationType: "read",
     description: "List the field metadata for one Affinity list.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -635,6 +651,7 @@ export const affinityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_list_entries",
+    operationType: "read",
     description: "List the Affinity list entries for one list with optional field selectors.",
     requiredScopes: [],
     inputSchema: listEntriesInputSchema,
@@ -642,6 +659,7 @@ export const affinityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_saved_views",
+    operationType: "read",
     description: "List the saved views configured on one Affinity list.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -656,6 +674,7 @@ export const affinityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_saved_view",
+    operationType: "read",
     description: "Get one Affinity saved view by list ID and saved view ID.",
     requiredScopes: [],
     inputSchema: savedViewIdInputSchema,
@@ -663,6 +682,7 @@ export const affinityActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_saved_view_list_entries",
+    operationType: "read",
     description: "List the Affinity list entries returned by one saved view.",
     requiredScopes: [],
     inputSchema: savedViewListEntriesInputSchema,

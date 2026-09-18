@@ -33,6 +33,7 @@ const paginatedOutputSchema = s.requiredObject("A paginated response returned by
 
 const listOpportunitiesAction = defineProviderAction(service, {
   name: "list_opportunities",
+  operationType: "read",
   description:
     "List HigherGov federal contract, DIBBS, grant, and state or local opportunities using documented filters.",
   requiredScopes: [],
@@ -79,6 +80,7 @@ const listOpportunitiesAction = defineProviderAction(service, {
 
 const listContractsAction = defineProviderAction(service, {
   name: "list_contracts",
+  operationType: "read",
   description: "List HigherGov federal prime contract awards using documented award filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -144,6 +146,7 @@ const listContractsAction = defineProviderAction(service, {
 
 const listAgenciesAction = defineProviderAction(service, {
   name: "list_agencies",
+  operationType: "read",
   description: "List HigherGov federal, state, and local agencies and their hierarchies.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -160,6 +163,7 @@ const listAgenciesAction = defineProviderAction(service, {
 
 const listNaicsCodesAction = defineProviderAction(service, {
   name: "list_naics_codes",
+  operationType: "read",
   description: "List HigherGov NAICS industry classification codes and descriptions.",
   requiredScopes: [],
   inputSchema: s.object(

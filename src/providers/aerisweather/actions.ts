@@ -43,6 +43,7 @@ const forecastResultSchema = s.looseRequiredObject("A normalized Xweather foreca
 export const aerisweatherActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_place",
+    operationType: "read",
     description: "Resolve an Xweather place by location identifier.",
     inputSchema: s.actionInput(
       {
@@ -62,6 +63,7 @@ export const aerisweatherActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_observation",
+    operationType: "read",
     description: "Retrieve the latest Xweather observation for a location.",
     inputSchema: s.actionInput(
       {
@@ -81,6 +83,7 @@ export const aerisweatherActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_forecast",
+    operationType: "read",
     description: "Retrieve Xweather forecast periods for a location.",
     inputSchema: s.actionInput(
       {

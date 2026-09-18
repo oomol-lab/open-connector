@@ -5,6 +5,7 @@ import { createDataForSeoFilterSchema, dataForSeoFilterDefinitions } from "./dat
 export const seoOperations: readonly UnifapiOperationDefinition[] = [
   {
     name: "list_seo_backlink_anchors",
+    operationType: "read",
     operationId: "postSeoBacklinksAnchors",
     description: "Get anchor texts used in backlinks to a target.",
     method: "POST",
@@ -131,6 +132,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "count_seo_bulk_backlinks",
+    operationType: "read",
     operationId: "postSeoBacklinksBulkBacklinks",
     description: "Count backlinks for many targets.",
     method: "POST",
@@ -163,6 +165,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "count_seo_bulk_new_lost_backlinks",
+    operationType: "read",
     operationId: "postSeoBacklinksBulkNewLostBacklinks",
     description: "Count new and lost backlinks for many targets.",
     method: "POST",
@@ -200,6 +203,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "count_seo_bulk_new_lost_referring_domains",
+    operationType: "read",
     operationId: "postSeoBacklinksBulkNewLostReferringDomains",
     description: "Count new and lost referring domains for many targets.",
     method: "POST",
@@ -237,6 +241,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "summarize_seo_bulk_pages",
+    operationType: "read",
     operationId: "postSeoBacklinksBulkPagesSummary",
     description: "Summarize backlinks for many pages at once.",
     method: "POST",
@@ -292,6 +297,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_seo_bulk_backlink_ranks",
+    operationType: "read",
     operationId: "postSeoBacklinksBulkRanks",
     description: "Get backlink ranks for many targets.",
     method: "POST",
@@ -329,6 +335,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "count_seo_bulk_referring_domains",
+    operationType: "read",
     operationId: "postSeoBacklinksBulkReferringDomains",
     description: "Count referring domains for many targets.",
     method: "POST",
@@ -361,6 +368,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_seo_bulk_spam_scores",
+    operationType: "read",
     operationId: "postSeoBacklinksBulkSpamScore",
     description: "Get spam scores for many targets.",
     method: "POST",
@@ -393,6 +401,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "find_seo_backlink_competitors",
+    operationType: "read",
     operationId: "postSeoBacklinksCompetitors",
     description: "Find competitors by shared referring domains.",
     method: "POST",
@@ -487,6 +496,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "find_seo_backlink_domain_intersection",
+    operationType: "read",
     operationId: "postSeoBacklinksDomainIntersection",
     description: "Find domains linking to multiple targets.",
     method: "POST",
@@ -638,6 +648,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "summarize_seo_backlink_domain_pages",
+    operationType: "read",
     operationId: "postSeoBacklinksDomainPagesSummary",
     description: "Summarize backlinks for each page of a target.",
     method: "POST",
@@ -764,6 +775,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_seo_backlink_domain_pages",
+    operationType: "read",
     operationId: "postSeoBacklinksDomainPages",
     description: "List target pages ranked by backlinks.",
     method: "POST",
@@ -885,6 +897,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_seo_backlink_history",
+    operationType: "read",
     operationId: "postSeoBacklinksHistory",
     description: "Get historical backlink metrics for a target.",
     method: "POST",
@@ -938,6 +951,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_seo_backlinks",
+    operationType: "read",
     operationId: "postSeoBacklinksList",
     description: "List individual backlinks pointing to a target.",
     method: "POST",
@@ -1066,6 +1080,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "find_seo_backlink_page_intersection",
+    operationType: "read",
     operationId: "postSeoBacklinksPageIntersection",
     description: "Find pages linking to multiple targets.",
     method: "POST",
@@ -1213,6 +1228,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_seo_referring_domains",
+    operationType: "read",
     operationId: "postSeoBacklinksReferringDomains",
     description: "List referring domains pointing to a target.",
     method: "POST",
@@ -1335,6 +1351,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_seo_referring_networks",
+    operationType: "read",
     operationId: "postSeoBacklinksReferringNetworks",
     description: "List referring IP networks pointing to a target.",
     method: "POST",
@@ -1467,6 +1484,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_seo_backlink_summary",
+    operationType: "read",
     operationId: "postSeoBacklinksSummary",
     description: "Get the backlink profile summary for a target.",
     method: "POST",
@@ -1544,6 +1562,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_seo_new_lost_backlinks_timeseries",
+    operationType: "read",
     operationId: "postSeoBacklinksTimeseriesNewLost",
     description: "Get new and lost backlinks over time.",
     method: "POST",
@@ -1587,6 +1606,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_seo_backlink_timeseries",
+    operationType: "read",
     operationId: "postSeoBacklinksTimeseries",
     description: "Get backlink metrics over time.",
     method: "POST",
@@ -1635,6 +1655,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "estimate_seo_bulk_traffic",
+    operationType: "read",
     operationId: "postSeoCompetitorsBulkTraffic",
     description: "Estimate organic traffic for domains.",
     method: "POST",
@@ -1703,6 +1724,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "find_seo_domain_keyword_intersection",
+    operationType: "read",
     operationId: "postSeoCompetitorsDomainIntersection",
     description: "Find keywords two domains both rank for.",
     method: "POST",
@@ -1787,6 +1809,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_seo_domain_rank_overview",
+    operationType: "read",
     operationId: "postSeoCompetitorsDomainRankOverview",
     description: "Get a domain's ranking and traffic overview.",
     method: "POST",
@@ -1849,6 +1872,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "find_seo_domain_competitors",
+    operationType: "read",
     operationId: "postSeoCompetitorsDomain",
     description: "Find a domain's organic competitors.",
     method: "POST",
@@ -1946,6 +1970,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "estimate_seo_historical_bulk_traffic",
+    operationType: "read",
     operationId: "postSeoCompetitorsHistoricalBulkTraffic",
     description: "Estimate historical traffic for domains.",
     method: "POST",
@@ -2010,6 +2035,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_seo_historical_rank_overview",
+    operationType: "read",
     operationId: "postSeoCompetitorsHistoricalRankOverview",
     description: "Get a domain's historical ranking overview.",
     method: "POST",
@@ -2082,6 +2108,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_seo_historical_serps",
+    operationType: "read",
     operationId: "postSeoCompetitorsHistoricalSerps",
     description: "Get historical SERP snapshots for a keyword.",
     method: "POST",
@@ -2140,6 +2167,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "find_seo_page_keyword_intersection",
+    operationType: "read",
     operationId: "postSeoCompetitorsPageIntersection",
     description: "Find keywords specific pages rank for.",
     method: "POST",
@@ -2236,6 +2264,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "find_seo_ranked_keywords",
+    operationType: "read",
     operationId: "postSeoCompetitorsRankedKeywords",
     description: "Find the keywords a domain ranks for.",
     method: "POST",
@@ -2314,6 +2343,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_seo_relevant_pages",
+    operationType: "read",
     operationId: "postSeoCompetitorsRelevantPages",
     description: "List a domain's top ranking pages.",
     method: "POST",
@@ -2387,6 +2417,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "find_seo_serp_competitors",
+    operationType: "read",
     operationId: "postSeoCompetitorsSerp",
     description: "Find domains competing for keywords.",
     method: "POST",
@@ -2456,6 +2487,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_seo_subdomains",
+    operationType: "read",
     operationId: "postSeoCompetitorsSubdomains",
     description: "List a domain's subdomains with traffic.",
     method: "POST",
@@ -2529,6 +2561,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "collect_seo_keyword_autocomplete",
+    operationType: "read",
     operationId: "postSeoKeywordsAutocomplete",
     description: "Collect autocomplete keyword suggestions.",
     method: "POST",
@@ -2591,6 +2624,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "score_seo_keyword_difficulty",
+    operationType: "write",
     operationId: "postSeoKeywordsDifficulty",
     description: "Score keyword difficulty.",
     method: "POST",
@@ -2645,6 +2679,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "find_seo_site_keywords",
+    operationType: "read",
     operationId: "postSeoKeywordsForSite",
     description: "Find keywords a domain ranks for.",
     method: "POST",
@@ -2745,6 +2780,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_seo_keyword_history",
+    operationType: "read",
     operationId: "postSeoKeywordsHistory",
     description: "Get historical keyword data.",
     method: "POST",
@@ -2799,6 +2835,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "discover_seo_keyword_ideas",
+    operationType: "write",
     operationId: "postSeoKeywordsIdeas",
     description: "Discover keyword ideas.",
     method: "POST",
@@ -2911,6 +2948,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "classify_seo_keyword_intent",
+    operationType: "read",
     operationId: "postSeoKeywordsIntent",
     description: "Classify keyword search intent.",
     method: "POST",
@@ -2948,6 +2986,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_seo_keyword_overview",
+    operationType: "read",
     operationId: "postSeoKeywordsOverview",
     description: "Look up keyword metrics.",
     method: "POST",
@@ -3021,6 +3060,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "find_seo_related_keywords",
+    operationType: "read",
     operationId: "postSeoKeywordsRelated",
     description: "Find related keywords.",
     method: "POST",
@@ -3125,6 +3165,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "find_seo_keyword_suggestions",
+    operationType: "read",
     operationId: "postSeoKeywordsSuggestions",
     description: "Find keyword suggestions.",
     method: "POST",
@@ -3234,6 +3275,7 @@ export const seoOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "collect_seo_serp",
+    operationType: "read",
     operationId: "postSeoSerp",
     description: "Collect organic SERP SEO evidence.",
     method: "POST",

@@ -189,6 +189,7 @@ const sendSurveyTicketSchema = s.object(
 
 const listSurveysAction = defineProviderAction(service, {
   name: "list_surveys",
+  operationType: "read",
   description: "List one page of Simplesat surveys.",
   requiredScopes: [],
   inputSchema: s.object("Filters for listing Simplesat surveys.", paginationFields, {
@@ -199,6 +200,7 @@ const listSurveysAction = defineProviderAction(service, {
 
 const listQuestionsAction = defineProviderAction(service, {
   name: "list_questions",
+  operationType: "read",
   description: "List one page of Simplesat questions with optional survey and metric filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -217,6 +219,7 @@ const listQuestionsAction = defineProviderAction(service, {
 
 const searchResponsesAction = defineProviderAction(service, {
   name: "search_responses",
+  operationType: "read",
   description: "Search one page of Simplesat survey responses with documented date and field filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -251,6 +254,7 @@ const searchResponsesAction = defineProviderAction(service, {
 
 const getResponseAction = defineProviderAction(service, {
   name: "get_response",
+  operationType: "read",
   description: "Get a single Simplesat survey response by ID.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -265,6 +269,7 @@ const getResponseAction = defineProviderAction(service, {
 
 const listCustomersAction = defineProviderAction(service, {
   name: "list_customers",
+  operationType: "read",
   description: "List one page of Simplesat customers with optional date and subscription filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -287,6 +292,7 @@ const listCustomersAction = defineProviderAction(service, {
 
 const getCustomerAction = defineProviderAction(service, {
   name: "get_customer",
+  operationType: "read",
   description: "Get a single Simplesat customer by ID.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -301,6 +307,7 @@ const getCustomerAction = defineProviderAction(service, {
 
 const createOrUpdateCustomerAction = defineProviderAction(service, {
   name: "create_or_update_customer",
+  operationType: "write",
   description: "Create or update a Simplesat customer by email, overwriting tags or custom attributes when provided.",
   requiredScopes: [],
   inputSchema: s.object("The customer fields to create or update in Simplesat.", customerMutationFields, {
@@ -311,6 +318,7 @@ const createOrUpdateCustomerAction = defineProviderAction(service, {
 
 const sendSurveyEmailAction = defineProviderAction(service, {
   name: "send_survey_email",
+  operationType: "write",
   description:
     "Schedule a Simplesat event-based survey email for a customer with optional team member and ticket metadata.",
   requiredScopes: [],

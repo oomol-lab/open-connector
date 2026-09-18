@@ -231,6 +231,7 @@ let incidentUpdateEditOptionalFields: readonly (keyof typeof incidentUpdateMutat
 
 let listStatusPagesAction = defineProviderAction(service, {
   name: "list_status_pages",
+  operationType: "read",
   description: "List Instatus status pages in the authenticated account.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for listing Instatus status pages.", paginationFields, {
@@ -243,6 +244,7 @@ let listStatusPagesAction = defineProviderAction(service, {
 
 let listComponentsAction = defineProviderAction(service, {
   name: "list_components",
+  operationType: "read",
   description: "List components on an Instatus status page.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -257,6 +259,7 @@ let listComponentsAction = defineProviderAction(service, {
 
 let getComponentAction = defineProviderAction(service, {
   name: "get_component",
+  operationType: "read",
   description: "Get one Instatus component by ID.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for getting an Instatus component.", {
@@ -270,6 +273,7 @@ let getComponentAction = defineProviderAction(service, {
 
 let createComponentAction = defineProviderAction(service, {
   name: "create_component",
+  operationType: "write",
   description: "Create one component on an Instatus status page.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -284,6 +288,7 @@ let createComponentAction = defineProviderAction(service, {
 
 let updateComponentAction = defineProviderAction(service, {
   name: "update_component",
+  operationType: "write",
   description: "Update one Instatus component by ID.",
   requiredScopes: [],
   inputSchema: mutationSchema(
@@ -302,6 +307,7 @@ let updateComponentAction = defineProviderAction(service, {
 
 let deleteComponentAction = defineProviderAction(service, {
   name: "delete_component",
+  operationType: "destructive",
   description: "Delete one Instatus component by ID.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for deleting an Instatus component.", {
@@ -316,6 +322,7 @@ let deleteComponentAction = defineProviderAction(service, {
 
 let listIncidentsAction = defineProviderAction(service, {
   name: "list_incidents",
+  operationType: "read",
   description: "List incidents on an Instatus status page.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -335,6 +342,7 @@ let listIncidentsAction = defineProviderAction(service, {
 
 let getIncidentAction = defineProviderAction(service, {
   name: "get_incident",
+  operationType: "read",
   description: "Get one Instatus incident by ID.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for getting an Instatus incident.", {
@@ -348,6 +356,7 @@ let getIncidentAction = defineProviderAction(service, {
 
 let createIncidentAction = defineProviderAction(service, {
   name: "create_incident",
+  operationType: "write",
   description: "Create one incident on an Instatus status page.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -362,6 +371,7 @@ let createIncidentAction = defineProviderAction(service, {
 
 let updateIncidentAction = defineProviderAction(service, {
   name: "update_incident",
+  operationType: "write",
   description: "Update one Instatus incident by ID.",
   requiredScopes: [],
   inputSchema: mutationSchema(
@@ -380,6 +390,7 @@ let updateIncidentAction = defineProviderAction(service, {
 
 let deleteIncidentAction = defineProviderAction(service, {
   name: "delete_incident",
+  operationType: "destructive",
   description: "Delete one Instatus incident by ID.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for deleting an Instatus incident.", {
@@ -394,6 +405,7 @@ let deleteIncidentAction = defineProviderAction(service, {
 
 let getIncidentUpdateAction = defineProviderAction(service, {
   name: "get_incident_update",
+  operationType: "read",
   description: "Get one Instatus incident update by ID.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for getting an Instatus incident update.", {
@@ -408,6 +420,7 @@ let getIncidentUpdateAction = defineProviderAction(service, {
 
 let createIncidentUpdateAction = defineProviderAction(service, {
   name: "create_incident_update",
+  operationType: "write",
   description: "Create one update on an Instatus incident.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -422,6 +435,7 @@ let createIncidentUpdateAction = defineProviderAction(service, {
 
 let updateIncidentUpdateAction = defineProviderAction(service, {
   name: "update_incident_update",
+  operationType: "write",
   description: "Update one Instatus incident update by ID.",
   requiredScopes: [],
   inputSchema: mutationSchema(
@@ -445,6 +459,7 @@ let updateIncidentUpdateAction = defineProviderAction(service, {
 
 let deleteIncidentUpdateAction = defineProviderAction(service, {
   name: "delete_incident_update",
+  operationType: "destructive",
   description: "Delete one Instatus incident update by ID.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for deleting an Instatus incident update.", {

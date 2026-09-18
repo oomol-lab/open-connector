@@ -113,6 +113,7 @@ const fastSignHashInputSchema = fastSignHashInputBaseSchema;
 export const signpathActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_signing_policies",
+    operationType: "read",
     description:
       "List SignPath signing policies visible to the API token, optionally filtered by project and policy slug.",
     requiredScopes: [],
@@ -130,6 +131,7 @@ export const signpathActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_signing_request",
+    operationType: "read",
     description:
       "Get the current status and metadata for a SignPath signing request so callers can poll for completion.",
     requiredScopes: [],
@@ -146,6 +148,7 @@ export const signpathActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "fast_sign_hash",
+    operationType: "write",
     description:
       "Submit a fast SignPath hash-signing request using the REST API payload.json contract and return the signature result immediately.",
     requiredScopes: [],

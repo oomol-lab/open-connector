@@ -15,6 +15,7 @@ import {
 export const appStoreConnectAppStoreVersionActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_app_store_versions",
+    operationType: "read",
     description: "List the App Store versions of one app, with the review and release state of each version.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -37,6 +38,7 @@ export const appStoreConnectAppStoreVersionActions: readonly ProviderActionDefin
   }),
   defineProviderAction(service, {
     name: "get_app_store_version",
+    operationType: "read",
     description: "Read one App Store version by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(

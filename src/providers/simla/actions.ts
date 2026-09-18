@@ -115,6 +115,7 @@ const editCustomerInputSchema = s.object(
 export const simlaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description: "List Simla orders with optional pagination and filter parameters.",
     inputSchema: listOrdersInputSchema,
     outputSchema: s.object("Paginated Simla orders response.", {
@@ -126,6 +127,7 @@ export const simlaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_order",
+    operationType: "read",
     description: "Get full Simla order information by internal ID or external ID.",
     inputSchema: getOrderInputSchema,
     outputSchema: s.object("Simla order response.", {
@@ -136,6 +138,7 @@ export const simlaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_order",
+    operationType: "write",
     description: "Create a Simla order using the official order payload object.",
     inputSchema: createOrderInputSchema,
     outputSchema: s.object("Simla order creation response.", {
@@ -146,6 +149,7 @@ export const simlaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "edit_order",
+    operationType: "write",
     description: "Edit a Simla order by internal ID or external ID.",
     inputSchema: editOrderInputSchema,
     outputSchema: s.object("Simla order editing response.", {
@@ -156,6 +160,7 @@ export const simlaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_order_statuses",
+    operationType: "read",
     description: "Get Simla status information for orders by internal IDs or external IDs.",
     inputSchema: getOrderStatusesInputSchema,
     outputSchema: s.object("Simla order statuses response.", {
@@ -166,6 +171,7 @@ export const simlaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List Simla customers with optional pagination and filter parameters.",
     inputSchema: listCustomersInputSchema,
     outputSchema: s.object("Paginated Simla customers response.", {
@@ -177,6 +183,7 @@ export const simlaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Get full Simla customer information by internal ID or external ID.",
     inputSchema: getCustomerInputSchema,
     outputSchema: s.object("Simla customer response.", {
@@ -187,6 +194,7 @@ export const simlaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_customer",
+    operationType: "write",
     description: "Create a Simla customer using the official customer payload object.",
     inputSchema: createCustomerInputSchema,
     outputSchema: s.object("Simla customer creation response.", {
@@ -197,6 +205,7 @@ export const simlaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "edit_customer",
+    operationType: "write",
     description: "Edit a Simla customer by internal ID or external ID.",
     inputSchema: editCustomerInputSchema,
     outputSchema: s.object("Simla customer editing response.", {

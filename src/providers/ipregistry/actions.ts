@@ -24,6 +24,7 @@ const batchOutputSchema = s.object("Ipregistry batch response wrapper.", {
 export const ipregistryActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "lookup_ip",
+    operationType: "read",
     description: "Look up geolocation, connection, company, currency, time zone, and security data for one IP address.",
     inputSchema: s.object(
       "Input parameters for looking up one IP address with Ipregistry.",
@@ -38,6 +39,7 @@ export const ipregistryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "batch_lookup_ips",
+    operationType: "read",
     description: "Look up Ipregistry data for multiple IPv4 or IPv6 addresses in one request.",
     inputSchema: s.object(
       "Input parameters for batch IP lookup with Ipregistry.",
@@ -55,6 +57,7 @@ export const ipregistryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "parse_user_agents",
+    operationType: "read",
     description: "Parse one or more user-agent strings with Ipregistry.",
     inputSchema: s.object(
       "Input parameters for parsing user-agent strings with Ipregistry.",
@@ -71,6 +74,7 @@ export const ipregistryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "lookup_asn",
+    operationType: "read",
     description: "Look up data for one Autonomous System Number with Ipregistry.",
     inputSchema: s.object(
       "Input parameters for looking up one Autonomous System Number with Ipregistry.",
@@ -84,6 +88,7 @@ export const ipregistryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "batch_lookup_asns",
+    operationType: "read",
     description: "Look up data for multiple Autonomous System Numbers with Ipregistry.",
     inputSchema: s.object(
       "Input parameters for batch ASN lookup with Ipregistry.",

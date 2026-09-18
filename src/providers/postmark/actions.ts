@@ -70,12 +70,14 @@ const offset = s.nonNegativeInteger("Number of results to skip before returning 
 export const postmarkActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_server",
+    operationType: "read",
     description: "Get the current Postmark server configuration for the connected server token.",
     inputSchema: s.object({}),
     outputSchema: loose,
   }),
   defineProviderAction(service, {
     name: "send_email",
+    operationType: "write",
     description: "Send a transactional email through the current Postmark server.",
     inputSchema: s.object(
       {
@@ -105,12 +107,14 @@ export const postmarkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_email_with_template",
+    operationType: "write",
     description: "Send a single templated email through the current Postmark server.",
     inputSchema: templateMessage,
     outputSchema: messageResponse,
   }),
   defineProviderAction(service, {
     name: "send_batch_with_templates",
+    operationType: "write",
     description: "Send up to 500 templated emails in a single Postmark batch request.",
     inputSchema: s.object({
       Messages: s.array("Templated messages to send in this batch request.", templateMessage, {
@@ -122,6 +126,7 @@ export const postmarkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_outbound_messages",
+    operationType: "read",
     description: "Search outbound Postmark messages with filters and pagination.",
     inputSchema: s.object(
       {
@@ -167,12 +172,14 @@ export const postmarkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_outbound_message_details",
+    operationType: "read",
     description: "Get detailed content and events for one outbound Postmark message.",
     inputSchema: s.object({ messageId: s.nonEmptyString("Outbound message ID returned by Postmark.") }),
     outputSchema: loose,
   }),
   defineProviderAction(service, {
     name: "get_bounces",
+    operationType: "read",
     description: "Get Postmark bounces for the current server with optional filters.",
     inputSchema: s.object(
       {
@@ -209,6 +216,7 @@ export const postmarkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List Postmark templates for the current server.",
     inputSchema: s.object(
       { count, offset, TemplateType: templateType, LayoutTemplate: s.string("Filter by layout template alias.") },
@@ -221,6 +229,7 @@ export const postmarkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_template",
+    operationType: "read",
     description: "Get one Postmark template by template ID or alias.",
     inputSchema: s.object({
       templateIdOrAlias: s.anyOf("Template ID or template alias accepted by the Postmark path parameter.", [
@@ -232,6 +241,7 @@ export const postmarkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_template",
+    operationType: "write",
     description: "Create a Postmark template.",
     inputSchema: s.object(
       {
@@ -249,6 +259,7 @@ export const postmarkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "edit_template",
+    operationType: "write",
     description: "Edit an existing Postmark template.",
     inputSchema: s.object(
       {
@@ -269,6 +280,7 @@ export const postmarkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "validate_template",
+    operationType: "read",
     description: "Validate Postmark template content and render test output.",
     inputSchema: s.object(
       {

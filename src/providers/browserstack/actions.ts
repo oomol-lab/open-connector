@@ -83,6 +83,7 @@ const automationSessionSchema = s.looseRequiredObject(
 export const browserstackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_builds",
+    operationType: "read",
     description: "List recent BrowserStack Automate builds with optional status, project, and pagination filters.",
     inputSchema: s.object(
       "Filters for listing BrowserStack Automate builds.",
@@ -101,6 +102,7 @@ export const browserstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_build_sessions",
+    operationType: "read",
     description: "List BrowserStack Automate sessions for a build.",
     inputSchema: s.object(
       "Filters for listing sessions in a BrowserStack Automate build.",
@@ -117,6 +119,7 @@ export const browserstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_session",
+    operationType: "read",
     description: "Retrieve details for a BrowserStack Automate session.",
     inputSchema: s.requiredObject("Input for retrieving a BrowserStack Automate session.", {
       session_id: idSchema("The BrowserStack session hashed_id."),
@@ -127,6 +130,7 @@ export const browserstackActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_session_status",
+    operationType: "write",
     description: "Mark a BrowserStack Automate session as passed or failed with a reason.",
     inputSchema: s.requiredObject("Input for updating a BrowserStack Automate session status.", {
       session_id: idSchema("The BrowserStack session hashed_id."),

@@ -163,6 +163,7 @@ const browserbaseRequestSessionReleaseInputSchema = s.actionInput(
 export const browserbaseActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List the Browserbase projects visible to the current API key.",
     inputSchema: s.actionInput({}, [], "This action does not require any input."),
     outputSchema: s.actionOutput(
@@ -174,6 +175,7 @@ export const browserbaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get one Browserbase project by project identifier.",
     inputSchema: browserbaseProjectIdInputSchema,
     outputSchema: s.actionOutput(
@@ -185,6 +187,7 @@ export const browserbaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project_usage",
+    operationType: "read",
     description:
       "Get Browserbase browser minute and proxy byte usage for one project, defaulting to the connected project.",
     inputSchema: browserbaseOptionalProjectIdInputSchema,
@@ -192,12 +195,14 @@ export const browserbaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_context",
+    operationType: "write",
     description: "Create a Browserbase context and return the upload credentials for an encrypted user-data directory.",
     inputSchema: browserbaseCreateContextInputSchema,
     outputSchema: browserbaseContextUploadSchema,
   }),
   defineProviderAction(service, {
     name: "get_context",
+    operationType: "read",
     description: "Get one Browserbase context by context identifier.",
     inputSchema: browserbaseContextIdInputSchema,
     outputSchema: s.actionOutput(
@@ -209,6 +214,7 @@ export const browserbaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "refresh_context_upload_credentials",
+    operationType: "write",
     description:
       "Refresh the Browserbase upload credentials for an existing context so a new encrypted archive can be uploaded.",
     inputSchema: browserbaseContextIdInputSchema,
@@ -216,6 +222,7 @@ export const browserbaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_context",
+    operationType: "destructive",
     description: "Delete one Browserbase context by context identifier.",
     inputSchema: browserbaseContextIdInputSchema,
     outputSchema: s.actionOutput(
@@ -227,6 +234,7 @@ export const browserbaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_session",
+    operationType: "write",
     description:
       "Create a Browserbase session using the connected project by default, with optional context reuse and persistence.",
     followUpActions: ["browserbase.get_session", "browserbase.request_session_release"],
@@ -240,6 +248,7 @@ export const browserbaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sessions",
+    operationType: "read",
     description: "List Browserbase sessions with optional status or metadata query filters.",
     inputSchema: browserbaseListSessionsInputSchema,
     outputSchema: s.actionOutput(
@@ -251,6 +260,7 @@ export const browserbaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_session",
+    operationType: "read",
     description: "Get one Browserbase session by session identifier.",
     inputSchema: s.actionInput(
       {
@@ -268,6 +278,7 @@ export const browserbaseActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "request_session_release",
+    operationType: "destructive",
     description: "Request that Browserbase releases a session before timeout by sending status REQUEST_RELEASE.",
     inputSchema: browserbaseRequestSessionReleaseInputSchema,
     outputSchema: s.actionOutput(

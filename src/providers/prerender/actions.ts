@@ -10,6 +10,7 @@ const rawPayloadSchema = s.nullable(s.unknown("The raw Prerender response payloa
 export const prerenderActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "recache_urls",
+    operationType: "write",
     description: "Queue one or more URLs for first-time caching or recaching with the Prerender recache API.",
     inputSchema: s.object(
       "The input payload for queueing one or more Prerender recache URLs.",
@@ -28,6 +29,7 @@ export const prerenderActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_sitemap",
+    operationType: "write",
     description: "Submit a sitemap XML URL to Prerender so it can discover and cache new URLs from that sitemap.",
     inputSchema: s.object("The input payload for submitting a sitemap to Prerender.", {
       url: s.url("The sitemap XML URL to submit to Prerender."),
@@ -39,6 +41,7 @@ export const prerenderActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "clear_cache",
+    operationType: "destructive",
     description: "Queue a Prerender cache clear request for URLs matching a wildcard query pattern.",
     inputSchema: s.object("The input payload for queueing a Prerender cache clear request.", {
       query: s.string("The wildcard query used to match cached URLs to clear, such as https://example.com%.", {
@@ -53,6 +56,7 @@ export const prerenderActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_cache_clear_status",
+    operationType: "read",
     description: "Check whether a Prerender cache clear job is currently running for the authenticated account.",
     inputSchema: s.object("This action does not require any input parameters.", {}),
     outputSchema: s.object("The normalized Prerender cache clear status response.", {

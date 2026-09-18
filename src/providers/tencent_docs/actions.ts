@@ -299,6 +299,7 @@ export const tencentDocsActions: ActionDefinition[] = [
   defineAction({
     service: "tencent_docs",
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current Tencent Docs user profile for the OAuth access token.",
     requiredScopes: [tencentDocsConnectorScopes.userRead],
     providerPermissions: [tencentDocsProviderScopes.userInfoBase],
@@ -311,6 +312,7 @@ export const tencentDocsActions: ActionDefinition[] = [
   defineAction({
     service: "tencent_docs",
     name: "create_file",
+    operationType: "write",
     description: "Create a Tencent Docs online document, sheet, form, slide, or smart sheet.",
     requiredScopes: [tencentDocsConnectorScopes.driveCreate],
     providerPermissions: [tencentDocsProviderScopes.driveCreatable],
@@ -323,6 +325,7 @@ export const tencentDocsActions: ActionDefinition[] = [
   defineAction({
     service: "tencent_docs",
     name: "get_file_metadata",
+    operationType: "read",
     description: "Get Tencent Docs metadata for one file by file ID.",
     requiredScopes: [tencentDocsConnectorScopes.driveRead],
     providerPermissions: [
@@ -339,6 +342,7 @@ export const tencentDocsActions: ActionDefinition[] = [
   defineAction({
     service: "tencent_docs",
     name: "rename_file",
+    operationType: "write",
     description: "Rename a Tencent Docs file by file ID.",
     requiredScopes: [tencentDocsConnectorScopes.driveRename],
     providerPermissions: [tencentDocsProviderScopes.driveEditable, tencentDocsProviderScopes.driveFileMetadata],
@@ -350,6 +354,7 @@ export const tencentDocsActions: ActionDefinition[] = [
   defineAction({
     service: "tencent_docs",
     name: "list_folder",
+    operationType: "read",
     description: "List files and folders in a Tencent Docs folder.",
     requiredScopes: [tencentDocsConnectorScopes.driveRead],
     providerPermissions: [tencentDocsProviderScopes.driveReadonly],
@@ -364,6 +369,7 @@ export const tencentDocsActions: ActionDefinition[] = [
   defineAction({
     service: "tencent_docs",
     name: "search_files",
+    operationType: "read",
     description: "Search Tencent Docs files by title keyword or owner nickname.",
     requiredScopes: [tencentDocsConnectorScopes.driveRead],
     providerPermissions: [tencentDocsProviderScopes.driveReadonly],
@@ -380,6 +386,7 @@ export const tencentDocsActions: ActionDefinition[] = [
   defineAction({
     service: "tencent_docs",
     name: "start_export",
+    operationType: "write",
     description: "Start an asynchronous Tencent Docs file export and return the operation ID.",
     requiredScopes: [tencentDocsConnectorScopes.driveExport],
     providerPermissions: [tencentDocsProviderScopes.driveExportable],
@@ -394,6 +401,7 @@ export const tencentDocsActions: ActionDefinition[] = [
   defineAction({
     service: "tencent_docs",
     name: "get_export_progress",
+    operationType: "read",
     description: "Check a Tencent Docs asynchronous export operation and return the download URL when ready.",
     requiredScopes: [tencentDocsConnectorScopes.driveExport],
     providerPermissions: [tencentDocsProviderScopes.driveExportable],
@@ -409,6 +417,7 @@ export const tencentDocsActions: ActionDefinition[] = [
   defineAction({
     service: "tencent_docs",
     name: "convert_file_id",
+    operationType: "read",
     description: "Convert between Tencent Docs fileID and encodedID values.",
     requiredScopes: [tencentDocsConnectorScopes.driveRead],
     providerPermissions: [
@@ -427,6 +436,7 @@ export const tencentDocsActions: ActionDefinition[] = [
   defineAction({
     service: "tencent_docs",
     name: "get_sheet_range",
+    operationType: "read",
     description: "Read cell values and metadata from a Tencent Docs spreadsheet range.",
     requiredScopes: [tencentDocsConnectorScopes.sheetRead],
     providerPermissions: [tencentDocsProviderScopes.sheet],
@@ -440,6 +450,7 @@ export const tencentDocsActions: ActionDefinition[] = [
   defineAction({
     service: "tencent_docs",
     name: "batch_update_sheet",
+    operationType: "write",
     description: "Apply up to five Tencent Docs spreadsheet V3 batch update operations.",
     requiredScopes: [tencentDocsConnectorScopes.sheetWrite],
     providerPermissions: [tencentDocsProviderScopes.sheet],
@@ -453,6 +464,7 @@ export const tencentDocsActions: ActionDefinition[] = [
   defineAction({
     service: "tencent_docs",
     name: "get_doc_content",
+    operationType: "read",
     description: "Get the structured content and version of a Tencent Docs document.",
     requiredScopes: [tencentDocsConnectorScopes.docRead],
     providerPermissions: [tencentDocsProviderScopes.doc],
@@ -467,6 +479,7 @@ export const tencentDocsActions: ActionDefinition[] = [
   defineAction({
     service: "tencent_docs",
     name: "batch_update_doc",
+    operationType: "write",
     description: "Apply up to thirty Tencent Docs document V3 batch update operations.",
     requiredScopes: [tencentDocsConnectorScopes.docWrite],
     providerPermissions: [tencentDocsProviderScopes.doc],
@@ -479,6 +492,7 @@ export const tencentDocsActions: ActionDefinition[] = [
   defineAction({
     service: "tencent_docs",
     name: "list_smartsheet_sheets",
+    operationType: "read",
     description: "List child sheets inside a Tencent Docs Smartsheet file.",
     requiredScopes: [tencentDocsConnectorScopes.smartsheetRead],
     providerPermissions: [tencentDocsProviderScopes.smartsheetReadonly],
@@ -492,6 +506,7 @@ export const tencentDocsActions: ActionDefinition[] = [
   defineAction({
     service: "tencent_docs",
     name: "update_form_collection_deadline",
+    operationType: "write",
     description: "Publish, pause, or update the collection deadline for a Tencent Docs form.",
     requiredScopes: [tencentDocsConnectorScopes.formWrite],
     providerPermissions: [tencentDocsProviderScopes.form],
@@ -503,6 +518,7 @@ export const tencentDocsActions: ActionDefinition[] = [
   defineAction({
     service: "tencent_docs",
     name: "generate_form_result",
+    operationType: "write",
     description: "Generate the result spreadsheet for a Tencent Docs form.",
     requiredScopes: [tencentDocsConnectorScopes.formWrite],
     providerPermissions: [tencentDocsProviderScopes.form],

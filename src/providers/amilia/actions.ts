@@ -22,6 +22,7 @@ const pagingSchema = s.actionOutput(
 export const amiliaActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_programs",
+    operationType: "read",
     description:
       "List programs for the connected Amilia organization with visibility, archive, and pagination filters.",
     inputSchema: s.actionInput(
@@ -44,6 +45,7 @@ export const amiliaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_program",
+    operationType: "read",
     description: "Retrieve one program from the connected Amilia organization.",
     inputSchema: s.actionInput(
       {
@@ -61,6 +63,7 @@ export const amiliaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_program_activities",
+    operationType: "read",
     description:
       "List activities in one Amilia program with visibility, cancellation, occurrence, tax, and pagination options.",
     inputSchema: s.actionInput(
@@ -86,6 +89,7 @@ export const amiliaActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_activity",
+    operationType: "read",
     description: "Retrieve one activity from the connected Amilia organization.",
     inputSchema: s.actionInput(
       {

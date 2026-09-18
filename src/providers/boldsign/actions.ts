@@ -137,6 +137,7 @@ const templateRoleInputSchema = s.object(
 export const boldSignActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_api_credits",
+    operationType: "read",
     description: "Get the remaining BoldSign API document credits for the connected account.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for retrieving BoldSign API credits.", {}),
@@ -146,6 +147,7 @@ export const boldSignActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_documents",
+    operationType: "read",
     description: "List BoldSign documents available to the connected account with filters and pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -193,6 +195,7 @@ export const boldSignActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_document_details",
+    operationType: "read",
     description: "Get the status, signers, and full JSON details for one BoldSign document.",
     requiredScopes: [],
     inputSchema: s.object("The BoldSign document to retrieve.", {
@@ -204,6 +207,7 @@ export const boldSignActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List BoldSign templates available to the connected account with filters and pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -252,6 +256,7 @@ export const boldSignActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_template_details",
+    operationType: "read",
     description: "Get roles, files, and full JSON details for one BoldSign template.",
     requiredScopes: [],
     inputSchema: s.object("The BoldSign template to retrieve.", {
@@ -263,6 +268,7 @@ export const boldSignActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_document_from_template",
+    operationType: "write",
     description: "Send a BoldSign signature request from an existing template and return the new document ID.",
     requiredScopes: [],
     followUpActions: ["boldsign.get_document_details"],

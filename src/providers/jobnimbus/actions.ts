@@ -48,6 +48,7 @@ const writeInputProperties = {
 export const jobnimbusActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description:
       "List JobNimbus contacts with the standard pagination, sorting, field selection, actor, and Elasticsearch-style filter options.",
     requiredScopes: [],
@@ -68,6 +69,7 @@ export const jobnimbusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get one JobNimbus contact by ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -85,6 +87,7 @@ export const jobnimbusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description:
       "Create one JobNimbus contact from a raw contact payload, with optional actor, bulk, and skip controls.",
     requiredScopes: [],
@@ -102,6 +105,7 @@ export const jobnimbusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description:
       "Update one JobNimbus contact by ID from a raw contact payload, with optional actor, bulk, and skip controls.",
     requiredScopes: [],
@@ -120,6 +124,7 @@ export const jobnimbusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_jobs",
+    operationType: "read",
     description:
       "List JobNimbus jobs with the standard pagination, sorting, field selection, actor, and Elasticsearch-style filter options.",
     requiredScopes: [],
@@ -140,6 +145,7 @@ export const jobnimbusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job",
+    operationType: "read",
     description: "Get one JobNimbus job by ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -157,6 +163,7 @@ export const jobnimbusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_job",
+    operationType: "write",
     description: "Create one JobNimbus job from a raw job payload, with optional actor, bulk, and skip controls.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -173,6 +180,7 @@ export const jobnimbusActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_job",
+    operationType: "write",
     description: "Update one JobNimbus job by ID from a raw job payload, with optional actor, bulk, and skip controls.",
     requiredScopes: [],
     inputSchema: s.object(

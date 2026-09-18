@@ -13,6 +13,7 @@ const optionalQueryStringSchema = (description: string) => s.string(description,
 export const wiseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_profiles",
+    operationType: "read",
     description: "List Wise personal and business profiles available to the authenticated personal API token.",
     requiredScopes: [],
     inputSchema: s.object("No input parameters are required.", {}),
@@ -22,6 +23,7 @@ export const wiseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_currencies",
+    operationType: "read",
     description: "List currencies supported by Wise for transfers, including codes and names.",
     requiredScopes: [],
     inputSchema: s.object("No input parameters are required.", {}),
@@ -31,6 +33,7 @@ export const wiseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_rates",
+    operationType: "read",
     description: "Retrieve current or historical Wise exchange rates.",
     requiredScopes: [],
     inputSchema: s.object(

@@ -29,6 +29,7 @@ const mcpToolSummarySchema = s.object(
 export const yingmiMcpActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_tools",
+    operationType: "read",
     description:
       "Discover the current Yingmi financial data, research, and advisory MCP tools with their live input schemas.",
     requiredScopes: [],
@@ -40,6 +41,7 @@ export const yingmiMcpActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "call_tool",
+    operationType: "write",
     description:
       "Call a current Yingmi MCP tool with JSON arguments after checking its live schema and behavior annotations.",
     requiredScopes: [],

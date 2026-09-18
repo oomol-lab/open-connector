@@ -20,6 +20,7 @@ const webhookIdSchema = s.positiveInteger("The Webvizio webhook subscription ID.
 export const webvizioActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_rest_hook_subscription",
+    operationType: "write",
     description:
       "Subscribe a callback URL to one Webvizio REST Hook event so Webvizio can send outbound event notifications to your service.",
     requiredScopes: [],
@@ -42,6 +43,7 @@ export const webvizioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_rest_hook_subscription",
+    operationType: "destructive",
     description: "Unsubscribe one Webvizio REST Hook event subscription by its Webvizio webhook ID.",
     requiredScopes: [],
     inputSchema: s.actionInput(

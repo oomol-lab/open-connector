@@ -16,6 +16,7 @@ const paginationSchema = s.object("Normalized pagination metadata for WhoisFreak
 export const whoisfreaksActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "check_domain_availability",
+    operationType: "read",
     description: "Check whether one domain is available for registration and optionally request suggestions.",
     inputSchema: s.actionInput(
       {
@@ -41,6 +42,7 @@ export const whoisfreaksActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_domain_whois",
+    operationType: "read",
     description: "Retrieve the live WHOIS record for one domain.",
     inputSchema: s.actionInput(
       {
@@ -55,6 +57,7 @@ export const whoisfreaksActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subdomains",
+    operationType: "read",
     description: "List known subdomains for one domain with optional paging and status filters.",
     inputSchema: s.actionInput(
       {
@@ -83,6 +86,7 @@ export const whoisfreaksActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_ip_whois",
+    operationType: "read",
     description: "Retrieve the IP WHOIS record for one IP address.",
     inputSchema: s.actionInput(
       {
@@ -100,6 +104,7 @@ export const whoisfreaksActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_asn_whois",
+    operationType: "read",
     description: "Retrieve the ASN WHOIS record for one autonomous system number.",
     inputSchema: s.actionInput(
       {

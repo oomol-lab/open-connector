@@ -31,6 +31,7 @@ const contentSchema = s.object(
 export const builderIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_content",
+    operationType: "read",
     description: "List Builder.io content entries for a model using the Content API.",
     inputSchema: s.object(
       "Filters and pagination controls for listing Builder.io content.",
@@ -70,6 +71,7 @@ export const builderIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_content",
+    operationType: "read",
     description: "Fetch a single Builder.io content entry by model and content ID.",
     inputSchema: s.object(
       "Input for fetching a single Builder.io content entry.",
@@ -100,6 +102,7 @@ export const builderIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_content",
+    operationType: "write",
     description: "Create a Builder.io content entry for a model using the Write API.",
     inputSchema: s.object(
       "Input for creating a Builder.io content entry through the Write API.",
@@ -126,6 +129,7 @@ export const builderIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_content",
+    operationType: "write",
     description: "Update a Builder.io content entry by model and content ID using the Write API.",
     inputSchema: s.object(
       "Input for updating a Builder.io content entry through the Write API.",
@@ -153,6 +157,7 @@ export const builderIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_content",
+    operationType: "destructive",
     description: "Delete a Builder.io content entry by model and content ID using the Write API.",
     inputSchema: s.object(
       "Input for deleting a Builder.io content entry.",

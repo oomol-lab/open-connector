@@ -8,6 +8,7 @@ const service = "meituan";
 export const meituanActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_travel",
+    operationType: "read",
     description:
       "Query Meituan Travel for flights, trains, hotels, attractions, itineraries, local transportation, and other travel information using natural language. Requests may take up to two minutes, so use a caller timeout longer than 120 seconds.",
     inputSchema: s.actionInput(

@@ -133,6 +133,7 @@ function listInputSchema(description: string, extraProperties: Record<string, Js
 export const fivetranActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_transformation_projects",
+    operationType: "read",
     description: "List transformation projects accessible to the configured Fivetran API key.",
     inputSchema: listInputSchema("Pagination parameters for listing Fivetran transformation projects."),
     outputSchema: s.object("A page of Fivetran transformation projects.", {
@@ -143,6 +144,7 @@ export const fivetranActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_transformation_project",
+    operationType: "read",
     description: "Retrieve detailed information for one Fivetran transformation project.",
     inputSchema: s.requiredObject("Identifier of the Fivetran transformation project to retrieve.", {
       projectId: s.nonEmptyString("Unique Fivetran transformation project identifier."),
@@ -153,6 +155,7 @@ export const fivetranActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_log_services",
+    operationType: "read",
     description: "List external log services accessible within the configured Fivetran account.",
     inputSchema: listInputSchema("Pagination parameters for listing Fivetran external log services."),
     outputSchema: s.object("A page of Fivetran external log services.", {
@@ -163,6 +166,7 @@ export const fivetranActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_log_service",
+    operationType: "read",
     description: "Retrieve detailed information for one group-level Fivetran external log service.",
     inputSchema: s.requiredObject("Identifier of the Fivetran log service to retrieve.", {
       logId: s.nonEmptyString("Unique Fivetran log service identifier."),
@@ -173,6 +177,7 @@ export const fivetranActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_hybrid_deployment_agents",
+    operationType: "read",
     description: "List Fivetran hybrid deployment agents with their connection usage, optionally filtered by group.",
     inputSchema: listInputSchema("Filters and pagination for listing Fivetran hybrid deployment agents.", {
       groupId: s.nonEmptyString("Return agents associated with this Fivetran group only."),
@@ -185,6 +190,7 @@ export const fivetranActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_hybrid_deployment_agent",
+    operationType: "read",
     description: "Retrieve details and current connection usage for one Fivetran hybrid deployment agent.",
     inputSchema: s.requiredObject("Identifier of the Fivetran hybrid deployment agent to retrieve.", {
       agentId: s.nonEmptyString("Unique Fivetran hybrid deployment agent identifier."),

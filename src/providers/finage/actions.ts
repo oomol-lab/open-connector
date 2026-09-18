@@ -76,6 +76,7 @@ const snapshotOutputSchema = s.requiredObject("Finage stock snapshot response fo
 export const finageActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_stock_symbols",
+    operationType: "read",
     description: "List Finage U.S. stock symbols with optional page and search filters.",
     inputSchema: s.object(
       "Input parameters for listing Finage U.S. stock symbols.",
@@ -89,18 +90,21 @@ export const finageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_last_quote",
+    operationType: "read",
     description: "Get the latest Finage quote for a single U.S. stock symbol.",
     inputSchema: symbolInputSchema,
     outputSchema: quoteOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_last_trade",
+    operationType: "read",
     description: "Get the latest Finage trade for a single U.S. stock symbol.",
     inputSchema: symbolInputSchema,
     outputSchema: tradeOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_aggregates",
+    operationType: "read",
     description: "Get Finage OHLCV aggregate bars for a U.S. stock over a date range.",
     inputSchema: s.object(
       "Input parameters for retrieving Finage stock aggregate bars.",
@@ -119,12 +123,14 @@ export const finageActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_previous_close",
+    operationType: "read",
     description: "Get the previous close aggregate bar for a single Finage U.S. stock symbol.",
     inputSchema: symbolInputSchema,
     outputSchema: aggregateOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_snapshot",
+    operationType: "read",
     description:
       "Get a Finage stock snapshot for a bounded list of U.S. stock symbols, including quotes, trades, or both.",
     inputSchema: s.object(

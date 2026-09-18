@@ -27,6 +27,7 @@ const singleOutput = (key: string): ReturnType<typeof s.object> => s.object({ [k
 export const chattermillActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List Chattermill projects accessible to the API key.",
     requiredScopes: [],
     inputSchema: s.object({}, { description: "Input for listing projects." }),
@@ -34,6 +35,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get a Chattermill project by project ID.",
     requiredScopes: [],
     inputSchema: s.object({ id }, { required: ["id"] }),
@@ -41,6 +43,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_responses",
+    operationType: "read",
     description: "List responses for a Chattermill project with optional filters.",
     requiredScopes: [],
     inputSchema: s.looseObject(
@@ -51,6 +54,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_response",
+    operationType: "read",
     description: "Get a single Chattermill response by ID.",
     requiredScopes: [],
     inputSchema: projectIdInput,
@@ -58,6 +62,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_response",
+    operationType: "write",
     description: "Create a response in a Chattermill project.",
     requiredScopes: [],
     inputSchema: s.object({ project, response: raw }, { required: ["project", "response"] }),
@@ -65,6 +70,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_response",
+    operationType: "write",
     description: "Update user metadata, segments, or other response fields in Chattermill.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -75,6 +81,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_response",
+    operationType: "destructive",
     description: "Permanently delete a Chattermill response by ID.",
     requiredScopes: [],
     inputSchema: s.object({ project, responseId: id }, { required: ["project", "responseId"] }),
@@ -86,6 +93,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_responses",
+    operationType: "read",
     description: "Search for Chattermill responses by response ID, user metadata, or custom criteria.",
     requiredScopes: [],
     inputSchema: s.looseObject({ project, ...pageFields }, { description: "Search criteria accepted by Chattermill." }),
@@ -93,6 +101,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_data_sources",
+    operationType: "read",
     description: "List data sources for a Chattermill project.",
     requiredScopes: [],
     inputSchema: projectInput,
@@ -100,6 +109,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_data_source",
+    operationType: "read",
     description: "Get a Chattermill data source by ID.",
     requiredScopes: [],
     inputSchema: projectIdInput,
@@ -107,6 +117,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_data_types",
+    operationType: "read",
     description: "List data types for a Chattermill project.",
     requiredScopes: [],
     inputSchema: projectInput,
@@ -114,6 +125,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_data_type",
+    operationType: "read",
     description: "Get a Chattermill data type by ID.",
     requiredScopes: [],
     inputSchema: projectIdInput,
@@ -121,6 +133,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_custom_segments",
+    operationType: "read",
     description: "List custom segments for a Chattermill project.",
     requiredScopes: [],
     inputSchema: projectInput,
@@ -128,6 +141,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_metric",
+    operationType: "read",
     description: "Get a Chattermill metric value for a project.",
     requiredScopes: [],
     inputSchema: s.looseObject({ project, type: id }, { description: "Input for reading a metric." }),
@@ -135,6 +149,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_themes",
+    operationType: "read",
     description: "List themes for a Chattermill project.",
     requiredScopes: [],
     inputSchema: projectInput,
@@ -142,6 +157,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_theme",
+    operationType: "read",
     description: "Get a Chattermill theme by ID.",
     requiredScopes: [],
     inputSchema: projectIdInput,
@@ -149,6 +165,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_categories",
+    operationType: "read",
     description: "List categories for a Chattermill project.",
     requiredScopes: [],
     inputSchema: projectInput,
@@ -156,6 +173,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_category",
+    operationType: "read",
     description: "Get a Chattermill category by ID.",
     requiredScopes: [],
     inputSchema: projectIdInput,
@@ -163,6 +181,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_attributes",
+    operationType: "read",
     description: "List attributes for a Chattermill project.",
     requiredScopes: [],
     inputSchema: projectInput,
@@ -170,6 +189,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_attribute",
+    operationType: "read",
     description: "Get a Chattermill attribute by ID.",
     requiredScopes: [],
     inputSchema: projectIdInput,
@@ -177,6 +197,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List tags for a Chattermill project.",
     requiredScopes: [],
     inputSchema: projectInput,
@@ -184,6 +205,7 @@ export const chattermillActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tag",
+    operationType: "read",
     description: "Get a Chattermill tag by ID.",
     requiredScopes: [],
     inputSchema: projectIdInput,

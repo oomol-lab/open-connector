@@ -19,6 +19,7 @@ const highlightNoteField = s.nullableString(
 export const karakeepHighlightActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_highlights",
+    operationType: "read",
     description: "Retrieve one page of the highlights the authenticated Karakeep user has made across all bookmarks.",
     requiredScopes: highlightReadScopes,
     inputSchema: s.object(
@@ -33,6 +34,7 @@ export const karakeepHighlightActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_highlight",
+    operationType: "write",
     description:
       "Create a text highlight on a Karakeep bookmark. A highlight is defined by the character offsets it covers in the readable content of the bookmark and can carry a color and a note.",
     requiredScopes: highlightWriteScopes,
@@ -56,6 +58,7 @@ export const karakeepHighlightActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_highlight",
+    operationType: "read",
     description: "Retrieve a single Karakeep highlight by its id.",
     requiredScopes: highlightReadScopes,
     inputSchema: s.requiredObject("Input for retrieving one Karakeep highlight.", {
@@ -65,6 +68,7 @@ export const karakeepHighlightActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_highlight",
+    operationType: "write",
     description:
       "Partially update a Karakeep highlight. Only the color and the note can be changed, and sending null for the note clears it.",
     requiredScopes: highlightWriteScopes,
@@ -81,6 +85,7 @@ export const karakeepHighlightActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_highlight",
+    operationType: "destructive",
     description:
       "Delete a Karakeep highlight and return the record that was removed. The bookmark the highlight belonged to is kept.",
     requiredScopes: highlightWriteScopes,

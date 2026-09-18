@@ -56,6 +56,7 @@ const paginatedOutputSchema = (description: string, resultsDescription: string) 
 const echoAction = defineAction({
   service,
   name: "echo",
+  operationType: "write",
   description: "Send a JSON payload to Cardly's authenticated echo endpoint for credential and request debugging.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -80,6 +81,7 @@ const echoAction = defineAction({
 const getBalanceAction = defineAction({
   service,
   name: "get_balance",
+  operationType: "read",
   description: "Retrieve the current Cardly card credit and gift credit balances.",
   requiredScopes: [],
   inputSchema: s.object("The input payload for retrieving the Cardly account balance.", {}),
@@ -104,6 +106,7 @@ const getBalanceAction = defineAction({
 const listCreditHistoryAction = defineAction({
   service,
   name: "list_credit_history",
+  operationType: "read",
   description: "List Cardly account credit history records with pagination and time filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -125,6 +128,7 @@ const listCreditHistoryAction = defineAction({
 const listGiftCreditHistoryAction = defineAction({
   service,
   name: "list_gift_credit_history",
+  operationType: "read",
   description: "List Cardly gift credit history records with pagination and time filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -146,6 +150,7 @@ const listGiftCreditHistoryAction = defineAction({
 const listMediaAction = defineAction({
   service,
   name: "list_media",
+  operationType: "read",
   description: "List Cardly media options that can be used when selecting card products.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -161,6 +166,7 @@ const listMediaAction = defineAction({
 const listFontsAction = defineAction({
   service,
   name: "list_fonts",
+  operationType: "read",
   description: "List Cardly fonts available for handwriting and text personalization.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -176,6 +182,7 @@ const listFontsAction = defineAction({
 const listWritingStylesAction = defineAction({
   service,
   name: "list_writing_styles",
+  operationType: "read",
   description: "List Cardly writing styles available for generated handwriting.",
   requiredScopes: [],
   inputSchema: s.object(

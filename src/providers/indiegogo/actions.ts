@@ -41,6 +41,7 @@ const urlNameInputSchema = s.object("Input for an Indiegogo Public API lookup.",
 export const indiegogoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_creator",
+    operationType: "read",
     description: "Get an Indiegogo creator by the URL name shown on their public creator page.",
     requiredScopes: [],
     inputSchema: urlNameInputSchema,
@@ -50,6 +51,7 @@ export const indiegogoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_active_crowdfunding_projects",
+    operationType: "read",
     description: "List active Indiegogo crowdfunding projects ordered by campaign start date.",
     requiredScopes: [],
     inputSchema: s.object("No input is required to list active Indiegogo projects.", {}),
@@ -59,6 +61,7 @@ export const indiegogoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_crowdfunding_project",
+    operationType: "read",
     description:
       "Get an Indiegogo crowdfunding project by its URL name when it is in a public campaign or pledge-manager phase.",
     requiredScopes: [],

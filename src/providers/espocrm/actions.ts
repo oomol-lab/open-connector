@@ -97,6 +97,7 @@ const deleteRecordOutputSchema = s.object("The EspoCRM delete record output payl
 export const espocrmActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_app_user",
+    operationType: "read",
     description:
       "Get the current EspoCRM user data for the configured connection, including ACL and preferences when returned.",
     inputSchema: emptyInputSchema,
@@ -104,18 +105,21 @@ export const espocrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_metadata",
+    operationType: "read",
     description: "Get EspoCRM application metadata, optionally narrowed to one metadata path.",
     inputSchema: getMetadataInputSchema,
     outputSchema: metadataOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_records",
+    operationType: "read",
     description: "List EspoCRM records for an entity type with optional pagination, sorting, and where clauses.",
     inputSchema: listRecordsInputSchema,
     outputSchema: listRecordsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_record",
+    operationType: "read",
     description: "Get one EspoCRM record by entity type and record identifier.",
     inputSchema: s.object("The input payload for reading one EspoCRM record.", {
       entityType: entityTypeField,
@@ -125,6 +129,7 @@ export const espocrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_record",
+    operationType: "write",
     description: "Create one EspoCRM record for the specified entity type.",
     inputSchema: s.object("The input payload for creating one EspoCRM record.", {
       entityType: entityTypeField,
@@ -134,6 +139,7 @@ export const espocrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_record",
+    operationType: "write",
     description: "Update selected fields on one EspoCRM record.",
     inputSchema: s.object("The input payload for updating one EspoCRM record.", {
       entityType: entityTypeField,
@@ -144,6 +150,7 @@ export const espocrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_record",
+    operationType: "destructive",
     description: "Delete one EspoCRM record by entity type and record identifier.",
     inputSchema: s.object("The input payload for deleting one EspoCRM record.", {
       entityType: entityTypeField,

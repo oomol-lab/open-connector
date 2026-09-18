@@ -787,6 +787,7 @@ export const sellerSpriteMcpOfficialActions: ActionDefinition[] = Object.entries
 ).map(([name, definition]) =>
   defineProviderAction(service, {
     name,
+    operationType: "read",
     description: officialToolDescriptionByName[name],
     requiredScopes: [],
     inputSchema: officialToolInputSchema(name, definition),

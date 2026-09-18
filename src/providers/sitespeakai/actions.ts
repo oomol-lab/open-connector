@@ -13,6 +13,7 @@ const emptyObjectInputSchema = s.object("This action does not require any input 
 export const sitespeakaiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Retrieve the connected SiteSpeakAI user account details.",
     inputSchema: emptyObjectInputSchema,
     outputSchema: s.object("The connected SiteSpeakAI account details.", {
@@ -21,6 +22,7 @@ export const sitespeakaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_chatbots",
+    operationType: "read",
     description: "List every SiteSpeakAI chatbot available to the connected account.",
     inputSchema: emptyObjectInputSchema,
     outputSchema: s.object("The SiteSpeakAI chatbots available to the account.", {
@@ -29,6 +31,7 @@ export const sitespeakaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_chatbot",
+    operationType: "read",
     description: "Retrieve the full SiteSpeakAI settings object for one chatbot.",
     inputSchema: s.object("The chatbot to retrieve from SiteSpeakAI.", {
       chatbot_id: chatbotIdSchema,
@@ -39,6 +42,7 @@ export const sitespeakaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_sources",
+    operationType: "read",
     description: "List the training sources and training statuses for one SiteSpeakAI chatbot.",
     inputSchema: s.object("The chatbot whose training sources should be returned.", {
       chatbot_id: chatbotIdSchema,
@@ -49,6 +53,7 @@ export const sitespeakaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_suggested_messages",
+    operationType: "read",
     description: "List the suggested visitor prompts configured for one SiteSpeakAI chatbot.",
     inputSchema: s.object("The chatbot whose suggested messages should be returned.", {
       chatbot_id: chatbotIdSchema,
@@ -59,6 +64,7 @@ export const sitespeakaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_conversations",
+    operationType: "read",
     description: "Retrieve conversation history for one SiteSpeakAI chatbot.",
     inputSchema: s.object(
       "The chatbot and optional filters for retrieving conversation history.",
@@ -81,6 +87,7 @@ export const sitespeakaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_leads",
+    operationType: "read",
     description: "List the leads captured by one SiteSpeakAI chatbot.",
     inputSchema: s.object("The chatbot whose captured leads should be returned.", {
       chatbot_id: chatbotIdSchema,
@@ -91,6 +98,7 @@ export const sitespeakaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_chatbot",
+    operationType: "read",
     description: "Send a question to one SiteSpeakAI chatbot and return its answer plus source URLs.",
     inputSchema: s.object(
       "The chatbot and message payload to send to SiteSpeakAI.",
@@ -115,6 +123,7 @@ export const sitespeakaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_updated_answers",
+    operationType: "read",
     description: "List updated answers configured for one SiteSpeakAI chatbot.",
     inputSchema: s.object("The chatbot whose updated answers should be returned.", {
       chatbot_id: chatbotIdSchema,
@@ -125,6 +134,7 @@ export const sitespeakaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_updated_answer",
+    operationType: "write",
     description: "Create or update a SiteSpeakAI custom answer for a chatbot.",
     inputSchema: s.object("The custom answer to create or update.", {
       chatbot_id: chatbotIdSchema,
@@ -135,6 +145,7 @@ export const sitespeakaiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_updated_answer",
+    operationType: "destructive",
     description: "Delete one SiteSpeakAI updated answer from a chatbot.",
     inputSchema: s.object("The updated answer to delete.", {
       chatbot_id: chatbotIdSchema,

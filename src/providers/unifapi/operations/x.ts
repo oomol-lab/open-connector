@@ -3,6 +3,7 @@ import type { UnifapiOperationDefinition } from "../operations.ts";
 export const xOperations: readonly UnifapiOperationDefinition[] = [
   {
     name: "get_x_autocomplete",
+    operationType: "read",
     operationId: "getXAutocomplete",
     description: "Autocomplete X users, topics, hashtags, and cashtags.",
     method: "GET",
@@ -27,6 +28,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_x_community_about",
+    operationType: "read",
     operationId: "getXCommunitiesByIdAbout",
     description: "Get an X Community about timeline.",
     method: "GET",
@@ -99,6 +101,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_x_community_media",
+    operationType: "read",
     operationId: "getXCommunitiesByIdMedia",
     description: "Get media Posts from an X Community.",
     method: "GET",
@@ -171,6 +174,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_x_community_member",
+    operationType: "read",
     operationId: "getXCommunitiesByIdMemberSearch",
     description: "Search members in an X Community.",
     method: "GET",
@@ -249,6 +253,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_x_community_members",
+    operationType: "read",
     operationId: "getXCommunitiesByIdMembers",
     description: "Get members of an X Community.",
     method: "GET",
@@ -321,6 +326,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_x_community_moderators",
+    operationType: "read",
     operationId: "getXCommunitiesByIdModerators",
     description: "Get moderators of an X Community.",
     method: "GET",
@@ -393,6 +399,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_x_community",
+    operationType: "read",
     operationId: "getXCommunitiesById",
     description: "Get X Community by ID.",
     method: "GET",
@@ -421,6 +428,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_x_community_tweets",
+    operationType: "read",
     operationId: "getXCommunitiesByIdTweets",
     description: "Get Posts from an X Community.",
     method: "GET",
@@ -493,6 +501,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_x_communities",
+    operationType: "read",
     operationId: "getXCommunitiesSearch",
     description: "Search X Communities.",
     method: "GET",
@@ -571,6 +580,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "check_x_friendship",
+    operationType: "read",
     operationId: "getXFriendshipsShow",
     description: "Check whether one X user follows another.",
     method: "GET",
@@ -605,6 +615,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_x_list_followers",
+    operationType: "read",
     operationId: "getXListsByIdFollowers",
     description: "Get followers/subscribers of an X List.",
     method: "GET",
@@ -677,6 +688,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_x_list_members",
+    operationType: "read",
     operationId: "getXListsByIdMembers",
     description: "Get members of an X List.",
     method: "GET",
@@ -749,6 +761,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_x_list_tweets",
+    operationType: "read",
     operationId: "getXListsByIdTweets",
     description: "Get Posts from an X List.",
     method: "GET",
@@ -821,6 +834,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_x_lists",
+    operationType: "read",
     operationId: "getXListsSearch",
     description: "Search X Lists.",
     method: "GET",
@@ -894,6 +908,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_x_trends_by_woeid",
+    operationType: "read",
     operationId: "getXTrendsByWoeidByWoeid",
     description: "Get X trends by WOEID.",
     method: "GET",
@@ -928,6 +943,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_x_tweet_article",
+    operationType: "read",
     operationId: "getXTweetsByIdArticle",
     description: "Get the article-style payload for an X Post.",
     method: "GET",
@@ -976,6 +992,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_x_tweet_liking_users",
+    operationType: "read",
     operationId: "getXTweetsByIdLikingUsers",
     description: "Get users who liked an X Post.",
     method: "GET",
@@ -1048,6 +1065,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_x_tweet_quotes",
+    operationType: "read",
     operationId: "getXTweetsByIdQuoteTweets",
     description: "Get quote Posts for an X Post.",
     method: "GET",
@@ -1120,6 +1138,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_x_tweet_repost_users",
+    operationType: "read",
     operationId: "getXTweetsByIdRetweetedBy",
     description: "Get users who reposted an X Post.",
     method: "GET",
@@ -1192,6 +1211,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_x_tweet",
+    operationType: "read",
     operationId: "getXTweetsById",
     description: "Get X Post by ID.",
     method: "GET",
@@ -1240,6 +1260,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "translate_x_tweet",
+    operationType: "read",
     operationId: "getXTweetsByIdTranslation",
     description: "Translate an X Post.",
     method: "GET",
@@ -1269,6 +1290,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_x_tweets",
+    operationType: "read",
     operationId: "getXTweets",
     description: "Get X Posts by IDs.",
     method: "GET",
@@ -1317,6 +1339,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "search_x_recent_tweets",
+    operationType: "read",
     operationId: "getXTweetsSearchRecent",
     description: "Search recent X Posts.",
     method: "GET",
@@ -1390,6 +1413,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_x_user_follower_ids",
+    operationType: "read",
     operationId: "getXUsersByIdFollowersIds",
     description: "Get follower IDs for an X user.",
     method: "GET",
@@ -1462,6 +1486,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_x_user_followers",
+    operationType: "read",
     operationId: "getXUsersByIdFollowers",
     description: "Get an X user's followers.",
     method: "GET",
@@ -1534,6 +1559,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_x_user_following_ids",
+    operationType: "read",
     operationId: "getXUsersByIdFollowingIds",
     description: "Get following IDs for an X user.",
     method: "GET",
@@ -1606,6 +1632,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_x_user_following",
+    operationType: "read",
     operationId: "getXUsersByIdFollowing",
     description: "Get users followed by an X user.",
     method: "GET",
@@ -1678,6 +1705,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_x_user_liked_tweets",
+    operationType: "read",
     operationId: "getXUsersByIdLikedTweets",
     description: "Get Posts liked by an X user.",
     method: "GET",
@@ -1750,6 +1778,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "translate_x_user_profile",
+    operationType: "read",
     operationId: "getXUsersByIdProfileTranslation",
     description: "Translate an X user profile.",
     method: "GET",
@@ -1779,6 +1808,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_x_user",
+    operationType: "read",
     operationId: "getXUsersById",
     description: "Get X user by ID.",
     method: "GET",
@@ -1827,6 +1857,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_x_user_tweets",
+    operationType: "read",
     operationId: "getXUsersByIdTweets",
     description: "Get Posts authored by an X user.",
     method: "GET",
@@ -1904,6 +1935,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "list_x_user_verified_followers",
+    operationType: "read",
     operationId: "getXUsersByIdVerifiedFollowers",
     description: "Get verified followers for an X user.",
     method: "GET",
@@ -1976,6 +2008,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_x_users_by_usernames",
+    operationType: "read",
     operationId: "getXUsersBy",
     description: "Get X users by usernames.",
     method: "GET",
@@ -2032,6 +2065,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_x_user_by_username",
+    operationType: "read",
     operationId: "getXUsersByUsernameByUsername",
     description: "Get X user by username.",
     method: "GET",
@@ -2080,6 +2114,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
   },
   {
     name: "get_x_users",
+    operationType: "read",
     operationId: "getXUsers",
     description: "Get X users by IDs.",
     method: "GET",

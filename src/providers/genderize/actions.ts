@@ -38,6 +38,7 @@ const predictionSchema = s.object(
 export const genderizeActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "predict_gender",
+    operationType: "read",
     description: "Predict the gender probability for a single name, optionally localized to one country.",
     inputSchema: s.actionInput(
       {
@@ -51,6 +52,7 @@ export const genderizeActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "predict_gender_batch",
+    operationType: "read",
     description:
       "Predict the gender probability for up to 10 names in a single request, optionally localized to one country.",
     inputSchema: s.actionInput(

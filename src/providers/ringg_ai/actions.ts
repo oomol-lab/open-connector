@@ -120,6 +120,7 @@ const callDetailsOutputSchema = s.looseRequiredObject("The Ringg AI call details
 export const ringgAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_workspace",
+    operationType: "read",
     description: "Retrieve information about the Ringg AI workspace associated with the API key.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -127,6 +128,7 @@ export const ringgAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_assistants",
+    operationType: "read",
     description: "List assistants available in the current Ringg AI workspace.",
     requiredScopes: [],
     inputSchema: s.object("Pagination options for listing Ringg AI assistants.", paginationProperties, {
@@ -136,6 +138,7 @@ export const ringgAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_assistant",
+    operationType: "read",
     description: "Retrieve detailed configuration for one Ringg AI assistant.",
     requiredScopes: [],
     inputSchema: idInputSchema("The assistant to retrieve."),
@@ -143,6 +146,7 @@ export const ringgAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_voices",
+    operationType: "read",
     description: "List voices available for Ringg AI assistants, optionally filtered by language.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -156,6 +160,7 @@ export const ringgAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workspace_numbers",
+    operationType: "read",
     description: "List caller numbers available in the current Ringg AI workspace.",
     requiredScopes: [],
     inputSchema: s.object("Pagination options for listing Ringg AI workspace numbers.", paginationProperties, {
@@ -165,6 +170,7 @@ export const ringgAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "initiate_call",
+    operationType: "write",
     description: "Initiate one outbound call with a Ringg AI assistant and caller number.",
     requiredScopes: [],
     inputSchema: initiateCallInputSchema,
@@ -172,6 +178,7 @@ export const ringgAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_calls",
+    operationType: "read",
     description: "List Ringg AI call history with pagination and optional filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -205,6 +212,7 @@ export const ringgAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_call",
+    operationType: "read",
     description: "Retrieve details for one Ringg AI call, optionally including analysis data.",
     requiredScopes: [],
     inputSchema: s.object(

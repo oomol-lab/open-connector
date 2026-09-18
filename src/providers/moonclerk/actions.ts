@@ -296,6 +296,7 @@ const paymentStatusSchema = s.stringEnum("The MoonClerk payment status filter.",
 export const moonclerkActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_forms",
+    operationType: "read",
     description: "List MoonClerk payment forms with official pagination parameters.",
     inputSchema: s.actionInput(
       {
@@ -314,6 +315,7 @@ export const moonclerkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form",
+    operationType: "read",
     description: "Retrieve one MoonClerk payment form by its numeric ID.",
     inputSchema: s.actionInput(
       {
@@ -331,6 +333,7 @@ export const moonclerkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description:
       "List MoonClerk customers with official filters for form, checkout date, next payment date, and status.",
     inputSchema: s.actionInput(
@@ -356,6 +359,7 @@ export const moonclerkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Retrieve one MoonClerk customer by its numeric ID.",
     inputSchema: s.actionInput(
       {
@@ -373,6 +377,7 @@ export const moonclerkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_payments",
+    operationType: "read",
     description: "List MoonClerk payments with official filters for form, customer, payment date, and status.",
     inputSchema: s.actionInput(
       {
@@ -396,6 +401,7 @@ export const moonclerkActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_payment",
+    operationType: "read",
     description: "Retrieve one MoonClerk payment by its numeric ID.",
     inputSchema: s.actionInput(
       {

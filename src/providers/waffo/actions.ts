@@ -264,6 +264,7 @@ const graphqlEnvelopeSchema = s.looseObject("The Waffo GraphQL response envelope
 export const waffoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_store",
+    operationType: "write",
     description: "Create a Waffo store for the connected merchant account.",
     inputSchema: s.object("Parameters for creating a Waffo store.", {
       name: s.nonEmptyString("The store name.", { maxLength: 48 }),
@@ -279,6 +280,7 @@ export const waffoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_stores",
+    operationType: "read",
     description: "List stores available to the connected Waffo merchant account.",
     inputSchema: s.object("Parameters for listing Waffo stores.", {}),
     outputSchema: s.object("The connected merchant's Waffo stores.", {
@@ -295,6 +297,7 @@ export const waffoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_one_time_product",
+    operationType: "write",
     description: "Create a one-time purchase product with multi-currency pricing in Waffo.",
     inputSchema: s.object(
       "Parameters for creating a Waffo one-time product.",
@@ -305,6 +308,7 @@ export const waffoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_subscription_product",
+    operationType: "write",
     description: "Create a recurring subscription product with multi-currency pricing in Waffo.",
     inputSchema: s.object(
       "Parameters for creating a Waffo subscription product.",
@@ -319,6 +323,7 @@ export const waffoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List one-time or subscription products in the connected Waffo API key environment.",
     inputSchema: s.object(
       "Parameters for listing Waffo products.",
@@ -339,6 +344,7 @@ export const waffoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_product",
+    operationType: "write",
     description:
       "Update a one-time or subscription product in the connected Waffo API key environment, creating an immutable version when content changes.",
     inputSchema: productUpdateInputSchema,
@@ -346,6 +352,7 @@ export const waffoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "set_product_status",
+    operationType: "destructive",
     description:
       "Activate or deactivate a one-time or subscription product in the connected Waffo API key environment.",
     inputSchema: s.object("Parameters for changing a Waffo product status.", {
@@ -357,6 +364,7 @@ export const waffoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "publish_product",
+    operationType: "write",
     description:
       "Publish the active test version of a one-time or subscription product to production for the first time.",
     inputSchema: s.object("Parameters for publishing a Waffo product.", {
@@ -367,6 +375,7 @@ export const waffoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_checkout_session",
+    operationType: "write",
     description: "Create a Waffo hosted checkout session for a one-time or subscription product.",
     inputSchema: checkoutInputSchema,
     outputSchema: s.object("A Waffo hosted checkout session.", {
@@ -377,6 +386,7 @@ export const waffoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "cancel_subscription",
+    operationType: "destructive",
     description:
       "Cancel a pending Waffo subscription immediately or schedule an active subscription to end after its current period.",
     inputSchema: s.object("Parameters for canceling a Waffo subscription.", {
@@ -389,6 +399,7 @@ export const waffoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_orders",
+    operationType: "read",
     description: "Search one-time or subscription orders by store, status, merchant reference, or creation time.",
     inputSchema: orderSearchInputSchema,
     outputSchema: s.object("A page of Waffo orders.", {
@@ -408,6 +419,7 @@ export const waffoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_payments",
+    operationType: "read",
     description: "Find a Waffo payment by ID or search payments by status, merchant order reference, or creation time.",
     inputSchema: paymentSearchInputSchema,
     outputSchema: s.object("A page of Waffo payments.", {
@@ -426,6 +438,7 @@ export const waffoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_refund_tickets",
+    operationType: "read",
     description: "Search Waffo refund tickets by status, payment, merchant reference, or creation time.",
     inputSchema: refundTicketSearchInputSchema,
     outputSchema: s.object("A page of Waffo refund tickets.", {
@@ -444,6 +457,7 @@ export const waffoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_refund_ticket",
+    operationType: "destructive",
     description: "Request a full or partial Waffo refund for a succeeded payment.",
     inputSchema: s.object(
       "Parameters for creating a Waffo refund ticket.",
@@ -468,6 +482,7 @@ export const waffoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "resubmit_refund_ticket",
+    operationType: "destructive",
     description: "Revise and resubmit a rejected or failed Waffo refund ticket.",
     inputSchema: s.object("Parameters for resubmitting a Waffo refund ticket.", {
       ticketId: s.nonEmptyString("The refund ticket ID in `TKT_...` format."),
@@ -488,6 +503,7 @@ export const waffoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_query",
+    operationType: "read",
     description:
       "Run a read-only query against the Waffo GraphQL API for stores, products, orders, payments, refunds, customers, or analytics.",
     inputSchema: s.object(

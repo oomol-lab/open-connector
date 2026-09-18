@@ -209,6 +209,7 @@ const takeScreenshotOutputSchema = s.object("The hosted screenshot response.", {
 export const screenshotbaseActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_quota_status",
+    operationType: "read",
     description: "Retrieve the current monthly and grace quota usage for screenshotbase.",
     requiredScopes: [],
     inputSchema: getQuotaStatusInputSchema,
@@ -216,6 +217,7 @@ export const screenshotbaseActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "take_screenshot",
+    operationType: "read",
     description: "Capture a webpage with screenshotbase and return a hosted screenshot URL.",
     requiredScopes: [],
     inputSchema: takeScreenshotInputSchema,

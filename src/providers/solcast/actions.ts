@@ -61,12 +61,14 @@ function forecastLikeInput(maxHours: number, description: string): JsonSchema {
 export const solcastActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_radiation_and_weather_forecast",
+    operationType: "read",
     description: "Get Solcast irradiance and weather forecasts for a latitude and longitude up to 14 days ahead.",
     inputSchema: forecastLikeInput(336, "Input parameters for Solcast irradiance and weather forecasts."),
     outputSchema: timeseriesOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_radiation_and_weather_live_estimated_actuals",
+    operationType: "read",
     description:
       "Get Solcast irradiance and weather live estimated actuals for a latitude and longitude over the past 7 days.",
     inputSchema: forecastLikeInput(168, "Input parameters for Solcast irradiance and weather live estimated actuals."),
@@ -74,6 +76,7 @@ export const solcastActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_radiation_and_weather_historic",
+    operationType: "read",
     description:
       "Get Solcast irradiance and weather historical estimated actuals for a latitude and longitude from 2007 through 7 days ago.",
     inputSchema: s.object(

@@ -106,6 +106,7 @@ const customerDetailSchema = s.object(
 
 const listBusinessesAction = defineProviderAction(service, {
   name: "list_businesses",
+  operationType: "read",
   description: "List one page of business locations available to the connected GatherUp account.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -130,6 +131,7 @@ const listBusinessesAction = defineProviderAction(service, {
 
 const getBusinessAction = defineProviderAction(service, {
   name: "get_business",
+  operationType: "read",
   description: "Get one GatherUp business location by ID.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -145,6 +147,7 @@ const getBusinessAction = defineProviderAction(service, {
 
 const listCustomersAction = defineProviderAction(service, {
   name: "list_customers",
+  operationType: "read",
   description: "List one page of GatherUp customers with optional business and customer filters.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -190,6 +193,7 @@ const listCustomersAction = defineProviderAction(service, {
 
 const getCustomerAction = defineProviderAction(service, {
   name: "get_customer",
+  operationType: "read",
   description: "Get one GatherUp customer by ID.",
   requiredScopes: [],
   inputSchema: s.object(

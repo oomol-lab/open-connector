@@ -12,6 +12,7 @@ const resultSchema = s.object("The ClickUp MCP tool response.", {
 
 function action(
   name: string,
+  operationType: ActionDefinition["operationType"],
   description: string,
   requiredScopes: string[],
   properties: Record<string, JsonSchema>,
@@ -19,6 +20,7 @@ function action(
 ): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     requiredScopes,
     inputSchema: s.object(`Arguments for the ClickUp MCP ${name} tool.`, properties, {
@@ -35,6 +37,7 @@ const taskReferenceFields: Record<string, JsonSchema> = {
 export const clickupMcpActions: ActionDefinition[] = [
   action(
     "search_workspace",
+    "read",
     "Search tasks, Lists, Folders, and Docs across the authorized ClickUp Workspaces.",
     readScope,
     {
@@ -48,6 +51,7 @@ export const clickupMcpActions: ActionDefinition[] = [
   ),
   action(
     "get_task",
+    "read",
     "Get one ClickUp task, optionally including normally summarized sections.",
     readScope,
     {
@@ -74,6 +78,7 @@ export const clickupMcpActions: ActionDefinition[] = [
   ),
   action(
     "get_workspace_hierarchy",
+    "read",
     "Get the authorized ClickUp Workspace hierarchy of Spaces, Folders, and Lists.",
     readScope,
     {
@@ -86,13 +91,14 @@ export const clickupMcpActions: ActionDefinition[] = [
       }),
     },
   ),
-  action("get_workspace_members", "List members and guests in an authorized ClickUp Workspace.", readScope, {
+  action("get_workspace_members", "read", "List members and guests in an authorized ClickUp Workspace.", readScope, {
     workspace_id: s.string("The Workspace ID when the connection authorizes multiple Workspaces.", {
       pattern: "^\\d+$",
     }),
   }),
   action(
     "create_task",
+    "write",
     "Create a task in a ClickUp List.",
     writeScope,
     {
@@ -113,6 +119,7 @@ export const clickupMcpActions: ActionDefinition[] = [
   ),
   action(
     "update_task",
+    "write",
     "Update the properties of an existing ClickUp task.",
     writeScope,
     {
@@ -138,6 +145,7 @@ export const clickupMcpActions: ActionDefinition[] = [
   ),
   action(
     "create_task_comment",
+    "write",
     "Add a comment to a ClickUp task.",
     writeScope,
     {
@@ -156,6 +164,7 @@ export const clickupMcpActions: ActionDefinition[] = [
   ),
   action(
     "send_chat_message",
+    "write",
     "Send a message to a ClickUp Chat channel.",
     writeScope,
     {

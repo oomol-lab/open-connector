@@ -34,6 +34,7 @@ const sentMessageSchema = s.object(
 export const lineActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_bot_info",
+    operationType: "read",
     description: "Get profile and chat settings for the connected LINE Official Account.",
     inputSchema: s.requiredObject("The empty input for reading LINE bot information.", {}),
     outputSchema: s.object(
@@ -52,6 +53,7 @@ export const lineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_profile",
+    operationType: "read",
     description: "Get the LINE profile of a user who can interact with the connected bot.",
     inputSchema: s.requiredObject("The LINE user profile lookup.", {
       userId: nonEmptyString("The LINE user ID obtained from a Messaging API webhook."),
@@ -70,6 +72,7 @@ export const lineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_push_text",
+    operationType: "write",
     description: "Send up to five text messages to one LINE user, group, or multi-person chat.",
     inputSchema: s.object(
       "The LINE push text request.",
@@ -85,6 +88,7 @@ export const lineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_multicast_text",
+    operationType: "write",
     description: "Send up to five text messages to as many as 500 LINE users.",
     inputSchema: s.object(
       "The LINE multicast text request.",
@@ -101,6 +105,7 @@ export const lineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_broadcast_text",
+    operationType: "write",
     description: "Send up to five text messages to all friends of the LINE Official Account.",
     inputSchema: s.object("The LINE broadcast text request.", sendOptions, {
       optional: ["notificationDisabled", "retryKey"],

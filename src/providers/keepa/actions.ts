@@ -356,6 +356,7 @@ const dealRangeSchema: JsonSchema = {
 
 const getTokenStatusAction = defineProviderAction(service, {
   name: "get_token_status",
+  operationType: "read",
   description: "Retrieve Keepa token availability and refill information without consuming tokens.",
   requiredScopes: [],
   inputSchema: s.actionInput({}, [], "Input for retrieving Keepa token status."),
@@ -369,6 +370,7 @@ const getTokenStatusAction = defineProviderAction(service, {
 
 const getProductSnapshotAction = defineProviderAction(service, {
   name: "get_product_snapshot",
+  operationType: "read",
   description: "Retrieve current Keepa product metadata and named statistics for one or more Amazon ASINs.",
   requiredScopes: [],
   inputSchema: withProductRequestRules(
@@ -387,6 +389,7 @@ const getProductSnapshotAction = defineProviderAction(service, {
 
 const getProductHistoryAction = defineProviderAction(service, {
   name: "get_product_history",
+  operationType: "read",
   description:
     "Retrieve named Keepa price, rank, offer-count, rating, review, monthly-sales, and coupon history for Amazon ASINs.",
   requiredScopes: [],
@@ -412,6 +415,7 @@ const getProductHistoryAction = defineProviderAction(service, {
 
 const findProductsAction = defineProviderAction(service, {
   name: "find_products",
+  operationType: "read",
   description: "Find Amazon ASINs with Keepa Product Finder filters using official ProductFinderRequest field names.",
   requiredScopes: [],
   inputSchema: s.actionInput(
@@ -435,6 +439,7 @@ const findProductsAction = defineProviderAction(service, {
 
 const searchCategoriesAction = defineProviderAction(service, {
   name: "search_categories",
+  operationType: "read",
   description: "Search Keepa Amazon categories by name so category IDs can be used in product and best-seller queries.",
   requiredScopes: [],
   inputSchema: s.actionInput(
@@ -459,6 +464,7 @@ const searchCategoriesAction = defineProviderAction(service, {
 
 const getBestSellersAction = defineProviderAction(service, {
   name: "get_best_sellers",
+  operationType: "read",
   description: "Retrieve Keepa's ordered Amazon best-seller ASIN list for a category node or website display group.",
   requiredScopes: [],
   inputSchema: s.actionInput(
@@ -490,6 +496,7 @@ const getBestSellersAction = defineProviderAction(service, {
 
 const findDealsAction = defineProviderAction(service, {
   name: "find_deals",
+  operationType: "read",
   description: "Find recently changed Amazon products with Keepa deal filters and bounded pagination.",
   requiredScopes: [],
   inputSchema: s.actionInput(
@@ -556,6 +563,7 @@ const findDealsAction = defineProviderAction(service, {
 
 const getSellerSnapshotAction = defineProviderAction(service, {
   name: "get_seller_snapshot",
+  operationType: "read",
   description:
     "Retrieve compact Keepa marketplace seller profiles, ratings, category statistics, brands, and competitors.",
   requiredScopes: [],

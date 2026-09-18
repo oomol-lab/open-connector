@@ -168,6 +168,7 @@ const balanceOutput = s.looseObject(
 export const deepseekActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",
+    operationType: "read",
     description: "List the available DeepSeek models.",
     requiredScopes: [],
     inputSchema: noInput,
@@ -178,6 +179,7 @@ export const deepseekActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_balance",
+    operationType: "read",
     description: "Get the current DeepSeek account balance.",
     requiredScopes: [],
     inputSchema: noInput,
@@ -188,6 +190,7 @@ export const deepseekActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_chat_completion",
+    operationType: "read",
     description: "Create a DeepSeek chat completion via the OpenAI-compatible API.",
     requiredScopes: [],
     inputSchema: chatCompletionInput,
@@ -195,6 +198,7 @@ export const deepseekActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_anthropic_message",
+    operationType: "write",
     description: "Create a DeepSeek message via the Anthropic-compatible API.",
     requiredScopes: [],
     inputSchema: anthropicMessageInput,

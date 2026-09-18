@@ -213,6 +213,7 @@ const createCommentInputSchema = s.object(
 export const cannyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_boards",
+    operationType: "read",
     description: "List all Canny boards available to the authenticated workspace.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The output payload for this action.", {
@@ -221,12 +222,14 @@ export const cannyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "retrieve_board",
+    operationType: "read",
     description: "Retrieve a single Canny board by board ID.",
     inputSchema: retrieveBoardInputSchema,
     outputSchema: s.object("The output payload for this action.", { board: boardSchema }),
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Canny users with cursor-based pagination.",
     inputSchema: listUsersInputSchema,
     outputSchema: s.object("The output payload for this action.", {
@@ -237,12 +240,14 @@ export const cannyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "retrieve_user",
+    operationType: "read",
     description: "Retrieve a single Canny user by id, userID, or email.",
     inputSchema: retrieveUserInputSchema,
     outputSchema: s.object("The output payload for this action.", { user: userSchema }),
   }),
   defineProviderAction(service, {
     name: "create_or_update_user",
+    operationType: "write",
     description: "Create a new Canny user or update an existing one by id, userID, or email.",
     inputSchema: createOrUpdateUserInputSchema,
     outputSchema: s.object("The output payload for this action.", {
@@ -253,6 +258,7 @@ export const cannyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_posts",
+    operationType: "read",
     description: "List Canny posts with optional filtering, search, sorting, and pagination.",
     inputSchema: listPostsInputSchema,
     outputSchema: s.object("The output payload for this action.", {
@@ -262,12 +268,14 @@ export const cannyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "retrieve_post",
+    operationType: "read",
     description: "Retrieve a single Canny post by post ID.",
     inputSchema: retrievePostInputSchema,
     outputSchema: s.object("The output payload for this action.", { post: postSchema }),
   }),
   defineProviderAction(service, {
     name: "create_post",
+    operationType: "write",
     description: "Create a new Canny post on a board for a specific author.",
     inputSchema: createPostInputSchema,
     outputSchema: s.object("The output payload for this action.", {
@@ -283,6 +291,7 @@ export const cannyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_post",
+    operationType: "write",
     description: "Update mutable fields on an existing Canny post.",
     inputSchema: updatePostInputSchema,
     outputSchema: s.object("The output payload for this action.", {
@@ -291,6 +300,7 @@ export const cannyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_comments",
+    operationType: "read",
     description: "List Canny comments with optional filtering and pagination.",
     inputSchema: listCommentsInputSchema,
     outputSchema: s.object("The output payload for this action.", {
@@ -300,6 +310,7 @@ export const cannyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_comment",
+    operationType: "write",
     description: "Create a new Canny comment on a post or as a reply to a comment.",
     inputSchema: createCommentInputSchema,
     outputSchema: s.object("The output payload for this action.", {

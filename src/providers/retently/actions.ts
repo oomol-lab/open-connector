@@ -222,6 +222,7 @@ const upsertCustomersOutputSchema = s.object(
 export const retentlyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_status",
+    operationType: "read",
     description:
       "Get Retently account identity, plan, survey credit, and usage counters for the authenticated API key.",
     requiredScopes: [],
@@ -230,6 +231,7 @@ export const retentlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List Retently customers with optional email, pagination, sorting, date range, and attribute filters.",
     requiredScopes: [],
     inputSchema: listCustomersInputSchema,
@@ -237,6 +239,7 @@ export const retentlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Get a Retently customer by customer ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -250,6 +253,7 @@ export const retentlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_feedback",
+    operationType: "read",
     description:
       "List Retently survey feedback responses with optional customer, campaign, pagination, date, and attribute filters.",
     requiredScopes: [],
@@ -258,6 +262,7 @@ export const retentlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_feedback",
+    operationType: "read",
     description: "Get a Retently feedback response by feedback ID.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -271,6 +276,7 @@ export const retentlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_templates",
+    operationType: "read",
     description: "List Retently survey templates.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Retently templates.", {}, { required: [] }),
@@ -278,6 +284,7 @@ export const retentlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_template",
+    operationType: "read",
     description:
       "Get a Retently survey template by template ID, including survey questions when Retently returns them.",
     requiredScopes: [],
@@ -292,6 +299,7 @@ export const retentlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_campaigns",
+    operationType: "read",
     description: "List Retently survey campaigns.",
     requiredScopes: [],
     inputSchema: s.object("The input payload for listing Retently campaigns.", {}, { required: [] }),
@@ -299,6 +307,7 @@ export const retentlyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_customers",
+    operationType: "write",
     description: "Create or update Retently customers in bulk, including tags, properties, and fields to unset.",
     requiredScopes: [],
     inputSchema: s.object(

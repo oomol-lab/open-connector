@@ -25,6 +25,7 @@ export type OcrspaceActionName = "extract_text" | "get_conversion_stats";
 export const ocrspaceActions: ActionDefinition[] = [
   action(
     "extract_text",
+    "read",
     "Extract text from a public image/PDF URL or uploaded transit file by calling OCR.space.",
     s.actionInput(
       {
@@ -57,6 +58,7 @@ export const ocrspaceActions: ActionDefinition[] = [
   ),
   action(
     "get_conversion_stats",
+    "read",
     "Fetch OCR.space conversion statistics for the current month or the previous month.",
     s.actionInput(
       {
@@ -83,12 +85,14 @@ export const ocrspaceActions: ActionDefinition[] = [
 
 function action(
   name: OcrspaceActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): ActionDefinition {
   return defineProviderAction(service, {
     name,
+    operationType,
     description,
     requiredScopes: [],
     inputSchema,

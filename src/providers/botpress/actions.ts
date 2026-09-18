@@ -70,6 +70,7 @@ const botDetailsSchema = s.looseObject("A Botpress bot details object.", {
 export const botpressActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_workspaces",
+    operationType: "read",
     description: "List Botpress workspaces accessible to the connected API token.",
     inputSchema: s.object(
       "Input for listing Botpress workspaces.",
@@ -86,6 +87,7 @@ export const botpressActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_bots",
+    operationType: "read",
     description: "List Botpress bots in the connected workspace.",
     inputSchema: s.object(
       "Input for listing Botpress bots in the connected workspace.",
@@ -105,6 +107,7 @@ export const botpressActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_bot",
+    operationType: "read",
     description: "Get details for one Botpress bot in the connected workspace.",
     inputSchema: s.object("Input identifying one Botpress bot.", {
       botId: s.nonEmptyString("The Botpress bot ID."),

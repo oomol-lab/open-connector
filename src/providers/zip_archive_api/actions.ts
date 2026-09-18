@@ -16,6 +16,7 @@ const transitFileSchema = s.requiredObject("A file uploaded to connector transit
 export const zipArchiveApiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "compress_files",
+    operationType: "read",
     description: "Compress one or more publicly accessible files into a ZIP archive and return a transit download URL.",
     inputSchema: s.object(
       "Public file URLs and ZIP options.",
@@ -40,6 +41,7 @@ export const zipArchiveApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "extract_archive",
+    operationType: "read",
     description: "Extract a publicly accessible archive and return each extracted file through transit storage.",
     inputSchema: s.object(
       "A public archive URL and optional password.",

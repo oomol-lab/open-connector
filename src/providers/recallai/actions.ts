@@ -43,6 +43,7 @@ const recallaiStatusSchema = s.stringEnum("The Recall.ai bot status filter value
 export const recallaiActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_bot",
+    operationType: "write",
     description:
       "Create a Recall.ai bot with the core scheduling, recording, automatic-leave, and metadata fields needed for a first-pass meeting bot workflow.",
     inputSchema: s.object(
@@ -69,6 +70,7 @@ export const recallaiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_bots",
+    operationType: "read",
     description:
       "List Recall.ai bots with optional filters for scheduled date window, meeting URL, platform, status, metadata, and pagination.",
     inputSchema: s.object(
@@ -109,6 +111,7 @@ export const recallaiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_bot",
+    operationType: "read",
     description:
       "Retrieve one Recall.ai bot by bot ID, including its current status changes, recordings, and metadata.",
     inputSchema: s.object("Input parameters for retrieving one Recall.ai bot.", {
@@ -120,6 +123,7 @@ export const recallaiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_bot_from_call",
+    operationType: "destructive",
     description: "Remove a Recall.ai bot from the meeting immediately when it is already active in the call.",
     inputSchema: s.object("Input parameters for removing one Recall.ai bot from a call.", {
       id: s.nonEmptyString("The Recall.ai bot identifier."),
@@ -130,6 +134,7 @@ export const recallaiActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_bot_media",
+    operationType: "destructive",
     description:
       "Delete the Recall.ai media artifacts stored for a completed bot after downstream processing is finished.",
     inputSchema: s.object("Input parameters for deleting one Recall.ai bot's stored media.", {

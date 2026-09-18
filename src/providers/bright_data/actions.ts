@@ -87,6 +87,7 @@ const snapshotFormatSchema = s.stringEnum("The snapshot delivery format.", ["jso
 export const brightDataActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_status",
+    operationType: "read",
     description:
       "Fetch the Bright Data account status for the connected API key and return account request capability metadata.",
     inputSchema: s.actionInput({}, [], "Input parameters for fetching Bright Data account status."),
@@ -104,6 +105,7 @@ export const brightDataActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_datasets",
+    operationType: "read",
     description: "List Bright Data marketplace dataset IDs available to the connected account.",
     inputSchema: s.actionInput({}, [], "Input parameters for listing Bright Data datasets."),
     outputSchema: s.actionOutput(
@@ -116,6 +118,7 @@ export const brightDataActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dataset_metadata",
+    operationType: "read",
     description: "Fetch Bright Data marketplace dataset field metadata for a dataset ID.",
     inputSchema: s.actionInput(
       {
@@ -135,6 +138,7 @@ export const brightDataActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_dataset_views",
+    operationType: "read",
     description: "List Bright Data dataset views available to the connected account.",
     inputSchema: s.actionInput({}, [], "Input parameters for listing Bright Data dataset views."),
     outputSchema: s.actionOutput(
@@ -147,6 +151,7 @@ export const brightDataActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_snapshot_metadata",
+    operationType: "read",
     description: "Fetch metadata for a Bright Data marketplace dataset snapshot.",
     inputSchema: s.actionInput(
       {
@@ -165,6 +170,7 @@ export const brightDataActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_snapshot_parts",
+    operationType: "read",
     description: "Fetch the number of delivery parts for a ready Bright Data marketplace dataset snapshot.",
     inputSchema: s.actionInput(
       {

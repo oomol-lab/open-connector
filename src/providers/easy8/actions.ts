@@ -67,6 +67,7 @@ const issueWriteFields = {
 export const easy8Actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List projects visible to the connected Easy8 user.",
     requiredScopes: [],
     inputSchema: s.object("The input for listing Easy8 projects.", pagination, {
@@ -79,6 +80,7 @@ export const easy8Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Retrieve one Easy8 project by ID.",
     requiredScopes: [],
     inputSchema: s.object("The input for retrieving an Easy8 project.", { projectId: id }),
@@ -86,6 +88,7 @@ export const easy8Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create an Easy8 project.",
     requiredScopes: [],
     inputSchema: s.object("The input for creating an Easy8 project.", projectWriteFields, {
@@ -105,6 +108,7 @@ export const easy8Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_project",
+    operationType: "write",
     description: "Update documented fields on an Easy8 project.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -130,6 +134,7 @@ export const easy8Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_issues",
+    operationType: "read",
     description: "List tasks visible to the connected Easy8 user.",
     requiredScopes: [],
     inputSchema: s.object("The input for listing Easy8 tasks.", pagination, {
@@ -142,6 +147,7 @@ export const easy8Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_issue",
+    operationType: "read",
     description: "Retrieve one Easy8 task by ID.",
     requiredScopes: [],
     inputSchema: s.object("The input for retrieving an Easy8 task.", { issueId: id }),
@@ -149,6 +155,7 @@ export const easy8Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_issue",
+    operationType: "write",
     description: "Create an Easy8 task.",
     requiredScopes: [],
     inputSchema: s.object("The input for creating an Easy8 task.", issueWriteFields, {
@@ -168,6 +175,7 @@ export const easy8Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_issue",
+    operationType: "write",
     description: "Update documented fields on an Easy8 task.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -198,6 +206,7 @@ export const easy8Actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_issue",
+    operationType: "destructive",
     description: "Permanently delete an Easy8 task.",
     requiredScopes: [],
     inputSchema: s.object("The input for deleting an Easy8 task.", { issueId: id }),

@@ -88,6 +88,7 @@ const controlCapabilityInputSchema = s.object(
 export const goveeActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_devices",
+    operationType: "read",
     description: "List Govee devices visible to the API key, including each device's supported capabilities.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Input parameters for listing Govee devices.", {}),
@@ -98,6 +99,7 @@ export const goveeActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_device_state",
+    operationType: "read",
     description: "Get the current state for one Govee device by sku and device id.",
     requiredScopes: [],
     inputSchema: deviceInputSchema,
@@ -108,6 +110,7 @@ export const goveeActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "control_capability",
+    operationType: "destructive",
     description:
       "Send one documented Govee capability value to a device, such as power, brightness, color, mode, or temperature.",
     requiredScopes: [],
@@ -119,6 +122,7 @@ export const goveeActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_light_scenes",
+    operationType: "read",
     description: "List dynamic light scenes available for one Govee device.",
     requiredScopes: [],
     inputSchema: deviceInputSchema,
@@ -129,6 +133,7 @@ export const goveeActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_diy_scenes",
+    operationType: "read",
     description: "List dynamic DIY scenes available for one Govee device.",
     requiredScopes: [],
     inputSchema: deviceInputSchema,

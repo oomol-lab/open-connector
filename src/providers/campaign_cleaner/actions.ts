@@ -109,6 +109,7 @@ const emptyInputSchema = s.object("This action does not require any input.", {})
 export const campaignCleanerActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "send_campaign",
+    operationType: "write",
     description: "Submit an email campaign HTML payload for Campaign Cleaner analysis and processing.",
     inputSchema: sendCampaignInputSchema,
     outputSchema: s.object("The output payload returned after submitting a campaign.", {
@@ -119,6 +120,7 @@ export const campaignCleanerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign_status",
+    operationType: "read",
     description: "Fetch the current processing status of one submitted Campaign Cleaner campaign.",
     inputSchema: campaignIdInputSchema,
     outputSchema: s.object("The current processing status returned by Campaign Cleaner.", {
@@ -127,6 +129,7 @@ export const campaignCleanerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign",
+    operationType: "read",
     description: "Retrieve the full Campaign Cleaner analysis payload for one saved campaign.",
     inputSchema: getCampaignInputSchema,
     outputSchema: s.object("The full campaign analysis returned by Campaign Cleaner.", {
@@ -135,6 +138,7 @@ export const campaignCleanerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_campaign_pdf_analysis",
+    operationType: "read",
     description: "Download a Campaign Cleaner PDF analysis report and return it as a transit file.",
     inputSchema: campaignIdInputSchema,
     outputSchema: s.object("The downloaded Campaign Cleaner PDF analysis report.", {
@@ -149,6 +153,7 @@ export const campaignCleanerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_campaigns",
+    operationType: "read",
     description: "List saved Campaign Cleaner campaigns together with their current processing status.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The list of saved Campaign Cleaner campaigns.", {
@@ -157,6 +162,7 @@ export const campaignCleanerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_credits",
+    operationType: "read",
     description: "Get the remaining Campaign Cleaner credits available to the current API key.",
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The Campaign Cleaner credit balance.", {
@@ -165,6 +171,7 @@ export const campaignCleanerActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_campaign",
+    operationType: "destructive",
     description: "Delete one saved Campaign Cleaner campaign by campaign ID.",
     inputSchema: campaignIdInputSchema,
     outputSchema: s.object(

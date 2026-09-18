@@ -91,6 +91,7 @@ const resourceOutputSchema = s.object(
 function defineListAction(resource: "jobs" | "candidates" | "applications", description: string) {
   return defineProviderAction(service, {
     name: `list_${resource}`,
+    operationType: "read",
     description,
     requiredScopes: [],
     inputSchema: listInputSchema,
@@ -101,6 +102,7 @@ function defineListAction(resource: "jobs" | "candidates" | "applications", desc
 function defineGetAction(resource: "job" | "candidate" | "application", description: string) {
   return defineProviderAction(service, {
     name: `get_${resource}`,
+    operationType: "read",
     description,
     requiredScopes: [],
     inputSchema: getInputSchema,

@@ -194,6 +194,7 @@ const createCallLogInputSchema = s.actionInput(
 export const nethuntActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_readable_folders",
+    operationType: "read",
     description: "List NetHunt folders that the connected user can read.",
     inputSchema: s.actionInput({}, [], "Input parameters for listing readable NetHunt folders."),
     outputSchema: s.actionOutput(
@@ -205,6 +206,7 @@ export const nethuntActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_writable_folders",
+    operationType: "read",
     description: "List NetHunt folders that the connected user can create records in.",
     inputSchema: s.actionInput({}, [], "Input parameters for listing writable NetHunt folders."),
     outputSchema: s.actionOutput(
@@ -216,6 +218,7 @@ export const nethuntActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_folder_fields",
+    operationType: "read",
     description: "List fields configured for a NetHunt folder.",
     inputSchema: folderIdInputSchema,
     outputSchema: s.actionOutput(
@@ -227,6 +230,7 @@ export const nethuntActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_records",
+    operationType: "read",
     description: "Find NetHunt records by record ID or advanced search query.",
     inputSchema: findRecordsInputSchema,
     outputSchema: s.actionOutput(
@@ -238,6 +242,7 @@ export const nethuntActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_new_records",
+    operationType: "read",
     description: "List NetHunt records created after an optional timestamp.",
     inputSchema: sinceLimitInputSchema,
     outputSchema: s.actionOutput(
@@ -249,6 +254,7 @@ export const nethuntActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_updated_records",
+    operationType: "read",
     description: "List NetHunt records updated after an optional timestamp.",
     inputSchema: updatedRecordInputSchema,
     outputSchema: s.actionOutput(
@@ -260,6 +266,7 @@ export const nethuntActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_record_changes",
+    operationType: "read",
     description: "List NetHunt record changes after an optional timestamp.",
     inputSchema: recordChangeInputSchema,
     outputSchema: s.actionOutput(
@@ -271,18 +278,21 @@ export const nethuntActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_record",
+    operationType: "write",
     description: "Create a NetHunt record in a folder with field values.",
     inputSchema: createRecordInputSchema,
     outputSchema: s.actionOutput({ record: recordSchema }, "NetHunt create-record response."),
   }),
   defineProviderAction(service, {
     name: "update_record",
+    operationType: "write",
     description: "Update a NetHunt record with field actions.",
     inputSchema: updateRecordInputSchema,
     outputSchema: s.actionOutput({ record: recordSchema }, "NetHunt update-record response."),
   }),
   defineProviderAction(service, {
     name: "delete_record",
+    operationType: "destructive",
     description: "Delete a NetHunt record.",
     inputSchema: recordIdInputSchema,
     outputSchema: s.actionOutput(
@@ -294,12 +304,14 @@ export const nethuntActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_comment",
+    operationType: "write",
     description: "Create a NetHunt comment on a record.",
     inputSchema: createCommentInputSchema,
     outputSchema: s.actionOutput({ comment: commentSchema }, "NetHunt create-comment response."),
   }),
   defineProviderAction(service, {
     name: "list_new_comments",
+    operationType: "read",
     description: "List NetHunt record comments created after an optional timestamp.",
     inputSchema: sinceLimitInputSchema,
     outputSchema: s.actionOutput(
@@ -311,12 +323,14 @@ export const nethuntActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_call_log",
+    operationType: "write",
     description: "Create a NetHunt call log on a record.",
     inputSchema: createCallLogInputSchema,
     outputSchema: s.actionOutput({ callLog: callLogSchema }, "NetHunt create-call-log response."),
   }),
   defineProviderAction(service, {
     name: "list_new_call_logs",
+    operationType: "read",
     description: "List NetHunt call logs created after an optional timestamp.",
     inputSchema: sinceLimitInputSchema,
     outputSchema: s.actionOutput(
@@ -328,6 +342,7 @@ export const nethuntActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "auth_test",
+    operationType: "read",
     description: "Verify the NetHunt credentials and return the connected user.",
     inputSchema: s.actionInput({}, [], "Input parameters for verifying NetHunt credentials."),
     outputSchema: s.actionOutput({ user: authUserSchema }, "NetHunt auth-test response."),

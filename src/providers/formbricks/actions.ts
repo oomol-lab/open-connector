@@ -163,6 +163,7 @@ const createContactInputSchema = s.object(
 export const formbricksActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_me",
+    operationType: "read",
     description: "Get the Formbricks organization and workspace context associated with the current API key.",
     requiredScopes: [],
     inputSchema: s.object("No input is required for retrieving the current Formbricks API key context.", {}),
@@ -170,6 +171,7 @@ export const formbricksActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contact_attribute_keys",
+    operationType: "read",
     description:
       "List Formbricks contact attribute keys with optional pagination, sorting, date filters, and workspace scoping.",
     requiredScopes: [],
@@ -181,6 +183,7 @@ export const formbricksActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact_attribute_key",
+    operationType: "read",
     description: "Get one Formbricks contact attribute key by its identifier.",
     requiredScopes: [],
     inputSchema: contactAttributeKeyIdInputSchema,
@@ -190,6 +193,7 @@ export const formbricksActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact_attribute_key",
+    operationType: "write",
     description: "Create one Formbricks contact attribute key inside a workspace.",
     requiredScopes: [],
     inputSchema: contactAttributeKeyCreateInputSchema,
@@ -199,6 +203,7 @@ export const formbricksActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact_attribute_key",
+    operationType: "write",
     description: "Update one existing Formbricks contact attribute key.",
     requiredScopes: [],
     inputSchema: contactAttributeKeyUpdateInputSchema,
@@ -208,6 +213,7 @@ export const formbricksActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact_attribute_key",
+    operationType: "destructive",
     description: "Delete one Formbricks contact attribute key by its identifier.",
     requiredScopes: [],
     inputSchema: contactAttributeKeyIdInputSchema,
@@ -217,6 +223,7 @@ export const formbricksActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create one Formbricks contact with a workspace-scoped attributes object.",
     requiredScopes: [],
     inputSchema: createContactInputSchema,

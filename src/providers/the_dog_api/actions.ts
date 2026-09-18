@@ -198,6 +198,7 @@ const deleteVoteInputSchema = s.object("Input parameters for deleting one vote."
 export const theDogApiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_images",
+    operationType: "read",
     description: "Search for dog images with optional breed, category, type, size, and paging filters.",
     requiredScopes: [],
     inputSchema: searchImagesInputSchema,
@@ -205,6 +206,7 @@ export const theDogApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_image",
+    operationType: "read",
     description: "Get one dog image by its The Dog API image identifier.",
     requiredScopes: [],
     inputSchema: getImageInputSchema,
@@ -212,6 +214,7 @@ export const theDogApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_breeds",
+    operationType: "read",
     description: "List dog breeds supported by The Dog API.",
     requiredScopes: [],
     inputSchema: listBreedsInputSchema,
@@ -219,6 +222,7 @@ export const theDogApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_breeds",
+    operationType: "read",
     description: "Search dog breeds by breed name.",
     requiredScopes: [],
     inputSchema: searchBreedsInputSchema,
@@ -226,6 +230,7 @@ export const theDogApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_breed",
+    operationType: "read",
     description: "Get one dog breed by its The Dog API breed identifier.",
     requiredScopes: [],
     inputSchema: getBreedInputSchema,
@@ -233,6 +238,7 @@ export const theDogApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_favourites",
+    operationType: "read",
     description: "List favourite dog images for the connected The Dog API account.",
     requiredScopes: [],
     inputSchema: listAccountRecordsInputSchema,
@@ -240,6 +246,7 @@ export const theDogApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_favourite",
+    operationType: "write",
     description: "Create one favourite dog image record.",
     requiredScopes: [],
     inputSchema: createFavouriteInputSchema,
@@ -247,6 +254,7 @@ export const theDogApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_favourite",
+    operationType: "destructive",
     description: "Delete one favourite dog image record.",
     requiredScopes: [],
     inputSchema: deleteFavouriteInputSchema,
@@ -254,6 +262,7 @@ export const theDogApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_votes",
+    operationType: "read",
     description: "List dog image votes for the connected The Dog API account.",
     requiredScopes: [],
     inputSchema: listAccountRecordsInputSchema,
@@ -261,6 +270,7 @@ export const theDogApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_vote",
+    operationType: "write",
     description: "Create one dog image vote.",
     requiredScopes: [],
     inputSchema: createVoteInputSchema,
@@ -268,6 +278,7 @@ export const theDogApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_vote",
+    operationType: "destructive",
     description: "Delete one dog image vote.",
     requiredScopes: [],
     inputSchema: deleteVoteInputSchema,

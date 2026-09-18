@@ -52,6 +52,7 @@ const googleMapsInputSchema = s.actionInput(
 export const serpapiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "google_search",
+    operationType: "read",
     description: "Run a Google web search through SerpApi.",
     inputSchema: googleSearchInputSchema,
     outputSchema: s.object(
@@ -81,6 +82,7 @@ export const serpapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_news_search",
+    operationType: "read",
     description: "Run a Google News search through SerpApi.",
     inputSchema: googleNewsInputSchema,
     outputSchema: s.object(
@@ -105,6 +107,7 @@ export const serpapiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "google_maps_search",
+    operationType: "read",
     description: "Run a Google Maps search through SerpApi.",
     inputSchema: googleMapsInputSchema,
     outputSchema: s.object(

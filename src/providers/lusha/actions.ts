@@ -160,12 +160,14 @@ const accountUsageOutputSchema = s.looseObject("The Lusha account usage response
 export const lushaActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_usage",
+    operationType: "read",
     description: "Retrieve Lusha account usage, credit balance, rate limits, plan details, and API action pricing.",
     inputSchema: s.object("This action does not require input.", {}),
     outputSchema: accountUsageOutputSchema,
   }),
   defineProviderAction(service, {
     name: "search_contacts",
+    operationType: "read",
     description:
       "Search for Lusha contact previews by contact ID, LinkedIn URL, email, or name plus company identifier.",
     inputSchema: searchContactsInputSchema,
@@ -173,18 +175,21 @@ export const lushaActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "enrich_contacts",
+    operationType: "read",
     description: "Reveal email and phone data for contacts previously returned by Lusha Contacts Search.",
     inputSchema: enrichContactsInputSchema,
     outputSchema: contactsEnrichOutputSchema,
   }),
   defineProviderAction(service, {
     name: "search_companies",
+    operationType: "read",
     description: "Search for Lusha company previews by company ID, name, or domain.",
     inputSchema: searchCompaniesInputSchema,
     outputSchema: companiesSearchOutputSchema,
   }),
   defineProviderAction(service, {
     name: "enrich_companies",
+    operationType: "read",
     description:
       "Reveal firmographic, employee, competitor, and intent data for companies returned by Lusha Companies Search.",
     inputSchema: enrichCompaniesInputSchema,

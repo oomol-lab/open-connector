@@ -86,6 +86,7 @@ function singleOutputSchema(description: string, dataDescription: string) {
 export const statsigActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Retrieve the Statsig project information visible to the Console API key.",
     inputSchema: s.actionInput({}, [], "The input payload for getting Statsig project information."),
     outputSchema: singleOutputSchema(
@@ -95,6 +96,7 @@ export const statsigActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_gates",
+    operationType: "read",
     description: "List Statsig feature gates with optional lifecycle, ownership, and paging filters.",
     inputSchema: s.object(
       "The input payload for listing Statsig gates.",
@@ -141,6 +143,7 @@ export const statsigActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_gate",
+    operationType: "read",
     description: "Read one Statsig feature gate by ID.",
     inputSchema: s.object(
       "The input payload for reading a Statsig gate.",
@@ -157,6 +160,7 @@ export const statsigActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_dynamic_configs",
+    operationType: "read",
     description: "List Statsig dynamic configs with optional lifecycle, ownership, and paging filters.",
     inputSchema: s.object(
       "The input payload for listing Statsig dynamic configs.",
@@ -188,6 +192,7 @@ export const statsigActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dynamic_config",
+    operationType: "read",
     description: "Read one Statsig dynamic config by ID.",
     inputSchema: s.object("The input payload for reading a Statsig dynamic config.", {
       id: s.nonEmptyString("The Statsig dynamic config ID."),
@@ -199,6 +204,7 @@ export const statsigActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_segments",
+    operationType: "read",
     description: "List Statsig segments using page-based pagination.",
     inputSchema: s.object("The input payload for listing Statsig segments.", listPagingFields, {
       optional: ["limit", "page"],
@@ -210,6 +216,7 @@ export const statsigActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_segment",
+    operationType: "read",
     description: "Read one Statsig segment by ID.",
     inputSchema: s.object("The input payload for reading a Statsig segment.", {
       id: s.nonEmptyString("The Statsig segment ID."),

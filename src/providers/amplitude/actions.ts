@@ -180,6 +180,7 @@ const getUserActivityOutputSchema = s.object("The normalized Amplitude user acti
 export const amplitudeActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_events",
+    operationType: "read",
     description: "List visible Amplitude events with current-week totals and display metadata.",
     requiredScopes: [],
     inputSchema: listEventsInputSchema,
@@ -187,6 +188,7 @@ export const amplitudeActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_event_segmentation",
+    operationType: "read",
     description: "Get Amplitude event segmentation metrics for one or two event queries.",
     requiredScopes: [],
     inputSchema: getEventSegmentationInputSchema,
@@ -194,6 +196,7 @@ export const amplitudeActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_user",
+    operationType: "read",
     description: "Search for an Amplitude user by Amplitude ID, device ID, user ID, or prefix.",
     requiredScopes: [],
     inputSchema: searchUserInputSchema,
@@ -201,6 +204,7 @@ export const amplitudeActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_activity",
+    operationType: "read",
     description: "Get an Amplitude user summary and recent or earliest activity events.",
     requiredScopes: [],
     inputSchema: getUserActivityInputSchema,

@@ -137,6 +137,7 @@ const lookupResultSchema = s.object(
 export const placekeyActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_placekey",
+    operationType: "read",
     description:
       "Look up a single location with Placekey and return its Placekey identifier plus optional enrichment fields.",
     requiredScopes: [],
@@ -145,6 +146,7 @@ export const placekeyActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_placekeys_bulk",
+    operationType: "read",
     description: "Look up up to 100 locations in one Placekey bulk request and return the result for each query item.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -162,6 +164,7 @@ export const placekeyActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_placekey_from_address",
+    operationType: "read",
     description: "Resolve a postal address into a Placekey identifier using the Placekey single-lookup API.",
     requiredScopes: [],
     inputSchema: addressInputSchema,
@@ -177,6 +180,7 @@ export const placekeyActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_geocode_from_address",
+    operationType: "read",
     description: "Resolve a postal address with Placekey and return the matched geocode response for the location.",
     requiredScopes: [],
     inputSchema: addressInputSchema,

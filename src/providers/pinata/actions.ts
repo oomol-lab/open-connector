@@ -171,6 +171,7 @@ const groupFileInputSchema = s.object("Input parameters for changing Pinata grou
 export const pinataActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_files",
+    operationType: "read",
     description: "List Pinata files from the public or private IPFS network with optional filters.",
     requiredScopes: ["org:files:read"],
     inputSchema: listFilesInputSchema,
@@ -182,6 +183,7 @@ export const pinataActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_file",
+    operationType: "read",
     description: "Get one Pinata file by ID from the public or private IPFS network.",
     requiredScopes: ["org:files:read"],
     inputSchema: fileIdInputSchema,
@@ -191,6 +193,7 @@ export const pinataActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_file",
+    operationType: "write",
     description: "Update a Pinata file name or key-value metadata.",
     requiredScopes: ["org:files:write"],
     inputSchema: updateFileInputSchema,
@@ -200,6 +203,7 @@ export const pinataActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_file",
+    operationType: "destructive",
     description: "Delete one Pinata file by ID from the public or private IPFS network.",
     requiredScopes: ["org:files:write"],
     inputSchema: fileIdInputSchema,
@@ -207,6 +211,7 @@ export const pinataActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "pin_by_cid",
+    operationType: "read",
     description: "Ask Pinata to pin an existing public IPFS CID.",
     requiredScopes: ["org:files:write"],
     followUpActions: ["pinata.query_pin_requests"],
@@ -217,6 +222,7 @@ export const pinataActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_pin_requests",
+    operationType: "read",
     description: "Query Pinata pin-by-CID requests with optional filters and pagination.",
     requiredScopes: ["org:files:read"],
     inputSchema: queryPinRequestsInputSchema,
@@ -228,6 +234,7 @@ export const pinataActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_groups",
+    operationType: "read",
     description: "List Pinata file groups from the public or private IPFS network.",
     requiredScopes: ["org:groups:read"],
     inputSchema: listGroupsInputSchema,
@@ -239,6 +246,7 @@ export const pinataActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_group",
+    operationType: "read",
     description: "Get one Pinata group by ID from the public or private IPFS network.",
     requiredScopes: ["org:groups:read"],
     inputSchema: groupIdInputSchema,
@@ -248,6 +256,7 @@ export const pinataActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_group",
+    operationType: "write",
     description: "Create a Pinata file group on the public or private IPFS network.",
     requiredScopes: ["org:groups:write"],
     inputSchema: createGroupInputSchema,
@@ -257,6 +266,7 @@ export const pinataActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_group",
+    operationType: "write",
     description: "Update a Pinata group name or public visibility setting.",
     requiredScopes: ["org:groups:write"],
     inputSchema: updateGroupInputSchema,
@@ -266,6 +276,7 @@ export const pinataActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_file_to_group",
+    operationType: "write",
     description: "Add a Pinata file to a Pinata group.",
     requiredScopes: ["org:groups:write"],
     inputSchema: groupFileInputSchema,
@@ -273,6 +284,7 @@ export const pinataActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_file_from_group",
+    operationType: "destructive",
     description: "Remove a Pinata file from a Pinata group.",
     requiredScopes: ["org:groups:write"],
     inputSchema: groupFileInputSchema,

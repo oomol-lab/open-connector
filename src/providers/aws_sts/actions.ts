@@ -46,6 +46,7 @@ const stsCredentialOutputSchema = s.object("The normalized AWS STS temporary cre
 export const awsStsActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "assume_role",
+    operationType: "write",
     description: "Use a connected AWS access key pair to call STS AssumeRole and return temporary credentials.",
     requiredScopes: [],
     inputSchema: s.object(

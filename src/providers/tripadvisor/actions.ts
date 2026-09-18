@@ -153,6 +153,7 @@ const pagingSchema = s.object(
 export const tripadvisorActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_locations",
+    operationType: "read",
     description: "Search Tripadvisor locations by text with optional geographic and category filters.",
     inputSchema: s.object(
       "Input parameters for Tripadvisor location search.",
@@ -175,6 +176,7 @@ export const tripadvisorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_nearby_locations",
+    operationType: "read",
     description: "Search Tripadvisor locations near a latitude and longitude coordinate pair.",
     inputSchema: s.object(
       "Input parameters for Tripadvisor nearby location search.",
@@ -196,6 +198,7 @@ export const tripadvisorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_location_details",
+    operationType: "read",
     description: "Get detailed Tripadvisor information for one location.",
     inputSchema: s.object(
       "Input parameters for retrieving Tripadvisor location details.",
@@ -212,6 +215,7 @@ export const tripadvisorActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_location_photos",
+    operationType: "read",
     description: "Get Tripadvisor photos for one location with optional paging and source filters.",
     inputSchema: s.object(
       "Input parameters for retrieving Tripadvisor location photos.",

@@ -299,6 +299,7 @@ function paginatedResourceInput(idField: string, description: string): JsonSchem
 export const asanaCustomFieldActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_custom_field",
+    operationType: "write",
     description: "Create an Asana custom field in a workspace.",
     requiredScopes: ["custom_fields:write"],
     inputSchema: createCustomFieldInputSchema,
@@ -306,6 +307,7 @@ export const asanaCustomFieldActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_custom_field",
+    operationType: "read",
     description: "Get an Asana custom field by gid.",
     requiredScopes: ["custom_fields:read"],
     inputSchema: resourceInput("customFieldId", "The custom field gid."),
@@ -313,6 +315,7 @@ export const asanaCustomFieldActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_custom_field",
+    operationType: "write",
     description: "Update an Asana custom field.",
     requiredScopes: ["custom_fields:write"],
     inputSchema: updateCustomFieldInputSchema,
@@ -320,6 +323,7 @@ export const asanaCustomFieldActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_custom_field",
+    operationType: "destructive",
     description: "Delete an Asana custom field.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -331,6 +335,7 @@ export const asanaCustomFieldActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workspace_custom_fields",
+    operationType: "read",
     description: "List the custom fields in an Asana workspace.",
     requiredScopes: ["custom_fields:read"],
     inputSchema: paginatedResourceInput("workspaceId", "The workspace gid."),
@@ -338,6 +343,7 @@ export const asanaCustomFieldActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_custom_field_enum_option",
+    operationType: "write",
     description: "Create an option for an Asana enum or multi-enum custom field.",
     requiredScopes: ["custom_fields:write"],
     inputSchema: createEnumOptionInputSchema,
@@ -345,6 +351,7 @@ export const asanaCustomFieldActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "insert_custom_field_enum_option",
+    operationType: "write",
     description: "Reorder an option in an Asana enum or multi-enum custom field.",
     requiredScopes: ["custom_fields:write"],
     inputSchema: insertEnumOptionInputSchema,
@@ -352,6 +359,7 @@ export const asanaCustomFieldActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_custom_field_enum_option",
+    operationType: "write",
     description: "Update an Asana enum option.",
     requiredScopes: ["custom_fields:write"],
     inputSchema: updateEnumOptionInputSchema,
@@ -359,6 +367,7 @@ export const asanaCustomFieldActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_project_custom_field_settings",
+    operationType: "read",
     description: "List the custom field settings on an Asana project.",
     requiredScopes: ["projects:read"],
     inputSchema: paginatedResourceInput("projectId", "The project gid."),
@@ -366,6 +375,7 @@ export const asanaCustomFieldActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_team_custom_field_settings",
+    operationType: "read",
     description: "List the custom field settings on an Asana team. Asana returns this collection without pagination.",
     requiredScopes: ["teams:read"],
     inputSchema: resourceInput("teamId", "The team gid."),

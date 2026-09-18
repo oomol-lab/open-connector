@@ -305,6 +305,7 @@ const paginatedBudgetsOutputSchema = s.actionOutput(
 export const brexActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Retrieve the Brex user associated with the connected user token.",
     inputSchema: s.actionInput({}, [], "No input is required for this Brex action."),
     outputSchema: s.actionOutput(
@@ -317,6 +318,7 @@ export const brexActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company",
+    operationType: "read",
     description: "Retrieve the Brex company associated with the connected user token.",
     inputSchema: s.actionInput({}, [], "No input is required for this Brex action."),
     outputSchema: s.actionOutput(
@@ -329,30 +331,35 @@ export const brexActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Brex users with optional email, remote display ID, and cursor filters.",
     inputSchema: listUsersInputSchema,
     outputSchema: paginatedUsersOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_card_accounts",
+    operationType: "read",
     description: "List Brex card accounts for the connected company.",
     inputSchema: s.actionInput({}, [], "No input is required for this Brex action."),
     outputSchema: paginatedCardAccountsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_primary_card_transactions",
+    operationType: "read",
     description: "List settled transactions across all Brex card accounts with optional user and date filters.",
     inputSchema: listTransactionsInputSchema,
     outputSchema: paginatedTransactionsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_expenses",
+    operationType: "read",
     description: "List Brex expenses with documented filters and cursor pagination.",
     inputSchema: listExpensesInputSchema,
     outputSchema: paginatedExpensesOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_expense",
+    operationType: "read",
     description: "Retrieve one Brex expense by ID.",
     inputSchema: getExpenseInputSchema,
     outputSchema: s.actionOutput(
@@ -365,12 +372,14 @@ export const brexActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_budgets",
+    operationType: "read",
     description: "List Brex budgets with cursor pagination.",
     inputSchema: paginationInputSchema,
     outputSchema: paginatedBudgetsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_budget",
+    operationType: "read",
     description: "Retrieve one Brex budget by ID.",
     inputSchema: getByIdInputSchema,
     outputSchema: s.actionOutput(

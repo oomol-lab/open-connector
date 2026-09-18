@@ -261,6 +261,7 @@ const sendTimeSchema = dateTimeSchema("The shipment or pickup time in YYYY-MM-DD
 export const sfExpressQueryActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_routes",
+    operationType: "read",
     description:
       "Query logistics routes (tracking events) for up to 10 SF Express shipments. Waybill-only queries return routes only for shipments paid with a monthly card bound to your partnerID; for any other shipment, pass the sender or recipient phone's last 4 digits in check_phone_nos. Only shipments from the last 3 months have routes.",
     requiredScopes: [],
@@ -294,6 +295,7 @@ export const sfExpressQueryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_delivery_time_price",
+    operationType: "read",
     description:
       "Query the SF Express delivery time standards for an origin and destination, optionally with freight prices per product.",
     requiredScopes: [],
@@ -321,6 +323,7 @@ export const sfExpressQueryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "estimate_delivery_time",
+    operationType: "read",
     description:
       "Query the promised delivery time for an SF Express waybill, verified by the sender or recipient phone number or by the monthly card that paid the waybill.",
     requiredScopes: [],
@@ -346,6 +349,7 @@ export const sfExpressQueryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "validate_waybill_no",
+    operationType: "read",
     description: "Check whether a waybill number is a valid SF Express waybill number.",
     requiredScopes: [],
     inputSchema: s.requiredObject("The waybill number to validate.", {
@@ -359,6 +363,7 @@ export const sfExpressQueryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "filter_order",
+    operationType: "read",
     description:
       "Check whether origin and destination addresses are within SF Express pickup and delivery coverage (筛单), before placing an order.",
     requiredScopes: [],
@@ -387,6 +392,7 @@ export const sfExpressQueryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "query_service_points",
+    operationType: "read",
     description:
       "List nearby SF Express service points (自营服务点, 合作商家店, 顺丰站, 丰巢柜, and more) around an address or a coordinate.",
     requiredScopes: [],
@@ -410,6 +416,7 @@ export const sfExpressQueryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "recommend_product",
+    operationType: "read",
     description: "Recommend SF Express products with prices and promised delivery times for a shipment.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -462,6 +469,7 @@ export const sfExpressQueryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "recommend_vas",
+    operationType: "read",
     description:
       "Recommend value-added services (保鲜, 保价, 定时派送, and more) with prices for a shipment on a chosen product.",
     requiredScopes: [],
@@ -554,6 +562,7 @@ export const sfExpressQueryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "check_pickup_time",
+    operationType: "read",
     description:
       "Check whether an SF Express pickup at an address can be served at a planned time, optionally returning the service window.",
     requiredScopes: [],

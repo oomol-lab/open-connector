@@ -159,6 +159,7 @@ const baseEnrichmentOutputSchema = s.object(
 export const klazifyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "categorize_url",
+    operationType: "read",
     description: "Categorize a website URL with Klazify and return the aggregated domain enrichment overview.",
     requiredScopes: [],
     inputSchema: s.object("Input for the Klazify all-in-one categorization action.", {
@@ -168,6 +169,7 @@ export const klazifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_iab_categories",
+    operationType: "read",
     description: "Return the IAB category classification for one website URL with Klazify.",
     requiredScopes: [],
     inputSchema: baseEnrichmentInputSchema,
@@ -179,6 +181,7 @@ export const klazifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_company_data",
+    operationType: "read",
     description: "Return company profile data for one website URL with Klazify.",
     requiredScopes: [],
     inputSchema: baseEnrichmentInputSchema,
@@ -191,6 +194,7 @@ export const klazifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tech_stack",
+    operationType: "read",
     description: "Return the detected technology stack for one website URL with Klazify.",
     requiredScopes: [],
     inputSchema: baseEnrichmentInputSchema,
@@ -207,6 +211,7 @@ export const klazifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_domain_logo",
+    operationType: "read",
     description: "Return the hosted logo URL for one website URL with Klazify.",
     requiredScopes: [],
     inputSchema: baseEnrichmentInputSchema,
@@ -218,6 +223,7 @@ export const klazifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_domain_expiration",
+    operationType: "read",
     description: "Return the registration and expiration details for one website URL with Klazify.",
     requiredScopes: [],
     inputSchema: baseEnrichmentInputSchema,
@@ -230,6 +236,7 @@ export const klazifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_social_media_links",
+    operationType: "read",
     description: "Return the social media profile URLs for one website URL with Klazify.",
     requiredScopes: [],
     inputSchema: baseEnrichmentInputSchema,
@@ -242,6 +249,7 @@ export const klazifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_similar_domains",
+    operationType: "read",
     description: "Return similar or competitor domains for one website URL with Klazify.",
     requiredScopes: [],
     inputSchema: baseEnrichmentInputSchema,

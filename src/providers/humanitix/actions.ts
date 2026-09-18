@@ -34,6 +34,7 @@ const tagSchema = s.object("A Humanitix tag.", {
 export const humanitixActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_events",
+    operationType: "read",
     description:
       "List Humanitix events accessible to the connected account, with optional pagination and update filters.",
     inputSchema: s.object(
@@ -60,6 +61,7 @@ export const humanitixActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_event",
+    operationType: "read",
     description: "Retrieve full Humanitix metadata for a single event by event ID.",
     inputSchema: s.actionInput(
       {
@@ -77,6 +79,7 @@ export const humanitixActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tags",
+    operationType: "read",
     description: "List tags associated with the connected Humanitix account.",
     inputSchema: s.object(
       "Input parameters for listing Humanitix tags.",

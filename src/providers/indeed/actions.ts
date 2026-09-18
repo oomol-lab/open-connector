@@ -33,6 +33,7 @@ const jobFieldsSchema: JsonSchema = s.object(
 export const indeedActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the Indeed user and associated employers represented by the OAuth access token.",
     requiredScopes: ["email", "employer_access"],
     providerPermissions: ["email", "employer_access"],
@@ -56,6 +57,7 @@ export const indeedActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "find_employer_jobs",
+    operationType: "read",
     description: "List jobs for the employer represented by the OAuth token, with filters and cursor pagination.",
     requiredScopes: readScopes,
     providerPermissions: readScopes,
@@ -81,6 +83,7 @@ export const indeedActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_job",
+    operationType: "read",
     description: "Get one Indeed employer job by its EmployerJob IRI.",
     requiredScopes: readScopes,
     providerPermissions: readScopes,
@@ -89,6 +92,7 @@ export const indeedActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_jobs",
+    operationType: "read",
     description: "Get multiple Indeed employer jobs by their EmployerJob IRIs.",
     requiredScopes: readScopes,
     providerPermissions: readScopes,
@@ -97,6 +101,7 @@ export const indeedActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_sourced_job_postings",
+    operationType: "write",
     description: "Update supported fields on one sourced Indeed job posting.",
     requiredScopes: readScopes,
     providerPermissions: readScopes,
@@ -114,6 +119,7 @@ export const indeedActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "clear_sourced_job_posting_updates",
+    operationType: "destructive",
     description: "Clear updates previously applied to one sourced Indeed job posting.",
     requiredScopes: readScopes,
     providerPermissions: readScopes,

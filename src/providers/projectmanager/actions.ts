@@ -20,6 +20,7 @@ const odataInput = s.object(
 export const projectmanagerActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "Query ProjectManager projects with optional OData parameters.",
     inputSchema: odataInput,
     outputSchema: s.object(
@@ -33,6 +34,7 @@ export const projectmanagerActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Retrieve a ProjectManager project by its unique identifier.",
     inputSchema: s.object("Input parameters for retrieving a Project.", {
       projectId: s.nonEmptyString("The unique identifier of the Project to retrieve."),
@@ -48,6 +50,7 @@ export const projectmanagerActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "Query ProjectManager tasks with optional OData parameters.",
     inputSchema: odataInput,
     outputSchema: s.object(

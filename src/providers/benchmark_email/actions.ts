@@ -127,12 +127,14 @@ const contactDetailsOutputSchema = s.object(
 export const benchmarkEmailActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_summary",
+    operationType: "read",
     description: "Get the current Benchmark Email account summary and image storage plan details.",
     inputSchema: s.object({}, { description: "This action does not require any input." }),
     outputSchema: accountSummaryOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_contacts_in_list",
+    operationType: "read",
     description:
       "Get paginated contacts from a Benchmark Email list with optional search, filter, and sorting parameters.",
     inputSchema: s.object(
@@ -169,6 +171,7 @@ export const benchmarkEmailActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact_details",
+    operationType: "read",
     description: "Get detailed information for a specific Benchmark Email contact email within a specific list.",
     inputSchema: s.object(
       "The input payload for reading a single contact from a Benchmark Email list.",
@@ -182,6 +185,7 @@ export const benchmarkEmailActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact_list_summary",
+    operationType: "read",
     description:
       "Get summary counts for a Benchmark Email contact list, including active, bounced, pending, and unsubscribed contacts.",
     inputSchema: s.object(

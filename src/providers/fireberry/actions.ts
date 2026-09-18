@@ -241,6 +241,7 @@ const queryRecordsOutputSchema = s.requiredObject("A Fireberry v3 query result."
 export const fireberryActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_records",
+    operationType: "read",
     description: "Search, filter, sort, aggregate, and paginate Fireberry records using v3 query.",
     requiredScopes: [],
     inputSchema: queryRecordsInputSchema,
@@ -248,6 +249,7 @@ export const fireberryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_accounts",
+    operationType: "read",
     description: "List Fireberry account records with simple page and page size controls.",
     requiredScopes: [],
     inputSchema: listRecordsInputSchema,
@@ -255,6 +257,7 @@ export const fireberryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Get one Fireberry account record by GUID.",
     requiredScopes: [],
     inputSchema: idInputSchema,
@@ -262,6 +265,7 @@ export const fireberryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_account",
+    operationType: "write",
     description: "Create one Fireberry account record.",
     requiredScopes: [],
     inputSchema: createAccountInputSchema,
@@ -269,6 +273,7 @@ export const fireberryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_account",
+    operationType: "write",
     description: "Update one Fireberry account record by GUID.",
     requiredScopes: [],
     inputSchema: updateAccountInputSchema,
@@ -276,6 +281,7 @@ export const fireberryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_account",
+    operationType: "destructive",
     description: "Delete one Fireberry account record by GUID.",
     requiredScopes: [],
     inputSchema: idInputSchema,
@@ -283,6 +289,7 @@ export const fireberryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Fireberry contact records with simple page and page size controls.",
     requiredScopes: [],
     inputSchema: listRecordsInputSchema,
@@ -290,6 +297,7 @@ export const fireberryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get one Fireberry contact record by GUID.",
     requiredScopes: [],
     inputSchema: idInputSchema,
@@ -297,6 +305,7 @@ export const fireberryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create one Fireberry contact record.",
     requiredScopes: [],
     inputSchema: createContactInputSchema,
@@ -304,6 +313,7 @@ export const fireberryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update one Fireberry contact record by GUID.",
     requiredScopes: [],
     inputSchema: updateContactInputSchema,
@@ -311,6 +321,7 @@ export const fireberryActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete one Fireberry contact record by GUID.",
     requiredScopes: [],
     inputSchema: idInputSchema,

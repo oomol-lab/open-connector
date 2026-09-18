@@ -200,12 +200,14 @@ const updateInstanceInputSchema: JsonSchema = {
 export const vultrActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Retrieve the connected Vultr account profile, ACL permissions, balance, and billing summary.",
     inputSchema: s.object({}, { description: "No input is required." }),
     outputSchema: s.actionOutput({ account: accountSchema }, "The connected Vultr account."),
   }),
   defineProviderAction(service, {
     name: "list_instances",
+    operationType: "read",
     description: "List Vultr VPS instances with cursor pagination and common instance filters.",
     requiredScopes: [subscriptionReadPermission],
     inputSchema: s.object(
@@ -237,6 +239,7 @@ export const vultrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_instance",
+    operationType: "read",
     description: "Retrieve one Vultr VPS instance by ID.",
     requiredScopes: [subscriptionReadPermission],
     inputSchema: s.actionInput({ instanceId: instanceIdSchema }, ["instanceId"], "The Vultr instance to retrieve."),
@@ -245,6 +248,7 @@ export const vultrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_instance",
+    operationType: "write",
     description: "Create a Vultr VPS instance from an OS, ISO, snapshot, application, or application image.",
     requiredScopes: [provisioningPermission],
     inputSchema: createInstanceInputSchema,
@@ -257,6 +261,7 @@ export const vultrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_instance",
+    operationType: "write",
     description: "Update common settings on a Vultr VPS instance without reinstalling it.",
     requiredScopes: [subscriptionWritePermission],
     inputSchema: updateInstanceInputSchema,
@@ -265,6 +270,7 @@ export const vultrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_instance",
+    operationType: "destructive",
     description: "Permanently delete a Vultr VPS instance.",
     requiredScopes: [subscriptionWritePermission],
     inputSchema: s.actionInput({ instanceId: instanceIdSchema }, ["instanceId"], "The Vultr instance to delete."),
@@ -278,6 +284,7 @@ export const vultrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "manage_instance_power",
+    operationType: "write",
     description: "Start, reboot, or halt a Vultr VPS instance.",
     requiredScopes: [subscriptionWritePermission],
     inputSchema: s.actionInput(
@@ -304,6 +311,7 @@ export const vultrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_regions",
+    operationType: "read",
     description: "List Vultr deployment regions and the product features available in each region.",
     inputSchema: paginationInputSchema("Pagination for Vultr regions."),
     outputSchema: listOutputSchema("regions", "Vultr regions in this page.", regionSchema),
@@ -311,6 +319,7 @@ export const vultrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_plans",
+    operationType: "read",
     description: "List Vultr VPS plans with optional plan-type and Windows compatibility filters.",
     inputSchema: s.object(
       "Filters and pagination for Vultr plans.",
@@ -328,6 +337,7 @@ export const vultrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_operating_systems",
+    operationType: "read",
     description: "List operating system images available for Vultr instance deployment.",
     inputSchema: paginationInputSchema("Pagination for Vultr operating systems."),
     outputSchema: listOutputSchema("operatingSystems", "Vultr operating systems in this page.", operatingSystemSchema),
@@ -335,6 +345,7 @@ export const vultrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_snapshots",
+    operationType: "read",
     description: "List snapshots in the connected Vultr account, optionally filtered by description.",
     requiredScopes: [subscriptionReadPermission],
     inputSchema: s.object(
@@ -350,6 +361,7 @@ export const vultrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_firewall_groups",
+    operationType: "read",
     description: "List firewall groups in the connected Vultr account.",
     requiredScopes: [firewallPermission],
     inputSchema: paginationInputSchema("Pagination for Vultr firewall groups."),
@@ -357,6 +369,7 @@ export const vultrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_domains",
+    operationType: "read",
     description: "List DNS domains in the connected Vultr account.",
     requiredScopes: [dnsPermission],
     inputSchema: paginationInputSchema("Pagination for Vultr DNS domains."),
@@ -365,6 +378,7 @@ export const vultrActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_domain_records",
+    operationType: "read",
     description: "List DNS records for one domain in the connected Vultr account.",
     requiredScopes: [dnsPermission],
     inputSchema: s.object(

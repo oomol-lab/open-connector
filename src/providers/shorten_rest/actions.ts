@@ -153,6 +153,7 @@ const clickSchema = s.object(
 export const shortenRestActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_alias",
+    operationType: "write",
     description: "Create a Shorten.REST alias for one or more destination URLs.",
     inputSchema: createAliasInputSchema,
     outputSchema: s.object("The alias created by Shorten.REST.", {
@@ -163,6 +164,7 @@ export const shortenRestActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_alias",
+    operationType: "read",
     description: "Get detailed information for one Shorten.REST alias.",
     inputSchema: aliasReferenceInputSchema,
     outputSchema: s.object("The alias lookup result returned by Shorten.REST.", {
@@ -171,6 +173,7 @@ export const shortenRestActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_alias",
+    operationType: "write",
     description: "Update destinations, metatags, or snippets on an existing Shorten.REST alias.",
     inputSchema: updateAliasInputSchema,
     outputSchema: s.object("The Shorten.REST alias update result.", {
@@ -179,6 +182,7 @@ export const shortenRestActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_alias",
+    operationType: "destructive",
     description: "Delete one Shorten.REST alias by alias name and optional domain.",
     inputSchema: aliasReferenceInputSchema,
     outputSchema: s.object("The Shorten.REST alias deletion result.", {
@@ -187,6 +191,7 @@ export const shortenRestActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_aliases",
+    operationType: "read",
     description: "List Shorten.REST alias names for a domain with official pagination.",
     inputSchema: listAliasesInputSchema,
     outputSchema: s.object(
@@ -200,6 +205,7 @@ export const shortenRestActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_clicks",
+    operationType: "read",
     description: "List raw Shorten.REST click records with official pagination.",
     inputSchema: listClicksInputSchema,
     outputSchema: s.object(

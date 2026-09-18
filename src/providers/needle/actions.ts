@@ -70,6 +70,7 @@ const needleFileToAddSchema = s.requiredObject("A file reference to add into a N
 export const needleActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_collections",
+    operationType: "read",
     description: "List the Needle collections that the API key can access.",
     inputSchema: s.object({}, { description: "No input is required for listing Needle collections." }),
     outputSchema: s.requiredObject("The collections visible to the API key.", {
@@ -78,6 +79,7 @@ export const needleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_collection",
+    operationType: "write",
     description: "Create a Needle collection and optionally attach existing Needle file IDs.",
     inputSchema: s.object(
       "The input payload for creating a Needle collection.",
@@ -96,6 +98,7 @@ export const needleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_collection",
+    operationType: "read",
     description: "Get the details of a single Needle collection.",
     inputSchema: s.requiredObject("The collection identifier for the requested Needle collection.", {
       collection_id: nonEmptyString("The Needle collection ID."),
@@ -106,6 +109,7 @@ export const needleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_collection_stats",
+    operationType: "read",
     description: "Get indexing and storage statistics for a Needle collection.",
     inputSchema: s.requiredObject("The collection identifier used to fetch Needle collection statistics.", {
       collection_id: nonEmptyString("The Needle collection ID."),
@@ -123,6 +127,7 @@ export const needleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_collection_files",
+    operationType: "read",
     description: "List the files currently attached to a Needle collection.",
     inputSchema: s.requiredObject("The collection identifier used to list Needle collection files.", {
       collection_id: nonEmptyString("The Needle collection ID."),
@@ -133,6 +138,7 @@ export const needleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_files_to_collection",
+    operationType: "write",
     description: "Import one or more URL-backed files into a Needle collection for indexing.",
     inputSchema: s.requiredObject("The input payload for importing files into a Needle collection.", {
       collection_id: nonEmptyString("The Needle collection ID."),
@@ -144,6 +150,7 @@ export const needleActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_collection",
+    operationType: "read",
     description: "Search a Needle collection for the most relevant retrieved content.",
     inputSchema: s.object(
       "The input payload for a Needle collection search.",

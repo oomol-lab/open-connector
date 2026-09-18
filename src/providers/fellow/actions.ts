@@ -149,6 +149,7 @@ const actionItemOutputSchema = s.object("Fellow action item response.", {
 export const fellowActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the Fellow user and workspace associated with the current API key.",
     inputSchema: s.object("This action does not require input.", {}),
     outputSchema: s.object("Fellow authenticated user response.", {
@@ -158,12 +159,14 @@ export const fellowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_notes",
+    operationType: "read",
     description: "List Fellow meeting notes with optional filters, includes, and pagination.",
     inputSchema: listNotesInputSchema,
     outputSchema: paginatedNotesOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_note",
+    operationType: "read",
     description: "Retrieve one Fellow meeting note by ID.",
     inputSchema: s.object("Input for retrieving a Fellow note.", {
       note_id: s.nonEmptyString("The Fellow note ID."),
@@ -172,12 +175,14 @@ export const fellowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_action_items",
+    operationType: "read",
     description: "List Fellow action items with optional filters, ordering, and pagination.",
     inputSchema: listActionItemsInputSchema,
     outputSchema: paginatedActionItemsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_action_item",
+    operationType: "read",
     description: "Retrieve one Fellow action item by ID.",
     inputSchema: s.object("Input for retrieving a Fellow action item.", {
       action_item_id: s.nonEmptyString("The Fellow action item ID."),
@@ -186,6 +191,7 @@ export const fellowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "mark_action_item_complete",
+    operationType: "write",
     description: "Mark a Fellow action item complete or incomplete.",
     inputSchema: s.object("Input for marking a Fellow action item complete or incomplete.", {
       action_item_id: s.nonEmptyString("The Fellow action item ID."),
@@ -195,6 +201,7 @@ export const fellowActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "archive_action_item",
+    operationType: "destructive",
     description: "Archive a Fellow action item by marking it as won't do.",
     inputSchema: s.object("Input for archiving a Fellow action item.", {
       action_item_id: s.nonEmptyString("The Fellow action item ID."),

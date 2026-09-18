@@ -68,6 +68,7 @@ const apifyRunSchema = s.looseRequiredObject(
 export const apifyActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Retrieve the currently authenticated Apify user account.",
     inputSchema: s.object("The input for retrieving the current Apify user.", {}),
     outputSchema: s.object("The current authenticated Apify user response.", {
@@ -76,6 +77,7 @@ export const apifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_actor",
+    operationType: "read",
     description: "Retrieve metadata for one Apify actor by identifier.",
     inputSchema: s.object("The input for retrieving one Apify actor.", {
       actorId: s.nonEmptyString("The Apify actor identifier, such as apify~web-scraper or apify/web-scraper."),
@@ -86,6 +88,7 @@ export const apifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_actor",
+    operationType: "write",
     description: "Start one Apify actor run with an optional JSON input payload.",
     inputSchema: s.object(
       "The input for starting one Apify actor run.",
@@ -104,6 +107,7 @@ export const apifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_run",
+    operationType: "read",
     description: "Retrieve the current status and storage identifiers for one Apify actor run.",
     inputSchema: s.object(
       "The input for retrieving one Apify actor run.",
@@ -122,6 +126,7 @@ export const apifyActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dataset_items",
+    operationType: "read",
     description: "Retrieve JSON items from one Apify dataset.",
     inputSchema: s.object(
       "The input for retrieving items from an Apify dataset.",

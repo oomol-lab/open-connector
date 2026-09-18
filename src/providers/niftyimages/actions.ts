@@ -118,6 +118,7 @@ const widgetUserDateRangeInputSchema = (description: string) =>
 
 const listImagesAction = defineProviderAction(service, {
   name: "list_images",
+  operationType: "read",
   description: "Page through images in the connected NiftyImages account.",
   inputSchema: s.object(
     "Pagination parameters for listing NiftyImages images.",
@@ -132,6 +133,7 @@ const listImagesAction = defineProviderAction(service, {
 
 const getImageAction = defineProviderAction(service, {
   name: "get_image",
+  operationType: "read",
   description: "Get details for a NiftyImages personalized image or countdown timer by its URL.",
   inputSchema: s.requiredObject("The NiftyImages image URL to inspect.", {
     url: s.url("The NiftyImages image URL to look up."),
@@ -141,6 +143,7 @@ const getImageAction = defineProviderAction(service, {
 
 const getImageStatsAction = defineProviderAction(service, {
   name: "get_image_stats",
+  operationType: "read",
   description: "Get aggregated NiftyImages image statistics for an optional ISO 8601 date range.",
   inputSchema: dateRangeInputSchema("The optional date range for aggregated NiftyImages image statistics."),
   outputSchema: s.array("The aggregated NiftyImages image statistics.", imageSchema),
@@ -148,6 +151,7 @@ const getImageStatsAction = defineProviderAction(service, {
 
 const listWidgetsAction = defineProviderAction(service, {
   name: "list_widgets",
+  operationType: "read",
   description: "List active widgets in the connected NiftyImages account.",
   inputSchema: s.object("The input payload for listing active NiftyImages widgets.", {}),
   outputSchema: s.array("The active NiftyImages widgets.", widgetSchema),
@@ -155,6 +159,7 @@ const listWidgetsAction = defineProviderAction(service, {
 
 const getWidgetStatsAction = defineProviderAction(service, {
   name: "get_widget_stats",
+  operationType: "read",
   description: "Get aggregated NiftyImages user, image, and impression statistics grouped by widget.",
   inputSchema: dateRangeInputSchema("The optional date range for aggregated NiftyImages widget statistics."),
   outputSchema: s.array("The aggregated statistics grouped by NiftyImages widget.", widgetStatsSchema),
@@ -162,6 +167,7 @@ const getWidgetStatsAction = defineProviderAction(service, {
 
 const listWidgetImagesAction = defineProviderAction(service, {
   name: "list_widget_images",
+  operationType: "read",
   description: "List images created or viewed through a NiftyImages widget during an optional date range.",
   inputSchema: widgetDateRangeInputSchema("The widget and optional date range used to list NiftyImages widget images."),
   outputSchema: s.array("The images associated with the NiftyImages widget.", widgetImageSchema),
@@ -169,6 +175,7 @@ const listWidgetImagesAction = defineProviderAction(service, {
 
 const listWidgetUsersAction = defineProviderAction(service, {
   name: "list_widget_users",
+  operationType: "read",
   description: "List users who created images or accumulated impressions through a NiftyImages widget.",
   inputSchema: widgetDateRangeInputSchema("The widget and optional date range used to list NiftyImages widget users."),
   outputSchema: s.array("The users associated with the NiftyImages widget.", widgetUserSchema),
@@ -176,6 +183,7 @@ const listWidgetUsersAction = defineProviderAction(service, {
 
 const getWidgetUserStatsAction = defineProviderAction(service, {
   name: "get_widget_user_stats",
+  operationType: "read",
   description: "Get image and impression statistics for one NiftyImages widget user during an optional date range.",
   inputSchema: widgetUserDateRangeInputSchema(
     "The widget user and optional date range used to retrieve NiftyImages statistics.",
@@ -185,6 +193,7 @@ const getWidgetUserStatsAction = defineProviderAction(service, {
 
 const listWidgetUserImagesAction = defineProviderAction(service, {
   name: "list_widget_user_images",
+  operationType: "read",
   description: "List images created or viewed by one NiftyImages widget user during an optional date range.",
   inputSchema: widgetUserDateRangeInputSchema(
     "The widget user and optional date range used to list NiftyImages images.",

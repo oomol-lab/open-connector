@@ -51,6 +51,7 @@ const baseOutputSchema = s.looseObject("The raw Carbone response wrapper.", {
 
 const listTemplatesAction = defineProviderAction(service, {
   name: "list_templates",
+  operationType: "read",
   description: "List Carbone templates with optional filtering and cursor pagination.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -78,6 +79,7 @@ const listTemplatesAction = defineProviderAction(service, {
 
 const listTemplateCategoriesAction = defineProviderAction(service, {
   name: "list_template_categories",
+  operationType: "read",
   description: "List categories used by deployed Carbone templates.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -95,6 +97,7 @@ const listTemplateCategoriesAction = defineProviderAction(service, {
 
 const listTemplateTagsAction = defineProviderAction(service, {
   name: "list_template_tags",
+  operationType: "read",
   description: "List tags used by deployed Carbone templates.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -112,6 +115,7 @@ const listTemplateTagsAction = defineProviderAction(service, {
 
 const updateTemplateMetadataAction = defineProviderAction(service, {
   name: "update_template_metadata",
+  operationType: "write",
   description: "Update metadata on an existing Carbone template or template version.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -132,6 +136,7 @@ const updateTemplateMetadataAction = defineProviderAction(service, {
 
 const deleteTemplateAction = defineProviderAction(service, {
   name: "delete_template",
+  operationType: "destructive",
   description: "Delete a Carbone template or a specific template version.",
   requiredScopes: [],
   inputSchema: s.object(

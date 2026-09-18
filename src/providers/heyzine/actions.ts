@@ -119,6 +119,7 @@ const socialMetadataInputSchema = s.actionInput(
 export const heyzineActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_flipbooks",
+    operationType: "read",
     description: "List the flipbooks accessible with the current Heyzine API key.",
     inputSchema: noInputSchema,
     outputSchema: s.actionOutput(
@@ -128,6 +129,7 @@ export const heyzineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_flipbook",
+    operationType: "read",
     description: "Get the details and oEmbed metadata for a specific Heyzine flipbook.",
     inputSchema: idInputSchema,
     outputSchema: s.actionOutput(
@@ -137,12 +139,14 @@ export const heyzineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_flipbook",
+    operationType: "destructive",
     description: "Delete a specific Heyzine flipbook.",
     inputSchema: idInputSchema,
     outputSchema: operationSchema,
   }),
   defineProviderAction(service, {
     name: "list_bookshelves",
+    operationType: "read",
     description: "List the bookshelves accessible with the current Heyzine API key.",
     inputSchema: noInputSchema,
     outputSchema: s.actionOutput(
@@ -152,6 +156,7 @@ export const heyzineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_bookshelf_flipbooks",
+    operationType: "read",
     description: "List the flipbooks assigned to a specific Heyzine bookshelf.",
     inputSchema: idInputSchema,
     outputSchema: s.actionOutput(
@@ -161,24 +166,28 @@ export const heyzineActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_flipbook_to_bookshelf",
+    operationType: "write",
     description: "Add a flipbook to a specific Heyzine bookshelf.",
     inputSchema: addFlipbookInputSchema,
     outputSchema: operationSchema,
   }),
   defineProviderAction(service, {
     name: "remove_flipbook_from_bookshelf",
+    operationType: "destructive",
     description: "Remove a flipbook from a specific Heyzine bookshelf.",
     inputSchema: bookshelfFlipbookInputSchema,
     outputSchema: operationSchema,
   }),
   defineProviderAction(service, {
     name: "set_flipbook_social_data",
+    operationType: "write",
     description: "Set the social sharing metadata for a specific Heyzine flipbook.",
     inputSchema: socialMetadataInputSchema,
     outputSchema: operationSchema,
   }),
   defineProviderAction(service, {
     name: "set_bookshelf_social_data",
+    operationType: "write",
     description: "Set the social sharing metadata for a specific Heyzine bookshelf.",
     inputSchema: socialMetadataInputSchema,
     outputSchema: operationSchema,

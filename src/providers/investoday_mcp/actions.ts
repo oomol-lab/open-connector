@@ -29,7 +29,7 @@ export const investodayMcpActions: readonly ActionDefinition[] = [
   ...investodayOfficialActions,
   defineProviderAction("investoday_mcp", {
     name: "list_tools",
-
+    operationType: "read",
     description:
       "Discover the current Investoday financial market data and research MCP tools with their live input schemas.",
     requiredScopes: [],
@@ -45,7 +45,7 @@ export const investodayMcpActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction("investoday_mcp", {
     name: "call_tool",
-
+    operationType: "read",
     description:
       "Call a current Investoday MCP tool with JSON arguments after checking its live schema and behavior annotations.",
     requiredScopes: [],

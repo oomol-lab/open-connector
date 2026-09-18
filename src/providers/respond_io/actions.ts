@@ -181,6 +181,7 @@ const channelSchema = s.looseRequiredObject("A Respond.io workspace channel.", {
 export const respondIoActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get one Respond.io contact by contact ID, email address, or phone number.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Input parameters for retrieving a Respond.io contact.", {
@@ -190,6 +191,7 @@ export const respondIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a Respond.io contact identified by an email address or phone number.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -204,6 +206,7 @@ export const respondIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update one or more fields on an existing Respond.io contact.",
     requiredScopes: [],
     inputSchema: updateContactInputSchema,
@@ -211,6 +214,7 @@ export const respondIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete a Respond.io contact by contact ID, email address, or phone number.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Input parameters for deleting a Respond.io contact.", {
@@ -220,6 +224,7 @@ export const respondIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_or_update_contact",
+    operationType: "write",
     description: "Create a Respond.io contact when it does not exist, or update it when the identifier already exists.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -231,6 +236,7 @@ export const respondIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Respond.io contacts using workspace timezone-aware filters and cursor pagination.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -251,6 +257,7 @@ export const respondIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_contact_tags",
+    operationType: "write",
     description: "Add up to ten tags to a Respond.io contact.",
     requiredScopes: [],
     inputSchema: tagInputSchema,
@@ -258,6 +265,7 @@ export const respondIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_contact_tags",
+    operationType: "destructive",
     description: "Remove up to ten tags from a Respond.io contact.",
     requiredScopes: [],
     inputSchema: tagInputSchema,
@@ -265,6 +273,7 @@ export const respondIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "assign_conversation",
+    operationType: "destructive",
     description: "Assign or unassign the open conversation for a Respond.io contact.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Input parameters for assigning a Respond.io conversation.", {
@@ -279,6 +288,7 @@ export const respondIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_conversation_status",
+    operationType: "destructive",
     description: "Open or close a Respond.io contact conversation with optional closing context.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -295,6 +305,7 @@ export const respondIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_comment",
+    operationType: "write",
     description: "Add an internal comment to a Respond.io contact conversation.",
     requiredScopes: [],
     inputSchema: s.requiredObject("Input parameters for adding a Respond.io conversation comment.", {
@@ -309,6 +320,7 @@ export const respondIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List users in the connected Respond.io workspace with cursor pagination.",
     requiredScopes: [],
     inputSchema: workspaceListInputSchema,
@@ -319,6 +331,7 @@ export const respondIoActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_channels",
+    operationType: "read",
     description: "List channels in the connected Respond.io workspace with cursor pagination.",
     requiredScopes: [],
     inputSchema: workspaceListInputSchema,

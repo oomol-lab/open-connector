@@ -220,6 +220,7 @@ function getOutputSchema(description: string, fieldName: string, itemDescription
 export const rechargeActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_customers",
+    operationType: "read",
     description: "List Recharge customers with cursor pagination and common filters.",
     requiredScopes: [],
     inputSchema: customerListInputSchema,
@@ -231,6 +232,7 @@ export const rechargeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_customer",
+    operationType: "read",
     description: "Retrieve one Recharge customer by ID.",
     requiredScopes: [],
     inputSchema: getResourceInputSchema,
@@ -242,6 +244,7 @@ export const rechargeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subscriptions",
+    operationType: "read",
     description: "List Recharge subscriptions with cursor pagination and common filters.",
     requiredScopes: [],
     inputSchema: subscriptionListInputSchema,
@@ -253,6 +256,7 @@ export const rechargeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_subscription",
+    operationType: "read",
     description: "Retrieve one Recharge subscription by ID.",
     requiredScopes: [],
     inputSchema: getResourceInputSchema,
@@ -264,6 +268,7 @@ export const rechargeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_orders",
+    operationType: "read",
     description: "List Recharge orders with cursor pagination and common filters.",
     requiredScopes: [],
     inputSchema: orderListInputSchema,
@@ -275,6 +280,7 @@ export const rechargeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_order",
+    operationType: "read",
     description: "Retrieve one Recharge order by ID.",
     requiredScopes: [],
     inputSchema: getResourceInputSchema,
@@ -286,6 +292,7 @@ export const rechargeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_charges",
+    operationType: "read",
     description: "List Recharge charges with cursor pagination and common filters.",
     requiredScopes: [],
     inputSchema: chargeListInputSchema,
@@ -297,6 +304,7 @@ export const rechargeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_charge",
+    operationType: "read",
     description: "Retrieve one Recharge charge by ID.",
     requiredScopes: [],
     inputSchema: getResourceInputSchema,
@@ -308,6 +316,7 @@ export const rechargeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_products",
+    operationType: "read",
     description: "List Recharge products with cursor pagination and common filters.",
     requiredScopes: [],
     inputSchema: productListInputSchema,
@@ -319,6 +328,7 @@ export const rechargeActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_product",
+    operationType: "read",
     description: "Retrieve one Recharge product by ID.",
     requiredScopes: [],
     inputSchema: getResourceInputSchema,

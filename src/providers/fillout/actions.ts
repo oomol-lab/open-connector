@@ -114,6 +114,7 @@ const submissionIdInputSchema = s.object(
 export const filloutActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_forms",
+    operationType: "read",
     description: "List forms available to the authenticated Fillout account.",
     inputSchema: noInputSchema,
     outputSchema: s.requiredObject("The normalized Fillout form-list response.", {
@@ -122,6 +123,7 @@ export const filloutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form_metadata",
+    operationType: "read",
     description: "Get metadata and configured questions for one Fillout form.",
     inputSchema: formIdInputSchema,
     outputSchema: s.requiredObject("The normalized Fillout form metadata response.", {
@@ -130,6 +132,7 @@ export const filloutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_submissions",
+    operationType: "read",
     description: "List submissions for one Fillout form with documented pagination and filters.",
     inputSchema: s.object(
       "Input payload for listing Fillout submissions.",
@@ -167,6 +170,7 @@ export const filloutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_submission",
+    operationType: "read",
     description: "Get one Fillout form submission by submission ID.",
     inputSchema: submissionIdInputSchema,
     outputSchema: s.requiredObject("The normalized Fillout single-submission response.", {
@@ -175,6 +179,7 @@ export const filloutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_submissions",
+    operationType: "write",
     description: "Create one or more submissions for a Fillout form.",
     inputSchema: s.requiredObject("Input payload for creating Fillout submissions.", {
       formId: s.nonEmptyString("The Fillout form ID."),
@@ -193,6 +198,7 @@ export const filloutActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_submission",
+    operationType: "destructive",
     description: "Delete one Fillout form submission by submission ID.",
     inputSchema: submissionIdInputSchema,
     outputSchema: s.requiredObject("The normalized Fillout delete-submission response.", {

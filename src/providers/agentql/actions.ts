@@ -111,6 +111,7 @@ const telemetryEntrySchema = s.requiredObject("Single AgentQL Tetra session tele
 export const agentqlActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "query_data",
+    operationType: "read",
     description: "Query a webpage with AgentQL and return the extracted structured data plus AgentQL metadata.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -135,6 +136,7 @@ export const agentqlActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_usage",
+    operationType: "read",
     description: "Get AgentQL account and API key usage counters for the current billing cycle and lifetime totals.",
     requiredScopes: [],
     inputSchema: s.object({}, { description: "This action does not require any input parameters." }),
@@ -157,6 +159,7 @@ export const agentqlActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_browser_session",
+    operationType: "write",
     description: "Create an AgentQL Tetra remote browser session and return the session, CDP, and base URLs.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -193,6 +196,7 @@ export const agentqlActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_session_usage",
+    operationType: "read",
     description: "List AgentQL Tetra session telemetry entries with optional filters and pagination controls.",
     requiredScopes: [],
     inputSchema: s.object(

@@ -98,12 +98,14 @@ const spaceMemberSchema = s.object("A normalized Circle space member.", {
 export const circleActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_community",
+    operationType: "read",
     description: "Get details about the Circle community associated with the current API token.",
     inputSchema: s.actionInput({}, [], "The input payload for getting Circle community details."),
     outputSchema: s.actionOutput({ community: communitySchema }),
   }),
   defineProviderAction(service, {
     name: "list_community_members",
+    operationType: "read",
     description: "List Circle community members with optional status and tag filters.",
     inputSchema: s.object(
       "Input parameters for listing Circle community members.",
@@ -125,12 +127,14 @@ export const circleActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_community_member",
+    operationType: "read",
     description: "Get a Circle community member by ID.",
     inputSchema: s.actionInput({ id: positiveInteger("The Circle community member ID.") }, ["id"]),
     outputSchema: s.actionOutput({ member: memberSchema }),
   }),
   defineProviderAction(service, {
     name: "list_posts",
+    operationType: "read",
     description: "List Circle basic posts with optional space, status, search, and sort filters.",
     inputSchema: s.object(
       "Input parameters for listing Circle basic posts.",
@@ -158,12 +162,14 @@ export const circleActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_post",
+    operationType: "read",
     description: "Get a Circle basic post by ID.",
     inputSchema: s.actionInput({ id: positiveInteger("The Circle post ID.") }, ["id"]),
     outputSchema: s.actionOutput({ post: postSchema }),
   }),
   defineProviderAction(service, {
     name: "list_space_groups",
+    operationType: "read",
     description: "List Circle space groups with optional name filtering.",
     inputSchema: s.object(
       "Input parameters for listing Circle space groups.",
@@ -177,12 +183,14 @@ export const circleActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_space_group",
+    operationType: "read",
     description: "Get a Circle space group by ID.",
     inputSchema: s.actionInput({ id: positiveInteger("The Circle space group ID.") }, ["id"]),
     outputSchema: s.actionOutput({ space_group: spaceGroupSchema }),
   }),
   defineProviderAction(service, {
     name: "list_space_members",
+    operationType: "read",
     description: "List Circle members in a specific space.",
     inputSchema: s.object(
       "Input parameters for listing Circle space members.",

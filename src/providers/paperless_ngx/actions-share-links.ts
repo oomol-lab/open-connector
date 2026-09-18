@@ -110,6 +110,7 @@ const bundleFollowUp = "paperless_ngx.get_share_link_bundle";
 export const paperlessNgxShareLinkActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_share_links",
+    operationType: "read",
     description:
       "List share links visible to the connected user (own links plus links shared with them), with optional creation and expiration time filters. Each result carries share_url, the public download URL. Requires the view_sharelink permission.",
     requiredScopes: [],
@@ -120,6 +121,7 @@ export const paperlessNgxShareLinkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_share_link",
+    operationType: "read",
     description:
       "Get one share link by id, including its public share_url. Requires the view_sharelink permission and access to the link.",
     requiredScopes: [],
@@ -128,6 +130,7 @@ export const paperlessNgxShareLinkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_share_link",
+    operationType: "write",
     description:
       "Create a public share link for one document. The link is owned by the connected user, who must be allowed to view the document. The response includes slug and the derived share_url; share links cannot be edited afterwards, so delete and recreate to change the expiration or file version. Requires the add_sharelink permission.",
     requiredScopes: [],
@@ -148,6 +151,7 @@ export const paperlessNgxShareLinkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_share_link",
+    operationType: "destructive",
     description:
       "Delete a share link so its public URL stops working. Requires the delete_sharelink permission and ownership of the link (or superuser).",
     requiredScopes: [],
@@ -157,6 +161,7 @@ export const paperlessNgxShareLinkActions: ProviderActionDefinition[] = [
 
   defineProviderAction(service, {
     name: "list_share_link_bundles",
+    operationType: "read",
     description:
       "List share link bundles visible to the connected user, filterable by status, contained documents and creation or expiration time. Each result carries share_url and the build status. Requires the view_sharelinkbundle permission.",
     requiredScopes: [],
@@ -167,6 +172,7 @@ export const paperlessNgxShareLinkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_share_link_bundle",
+    operationType: "read",
     description:
       "Get one share link bundle by id, including its build status, size and public share_url. Use it to poll a bundle after create_share_link_bundle or rebuild_share_link_bundle until status is ready. Requires the view_sharelinkbundle permission.",
     requiredScopes: [],
@@ -175,6 +181,7 @@ export const paperlessNgxShareLinkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_share_link_bundle",
+    operationType: "write",
     description:
       "Create a share link bundle: one public link serving a zip archive of several documents. The connected user must be allowed to view every document and duplicate ids are rejected. The zip is built by a background task, so the bundle is returned with status pending; poll get_share_link_bundle until it is ready. Bundles cannot be edited afterwards. Requires the add_sharelinkbundle permission.",
     requiredScopes: [],
@@ -203,6 +210,7 @@ export const paperlessNgxShareLinkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "rebuild_share_link_bundle",
+    operationType: "write",
     description:
       "Discard the built zip archive of a share link bundle and queue it for rebuilding, for example after its documents changed. The bundle is returned with status pending; Paperless-ngx rejects the request with 400 while a build is still processing. Requires the change_sharelinkbundle permission.",
     requiredScopes: [],
@@ -216,6 +224,7 @@ export const paperlessNgxShareLinkActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_share_link_bundle",
+    operationType: "destructive",
     description:
       "Delete a share link bundle and its zip archive so the public URL stops working. Requires the delete_sharelinkbundle permission and ownership of the bundle (or superuser).",
     requiredScopes: [],

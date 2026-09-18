@@ -131,6 +131,7 @@ const videoLanguageInputSchema = s.object("Input for an Amara video language act
 export const amaraActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_languages",
+    operationType: "read",
     description: "List the languages supported by the Amara API.",
     requiredScopes: [],
     inputSchema: noInputSchema,
@@ -140,6 +141,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_available_languages",
+    operationType: "read",
     description: "List the languages supported by the Amara API.",
     requiredScopes: [],
     inputSchema: noInputSchema,
@@ -149,6 +151,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_videos",
+    operationType: "read",
     description: "List Amara videos with optional filters, sorting, and pagination controls.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -176,6 +179,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_video",
+    operationType: "read",
     description: "Fetch a single Amara video by video ID.",
     requiredScopes: [],
     inputSchema: videoIdInputSchema,
@@ -185,6 +189,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "view_video_details",
+    operationType: "read",
     description: "Fetch a single Amara video by video ID.",
     requiredScopes: [],
     inputSchema: videoIdInputSchema,
@@ -194,6 +199,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_video",
+    operationType: "write",
     description: "Create a new Amara video from a source URL and title, with optional metadata.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -220,6 +226,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_video",
+    operationType: "write",
     description: "Update an existing Amara video's metadata, assignment, or language settings.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -255,6 +262,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_video_activity",
+    operationType: "read",
     description: "List activity items for a single Amara video with pagination controls.",
     requiredScopes: [],
     inputSchema: paginatedVideoInputSchema(),
@@ -262,6 +270,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_video_urls",
+    operationType: "read",
     description: "List all source URLs associated with a single Amara video.",
     requiredScopes: [],
     inputSchema: paginatedVideoInputSchema(),
@@ -272,6 +281,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_video_url",
+    operationType: "read",
     description: "Fetch a single Amara video URL entry by video ID and URL ID.",
     requiredScopes: [],
     inputSchema: videoUrlInputSchema(),
@@ -281,6 +291,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_video_url",
+    operationType: "write",
     description: "Add a new source URL to an existing Amara video.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -298,6 +309,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_video_url",
+    operationType: "destructive",
     description: "Delete a source URL from an existing Amara video.",
     requiredScopes: [],
     inputSchema: videoUrlInputSchema(),
@@ -305,6 +317,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "make_video_url_primary",
+    operationType: "write",
     description: "Update a video URL entry and mark it as the primary URL when requested.",
     requiredScopes: [],
     inputSchema: s.object("Input for making an Amara video URL primary.", {
@@ -318,6 +331,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_video_url_details",
+    operationType: "read",
     description: "Look up Amara metadata for a public or embeddable video URL.",
     requiredScopes: [],
     inputSchema: s.object("Input for looking up an Amara video URL.", {
@@ -329,6 +343,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subtitle_languages",
+    operationType: "read",
     description: "List all subtitle language tracks for a single Amara video.",
     requiredScopes: [],
     inputSchema: videoIdInputSchema,
@@ -339,6 +354,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_subtitle_language",
+    operationType: "write",
     description: "Create a new subtitle language track for an Amara video.",
     requiredScopes: [],
     inputSchema: s.object("Input for creating an Amara subtitle language.", {
@@ -351,6 +367,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_subtitle_language_details",
+    operationType: "read",
     description: "Fetch a single subtitle language track for an Amara video.",
     requiredScopes: [],
     inputSchema: videoLanguageInputSchema,
@@ -360,6 +377,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_subtitle_language",
+    operationType: "write",
     description: "Update subtitle language settings such as completion flags and soft limits.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -398,6 +416,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "fetch_subtitles_data",
+    operationType: "read",
     description: "Fetch subtitle data for a specific video and language in JSON, SRT, or VTT format.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -423,6 +442,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_subtitles",
+    operationType: "write",
     description: "Create a new subtitle version for a specific video and language.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -457,6 +477,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subtitle_actions",
+    operationType: "read",
     description: "List the subtitle workflow actions available for a specific video and language.",
     requiredScopes: [],
     inputSchema: videoLanguageInputSchema,
@@ -466,6 +487,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "perform_subtitle_action",
+    operationType: "destructive",
     description: "Perform a subtitle workflow action such as publish, approve, or reject.",
     requiredScopes: [],
     inputSchema: s.object("Input for performing an Amara subtitle action.", {
@@ -477,6 +499,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_subtitle_notes",
+    operationType: "read",
     description: "List all subtitle notes for a specific video and subtitle language.",
     requiredScopes: [],
     inputSchema: videoLanguageInputSchema,
@@ -486,6 +509,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_subtitle_note",
+    operationType: "write",
     description: "Add a subtitle note for a specific video and subtitle language.",
     requiredScopes: [],
     inputSchema: s.object("Input for adding an Amara subtitle note.", {
@@ -499,6 +523,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_activity",
+    operationType: "read",
     description: "List Amara activity items with optional team, video, language, and date filters.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -522,6 +547,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_activity",
+    operationType: "read",
     description: "Fetch a single Amara activity item by activity ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for fetching an Amara activity.", {
@@ -533,6 +559,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user",
+    operationType: "read",
     description: "Fetch a single Amara user by username or user ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for fetching an Amara user.", {
@@ -544,6 +571,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_data",
+    operationType: "read",
     description: "Fetch a single Amara user by username, `me`, or user ID.",
     requiredScopes: [],
     inputSchema: s.object("Input for fetching Amara user data.", {
@@ -555,6 +583,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_user_activity",
+    operationType: "read",
     description: "List activity items for a specific Amara user.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -570,6 +599,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_teams",
+    operationType: "read",
     description: "List the Amara teams accessible to the current API key with pagination controls.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -587,6 +617,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_team_details",
+    operationType: "read",
     description: "Fetch a single Amara team by team slug.",
     requiredScopes: [],
     inputSchema: s.object("Input for fetching an Amara team.", {
@@ -598,6 +629,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_team_languages",
+    operationType: "read",
     description: "Fetch preferred and blacklisted language codes for a single Amara team.",
     requiredScopes: [],
     inputSchema: s.object("Input for fetching Amara team languages.", {
@@ -610,6 +642,7 @@ export const amaraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "send_message",
+    operationType: "write",
     description: "Send a message to an Amara user or team recipient.",
     requiredScopes: [],
     inputSchema: s.object(

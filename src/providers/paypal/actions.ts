@@ -376,6 +376,7 @@ const updateTrackingInputSchema = s.object(
 export const paypalActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_transactions",
+    operationType: "read",
     description: "List PayPal account transactions for reconciliation, support, and financial reporting.",
     requiredScopes: [],
     inputSchema: transactionSearchInputSchema,
@@ -383,6 +384,7 @@ export const paypalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_balances",
+    operationType: "read",
     description: "Retrieve PayPal account balances, including available and withheld amounts by currency.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -400,6 +402,7 @@ export const paypalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_order",
+    operationType: "write",
     description: "Create a PayPal order and return the approval links needed to continue checkout.",
     requiredScopes: [],
     inputSchema: createOrderInputSchema,
@@ -407,6 +410,7 @@ export const paypalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_order",
+    operationType: "read",
     description: "Retrieve the current details and status of a PayPal order.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -421,6 +425,7 @@ export const paypalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "authorize_order",
+    operationType: "write",
     description: "Authorize an approved PayPal order so its funds can be captured later.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -432,6 +437,7 @@ export const paypalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "capture_order",
+    operationType: "write",
     description: "Capture payment for an approved PayPal order with CAPTURE intent.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -443,6 +449,7 @@ export const paypalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_authorization",
+    operationType: "read",
     description: "Retrieve details for a PayPal authorized payment.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving an authorized PayPal payment.", {
@@ -452,6 +459,7 @@ export const paypalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "capture_authorization",
+    operationType: "write",
     description: "Capture all or part of an authorized PayPal payment.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -482,6 +490,7 @@ export const paypalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "void_authorization",
+    operationType: "destructive",
     description: "Void a PayPal authorization that has not been fully captured.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -499,6 +508,7 @@ export const paypalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_capture",
+    operationType: "read",
     description: "Retrieve details for a captured PayPal payment.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a captured PayPal payment.", {
@@ -508,6 +518,7 @@ export const paypalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "refund_capture",
+    operationType: "destructive",
     description: "Refund all or part of a captured PayPal payment.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -538,6 +549,7 @@ export const paypalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_refund",
+    operationType: "read",
     description: "Retrieve the current details and status of a PayPal refund.",
     requiredScopes: [],
     inputSchema: s.object("Input for retrieving a PayPal refund.", {
@@ -547,6 +559,7 @@ export const paypalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_tracking",
+    operationType: "write",
     description: "Add shipment tracking information to a completed capture in a PayPal order.",
     requiredScopes: [],
     inputSchema: addTrackingInputSchema,
@@ -554,6 +567,7 @@ export const paypalActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_tracking",
+    operationType: "destructive",
     description: "Update an order shipment tracker, replace its items, notify the payer, or cancel it.",
     requiredScopes: [],
     inputSchema: updateTrackingInputSchema,

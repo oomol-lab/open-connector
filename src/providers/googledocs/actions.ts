@@ -8,6 +8,7 @@ const service = "googledocs";
 
 interface GoogledocsActionSource {
   name: GoogledocsActionName;
+  readonly operationType: ActionDefinition["operationType"];
   description: string;
   requiredScopes: string[];
   inputSchema: JsonSchema;
@@ -202,7 +203,7 @@ const actions: GoogledocsActionSource[] = [
     ),
     batchResult,
   ),
-  write(
+  destructive(
     "delete_content_range",
     "Delete a content range from a Google Docs document.",
     input(
@@ -214,7 +215,7 @@ const actions: GoogledocsActionSource[] = [
     ),
     batchResult,
   ),
-  write(
+  destructive(
     "delete_footer",
     "Delete a footer from a Google Docs document.",
     input(
@@ -227,7 +228,7 @@ const actions: GoogledocsActionSource[] = [
     ),
     batchResult,
   ),
-  write(
+  destructive(
     "delete_header",
     "Delete a header from a Google Docs document.",
     input(
@@ -240,7 +241,7 @@ const actions: GoogledocsActionSource[] = [
     ),
     batchResult,
   ),
-  write(
+  destructive(
     "delete_named_range",
     "Delete a named range from a Google Docs document.",
     input(
@@ -252,7 +253,7 @@ const actions: GoogledocsActionSource[] = [
     ),
     batchResult,
   ),
-  write(
+  destructive(
     "delete_paragraph_bullets",
     "Remove bullets from paragraphs within a specified range in a Google Docs document.",
     input(
@@ -265,7 +266,7 @@ const actions: GoogledocsActionSource[] = [
     ),
     batchResult,
   ),
-  write(
+  destructive(
     "delete_table_column",
     "Delete one or more table columns from a Google Docs document.",
     input(
@@ -277,7 +278,7 @@ const actions: GoogledocsActionSource[] = [
     ),
     batchResult,
   ),
-  write(
+  destructive(
     "delete_table_row",
     "Delete a table row from a Google Docs document.",
     input(
@@ -412,7 +413,7 @@ const actions: GoogledocsActionSource[] = [
     ),
     spreadsheetChartsOutput,
   ),
-  write(
+  destructive(
     "replace_all_text",
     "Replace all matching text in a Google Docs document.",
     input(
@@ -428,7 +429,7 @@ const actions: GoogledocsActionSource[] = [
     ),
     batchResult,
   ),
-  write(
+  destructive(
     "replace_image",
     "Replace an existing image in a Google Docs document with a new image from a URI.",
     input(
@@ -457,7 +458,7 @@ const actions: GoogledocsActionSource[] = [
     }),
     searchDocumentsOutput,
   ),
-  write(
+  destructive(
     "unmerge_table_cells",
     "Unmerge previously merged table cells in a Google Docs document.",
     input(
@@ -559,6 +560,7 @@ export type GoogledocsActionName =
 export const googledocsActions: ActionDefinition[] = actions.map((source) =>
   defineProviderAction(service, {
     name: source.name,
+    operationType: source.operationType,
     description: source.description,
     requiredScopes: source.requiredScopes,
     providerPermissions: source.requiredScopes,
@@ -573,7 +575,7 @@ function read(
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): GoogledocsActionSource {
-  return { name, description, requiredScopes: googledocsReadScopes, inputSchema, outputSchema };
+  return { name, operationType: "read", description, requiredScopes: googledocsReadScopes, inputSchema, outputSchema };
 }
 
 function write(
@@ -582,7 +584,30 @@ function write(
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): GoogledocsActionSource {
-  return { name, description, requiredScopes: googledocsWriteScopes, inputSchema, outputSchema };
+  return {
+    name,
+    operationType: "write",
+    description,
+    requiredScopes: googledocsWriteScopes,
+    inputSchema,
+    outputSchema,
+  };
+}
+
+function destructive(
+  name: GoogledocsActionName,
+  description: string,
+  inputSchema: JsonSchema,
+  outputSchema: JsonSchema,
+): GoogledocsActionSource {
+  return {
+    name,
+    operationType: "destructive",
+    description,
+    requiredScopes: googledocsWriteScopes,
+    inputSchema,
+    outputSchema,
+  };
 }
 
 function sheetsRead(
@@ -591,7 +616,14 @@ function sheetsRead(
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): GoogledocsActionSource {
-  return { name, description, requiredScopes: googledocsSheetsReadScopes, inputSchema, outputSchema };
+  return {
+    name,
+    operationType: "read",
+    description,
+    requiredScopes: googledocsSheetsReadScopes,
+    inputSchema,
+    outputSchema,
+  };
 }
 
 function input(properties: Record<string, JsonSchema>, required: string[] = []): JsonSchema {

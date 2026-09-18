@@ -218,36 +218,42 @@ const cancelBuildOutputSchema = s.object("Acknowledgement returned after a cance
 export const codemagicActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the authenticated Codemagic user and their available team permissions.",
     inputSchema: s.object("No input is required.", {}),
     outputSchema: userSchema,
   }),
   defineProviderAction(service, {
     name: "list_user_teams",
+    operationType: "read",
     description: "List the Codemagic teams accessible to the authenticated user.",
     inputSchema: userPaginationInputSchema,
     outputSchema: listUserTeamsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_user_apps",
+    operationType: "read",
     description: "List the Codemagic applications accessible to the authenticated user.",
     inputSchema: userPaginationInputSchema,
     outputSchema: listUserAppsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_team_apps",
+    operationType: "read",
     description: "List the applications that belong to a specific Codemagic team.",
     inputSchema: listTeamAppsInputSchema,
     outputSchema: listTeamAppsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_team_builds",
+    operationType: "read",
     description: "List builds for a specific Codemagic team with optional filters.",
     inputSchema: listTeamBuildsInputSchema,
     outputSchema: listTeamBuildsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_build",
+    operationType: "read",
     description: "Get detailed information about a single Codemagic build.",
     inputSchema: s.object(
       "Input for fetching a single build.",
@@ -260,12 +266,14 @@ export const codemagicActions: readonly ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_build",
+    operationType: "write",
     description: "Start a new Codemagic build for the specified app and workflow.",
     inputSchema: createBuildInputSchema,
     outputSchema: createBuildOutputSchema,
   }),
   defineProviderAction(service, {
     name: "cancel_build",
+    operationType: "destructive",
     description: "Cancel a Codemagic build by its build ID.",
     inputSchema: cancelBuildInputSchema,
     outputSchema: cancelBuildOutputSchema,

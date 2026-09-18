@@ -32,6 +32,7 @@ const datasetRecord = s.record(
 export const databoxActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_accounts",
+    operationType: "read",
     description: "List Databox accounts accessible to the API key.",
     inputSchema: s.actionInput({}),
     outputSchema: s.actionOutput({
@@ -49,6 +50,7 @@ export const databoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_data_source",
+    operationType: "write",
     description: "Create a Databox ingestion data source in an account.",
     inputSchema: s.actionInput(
       {
@@ -62,12 +64,14 @@ export const databoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_data_source",
+    operationType: "destructive",
     description: "Delete a Databox data source by ID.",
     inputSchema: s.actionInput({ dataSourceId }, ["dataSourceId"]),
     outputSchema: deletion,
   }),
   defineProviderAction(service, {
     name: "create_dataset",
+    operationType: "write",
     description: "Create a Databox dataset within an ingestion data source.",
     inputSchema: s.actionInput(
       {
@@ -83,12 +87,14 @@ export const databoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_dataset",
+    operationType: "destructive",
     description: "Delete a Databox dataset by ID.",
     inputSchema: s.actionInput({ datasetId }, ["datasetId"]),
     outputSchema: deletion,
   }),
   defineProviderAction(service, {
     name: "push_dataset_data",
+    operationType: "write",
     description: "Push JSON records into a Databox dataset.",
     inputSchema: s.actionInput(
       {
@@ -101,6 +107,7 @@ export const databoxActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dataset_ingestion_status",
+    operationType: "read",
     description: "Get the processing status of a Databox dataset ingestion.",
     inputSchema: s.actionInput({ datasetId, ingestionId }, ["datasetId", "ingestionId"]),
     outputSchema: ingestion,

@@ -131,6 +131,7 @@ const contactWriteOptionalFields = [
 export const sevdeskActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List sevdesk contacts with optional customer number, pagination, and embed options.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -155,6 +156,7 @@ export const sevdeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get one sevdesk contact by its identifier.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -169,6 +171,7 @@ export const sevdeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_contact",
+    operationType: "write",
     description: "Create a new sevdesk contact using the official contact payload fields.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for creating a sevdesk contact.", createContactFields, {
@@ -181,6 +184,7 @@ export const sevdeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_contact",
+    operationType: "write",
     description: "Update an existing sevdesk contact using the official contact update payload fields.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -195,6 +199,7 @@ export const sevdeskActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_contact",
+    operationType: "destructive",
     description: "Delete a sevdesk contact by its identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(

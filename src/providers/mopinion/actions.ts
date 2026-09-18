@@ -134,6 +134,7 @@ const fieldSchema = s.looseObject("A Mopinion report or dataset field object.", 
 export const mopinionActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Fetch the current Mopinion account profile and available account limits.",
     inputSchema: emptyInputSchema,
     outputSchema: s.actionOutput(
@@ -145,6 +146,7 @@ export const mopinionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_report",
+    operationType: "read",
     description: "Fetch basic metadata for one Mopinion report.",
     inputSchema: reportIdInputSchema,
     outputSchema: s.actionOutput(
@@ -156,6 +158,7 @@ export const mopinionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dataset",
+    operationType: "read",
     description: "Fetch basic metadata for one Mopinion dataset or feedback form.",
     inputSchema: datasetIdInputSchema,
     outputSchema: s.actionOutput(
@@ -167,6 +170,7 @@ export const mopinionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_deployments",
+    operationType: "read",
     description: "List Mopinion deployments for the connected account.",
     inputSchema: s.actionInput(listPageProperties, [], "Pagination options for a Mopinion collection endpoint."),
     outputSchema: s.actionOutput(
@@ -179,6 +183,7 @@ export const mopinionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_deployment",
+    operationType: "read",
     description: "Fetch one Mopinion deployment by deployment identifier.",
     inputSchema: deploymentIdInputSchema,
     outputSchema: s.actionOutput(
@@ -190,6 +195,7 @@ export const mopinionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_dataset_feedback",
+    operationType: "read",
     description: "List feedback items collected by one Mopinion dataset or feedback form.",
     inputSchema: s.actionInput(
       {
@@ -209,6 +215,7 @@ export const mopinionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_dataset_feedback",
+    operationType: "read",
     description: "Fetch one feedback item from a Mopinion dataset or feedback form.",
     inputSchema: s.actionInput(
       {
@@ -227,6 +234,7 @@ export const mopinionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_report_feedback",
+    operationType: "read",
     description: "List feedback items available through one Mopinion report.",
     inputSchema: s.actionInput(
       {
@@ -246,6 +254,7 @@ export const mopinionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_report_feedback",
+    operationType: "read",
     description: "Fetch one feedback item from a Mopinion report.",
     inputSchema: s.actionInput(
       {
@@ -264,6 +273,7 @@ export const mopinionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_dataset_fields",
+    operationType: "read",
     description: "List the field definitions configured for one Mopinion dataset.",
     inputSchema: datasetIdInputSchema,
     outputSchema: s.actionOutput(
@@ -276,6 +286,7 @@ export const mopinionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_report_fields",
+    operationType: "read",
     description: "List the field definitions configured for one Mopinion report.",
     inputSchema: reportIdInputSchema,
     outputSchema: s.actionOutput(

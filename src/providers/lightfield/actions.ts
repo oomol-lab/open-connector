@@ -120,6 +120,7 @@ const retrieveRecordOutputSchema = s.object(
 export const lightfieldActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_api_key_metadata",
+    operationType: "read",
     description: "Validate the current Lightfield API key and return its subject and scopes.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for validating the current API key.", {}),
@@ -127,6 +128,7 @@ export const lightfieldActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_object_definitions",
+    operationType: "read",
     description: "List custom object types available to the current Lightfield API key.",
     requiredScopes: [],
     inputSchema: s.object("Input parameters for listing Lightfield custom object types.", {}),
@@ -140,6 +142,7 @@ export const lightfieldActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_custom_object_records",
+    operationType: "read",
     description: "List records for a Lightfield custom object type with optional filters.",
     requiredScopes: [],
     inputSchema: customObjectListInputSchema,
@@ -147,6 +150,7 @@ export const lightfieldActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_custom_object_record",
+    operationType: "read",
     description: "Get one Lightfield custom object record by object type and record ID.",
     requiredScopes: [],
     inputSchema: customObjectRetrieveInputSchema,
@@ -154,6 +158,7 @@ export const lightfieldActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_accounts",
+    operationType: "read",
     description: "List Lightfield accounts with optional pagination and filters.",
     requiredScopes: ["accounts:read"],
     inputSchema: listInputSchema,
@@ -161,6 +166,7 @@ export const lightfieldActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_account",
+    operationType: "read",
     description: "Get one Lightfield account by ID.",
     requiredScopes: ["accounts:read"],
     inputSchema: idInputSchema,
@@ -168,6 +174,7 @@ export const lightfieldActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List Lightfield contacts with optional pagination and filters.",
     requiredScopes: ["contacts:read"],
     inputSchema: listInputSchema,
@@ -175,6 +182,7 @@ export const lightfieldActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get one Lightfield contact by ID.",
     requiredScopes: ["contacts:read"],
     inputSchema: idInputSchema,
@@ -182,6 +190,7 @@ export const lightfieldActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_opportunities",
+    operationType: "read",
     description: "List Lightfield opportunities with optional pagination and filters.",
     requiredScopes: ["opportunities:read"],
     inputSchema: listInputSchema,
@@ -189,6 +198,7 @@ export const lightfieldActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_opportunity",
+    operationType: "read",
     description: "Get one Lightfield opportunity by ID.",
     requiredScopes: ["opportunities:read"],
     inputSchema: idInputSchema,

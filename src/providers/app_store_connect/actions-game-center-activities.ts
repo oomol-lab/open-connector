@@ -331,6 +331,7 @@ const metricGroupByInput = (description: string, values: readonly string[]) =>
 export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_game_center_detail_activities",
+    operationType: "read",
     description:
       "List the Game Center activities of one app, reached through its Game Center detail record. App Store Connect offers no filters here, so page through the results with limit and cursor.",
     requiredScopes: [],
@@ -351,6 +352,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "list_game_center_group_activities",
+    operationType: "read",
     description:
       "List the Game Center activities shared by the apps of one Game Center group. App Store Connect offers no filters here, so page through the results with limit and cursor.",
     requiredScopes: [],
@@ -371,6 +373,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "create_game_center_activity",
+    operationType: "write",
     description:
       "Create a Game Center activity for one app (gameCenterDetailId) or for a group of apps (gameCenterGroupId). Pass fallbackUrl to create the first activity version together with the activity; leave it out and no version is created, so add one afterwards with create_game_center_activity_version before the activity can be localized.",
     requiredScopes: [],
@@ -406,6 +409,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_activity",
+    operationType: "read",
     description: "Read one Game Center activity by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -422,6 +426,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "update_game_center_activity",
+    operationType: "destructive",
     description:
       "Change the configuration of a Game Center activity or archive it. Overwrites the given fields and passing null clears one; vendorIdentifier cannot change once the activity exists. Pass at least one field.",
     requiredScopes: [],
@@ -456,6 +461,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "delete_game_center_activity",
+    operationType: "destructive",
     description:
       "Delete a Game Center activity together with its versions, localizations and images. Archive it with update_game_center_activity instead when players may still hold invitations to it.",
     requiredScopes: [],
@@ -474,6 +480,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "list_game_center_activity_versions",
+    operationType: "read",
     description: "List the versions of one Game Center activity, each with its review and release state.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -493,6 +500,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "add_achievements_to_game_center_activity",
+    operationType: "write",
     description:
       "Attach achievements to a Game Center activity so players can earn them while the activity is played. Achievements already attached are left as they are.",
     requiredScopes: [],
@@ -516,6 +524,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "remove_achievements_from_game_center_activity",
+    operationType: "destructive",
     description:
       "Detach achievements from a Game Center activity. The achievements themselves are kept and stay available outside the activity.",
     requiredScopes: [],
@@ -539,6 +548,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "add_leaderboards_to_game_center_activity",
+    operationType: "write",
     description:
       "Attach leaderboards to a Game Center activity so scores made while it is played are posted to them. Leaderboards already attached are left as they are.",
     requiredScopes: [],
@@ -562,6 +572,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "remove_leaderboards_from_game_center_activity",
+    operationType: "destructive",
     description:
       "Detach leaderboards from a Game Center activity. The leaderboards themselves are kept together with the scores already posted to them.",
     requiredScopes: [],
@@ -585,6 +596,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "create_game_center_activity_version",
+    operationType: "write",
     description:
       "Create a new version of a Game Center activity, for example to change its localizations or its default image after the current version was released. The new version starts in PREPARE_FOR_SUBMISSION.",
     requiredScopes: [],
@@ -604,6 +616,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_activity_version",
+    operationType: "read",
     description: "Read one Game Center activity version by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -622,6 +635,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "update_game_center_activity_version",
+    operationType: "destructive",
     description:
       "Set or clear the fallback URL of a Game Center activity version. Overwrites the existing URL; pass null to remove it.",
     requiredScopes: [],
@@ -645,6 +659,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_activity_version_default_image",
+    operationType: "read",
     description:
       "Read the default image of a Game Center activity version, shown wherever a locale has no image of its own. Returns null when no default image has been uploaded yet; uploading one is not covered by this connector.",
     requiredScopes: [],
@@ -664,6 +679,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "list_game_center_activity_version_localizations",
+    operationType: "read",
     description: "List the locales one Game Center activity version has text for.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -685,6 +701,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "create_game_center_activity_localization",
+    operationType: "write",
     description:
       "Add a locale to a Game Center activity version with the name and description players see in it. App Store Connect rejects a locale the version already has.",
     requiredScopes: [],
@@ -708,6 +725,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_activity_localization",
+    operationType: "read",
     description: "Read one Game Center activity localization by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -726,6 +744,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "update_game_center_activity_localization",
+    operationType: "destructive",
     description:
       "Replace the name or the description of a Game Center activity localization, or clear one with null. The locale cannot change; delete the localization and create it again instead. Pass at least one field.",
     requiredScopes: [],
@@ -748,6 +767,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "delete_game_center_activity_localization",
+    operationType: "destructive",
     description: "Remove a locale from a Game Center activity version, including the image attached to it.",
     requiredScopes: [],
     providerPermissions: [...configureGameCenterRoles],
@@ -767,6 +787,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_activity_localization_image",
+    operationType: "read",
     description:
       "Read the image of one Game Center activity localization. Returns null when the locale has no image of its own and falls back to the default image of the version; uploading an image is not covered by this connector.",
     requiredScopes: [],
@@ -787,6 +808,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
 
   defineProviderAction(service, {
     name: "list_game_center_detail_challenges",
+    operationType: "read",
     description:
       "List the challenges configured on the Game Center detail of one app, optionally narrowed by reference name, archived state or identifier.",
     requiredScopes: [],
@@ -808,6 +830,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "list_game_center_group_challenges",
+    operationType: "read",
     description:
       "List the challenges shared by the games of one Game Center group, optionally narrowed by reference name, archived state or identifier.",
     requiredScopes: [],
@@ -829,6 +852,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "create_game_center_challenge",
+    operationType: "write",
     description:
       "Create a Game Center challenge on the Game Center detail of one app or on a group, scored on one leaderboard. The challenge starts without a version; create its first version with create_game_center_challenge_version and add the localized text to that version.",
     requiredScopes: [],
@@ -859,6 +883,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_challenge",
+    operationType: "read",
     description: "Read one Game Center challenge by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -875,6 +900,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "update_game_center_challenge",
+    operationType: "destructive",
     description:
       "Rename a Game Center challenge, archive it, change whether players may repeat it, or score it on another leaderboard. Overwrites the given fields; pass at least one. The vendor identifier and the challenge type cannot be changed after creation.",
     requiredScopes: [],
@@ -901,6 +927,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "delete_game_center_challenge",
+    operationType: "destructive",
     description: "Delete a Game Center challenge together with all of its versions, localizations and images.",
     requiredScopes: [],
     providerPermissions: [...configureGameCenterRoles],
@@ -918,6 +945,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "list_game_center_challenge_versions",
+    operationType: "read",
     description: "List the versions of one Game Center challenge, each with the review and release state it is in.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -937,6 +965,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "set_game_center_challenge_leaderboard",
+    operationType: "destructive",
     description:
       "Score a Game Center challenge on another leaderboard, replacing the leaderboard it used before. App Store Connect does not accept detaching the leaderboard, so a leaderboard identifier is always required.",
     requiredScopes: [],
@@ -962,6 +991,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "create_game_center_challenge_version",
+    operationType: "write",
     description:
       "Create a new version of a Game Center challenge, for example to change its localized text after the current version went live. The version starts empty; add its locales with create_game_center_challenge_localization.",
     requiredScopes: [],
@@ -980,6 +1010,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_challenge_version",
+    operationType: "read",
     description: "Read one Game Center challenge version by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -998,6 +1029,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_challenge_version_default_image",
+    operationType: "read",
     description:
       "Read the default image of a Game Center challenge version, the one shown for locales without their own image. Returns null when the version has no default image. Uploading an image is not covered by this connector.",
     requiredScopes: [],
@@ -1017,6 +1049,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "list_game_center_challenge_version_localizations",
+    operationType: "read",
     description: "List the locales one Game Center challenge version carries text for.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -1038,6 +1071,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "create_game_center_challenge_localization",
+    operationType: "write",
     description:
       "Add a locale with the name and description players see to a Game Center challenge version. App Store Connect rejects a locale the version already has.",
     requiredScopes: [],
@@ -1061,6 +1095,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_challenge_localization",
+    operationType: "read",
     description: "Read one Game Center challenge localization by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -1079,6 +1114,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "update_game_center_challenge_localization",
+    operationType: "destructive",
     description:
       "Replace the name or the description of a Game Center challenge localization, or clear one of them with null. Overwrites the given fields; pass at least one. The locale cannot be changed, so replace the localization to move the text to another locale.",
     requiredScopes: [],
@@ -1101,6 +1137,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "delete_game_center_challenge_localization",
+    operationType: "destructive",
     description: "Remove one locale from a Game Center challenge version, including the image attached to it.",
     requiredScopes: [],
     providerPermissions: [...configureGameCenterRoles],
@@ -1120,6 +1157,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_challenge_localization_image",
+    operationType: "read",
     description:
       "Read the image of one Game Center challenge localization, or null when the locale has no image of its own and falls back to the default image of the version. Uploading an image is not covered by this connector.",
     requiredScopes: [],
@@ -1140,6 +1178,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
 
   defineProviderAction(service, {
     name: "list_game_center_matchmaking_queues",
+    operationType: "read",
     description:
       "List every Game Center matchmaking queue of the team, each with the rule set it matches requests with and the rule set of a running experiment.",
     requiredScopes: [],
@@ -1157,6 +1196,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "create_game_center_matchmaking_queue",
+    operationType: "write",
     description:
       "Create a Game Center matchmaking queue and attach the rule set its requests are matched with. Optionally attach a second rule set to experiment with, and list the bundle identifiers whose classic matchmaking requests should reach this queue.",
     requiredScopes: [],
@@ -1185,6 +1225,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_matchmaking_queue",
+    operationType: "read",
     description:
       "Read one Game Center matchmaking queue by its App Store Connect identifier, including the rule set it matches requests with and the rule set of a running experiment.",
     requiredScopes: [],
@@ -1202,6 +1243,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "update_game_center_matchmaking_queue",
+    operationType: "destructive",
     description:
       "Point a Game Center matchmaking queue at another rule set, change the rule set its experiment runs with, or replace the classic matchmaking bundle identifiers. Overwrites the given fields; pass at least one. The queue name cannot be changed after creation.",
     requiredScopes: [],
@@ -1230,6 +1272,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "delete_game_center_matchmaking_queue",
+    operationType: "destructive",
     description:
       "Delete a Game Center matchmaking queue. Requests the game sends to the deleted queue are no longer matched.",
     requiredScopes: [],
@@ -1248,6 +1291,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "list_game_center_matchmaking_rule_sets",
+    operationType: "read",
     description:
       "List every Game Center matchmaking rule set of the team, with the player limits and the rule language version each one uses.",
     requiredScopes: [],
@@ -1265,6 +1309,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "create_game_center_matchmaking_rule_set",
+    operationType: "write",
     description:
       "Create a Game Center matchmaking rule set with the player limits a match must stay within. Add its teams and rules afterwards with create_game_center_matchmaking_team and create_game_center_matchmaking_rule, then attach the rule set to a queue.",
     requiredScopes: [],
@@ -1288,6 +1333,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_matchmaking_rule_set",
+    operationType: "read",
     description: "Read one Game Center matchmaking rule set by its App Store Connect identifier.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -1304,6 +1350,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "update_game_center_matchmaking_rule_set",
+    operationType: "destructive",
     description:
       "Change the player limits of a Game Center matchmaking rule set, or clear a limit with null. Overwrites the given fields; pass at least one. The rule set name and its rule language version cannot be changed.",
     requiredScopes: [],
@@ -1328,6 +1375,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "delete_game_center_matchmaking_rule_set",
+    operationType: "destructive",
     description:
       "Delete a Game Center matchmaking rule set together with its teams and rules. A queue that still points at the rule set stops matching requests.",
     requiredScopes: [],
@@ -1346,6 +1394,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "list_game_center_matchmaking_rule_set_queues",
+    operationType: "read",
     description:
       "List the matchmaking queues that match their requests with one rule set, either as their rule set or as their experiment rule set.",
     requiredScopes: [],
@@ -1366,6 +1415,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "list_game_center_matchmaking_rule_set_rules",
+    operationType: "read",
     description:
       "List the rules of one Game Center matchmaking rule set, with the expression each rule evaluates for a candidate match.",
     requiredScopes: [],
@@ -1386,6 +1436,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "list_game_center_matchmaking_rule_set_teams",
+    operationType: "read",
     description: "List the teams of one Game Center matchmaking rule set, with the player limits of each team.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -1405,6 +1456,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "create_game_center_matchmaking_rule",
+    operationType: "write",
     description:
       "Add a rule to a Game Center matchmaking rule set. The expression is evaluated for every candidate match: a COMPATIBLE, DISTANCE or TEAM rule decides whether the candidate is acceptable, and a MATCH rule scores it. Try the rule set with test_game_center_matchmaking_rule_set before attaching it to a queue.",
     requiredScopes: [],
@@ -1434,6 +1486,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "update_game_center_matchmaking_rule",
+    operationType: "destructive",
     description:
       "Change the expression, the description or the weight of a Game Center matchmaking rule, or clear one of them with null. Overwrites the given fields; pass at least one. The rule name and its type cannot be changed.",
     requiredScopes: [],
@@ -1457,6 +1510,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "delete_game_center_matchmaking_rule",
+    operationType: "destructive",
     description:
       "Delete a rule from its Game Center matchmaking rule set. Candidate matches are no longer checked against it.",
     requiredScopes: [],
@@ -1475,6 +1529,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "create_game_center_matchmaking_team",
+    operationType: "write",
     description:
       "Add a team to a Game Center matchmaking rule set. Rule expressions refer to the team by its name, and Game Center fills the team with between minPlayers and maxPlayers players.",
     requiredScopes: [],
@@ -1498,6 +1553,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "update_game_center_matchmaking_team",
+    operationType: "destructive",
     description:
       "Change the player limits of a Game Center matchmaking team, or clear a limit with null. Overwrites the given fields; pass at least one. The team name cannot be changed, because rule expressions refer to it.",
     requiredScopes: [],
@@ -1518,6 +1574,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "delete_game_center_matchmaking_team",
+    operationType: "destructive",
     description:
       "Delete a team from its Game Center matchmaking rule set. Rule expressions that still refer to the team by name stop working.",
     requiredScopes: [],
@@ -1536,6 +1593,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "test_game_center_matchmaking_rule_set",
+    operationType: "write",
     description:
       "Run a Game Center matchmaking rule set against a set of simulated requests and return the matches it would have formed, with the team each simulated player was assigned to. Nothing is stored and no real player is matched, so this is safe to run against a rule set that is already attached to a queue.",
     requiredScopes: [],
@@ -1607,6 +1665,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
 
   defineProviderAction(service, {
     name: "get_game_center_classic_matchmaking_request_metrics",
+    operationType: "read",
     description:
       "Read the matchmaking requests an app made through classic (non rule based) matchmaking, as time series of request counts and queue wait times. Each data point covers the granularity you pass.",
     requiredScopes: [],
@@ -1635,6 +1694,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_rule_based_matchmaking_request_metrics",
+    operationType: "read",
     description:
       "Read the matchmaking requests an app made through rule based matchmaking, as time series of request counts and queue wait times.",
     requiredScopes: [],
@@ -1663,6 +1723,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_matchmaking_queue_request_metrics",
+    operationType: "read",
     description:
       "Read the matchmaking requests one queue handled, as time series of request counts and queue wait times, optionally split by result or by the app that sent the requests.",
     requiredScopes: [],
@@ -1692,6 +1753,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_matchmaking_queue_size_metrics",
+    operationType: "read",
     description:
       "Read how many requests were waiting in one matchmaking queue, as time series of average and percentile queue sizes.",
     requiredScopes: [],
@@ -1712,6 +1774,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_matchmaking_queue_session_metrics",
+    operationType: "read",
     description:
       "Read the matchmaking sessions one queue produced, as time series of session counts and of how many players each session held.",
     requiredScopes: [],
@@ -1732,6 +1795,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_matchmaking_queue_experiment_request_metrics",
+    operationType: "read",
     description:
       "Read the share of a queue's traffic that was matched with the experiment rule set, as time series of request counts and queue wait times. Compare it with get_game_center_matchmaking_queue_request_metrics to judge whether the experiment rule set is an improvement.",
     requiredScopes: [],
@@ -1761,6 +1825,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_matchmaking_queue_experiment_size_metrics",
+    operationType: "read",
     description:
       "Read how many requests were waiting in the part of a matchmaking queue served by the experiment rule set, as time series of average and percentile queue sizes.",
     requiredScopes: [],
@@ -1781,6 +1846,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_matchmaking_rule_boolean_result_metrics",
+    operationType: "read",
     description:
       "Read how often one matchmaking rule returned each boolean result, as time series of evaluation counts.",
     requiredScopes: [],
@@ -1809,6 +1875,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_matchmaking_rule_number_result_metrics",
+    operationType: "read",
     description:
       "Read the values one matchmaking rule expression returned, as time series of evaluation counts with average and percentile results.",
     requiredScopes: [],
@@ -1836,6 +1903,7 @@ export const appStoreConnectGameCenterActivityActions: readonly ProviderActionDe
   }),
   defineProviderAction(service, {
     name: "get_game_center_matchmaking_rule_error_metrics",
+    operationType: "read",
     description: "Read how often one matchmaking rule failed to evaluate, as time series of error counts.",
     requiredScopes: [],
     inputSchema: s.object(

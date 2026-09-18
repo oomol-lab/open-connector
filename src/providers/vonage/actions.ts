@@ -55,6 +55,7 @@ const reportDateSchema = s.dateTime("An ISO-8601 timestamp used as an inclusive 
 export const vonageActions: ActionDefinition[] = [
   defineProviderAction("vonage", {
     name: "get_balance",
+    operationType: "read",
     description: "Retrieve the current balance of the connected Vonage API account.",
     requiredScopes: [],
     inputSchema: s.object("No input is required for this action.", {}),
@@ -65,6 +66,7 @@ export const vonageActions: ActionDefinition[] = [
   }),
   defineProviderAction("vonage", {
     name: "send_sms",
+    operationType: "write",
     description: "Send a text or Unicode SMS through the Vonage SMS API.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -102,6 +104,7 @@ export const vonageActions: ActionDefinition[] = [
   }),
   defineProviderAction("vonage", {
     name: "list_sms_records",
+    operationType: "read",
     description: "List Vonage SMS delivery records for a date range and optional delivery filters.",
     requiredScopes: [],
     inputSchema: s.actionInput(
@@ -127,6 +130,7 @@ export const vonageActions: ActionDefinition[] = [
   }),
   defineProviderAction("vonage", {
     name: "get_sms_record",
+    operationType: "read",
     description: "Retrieve a Vonage SMS delivery record by message ID.",
     requiredScopes: [],
     inputSchema: s.actionInput(

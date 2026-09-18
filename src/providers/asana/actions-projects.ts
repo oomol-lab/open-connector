@@ -269,6 +269,7 @@ function memberMutationInputSchema(field: "members" | "followers"): JsonSchema {
 export const asanaProjectSectionActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_projects",
+    operationType: "read",
     description: "List projects filtered by exactly one workspace or team.",
     requiredScopes: ["projects:read"],
     inputSchema: (() => {
@@ -293,6 +294,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project",
+    operationType: "write",
     description: "Create a project at exactly one workspace or team location.",
     requiredScopes: ["projects:write"],
     inputSchema: genericProjectCreateInputSchema,
@@ -300,6 +302,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project",
+    operationType: "read",
     description: "Get an Asana project by gid.",
     requiredScopes: ["projects:read"],
     inputSchema: s.object(
@@ -314,6 +317,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_project",
+    operationType: "write",
     description: "Update one or more writable fields on an Asana project.",
     requiredScopes: ["projects:write"],
     inputSchema: projectUpdateInputSchema,
@@ -321,6 +325,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_project",
+    operationType: "destructive",
     description: "Delete an Asana project.",
     requiredScopes: ["projects:delete"],
     inputSchema: s.object(
@@ -332,6 +337,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "duplicate_project",
+    operationType: "write",
     description: "Start an asynchronous job to duplicate an Asana project.",
     requiredScopes: ["projects:write"],
     inputSchema: s.object(
@@ -368,6 +374,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_task_projects",
+    operationType: "read",
     description: "List projects associated with a task.",
     requiredScopes: ["projects:read"],
     inputSchema: s.object(
@@ -383,6 +390,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_team_projects",
+    operationType: "read",
     description: "List projects shared with a team.",
     requiredScopes: ["projects:read"],
     inputSchema: s.object(
@@ -399,6 +407,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_team_project",
+    operationType: "write",
     description: "Create a project in an Asana team.",
     requiredScopes: ["projects:write"],
     inputSchema: projectCreateInputSchema({ teamId: gidField("The team that will own the project.") }, ["teamId"]),
@@ -406,6 +415,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_workspace_projects",
+    operationType: "read",
     description: "List projects in an Asana workspace or organization.",
     requiredScopes: ["projects:read"],
     inputSchema: s.object(
@@ -422,6 +432,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_workspace_project",
+    operationType: "write",
     description: "Create a project in an Asana workspace or organization.",
     requiredScopes: ["projects:write"],
     inputSchema: projectCreateInputSchema(
@@ -432,6 +443,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_workspace_projects",
+    operationType: "read",
     description:
       "Search projects in a workspace using Asana's documented project filters. Asana does not paginate search results; use limit to cap the page size.",
     requiredScopes: ["projects:read"],
@@ -484,6 +496,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_project_custom_field",
+    operationType: "write",
     description: "Add a custom field setting to an Asana project.",
     requiredScopes: ["projects:write"],
     inputSchema: addMutuallyExclusivePlacement(
@@ -505,6 +518,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_project_custom_field",
+    operationType: "destructive",
     description: "Remove a custom field setting from an Asana project.",
     requiredScopes: ["projects:write"],
     inputSchema: s.object(
@@ -519,6 +533,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_project_task_counts",
+    operationType: "read",
     description: "Get all documented task and milestone counts for an Asana project.",
     requiredScopes: ["projects:read"],
     inputSchema: s.object(
@@ -533,6 +548,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_project_members",
+    operationType: "write",
     description: "Add users as members of an Asana project.",
     requiredScopes: [],
     inputSchema: memberMutationInputSchema("members"),
@@ -540,6 +556,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_project_members",
+    operationType: "destructive",
     description: "Remove users from an Asana project.",
     requiredScopes: [],
     inputSchema: memberMutationInputSchema("members"),
@@ -547,6 +564,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_project_followers",
+    operationType: "write",
     description: "Add users as followers of an Asana project.",
     requiredScopes: [],
     inputSchema: memberMutationInputSchema("followers"),
@@ -554,6 +572,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "remove_project_followers",
+    operationType: "destructive",
     description: "Remove users from an Asana project's followers.",
     requiredScopes: [],
     inputSchema: memberMutationInputSchema("followers"),
@@ -561,6 +580,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_section",
+    operationType: "read",
     description: "Get an Asana project section by gid.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -575,6 +595,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_section",
+    operationType: "write",
     description: "Rename an Asana project section.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -590,6 +611,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_section",
+    operationType: "destructive",
     description: "Delete an empty Asana project section.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -601,6 +623,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_project_sections",
+    operationType: "read",
     description: "List sections in an Asana project.",
     requiredScopes: [],
     inputSchema: s.object(
@@ -616,6 +639,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_project_section",
+    operationType: "write",
     description: "Create a section in an Asana project, optionally at a specific position.",
     requiredScopes: [],
     inputSchema: addMutuallyExclusivePlacement(
@@ -634,6 +658,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "add_section_task",
+    operationType: "write",
     description: "Move a task into a section, optionally at a specific position.",
     requiredScopes: ["tasks:write"],
     inputSchema: addMutuallyExclusivePlacement(
@@ -651,6 +676,7 @@ export const asanaProjectSectionActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "insert_project_section",
+    operationType: "write",
     description: "Move a section before or after another section in the same project.",
     requiredScopes: [],
     inputSchema: (() => {

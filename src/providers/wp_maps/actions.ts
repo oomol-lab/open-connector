@@ -140,6 +140,7 @@ const listOutput = s.object("A column-oriented WP Maps list response.", {
 
 const createProductsAction = defineProviderAction(service, {
   name: "create_products",
+  operationType: "write",
   description: "Create one or more products in WP Maps.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -158,6 +159,7 @@ const createProductsAction = defineProviderAction(service, {
 
 const updateProductsAction = defineProviderAction(service, {
   name: "update_products",
+  operationType: "write",
   description: "Update one or more existing products in WP Maps.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -176,6 +178,7 @@ const updateProductsAction = defineProviderAction(service, {
 
 const getProductAction = defineProviderAction(service, {
   name: "get_product",
+  operationType: "read",
   description: "Get one WP Maps product by ID.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -188,6 +191,7 @@ const getProductAction = defineProviderAction(service, {
 
 const listProductsAction = defineProviderAction(service, {
   name: "list_products",
+  operationType: "read",
   description: "List all products in the connected WP Maps account.",
   requiredScopes: [],
   inputSchema: languageOnlyInput,
@@ -196,6 +200,7 @@ const listProductsAction = defineProviderAction(service, {
 
 const deleteProductsAction = defineProviderAction(service, {
   name: "delete_products",
+  operationType: "destructive",
   description: "Delete one or more WP Maps products by ID.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -211,6 +216,7 @@ const deleteProductsAction = defineProviderAction(service, {
 
 const createStoresAction = defineProviderAction(service, {
   name: "create_stores",
+  operationType: "write",
   description: "Create one or more stores in WP Maps.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -230,6 +236,7 @@ const createStoresAction = defineProviderAction(service, {
 
 const updateStoresAction = defineProviderAction(service, {
   name: "update_stores",
+  operationType: "write",
   description: "Update one or more existing stores in WP Maps.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -249,6 +256,7 @@ const updateStoresAction = defineProviderAction(service, {
 
 const getStoreAction = defineProviderAction(service, {
   name: "get_store",
+  operationType: "read",
   description: "Get one WP Maps store by ID.",
   requiredScopes: [],
   inputSchema: s.object(
@@ -261,6 +269,7 @@ const getStoreAction = defineProviderAction(service, {
 
 const listStoresAction = defineProviderAction(service, {
   name: "list_stores",
+  operationType: "read",
   description: "List all stores in the connected WP Maps account.",
   requiredScopes: [],
   inputSchema: languageOnlyInput,
@@ -269,6 +278,7 @@ const listStoresAction = defineProviderAction(service, {
 
 const deleteStoresAction = defineProviderAction(service, {
   name: "delete_stores",
+  operationType: "destructive",
   description: "Delete one or more WP Maps stores by ID.",
   requiredScopes: [],
   inputSchema: s.object(

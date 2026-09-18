@@ -28,6 +28,7 @@ const falAiQueueLifecycle = {
 export const falAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_models",
+    operationType: "read",
     description:
       "Discover fal model endpoints with optional text search, status, category, pagination, endpoint filtering, and response expansion.",
     inputSchema: s.object(
@@ -59,6 +60,7 @@ export const falAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_pricing",
+    operationType: "read",
     description:
       "Retrieve unit pricing information for one or more fal model endpoints, including billing unit and currency.",
     inputSchema: s.object(
@@ -84,6 +86,7 @@ export const falAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "estimate_pricing",
+    operationType: "read",
     description:
       "Estimate total fal model cost using either historical API call quantities or expected billing-unit quantities.",
     inputSchema: s.object(
@@ -110,6 +113,7 @@ export const falAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_jwks",
+    operationType: "read",
     description: "Retrieve the fal JSON Web Key Set used for webhook signature verification.",
     inputSchema: s.object("The input payload for this action.", {}),
     outputSchema: s.object(
@@ -124,6 +128,7 @@ export const falAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "submit_queue_request",
+    operationType: "write",
     description: "Submit a job to a fal model endpoint's async queue and return the URLs used to track it.",
     followUpActions: ["fal_ai.queue_get_status", "fal_ai.get_queue_request_result", "fal_ai.cancel_queue_request"],
     asyncLifecycle: falAiQueueLifecycle,
@@ -155,6 +160,7 @@ export const falAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "queue_get_status",
+    operationType: "read",
     description:
       "Check the status of a queued fal request, with optional log retrieval for in-progress or completed work.",
     asyncLifecycle: falAiQueueLifecycle,
@@ -184,6 +190,7 @@ export const falAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "queue_get_status_stream",
+    operationType: "write",
     description:
       "Consume fal queue status updates as a streamed sequence of SSE events until the server closes the stream.",
     inputSchema: s.object(
@@ -214,6 +221,7 @@ export const falAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_queue_request_result",
+    operationType: "read",
     description: "Retrieve the stored final result payload for a completed fal queued request.",
     inputSchema: s.object(
       "The input payload for this action.",
@@ -237,6 +245,7 @@ export const falAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "cancel_queue_request",
+    operationType: "destructive",
     description: "Cancel a queued or in-progress fal request using its cancellation URL.",
     asyncLifecycle: falAiQueueLifecycle,
     inputSchema: s.object(

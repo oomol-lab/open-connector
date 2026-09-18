@@ -178,6 +178,7 @@ const listStagesInputSchema = s.object(
 export const capsuleCrmActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_parties",
+    operationType: "read",
     description: "List Capsule CRM parties with pagination, optional change filtering, and embeds.",
     requiredScopes: [],
     inputSchema: listPartiesInputSchema,
@@ -185,6 +186,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_parties",
+    operationType: "read",
     description: "Search Capsule CRM parties by query text.",
     requiredScopes: [],
     inputSchema: searchPartiesInputSchema,
@@ -192,6 +194,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_party",
+    operationType: "read",
     description: "Read one Capsule CRM party by ID.",
     requiredScopes: [],
     inputSchema: idInputSchema("The unique Capsule CRM party ID."),
@@ -199,6 +202,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_party",
+    operationType: "write",
     description: "Create a Capsule CRM party.",
     requiredScopes: [],
     inputSchema: partyWriteInputSchema,
@@ -206,6 +210,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_party",
+    operationType: "write",
     description: "Update a Capsule CRM party.",
     requiredScopes: [],
     inputSchema: partyUpdateInputSchema,
@@ -213,6 +218,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_party",
+    operationType: "destructive",
     description: "Delete a Capsule CRM party.",
     requiredScopes: [],
     inputSchema: deleteInputSchema("The unique Capsule CRM party ID."),
@@ -220,6 +226,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_opportunities",
+    operationType: "read",
     description: "List Capsule CRM opportunities with pagination, optional change filtering, and embeds.",
     requiredScopes: [],
     inputSchema: listOpportunitiesInputSchema,
@@ -227,6 +234,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "search_opportunities",
+    operationType: "read",
     description: "Search Capsule CRM opportunities by query text.",
     requiredScopes: [],
     inputSchema: searchOpportunitiesInputSchema,
@@ -234,6 +242,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_opportunity",
+    operationType: "read",
     description: "Read one Capsule CRM opportunity by ID.",
     requiredScopes: [],
     inputSchema: idInputSchema("The unique Capsule CRM opportunity ID."),
@@ -241,6 +250,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_opportunity",
+    operationType: "write",
     description: "Create a Capsule CRM opportunity.",
     requiredScopes: [],
     inputSchema: opportunityWriteInputSchema,
@@ -248,6 +258,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_opportunity",
+    operationType: "write",
     description: "Update a Capsule CRM opportunity.",
     requiredScopes: [],
     inputSchema: opportunityUpdateInputSchema,
@@ -255,6 +266,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_opportunity",
+    operationType: "destructive",
     description: "Delete a Capsule CRM opportunity.",
     requiredScopes: [],
     inputSchema: deleteInputSchema("The unique Capsule CRM opportunity ID."),
@@ -262,6 +274,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_tasks",
+    operationType: "read",
     description: "List Capsule CRM tasks with pagination, status filtering, and embeds.",
     requiredScopes: [],
     inputSchema: listTasksInputSchema,
@@ -269,6 +282,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_task",
+    operationType: "read",
     description: "Read one Capsule CRM task by ID.",
     requiredScopes: [],
     inputSchema: idInputSchema("The unique Capsule CRM task ID."),
@@ -276,6 +290,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_task",
+    operationType: "write",
     description: "Create a Capsule CRM task.",
     requiredScopes: [],
     inputSchema: taskWriteInputSchema,
@@ -283,6 +298,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_task",
+    operationType: "write",
     description: "Update a Capsule CRM task.",
     requiredScopes: [],
     inputSchema: taskUpdateInputSchema,
@@ -290,6 +306,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_task",
+    operationType: "destructive",
     description: "Delete a Capsule CRM task.",
     requiredScopes: [],
     inputSchema: deleteInputSchema("The unique Capsule CRM task ID."),
@@ -297,6 +314,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_users",
+    operationType: "read",
     description: "List Capsule CRM users.",
     requiredScopes: [],
     inputSchema: listUsersInputSchema,
@@ -304,6 +322,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Read the Capsule CRM user associated with the access token.",
     requiredScopes: [],
     inputSchema: getCurrentUserInputSchema,
@@ -311,6 +330,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_categories",
+    operationType: "read",
     description: "List Capsule CRM task categories.",
     requiredScopes: [],
     inputSchema: listCategoriesInputSchema,
@@ -318,6 +338,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_countries",
+    operationType: "read",
     description: "List countries supported by Capsule CRM.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -325,6 +346,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_currencies",
+    operationType: "read",
     description: "List currencies supported by Capsule CRM.",
     requiredScopes: [],
     inputSchema: emptyInputSchema,
@@ -332,6 +354,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pipelines",
+    operationType: "read",
     description: "List Capsule CRM sales pipelines.",
     requiredScopes: [],
     inputSchema: listPipelinesInputSchema,
@@ -339,6 +362,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_pipeline_milestones",
+    operationType: "read",
     description: "List milestones for a Capsule CRM pipeline.",
     requiredScopes: [],
     inputSchema: listPipelineMilestonesInputSchema,
@@ -346,6 +370,7 @@ export const capsuleCrmActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_stages",
+    operationType: "read",
     description: "List stages for a Capsule CRM board.",
     requiredScopes: [],
     inputSchema: listStagesInputSchema,

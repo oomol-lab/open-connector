@@ -352,6 +352,7 @@ const listTrendingInputSchema = s.object(
 export const tmdbActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_movie",
+    operationType: "read",
     description: "Search TMDB movies by title and return a paginated list of matching results.",
     inputSchema: searchMovieInputSchema,
     outputSchema: pagedResultsSchema,
@@ -359,12 +360,14 @@ export const tmdbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_movie",
+    operationType: "read",
     description: "Get top-level TMDB details for one movie by its TMDB identifier.",
     inputSchema: getMovieInputSchema,
     outputSchema: movieDetailsSchema,
   }),
   defineProviderAction(service, {
     name: "search_tv",
+    operationType: "read",
     description: "Search TMDB TV shows by name and return a paginated list of matching results.",
     inputSchema: searchTvInputSchema,
     outputSchema: pagedResultsSchema,
@@ -372,18 +375,21 @@ export const tmdbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_tv",
+    operationType: "read",
     description: "Get top-level TMDB details for one TV series by its TMDB identifier.",
     inputSchema: getTvInputSchema,
     outputSchema: tvDetailsSchema,
   }),
   defineProviderAction(service, {
     name: "get_person",
+    operationType: "read",
     description: "Get top-level TMDB details for one person by their TMDB identifier.",
     inputSchema: getPersonInputSchema,
     outputSchema: personDetailsSchema,
   }),
   defineProviderAction(service, {
     name: "list_trending",
+    operationType: "read",
     description: "List movies, TV shows, and people currently trending on TMDB for a day or week window.",
     inputSchema: listTrendingInputSchema,
     outputSchema: pagedResultsSchema,
@@ -391,6 +397,7 @@ export const tmdbActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_configuration",
+    operationType: "read",
     description: "Get TMDB image base URLs, available image sizes, and change keys used to build media URLs.",
     inputSchema: s.object({}, { description: "No input is required for TMDB configuration." }),
     outputSchema: configurationSchema,

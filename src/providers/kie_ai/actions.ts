@@ -11,6 +11,7 @@ const responseMessageSchema = s.string("The response message returned by KIE.AI.
 export const kieAiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_account_credits",
+    operationType: "read",
     description: "Get the remaining credit balance for the connected KIE.AI account.",
     inputSchema: s.object("The input payload for getting KIE.AI account credits.", {}),
     outputSchema: s.object("The KIE.AI account credit response.", {
@@ -21,6 +22,7 @@ export const kieAiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_download_url",
+    operationType: "read",
     description: "Convert a KIE.AI generated file URL into a temporary direct download URL.",
     inputSchema: s.object("The input payload for getting a KIE.AI download URL.", {
       url: s.string("The KIE.AI generated file URL to convert into a download URL.", {

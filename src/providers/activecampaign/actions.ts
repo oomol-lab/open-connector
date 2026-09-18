@@ -140,6 +140,7 @@ const fieldValuesInputSchema = {
 export const activecampaignActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_current_user",
+    operationType: "read",
     description: "Get the current ActiveCampaign user associated with the API token.",
     inputSchema: s.object({}, { description: "Input parameters for reading the current ActiveCampaign user." }),
     outputSchema: s.object(
@@ -151,6 +152,7 @@ export const activecampaignActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_contacts",
+    operationType: "read",
     description: "List ActiveCampaign contacts with pagination, search, and filtering support.",
     inputSchema: s.object(
       {
@@ -182,6 +184,7 @@ export const activecampaignActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_contact",
+    operationType: "read",
     description: "Get one ActiveCampaign contact by identifier.",
     inputSchema: s.object(
       {
@@ -198,6 +201,7 @@ export const activecampaignActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "upsert_contact",
+    operationType: "write",
     description: "Create or update an ActiveCampaign contact using the official contact sync endpoint.",
     inputSchema: s.object(
       {
@@ -221,6 +225,7 @@ export const activecampaignActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_lists",
+    operationType: "read",
     description: "List ActiveCampaign mailing lists with pagination and optional name filtering.",
     inputSchema: s.object(
       {
@@ -240,6 +245,7 @@ export const activecampaignActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_fields",
+    operationType: "read",
     description: "List ActiveCampaign custom contact fields.",
     inputSchema: s.object(
       {

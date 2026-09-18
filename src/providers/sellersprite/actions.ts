@@ -426,12 +426,14 @@ const reverseKeywordOutputSchema = s.object(
 export const sellerspriteActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_api_usage",
+    operationType: "read",
     description: "Retrieve current-month SellerSprite API usage for initialized purchased modules.",
     inputSchema: s.actionInput({}, [], "Input for retrieving SellerSprite API usage."),
     outputSchema: usageOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_asin_detail",
+    operationType: "read",
     description:
       "Retrieve SellerSprite product, listing, category, rating, seller, and variation details for an Amazon ASIN.",
     inputSchema: s.actionInput(
@@ -446,12 +448,14 @@ export const sellerspriteActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "lookup_competitors",
+    operationType: "read",
     description: "Query SellerSprite competitor products with sales, revenue, ranking, pricing, and seller estimates.",
     inputSchema: competitorInputSchema,
     outputSchema: paginatedProductOutputSchema,
   }),
   defineProviderAction(service, {
     name: "research_products",
+    operationType: "write",
     description:
       "Research Amazon products in SellerSprite using product, sales, revenue, ranking, review, category, and seller filters.",
     inputSchema: productResearchInputSchema,
@@ -459,6 +463,7 @@ export const sellerspriteActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "reverse_asin_keywords",
+    operationType: "read",
     description:
       "Find Amazon search traffic keywords, natural ranks, advertising ranks, and traffic estimates for an ASIN with SellerSprite.",
     inputSchema: reverseKeywordInputSchema,

@@ -120,6 +120,7 @@ const dashcardMutation = s.oneOf([
 export const metabaseMcpActions: ProviderActionDefinition[] = [
   defineProviderAction("metabase", {
     name: "search_content",
+    operationType: "read",
     description:
       "Search native Metabase MCP content using keyword or semantic queries (not the REST search action). Requires native MCP on the instance.",
     inputSchema: s.requiredObject("Native search queries.", {
@@ -150,6 +151,7 @@ export const metabaseMcpActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("metabase", {
     name: "read_resource",
+    operationType: "read",
     description:
       "Read up to five Metabase entity URIs. Preserves individual resource errors; list endpoints cap at 25 items.",
     inputSchema: s.requiredObject("Entity resource URIs.", {
@@ -174,6 +176,7 @@ export const metabaseMcpActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("metabase", {
     name: "construct_query",
+    operationType: "read",
     description: "Construct portable MBQL 5 without executing it; returns a stored query handle.",
     inputSchema: s.requiredObject("Structured query construction.", {
       query: queryObject,
@@ -183,6 +186,7 @@ export const metabaseMcpActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("metabase", {
     name: "construct_native_query",
+    operationType: "read",
     description:
       "Construct SQL for saving as a question. This handle cannot be run by execute_query or query; use execute_sql to execute SQL.",
     inputSchema: nativeQueryInput,
@@ -190,6 +194,7 @@ export const metabaseMcpActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("metabase", {
     name: "query",
+    operationType: "read",
     description:
       "Execute MBQL or fetch its next page. Native MCP returns pages of 200 rows within a 2,000-row total budget.",
     inputSchema: s.requireAnyProperty(
@@ -204,6 +209,7 @@ export const metabaseMcpActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("metabase", {
     name: "execute_query",
+    operationType: "read",
     description: "Execute constructed MBQL and return rows and columns. Native SQL handles are not supported.",
     inputSchema: s.requireAnyProperty(
       s.requiredObject("Supply exactly one handle or base64-encoded MBQL query.", {
@@ -216,6 +222,7 @@ export const metabaseMcpActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("metabase", {
     name: "execute_sql",
+    operationType: "destructive",
     description:
       "Execute native SQL. Requires native-query permission and the instance's execute-SQL setting to be enabled.",
     inputSchema: nativeQueryInput,
@@ -223,6 +230,7 @@ export const metabaseMcpActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("metabase", {
     name: "execute_question",
+    operationType: "read",
     description:
       "Run a saved question. Parameterized questions and input template tags are not supported by native MCP.",
     inputSchema: s.requiredObject("Saved question.", { id }),
@@ -230,30 +238,35 @@ export const metabaseMcpActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("metabase", {
     name: "create_question",
+    operationType: "write",
     description: "Save a constructed MBQL or SQL query as a question.",
     inputSchema: cardCreateInput,
     outputSchema: createdCard,
   }),
   defineProviderAction("metabase", {
     name: "update_question",
+    operationType: "destructive",
     description: "Patch a saved question, optionally replacing its query with a stored handle.",
     inputSchema: cardUpdateInput,
     outputSchema: updatedCard,
   }),
   defineProviderAction("metabase", {
     name: "create_metric",
+    operationType: "write",
     description: "Save constructed MBQL as a metric: one aggregation and at most one date/datetime grouping.",
     inputSchema: cardCreateInput,
     outputSchema: createdCard,
   }),
   defineProviderAction("metabase", {
     name: "update_metric",
+    operationType: "destructive",
     description: "Patch a metric; replacement queries must still meet metric requirements.",
     inputSchema: cardUpdateInput,
     outputSchema: updatedCard,
   }),
   defineProviderAction("metabase", {
     name: "create_dashboard",
+    operationType: "write",
     description: "Create a dashboard with optional saved questions, automatically positioned.",
     inputSchema: s.requiredObject("Dashboard creation.", {
       name,
@@ -270,6 +283,7 @@ export const metabaseMcpActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("metabase", {
     name: "update_dashboard",
+    operationType: "destructive",
     description: "Patch a dashboard and apply ordered add/remove/move card mutations.",
     inputSchema: s.requiredObject("Dashboard patch.", {
       id,
@@ -288,6 +302,7 @@ export const metabaseMcpActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("metabase", {
     name: "create_collection",
+    operationType: "write",
     description: "Create a collection, optionally nested under a parent.",
     inputSchema: s.requiredObject("Collection creation.", { name, description, parentCollectionId: s.optional(id) }),
     outputSchema: s.requiredObject("Created collection.", {
@@ -301,6 +316,7 @@ export const metabaseMcpActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("metabase", {
     name: "list_mcp_tools",
+    operationType: "read",
     description:
       "Discover native MCP tools and their upstream schemas. Unknown tools are discoverable, not automatically executable.",
     inputSchema: s.object("No input required.", {}),
@@ -321,6 +337,7 @@ export const metabaseMcpActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("metabase", {
     name: "list_mcp_resources",
+    operationType: "read",
     description:
       "Discover native MCP resources. Only documentation resources can be read by this connector; Apps are not supported.",
     inputSchema: s.object("No input required.", {}),
@@ -340,6 +357,7 @@ export const metabaseMcpActions: ProviderActionDefinition[] = [
   }),
   defineProviderAction("metabase", {
     name: "read_mcp_resource",
+    operationType: "read",
     description: "Read native metabase://docs/ documentation, not entities or MCP Apps resources.",
     inputSchema: s.requiredObject("Documentation resource.", {
       uri: s.string("URI from list_mcp_resources.", { pattern: "^metabase://docs/", minLength: 17 }),

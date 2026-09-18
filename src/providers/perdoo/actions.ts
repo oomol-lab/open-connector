@@ -239,6 +239,7 @@ const commitSchema = s.object(
 export const perdooActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_goals",
+    operationType: "read",
     description: "List Perdoo goals with the documented GraphQL goal filters and cursor pagination.",
     inputSchema: listGoalsInputSchema,
     outputSchema: s.object(
@@ -254,12 +255,14 @@ export const perdooActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_goal",
+    operationType: "read",
     description: "Retrieve one Perdoo goal by UUID.",
     inputSchema: getGoalInputSchema,
     outputSchema: s.object("A Perdoo goal lookup result.", { goal: s.nullable(goalSchema) }, { required: ["goal"] }),
   }),
   defineProviderAction(service, {
     name: "upsert_commit",
+    operationType: "write",
     description: "Create or update a Perdoo progress update for exactly one goal, key result, or KPI.",
     inputSchema: upsertCommitInputSchema,
     outputSchema: s.object(
@@ -273,6 +276,7 @@ export const perdooActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "execute_graphql",
+    operationType: "write",
     description: "Execute a JSON-friendly Perdoo GraphQL query or mutation.",
     inputSchema: graphqlRequestSchema,
     outputSchema: s.object(

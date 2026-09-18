@@ -112,6 +112,7 @@ const transactionSchema = s.requiredObject("A Fidel transaction record normalize
 export const fidelApiActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_brands",
+    operationType: "read",
     description: "List Fidel brands available to the connected secret API key.",
     inputSchema: s.object(
       "Optional filters for listing Fidel brands.",
@@ -134,6 +135,7 @@ export const fidelApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_brand",
+    operationType: "read",
     description: "Fetch one Fidel brand by brand ID.",
     inputSchema: s.requiredObject("The Fidel brand lookup input.", {
       brandId: s.string("The Fidel brand ID to fetch.", { minLength: 1 }),
@@ -145,6 +147,7 @@ export const fidelApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_cards",
+    operationType: "read",
     description: "List Fidel cards for one program ID.",
     inputSchema: s.object(
       "The Fidel card list input.",
@@ -167,6 +170,7 @@ export const fidelApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_card",
+    operationType: "read",
     description: "Fetch one Fidel card by card ID.",
     inputSchema: s.requiredObject("The Fidel card lookup input.", {
       cardId: s.string("The Fidel card ID to fetch.", { minLength: 1 }),
@@ -178,6 +182,7 @@ export const fidelApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_transactions",
+    operationType: "read",
     description: "List Fidel transactions for one program ID.",
     inputSchema: s.object(
       "The Fidel transaction list input.",
@@ -202,6 +207,7 @@ export const fidelApiActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_transaction",
+    operationType: "read",
     description: "Fetch one Fidel transaction by transaction ID.",
     inputSchema: s.requiredObject("The Fidel transaction lookup input.", {
       transactionId: s.string("The Fidel transaction ID to fetch.", { minLength: 1 }),

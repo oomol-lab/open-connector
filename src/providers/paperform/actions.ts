@@ -185,6 +185,7 @@ const couponSchema = s.object(
 export const paperformActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_forms",
+    operationType: "read",
     description: "List Paperform forms accessible to the authorized user.",
     inputSchema: s.object(
       "Filters and pagination controls for listing Paperform forms.",
@@ -206,12 +207,14 @@ export const paperformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form",
+    operationType: "read",
     description: "Get a Paperform form by slug, custom slug, or ID.",
     inputSchema: s.object("The Paperform form lookup input.", slugInputFields, { required: ["slug_or_id"] }),
     outputSchema: s.object("A single Paperform form result.", { form: formSchema }, { required: ["form"] }),
   }),
   defineProviderAction(service, {
     name: "list_form_fields",
+    operationType: "read",
     description: "List fields for a Paperform form.",
     inputSchema: s.object(
       "Filters for listing Paperform form fields.",
@@ -232,6 +235,7 @@ export const paperformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form_field",
+    operationType: "read",
     description: "Get a Paperform form field by field key.",
     inputSchema: s.object(
       "The Paperform form field lookup input.",
@@ -245,6 +249,7 @@ export const paperformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_form_submissions",
+    operationType: "read",
     description: "List submissions for a Paperform form.",
     inputSchema: s.object(
       "Filters and pagination controls for listing Paperform submissions.",
@@ -266,6 +271,7 @@ export const paperformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form_submission",
+    operationType: "read",
     description: "Get a Paperform submission by form and submission ID.",
     inputSchema: s.object(
       "The Paperform form submission lookup input.",
@@ -283,6 +289,7 @@ export const paperformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_submission",
+    operationType: "read",
     description: "Get a Paperform submission by submission ID.",
     inputSchema: s.object(
       "The Paperform submission lookup input.",
@@ -297,6 +304,7 @@ export const paperformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_form_partial_submissions",
+    operationType: "read",
     description: "List partial submissions for a Paperform form.",
     inputSchema: s.object(
       "Filters and pagination controls for listing Paperform partial submissions.",
@@ -318,6 +326,7 @@ export const paperformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form_partial_submission",
+    operationType: "read",
     description: "Get a Paperform partial submission by form and partial submission ID.",
     inputSchema: s.object(
       "The Paperform form partial submission lookup input.",
@@ -335,6 +344,7 @@ export const paperformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_partial_submission",
+    operationType: "read",
     description: "Get a Paperform partial submission by partial submission ID.",
     inputSchema: s.object(
       "The Paperform partial submission lookup input.",
@@ -349,6 +359,7 @@ export const paperformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_form_products",
+    operationType: "read",
     description: "List products for a Paperform form.",
     inputSchema: s.object(
       "Filters for listing Paperform form products.",
@@ -369,6 +380,7 @@ export const paperformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form_product",
+    operationType: "read",
     description: "Get a Paperform product by form and SKU.",
     inputSchema: s.object(
       "The Paperform form product lookup input.",
@@ -382,6 +394,7 @@ export const paperformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_form_coupons",
+    operationType: "read",
     description: "List coupons for a Paperform form.",
     inputSchema: s.object("The Paperform form coupon list input.", slugInputFields, { required: ["slug_or_id"] }),
     outputSchema: s.object(
@@ -395,6 +408,7 @@ export const paperformActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_form_coupon",
+    operationType: "read",
     description: "Get a Paperform coupon by form and coupon code.",
     inputSchema: s.object(
       "The Paperform form coupon lookup input.",

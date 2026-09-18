@@ -105,11 +105,12 @@ const albumImageInput = s.actionInput(
 
 function action(
   name: SmugmugActionName,
+  operationType: ActionDefinition["operationType"],
   description: string,
   inputSchema: JsonSchema,
   outputSchema: JsonSchema,
 ): ActionDefinition {
-  return defineProviderAction(service, { name, description, inputSchema, outputSchema });
+  return defineProviderAction(service, { name, operationType, description, inputSchema, outputSchema });
 }
 
 const listOutput = (key: string, itemSchema: JsonSchema, description: string) =>
@@ -147,39 +148,51 @@ export type SmugmugActionName =
   | "get_image_size_details";
 
 export const smugmugActions: ActionDefinition[] = [
-  action("get_user", "Retrieve a SmugMug user by nickname.", nicknameInput, s.actionOutput({ user: userSchema })),
+  action(
+    "get_user",
+    "read",
+    "Retrieve a SmugMug user by nickname.",
+    nicknameInput,
+    s.actionOutput({ user: userSchema }),
+  ),
   action(
     "get_user_profile",
+    "read",
     "Retrieve the public profile for a SmugMug user.",
     nicknameInput,
     s.actionOutput({ userProfile: userProfileSchema }),
   ),
   action(
     "get_user_features",
+    "read",
     "Retrieve the feature and entitlement map for a SmugMug user.",
     nicknameInput,
     s.actionOutput({ features: rawObject("The SmugMug user feature map.") }),
   ),
   action(
     "get_user_root_node",
+    "read",
     "Retrieve the root node for a SmugMug user.",
     nicknameInput,
     s.actionOutput({ rootNode: nodeSchema }),
   ),
   action(
     "get_user_bio_image",
+    "read",
     "Retrieve the biography image for a SmugMug user.",
     nicknameInput,
     s.actionOutput({ bioImage: imageSchema }),
   ),
   action(
     "get_user_featured_albums",
+    "read",
     "List featured albums for a SmugMug user.",
     nicknameInput,
     listOutput("featuredAlbums", albumSchema, "Featured albums returned by SmugMug."),
   ),
   action(
     "search_user_content",
+    "read",
     "Search images in a SmugMug user's public content.",
     s.object(
       {
@@ -198,30 +211,35 @@ export const smugmugActions: ActionDefinition[] = [
   ),
   action(
     "get_folder_by_user_path",
+    "read",
     "Resolve a SmugMug folder by user nickname and path.",
     folderLookupInput,
     s.actionOutput({ folder: folderSchema }),
   ),
   action(
     "get_folder_details",
+    "read",
     "Retrieve details for a SmugMug folder node.",
     nodeIdInput,
     s.actionOutput({ folder: folderSchema }),
   ),
   action(
     "get_folder_subfolders",
+    "read",
     "List subfolders below a SmugMug folder path.",
     folderLookupInput,
     listOutput("folders", folderSchema, "Subfolders returned by SmugMug."),
   ),
   action(
     "get_folder_albums",
+    "read",
     "List albums below a SmugMug folder path.",
     folderLookupInput,
     listOutput("albums", albumSchema, "Albums returned by SmugMug."),
   ),
   action(
     "list_child_nodes",
+    "read",
     "List child nodes below a SmugMug node.",
     s.object(
       { nodeId: nonEmptyString("The SmugMug node ID."), ...paginationFields },
@@ -231,31 +249,42 @@ export const smugmugActions: ActionDefinition[] = [
   ),
   action(
     "get_node_parent",
+    "read",
     "Retrieve the parent node for a SmugMug node.",
     nodeIdInput,
     s.actionOutput({ parentNode: nodeSchema }),
   ),
   action(
     "get_node_parents",
+    "read",
     "List all parent nodes for a SmugMug node.",
     nodeIdInput,
     listOutput("parentNodes", nodeSchema, "Parent nodes returned by SmugMug."),
   ),
   action(
     "get_node_highlight_image",
+    "read",
     "Retrieve the highlight image for a SmugMug node.",
     nodeIdInput,
     s.actionOutput({ highlightImage: imageSchema }),
   ),
-  action("get_album", "Retrieve a SmugMug album by key.", albumKeyInput, s.actionOutput({ album: albumSchema })),
+  action(
+    "get_album",
+    "read",
+    "Retrieve a SmugMug album by key.",
+    albumKeyInput,
+    s.actionOutput({ album: albumSchema }),
+  ),
   action(
     "get_album_highlight_image",
+    "read",
     "Retrieve the highlight image for a SmugMug album.",
     albumKeyInput,
     s.actionOutput({ highlightImage: imageSchema }),
   ),
   action(
     "get_album_images",
+    "read",
     "List images in a SmugMug album.",
     s.object(
       { albumKey: nonEmptyString("The SmugMug album key."), ...paginationFields },
@@ -265,19 +294,28 @@ export const smugmugActions: ActionDefinition[] = [
   ),
   action(
     "get_album_image",
+    "read",
     "Retrieve a SmugMug album image relationship.",
     albumImageInput,
     s.actionOutput({ albumImage: imageSchema }),
   ),
-  action("get_image", "Retrieve a SmugMug image by key.", imageKeyInput, s.actionOutput({ image: imageSchema })),
+  action(
+    "get_image",
+    "read",
+    "Retrieve a SmugMug image by key.",
+    imageKeyInput,
+    s.actionOutput({ image: imageSchema }),
+  ),
   action(
     "get_image_metadata",
+    "read",
     "Retrieve metadata for a SmugMug image.",
     imageKeyInput,
     s.actionOutput({ imageMetadata: imageMetadataSchema }),
   ),
   action(
     "get_image_sizes",
+    "read",
     "List direct image size URLs for a SmugMug image.",
     imageKeyInput,
     s.actionOutput({
@@ -287,6 +325,7 @@ export const smugmugActions: ActionDefinition[] = [
   ),
   action(
     "get_image_size_details",
+    "read",
     "Retrieve full image size details for a SmugMug image.",
     imageKeyInput,
     s.actionOutput({ imageSizeDetails: imageSizeDetailsSchema }),
