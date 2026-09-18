@@ -604,18 +604,50 @@ async function listRepositoryWorkflows(input: Record<string, unknown>, accessTok
 }
 
 async function dispatchWorkflow(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
-  await githubRequestNoContent({
+  const response = await githubRequestJson<unknown>({
     method: "POST",
     path: `/repos/${encodeURIComponent(String(input.owner))}/${encodeURIComponent(String(input.repo))}/actions/workflows/${encodeURIComponent(String(input.workflowId))}/dispatches`,
     body: compactObject({
       ref: String(input.ref),
       inputs: optionalRecord(input.inputs),
+      return_run_details: true,
     }),
     accessToken,
     fetcher,
   });
 
-  return { dispatched: true };
+  const runDetails = readWorkflowDispatchRunDetails(response);
+  if (!runDetails) {
+    return { dispatched: true, run_identity_status: "unavailable" };
+  }
+
+  return {
+    dispatched: true,
+    run_identity_status: "known",
+    ...runDetails,
+  };
+}
+
+interface WorkflowDispatchRunDetails {
+  workflow_run_id: number;
+  run_url: string;
+  html_url: string;
+}
+
+function readWorkflowDispatchRunDetails(payload: unknown): WorkflowDispatchRunDetails | undefined {
+  const record = optionalRecord(payload);
+  const workflowRunId = optionalInteger(record?.workflow_run_id);
+  const runUrl = optionalString(record?.run_url);
+  const htmlUrl = optionalString(record?.html_url);
+  if (!workflowRunId || !Number.isSafeInteger(workflowRunId) || !runUrl || !htmlUrl) {
+    return undefined;
+  }
+
+  return {
+    workflow_run_id: workflowRunId,
+    run_url: runUrl,
+    html_url: htmlUrl,
+  };
 }
 
 async function enableWorkflow(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {

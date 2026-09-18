@@ -2484,17 +2484,25 @@ export const githubActions: ActionDefinition[] = [
   }),
   action({
     name: "dispatch_workflow",
-    description: "Trigger a GitHub Actions workflow dispatch event.",
+    description:
+      "Request a GitHub Actions workflow run. A successful action means GitHub accepted the dispatch, not that the workflow completed.",
     requiredScopes: githubWorkflowScopes,
     inputSchema: s.object({
       owner: nonEmptyString,
       repo: nonEmptyString,
       workflowId: workflowIdSchema,
       ref: s.nonEmptyString("The branch or tag name to run the workflow on."),
-      inputs: s.record("The workflow inputs. All values must be strings.", s.string()),
+      inputs: s.optional(s.record("The workflow inputs. All values must be strings.", s.string())),
     }),
     outputSchema: s.object({
       dispatched: s.boolean(),
+      run_identity_status: s.anyOf("Whether GitHub returned the exact workflow run identity.", [
+        s.literal("known"),
+        s.literal("unavailable"),
+      ]),
+      workflow_run_id: s.optional(s.integer({ minimum: 1 })),
+      run_url: s.optional(s.url("The exact workflow run API URL returned by GitHub.")),
+      html_url: s.optional(s.url("The exact workflow run web URL returned by GitHub.")),
     }),
   }),
   action({
