@@ -185,6 +185,46 @@ describe("OneDrive transit downloads", () => {
   });
 });
 
+describe("OneDrive path traversal guard", () => {
+  it.each([
+    ["get_item", { itemPath: "/../../me/messages" }, "itemPath"],
+    ["get_item", { itemPath: "/reports/./q1.csv" }, "itemPath"],
+    ["get_item", { itemPath: "/reports\\..\\secret" }, "itemPath"],
+    ["get_item", { itemId: ".." }, "itemId"],
+    ["get_item", { driveId: "..", itemPath: "/notes.txt" }, "driveId"],
+    ["list_folder_children", { folderPath: "/../../me/messages" }, "folderPath"],
+    ["create_folder", { name: "new", parentPath: "/../../me" }, "parentPath"],
+    ["download_file_by_path", { itemPath: "../../me/messages" }, "itemPath"],
+    ["upload_file", { folder: "/a/../../me", name: "a.txt", text: "hi" }, "folder"],
+    ["upload_file", { folder: "..", name: "a.txt", text: "hi" }, "itemId"],
+  ] as const)("rejects %s input %j before any request", async (actionName, input, fieldName) => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    const { store } = createTransitFileStore(16);
+
+    const result = await executeOneDriveAction(actionName, input, store);
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: `${fieldName} must not contain ".", "..", or backslash path segments`,
+        details: { status: 400 },
+      },
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("still accepts dotted names that are not dot segments", async () => {
+    const requests = stubResponses([Response.json({ id: "item-9", name: "..env" })]);
+
+    const result = await executeOneDriveAction("get_item", { itemPath: "/.config/..env" });
+
+    expect(result).toMatchObject({ ok: true });
+    expect(requests[0]?.url.pathname).toBe("/v1.0/me/drive/root:/.config/..env:");
+  });
+});
+
 function stubResponses(responses: Response[]): CapturedRequest[] {
   const requests: CapturedRequest[] = [];
   vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -229,10 +269,8 @@ function createTransitFileStore(maxBytes: number): {
   };
 }
 
-type OneDriveDownloadAction = "download_file" | "download_file_by_path" | "download_item_as_format";
-
 async function executeOneDriveAction(
-  actionName: OneDriveDownloadAction,
+  actionName: string,
   input: Record<string, unknown>,
   transitFiles?: TransitFileStore,
   signal?: AbortSignal,

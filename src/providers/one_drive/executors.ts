@@ -1164,7 +1164,7 @@ function buildDriveBasePath(driveId?: string) {
   if (!driveId || driveId === "me") {
     return "me/drive";
   }
-  return `drives/${encodeURIComponent(driveId)}`;
+  return `drives/${encodeDriveSegment(driveId, "driveId")}`;
 }
 
 function buildDriveRootPath(driveId?: string) {
@@ -1172,7 +1172,7 @@ function buildDriveRootPath(driveId?: string) {
 }
 
 function buildDriveItemPath(itemId: string, driveId?: string) {
-  return `${buildDriveBasePath(driveId)}/items/${encodeURIComponent(itemId)}`;
+  return `${buildDriveBasePath(driveId)}/items/${encodeDriveSegment(itemId, "itemId")}`;
 }
 
 function buildDrivePathFromPath(path: string, driveId: string | undefined, fieldName: string) {
@@ -1193,6 +1193,19 @@ function buildDrivePathFromSegments(segments: string[], driveId?: string) {
   return `${buildDriveBasePath(driveId)}/root:/${segments.map((segment) => encodeURIComponent(segment)).join("/")}:`;
 }
 
+// encodeURIComponent leaves "." and ".." intact, and new URL() then collapses them as dot segments,
+// which would let an input escape its Graph path prefix while still carrying the user's token.
+function assertSafeDriveSegment(segment: string, fieldName: string) {
+  if (segment === "." || segment === ".." || segment.includes("\\")) {
+    throw new ProviderRequestError(400, `${fieldName} must not contain ".", "..", or backslash path segments`);
+  }
+}
+
+function encodeDriveSegment(segment: string, fieldName: string) {
+  assertSafeDriveSegment(segment, fieldName);
+  return encodeURIComponent(segment);
+}
+
 function normalizeDrivePath(path: string, fieldName: string) {
   const trimmed = path.trim();
   if (!trimmed) {
@@ -1207,6 +1220,9 @@ function normalizeDrivePath(path: string, fieldName: string) {
   const segments = trimmed.slice(1).split("/");
   if (segments.some((segment) => segment.length === 0)) {
     throw new ProviderRequestError(400, `${fieldName} must not contain empty path segments`);
+  }
+  for (const segment of segments) {
+    assertSafeDriveSegment(segment, fieldName);
   }
   return segments;
 }
@@ -1224,6 +1240,9 @@ function normalizeFlexibleDrivePath(path: string, fieldName: string) {
   const segments = rawPath.split("/");
   if (segments.some((segment) => segment.length === 0)) {
     throw new ProviderRequestError(400, `${fieldName} must not contain empty path segments`);
+  }
+  for (const segment of segments) {
+    assertSafeDriveSegment(segment, fieldName);
   }
   return segments;
 }
