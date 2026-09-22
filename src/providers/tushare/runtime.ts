@@ -403,7 +403,8 @@ async function readJsonPayload(response: Response): Promise<unknown> {
 
 function createTushareHttpError(status: number, payload: Record<string, unknown>): ProviderRequestError {
   const message = extractErrorMessage(payload) ?? `Tushare request failed with ${status || 500}`;
-  if (status === 401 || status === 403) return new ProviderRequestError(400, message, payload);
+  if (status === 401) return new ProviderRequestError(400, message, payload);
+  if (status === 403) return new ProviderRequestError(403, message, payload);
   if (status === 429) return new ProviderRequestError(429, message, payload);
   return new ProviderRequestError(status || 502, message, payload);
 }

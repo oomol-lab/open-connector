@@ -196,7 +196,7 @@ function createError(status: number, payload: unknown, phase: Phase): ProviderRe
   if (status === 402) return new ProviderRequestError(402, message, payload);
   if (isCredentialError(code))
     return phase === "validate" ? providerInputError(message) : new ProviderRequestError(409, message, payload);
-  if ([400, 404, 422].includes(status)) return providerInputError(message);
+  if ([400, 422].includes(status)) return providerInputError(message);
   return new ProviderRequestError(status || 502, message, payload);
 }
 

@@ -239,8 +239,13 @@ export class OAuthFlowService {
       authorizationUrl.searchParams.set("code_challenge_method", auth.pkce?.method ?? "S256");
     }
 
+    const providerOAuth = await this.providerLoader.loadProviderOAuthRuntime?.(service);
+    const resolvedAuthorizationUrl = providerOAuth?.buildAuthorizationUrl
+      ? await providerOAuth.buildAuthorizationUrl({ authorizationUrl, clientConfig: config, now })
+      : authorizationUrl.toString();
+
     return {
-      authorizationUrl: authorizationUrl.toString(),
+      authorizationUrl: resolvedAuthorizationUrl,
       pending,
     };
   }

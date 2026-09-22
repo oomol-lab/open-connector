@@ -52,6 +52,11 @@ export interface OAuthAccessTokenRefreshInput {
 
 /** Provider-local overrides for token protocols that do not follow the standard OAuth request shape. */
 export interface ProviderOAuthRuntime {
+  buildAuthorizationUrl?(input: {
+    authorizationUrl: URL;
+    clientConfig: OAuthClientConfig;
+    now: Date;
+  }): string | Promise<string>;
   exchangeCode?(input: OAuthCodeExchangeInput): Promise<OAuthTokenResult>;
   refreshAccessToken?(input: OAuthAccessTokenRefreshInput): Promise<OAuthTokenResult>;
 }

@@ -11,7 +11,7 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
-      authorizationUrl: "{+authorizationBaseUrl}/auth",
+      authorizationUrl: "{+authorizationBaseUrl}/api/v2/shop/auth_partner",
       tokenUrl: "{+apiBaseUrl}/api/v2/auth/token/get",
       refreshTokenUrl: "{+apiBaseUrl}/api/v2/auth/access_token/get",
       scopes: ["all"],

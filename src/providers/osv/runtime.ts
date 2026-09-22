@@ -1,6 +1,6 @@
 import type { ProviderActionHandlers, ProviderFetch } from "../provider-runtime.ts";
 
-import { compactObject, looseArray, optionalRawString, optionalRecord, optionalString } from "../../core/cast.ts";
+import { compactObject, optionalRawString, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   providerResponseError,
   providerUserAgent,
@@ -42,7 +42,10 @@ export const osvActionHandlers: ProviderActionHandlers<"osv", OsvActionHandler> 
       ),
       "OSV query response",
     );
-    const vulnerabilities = payload.vulns === undefined ? [] : looseArray(payload.vulns);
+    const vulnerabilities = payload.vulns === undefined ? [] : payload.vulns;
+    if (!Array.isArray(vulnerabilities)) {
+      throw providerResponseError("OSV query vulnerabilities must be an array of objects");
+    }
     if (!vulnerabilities.every((vulnerability) => optionalRecord(vulnerability))) {
       throw providerResponseError("OSV query vulnerabilities must be an array of objects");
     }

@@ -8,12 +8,31 @@ import type {
 import { optionalInteger } from "../../core/cast.ts";
 import {
   createInitialShopeeTokenInventory,
+  createShopeeSignature,
   parseShopeePartnerId,
   refreshShopeeTokenInventory,
   requestShopeeToken,
 } from "./runtime.ts";
 
 export const oauth: ProviderOAuthRuntime = {
+  buildAuthorizationUrl({ authorizationUrl, clientConfig, now }) {
+    const path = "/api/v2/shop/auth_partner";
+    const partnerId = parseShopeePartnerId(clientConfig);
+    const timestamp = Math.floor(now.getTime() / 1_000);
+    authorizationUrl.pathname = path;
+    authorizationUrl.searchParams.set("timestamp", String(timestamp));
+    authorizationUrl.searchParams.set(
+      "sign",
+      createShopeeSignature({
+        partnerId,
+        partnerKey: clientConfig.clientSecret,
+        path,
+        timestamp,
+      }),
+    );
+    return authorizationUrl.toString();
+  },
+
   async exchangeCode(input: OAuthCodeExchangeInput): Promise<OAuthTokenResult> {
     const shopId = positiveInteger(input.callbackParameters?.shop_id);
     const mainAccountId = positiveInteger(input.callbackParameters?.main_account_id);

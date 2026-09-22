@@ -176,13 +176,14 @@ export const shopeeActions: ActionDefinition[] = [
     inputSchema: s.object(
       "A public image URL and Shopee image processing options.",
       {
+        shopId: entityIdSchema("The Shopee shop ID. Omit it when the connection has exactly one shop."),
         imageUrl: s.string("A public HTTPS URL for a JPG, JPEG, or PNG image up to 10 MB.", {
           format: "uri",
         }),
         scene: s.stringEnum("How Shopee processes the image.", ["normal", "desc"]),
         ratio: s.stringEnum("The requested image ratio for eligible sellers.", ["1:1", "3:4"]),
       },
-      { optional: ["scene", "ratio"] },
+      { optional: ["shopId", "scene", "ratio"] },
     ),
     outputSchema: responseSchema,
   }),

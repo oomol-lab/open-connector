@@ -2,7 +2,9 @@ import type { CredentialValidators, ProviderExecutors } from "../../core/types.t
 import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { looseArray, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import { readBoundedResponseBytes } from "../../core/request.ts";
 import {
+  defaultProviderJsonMaxResponseBytes,
   defineApiKeyProviderExecutors,
   ProviderRequestError,
   providerUserAgent,
@@ -205,7 +207,13 @@ async function request(
     });
     const text =
       code === "globalStockSearchSymbols" && response.ok
-        ? new TextDecoder("gb18030").decode(await response.arrayBuffer())
+        ? new TextDecoder("gb18030").decode(
+            await readBoundedResponseBytes(response, {
+              maxBytes: defaultProviderJsonMaxResponseBytes,
+              fieldName: "ZYHub response",
+              createError: (message) => new ProviderRequestError(413, message),
+            }),
+          )
         : await readProviderTextBody(response, "ZYHub response");
     const payload = parse(text);
     if (!response.ok) {

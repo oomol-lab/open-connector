@@ -107,11 +107,14 @@ async function request(
       body: JSON.stringify(compactObject(body)),
       signal,
     });
-    const payload = requiredResponseRecord(
-      await readProviderJsonBody(response, { emptyBody: {}, invalidJsonMessage: "cufinder returned malformed JSON" }),
-      "cufinder response",
-    );
-    if (!response.ok || payload.success !== true) throw makeError(response.status, payload, phase);
+    const decoded = await readProviderJsonBody(response, {
+      emptyBody: {},
+      invalidJsonMessage: "cufinder returned malformed JSON",
+      invalidJsonFallback: response.ok ? undefined : () => ({}),
+    });
+    const payload = optionalRecord(decoded) ?? {};
+    if (!response.ok) throw makeError(response.status, payload, phase);
+    if (payload.success !== true) throw makeError(response.status, payload, phase);
     return payload;
   });
 }

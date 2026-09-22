@@ -835,7 +835,9 @@ async function slackDownloadFile(input: Record<string, unknown>, context: SlackA
         throw new ProviderRequestError(response.status, `Slack file download failed with HTTP ${response.status}`);
       }
       const mimeType =
-        response.headers.get("content-type") ?? optionalString(metadata.mimetype) ?? "application/octet-stream";
+        optionalString(response.headers.get("content-type")) ??
+        optionalString(metadata.mimetype) ??
+        "application/octet-stream";
       // Slack can return a sign-in page instead of the requested bytes.
       if (mimeType.split(";")[0]?.trim().toLowerCase() === "text/html" && metadata.mimetype !== "text/html") {
         throw providerResponseError("Slack returned an HTML page instead of the requested file");

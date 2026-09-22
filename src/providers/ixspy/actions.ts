@@ -360,21 +360,24 @@ const searchStoresAction = defineIxspyAction({
   ),
 });
 
-const storeDetailsInputSchema = s.object(
-  "Exactly one type of AliExpress store identifier to retrieve, with up to 10 IDs.",
-  {
-    merchantIds: s.array("The merchant IDs to retrieve.", positiveId("One AliExpress merchant ID."), {
-      minItems: 1,
-      maxItems: 10,
-      uniqueItems: true,
-    }),
-    linkIds: s.array("The store link IDs to retrieve.", positiveId("One AliExpress store link ID."), {
-      minItems: 1,
-      maxItems: 10,
-      uniqueItems: true,
-    }),
-  },
-  { optional: ["merchantIds", "linkIds"] },
+const storeDetailsInputSchema = s.requireExactlyOneProperty(
+  s.object(
+    "Exactly one type of AliExpress store identifier to retrieve, with up to 10 IDs.",
+    {
+      merchantIds: s.array("The merchant IDs to retrieve.", positiveId("One AliExpress merchant ID."), {
+        minItems: 1,
+        maxItems: 10,
+        uniqueItems: true,
+      }),
+      linkIds: s.array("The store link IDs to retrieve.", positiveId("One AliExpress store link ID."), {
+        minItems: 1,
+        maxItems: 10,
+        uniqueItems: true,
+      }),
+    },
+    { optional: ["merchantIds", "linkIds"] },
+  ),
+  ["merchantIds", "linkIds"],
 );
 
 const storeDetailsAction = defineIxspyAction({

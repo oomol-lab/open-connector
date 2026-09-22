@@ -77,12 +77,12 @@ function executeDocumentAction(
     body: compactObject({
       url: requiredInputString(input.documentUrl, "documentUrl"),
       model: optionalString(input.model),
-      documentId: optionalString(input.documentId),
       includePages: input.includePages,
       question: optionalString(input.question),
       prompt: optionalString(input.prompt),
       schema: optionalRecord(input.schema),
     }),
+    documentId: optionalString(input.documentId),
     context,
     phase: "execute",
   });
@@ -91,6 +91,7 @@ function executeDocumentAction(
 async function requestJson(input: {
   url: string;
   body: Record<string, unknown>;
+  documentId?: string;
   context: ApiKeyProviderContext;
   phase: Phase;
 }): Promise<unknown> {
@@ -103,6 +104,7 @@ async function requestJson(input: {
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-pdfvector-source": "oomol-connector",
+        ...(input.documentId ? { "x-pdfvector-document-id": input.documentId } : {}),
       },
       body: JSON.stringify(input.body),
       signal,

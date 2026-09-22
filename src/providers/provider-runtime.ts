@@ -421,7 +421,7 @@ const blockedProxyRequestHeaders = new Set([
   "transfer-encoding",
 ]);
 const defaultProviderProxyMaxResponseBytes = 20 * 1024 * 1024;
-const defaultProviderJsonMaxResponseBytes = 20 * 1024 * 1024;
+export const defaultProviderJsonMaxResponseBytes: number = 20 * 1024 * 1024;
 const defaultProviderErrorMaxResponseBytes = 64 * 1024;
 const defaultProviderRequestTimeoutMs = 30_000;
 

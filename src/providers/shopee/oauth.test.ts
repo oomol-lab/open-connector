@@ -16,6 +16,35 @@ const clientConfig: OAuthClientConfig = {
 };
 
 describe("Shopee OAuth", () => {
+  it("构造带有效期签名的卖家授权 URL", async () => {
+    const authorizationUrl = new URL("https://open.shopee.cn/api/v2/shop/auth_partner");
+    authorizationUrl.searchParams.set("partner_id", "12345");
+    authorizationUrl.searchParams.set("auth_type", "seller");
+    authorizationUrl.searchParams.set("redirect_uri", "http://localhost:3000/oauth/callback");
+    authorizationUrl.searchParams.set("response_type", "code");
+    authorizationUrl.searchParams.set("state", "state-1");
+
+    const result = new URL(
+      await oauth.buildAuthorizationUrl!({
+        authorizationUrl,
+        clientConfig,
+        now: new Date("2023-11-14T22:13:20.000Z"),
+      }),
+    );
+
+    expect(result.pathname).toBe("/api/v2/shop/auth_partner");
+    expect(result.searchParams.get("timestamp")).toBe("1700000000");
+    expect(result.searchParams.get("sign")).toBe(
+      createShopeeSignature({
+        partnerId: 12345,
+        partnerKey: "partner-key",
+        path: "/api/v2/shop/auth_partner",
+        timestamp: 1_700_000_000,
+      }),
+    );
+    expect(result.searchParams.get("state")).toBe("state-1");
+  });
+
   it("交换授权码时保存实体 token inventory 与签名配置", async () => {
     const fetcher = vi.fn(async (_input: string | URL | Request, _init?: RequestInit) =>
       Response.json({
@@ -107,6 +136,44 @@ describe("Shopee OAuth", () => {
         },
       },
     });
+  });
+
+  it("一个实体刷新失败时仍返回其他实体已轮换的令牌", async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        Response.json({
+          access_token: "rotated-access",
+          refresh_token: "rotated-refresh",
+          expire_in: 7200,
+          shop_id: 42,
+        }),
+      )
+      .mockResolvedValueOnce(Response.json({ error: "error_auth", message: "expired" }, { status: 403 }));
+
+    const result = await oauth.refreshAccessToken!({
+      refreshToken: "fallback-refresh",
+      clientConfig,
+      metadata: {},
+      providerSecret: {
+        tokenInventory: {
+          shops: {
+            "42": { accessToken: "first", refreshToken: "first-refresh", expiresAt: "2026-01-01T00:00:00Z" },
+            "43": { accessToken: "second", refreshToken: "second-refresh", expiresAt: "2026-01-01T00:00:00Z" },
+          },
+          merchants: {},
+        },
+      },
+      fetcher,
+      createError: (message) => new Error(message),
+    });
+
+    expect(result.providerSecret?.tokenInventory).toMatchObject({
+      shops: { "42": { accessToken: "rotated-access", refreshToken: "rotated-refresh" } },
+      merchants: {},
+    });
+    const tokenInventory = result.providerSecret?.tokenInventory as { shops: Record<string, unknown> };
+    expect(tokenInventory.shops["43"]).toBeUndefined();
   });
 
   it("Shopee 签名包含 partner、path、timestamp、token 与实体 ID", () => {

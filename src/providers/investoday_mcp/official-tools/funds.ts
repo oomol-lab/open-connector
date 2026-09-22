@@ -1357,7 +1357,7 @@ export const fundsOfficialTools: readonly InvestodayOfficialToolDefinition[] = [
         ),
         fundManagerName: s.withExamples(
           s.nonEmptyString("Fund manager name Accepted by Investoday for list_fund_mgr_returns."),
-          ["000001"],
+          ["张三"],
         ),
         pageNum: s.withExamples(
           s.integer("Page number, starting at 1 Accepted by Investoday for list_fund_mgr_returns.", { minimum: 1 }),

@@ -30,7 +30,7 @@ const handlers: ProviderActionHandlers<"cronfree", CronfreeActionHandler> = {
         mdays: readStringArray(input.monthDays),
         hours: readStringArray(input.hours),
         minutes: readStringArray(input.minutes),
-        timezone: requiredInputString(input.timezone, "timezone"),
+        timezone: [requiredInputString(input.timezone, "timezone")],
       },
       context,
       phase: "execute",

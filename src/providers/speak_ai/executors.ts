@@ -7,6 +7,7 @@ import {
   defineApiKeyProviderExecutors,
   providerInputError,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   readProviderJsonBody,
   requiredInputString,
@@ -43,7 +44,7 @@ const handlers: ProviderActionHandlers<"speak_ai", Handler> = {
       context,
       "execute",
     );
-    return { mediaId: requiredInputString(data.mediaId, "Speak AI upload mediaId") };
+    return { mediaId: requiredResponseString(data.mediaId, "Speak AI upload mediaId") };
   },
   async list_media(input, context) {
     const data = await request(
@@ -69,18 +70,18 @@ const handlers: ProviderActionHandlers<"speak_ai", Handler> = {
   async get_media_status(input, context) {
     const data = await media(input, context, "status");
     return {
-      mediaId: requiredInputString(data.mediaId, "mediaId"),
-      state: requiredInputString(data.state, "state"),
+      mediaId: requiredResponseString(data.mediaId, "mediaId"),
+      state: requiredResponseString(data.state, "state"),
       media: data,
     };
   },
   async get_transcript(input, context) {
     const data = await media(input, context, "transcript");
-    return { mediaId: requiredInputString(data.mediaId, "mediaId"), transcript: data };
+    return { mediaId: requiredResponseString(data.mediaId, "mediaId"), transcript: data };
   },
   async get_media_insights(input, context) {
     const data = await media(input, context, "insight");
-    return { mediaId: requiredInputString(data.mediaId, "mediaId"), insights: data };
+    return { mediaId: requiredResponseString(data.mediaId, "mediaId"), insights: data };
   },
   async list_folders(input, context) {
     const data = await request(
@@ -111,12 +112,9 @@ export const credentialValidators: CredentialValidators = {
 };
 
 async function media(input: Record<string, unknown>, context: ApiKeyProviderContext, family: string) {
-  return request(
-    `/media/${family}/${encodeURIComponent(requiredInputString(input.mediaId, "mediaId"))}`,
-    { method: "GET" },
-    context,
-    "execute",
-  );
+  const mediaId = requiredInputString(input.mediaId, "mediaId");
+  const data = await request(`/media/${family}/${encodeURIComponent(mediaId)}`, { method: "GET" }, context, "execute");
+  return data.state === "notUploaded" && data.mediaId === undefined ? { ...data, mediaId } : data;
 }
 async function request(
   path: string | URL,
@@ -140,7 +138,15 @@ async function request(
     });
   }
   if (!response.ok) throw error(response.status, payload, phase);
-  return requiredResponseRecord(requiredResponseRecord(payload, "Speak AI response").data, "Speak AI response data");
+  const envelope = requiredResponseRecord(payload, "Speak AI response");
+  if (envelope.state === "notUploaded" && envelope.data === undefined) return envelope;
+  return requiredResponseRecord(envelope.data, "Speak AI response data");
+}
+
+function requiredResponseString(value: unknown, label: string): string {
+  const result = optionalString(value);
+  if (!result) throw providerResponseError(`${label} must be a non-empty string`);
+  return result;
 }
 function fetchToken(
   path: string | URL,

@@ -425,7 +425,7 @@ export const indicesIndustriesOfficialTools: readonly InvestodayOfficialToolDefi
             ["2025-01-01"],
           ),
           indexCode: s.withExamples(s.nonEmptyString("Index code Supply exactly one of indexCode or indexCodes."), [
-            "002594",
+            "000300",
           ]),
           pageSize: s.withExamples(
             s.integer("Number of records per page Accepted by Investoday for list_index_oscillator_indicators.", {
@@ -444,7 +444,7 @@ export const indicesIndustriesOfficialTools: readonly InvestodayOfficialToolDefi
             s.array("Index codes Supply exactly one of indexCodes or indexCode.", s.string("One indexCode value."), {
               minItems: 1,
             }),
-            [["000001", "600519"]],
+            [["000001", "000300"]],
           ),
         },
         { required: [] },
@@ -475,7 +475,7 @@ export const indicesIndustriesOfficialTools: readonly InvestodayOfficialToolDefi
             ["2025-01-01"],
           ),
           indexCode: s.withExamples(s.nonEmptyString("Index code Supply exactly one of indexCode or indexCodes."), [
-            "002594",
+            "000300",
           ]),
           pageSize: s.withExamples(
             s.integer("Number of records per page Accepted by Investoday for list_index_price_volume_indicators.", {
@@ -494,7 +494,7 @@ export const indicesIndustriesOfficialTools: readonly InvestodayOfficialToolDefi
             s.array("Index codes Supply exactly one of indexCodes or indexCode.", s.string("One indexCode value."), {
               minItems: 1,
             }),
-            [["000001", "600519"]],
+            [["000001", "000300"]],
           ),
         },
         { required: [] },
@@ -541,7 +541,7 @@ export const indicesIndustriesOfficialTools: readonly InvestodayOfficialToolDefi
             ["2025-01-01"],
           ),
           indexCode: s.withExamples(s.nonEmptyString("Index code Supply exactly one of indexCode or indexCodes."), [
-            "002594",
+            "000300",
           ]),
           pageSize: s.withExamples(
             s.integer("Number of records per page Accepted by Investoday for list_index_strength_trend_indicators.", {
@@ -560,7 +560,7 @@ export const indicesIndustriesOfficialTools: readonly InvestodayOfficialToolDefi
             s.array("Index codes Supply exactly one of indexCodes or indexCode.", s.string("One indexCode value."), {
               minItems: 1,
             }),
-            [["000001", "600519"]],
+            [["000001", "000300"]],
           ),
         },
         { required: [] },
@@ -1054,7 +1054,7 @@ export const indicesIndustriesOfficialTools: readonly InvestodayOfficialToolDefi
         ),
         industryCode: s.withExamples(
           s.nonEmptyString("Industry code Accepted by Investoday for list_industry_rotation."),
-          ["002594"],
+          ["640000"],
         ),
       },
       { required: ["industryCode"] },
@@ -1131,7 +1131,7 @@ export const indicesIndustriesOfficialTools: readonly InvestodayOfficialToolDefi
               s.string("One industryCode value."),
               { minItems: 1 },
             ),
-            [["000001", "600519"]],
+            [["640000", "740000"]],
           ),
           pageNum: s.withExamples(
             s.integer("Page number, starting at 1 Accepted by Investoday for list_industry_val_ind.", { minimum: 1 }),
@@ -1139,7 +1139,7 @@ export const indicesIndustriesOfficialTools: readonly InvestodayOfficialToolDefi
           ),
           industryCode: s.withExamples(
             s.nonEmptyString("Industry code Supply exactly one of industryCode or industryCodes."),
-            ["002594"],
+            ["640000"],
           ),
         },
         { required: [] },

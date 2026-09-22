@@ -84,6 +84,15 @@ describe("Slack private file downloads", () => {
     ]);
   });
 
+  it("falls back when Slack returns empty filename and MIME metadata", async () => {
+    stubResponses([fileInfo({ name: "", mimetype: "" }), new Response("file", { headers: { "content-type": "" } })]);
+
+    expect(await download()).toMatchObject({
+      ok: true,
+      output: { fileId: "F123", file: { name: "F123", mimeType: "application/octet-stream" } },
+    });
+  });
+
   it.each([
     "https://evil.example/file",
     "https://files.slack.com.evil.example/file",

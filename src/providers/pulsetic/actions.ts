@@ -61,14 +61,8 @@ const listSnapshotsAction = defineProviderAction(service, {
     {
       ...timeRangeFields,
       ...paginationFields,
-      nodes: s.optional(
-        s.stringArray("The Pulsetic node slugs used to filter snapshots.", {
-          minItems: 1,
-          itemDescription: "A Pulsetic node slug.",
-        }),
-      ),
     },
-    { optional: ["page", "perPage", "nodes"] },
+    { optional: ["page", "perPage"] },
   ),
   outputSchema: s.object("The response returned when listing monitor snapshots.", {
     snapshots: s.array("The monitor snapshots returned by Pulsetic.", historyRecordSchema),

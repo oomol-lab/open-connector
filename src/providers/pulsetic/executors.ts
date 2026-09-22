@@ -1,7 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { looseArray, optionalNumber, optionalRawString, optionalRecord, optionalString } from "../../core/cast.ts";
+import { optionalNumber, optionalRawString, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
@@ -20,8 +20,9 @@ type Handler = (input: Record<string, unknown>, context: ApiKeyProviderContext) 
 const handlers: ProviderActionHandlers<"pulsetic", Handler> = {
   async list_monitors(input, context) {
     return {
-      monitors: looseArray(
+      monitors: responseArray(
         await request("/monitors", query({ page: input.page, per_page: input.perPage }), context, "execute"),
+        "Pulsetic monitors response",
       ),
     };
   },
@@ -73,8 +74,9 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
 });
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
-    looseArray(
+    responseArray(
       await request("/monitors", query({ per_page: 1 }), { apiKey: input.apiKey, fetcher, signal }, "validate"),
+      "Pulsetic monitors response",
     );
     return {
       profile: { accountId: "pulsetic-api-key", displayName: "Pulsetic API Key" },
@@ -98,10 +100,16 @@ async function history(
   append(params, "nodes[]", input.nodes);
   append(params, "response_codes[]", input.responseCodes);
   return {
-    [resource]: looseArray(
+    [resource]: responseArray(
       await request(`/monitors/${monitorId(input.monitorId)}/${resource}`, params, context, "execute"),
+      `Pulsetic ${resource} response`,
     ),
   };
+}
+
+function responseArray(value: unknown, label: string): unknown[] {
+  if (!Array.isArray(value)) throw providerResponseError(`${label} must be an array`);
+  return value;
 }
 async function request(
   path: string,

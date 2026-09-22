@@ -214,24 +214,32 @@ export async function refreshShopeeTokenInventory(input: {
   const shops: Record<string, ShopeeEntityToken> = {};
   const merchants: Record<string, ShopeeEntityToken> = {};
   for (const [id, token] of shopEntries) {
-    shops[id] = await refreshShopeeEntityToken({
-      clientConfig: input.clientConfig,
-      entityType: "shop",
-      entityId: Number(id),
-      refreshToken: token.refreshToken || input.fallbackRefreshToken,
-      fetcher: input.fetcher,
-      now: input.now,
-    });
+    try {
+      shops[id] = await refreshShopeeEntityToken({
+        clientConfig: input.clientConfig,
+        entityType: "shop",
+        entityId: Number(id),
+        refreshToken: token.refreshToken || input.fallbackRefreshToken,
+        fetcher: input.fetcher,
+        now: input.now,
+      });
+    } catch {
+      // 单个实体刷新失败时保留其他实体已经轮换成功的新令牌。
+    }
   }
   for (const [id, token] of merchantEntries) {
-    merchants[id] = await refreshShopeeEntityToken({
-      clientConfig: input.clientConfig,
-      entityType: "merchant",
-      entityId: Number(id),
-      refreshToken: token.refreshToken || input.fallbackRefreshToken,
-      fetcher: input.fetcher,
-      now: input.now,
-    });
+    try {
+      merchants[id] = await refreshShopeeEntityToken({
+        clientConfig: input.clientConfig,
+        entityType: "merchant",
+        entityId: Number(id),
+        refreshToken: token.refreshToken || input.fallbackRefreshToken,
+        fetcher: input.fetcher,
+        now: input.now,
+      });
+    } catch {
+      // 单个实体刷新失败时保留其他实体已经轮换成功的新令牌。
+    }
   }
   const representative = Object.values(merchants)[0] ?? Object.values(shops)[0];
   if (!representative) {
@@ -472,10 +480,14 @@ async function uploadShopeeProductImage(input: Record<string, unknown>, context:
   const ratio = asOptionalString(input.ratio);
   if (scene) body.set("scene", scene);
   if (ratio) body.set("ratio", ratio);
+  const inventory = readShopeeTokenInventory(context.providerSecret);
+  const entityId = resolveEntityId("shop", asOptionalInteger(input.shopId), inventory.shops);
   const payload = await requestShopee({
     path: "/api/v2/media_space/upload_image",
-    level: "public",
+    level: "shop",
+    entityId,
     clientConfig: context.clientConfig,
+    providerSecret: context.providerSecret,
     body,
     fetcher: context.fetcher,
   });
