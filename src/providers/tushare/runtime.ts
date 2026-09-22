@@ -281,15 +281,19 @@ export async function validateTushareCredential(
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const payload = await tushareRequest(
-    {
-      apiName: "trade_cal",
-      params: { exchange: "", start_date: "20180901", end_date: "20180902" },
-      fields: "exchange,cal_date,is_open",
-    },
-    { apiKey, fetcher, signal },
-  );
-  normalizeTableData(payload.data);
+  try {
+    const payload = await tushareRequest(
+      {
+        apiName: "daily",
+        params: { ts_code: "000001.SZ", trade_date: "20180903" },
+        fields: "ts_code,trade_date",
+      },
+      { apiKey, fetcher, signal },
+    );
+    normalizeTableData(payload.data);
+  } catch (error) {
+    if (!(error instanceof ProviderRequestError) || error.status !== 403) throw error;
+  }
   return {
     profile: {
       accountId: "tushare-token",
@@ -298,7 +302,7 @@ export async function validateTushareCredential(
     grantedScopes: [],
     metadata: {
       apiBaseUrl: tushareApiBaseUrl,
-      validationApiName: "trade_cal",
+      validationApiName: "daily",
       credentialHelpUrl: "https://tushare.pro/document/1?doc_id=39",
     },
   };
@@ -407,10 +411,18 @@ function createTushareHttpError(status: number, payload: Record<string, unknown>
 function createTushareApiError(code: number, payload: Record<string, unknown>): ProviderRequestError {
   const message = `Tushare request failed: ${extractErrorMessage(payload) ?? `code ${code}`}`;
   if (code === 40101) return new ProviderRequestError(400, message, payload);
-  if (code === 2002) return new ProviderRequestError(403, message, payload);
+  if (isTusharePermissionError(code, message)) return new ProviderRequestError(403, message, payload);
   if (code === 2003 || code === 2004 || message.includes("频率超限"))
     return new ProviderRequestError(429, message, payload);
   return new ProviderRequestError(502, message, payload);
+}
+
+function isTusharePermissionError(code: number, message: string): boolean {
+  return (
+    code === 2002 ||
+    message.includes("没有权限访问该接口") ||
+    (message.includes("没有接口(") && message.includes("访问权限"))
+  );
 }
 
 function normalizeTableData(value: unknown): TushareTableData {

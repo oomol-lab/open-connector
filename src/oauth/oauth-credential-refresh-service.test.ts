@@ -121,23 +121,31 @@ describe("OAuthCredentialRefreshService", () => {
   });
 
   it("refreshes through a provider OAuth runtime and preserves connection identity", async () => {
+    let receivedMetadata: Record<string, unknown> | undefined;
+    let receivedProviderSecret: Record<string, unknown> | undefined;
     const providerLoader = new ProviderLoader({
       example: async () => ({
         executors: {},
         oauth: {
-          async refreshAccessToken() {
+          async refreshAccessToken(input) {
+            receivedMetadata = input.metadata;
+            receivedProviderSecret = input.providerSecret;
             return {
               accessToken: "provider-refreshed-token",
               refreshToken: "provider-refreshed-token",
               tokenType: "Bearer",
               expiresAt: "2026-12-29T00:00:00.000Z",
+              providerSecret: { rotated: true },
               metadata: { refreshedBy: "provider-runtime" },
             };
           },
         },
       }),
     });
-    const credential = expiredCredential({ permissions: "read,write" });
+    const credential = {
+      ...expiredCredential({ permissions: "read,write" }),
+      providerSecret: { inventory: "stored" },
+    };
 
     const refreshed = await new OAuthCredentialRefreshService(clientConfigs, providerLoader).refresh(
       "example",
@@ -154,7 +162,10 @@ describe("OAuthCredentialRefreshService", () => {
         permissions: "read,write",
         refreshedBy: "provider-runtime",
       },
+      providerSecret: { rotated: true },
     });
+    expect(receivedMetadata).toBe(credential.metadata);
+    expect(receivedProviderSecret).toBe(credential.providerSecret);
   });
 
   it("uses a connection-scoped OAuth client config before the global config", async () => {

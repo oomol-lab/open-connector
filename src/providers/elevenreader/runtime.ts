@@ -15,7 +15,7 @@ import {
 import { readBoundedResponseBytes } from "../../core/request.ts";
 import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-const elevenreaderApiBaseUrl = "https://api.elevenlabs.io/v1";
+const elevenreaderApiOrigin = "https://api.elevenlabs.io";
 
 type ElevenreaderRequestPhase = "validate" | "execute";
 type ElevenreaderActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
@@ -118,7 +118,8 @@ async function searchElevenreaderVoices(
   context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const payload = await requestElevenreaderJson<Record<string, unknown>>({
-    path: "/voices/search",
+    path: "/voices",
+    version: "v2",
     query: compactObject({
       search: optionalString(input.search),
       category: optionalString(input.category),
@@ -230,6 +231,7 @@ async function readElevenreaderText(
 
 async function requestElevenreaderJson<T>(input: {
   path: string;
+  version?: "v1" | "v2";
   query?: Record<string, string | undefined>;
   body?: Record<string, unknown>;
   phase: ElevenreaderRequestPhase;
@@ -238,7 +240,7 @@ async function requestElevenreaderJson<T>(input: {
   signal?: AbortSignal;
 }): Promise<T> {
   const hasBody = input.body !== undefined;
-  const response = await input.fetcher(buildElevenreaderUrl(input.path, input.query), {
+  const response = await input.fetcher(buildElevenreaderUrl(input.path, input.query, input.version), {
     method: hasBody ? "POST" : "GET",
     headers: hasBody ? elevenreaderJsonHeaders(input.apiKey) : elevenreaderHeaders(input.apiKey),
     body: hasBody ? JSON.stringify(input.body) : undefined,
@@ -252,8 +254,12 @@ async function requestElevenreaderJson<T>(input: {
   return readElevenreaderJson<T>(response);
 }
 
-function buildElevenreaderUrl(path: string, query?: Record<string, string | undefined>): URL {
-  const url = new URL(`${elevenreaderApiBaseUrl}${path}`);
+function buildElevenreaderUrl(
+  path: string,
+  query?: Record<string, string | undefined>,
+  version: "v1" | "v2" = "v1",
+): URL {
+  const url = new URL(`${elevenreaderApiOrigin}/${version}${path}`);
   for (const [key, value] of Object.entries(query ?? {})) {
     if (value !== undefined) {
       url.searchParams.set(key, value);

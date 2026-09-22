@@ -1003,14 +1003,17 @@ describe("OAuthFlowService", () => {
   });
 
   it("stores the token returned by a provider OAuth runtime", async () => {
+    let callbackParameters: Record<string, string> | undefined;
     const services = createServices([oauthProvider], {
       oauthRuntime: {
-        async exchangeCode() {
+        async exchangeCode(input) {
+          callbackParameters = input.callbackParameters;
           return {
             accessToken: "provider-access-token",
             refreshToken: "provider-access-token",
             tokenType: "Bearer",
             expiresAt: "2026-10-30T00:00:00.000Z",
+            providerSecret: { inventory: "provider-owned" },
             metadata: { permissions: "read,write" },
           };
         },
@@ -1024,15 +1027,21 @@ describe("OAuthFlowService", () => {
     });
 
     const started = await services.flow.startAuthorization({ service: "example" });
-    await services.flow.completeAuthorization({ state: started.state, code: "authorization-code" });
+    await services.flow.completeAuthorization({
+      state: started.state,
+      code: "authorization-code",
+      callbackParameters: { shop_id: "42" },
+    });
 
     await expect(services.connections.getCredential("example")).resolves.toMatchObject({
       authType: "oauth2",
       accessToken: "provider-access-token",
       refreshToken: "provider-access-token",
       expiresAt: "2026-10-30T00:00:00.000Z",
+      providerSecret: { inventory: "provider-owned" },
       metadata: { permissions: "read,write" },
     });
+    expect(callbackParameters).toEqual({ shop_id: "42" });
   });
 
   it("rejects OAuth endpoint config values that resolve to local network targets", async () => {

@@ -140,6 +140,35 @@ describe("jsonSchema.requireAnyProperty", () => {
   });
 });
 
+describe("jsonSchema.requireExactlyOneProperty", () => {
+  it("emits mutually exclusive required branches without mutating the base schema", () => {
+    const schema = jsonSchema.object(
+      "A lookup.",
+      {
+        id: jsonSchema.string("An ID."),
+        name: jsonSchema.string("A name."),
+      },
+      { optional: ["id", "name"] },
+    );
+
+    expect(jsonSchema.requireExactlyOneProperty(schema, ["id", "name"])).toMatchObject({
+      oneOf: [{ required: ["id"] }, { required: ["name"] }],
+    });
+    expect(schema).not.toHaveProperty("oneOf");
+  });
+});
+
+describe("jsonSchema schema annotations", () => {
+  it("adds examples and enums without mutating the base schema", () => {
+    const schema = jsonSchema.string("A value.");
+
+    expect(jsonSchema.withExamples(schema, ["one"])).toMatchObject({ examples: ["one"] });
+    expect(jsonSchema.withEnum(schema, ["one", "two"])).toMatchObject({ enum: ["one", "two"] });
+    expect(schema).not.toHaveProperty("examples");
+    expect(schema).not.toHaveProperty("enum");
+  });
+});
+
 describe("readSchemaProperties", () => {
   it("returns the properties map of an object schema", () => {
     expect(readSchemaProperties({ type: "object", properties: { id: { type: "string" } } })).toEqual({

@@ -171,8 +171,8 @@ export const jsonSchema = {
     return this.string({ format: "date-time", description });
   },
 
-  date(description: string): JsonSchema {
-    return this.string({ format: "date", description });
+  date(description: string, options: Omit<StringOptions, "description" | "format"> = {}): JsonSchema {
+    return this.string({ ...options, format: "date", description });
   },
 
   uuid(description: string): JsonSchema {
@@ -258,10 +258,25 @@ export const jsonSchema = {
     return cloneSchema(schema, { default: defaultValue });
   },
 
+  withExamples(schema: JsonSchema, examples: readonly unknown[]): JsonSchema {
+    return cloneSchema(schema, { examples: [...examples] });
+  },
+
+  withEnum(schema: JsonSchema, values: readonly unknown[]): JsonSchema {
+    return cloneSchema(schema, { enum: [...values] });
+  },
+
   /** Require at least one named property while preserving the base object schema. */
   requireAnyProperty(schema: JsonSchema, propertyNames: readonly [string, ...string[]]): JsonSchema {
     return cloneSchema(schema, {
       anyOf: propertyNames.map((propertyName) => ({ required: [propertyName] })),
+    });
+  },
+
+  /** Require exactly one named property while preserving the base object schema. */
+  requireExactlyOneProperty(schema: JsonSchema, propertyNames: readonly [string, ...string[]]): JsonSchema {
+    return cloneSchema(schema, {
+      oneOf: propertyNames.map((propertyName) => ({ required: [propertyName] })),
     });
   },
 
