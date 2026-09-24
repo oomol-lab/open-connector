@@ -334,10 +334,6 @@ export class OAuthFlowService {
           oauthCredential,
           input.signal,
         );
-        const granted = new Set(credential.profile.grantedScopes);
-        const missing = auth.authorizationOptions?.filter((option) => option.required && !granted.has(option.id)) ?? [];
-        if (missing.length)
-          throw new OAuthFlowError("scope_missing", "The provider did not grant required OAuth scopes.");
         input.signal?.throwIfAborted();
         const appId = await this.requests.complete(request, credential, input.signal);
         if (!appId) {
@@ -368,8 +364,7 @@ export class OAuthFlowService {
     } catch (error) {
       if (request) {
         const code =
-          error instanceof OAuthFlowError &&
-          ["app_not_found", "request_key_conflict", "scope_missing"].includes(error.code)
+          error instanceof OAuthFlowError && ["app_not_found", "request_key_conflict"].includes(error.code)
             ? error.code
             : "provider_error";
         const message = "OAuth connection failed.";

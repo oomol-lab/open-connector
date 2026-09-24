@@ -20,5 +20,6 @@ describe("Sentry OAuth credential validation", () => {
 
     expect(fetcher).toHaveBeenCalledWith("https://sentry.io/api/0/", expect.anything());
     expect(result?.profile).toMatchObject({ accountId: "42", displayName: "Dev User" });
+    expect(result?.grantedScopes).toEqual(["org:read"]);
   });
 });

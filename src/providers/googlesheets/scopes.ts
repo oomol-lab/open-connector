@@ -1,10 +1,9 @@
+import { googleIdentityScopes } from "../google-oauth-scopes.ts";
+
 export const googleSheetsReadonlyScope = "https://www.googleapis.com/auth/spreadsheets.readonly";
 export const googleSheetsFullScope = "https://www.googleapis.com/auth/spreadsheets";
 export const googleDriveReadonlyScope = "https://www.googleapis.com/auth/drive.readonly";
 export const googleDriveFullScope = "https://www.googleapis.com/auth/drive";
-export const googleOpenIdScope = "openid";
-export const googleEmailScope = "email";
-export const googleProfileScope = "profile";
 
 export const googlesheetsReadScopes: string[] = [googleSheetsReadonlyScope, googleDriveReadonlyScope];
 export const googlesheetsWriteScopes: string[] = [googleSheetsFullScope, googleDriveFullScope];
@@ -13,7 +12,5 @@ export const googlesheetsOAuthScopes: string[] = [
   googleSheetsFullScope,
   googleDriveReadonlyScope,
   googleDriveFullScope,
-  googleOpenIdScope,
-  googleEmailScope,
-  googleProfileScope,
+  ...googleIdentityScopes,
 ];

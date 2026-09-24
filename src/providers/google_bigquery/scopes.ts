@@ -1,11 +1,10 @@
+import { googleIdentityScopes } from "../google-oauth-scopes.ts";
+
 export const bigQueryScope = "https://www.googleapis.com/auth/bigquery";
 export const bigQueryReadOnlyScope = "https://www.googleapis.com/auth/bigquery.readonly";
 export const bigQueryInsertDataScope = "https://www.googleapis.com/auth/bigquery.insertdata";
 export const devStorageReadOnlyScope = "https://www.googleapis.com/auth/devstorage.read_only";
 export const devStorageReadWriteScope = "https://www.googleapis.com/auth/devstorage.read_write";
-export const googleOpenIdScope = "openid";
-export const googleEmailScope = "email";
-export const googleProfileScope = "profile";
 
 export const googleBigQueryReadScopes: string[] = [bigQueryReadOnlyScope];
 export const googleBigQueryInsertDataScopes: string[] = [bigQueryInsertDataScope];
@@ -18,7 +17,5 @@ export const googleBigQueryOAuthScopes: string[] = [
   bigQueryInsertDataScope,
   devStorageReadOnlyScope,
   devStorageReadWriteScope,
-  googleOpenIdScope,
-  googleEmailScope,
-  googleProfileScope,
+  ...googleIdentityScopes,
 ];

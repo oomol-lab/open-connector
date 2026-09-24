@@ -259,13 +259,13 @@ it("applies declared authorization options and always includes required scopes",
   expect((await invalid.json()).errorCode).toBe("invalid_input");
 });
 
-it("fails a request when the provider does not grant its required authorization scope", async () => {
+it("keeps a connection when the provider grants fewer scopes than requested", async () => {
   const { call } = await setup(undefined, {}, { ...githubProvider, service: "example", actions: [] });
   const request = (await (await call("/v1/connections/example/connect", { authorizationOptionIds: [] })).json()).data;
   await call(`/oauth/callback?state=${request.stateHandle}&code=code`);
   expect((await (await call(`/v1/connection-requests/${request.connectionRequestId}`)).json()).data).toMatchObject({
-    status: "failed",
-    errorCode: "scope_missing",
+    status: "connected",
+    errorCode: null,
   });
 });
 
