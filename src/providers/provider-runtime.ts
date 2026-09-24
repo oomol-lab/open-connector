@@ -693,7 +693,8 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
 
         const response = await egressFetch(url, init);
         if (!response.ok) {
-          if (input.readError) {
+          // A provider error parser would surface an unfollowed redirect's body; the shared reader withholds it.
+          if (input.readError && (response.status < 300 || response.status >= 400)) {
             throw await input.readError(response);
           }
           throw new ProviderRequestError(

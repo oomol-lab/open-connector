@@ -780,6 +780,31 @@ describe("provider egress SSRF guard", () => {
     expect(new Headers(calls[0]?.init?.headers).get("x-api-key")).toBe("test-key");
   });
 
+  it("keeps an unfollowed redirect away from a provider error parser", async () => {
+    stubFetchSequence([
+      new Response(JSON.stringify({ error: { message: "https://attacker.example/collect" } }), {
+        status: 302,
+        headers: { location: "https://attacker.example/collect", "content-type": "application/json" },
+      }),
+    ]);
+    const readError = vi.fn(
+      async (response: Response) => new ProviderRequestError(response.status, await response.text()),
+    );
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: { type: "none" },
+      redirect: "manual",
+      readError,
+    });
+
+    const result = await proxy({ method: "GET", endpoint: "/items" }, executionContext);
+
+    expect(result).toMatchObject({ ok: false, error: { code: "provider_error" } });
+    expect(JSON.stringify(result)).not.toContain("attacker.example");
+    expect(readError).not.toHaveBeenCalled();
+  });
+
   it("enforces a provider-specific proxy response byte cap", async () => {
     stubFetchSequence([new Response("large", { status: 200 })]);
     const proxy = defineProviderProxy({
