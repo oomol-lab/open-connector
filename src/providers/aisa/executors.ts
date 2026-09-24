@@ -935,12 +935,7 @@ function createAisaError(response: Response, payload: unknown, phase: "validate"
   if (response.status === 429) return new ProviderRequestError(429, message, payload);
   if (response.status === 402) return new ProviderRequestError(402, message, payload, "insufficient_credit");
   if (isCredentialErrorCode(code)) {
-    return new ProviderRequestError(
-      phase === "validate" ? 400 : 409,
-      message,
-      payload,
-      phase === "validate" ? "invalid_input" : "credential_expired",
-    );
+    return phase === "validate" ? providerInputError(message) : new ProviderRequestError(409, message, payload);
   }
   if (response.status === 400 || response.status === 404 || response.status === 422) {
     return new ProviderRequestError(400, message, payload, "invalid_input");
