@@ -29,6 +29,23 @@ first.
 NOTION_TOKEN=secret_... node examples/local-http/notion.ts
 ```
 
+Read company contacts from an Odoo 14–19 instance using the legacy JSON-RPC API.
+Use a password or API key for `ODOO_PASSWORD`; the user's model access rights apply.
+Odoo Online requires an API-enabled plan. This connector does not implement XML-RPC or JSON-2.
+Legacy RPC is deprecated since Odoo 19; see the [Odoo RPC documentation](https://www.odoo.com/documentation/19.0/developer/reference/external_rpc_api.html).
+
+```bash
+ODOO_BASE_URL=https://mycompany.odoo.com \
+ODOO_DATABASE=mycompany \
+ODOO_USERNAME=user@example.com \
+ODOO_PASSWORD=... \
+node examples/local-http/odoo.ts
+```
+
+Private network instances require `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK=true` on the runtime
+and a deployment that can reach the instance, such as Node or Docker. Loopback and cloud metadata
+addresses remain blocked. Use the final instance URL: credential-bearing RPC requests reject redirects.
+
 Run App Store Connect with an API key created in App Store Connect. Pass the `.p8` file through
 `APP_STORE_CONNECT_PRIVATE_KEY_PATH`, or inline its PEM contents through
 `APP_STORE_CONNECT_PRIVATE_KEY`. Omit `APP_STORE_CONNECT_ISSUER_ID` when you use an Individual API
