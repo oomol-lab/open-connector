@@ -55,7 +55,7 @@ The generic runtime facts below have exactly one owner in this repository. Call 
 Two of the rules are review-only, because what makes them a violation is exactly what a count cannot see:
 
 - A hand-written `runProviderRequest` try/catch is legitimate whenever the provider maps errors differently, and a regex cannot tell the two apart. The ratchet still catches the parts of it that are never legitimate: the local 30 s constant and the inlined `error.name === "AbortError"` test.
-- A local `encodePathSegment` is allowed exactly when its behavior differs from the shared one, and each local copy here does differ - a `.`/`..` traversal guard, a required check, a `%3A` exception. Counting them by name would report a security guard as a clone.
+- A local `encodePathSegment` is allowed exactly when its behavior differs from the shared one, such as a `.`/`..` traversal guard, a required check, or a `%3A` exception. Counting them by name would report a security guard as a clone.
 
 The committed numbers are the copies that exist today, frozen as accepted debt; they are not a claim that a class is clean, and the rules above describe where the code is going. The counts may only move down:
 

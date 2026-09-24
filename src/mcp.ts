@@ -111,7 +111,7 @@ const mcpToolConfigs = {
   execute_action: {
     title: "Execute Action",
     description:
-      "Run one provider action by id against the provider's API, using the default connection or the named connectionName. The input object must match the action's input parameters. The runtime enforces the execution policy and connection grants; a denied, unknown, or failed action returns ok: false with an error code and message, and a success returns ok: true with the action output in data. Every call returns an executionId, and actions that create, update, delete, or send take effect on the external system immediately.",
+      "Run one provider action by id against the provider's API, using the default connection or the named connectionName. The input object must match the action's input parameters. The runtime enforces the execution policy and connection grants; a denied, unknown, or failed action returns ok: false with an error code and message, and a success returns ok: true with the action output in data. Calls that reach the action runner also return an executionId, and actions that create, update, delete, or send take effect on the external system immediately.",
     annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
     inputSchema: z.object({
       actionId: z.string().describe("Full action id, for example hackernews.get_item."),
