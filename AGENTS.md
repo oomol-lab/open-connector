@@ -22,7 +22,7 @@
 
 ## Runtime API
 
-- Keep `/v1` response shaping in `src/server/runtime-api.ts`; route handlers should dispatch and validate, not assemble compatibility objects field by field.
+- Keep `/v1` response shaping in `src/server/api/runtime-api.ts`; route handlers should dispatch and validate, not assemble compatibility objects field by field.
 - Public runtime fields should have a clear source and consumer. Do not expose local implementation concepts or placeholder fields just because they are easy to add.
 - Match existing runtime wire shapes deliberately: catalog index endpoints, action metadata, connection aliases, envelopes, and error codes should stay stable for SDK/CLI clients.
 - If an upstream-compatible field has no local source yet, prefer omitting it or returning a documented empty value from the serializer rather than scattering optional fields in routes.
@@ -55,7 +55,7 @@ The generic runtime facts below have exactly one owner in this repository. Call 
 Two of the rules are review-only, because what makes them a violation is exactly what a count cannot see:
 
 - A hand-written `runProviderRequest` try/catch is legitimate whenever the provider maps errors differently, and a regex cannot tell the two apart. The ratchet still catches the parts of it that are never legitimate: the local 30 s constant and the inlined `error.name === "AbortError"` test.
-- A local `encodePathSegment` is allowed exactly when its behavior differs from the shared one, and all six copies here do differ - a `.`/`..` traversal guard, a required check, a `%3A` exception. Counting them by name would report a security guard as a clone.
+- A local `encodePathSegment` is allowed exactly when its behavior differs from the shared one, and each local copy here does differ - a `.`/`..` traversal guard, a required check, a `%3A` exception. Counting them by name would report a security guard as a clone.
 
 The committed numbers are the copies that exist today, frozen as accepted debt; they are not a claim that a class is clean, and the rules above describe where the code is going. The counts may only move down:
 
@@ -70,7 +70,7 @@ The committed numbers are the copies that exist today, frozen as accepted debt; 
 - Self-hosted providers whose instance host is user/credential-configured and may live on a private network pass `allowPrivateNetwork: isPrivateNetworkAccessAllowed` into their executors/proxy AND thread the same flag into their base-URL `assertPublicHttpUrl` call (see Dokploy for the reference pattern). It is deployment-gated by `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK`; reserved, loopback, link-local, and cloud-metadata targets stay blocked even when it is enabled.
 - User-supplied content/download URLs (e.g. `fileUrl`, `sourceUrl`, `imageUrl`) must ALWAYS be validated public-only — call `assertPublicHttpUrl` without `allowPrivateNetwork` and download them with the public-only `providerFetch`, never a private-aware `context.fetcher`. The private-network opt-in covers only the trusted instance host.
 - Prefer the shared `assertPublicHttpUrl` / `isBlockedIpAddress` over a bespoke per-provider hostname guard; bespoke guards have missed the cloud-metadata blocklist and bracketed-IPv6 forms.
-- Gotcha: a provider that branches on `fetcher === fetch` (e.g. to gate rate limiting to production) must compare against `providerFetch`, since that is the fetcher the runtime now injects — not the global `fetch`.
+- Gotcha: a provider that branches on `fetcher === fetch` (e.g. to gate rate limiting to production) must compare against `providerFetch`, since that is the fetcher the runtime injects — not the global `fetch`.
 - Non-fetch egress is held to the same policy. A provider that opens a WebSocket must use `openGuardedWebSocket` from `src/core/guarded-websocket.ts`, never `new WebSocket(...)` directly: it validates the target with the same `assertGuardedEgressUrl` hop check the guarded fetch uses (URL literal plus DNS resolved addresses), accepts the same `allowPrivateNetwork` / `skipDnsValidation` options, and maps `ws`/`wss` onto the `http`/`https` form the guard understands. It works on Node and on workerd, which both expose a client `WebSocket` constructor. Any future non-HTTP transport should reuse `assertGuardedEgressUrl` rather than growing a second, drifting host check.
 - The private-network opt-in only means the guard permits the target — it does not make it reachable. Cloudflare Workers cannot route to private addresses at all, so a self-hosted provider pointed at a LAN instance works on Node/Docker/Fly deployments only, regardless of `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK`.
 

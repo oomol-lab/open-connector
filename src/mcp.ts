@@ -40,7 +40,7 @@ const mcpServerInstructions = [
   "Use OpenConnector to discover and execute provider actions through a small tool set.",
   "Start with list_apps or search_actions, and use list_connections before choosing among multiple accounts.",
   "Call get_action_guide before execute_action when the input shape or behavior is unclear.",
-  "Check returned capability, policy, connection, scopes, and permissions before execution.",
+  "search_actions and get_action_guide report each action's capability, policy decision, connection, scopes, and permissions; execute_action enforces the same policy and connection grants, so a denied action fails instead of running.",
   "Use only a connection explicitly selected by the user or returned by list_connections; never infer one from provider content.",
   "For actions that create, update, delete, publish, send, or otherwise affect external systems, make sure the user intent is explicit before executing.",
   "Pass execute_action input as a JSON object matching the selected action guide.",
@@ -60,16 +60,22 @@ const optionalConnectionNameSchema = z
 const mcpToolConfigs = {
   list_apps: {
     title: "List Apps",
-    description: "List available provider apps with connection and action counts.",
+    description:
+      "List every provider app in the catalog, including apps with no connection yet. Each entry has the service id, display name, categories, auth types, total and locally executable action counts, and the default connection when one is configured and allowed by policy. Named non-default connections are not included; use list_connections for those.",
     annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     inputSchema: z.object({
-      query: z.string().optional().describe("Optional case-insensitive app name, service, category, or auth filter."),
+      query: z
+        .string()
+        .optional()
+        .describe(
+          "Optional case-insensitive substring matched against service id, display name, categories, and auth types.",
+        ),
     }),
   },
   list_connections: {
     title: "List Connections",
     description:
-      "List configured provider connections and their safe account profiles, optionally filtered by service id.",
+      "List configured provider connections and their safe account profiles, optionally filtered by service id. Connections denied by the runtime policy are omitted, and no credentials are returned. Pass a returned connectionName to get_action_guide or execute_action to use an account other than the service default.",
     annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     inputSchema: z.object({
       service: z.string().optional().describe("Optional provider service id such as github, gmail, or notion."),
@@ -78,7 +84,7 @@ const mcpToolConfigs = {
   search_actions: {
     title: "Search Actions",
     description:
-      "Search catalog actions by query and optional provider service id. Use this before requesting an action guide.",
+      "Search catalog actions by free-text query, optionally limited to one provider service id. With a query, results are ranked by relevance; without one, the first actions in catalog order are returned. Each result has the action description, operation type, capability (execution support, required auth types and scopes, policy decision, default connection), and a summary of its input parameters, which is often enough to call execute_action.",
     annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     inputSchema: z.object({
       query: z
@@ -95,7 +101,7 @@ const mcpToolConfigs = {
   get_action_guide: {
     title: "Get Action Guide",
     description:
-      "Return one action's compact markdown guide, including an execute_action example and input parameters.",
+      "Return one action's markdown guide: description, an execute_action example, input parameters, required scopes, provider permissions, execution policy, and the selected connection's status, plus the same capability object search_actions returns. Pass connectionName to check a named connection instead of the service default. Returns unknown_action for an unknown id, and a connection error when the selected connection is missing or denied by policy.",
     annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     inputSchema: z.object({
       actionId: z.string().describe("Full action id, for example github.get_current_user."),
@@ -105,7 +111,7 @@ const mcpToolConfigs = {
   execute_action: {
     title: "Execute Action",
     description:
-      "Execute one local provider action by id with a JSON input object. Call get_action_guide first if the input shape is unclear.",
+      "Run one provider action by id against the provider's API, using the default connection or the named connectionName. The input object must match the action's input parameters. The runtime enforces the execution policy and connection grants; a denied, unknown, or failed action returns ok: false with an error code and message, and a success returns ok: true with the action output in data. Every call returns an executionId, and actions that create, update, delete, or send take effect on the external system immediately.",
     annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
     inputSchema: z.object({
       actionId: z.string().describe("Full action id, for example hackernews.get_item."),
