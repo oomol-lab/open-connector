@@ -127,7 +127,7 @@ export async function requestAppStoreServer(
           ? undefined
           : JSON.stringify(input.body),
       signal,
-      redirect: "error",
+      redirect: "manual",
     });
     const payload = await readPayload(response);
     if (!response.ok) {

@@ -186,9 +186,12 @@ export function unwrapGuardedFetch(fetcher: typeof fetch | undefined): typeof fe
  *   so this layer applies there too. Only on a runtime without `node:dns` does it
  *   degrade to a no-op, leaving the URL-literal and redirect-`Location` checks.
  *
- * Callers that pass `redirect: "manual"` or `redirect: "error"` keep native
- * semantics: the first response (or native redirect error) is returned after
- * the initial URL and its resolved addresses are validated.
+ * Callers that pass `redirect: "manual"` keep native semantics: the first
+ * response, including an unfollowed 3xx, is returned after the initial URL and
+ * its resolved addresses are validated, so the caller's `!response.ok` check
+ * rejects a redirect. Use "manual" rather than `redirect: "error"` to refuse
+ * redirects: Cloudflare Workers does not implement "error" and throws
+ * `TypeError: Invalid redirect value` before sending the request.
  */
 export function createGuardedFetch(options: GuardedFetchOptions = {}): typeof fetch {
   const baseFetch = unwrapGuardedFetch(options.fetch);

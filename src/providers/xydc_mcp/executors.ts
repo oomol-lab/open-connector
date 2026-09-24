@@ -62,7 +62,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   },
   timeoutMs: generationTimeoutMs,
   skipDnsValidation: true,
-  redirect: "error",
+  redirect: "manual",
   customizeRequest({ headers }) {
     headers.set("accept", "application/json, text/event-stream");
     headers.set("content-type", "application/json");
@@ -88,7 +88,7 @@ async function withClient<T>(context: ApiKeyProviderContext, run: (client: Clien
       transport: "streamable_http",
       fetcher: context.fetcher,
       headers: { authorization: `Bearer ${context.apiKey}`, "user-agent": providerUserAgent },
-      redirect: "error",
+      redirect: "manual",
       signal: context.signal,
       mapError,
     },

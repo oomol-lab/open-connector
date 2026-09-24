@@ -77,7 +77,7 @@ export async function requestFutunn(
       },
       body: body === undefined ? undefined : JSON.stringify(body),
       signal,
-      redirect: "error",
+      redirect: "manual",
     });
     const envelope = await readFutunnResponse(response, allowNoData);
     if (envelope.s === "ok" || envelope.ret_code === 0 || (allowNoData && envelope.ret_code === -10)) return envelope;

@@ -184,7 +184,7 @@ async function requestSlickdealsJson(input: {
         authorization: `Bearer ${input.token}`,
         "user-agent": providerUserAgent,
       },
-      redirect: "error",
+      redirect: "manual",
       signal,
     });
     const payload = await readPayload(response);

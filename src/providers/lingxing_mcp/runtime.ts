@@ -269,7 +269,7 @@ async function withLingxingMcpClient<T>(context: LingxingContext, run: (client: 
       transport: "streamable_http",
       fetcher: createLingxingRateLimitedFetch(context.fetcher, hashLingxingRateLimitKey(context)),
       headers,
-      redirect: "error",
+      redirect: "manual",
       signal: context.signal,
       mapError: mapLingxingMcpError,
     },

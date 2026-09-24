@@ -217,7 +217,7 @@ function mapAifinMarketMcpError(error: unknown): unknown {
 
 function createLimitedFetch(fetcher: typeof fetch): typeof fetch {
   return async (request, init) => {
-    const response = await fetcher(request, { ...init, redirect: "error" });
+    const response = await fetcher(request, { ...init, redirect: "manual" });
     if (response.status === 403) {
       await response.body?.cancel().catch(() => undefined);
       throw new ProviderRequestError(403, "Wind AIFin Market denied access to this service or tool");

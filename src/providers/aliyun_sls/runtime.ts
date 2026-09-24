@@ -159,7 +159,7 @@ export async function requestAliyunSlsJson(
   const requestInit: RequestInit = {
     method: input.method,
     headers: signed.headers,
-    redirect: "error",
+    redirect: "manual",
     signal: context.signal,
   };
   if (signed.bodyBytes.byteLength > 0) {

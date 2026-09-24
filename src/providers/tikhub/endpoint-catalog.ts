@@ -146,7 +146,7 @@ async function fetchOpenApi(fetcher: typeof fetch) {
     const response = await fetcher(tikhubOpenApiUrl, {
       method: "GET",
       headers: { accept: "application/json" },
-      redirect: "error",
+      redirect: "manual",
       signal: timeout.signal,
     });
     if (!response.ok) {

@@ -44,7 +44,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: endpoint,
   auth: { type: "api_key_query", name: "apiKey" },
   skipDnsValidation: true,
-  redirect: "error",
+  redirect: "manual",
   allowedEndpoint(value) {
     const url = new URL(value, endpoint);
     return url.origin === "https://data-api.investoday.net" && url.pathname === "/data/mcp";
@@ -74,7 +74,7 @@ function connectionInput(key: string, fetcher: ProviderFetch, signal?: AbortSign
     service: "Investoday",
     fetcher: createInvestodayFetch(fetcher, key),
     signal,
-    redirect: "error",
+    redirect: "manual",
     terminateSession: true,
   };
 }

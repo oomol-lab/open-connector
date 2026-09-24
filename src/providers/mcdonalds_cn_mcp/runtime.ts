@@ -101,7 +101,7 @@ async function withMcdonaldsCnMcpClient<T>(
       transport: "streamable_http",
       fetcher: context.fetcher,
       headers,
-      redirect: "error",
+      redirect: "manual",
       signal: context.signal,
       protocolVersion: "legacy",
       mapError: mapMcdonaldsCnMcpError,

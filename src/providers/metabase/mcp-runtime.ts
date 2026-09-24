@@ -42,7 +42,7 @@ export async function runMetabaseMcp<T>(
         endpoint: new URL(`${context.apiBaseUrl}/metabase-mcp`),
         transport: "streamable_http",
         headers: { "x-api-key": context.apiKey, "user-agent": providerUserAgent },
-        redirect: "error",
+        redirect: "manual",
         fetcher: context.fetcher,
         signal,
         mapError(error) {

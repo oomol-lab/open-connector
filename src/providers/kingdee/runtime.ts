@@ -95,7 +95,7 @@ export async function login(
       new URL("Kingdee.BOS.WebApi.ServicesStub.AuthService.LoginByAppSecret.common.kdsvc", credential.baseUrl),
       {
         method: "POST",
-        redirect: "error",
+        redirect: "manual",
         signal,
         headers: { "content-type": "application/json", accept: "application/json" },
         body: JSON.stringify({
@@ -164,7 +164,7 @@ async function execute(action: ActionName, input: Record<string, unknown>, conte
       {
         method: "POST",
         signal,
-        redirect: "error",
+        redirect: "manual",
         headers: { "content-type": "application/json", "kdservice-sessionid": sessionId },
         body: JSON.stringify(body),
       },

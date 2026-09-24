@@ -167,7 +167,7 @@ function requestOdooRpc(
       headers: { "content-type": "application/json", accept: "application/json", "user-agent": providerUserAgent },
       body: JSON.stringify({ jsonrpc: "2.0", method: "call", params: { service, method, args }, id: 1 }),
       // RPC credentials are in the body and must not be forwarded to a redirect target.
-      redirect: "error",
+      redirect: "manual",
       signal,
     });
     if (!response.ok) {

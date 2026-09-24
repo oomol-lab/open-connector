@@ -69,7 +69,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: sorftimeMcpEndpoint,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  redirect: "error",
+  redirect: "manual",
   timeoutMs: requestTimeoutMs,
   allowedEndpoint(endpoint) {
     const url = new URL(endpoint, sorftimeMcpEndpoint);
@@ -113,7 +113,7 @@ function withSorftimeClient<T>(context: SorftimeContext, run: (client: Client) =
         authorization: `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
       },
-      redirect: "error",
+      redirect: "manual",
       signal: context.signal,
       mapError: mapSorftimeError,
     },

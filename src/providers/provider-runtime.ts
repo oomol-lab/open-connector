@@ -1239,7 +1239,8 @@ export function toProviderExecutionError(error: unknown, fallbackMessage: string
             ? "authorization_failed"
             : error.status === 429
               ? "rate_limited"
-              : error.status < 500
+              : // A 3xx is an upstream redirect that `redirect: "manual"` surfaced unfollowed, not bad input.
+                error.status < 500 && (error.status < 300 || error.status >= 400)
                 ? "invalid_input"
                 : "provider_error"),
         message: error.message,

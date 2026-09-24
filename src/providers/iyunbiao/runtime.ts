@@ -102,7 +102,7 @@ async function jsonRequest(
       headers: buildIyunbiaoHeaders(credentials, token),
       body,
       signal,
-      redirect: "error",
+      redirect: "manual",
     });
     return readJson(response);
   });
@@ -288,7 +288,7 @@ export async function executeIyunbiaoAction(
           {
             headers: buildIyunbiaoHeaders(session.credentials, session.token),
             signal,
-            redirect: "error",
+            redirect: "manual",
           },
         );
         if (!response.ok) await readJson(response);

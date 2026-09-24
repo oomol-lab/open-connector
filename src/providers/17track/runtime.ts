@@ -76,7 +76,7 @@ async function requestSeventeenTrack(
         "user-agent": providerUserAgent,
       },
       body: JSON.stringify(body),
-      redirect: "error",
+      redirect: "manual",
       signal: timeout.signal,
     });
     const payload = await readPayload(response);

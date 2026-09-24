@@ -49,7 +49,7 @@ describe("Odoo JSON-RPC", () => {
 
     const [url, authRequest] = fetcher.mock.calls[0]!;
     expect(url).toBe("https://odoo.example.com/erp/jsonrpc");
-    expect(authRequest).toMatchObject({ method: "POST", redirect: "error", signal: expect.any(AbortSignal) });
+    expect(authRequest).toMatchObject({ method: "POST", redirect: "manual", signal: expect.any(AbortSignal) });
     expect(JSON.parse(String(authRequest?.body))).toEqual({
       jsonrpc: "2.0",
       id: 1,
@@ -204,7 +204,7 @@ describe("Odoo JSON-RPC", () => {
         new Response(null, { status: 307, headers: { location: "https://other.example.com/jsonrpc" } }),
       );
     await expect(createOdooContext(values, createProviderFetch({ fetch: fetcher }))).rejects.toThrow();
-    expect(fetcher.mock.calls[0]![1]?.redirect).toBe("error");
+    expect(fetcher.mock.calls[0]![1]?.redirect).toBe("manual");
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
 

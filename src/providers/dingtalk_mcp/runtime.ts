@@ -177,7 +177,7 @@ async function withDingTalkMcpClient<T>(context: DingTalkMcpContext, run: (clien
       transport: "streamable_http",
       fetcher: context.fetcher,
       headers,
-      redirect: "error",
+      redirect: "manual",
       signal: context.signal,
       mapError: mapDingTalkMcpError,
     },

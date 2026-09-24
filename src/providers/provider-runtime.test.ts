@@ -53,6 +53,15 @@ describe("toProviderExecutionError", () => {
     });
   });
 
+  it("maps an upstream redirect status to a provider error rather than invalid input", () => {
+    expect(toProviderExecutionError(new ProviderRequestError(302, "redirected"), "failed").error?.code).toBe(
+      "provider_error",
+    );
+    expect(toProviderExecutionError(new ProviderRequestError(404, "missing"), "failed").error?.code).toBe(
+      "invalid_input",
+    );
+  });
+
   it("maps unknown exceptions to a generic internal error", () => {
     expect(toProviderExecutionError(new Error("secret provider response"), "Provider request failed.")).toEqual({
       ok: false,
@@ -738,14 +747,34 @@ describe("provider egress SSRF guard", () => {
       service: "test_service",
       baseUrl: "https://api.example.com",
       auth: { type: "none" },
-      redirect: "error",
+      redirect: "manual",
       timeoutMs: 60_000,
     });
 
     const result = await proxy({ method: "GET", endpoint: "/items" }, executionContext);
 
     expect(result.ok).toBe(true);
-    expect(calls[0]?.init?.redirect).toBe("error");
+    expect(calls[0]?.init?.redirect).toBe("manual");
+  });
+
+  it("rejects an unfollowed redirect under the manual redirect policy", async () => {
+    const calls = stubFetchSequence([
+      new Response(null, { status: 302, headers: { location: "https://attacker.example/collect" } }),
+    ]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com",
+      auth: { type: "api_key_header", name: "x-api-key" },
+      redirect: "manual",
+    });
+
+    const result = await proxy({ method: "GET", endpoint: "/items" }, executionContext);
+
+    expect(result).toMatchObject({ ok: false, error: { code: "provider_error", details: { status: 302 } } });
+    expect(JSON.stringify(result)).not.toContain("attacker.example");
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.url).toBe("https://api.example.com/items");
+    expect(new Headers(calls[0]?.init?.headers).get("x-api-key")).toBe("test-key");
   });
 
   it("enforces a provider-specific proxy response byte cap", async () => {

@@ -150,7 +150,7 @@ async function requestJson(
       method,
       headers,
       body: serializedBody,
-      redirect: "error",
+      redirect: "manual",
       signal: timeout.signal,
     });
     const text = await readBoundedResponseText(response, responseMaxBytes, "Scrape Creators response");

@@ -264,7 +264,7 @@ async function withWeComMcpClient<T>(context: WeComContext, run: (client: Client
       transport: "streamable_http",
       fetcher: createWeComRateLimitedFetch(context.fetcher, hashWeComRateLimitKey(context)),
       headers,
-      redirect: "error",
+      redirect: "manual",
       signal: context.signal,
       mapError: mapWeComMcpError,
     },

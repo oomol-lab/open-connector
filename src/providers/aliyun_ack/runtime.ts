@@ -67,7 +67,7 @@ export async function getTemporaryKubeconfig(
       const response = await (deps.fetcher ?? fetch)(url, {
         method: "GET",
         headers: signedRequest.headers,
-        redirect: "error",
+        redirect: "manual",
         signal,
       });
       const payload = parseJsonObject(await response.text());

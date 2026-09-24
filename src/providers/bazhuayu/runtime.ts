@@ -322,7 +322,7 @@ async function requestApiWithToken(
 ): Promise<Record<string, unknown>> {
   const url = new URL(path, bazhuayuApiBaseUrl);
   const headers = new Headers({ accept: "application/json", authorization: `Bearer ${accessToken}` });
-  const init: RequestInit = { method, redirect: "error", headers };
+  const init: RequestInit = { method, redirect: "manual", headers };
   if (parameterLocation === "query") {
     for (const [key, value] of Object.entries(parameters)) {
       if (value !== undefined) url.searchParams.set(key, String(value));
@@ -403,7 +403,7 @@ async function requestToken(
     new URL("/token", bazhuayuApiBaseUrl),
     {
       method: "POST",
-      redirect: "error",
+      redirect: "manual",
       headers: { accept: "application/json", "content-type": "application/json" },
       body: JSON.stringify(body),
     },

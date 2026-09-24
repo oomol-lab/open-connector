@@ -347,7 +347,7 @@ export async function requestWaffoJson(input: WaffoRequestInput): Promise<Record
       method: "POST",
       headers,
       body,
-      redirect: "error",
+      redirect: "manual",
       signal: timeout.signal,
     });
     const payload = await readProviderJsonBody(response, {

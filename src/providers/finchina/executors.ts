@@ -136,7 +136,7 @@ function mcpInput(apiKey: string, fetcher: ProviderFetch, signal?: AbortSignal):
     service: "FinChina",
     headers: { "x-api-key": apiKey },
     fetcher,
-    redirect: "error",
+    redirect: "manual",
     terminateSession: true,
   };
 }

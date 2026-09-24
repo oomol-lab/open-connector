@@ -17,7 +17,7 @@ async function get(
 ): Promise<string | null> {
   const response = await fetcher(new URL(path, "https://tsdrapi.uspto.gov"), {
     headers: { accept, "USPTO-API-KEY": apiKey, "user-agent": providerUserAgent },
-    redirect: "error",
+    redirect: "manual",
     signal,
   });
   const text = await response.text();

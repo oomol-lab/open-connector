@@ -67,7 +67,7 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
       method: input.method,
       headers,
       body: input.method === "GET" || input.body == null ? undefined : signingBody,
-      redirect: "error",
+      redirect: "manual",
       signal: context.signal,
     });
     if (!response.ok) {

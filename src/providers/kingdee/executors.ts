@@ -38,7 +38,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   allowedEndpoint: isBusinessEndpoint,
   allowPrivateNetwork: isPrivateNetworkAccessAllowed,
   sensitiveHeaders: ["kdservice-sessionid"],
-  redirect: "error",
+  redirect: "manual",
   async customizeRequest({ context, fetcher, headers }) {
     const values = (await requireCustomCredential(context, service)).values;
     const kingdee = readCredential(values);

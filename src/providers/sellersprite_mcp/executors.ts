@@ -61,7 +61,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   auth: { type: "api_key_header", name: "secret-key" },
   skipDnsValidation: true,
   timeoutMs,
-  redirect: "error",
+  redirect: "manual",
   customizeRequest({ url, headers }) {
     if (url.toString() !== endpoint) {
       throw new ProviderRequestError(400, "SellerSprite MCP proxy only supports the official /mcp endpoint");

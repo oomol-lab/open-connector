@@ -150,7 +150,7 @@ async function withTongdaxinClient<T>(
         authorization: `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
       },
-      redirect: "error",
+      redirect: "manual",
       signal: context.signal,
       retryOnSessionNotFound,
       mapError: mapTongdaxinError,

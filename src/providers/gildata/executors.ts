@@ -314,7 +314,7 @@ function buildGildataMcpInput(
       }
       return response;
     },
-    redirect: "error",
+    redirect: "manual",
     terminateSession: true,
     signal: parentSignal,
     requestTimeoutMs,

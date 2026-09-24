@@ -133,7 +133,7 @@ async function fetchOpenApi(fetcher: typeof fetch) {
   try {
     const response = await fetcher(openApiUrl, {
       headers: { accept: "application/json" },
-      redirect: "error",
+      redirect: "manual",
       signal: timeout.signal,
     });
     if (!response.ok)

@@ -213,7 +213,7 @@ async function invokeTikHubEndpoint(input: Record<string, unknown>, fetcher: typ
         "user-agent": providerUserAgent,
       },
       ...(serializedBody === undefined ? {} : { body: serializedBody }),
-      redirect: "error",
+      redirect: "manual",
       signal: timeout.signal,
     });
     let responseBody: unknown;
@@ -580,7 +580,7 @@ async function requestTikHubUserJson(input: {
         authorization: `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
-      redirect: "error",
+      redirect: "manual",
       signal: timeout.signal,
     });
     const payload = await readTikHubResponseBody(response, tikhubDynamicResponseMaxBytes);

@@ -55,7 +55,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return endpoints.has(new URL(endpoint, patsnapMcpOrigin).href);
   },
   skipDnsValidation: true,
-  redirect: "error",
+  redirect: "manual",
   customizeRequest({ headers }) {
     headers.set("accept", "application/json, text/event-stream");
   },
@@ -124,7 +124,7 @@ async function withClient<T>(
       transport: "streamable_http",
       fetcher: context.fetcher,
       headers: { authorization: `Bearer ${context.apiKey}`, "user-agent": providerUserAgent },
-      redirect: "error",
+      redirect: "manual",
       signal: context.signal,
       mapError: mapMcpError,
     },

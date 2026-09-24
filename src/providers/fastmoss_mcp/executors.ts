@@ -37,7 +37,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: origin,
   auth: { type: "api_key_query", name: "api_key" },
   skipDnsValidation: true,
-  redirect: "error",
+  redirect: "manual",
   allowedEndpoint(value) {
     const url = new URL(value, origin);
     return (
@@ -71,7 +71,7 @@ function connectionInput(key: string, fetcher: ProviderFetch, signal?: AbortSign
     service: "FastMoss",
     fetcher,
     signal,
-    redirect: "error",
+    redirect: "manual",
     terminateSession: true,
     maxResponseBytes: 16 * 1024 * 1024,
   };
