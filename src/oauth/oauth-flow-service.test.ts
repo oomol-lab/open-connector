@@ -17,6 +17,7 @@ import { createCatalogStore } from "../catalog-store.ts";
 import { ConnectionService } from "../connection-service.ts";
 import { provider as slackProvider } from "../providers/slack/definition.ts";
 import { provider as slackbotProvider } from "../providers/slackbot/definition.ts";
+import { provider as tencentDocsProvider } from "../providers/tencent_docs/definition.ts";
 import { AesGcmSecretCodec } from "../server/secrets/secret-codec.ts";
 import { SqliteRuntimeDatabase } from "../server/storage/sqlite-runtime-store.ts";
 import { OAuthClientConfigService } from "./oauth-client-config-service.ts";
@@ -262,6 +263,27 @@ describe("OAuthFlowService", () => {
       service: "example",
       connectionName: "work",
     });
+  });
+
+  it.each(["authorization", "connection request"])("preserves Tencent Docs scope=all for %s", async (entry) => {
+    const services = createServices([{ ...tencentDocsProvider, actions: [] }]);
+    await services.clientConfigs.upsertConfig({
+      service: "tencent_docs",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+    });
+
+    const started =
+      entry === "authorization"
+        ? await services.flow.startAuthorization({ service: "tencent_docs" })
+        : await services.flow.startConnectionRequest({ service: "tencent_docs", owner: "test-owner" });
+    const url = new URL(started.authorizationUrl);
+
+    expect(url.searchParams.getAll("scope")).toEqual(["all"]);
+    expect(url.searchParams.get("client_id")).toBe("client-id");
+    expect(url.searchParams.get("redirect_uri")).toBe("http://localhost:3000/oauth/callback");
+    expect(url.searchParams.get("response_type")).toBe("code");
+    expect(url.searchParams.get("state")).toBeTruthy();
   });
 
   it("uses the requested scope subset from the OAuth client config", async () => {

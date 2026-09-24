@@ -26,6 +26,9 @@ export const provider: ProviderDefinition = {
         tencentDocsProviderScopes.form,
       ],
       tokenEndpointAuthMethod: "client_secret_post",
+      authorizationRequestFields: {
+        scope: false,
+      },
       authorizationParams: {
         scope: "all",
       },
