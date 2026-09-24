@@ -579,6 +579,11 @@ export async function readProviderProxyResponse(
 }
 
 export async function readProviderProxyErrorMessage(response: Response, fallbackMessage: string): Promise<string> {
+  // An unfollowed redirect's body usually echoes its `Location`, which may carry a signed target URL.
+  if (response.status >= 300 && response.status < 400) {
+    await response.body?.cancel().catch(() => undefined);
+    return fallbackMessage;
+  }
   const bytes = await readBoundedResponseBytes(response, {
     maxBytes: defaultProviderProxyMaxResponseBytes,
     fieldName: "proxy error response",

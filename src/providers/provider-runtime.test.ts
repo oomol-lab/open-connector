@@ -759,7 +759,10 @@ describe("provider egress SSRF guard", () => {
 
   it("rejects an unfollowed redirect under the manual redirect policy", async () => {
     const calls = stubFetchSequence([
-      new Response(null, { status: 302, headers: { location: "https://attacker.example/collect" } }),
+      new Response("Found. Redirecting to https://attacker.example/collect", {
+        status: 302,
+        headers: { location: "https://attacker.example/collect" },
+      }),
     ]);
     const proxy = defineProviderProxy({
       service: "test_service",
