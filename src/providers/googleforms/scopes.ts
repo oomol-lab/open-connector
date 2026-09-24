@@ -1,4 +1,4 @@
-import { googleIdentityScopes } from "../google-oauth-scopes.ts";
+import { googleIdentityScopes } from "../googleads/scopes.ts";
 
 export const googleFormsReadScope = "https://www.googleapis.com/auth/forms.body.readonly";
 export const googleFormsWriteScope = "https://www.googleapis.com/auth/forms.body";

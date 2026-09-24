@@ -11,7 +11,7 @@ import {
   optionalScalarString,
   optionalString,
 } from "../../core/cast.ts";
-import { googleJsonRequest, googleRequest } from "../google-runtime.ts";
+import { googleJsonRequest, googleRequest } from "../googledrive/runtime-request.ts";
 import {
   defineProviderExecutors,
   defineProviderProxy,

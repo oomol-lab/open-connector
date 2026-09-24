@@ -1,4 +1,4 @@
-import { googleIdentityScopes } from "../google-oauth-scopes.ts";
+import { googleIdentityScopes } from "../googleads/scopes.ts";
 
 export const googleMeetSpaceCreatedScope = "https://www.googleapis.com/auth/meetings.space.created";
 export const googleMeetSpaceReadonlyScope = "https://www.googleapis.com/auth/meetings.space.readonly";

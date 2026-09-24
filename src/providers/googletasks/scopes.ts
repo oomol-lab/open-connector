@@ -1,4 +1,4 @@
-import { googleIdentityScopes } from "../google-oauth-scopes.ts";
+import { googleIdentityScopes } from "../googleads/scopes.ts";
 
 export const googleTasksReadonlyScope = "https://www.googleapis.com/auth/tasks.readonly";
 export const googleTasksFullScope = "https://www.googleapis.com/auth/tasks";

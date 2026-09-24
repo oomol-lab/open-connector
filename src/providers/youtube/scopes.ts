@@ -1,4 +1,4 @@
-import { googleIdentityScopes } from "../google-oauth-scopes.ts";
+import { googleIdentityScopes } from "../googleads/scopes.ts";
 
 export const youtubeReadScope = "https://www.googleapis.com/auth/youtube.readonly";
 export const youtubeWriteScope = "https://www.googleapis.com/auth/youtube.force-ssl";

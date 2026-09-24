@@ -1,4 +1,4 @@
-import { googleIdentityScopes } from "../google-oauth-scopes.ts";
+import { googleIdentityScopes } from "../googleads/scopes.ts";
 
 export const photosReadonlyAppCreatedScope = "https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata";
 export const photosAppendonlyScope = "https://www.googleapis.com/auth/photoslibrary.appendonly";

@@ -1,4 +1,4 @@
-import { googleIdentityScopes } from "../google-oauth-scopes.ts";
+import { googleIdentityScopes } from "../googleads/scopes.ts";
 
 export const googleCalendarReadonlyScope = "https://www.googleapis.com/auth/calendar.readonly";
 export const googleCalendarEventsScope = "https://www.googleapis.com/auth/calendar.events";

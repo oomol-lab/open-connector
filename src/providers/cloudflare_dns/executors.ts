@@ -1,8 +1,8 @@
 import type { CredentialValidationResult, CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 
 import { compactObject } from "../../core/cast.ts";
-import { cloudflareCurrentUserDisplayName } from "../cloudflare-current-user.ts";
 import { defineBearerProviderExecutors } from "../provider-runtime.ts";
+import { cloudflareCurrentUserDisplayName } from "./runtime-user.ts";
 import { cloudflareDnsActionHandlers, requestCloudflareCurrentUser, validateCloudflareDnsToken } from "./runtime.ts";
 
 const service = "cloudflare_dns";

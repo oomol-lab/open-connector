@@ -1,14 +1,14 @@
-import type { CredentialValidators, ProviderExecutors, ResolvedCredential } from "../core/types.ts";
+import type { CredentialValidators, ProviderExecutors, ResolvedCredential } from "../../core/types.ts";
 import type {
   OAuthProviderContext,
   ProviderFetch,
   ProviderProxyAuth,
   ProviderRuntimeHandler,
-} from "./provider-runtime.ts";
+} from "../provider-runtime.ts";
 
 import { importPKCS8, SignJWT } from "jose";
-import { sha256Hex } from "../core/aws-sigv4.ts";
-import { optionalNumberLike, optionalRecord, optionalString } from "../core/cast.ts";
+import { sha256Hex } from "../../core/aws-sigv4.ts";
+import { optionalNumberLike, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   defineProviderExecutors,
   providerInputError,
@@ -16,7 +16,7 @@ import {
   providerUserAgent,
   requiredInputString,
   runProviderRequest,
-} from "./provider-runtime.ts";
+} from "../provider-runtime.ts";
 
 const googleTokenUrl = "https://oauth2.googleapis.com/token";
 const jwtBearerGrantType = "urn:ietf:params:oauth:grant-type:jwt-bearer";

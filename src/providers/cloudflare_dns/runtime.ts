@@ -1,12 +1,12 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { CloudflareCurrentUser } from "../cloudflare-current-user.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { CloudflareCurrentUser } from "./runtime-user.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
-import { readCloudflareCurrentUser } from "../cloudflare-current-user.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { readCloudflareCurrentUser } from "./runtime-user.ts";
 
 interface CloudflareEnvelope {
   success?: unknown;

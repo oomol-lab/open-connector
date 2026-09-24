@@ -1,12 +1,12 @@
-import type { ProviderFetch } from "./provider-runtime.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
-import { optionalRecord, optionalString } from "../core/cast.ts";
+import { optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
-} from "./provider-runtime.ts";
+} from "../provider-runtime.ts";
 
 export type GoogleQueryValue = string | readonly string[] | undefined;
 

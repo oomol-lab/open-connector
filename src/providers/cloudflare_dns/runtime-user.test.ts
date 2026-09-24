@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { cloudflareCurrentUserDisplayName, readCloudflareCurrentUser } from "./cloudflare-current-user.ts";
-import { ProviderRequestError } from "./provider-runtime.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
+import { cloudflareCurrentUserDisplayName, readCloudflareCurrentUser } from "./runtime-user.ts";
 
 describe("Cloudflare current-user parsing", () => {
   it("normalizes a Cloudflare user and display name", () => {

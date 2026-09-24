@@ -9,7 +9,11 @@ import type { GmailDraftResource, GmailMessageResource, GmailThreadResource } fr
 
 import { looseArray, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import { googleBearerProxyAuth, googleServiceAccountValidator, resolveGoogleAccessToken } from "../google-auth.ts";
+import {
+  googleBearerProxyAuth,
+  googleServiceAccountValidator,
+  resolveGoogleAccessToken,
+} from "../googledrive/runtime-auth.ts";
 import {
   defineProviderExecutors,
   defineProviderProxy,

@@ -1,16 +1,16 @@
-import type { ResolvedCredential } from "../core/types.ts";
-import type { GoogleServiceAccountToken, GoogleServiceAccountTokenRequest } from "./google-auth.ts";
-import type { ProviderFetch } from "./provider-runtime.ts";
+import type { ResolvedCredential } from "../../core/types.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
+import type { GoogleServiceAccountToken, GoogleServiceAccountTokenRequest } from "./runtime-auth.ts";
 
 import { decodeJwt, decodeProtectedHeader } from "jose";
 import { generateKeyPairSync } from "node:crypto";
 import { describe, expect, it } from "vitest";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import {
   createGoogleServiceAccountToken,
   readGoogleServiceAccountCredential,
   resolveGoogleAccessToken,
-} from "./google-auth.ts";
-import { ProviderRequestError } from "./provider-runtime.ts";
+} from "./runtime-auth.ts";
 
 const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
 const privateKeyPem = privateKey.export({ type: "pkcs8", format: "pem" }).toString();

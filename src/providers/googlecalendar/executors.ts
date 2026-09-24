@@ -10,7 +10,11 @@ import {
   pickOptionalString,
   requiredRecord,
 } from "../../core/cast.ts";
-import { defineGoogleProviderExecutors, googleBearerProxyAuth, googleServiceAccountValidator } from "../google-auth.ts";
+import {
+  defineGoogleProviderExecutors,
+  googleBearerProxyAuth,
+  googleServiceAccountValidator,
+} from "../googledrive/runtime-auth.ts";
 import { combineProviderActionHandlers, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
 import { googlecalendarEventActionHandlers } from "./runtime-events.ts";
 import {

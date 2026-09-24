@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { googleJsonRequest } from "../google-runtime.ts";
+import { googleJsonRequest } from "../googledrive/runtime-request.ts";
 import {
   defineOAuthProviderExecutors,
   defineProviderProxy,

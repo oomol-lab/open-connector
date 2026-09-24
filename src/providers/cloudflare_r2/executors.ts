@@ -8,7 +8,7 @@ import type {
 import type { CloudflareR2Context } from "./runtime.ts";
 
 import { compactObject, optionalString, requiredString } from "../../core/cast.ts";
-import { cloudflareCurrentUserDisplayName } from "../cloudflare-current-user.ts";
+import { cloudflareCurrentUserDisplayName } from "../cloudflare_dns/runtime-user.ts";
 import {
   createProviderFetch,
   createProviderProxyUrl,

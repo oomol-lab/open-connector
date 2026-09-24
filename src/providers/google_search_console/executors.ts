@@ -10,8 +10,12 @@ import {
   pickOptionalInteger,
   pickOptionalString as pickNonEmptyString,
 } from "../../core/cast.ts";
-import { defineGoogleProviderExecutors, googleBearerProxyAuth, googleServiceAccountValidator } from "../google-auth.ts";
-import { googleJsonRequest, googleRequest } from "../google-runtime.ts";
+import {
+  defineGoogleProviderExecutors,
+  googleBearerProxyAuth,
+  googleServiceAccountValidator,
+} from "../googledrive/runtime-auth.ts";
+import { googleJsonRequest, googleRequest } from "../googledrive/runtime-request.ts";
 import { defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
 import { googleSearchConsoleOAuthScopes } from "./scopes.ts";
 

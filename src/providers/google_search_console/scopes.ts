@@ -1,4 +1,4 @@
-import { googleIdentityScopes } from "../google-oauth-scopes.ts";
+import { googleIdentityScopes } from "../googleads/scopes.ts";
 
 export const googleSearchConsoleReadonlyScope = "https://www.googleapis.com/auth/webmasters.readonly";
 export const googleSearchConsoleFullScope = "https://www.googleapis.com/auth/webmasters";

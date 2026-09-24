@@ -1,5 +1,5 @@
 import type { CredentialValidationResult, TransitFileWriter } from "../../core/types.ts";
-import type { CloudflareCurrentUser } from "../cloudflare-current-user.ts";
+import type { CloudflareCurrentUser } from "../cloudflare_dns/runtime-user.ts";
 import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { CloudflareR2PresignedMethod } from "./s3-presign.ts";
 
@@ -14,7 +14,7 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, queryParams, readBoundedResponseBytes } from "../../core/request.ts";
-import { readCloudflareCurrentUser } from "../cloudflare-current-user.ts";
+import { readCloudflareCurrentUser } from "../cloudflare_dns/runtime-user.ts";
 import {
   combineProviderActionHandlers,
   providerFetch,

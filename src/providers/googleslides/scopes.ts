@@ -1,4 +1,4 @@
-import { googleIdentityScopes } from "../google-oauth-scopes.ts";
+import { googleIdentityScopes } from "../googleads/scopes.ts";
 
 export const presentationsReadonlyScope = "https://www.googleapis.com/auth/presentations.readonly";
 export const presentationsScope = "https://www.googleapis.com/auth/presentations";

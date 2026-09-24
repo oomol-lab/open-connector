@@ -3,8 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, objectArray, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineGoogleProviderExecutors, googleBearerProxyAuth, googleServiceAccountValidator } from "../google-auth.ts";
-import { googleJsonRequest } from "../google-runtime.ts";
+import {
+  defineGoogleProviderExecutors,
+  googleBearerProxyAuth,
+  googleServiceAccountValidator,
+} from "../googledrive/runtime-auth.ts";
+import { googleJsonRequest } from "../googledrive/runtime-request.ts";
 import { defineProviderProxy, providerInputError, ProviderRequestError } from "../provider-runtime.ts";
 import { googleSlidesOAuthScopes } from "./scopes.ts";
 

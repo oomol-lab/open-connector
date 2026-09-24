@@ -1,4 +1,4 @@
-import { googleIdentityScopes } from "../google-oauth-scopes.ts";
+import { googleIdentityScopes } from "../googleads/scopes.ts";
 
 export const bigQueryScope = "https://www.googleapis.com/auth/bigquery";
 export const bigQueryReadOnlyScope = "https://www.googleapis.com/auth/bigquery.readonly";

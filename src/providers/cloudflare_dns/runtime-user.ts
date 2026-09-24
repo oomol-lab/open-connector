@@ -1,5 +1,5 @@
-import { optionalRecord, optionalString } from "../core/cast.ts";
-import { ProviderRequestError } from "./provider-runtime.ts";
+import { optionalRecord, optionalString } from "../../core/cast.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 
 export interface CloudflareCurrentUser {
   userId: string;

@@ -11,7 +11,7 @@ import { integer, objectArray } from "../../core/cast.ts";
 import {
   googleJsonRequest as googleJsonRequestShared,
   googleRequest as googleRequestShared,
-} from "../google-runtime.ts";
+} from "../googledrive/runtime-request.ts";
 import {
   asObject,
   asOptionalObject,

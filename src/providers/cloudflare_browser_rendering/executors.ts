@@ -12,7 +12,7 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { cloudflareCurrentUserDisplayName, readCloudflareCurrentUser } from "../cloudflare-current-user.ts";
+import { cloudflareCurrentUserDisplayName, readCloudflareCurrentUser } from "../cloudflare_dns/runtime-user.ts";
 import {
   defineProviderExecutors,
   defineProviderProxy,

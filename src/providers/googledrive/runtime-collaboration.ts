@@ -1,5 +1,5 @@
-import { googleJsonRequest, googleRequest } from "../google-runtime.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
+import { googleJsonRequest, googleRequest } from "./runtime-request.ts";
 import {
   asObject,
   asOptionalObject,

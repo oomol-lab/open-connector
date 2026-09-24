@@ -4,7 +4,7 @@ import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-r
 import { randomUUID } from "node:crypto";
 import { compactObject, optionalBoolean, optionalInteger, optionalString, rawStringOrNull } from "../../core/cast.ts";
 import { assertPublicHttpUrl, readBoundedResponseBytes } from "../../core/request.ts";
-import { googleJsonRequest, googleRequest } from "../google-runtime.ts";
+import { googleJsonRequest, googleRequest } from "../googledrive/runtime-request.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const youtubeApiBaseUrl = "https://www.googleapis.com/youtube/v3";

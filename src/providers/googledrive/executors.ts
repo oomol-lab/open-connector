@@ -5,14 +5,13 @@ import type { OAuthProviderContext } from "../provider-runtime.ts";
 import { randomUUID } from "node:crypto";
 import { requiredRawString, requiredString } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
-import { defineGoogleProviderExecutors, googleBearerProxyAuth, googleServiceAccountValidator } from "../google-auth.ts";
-import { googleJsonRequest, googleRequest } from "../google-runtime.ts";
 import {
   defineProviderProxy,
   providerProxyEndpointPrefixes,
   ProviderRequestError,
   providerResponseError,
 } from "../provider-runtime.ts";
+import { defineGoogleProviderExecutors, googleBearerProxyAuth, googleServiceAccountValidator } from "./runtime-auth.ts";
 import {
   createComment,
   createPermission,
@@ -38,6 +37,7 @@ import {
   updatePermission,
   updateReply,
 } from "./runtime-collaboration.ts";
+import { googleJsonRequest, googleRequest } from "./runtime-request.ts";
 import {
   asObject,
   asOptionalObject,

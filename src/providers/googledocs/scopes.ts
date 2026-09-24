@@ -1,4 +1,4 @@
-import { googleIdentityScopes } from "../google-oauth-scopes.ts";
+import { googleIdentityScopes } from "../googleads/scopes.ts";
 
 export const googleDocsReadonlyScope = "https://www.googleapis.com/auth/documents.readonly";
 export const googleDocsWriteScope = "https://www.googleapis.com/auth/documents";
