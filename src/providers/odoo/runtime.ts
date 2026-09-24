@@ -91,11 +91,17 @@ export async function createOdooContext(
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<OdooActionContext> {
+  const allowPrivateNetwork = isPrivateNetworkAccessAllowed();
   const url = assertPublicHttpUrl(requiredInputString(values.baseUrl, "baseUrl"), {
     fieldName: "baseUrl",
     createError: providerInputError,
-    allowPrivateNetwork: isPrivateNetworkAccessAllowed(),
+    allowPrivateNetwork,
   });
+  if (url.protocol !== "https:" && !allowPrivateNetwork) {
+    throw providerInputError(
+      "baseUrl must use HTTPS unless the self-hosted runtime enables OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK",
+    );
+  }
   if (url.username || url.password || url.search || url.hash) {
     throw providerInputError("baseUrl must not contain credentials, a query, or a fragment");
   }

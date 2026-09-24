@@ -21,7 +21,7 @@ export const provider: ProviderDefinition = {
           secret: false,
           placeholder: "https://mycompany.odoo.com",
           description:
-            "Your Odoo instance URL, without /jsonrpc. Private network instances require OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK on a self-hosted runtime. Loopback and cloud metadata targets remain blocked.",
+            "Your Odoo instance URL, without /jsonrpc. HTTPS is required by default. A self-hosted runtime can enable OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK to permit private instances and unencrypted HTTP. Use HTTP only on a trusted network; it transmits credentials and data in plaintext. Loopback and cloud metadata targets remain blocked.",
         },
         {
           key: "database",

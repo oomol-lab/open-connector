@@ -208,6 +208,21 @@ describe("Odoo JSON-RPC", () => {
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
+  it("requires the deployment opt-in before sending credentials over HTTP", async () => {
+    const input = { values: { ...values, baseUrl: "http://odoo.example.com" } };
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(rpcResult(7));
+    await expect(credentialValidators.customCredential!(input, { fetcher })).rejects.toMatchObject({
+      status: 400,
+      message: expect.stringContaining("HTTPS"),
+    });
+    expect(fetcher).not.toHaveBeenCalled();
+    setPrivateNetworkAccessAllowed(true);
+    await expect(credentialValidators.customCredential!(input, { fetcher })).resolves.toHaveProperty(
+      "profile.accountId",
+      "http://odoo.example.com/jsonrpc:company:7",
+    );
+  });
+
   it("requires the deployment opt-in for private instances in credential validation", async () => {
     const input = { values: { ...values, baseUrl: "http://10.0.0.5:8069" } };
     const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(rpcResult(7));
