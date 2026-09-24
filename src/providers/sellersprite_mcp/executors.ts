@@ -34,7 +34,8 @@ const handlers: ProviderActionHandlers<"sellersprite_mcp", SellerSpriteMcpHandle
     if (name === "call_tool") {
       return (input, context) => call(context, required(input.toolName, "toolName"), object(input.arguments));
     }
-    return (input, context) => call(context, name, input);
+    return (input, context) =>
+      call(context, name, name === "traffic_extend" ? { ...input, queryType: input.queryType ?? 2 } : input);
   },
 );
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, handlers, {

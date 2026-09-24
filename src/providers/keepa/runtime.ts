@@ -7,12 +7,14 @@ import { compactObject, optionalRawString, optionalRecord, rawStringOrNull } fro
 import {
   createProviderTimeout,
   isAbortLikeError,
+  providerInputError,
   ProviderRequestError,
   providerUserAgent,
   readProviderTextBody,
   requiredInputString,
 } from "../provider-runtime.ts";
 import { keepaDealPriceTypes as dealPriceTypes, keepaHistoryTypes as historyTypes } from "./actions.ts";
+import { keepaDealAttributeNames } from "./deal-attributes.ts";
 
 export const keepaApiBaseUrl = "https://api.keepa.com";
 
@@ -259,6 +261,145 @@ export const keepaActionHandlers: ProviderActionHandlers<"keepa", KeepaActionHan
       meta: normalizeMeta(payload),
     };
   },
+  async search_products(input, context) {
+    const marketplace = requireMarketplace(input.marketplace);
+    const payload = await requestKeepaAction(context, {
+      path: "/search",
+      query: {
+        domain: marketplaceDomainIdByCode[marketplace],
+        type: "product",
+        term: requiredInputString(input.term, "term"),
+        ...(input.asinsOnly === true ? { "asins-only": 1 } : {}),
+        ...buildStatsQuery(input),
+        ...(typeof input.updateHours === "number" ? { update: input.updateHours } : {}),
+        ...(input.includeHistory === false ? { history: 0 } : {}),
+        ...(input.includeRating === true ? { rating: 1 } : {}),
+      },
+    });
+    const products = readObjectArray(payload.products).map(normalizeProductSnapshot);
+    return {
+      marketplace,
+      asins: input.asinsOnly === true ? readStringArray(payload.asinList) : products.map((product) => product.asin),
+      products,
+      meta: normalizeMeta(payload),
+    };
+  },
+
+  async lookup_categories(input, context) {
+    const marketplace = requireMarketplace(input.marketplace);
+    const categoryIds = readIntegerArray(input.categoryIds);
+    if (categoryIds.includes(0) && categoryIds.length !== 1) {
+      throw providerInputError("root category lookup must use categoryIds [0] alone");
+    }
+    const payload = await requestKeepaAction(context, {
+      path: "/category",
+      query: {
+        domain: marketplaceDomainIdByCode[marketplace],
+        category: categoryIds.join(","),
+        parents: input.includeParents === true ? 1 : 0,
+      },
+    });
+    return {
+      marketplace,
+      categories: objectMapValues(payload.categories),
+      categoryParents: objectMapValues(payload.categoryParents),
+      meta: normalizeMeta(payload),
+    };
+  },
+
+  async find_sellers(input, context) {
+    const marketplace = requireMarketplace(input.marketplace);
+    const filters = optionalRecord(input.filters);
+    if (!filters) throw providerInputError("filters must be an object");
+    if (!Object.keys(filters).some((key) => !["page", "perPage", "sort", "minMatch"].includes(key))) {
+      throw providerInputError("Seller Finder requires at least one business filter");
+    }
+    const page = typeof filters.page === "number" ? filters.page : 0;
+    const perPage = filters.perPage === 0 ? 100 : typeof filters.perPage === "number" ? filters.perPage : 50;
+    if (page > 0 && page * perPage >= 10_000) {
+      throw providerInputError("Seller Finder page starts beyond the 10000-result limit");
+    }
+    const payload = await requestKeepaAction(context, {
+      path: "/sellerquery",
+      query: { domain: marketplaceDomainIdByCode[marketplace] },
+      body: filters,
+    });
+    return {
+      marketplace,
+      sellerIds: readStringArray(payload.sellerIdList),
+      totalResults: asNullableInteger(payload.totalResults),
+      meta: normalizeMeta(payload),
+    };
+  },
+
+  async get_most_rated_sellers(input, context) {
+    const marketplace = requireMarketplace(input.marketplace);
+    const payload = await requestKeepaAction(context, {
+      path: "/topseller",
+      query: { domain: marketplaceDomainIdByCode[marketplace] },
+    });
+    const window = windowList(readStringArray(payload.sellerIdList), input);
+    return { marketplace, sellerIds: window.items, ...window.info, meta: normalizeMeta(payload) };
+  },
+
+  async get_seller_storefront(input, context) {
+    const marketplace = requireMarketplace(input.marketplace);
+    const sellerId = requiredInputString(input.sellerId, "sellerId");
+    const payload = await requestKeepaAction(context, {
+      path: "/seller",
+      query: { domain: marketplaceDomainIdByCode[marketplace], seller: sellerId, storefront: 1 },
+    });
+    const seller = optionalRecord(optionalRecord(payload.sellers)?.[sellerId]);
+    const asins = readStringArray(seller?.asinList);
+    const lastSeen = Array.isArray(seller?.asinListLastSeen) ? seller.asinListLastSeen : [];
+    const window = windowList(
+      asins.map((asin, index) => ({ asin, lastSeen: asNullableInteger(lastSeen[index]) })),
+      input,
+    );
+    const { asinList: _asinList, asinListLastSeen: _asinListLastSeen, ...sellerWithoutList } = seller ?? {};
+    return {
+      marketplace,
+      seller: seller ? normalizeSeller(sellerId, sellerWithoutList) : null,
+      items: window.items,
+      ...window.info,
+      meta: normalizeMeta(payload),
+    };
+  },
+
+  async get_lightning_deal(input, context) {
+    const marketplace = requireMarketplace(input.marketplace);
+    const payload = await requestKeepaAction(context, {
+      path: "/lightningdeal",
+      query: {
+        domain: marketplaceDomainIdByCode[marketplace],
+        asin: requiredInputString(input.asin, "asin"),
+        ...(typeof input.state === "string" ? { state: input.state } : {}),
+      },
+    });
+    return {
+      marketplace,
+      lightningDeals: readObjectArray(payload.lightningDeals),
+      meta: normalizeMeta(payload),
+    };
+  },
+
+  async list_lightning_deals(input, context) {
+    const marketplace = requireMarketplace(input.marketplace);
+    const payload = await requestKeepaAction(context, {
+      path: "/lightningdeal",
+      query: {
+        domain: marketplaceDomainIdByCode[marketplace],
+        ...(typeof input.state === "string" ? { state: input.state } : {}),
+      },
+    });
+    const window = windowList(readObjectArray(payload.lightningDeals), input);
+    return {
+      marketplace,
+      lightningDeals: window.items,
+      ...window.info,
+      meta: normalizeMeta(payload),
+    };
+  },
 };
 
 export async function validateKeepaCredential(
@@ -286,34 +427,74 @@ export async function validateKeepaCredential(
   };
 }
 
-function buildProductQuery(
-  input: Record<string, unknown>,
-  marketplace: KeepaMarketplace,
-  history: boolean,
-): Record<string, string | number> {
-  const asins = readAsinArray(input.asins);
-  assertProductRequestRules(input, asins);
+function requestKeepaAction(
+  context: ApiKeyProviderContext,
+  input: Pick<KeepaRequest, "path" | "query" | "body">,
+): Promise<Record<string, unknown>> {
+  return requestKeepa({ ...input, context, phase: "execute" });
+}
+
+function buildProductQuery(input: Record<string, unknown>, marketplace: KeepaMarketplace, history: boolean) {
+  const asins = input.asins === undefined ? [] : readAsinArray(input.asins);
+  const codes = readStringArray(input.codes).map((code) => code.trim());
+  if ((asins.length === 0) === (codes.length === 0)) {
+    throw providerInputError("provide either asins or codes");
+  }
+  const itemCount = asins.length || codes.length;
+  if (typeof input.offers === "number" && itemCount > 20) {
+    throw providerInputError("offers can only be requested for up to 20 ASINs or product codes");
+  }
+  if (input.codeLimit !== undefined && codes.length === 0) {
+    throw providerInputError("codeLimit requires codes");
+  }
+  if (input.onlyLiveOffers === true && typeof input.offers !== "number") {
+    throw providerInputError("onlyLiveOffers requires offers");
+  }
+  if (input.includeStock === true && typeof input.offers !== "number") {
+    throw providerInputError("includeStock requires offers");
+  }
   return {
-    asin: asins.join(","),
+    ...(asins.length > 0 ? { asin: asins.join(",") } : { code: codes.join(",") }),
     domain: marketplaceDomainIdByCode[marketplace],
     history: history ? 1 : 0,
-    ...(typeof input.statsDays === "number" ? { stats: input.statsDays } : {}),
+    ...buildStatsQuery(input),
+    ...(typeof input.codeLimit === "number" ? { "code-limit": input.codeLimit } : {}),
     ...(typeof input.updateHours === "number" ? { update: input.updateHours } : {}),
     ...(typeof input.offers === "number" ? { offers: input.offers } : {}),
     ...(input.onlyLiveOffers === true ? { "only-live-offers": 1 } : {}),
     ...(input.includeBuyBox === true ? { buybox: 1 } : {}),
     ...(input.includeRating === true ? { rating: 1 } : {}),
+    ...(input.includeVideos === true ? { videos: 1 } : {}),
+    ...(input.includeAPlus === true ? { aplus: 1 } : {}),
+    ...(input.includeStock === true ? { stock: 1 } : {}),
+    ...(input.includeHistoricalVariations === true ? { "historical-variations": 1 } : {}),
   };
+}
+
+function buildStatsQuery(input: Record<string, unknown>) {
+  const range = optionalRecord(input.statsRange);
+  if (input.statsDays !== undefined && range) {
+    throw providerInputError("statsDays and statsRange are mutually exclusive");
+  }
+  if (range) {
+    const start = typeof range.start === "number" ? range.start : Date.parse(String(range.start));
+    const end = typeof range.end === "number" ? range.end : Date.parse(String(range.end));
+    if (typeof range.start !== typeof range.end || start >= end) {
+      throw providerInputError("statsRange requires matching types and start before end");
+    }
+    return { stats: `${range.start},${range.end}` };
+  }
+  return typeof input.statsDays === "number" ? { stats: input.statsDays } : {};
 }
 
 function buildDealRequest(
   input: Record<string, unknown>,
   marketplace: KeepaMarketplace,
   priceType: KeepaDealPriceType,
-): Record<string, unknown> {
+) {
   const metricDefinition = keepaMetricByType.get(priceType);
   if (!metricDefinition) {
-    throw new ProviderRequestError(400, `unsupported deal price type: ${priceType}`);
+    throw providerInputError(`unsupported deal price type: ${priceType}`);
   }
   const sortName =
     typeof input.sortBy === "string" && input.sortBy in dealSortTypeByName
@@ -321,14 +502,18 @@ function buildDealRequest(
       : "newest";
   const sortType = dealSortTypeByName[sortName];
   if (sortType === 1 && input.invertSort === true) {
-    throw new ProviderRequestError(400, "newest deal sorting cannot be inverted");
+    throw providerInputError("newest deal sorting cannot be inverted");
   }
   const ranges = {
     currentRange: readOptionalIntegerArray(input.currentRange),
     deltaRange: readOptionalIntegerArray(input.deltaRange),
     deltaPercentRange: readOptionalIntegerArray(input.deltaPercentRange),
+    deltaLastRange: readOptionalIntegerArray(input.deltaLastRange),
     salesRankRange: readOptionalIntegerArray(input.salesRankRange),
   };
+  const attributes = Object.fromEntries(
+    keepaDealAttributeNames.map((name) => [name, readOptionalStringArray(input[name])]),
+  );
   return compactObject({
     page: typeof input.page === "number" ? input.page : 0,
     domainId: marketplaceDomainIdByCode[marketplace],
@@ -338,33 +523,61 @@ function buildDealRequest(
     isLowest: input.isLowestEver === true,
     isLowest90: input.isLowest90Days === true,
     isLowestOffer: input.isLowestOffer === true,
+    isHighest: input.isHighest === true,
     isBackInStock: input.isBackInStock === true,
     isOutOfStock: input.isOutOfStock === true,
     hasReviews: input.hasReviews === true,
     isPrimeExclusive: input.isPrimeExclusive === true,
     mustHaveAmazonOffer: input.mustHaveAmazonOffer === true,
     mustNotHaveAmazonOffer: input.mustNotHaveAmazonOffer === true,
-    filterErotic: true,
+    filterErotic: typeof input.filterErotic === "boolean" ? input.filterErotic : undefined,
+    singleVariation: input.singleVariation === true,
+    isRisers: input.isRisers === true,
+    warehouseConditions: readOptionalIntegerArray(input.warehouseConditions),
     isRangeEnabled: Object.values(ranges).some((value) => value !== undefined),
-    isFilterEnabled: [
-      input.isLowestEver,
-      input.isLowest90Days,
-      input.isLowestOffer,
-      input.isBackInStock,
-      input.isOutOfStock,
-      input.hasReviews,
-      input.isPrimeExclusive,
-      input.mustHaveAmazonOffer,
-      input.mustNotHaveAmazonOffer,
-      input.minimumRating,
-      input.titleSearch,
-    ].some((value) => value !== undefined && value !== false),
+    isFilterEnabled:
+      [
+        input.isLowestEver,
+        input.isLowest90Days,
+        input.isLowestOffer,
+        input.isBackInStock,
+        input.isOutOfStock,
+        input.hasReviews,
+        input.isPrimeExclusive,
+        input.mustHaveAmazonOffer,
+        input.mustNotHaveAmazonOffer,
+        input.isHighest,
+        input.singleVariation,
+        input.isRisers,
+        input.warehouseConditions,
+        input.minimumRating,
+        input.titleSearch,
+        ...Object.values(attributes),
+      ].some((value) => value !== undefined && value !== false) || input.filterErotic !== undefined,
     includeCategories: readOptionalIntegerArray(input.includeCategories),
     excludeCategories: readOptionalIntegerArray(input.excludeCategories),
-    titleSearch: optionalRawString(input.titleSearch),
+    titleSearch: typeof input.titleSearch === "string" ? input.titleSearch : undefined,
     minRating: typeof input.minimumRating === "number" ? input.minimumRating : undefined,
     ...ranges,
+    ...attributes,
   });
+}
+
+function windowList<T>(items: T[], input: Record<string, unknown>) {
+  const offset = typeof input.offset === "number" ? input.offset : 0;
+  const limit = input.limit === null ? null : typeof input.limit === "number" ? input.limit : 100;
+  const result = items.slice(offset, limit === null ? undefined : offset + limit);
+  const next = offset + result.length;
+  const hasMore = next < items.length;
+  return {
+    items: result,
+    info: {
+      totalAvailable: items.length,
+      returnedCount: result.length,
+      hasMore,
+      nextOffset: hasMore ? next : null,
+    },
+  };
 }
 
 async function requestKeepa(input: KeepaRequest): Promise<Record<string, unknown>> {
@@ -733,15 +946,6 @@ function validateCategorySearchTerm(term: string): void {
   }
 }
 
-function assertProductRequestRules(input: Record<string, unknown>, asins: string[]): void {
-  if (typeof input.offers === "number" && asins.length > 20) {
-    throw new ProviderRequestError(400, "offers can only be requested for up to 20 ASINs");
-  }
-  if (input.onlyLiveOffers === true && typeof input.offers !== "number") {
-    throw new ProviderRequestError(400, "onlyLiveOffers requires offers");
-  }
-}
-
 function requireInputObject(value: unknown, fieldName: string): Record<string, unknown> {
   const object = optionalRecord(value);
   if (!object) {
@@ -806,6 +1010,10 @@ function readIntegerArray(value: unknown): number[] {
 
 function readOptionalIntegerArray(value: unknown): number[] | undefined {
   return Array.isArray(value) ? readIntegerArray(value) : undefined;
+}
+
+function readOptionalStringArray(value: unknown): string[] | undefined {
+  return Array.isArray(value) ? readStringArray(value) : undefined;
 }
 
 function objectMapValues(value: unknown): Array<Record<string, unknown>> {

@@ -2,6 +2,14 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { apolloActions } from "./apollo-actions.ts";
+import { creatorActions } from "./creator-actions.ts";
+import { cryptoActions } from "./crypto-actions.ts";
+import { dataForSeoActions } from "./dataforseo-actions.ts";
+import { financialActions } from "./financial-actions.ts";
+import { seoActions } from "./seo-actions.ts";
+import { similarwebActions } from "./similarweb-actions.ts";
+import { socialActions } from "./social-actions.ts";
 
 const service = "aisa";
 
@@ -19,6 +27,7 @@ const kalshiMarketsAction = defineProviderAction(service, {
   name: "get_kalshi_markets",
   operationType: "read",
   description: "List Kalshi prediction markets with live quotes, settlement rules, and pagination.",
+  requiredScopes: [],
   inputSchema: s.object(
     "Filters for listing Kalshi prediction markets through AIsa.",
     {
@@ -57,7 +66,7 @@ const kalshiMarketsAction = defineProviderAction(service, {
       ],
     },
   ),
-  outputSchema: s.object("A page of Kalshi markets returned by AIsa.", {
+  outputSchema: s.requiredObject("A page of Kalshi markets returned by AIsa.", {
     cursor: s.optional(s.string("The cursor for the next page when more markets are available.")),
     markets: s.array(
       "The Kalshi markets matching the filters.",
@@ -70,6 +79,7 @@ const kalshiTradesAction = defineProviderAction(service, {
   name: "get_kalshi_trades",
   operationType: "read",
   description: "List executed Kalshi trades with prices, size, side, and pagination.",
+  requiredScopes: [],
   inputSchema: s.object(
     "Filters for listing executed Kalshi trades through AIsa.",
     {
@@ -81,7 +91,7 @@ const kalshiTradesAction = defineProviderAction(service, {
     },
     { optional: ["limit", "cursor", "ticker", "minTimestamp", "maxTimestamp", "isBlockTrade"] },
   ),
-  outputSchema: s.object("A page of executed Kalshi trades returned by AIsa.", {
+  outputSchema: s.requiredObject("A page of executed Kalshi trades returned by AIsa.", {
     cursor: s.optional(s.string("The cursor for the next page when more trades are available.")),
     trades: s.array(
       "The executed Kalshi trades matching the filters.",
@@ -100,6 +110,7 @@ const polymarketMarketsAction = defineProviderAction(service, {
   name: "get_polymarket_markets",
   operationType: "read",
   description: "List Polymarket questions with outcome prices, liquidity, volume, and date filters.",
+  requiredScopes: [],
   inputSchema: s.object(
     "Filters for listing Polymarket markets through AIsa.",
     {
@@ -158,6 +169,7 @@ const polymarketEventsAction = defineProviderAction(service, {
   name: "get_polymarket_events",
   operationType: "read",
   description: "List Polymarket events and their related prediction markets.",
+  requiredScopes: [],
   inputSchema: s.object(
     "Filters for listing Polymarket events through AIsa.",
     {
@@ -222,6 +234,7 @@ const polymarketActivityAction = defineProviderAction(service, {
   name: "get_polymarket_activity",
   operationType: "read",
   description: "Get one wallet's Polymarket split, merge, and redemption activity.",
+  requiredScopes: [],
   inputSchema: s.object(
     "Filters for getting one wallet's Polymarket activity through AIsa.",
     {
@@ -242,7 +255,7 @@ const polymarketActivityAction = defineProviderAction(service, {
       optional: ["startTimestamp", "endTimestamp", "marketSlug", "conditionId", "limit", "paginationKey"],
     },
   ),
-  outputSchema: s.object("A page of Polymarket wallet activity returned by AIsa.", {
+  outputSchema: s.requiredObject("A page of Polymarket wallet activity returned by AIsa.", {
     activities: s.array(
       "The wallet activity records matching the filters.",
       s.looseObject("A Polymarket split, merge, or redemption activity record."),
@@ -255,7 +268,8 @@ const creditsBalanceAction = defineProviderAction(service, {
   name: "get_credits_balance",
   operationType: "read",
   description: "Get the current AIsa account, key, and go-to-market credit balances.",
-  inputSchema: s.object("The input payload for getting the current AIsa credit balance.", {}),
+  requiredScopes: [],
+  inputSchema: s.requiredObject("The input payload for getting the current AIsa credit balance.", {}),
   outputSchema: s.looseObject("The current AIsa balance snapshot in micro-USD."),
 });
 
@@ -263,6 +277,7 @@ const usageAction = defineProviderAction(service, {
   name: "get_usage",
   operationType: "read",
   description: "Get AIsa request, token, value, and charged usage in daily buckets.",
+  requiredScopes: [],
   inputSchema: s.object(
     "The time window for getting AIsa account or API key usage.",
     {
@@ -286,4 +301,12 @@ export const aisaActions: ActionDefinition[] = [
   polymarketMarketsAction,
   polymarketEventsAction,
   polymarketActivityAction,
+  ...similarwebActions,
+  ...creatorActions,
+  ...seoActions,
+  ...financialActions,
+  ...dataForSeoActions,
+  ...cryptoActions,
+  ...socialActions,
+  ...apolloActions,
 ];

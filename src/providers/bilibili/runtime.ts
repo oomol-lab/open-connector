@@ -167,10 +167,9 @@ export async function bilibiliApiRequest(
   // JSON-channel request, including GETs and body-less POSTs.
   headers["content-type"] = "application/json";
 
-  const response = await runProviderRequest({ signal: context.signal, label: options.label }, (signal) =>
-    context.fetcher(url.toString(), { method, headers, body, signal }),
+  return runProviderRequest({ signal: context.signal, label: options.label }, async (signal) =>
+    readBilibiliApiResponse(await context.fetcher(url.toString(), { method, headers, body, signal }), options.label),
   );
-  return readBilibiliApiResponse(response, options.label);
 }
 
 export interface BilibiliFormRequestOptions {
@@ -209,10 +208,12 @@ export async function bilibiliFormRequest(
     accessToken: context.accessToken,
   });
 
-  const response = await runProviderRequest({ signal: context.signal, label: options.label }, (signal) =>
-    context.fetcher(url.toString(), { method: "POST", headers, body: form, signal }),
+  return runProviderRequest({ signal: context.signal, label: options.label }, async (signal) =>
+    readBilibiliApiResponse(
+      await context.fetcher(url.toString(), { method: "POST", headers, body: form, signal }),
+      options.label,
+    ),
   );
-  return readBilibiliApiResponse(response, options.label);
 }
 
 /** Read one arcopen/openupos response into its envelope data, mapping HTTP and envelope failures. */

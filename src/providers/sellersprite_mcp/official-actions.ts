@@ -743,7 +743,7 @@ const parameterDescriptionByToolAndName: Readonly<Record<string, string>> = {
   "keyword_miner.matchType": "Keyword match type: 2 for broad or 3 for phrase.",
   "traffic_extend.asinList": "Amazon ASINs to query, with at most 20 values.",
   "traffic_extend.queryType":
-    "Variation query mode: 0 for all variations, 1 for the best-selling variation, or 2 for the current variation.",
+    "Variation query mode: 0 for all variations, 1 for the best-selling variation, or 2 for the current variation; defaults to 2.",
   "aba_research_weekly.searchModel":
     "Search model from 1 through 6: popular, changing, sustained growth, rapid growth, potential, or long-tail market.",
   "aba_research_monthly.searchModel":
@@ -841,7 +841,8 @@ function officialParameterSchema(toolName: string, name: string, type: OfficialP
   }
   const integerValues = integerValuesByToolAndParameter[parameterKey];
   if (type === "integer" && integerValues) {
-    return { type: "integer", enum: integerValues, description };
+    const schema = { type: "integer", enum: integerValues, description };
+    return parameterKey === "traffic_extend.queryType" ? s.withDefault(schema, 2) : schema;
   }
   const stringValues = stringValuesByToolAndParameter[parameterKey];
   if (type === "string" && stringValues) {

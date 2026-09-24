@@ -4,7 +4,8 @@ import type { Client } from "@modelcontextprotocol/client";
 
 import { ProtocolError, SdkHttpError, UnauthorizedError } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
-import { optionalRecord } from "../../core/cast.ts";
+import { optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
+import { readBoundedResponseBytes } from "../../core/request.ts";
 import { withMcpClient } from "../mcp-client.ts";
 import {
   defineApiKeyProviderExecutors,
@@ -19,6 +20,11 @@ import { isTongdaxinNamedActionName, resolveTongdaxinNamedToolCall } from "./nam
 const service = "tongdaxin";
 const endpoint = new URL("https://txmcp.tdx.com.cn:3001/txmcp");
 const requestTimeoutMs = 60_000;
+const errorResponseMaxBytes = 64 * 1024;
+const insufficientPointsToolError = "MCP error -32603: Your usage quota has been reached";
+const insufficientPointsDescription = "TDX MCP quota is below 10. Please recharge before continuing.";
+const rechargeOrigin = "https://vip.tdx.com.cn";
+const rechargePath = "/site/app/pc-mall/main.html";
 const supportedToolNames = new Set(tongdaxinReadOnlyToolNames);
 
 interface TongdaxinTool {
@@ -30,19 +36,20 @@ interface TongdaxinTool {
 
 const handlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async list_tools(_input, context) {
-    return { tools: await discoverSupportedTools(context, "execute") };
+    return { tools: await discoverSupportedTools(context) };
   },
   async call_tool(input, context) {
     const toolName = requiredInputString(input.toolName, "toolName");
     const argumentsValue = input.arguments === undefined ? {} : optionalRecord(input.arguments);
     if (!argumentsValue) throw new ProviderRequestError(400, "arguments must be a JSON object");
     assertToolArgumentsSize(argumentsValue);
-    const result = await withTongdaxinClient(context, "execute", false, (client) =>
+    const result = await withTongdaxinClient(context, false, (client) =>
       client.callTool(
         { name: toolName, arguments: argumentsValue },
         { timeout: requestTimeoutMs, signal: context.signal },
       ),
     );
+    assertSufficientTongdaxinCredit(result);
     if (!("toolResult" in result) && result.isError) {
       throw new ProviderRequestError(502, `Tongdaxin MCP tool ${toolName} returned an error`, result);
     }
@@ -59,7 +66,7 @@ for (const actionName of Object.keys(resolveNamedHandlers())) {
     if (!isTongdaxinNamedActionName(actionName)) throw new ProviderRequestError(400, `Unknown action: ${actionName}`);
     const toolCall = resolveTongdaxinNamedToolCall(actionName, input);
     assertToolArgumentsSize(toolCall.arguments);
-    const tools = await discoverSupportedTools(context, "execute");
+    const tools = await discoverSupportedTools(context);
     const tool = tools.find((candidate) => candidate.name === toolCall.toolName);
     if (!tool && toolCall.toolName !== "wenda_macro_query") {
       throw new ProviderRequestError(
@@ -78,12 +85,13 @@ for (const actionName of Object.keys(resolveNamedHandlers())) {
         `Tongdaxin MCP does not currently affirm ${tool.name} as a non-destructive read-only tool`,
       );
     }
-    const result = await withTongdaxinClient(context, "execute", true, (client) =>
+    const result = await withTongdaxinClient(context, true, (client) =>
       client.callTool(
         { name: toolCall.toolName, arguments: toolCall.arguments },
         { timeout: requestTimeoutMs, signal: context.signal },
       ),
     );
+    assertSufficientTongdaxinCredit(result);
     if (!("toolResult" in result) && result.isError) {
       throw new ProviderRequestError(502, `Tongdaxin MCP tool ${toolCall.toolName} returned an error`, result);
     }
@@ -100,7 +108,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(servic
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const context = { apiKey: input.apiKey, fetcher, signal };
-    const tools = await discoverSupportedTools(context, "validate");
+    const tools = await discoverSupportedTools(context);
     if (tools.length === 0) {
       throw new ProviderRequestError(400, "Tongdaxin MCP did not expose any supported read-only tools");
     }
@@ -116,11 +124,8 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-async function discoverSupportedTools(
-  context: ApiKeyProviderContext,
-  phase: "validate" | "execute",
-): Promise<TongdaxinTool[]> {
-  const result = await withTongdaxinClient(context, phase, true, (client) =>
+async function discoverSupportedTools(context: ApiKeyProviderContext): Promise<TongdaxinTool[]> {
+  const result = await withTongdaxinClient(context, true, (client) =>
     client.listTools({}, { timeout: requestTimeoutMs, signal: context.signal }),
   );
   return result.tools.map((tool) => ({
@@ -133,7 +138,6 @@ async function discoverSupportedTools(
 
 async function withTongdaxinClient<T>(
   context: ApiKeyProviderContext,
-  phase: "validate" | "execute",
   retryOnSessionNotFound: boolean,
   run: (client: Client) => Promise<T>,
 ): Promise<T> {
@@ -141,7 +145,7 @@ async function withTongdaxinClient<T>(
     {
       endpoint,
       transport: "streamable_http",
-      fetcher: context.fetcher,
+      fetcher: createTongdaxinFetcher(context.fetcher),
       headers: {
         authorization: `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
@@ -149,20 +153,20 @@ async function withTongdaxinClient<T>(
       redirect: "error",
       signal: context.signal,
       retryOnSessionNotFound,
-      mapError: (error) => mapTongdaxinError(error, phase),
+      mapError: mapTongdaxinError,
     },
     run,
   );
 }
 
-function mapTongdaxinError(error: unknown, phase: "validate" | "execute"): unknown {
+function mapTongdaxinError(error: unknown): unknown {
   if (error instanceof ProviderRequestError) return error;
   if (error instanceof UnauthorizedError) {
-    return new ProviderRequestError(phase === "validate" ? 400 : 401, "Tongdaxin API Key is invalid or expired");
+    return new ProviderRequestError(401, "Tongdaxin MCP denied this request");
   }
   if (error instanceof SdkHttpError) {
     if (error.status === 401) {
-      return new ProviderRequestError(phase === "validate" ? 400 : 401, "Tongdaxin API Key is invalid or expired");
+      return new ProviderRequestError(401, "Tongdaxin MCP denied this request");
     }
     const status = 400 <= error.status && error.status < 500 ? error.status : 502;
     return new ProviderRequestError(status, `Tongdaxin MCP request failed: ${error.message}`, error);
@@ -174,6 +178,75 @@ function mapTongdaxinError(error: unknown, phase: "validate" | "execute"): unkno
     502,
     error instanceof Error ? `Tongdaxin MCP request failed: ${error.message}` : "Tongdaxin MCP request failed",
     error,
+  );
+}
+
+function createTongdaxinFetcher(fetcher: typeof fetch): typeof fetch {
+  return (async (...arguments_: Parameters<typeof fetch>) => {
+    const response = await fetcher(...arguments_);
+    const details = await readInsufficientPoints(response);
+    if (details) {
+      void response.body?.cancel().catch(() => undefined);
+      throw insufficientCreditError(details);
+    }
+    return response;
+  }) as typeof fetch;
+}
+
+interface InsufficientPointsDetails {
+  remainingCredit: number;
+  rechargeUrl: string;
+}
+
+async function readInsufficientPoints(response: Response): Promise<InsufficientPointsDetails | undefined> {
+  if (response.status !== 401) return undefined;
+  try {
+    const bytes = await readBoundedResponseBytes(response.clone(), {
+      maxBytes: errorResponseMaxBytes,
+      fieldName: "Tongdaxin MCP error response",
+      createError: (message) => new Error(message),
+    });
+    const payload = optionalRecord(JSON.parse(new TextDecoder().decode(bytes)));
+    const remainingCredit = optionalNumber(payload?.leftValue);
+    const rechargeUrl = optionalString(payload?.recharge_url);
+    if (
+      payload?.error !== "unauthorized" ||
+      payload?.error_description !== insufficientPointsDescription ||
+      remainingCredit === undefined ||
+      !isOfficialRechargeUrl(rechargeUrl)
+    ) {
+      return undefined;
+    }
+    return { remainingCredit, rechargeUrl };
+  } catch {
+    return undefined;
+  }
+}
+
+function isOfficialRechargeUrl(value: string | undefined): value is string {
+  if (!value) return false;
+  try {
+    const url = new URL(value);
+    return url.origin === rechargeOrigin && url.pathname === rechargePath;
+  } catch {
+    return false;
+  }
+}
+
+function assertSufficientTongdaxinCredit(result: Awaited<ReturnType<Client["callTool"]>>): void {
+  if (!("content" in result) || result.isError !== true) return;
+  const exhausted = result.content.some(
+    (content) => content.type === "text" && content.text === insufficientPointsToolError,
+  );
+  if (exhausted) throw insufficientCreditError();
+}
+
+function insufficientCreditError(details?: InsufficientPointsDetails): ProviderRequestError {
+  return new ProviderRequestError(
+    402,
+    "Tongdaxin AI points are insufficient. Recharge the account before retrying.",
+    details ?? { rechargeUrl: `${rechargeOrigin}${rechargePath}#/page_product_ai_jfb` },
+    "insufficient_credit",
   );
 }
 

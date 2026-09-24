@@ -82,6 +82,9 @@ export async function readBoundedResponseBytes(
 ): Promise<Uint8Array> {
   const contentLength = parseContentLength(response.headers.get("content-length"));
   if (contentLength !== undefined) {
+    if (contentLength > options.maxBytes) {
+      void response.body?.cancel().catch(() => undefined);
+    }
     assertMaxBytes(contentLength, options);
   }
 
@@ -102,7 +105,7 @@ export async function readBoundedResponseBytes(
       }
       totalBytes += value.byteLength;
       if (totalBytes > options.maxBytes) {
-        await reader.cancel().catch(() => undefined);
+        void reader.cancel().catch(() => undefined);
         throw options.createError(`${options.fieldName} exceeds ${options.maxBytes} bytes`);
       }
       chunks.push(value);

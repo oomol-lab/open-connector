@@ -9,9 +9,38 @@ import {
   isPrivateNetworkAccessAllowed,
   parseEgressTrustedHosts,
   parsePrivateNetworkAccessFlag,
+  readBoundedResponseBytes,
   setEgressTrustedHosts,
   setPrivateNetworkAccessAllowed,
 } from "./request.ts";
+
+it.each([undefined, "2"])(
+  "rejects oversized bodies without awaiting stream cancellation (Content-Length: %s)",
+  async (contentLength) => {
+    let cancelled = false;
+    const response = new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.enqueue(new Uint8Array(2));
+        },
+        cancel() {
+          cancelled = true;
+          return new Promise<void>(() => {});
+        },
+      }),
+      { headers: contentLength === undefined ? undefined : { "content-length": contentLength } },
+    );
+    await expect(
+      readBoundedResponseBytes(response, {
+        maxBytes: 1,
+        fieldName: "response",
+        createError: (message) => new Error(message),
+      }),
+    ).rejects.toThrow("response exceeds 1 bytes");
+    expect(cancelled).toBe(true);
+  },
+  1000,
+);
 
 describe("assertPublicHttpUrl", () => {
   it("canonicalizes public hostnames with trailing dots", () => {

@@ -5,7 +5,8 @@ import { aisaActions } from "./actions.ts";
 export const provider: ProviderDefinition = {
   service: "aisa",
   displayName: "AIsa",
-  description: "Query AIsa usage and prediction-market data from Kalshi and Polymarket.",
+  description:
+    "Query AIsa prediction markets, web intelligence, financial data, crypto markets, public social data, and company and creator databases.",
   categories: ["Data", "Finance"],
   authTypes: ["api_key"],
   auth: [

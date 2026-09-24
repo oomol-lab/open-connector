@@ -135,15 +135,15 @@ async function postBilibiliUposBytes(
 ): Promise<void> {
   const url = new URL(`${bilibiliUposBaseUrl}${path}`);
   setSearchParams(url, query);
-  const response = await runProviderRequest({ signal: context.signal, label }, (signal) =>
-    context.fetcher(url.toString(), {
+  await runProviderRequest({ signal: context.signal, label }, async (signal) => {
+    const response = await context.fetcher(url.toString(), {
       method: "POST",
       headers: { "content-type": "application/octet-stream" },
       body,
       signal,
-    }),
-  );
-  await readBilibiliApiResponse(response, label);
+    });
+    await readBilibiliApiResponse(response, label);
+  });
 }
 
 function normalizeUploadFileName(name: string): string {
