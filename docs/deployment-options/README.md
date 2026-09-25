@@ -102,5 +102,29 @@ path that includes managed OAuth.
         <a href="https://app.nibrun.com/deploy?name=open-connector&amp;binary=https%3A%2F%2Fgithub.com%2Foomol-lab%2Fopen-connector%2Freleases%2Flatest%2Fdownload%2Fopen-connector-linux-x64&amp;port=3000&amp;env=HOST%3D0.0.0.0&amp;env=OOMOL_CONNECT_DATA_DIR%3D%24%7BNIBRUN_DATA_DIR%7D&amp;env=OOMOL_CONNECT_ORIGIN%3Dhttps%3A%2F%2F%24%7BNIBRUN_HOSTNAME%7D&amp;env=OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS%3Dtrue&amp;env=OOMOL_CONNECT_ENCRYPTION_KEY&amp;env=OOMOL_CONNECT_ADMIN_TOKEN&amp;env=OOMOL_CONNECT_RUNTIME_TOKEN"><strong>One-click deploy</strong></a>
       </td>
     </tr>
+    <tr>
+      <td valign="middle" align="center">
+        <a href="https://nexusai.run/"><img src="../../assets/deployment-options/nexus-ai.svg" alt="NEXUS AI" width="140"></a>
+      </td>
+      <td valign="top">
+        Build the repository's <code>docker/Dockerfile</code> into a container with its own HTTPS URL. The
+        deploy link sets <code>OOMOL_CONNECT_ORIGIN</code> to that URL, asks for the admin token on the form,
+        and generates the encryption key and runtime token, so the Web Console and every API require
+        authentication from the first start. Secrets are typed on the form or generated on the server and
+        never appear in the link.
+        <br><br>
+        <strong>Advantages:</strong> one-click deploy from source, logs and redeploys in one dashboard,
+        and custom domains on paid plans. The SQLite database lives in the container: it survives restarts
+        but not rebuilds, so set <code>OOMOL_CONNECT_DATABASE_URL</code> to PostgreSQL for data that must last.
+        <br><br>
+        <strong>Pricing:</strong> the Free plan includes 1 active deployment with a public HTTPS URL
+        and no credit card; test deployments expire automatically. Starter is $29/month for 2 active
+        deployments and custom domains, and Pro is $149/month for 5. Each app gets 512 MB of RAM. See
+        <a href="https://nexusai.run/pricing">NEXUS AI pricing</a>.
+      </td>
+      <td valign="middle" align="center">
+        <a href="https://nexusai.run/deploy?repo=https%3A%2F%2Fgithub.com%2Foomol-lab%2Fopen-connector&amp;dockerfile=docker%2FDockerfile&amp;env=OOMOL_CONNECT_ORIGIN%3D%7Burl%7D&amp;require=OOMOL_CONNECT_ADMIN_TOKEN&amp;generate=OOMOL_CONNECT_ENCRYPTION_KEY&amp;generate=OOMOL_CONNECT_RUNTIME_TOKEN&amp;template=open-connector"><strong>One-click deploy</strong></a>
+      </td>
+    </tr>
   </tbody>
 </table>

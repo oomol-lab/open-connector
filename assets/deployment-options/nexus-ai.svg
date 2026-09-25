@@ -1,0 +1,41 @@
+<svg width="176" height="50" viewBox="0 0 176 50" xmlns="http://www.w3.org/2000/svg">
+  <title>NEXUS AI</title>
+  <defs>
+    <linearGradient id="nexusAiLockupMark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7dd3fc" />
+      <stop offset="1" stop-color="#38bdf8" />
+    </linearGradient>
+  </defs>
+  <style>
+  .nexus-ai-logotype {
+    fill: #0a0a0a;
+  }
+  @media (prefers-color-scheme: dark) {
+    .nexus-ai-logotype {
+      fill: #fafafa;
+    }
+  }
+  </style>
+  <g transform="translate(4 5) scale(0.05) translate(-174 -100)">
+    <path d="M 512 100 L 850 300 L 850 700 L 512 900 L 174 700 L 174 300 Z" fill="url(#nexusAiLockupMark)" />
+    <circle cx="512" cy="500" r="80" fill="#38bdf8" opacity="0.9" />
+    <circle cx="512" cy="500" r="40" fill="#E8F4F8" opacity="0.4" />
+    <g stroke="#E8F4F8" stroke-width="12" opacity="0.6">
+      <line x1="512" y1="500" x2="512" y2="300" />
+      <line x1="512" y1="500" x2="662" y2="400" />
+      <line x1="512" y1="500" x2="662" y2="600" />
+      <line x1="512" y1="500" x2="512" y2="700" />
+      <line x1="512" y1="500" x2="362" y2="600" />
+      <line x1="512" y1="500" x2="362" y2="400" />
+    </g>
+    <g fill="#E8F4F8">
+      <circle cx="512" cy="300" r="45" />
+      <circle cx="662" cy="400" r="45" />
+      <circle cx="662" cy="600" r="45" />
+      <circle cx="512" cy="700" r="45" />
+      <circle cx="362" cy="600" r="45" />
+      <circle cx="362" cy="400" r="45" />
+    </g>
+  </g>
+  <text class="nexus-ai-logotype" x="50" y="33" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="22" font-weight="700" letter-spacing="0.5">NEXUS AI</text>
+</svg>

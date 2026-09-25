@@ -102,5 +102,28 @@ platform에서는 OAuth app을 직접 등록해야 합니다. 관리형 OAuth가
         <a href="https://app.nibrun.com/deploy?name=open-connector&amp;binary=https%3A%2F%2Fgithub.com%2Foomol-lab%2Fopen-connector%2Freleases%2Flatest%2Fdownload%2Fopen-connector-linux-x64&amp;port=3000&amp;env=HOST%3D0.0.0.0&amp;env=OOMOL_CONNECT_DATA_DIR%3D%24%7BNIBRUN_DATA_DIR%7D&amp;env=OOMOL_CONNECT_ORIGIN%3Dhttps%3A%2F%2F%24%7BNIBRUN_HOSTNAME%7D&amp;env=OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS%3Dtrue&amp;env=OOMOL_CONNECT_ENCRYPTION_KEY&amp;env=OOMOL_CONNECT_ADMIN_TOKEN&amp;env=OOMOL_CONNECT_RUNTIME_TOKEN"><strong>원클릭 배포</strong></a>
       </td>
     </tr>
+    <tr>
+      <td valign="middle" align="center">
+        <a href="https://nexusai.run/"><img src="../../assets/deployment-options/nexus-ai.svg" alt="NEXUS AI" width="140"></a>
+      </td>
+      <td valign="top">
+        저장소의 <code>docker/Dockerfile</code>을 빌드해 자체 HTTPS URL이 있는 컨테이너로 실행합니다.
+        배포 링크는 <code>OOMOL_CONNECT_ORIGIN</code>을 그 URL로 설정하고, 폼에서 admin token을 입력받고,
+        encryption key와 runtime token을 생성하므로 Web Console과 모든 API가 처음 시작할 때부터 인증을
+        요구합니다. secret은 폼에 입력하거나 서버에서 생성되며 링크에는 절대 포함되지 않습니다.
+        <br><br>
+        <strong>장점:</strong> 소스에서 원클릭 배포, 하나의 대시보드에서 로그와 재배포 관리, 유료 플랜의 커스텀
+        도메인. SQLite 데이터베이스는 컨테이너 안에 있어 재시작 후에는 유지되지만 재빌드 후에는 유지되지
+        않으므로, 오래 보관할 데이터는 <code>OOMOL_CONNECT_DATABASE_URL</code>을 PostgreSQL로 설정하세요.
+        <br><br>
+        <strong>가격:</strong> Free 플랜은 공개 HTTPS URL이 있는 활성 배포 1개를 포함하며 신용카드가 필요
+        없습니다. 테스트 배포는 자동으로 만료됩니다. Starter는 월 $29로 활성 배포 2개와 커스텀 도메인, Pro는
+        월 $149로 5개입니다. 각 앱은 512 MB RAM을 사용합니다.
+        <a href="https://nexusai.run/pricing">NEXUS AI 가격</a>을 참고하세요.
+      </td>
+      <td valign="middle" align="center">
+        <a href="https://nexusai.run/deploy?repo=https%3A%2F%2Fgithub.com%2Foomol-lab%2Fopen-connector&amp;dockerfile=docker%2FDockerfile&amp;env=OOMOL_CONNECT_ORIGIN%3D%7Burl%7D&amp;require=OOMOL_CONNECT_ADMIN_TOKEN&amp;generate=OOMOL_CONNECT_ENCRYPTION_KEY&amp;generate=OOMOL_CONNECT_RUNTIME_TOKEN&amp;template=open-connector"><strong>원클릭 배포</strong></a>
+      </td>
+    </tr>
   </tbody>
 </table>

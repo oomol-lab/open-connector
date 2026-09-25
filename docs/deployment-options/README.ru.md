@@ -103,5 +103,31 @@
         <a href="https://app.nibrun.com/deploy?name=open-connector&amp;binary=https%3A%2F%2Fgithub.com%2Foomol-lab%2Fopen-connector%2Freleases%2Flatest%2Fdownload%2Fopen-connector-linux-x64&amp;port=3000&amp;env=HOST%3D0.0.0.0&amp;env=OOMOL_CONNECT_DATA_DIR%3D%24%7BNIBRUN_DATA_DIR%7D&amp;env=OOMOL_CONNECT_ORIGIN%3Dhttps%3A%2F%2F%24%7BNIBRUN_HOSTNAME%7D&amp;env=OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS%3Dtrue&amp;env=OOMOL_CONNECT_ENCRYPTION_KEY&amp;env=OOMOL_CONNECT_ADMIN_TOKEN&amp;env=OOMOL_CONNECT_RUNTIME_TOKEN"><strong>Развернуть в один клик</strong></a>
       </td>
     </tr>
+    <tr>
+      <td valign="middle" align="center">
+        <a href="https://nexusai.run/"><img src="../../assets/deployment-options/nexus-ai.svg" alt="NEXUS AI" width="140"></a>
+      </td>
+      <td valign="top">
+        Собирает <code>docker/Dockerfile</code> репозитория в контейнер с собственным HTTPS URL. Ссылка
+        развертывания задает <code>OOMOL_CONNECT_ORIGIN</code> равным этому URL, запрашивает admin token в
+        форме и генерирует ключ шифрования и runtime token, поэтому Web Console и все API требуют
+        аутентификации с первого запуска. Секреты вводятся в форме или генерируются на сервере и никогда не
+        попадают в ссылку.
+        <br><br>
+        <strong>Преимущества:</strong> развертывание из исходного кода в один клик, логи и повторные
+        развертывания в одной панели и собственные домены на платных тарифах. База SQLite хранится в
+        контейнере: она переживает перезапуски, но не пересборки, поэтому для долговременных данных задайте
+        <code>OOMOL_CONNECT_DATABASE_URL</code> на PostgreSQL.
+        <br><br>
+        <strong>Цена:</strong> тариф Free включает 1 активное развертывание с публичным HTTPS URL без
+        банковской карты; тестовые развертывания истекают автоматически. Starter стоит $29/месяц за
+        2 активных развертывания и собственные домены, Pro стоит $149/месяц за 5. Каждое приложение получает
+        512 MB RAM. См.
+        <a href="https://nexusai.run/pricing">тарифы NEXUS AI</a>.
+      </td>
+      <td valign="middle" align="center">
+        <a href="https://nexusai.run/deploy?repo=https%3A%2F%2Fgithub.com%2Foomol-lab%2Fopen-connector&amp;dockerfile=docker%2FDockerfile&amp;env=OOMOL_CONNECT_ORIGIN%3D%7Burl%7D&amp;require=OOMOL_CONNECT_ADMIN_TOKEN&amp;generate=OOMOL_CONNECT_ENCRYPTION_KEY&amp;generate=OOMOL_CONNECT_RUNTIME_TOKEN&amp;template=open-connector"><strong>Развернуть в один клик</strong></a>
+      </td>
+    </tr>
   </tbody>
 </table>
