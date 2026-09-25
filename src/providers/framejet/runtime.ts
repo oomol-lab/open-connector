@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderFetch } from "../provider-runtime.ts";
 
 import { createHmac } from "node:crypto";
-import { optionalRecord, optionalString } from "../../core/cast.ts";
+import { optionalIntegerOrNull, optionalRecord, optionalString } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
 import {
   providerInputError,
@@ -94,7 +94,6 @@ async function takeFramejetScreenshot(
       const mimeType = response.headers.get("content-type")?.split(";")[0]?.trim() || "image/png";
       const name = mimeType === "image/jpeg" ? "framejet-screenshot.jpg" : "framejet-screenshot.png";
       const upload = await transitFiles.create(new File([Uint8Array.from(bytes)], name, { type: mimeType }));
-      const remaining = response.headers.get("x-framejet-remaining");
 
       return {
         file: {
@@ -105,7 +104,7 @@ async function takeFramejetScreenshot(
           mimeType: upload.mimeType,
         },
         cache: response.headers.get("x-framejet-cache") === "HIT" ? "HIT" : "MISS",
-        remaining: remaining === null ? null : Number(remaining),
+        remaining: optionalIntegerOrNull(response.headers.get("x-framejet-remaining")),
       };
     },
   );
