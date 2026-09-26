@@ -21,7 +21,13 @@ import {
 } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
 import { providerInputError } from "../provider-runtime.ts";
-import { discordbotRequest, discordbotRequestJson, discordbotRequestNoContent, requiredPath } from "./runtime.ts";
+import {
+  discordbotRequest,
+  discordbotRequestJson,
+  discordbotRequestJsonOrNull,
+  discordbotRequestNoContent,
+  requiredPath,
+} from "./runtime.ts";
 
 export const guildActionHandlers: ProviderActionHandlerSubset<"discordbot", DiscordbotActionHandler> = {
   get_guild(input, context) {
@@ -141,7 +147,7 @@ export const guildActionHandlers: ProviderActionHandlerSubset<"discordbot", Disc
     return addGuildMember(input, context);
   },
   modify_guild_member(input, context) {
-    return discordbotRequestJson({
+    return discordbotRequestJsonOrNull({
       method: "PATCH",
       path: memberPath(input),
       body: jsonObject({
@@ -155,7 +161,7 @@ export const guildActionHandlers: ProviderActionHandlerSubset<"discordbot", Disc
       }),
       auditLogReason: input.audit_log_reason,
       context,
-    });
+    }).then((member) => ({ member }));
   },
   modify_current_member(input, context) {
     return discordbotRequestJson({
@@ -414,7 +420,8 @@ export const guildActionHandlers: ProviderActionHandlerSubset<"discordbot", Disc
 };
 
 async function addGuildMember(input: Record<string, unknown>, context: DiscordbotContext): Promise<unknown> {
-  const response = await discordbotRequest({
+  // Discord answers 204 with no body when the user is already in the guild.
+  const member = await discordbotRequestJsonOrNull({
     method: "PUT",
     path: memberPath(input),
     body: jsonObject({
@@ -426,11 +433,7 @@ async function addGuildMember(input: Record<string, unknown>, context: Discordbo
     }),
     context,
   });
-  // Discord answers 204 with no body when the user is already in the guild.
-  if (response.status === 204) {
-    return { already_member: true, member: null };
-  }
-  return { already_member: false, member: await response.json() };
+  return { already_member: member === null, member };
 }
 
 async function getGuildWidgetPng(input: Record<string, unknown>, context: DiscordbotContext): Promise<unknown> {

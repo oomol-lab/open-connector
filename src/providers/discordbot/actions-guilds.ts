@@ -266,7 +266,11 @@ export const discordbotGuildActions: ActionDefinition[] = [
       },
       ["user_id"],
     ),
-    outputSchema: rawObjectSchema,
+    outputSchema: s.requiredObject("The modify guild member response.", {
+      member: s.nullable(
+        s.looseObject("The updated guild member, or null when Discord answers 204 No Content without a body.", {}),
+      ),
+    }),
   }),
   defineProviderAction(service, {
     name: "modify_current_member",

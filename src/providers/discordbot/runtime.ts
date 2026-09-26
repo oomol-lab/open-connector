@@ -27,12 +27,16 @@ export interface DiscordbotRequestOptions {
 
 /** Send a Discord request and parse the JSON response body. */
 export async function discordbotRequestJson(input: DiscordbotRequestOptions): Promise<unknown> {
+  return readDiscordbotJson(await discordbotRequest(input));
+}
+
+/**
+ * Send a Discord request whose success may be 200 with a JSON body or 204 with none,
+ * returning null for the 204.
+ */
+export async function discordbotRequestJsonOrNull(input: DiscordbotRequestOptions): Promise<unknown> {
   const response = await discordbotRequest(input);
-  try {
-    return (await response.json()) as unknown;
-  } catch {
-    throw new ProviderRequestError(502, "Discord returned invalid JSON");
-  }
+  return response.status === 204 ? null : readDiscordbotJson(response);
 }
 
 /** Send a Discord request that answers with 204 No Content. */
@@ -76,6 +80,14 @@ export async function discordbotRequest(input: DiscordbotRequestOptions): Promis
 /** Read a required snowflake input and encode it as one URL path segment. */
 export function requiredPath(value: unknown, field: string): string {
   return encodePathSegment(requiredString(value, field, providerInputError));
+}
+
+async function readDiscordbotJson(response: Response): Promise<unknown> {
+  try {
+    return (await response.json()) as unknown;
+  } catch {
+    throw new ProviderRequestError(502, "Discord returned invalid JSON");
+  }
 }
 
 async function toDiscordbotError(response: Response, authenticated: boolean): Promise<ProviderRequestError> {
