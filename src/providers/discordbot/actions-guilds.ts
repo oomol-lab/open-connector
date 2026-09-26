@@ -6,9 +6,14 @@ import { auditLogReasonSchema, binaryFileSchema, rawObjectSchema, snowflakeSchem
 
 const service = "discordbot";
 
+interface SnowflakeArrayOptions {
+  minItems?: number;
+  maxItems?: number;
+}
+
 const imageDataSchema = (description: string): JsonSchema =>
   s.nullableString(`${description} Pass a data URI such as data:image/png;base64,..., or null to remove it.`);
-const snowflakeArraySchema = (description: string, options: { maxItems?: number } = {}): JsonSchema =>
+const snowflakeArraySchema = (description: string, options: SnowflakeArrayOptions = {}): JsonSchema =>
   s.array(description, snowflakeSchema, options);
 const memberListLimitSchema = s.integer("The maximum number of members to return. Discord defaults to 1.", {
   minimum: 1,
@@ -371,7 +376,7 @@ export const discordbotGuildActions: ActionDefinition[] = [
     inputSchema: guildSchema(
       "Input parameters for banning several users.",
       {
-        user_ids: snowflakeArraySchema("The user ids to ban.", { maxItems: 200 }),
+        user_ids: snowflakeArraySchema("The user ids to ban.", { minItems: 1, maxItems: 200 }),
         delete_message_seconds: deleteMessageSecondsSchema,
         audit_log_reason: auditLogReasonSchema,
       },
