@@ -153,7 +153,7 @@ const actions: OutlookActionSource[] = [
     "read",
     "List the root-level Outlook mail folders for the connected mailbox, with optional hidden folders and field selection.",
     outlookReadScopes,
-    [outlookProviderScopes.mailReadWrite],
+    [outlookProviderScopes.mailRead],
     input({
       nextLink,
       includeHiddenFolders: s.boolean({ description: "Whether to include hidden mail folders." }),
@@ -167,7 +167,7 @@ const actions: OutlookActionSource[] = [
     "read",
     "List Outlook messages from the mailbox or from a specific mail folder, with support for OData filters, sorting, field selection, and pagination.",
     outlookReadScopes,
-    [outlookProviderScopes.mailReadWrite],
+    [outlookProviderScopes.mailRead],
     input({
       mailFolderId,
       top: s.integer({ minimum: 1, maximum: 1000, description: "Maximum number of messages to return." }),
@@ -190,7 +190,7 @@ const actions: OutlookActionSource[] = [
     "read",
     "Get a single Outlook message by message ID, including message metadata and optional body formatting.",
     outlookReadScopes,
-    [outlookProviderScopes.mailReadWrite],
+    [outlookProviderScopes.mailRead],
     input({ messageId, select: stringArray("Message fields to request from Microsoft Graph."), bodyContentType }, [
       "messageId",
     ]),
