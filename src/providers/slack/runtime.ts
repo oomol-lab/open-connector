@@ -277,7 +277,11 @@ async function slackGetChannelMessages(input: Record<string, unknown>, context: 
   }
   applySlackHistoryWindow(url, input);
 
-  return readSlackMessagePage(await slackGetJson<SlackMessagePagePayload>(url, context), "conversations.history");
+  return readSlackMessagePage(
+    await slackGetJson<SlackMessagePagePayload>(url, context),
+    "conversations.history",
+    readIncludeRaw(input),
+  );
 }
 
 async function slackConversationsMembers(
@@ -308,6 +312,7 @@ async function slackConversationsMembers(
 }
 
 async function slackSearchMessages(input: Record<string, unknown>, context: SlackActionContext): Promise<unknown> {
+  const includeRaw = readIncludeRaw(input);
   const query = requiredString(input.query, "query", (message) => new ProviderRequestError(400, message));
   if (input.page != null && input.cursor != null) {
     throw new ProviderRequestError(400, "page and cursor cannot be used together");
@@ -351,7 +356,7 @@ async function slackSearchMessages(input: Record<string, unknown>, context: Slac
 
   return {
     query: optionalString(payload.query) ?? query,
-    matches: (payload.messages?.matches ?? []).map((match) => normalizeSearchMessageMatch(match)),
+    matches: (payload.messages?.matches ?? []).map((match) => normalizeSearchMessageMatch(match, includeRaw)),
     total: typeof payload.messages?.total === "number" ? payload.messages.total : 0,
     pagination: payload.messages?.pagination ?? {},
     paging: payload.messages?.paging ?? {},
@@ -447,7 +452,11 @@ async function slackGetThread(input: Record<string, unknown>, context: SlackActi
   }
   applySlackHistoryWindow(url, input);
 
-  return readSlackMessagePage(await slackGetJson<SlackMessagePagePayload>(url, context), "conversations.replies");
+  return readSlackMessagePage(
+    await slackGetJson<SlackMessagePagePayload>(url, context),
+    "conversations.replies",
+    readIncludeRaw(input),
+  );
 }
 
 async function slackListConversations(input: Record<string, unknown>, context: SlackActionContext): Promise<unknown> {
@@ -1170,7 +1179,11 @@ interface SlackMessagePagePayload extends SlackPayloadError {
  * flattened into an empty result, so a broken upstream response cannot pass
  * for the documented end of a walk.
  */
-function readSlackMessagePage(payload: SlackMessagePagePayload, method: string): Record<string, unknown> {
+function readSlackMessagePage(
+  payload: SlackMessagePagePayload,
+  method: string,
+  includeRaw = false,
+): Record<string, unknown> {
   if (payload.has_more !== undefined && typeof payload.has_more !== "boolean") {
     throw slackResponseError(`${method} has_more`);
   }
@@ -1180,7 +1193,7 @@ function readSlackMessagePage(payload: SlackMessagePagePayload, method: string):
       if (!record) {
         throw slackResponseError(`${method} message`);
       }
-      return normalizeSlackMessage(record);
+      return normalizeSlackMessage(record, includeRaw);
     }),
     hasMore: payload.has_more ?? false,
     nextCursor: readSlackNextCursor(payload, method),
@@ -1224,6 +1237,14 @@ function requireSlackId(value: unknown, label: string): string {
 }
 
 /**
+ * Read the optional `includeRaw` input shared by the message-reading actions.
+ * Only a literal `true` opts in; the default stays the normalized row alone.
+ */
+function readIncludeRaw(input: Record<string, unknown>): boolean {
+  return input.includeRaw === true;
+}
+
+/**
  * Normalize one `conversations.history` / `conversations.replies` message.
  *
  * `ts` and `text` keep their previous always-present shape (an absent text is
@@ -1232,9 +1253,16 @@ function requireSlackId(value: unknown, label: string): string {
  * missing value stays distinguishable from an empty one. `userId` is the one
  * exception kept for compatibility: it stays `""` on a message with no
  * author, where `botId` / `username` carry the identity instead.
+ *
+ * `files`, `attachments`, `blocks` and `metadata` pass through exactly as
+ * Slack sent them: they are open vendor shapes, and re-modelling them would
+ * drop what an archive or analytics consumer needs kept. With `includeRaw`
+ * the whole untouched record rides along under `raw` for consumers that need
+ * every field, including ones this normalizer does not know about.
  */
-function normalizeSlackMessage(message: Record<string, unknown>): Record<string, unknown> {
+function normalizeSlackMessage(message: Record<string, unknown>, includeRaw = false): Record<string, unknown> {
   const edited = optionalRecord(message.edited) ?? {};
+  const root = optionalRecord(message.root) ?? {};
   const reactions = Array.isArray(message.reactions) ? message.reactions : undefined;
 
   return compactObject({
@@ -1249,14 +1277,32 @@ function normalizeSlackMessage(message: Record<string, unknown>): Record<string,
     clientMsgId: optionalString(message.client_msg_id),
     text: typeof message.text === "string" ? message.text : "",
     editedTs: optionalString(edited.ts),
+    editedUserId: optionalString(edited.user),
     threadTs: optionalString(message.thread_ts),
     parentUserId: optionalString(message.parent_user_id),
     replyCount: optionalInteger(message.reply_count),
     replyUsersCount: optionalInteger(message.reply_users_count),
+    replyUserIds: Array.isArray(message.reply_users) ? message.reply_users.map((user) => String(user)) : undefined,
     latestReply: optionalString(message.latest_reply),
+    rootTs: optionalString(root.ts),
     isLocked: optionalBoolean(message.is_locked),
     reactions: reactions?.map((reaction) => normalizeSlackReaction(optionalRecord(reaction) ?? {})),
+    ...slackMessagePayloadFields(message),
+    raw: includeRaw ? message : undefined,
   });
+}
+
+/**
+ * The open vendor payloads carried on a message row, untouched. Each is
+ * emitted only when Slack sent it, so an absent list stays absent.
+ */
+function slackMessagePayloadFields(message: Record<string, unknown>): Record<string, unknown> {
+  return {
+    files: Array.isArray(message.files) ? message.files : undefined,
+    attachments: Array.isArray(message.attachments) ? message.attachments : undefined,
+    blocks: Array.isArray(message.blocks) ? message.blocks : undefined,
+    metadata: optionalRecord(message.metadata),
+  };
 }
 
 function normalizeSlackReaction(reaction: Record<string, unknown>): Record<string, unknown> {
@@ -1267,7 +1313,7 @@ function normalizeSlackReaction(reaction: Record<string, unknown>): Record<strin
   });
 }
 
-function normalizeSearchMessageMatch(match: Record<string, unknown>): Record<string, unknown> {
+function normalizeSearchMessageMatch(match: Record<string, unknown>, includeRaw = false): Record<string, unknown> {
   const channel = optionalRecord(match.channel) ?? {};
 
   return compactObject({
@@ -1281,6 +1327,8 @@ function normalizeSearchMessageMatch(match: Record<string, unknown>): Record<str
     permalink: optionalString(match.permalink),
     teamId: optionalString(match.team),
     type: optionalString(match.type),
+    ...slackMessagePayloadFields(match),
+    raw: includeRaw ? match : undefined,
   });
 }
 

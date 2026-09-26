@@ -485,8 +485,14 @@ describe("message normalization", () => {
               reply_users_count: 1,
               latest_reply: "1700000100.000000",
               is_locked: true,
+              reply_users: ["U1", "U2"],
               reactions: [{ name: "tada", count: 2, users: ["U1", "U2"] }],
               blocks: [{ type: "section" }],
+              attachments: [{ fallback: "release notes", color: "#36a64f" }],
+              files: [{ id: "F0G9QF9C6", name: "notes.txt", mimetype: "text/plain" }],
+              metadata: { event_type: "deploy", event_payload: { sha: "abc123" } },
+              root: { ts: "1699999999.000000", user: "U023BECGF", text: "parent" },
+              is_starred: true,
             },
           ],
         }),
@@ -513,18 +519,120 @@ describe("message normalization", () => {
       clientMsgId: "3d1b0a3e-0000-4000-8000-000000000000",
       text: "shipped",
       editedTs: "1700000001.000000",
+      editedUserId: "U023BECGF",
       threadTs: "1700000000.123456",
       parentUserId: "U023BECGF",
       replyCount: 2,
       replyUsersCount: 1,
+      replyUserIds: ["U1", "U2"],
       latestReply: "1700000100.000000",
+      rootTs: "1699999999.000000",
       isLocked: true,
       reactions: [{ name: "tada", count: 2, userIds: ["U1", "U2"] }],
+      files: [{ id: "F0G9QF9C6", name: "notes.txt", mimetype: "text/plain" }],
+      attachments: [{ fallback: "release notes", color: "#36a64f" }],
+      blocks: [{ type: "section" }],
+      metadata: { event_type: "deploy", event_payload: { sha: "abc123" } },
     });
-    // Declared but unsent fields are omitted rather than emitted empty, so a
-    // reader can tell "Slack said nothing" from "Slack said nothing here".
-    expect(result.output.messages[0]).not.toHaveProperty("blocks");
+    // An undeclared Slack field is not emitted, and the untouched record only
+    // rides along when the caller opted in with includeRaw.
+    expect(result.output.messages[0]).not.toHaveProperty("isStarred");
+    expect(result.output.messages[0]).not.toHaveProperty("is_starred");
+    expect(result.output.messages[0]).not.toHaveProperty("raw");
   });
+
+  const rawMessage = {
+    type: "message",
+    ts: "1700000000.123456",
+    user: "U023BECGF",
+    text: "see attached",
+    edited: { user: "U0G9QF9C6", ts: "1700000001.000000" },
+    files: [{ id: "F0G9QF9C6", name: "notes.txt" }],
+    blocks: [{ type: "section", text: { type: "mrkdwn", text: "see attached" } }],
+    is_starred: true,
+    pinned_to: ["C024BE91L"],
+  };
+  const rawMatch = {
+    iid: "9e4d2d5c-0000-4000-8000-000000000000",
+    channel: { id: "C024BE91L", name: "general", is_private: false },
+    ts: "1700000000.123456",
+    user: "U023BECGF",
+    username: "alice",
+    text: "see attached",
+    permalink: "https://example.slack.com/archives/C024BE91L/p1700000000123456",
+    team: "T024BE7LD",
+    type: "message",
+    score: 0.98,
+    files: [{ id: "F0G9QF9C6", name: "notes.txt" }],
+    attachments: [{ fallback: "release notes" }],
+  };
+
+  it.each([
+    {
+      actionId: "slack.get_channel_messages",
+      input: { channelId: "C024BE91L" },
+      payload: { ok: true, has_more: false, messages: [rawMessage] },
+      list: "messages",
+      record: rawMessage,
+    },
+    {
+      actionId: "slack.get_thread",
+      input: { channelId: "C024BE91L", threadTs: "1700000000.123456" },
+      payload: { ok: true, has_more: false, messages: [rawMessage] },
+      list: "messages",
+      record: rawMessage,
+    },
+    {
+      actionId: "slack.search_messages",
+      input: { query: "attached" },
+      payload: { ok: true, query: "attached", messages: { matches: [rawMatch], total: 1 } },
+      list: "matches",
+      record: rawMatch,
+    },
+  ] as const)(
+    "$actionId returns the untouched record under raw only when includeRaw is true",
+    async ({ actionId, input, payload, list, record }) => {
+      const action = slackActions.find((candidate) => candidate.id === actionId)!;
+      expect(validateActionInput(action, { ...input, includeRaw: true }).valid).toBe(true);
+      expect(validateActionInput(action, { ...input, includeRaw: "yes" }).valid).toBe(false);
+
+      const execute = slackExecutors[actionId]!;
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => Response.json(payload)),
+      );
+      const context: ExecutionContext = {
+        getCredential: async () => apiKeyCredential("xoxb-bot-token"),
+      };
+
+      const withRaw = (await execute({ ...input, includeRaw: true }, context)) as {
+        ok: true;
+        output: Record<string, Array<Record<string, unknown>>>;
+      };
+      expect(withRaw.ok).toBe(true);
+      const row = withRaw.output[list]![0]!;
+      // The whole vendor record, including fields the normalizer never models.
+      expect(row.raw).toEqual(record);
+      // The normalized fields stay beside it, unchanged by the opt-in.
+      expect(row).toMatchObject({
+        ts: "1700000000.123456",
+        userId: "U023BECGF",
+        text: "see attached",
+        files: [{ id: "F0G9QF9C6", name: "notes.txt" }],
+      });
+      expect(new Validator(action.outputSchema).validate(withRaw.output).valid).toBe(true);
+
+      for (const plain of [input, { ...input, includeRaw: false }]) {
+        const withoutRaw = (await execute(plain, context)) as {
+          ok: true;
+          output: Record<string, Array<Record<string, unknown>>>;
+        };
+        expect(withoutRaw.ok).toBe(true);
+        expect(withoutRaw.output[list]![0]).not.toHaveProperty("raw");
+        expect(withoutRaw.output[list]![0]).toMatchObject({ files: [{ id: "F0G9QF9C6", name: "notes.txt" }] });
+      }
+    },
+  );
 
   it("omits every optional field on a bare message", async () => {
     const execute = slackExecutors["slack.get_channel_messages"]!;
@@ -567,9 +675,17 @@ describe("message normalization", () => {
             ts: "1700000000.123456",
             userId: "U023BECGF",
             text: "hi",
+            editedUserId: "U0G9QF9C6",
             threadTs: "1700000000.123456",
             replyCount: 2,
+            replyUserIds: ["U1"],
+            rootTs: "1699999999.000000",
             reactions: [{ name: "tada", count: 2, userIds: ["U1"] }],
+            files: [{ id: "F0G9QF9C6" }],
+            attachments: [{ fallback: "release notes" }],
+            blocks: [{ type: "section" }],
+            metadata: { event_type: "deploy" },
+            raw: { ts: "1700000000.123456", user: "U023BECGF", text: "hi" },
           },
         ],
         hasMore: false,
