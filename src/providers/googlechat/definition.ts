@@ -8,13 +8,17 @@ const service = "googlechat";
 /**
  * Google Chat provider backed by the Chat API and a user-provided Google OAuth app.
  *
- * Scoped to read-only space and message history access, which the Chat API
- * supports under user authentication.
+ * Scoped to space and message history reads plus plain-text message creation,
+ * which is what the Chat API supports under user authentication. Message
+ * creation uses the Sensitive-tier chat.messages.create scope rather than the
+ * Restricted-tier chat.messages, so update, delete, and reaction access is never
+ * requested.
  */
 export const provider: ProviderDefinition = {
   service,
   displayName: "Google Chat",
-  description: "Read Google Chat spaces and message history as the authenticated Google Workspace user.",
+  description:
+    "Read Google Chat spaces and message history, name members and message senders through the Workspace directory, and send plain-text messages, as the authenticated Google Workspace user. Sending and naming require an OAuth user connection: service account connections only read spaces and messages.",
   categories: ["Communication", "Productivity"],
   authTypes: ["oauth2", "custom_credential"],
   auth: [
