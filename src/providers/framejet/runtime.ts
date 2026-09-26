@@ -22,6 +22,9 @@ const framejetCaptureTimeoutMs = 90_000;
 
 const framejetCaptureParams = ["format", "full_page", "width", "height", "dpr", "clean", "delay", "actions"];
 
+// Framejet caps each value at 200 characters, which the schema enforces, and the joined list at 1000.
+const framejetMaxValuesLength = 1000;
+
 type FramejetActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const framejetActionHandlers: ProviderActionHandlers<"framejet", FramejetActionHandler> = {
@@ -76,8 +79,14 @@ async function takeFramejetScreenshot(
     throw new ProviderRequestError(500, "take_screenshot requires transit file storage");
   }
 
+  const query = buildFramejetQuery(input, ["goal", "values", "cache"]);
+  if ([...(query.get("values") ?? "")].length > framejetMaxValuesLength) {
+    throw providerInputError(
+      `values must total at most ${framejetMaxValuesLength} characters, including the | separators`,
+    );
+  }
   const url = new URL("/v1/take", framejetApiBaseUrl);
-  url.search = buildFramejetQuery(input, ["goal", "values", "cache"]).toString();
+  url.search = query.toString();
 
   return runProviderRequest(
     { signal: context.signal, label: "Framejet", timeoutMs: framejetCaptureTimeoutMs },

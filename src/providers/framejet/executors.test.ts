@@ -1,6 +1,8 @@
 import type { ExecutionContext, TransitFileStore } from "../../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { validateActionInput } from "../../core/validation.ts";
+import { framejetActions } from "./actions.ts";
 import { credentialValidators, executors } from "./executors.ts";
 
 const apiKey = "fj_test_key";
@@ -68,6 +70,26 @@ function imageResponse(headers: Record<string, string> = {}): Response {
     headers: { "content-type": "image/png", ...headers },
   });
 }
+
+function framejetAction(name: string) {
+  return framejetActions.find((action) => action.name === name)!;
+}
+
+describe("framejet action schemas", () => {
+  it.each([["take_screenshot"], ["create_signed_url"]])("caps %s actions at 1000 characters", (name) => {
+    const action = framejetAction(name);
+
+    expect(validateActionInput(action, { url: "https://example.com", actions: "x".repeat(1000) }).valid).toBe(true);
+    expect(validateActionInput(action, { url: "https://example.com", actions: "x".repeat(1001) }).valid).toBe(false);
+  });
+
+  it("caps each goal value at 200 characters", () => {
+    const action = framejetAction("take_screenshot");
+
+    expect(validateActionInput(action, { url: "https://example.com", values: ["x".repeat(200)] }).valid).toBe(true);
+    expect(validateActionInput(action, { url: "https://example.com", values: ["x".repeat(201)] }).valid).toBe(false);
+  });
+});
 
 describe("framejet.take_screenshot", () => {
   it("sends capture options as query parameters and stores the image in transit storage", async () => {
@@ -140,6 +162,37 @@ describe("framejet.take_screenshot", () => {
     );
 
     expect(result).toMatchObject({ ok: true, output: { remaining: null } });
+  });
+
+  it("sends goal values that total exactly 1000 characters", async () => {
+    const requests = stubFetch(() => imageResponse());
+
+    const result = await executors["framejet.take_screenshot"]!(
+      { url: "https://example.com", values: ["x".repeat(499), "y".repeat(500)] },
+      executionContext(transitStore([])),
+    );
+
+    expect(result).toMatchObject({ ok: true });
+    expect(requests[0]!.url.searchParams.get("values")).toHaveLength(1000);
+  });
+
+  it("rejects goal values over 1000 characters once joined, before any request", async () => {
+    const requests = stubFetch(() => imageResponse());
+
+    const result = await executors["framejet.take_screenshot"]!(
+      { url: "https://example.com", values: Array.from({ length: 10 }, () => "x".repeat(150)) },
+      executionContext(transitStore([])),
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message: "values must total at most 1000 characters, including the | separators",
+        details: { status: 400 },
+      },
+    });
+    expect(requests).toEqual([]);
   });
 
   it("rejects an image larger than the transit limit", async () => {
