@@ -48,6 +48,13 @@ const importance = s.stringEnum(["low", "normal", "high"], { description: "Messa
 const messageId = nonEmptyString("Outlook message ID.");
 const mailFolderId = nonEmptyString("Outlook mail folder ID.");
 const nextLink = s.url("Opaque pagination URL returned by a previous Outlook response.");
+const deltaLink = s.url(
+  "Opaque delta URL (deltaLink) returned by a previous delta round; starts the next round of changes for the same mail folder. Ignored when nextLink is set.",
+);
+const delta = s.boolean({
+  description:
+    "Track changes in a mail folder with a Microsoft Graph delta query instead of listing it; requires mailFolderId because Graph tracks message changes per folder. The first round returns every message, later rounds (started with deltaLink) return only additions, updates and removals (rows carrying @removed). Graph accepts top and select on delta queries but only filter on receivedDateTime (ge or gt) and orderby receivedDateTime desc.",
+});
 const outlookUser = s.looseObject(
   {
     id: nonEmptyString("Unique identifier for the current account."),
@@ -128,8 +135,11 @@ const listMessagesOutput = s.object(
   {
     messages: s.array(outlookMessage, { description: "Messages returned by Outlook." }),
     nextLink: s.nullableString("Pagination URL for the next page, or null when there is no next page."),
+    deltaLink: s.nullableString(
+      "Delta URL for the next round of changes once a delta round is complete, or null (always null for plain listings).",
+    ),
   },
-  { required: ["messages", "nextLink"], description: "Outlook message list response." },
+  { required: ["messages", "nextLink", "deltaLink"], description: "Outlook message list response." },
 );
 const listFoldersOutput = s.object(
   {
@@ -181,6 +191,8 @@ const actions: OutlookActionSource[] = [
       }),
       select: stringArray("Message fields to request from Microsoft Graph."),
       nextLink,
+      delta,
+      deltaLink,
       bodyContentType,
     }),
     listMessagesOutput,

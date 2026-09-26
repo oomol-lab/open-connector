@@ -22,6 +22,12 @@ const stringArray = (description: string): JsonSchema => s.stringArray(descripti
 const calendarId = nonEmptyString("Outlook calendar ID.");
 const eventId = nonEmptyString("Outlook event ID.");
 const nextLink = s.url("Opaque Microsoft Graph pagination URL returned by a previous call.");
+const deltaLink = s.url(
+  "Opaque delta URL (deltaLink) returned by a previous calendar view delta round; starts the next round of changes for the same range. Ignored when nextLink is set.",
+);
+const delta = s.boolean(
+  "Track changes with a Microsoft Graph delta query (calendarView/delta) instead of listing: the first round returns every occurrence in the range, later rounds (started with deltaLink) return only additions, updates and removals (rows carrying @removed). Graph does not support select, filter, orderby or expand on calendar view delta queries.",
+);
 const select = stringArray("Microsoft Graph fields to include in the response.");
 const timeZone = nonEmptyString("Windows time zone name used for returned date-time values.");
 const dateTimeTimeZone = s.object(
@@ -164,8 +170,11 @@ const listEventsOutput = s.object(
   {
     events: s.array(event, { description: "Events returned by Microsoft Graph." }),
     nextLink: s.nullableString("Next-page URL, or null when no page remains."),
+    deltaLink: s.nullableString(
+      "Delta URL for the next round of changes once a calendar view delta round is complete, or null (always null for plain listings).",
+    ),
   },
-  { required: ["events", "nextLink"], description: "Paginated Outlook event response." },
+  { required: ["events", "nextLink", "deltaLink"], description: "Paginated Outlook event response." },
 );
 const scheduleInformation = s.looseObject(
   {
@@ -264,6 +273,8 @@ const actions: OutlookCalendarActionSource[] = [
         startDateTime: s.dateTime("Inclusive range start as an ISO 8601 timestamp."),
         endDateTime: s.dateTime("Exclusive range end as an ISO 8601 timestamp."),
         ...listQueryFields,
+        delta,
+        deltaLink,
       },
       ["startDateTime", "endDateTime"],
     ),

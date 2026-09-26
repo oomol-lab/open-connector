@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, requiredRecord } from "../../core/cast.ts";
-import { defineOAuthProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineOAuthProviderExecutors,
+  defineProviderProxy,
+  providerInputError,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 import { microsoftGraphJson, microsoftGraphRequest } from "./microsoft-graph.ts";
 
 const outlookGraphBaseUrl = "https://graph.microsoft.com/v1.0";
@@ -128,6 +133,14 @@ function isAllowedOutlookMessageNextLinkPath(pathname: string) {
   const normalizedPath = trimTrailingSlash(pathname);
   const segments = normalizedPath.split("/").filter(Boolean);
 
+  // Delta continuation links (@odata.nextLink inside a delta round and
+  // @odata.deltaLink) end in a trailing `delta` segment on the two
+  // folder-scoped message-collection shapes. Graph tracks message changes per
+  // folder, so `/v1.0/me/messages/delta` is not admitted.
+  if (segments.length > 4 && segments[segments.length - 1] === "delta") {
+    segments.pop();
+  }
+
   if (segments[0] !== "v1.0") {
     return false;
   }
@@ -212,14 +225,27 @@ async function listMailFolders(input: Record<string, unknown>, { accessToken, fe
 }
 
 async function listMessages(input: Record<string, unknown>, { accessToken, fetcher }: OutlookRuntimeDeps) {
-  const pathOrUrl =
+  // A nextLink continues the current page sequence; a deltaLink starts the
+  // next delta round. Both are opaque Graph URLs checked by the allowlist.
+  const followUpLink =
     typeof input.nextLink === "string"
       ? input.nextLink
-      : typeof input.mailFolderId === "string"
-        ? `me/mailFolders/${encodeURIComponent(input.mailFolderId)}/messages`
-        : "me/messages";
+      : typeof input.deltaLink === "string"
+        ? input.deltaLink
+        : undefined;
+  const folderPath =
+    typeof input.mailFolderId === "string"
+      ? `me/mailFolders/${encodeURIComponent(input.mailFolderId)}/messages`
+      : undefined;
+  // Graph tracks message changes per folder: there is no mailbox-wide
+  // messages/delta, so a delta listing needs a folder.
+  if (followUpLink === undefined && input.delta === true && folderPath === undefined) {
+    throw providerInputError("mailFolderId is required when delta is true.");
+  }
+  const collectionPath = folderPath ?? "me/messages";
+  const pathOrUrl = followUpLink ?? (input.delta === true ? `${collectionPath}/delta` : collectionPath);
   const query =
-    typeof input.nextLink === "string"
+    followUpLink !== undefined
       ? undefined
       : compactObject({
           $top: typeof input.top === "number" ? String(input.top) : undefined,
@@ -237,6 +263,7 @@ async function listMessages(input: Record<string, unknown>, { accessToken, fetch
   const payload = await outlookJsonRequest<{
     value?: unknown[];
     "@odata.nextLink"?: unknown;
+    "@odata.deltaLink"?: unknown;
   }>(pathOrUrl, {
     accessToken,
     fetcher,
@@ -244,9 +271,11 @@ async function listMessages(input: Record<string, unknown>, { accessToken, fetch
     headers,
   });
 
+  // Rows stay raw: a delta round reports removals as `{ id, "@removed": {...} }`.
   return {
     messages: Array.isArray(payload.value) ? payload.value : [],
     nextLink: typeof payload["@odata.nextLink"] === "string" ? payload["@odata.nextLink"] : null,
+    deltaLink: typeof payload["@odata.deltaLink"] === "string" ? payload["@odata.deltaLink"] : null,
   };
 }
 
