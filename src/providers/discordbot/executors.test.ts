@@ -107,12 +107,29 @@ describe("Discord guild actions", () => {
   // An empty list would send a blank `include_roles=` query value, which is not the
   // documented comma-delimited snowflake list; omitting the field is the way to ask
   // for the default.
-  it.each(["get_guild_prune_count", "begin_guild_prune"])("rejects an empty include_roles list for %s", (name) => {
-    const action = discordbotGuildActions.find((candidate) => candidate.name === name)!;
+  it("rejects an empty include_roles list for get_guild_prune_count", () => {
+    const action = discordbotGuildActions.find((candidate) => candidate.name === "get_guild_prune_count")!;
 
     expect(validateActionInput(action, { guild_id: "10", include_roles: [] }).valid).toBe(false);
     expect(validateActionInput(action, { guild_id: "10", include_roles: ["1"] }).valid).toBe(true);
     expect(validateActionInput(action, { guild_id: "10" }).valid).toBe(true);
+  });
+
+  // Begin Guild Prune takes include_roles as a JSON array in the body, so an empty
+  // array is still a valid snowflake list and matches the documented default of none.
+  it("sends an empty include_roles list in the begin_guild_prune body", async () => {
+    const action = discordbotGuildActions.find((candidate) => candidate.name === "begin_guild_prune")!;
+    const input = { guild_id: "10", days: 7, include_roles: [] };
+    expect(validateActionInput(action, input).valid).toBe(true);
+    const fetch = stubDiscord(() => Response.json({ pruned: 2 }));
+
+    const result = await run("begin_guild_prune", input);
+
+    expect(result).toEqual({ ok: true, output: { pruned: 2 } });
+    const [url, init] = fetch.mock.calls[0]!;
+    expect(url.toString()).toBe("https://discord.com/api/v10/guilds/10/prune");
+    expect(init?.method).toBe("POST");
+    expect(JSON.parse(String(init?.body))).toEqual({ days: 7, include_roles: [] });
   });
 });
 
