@@ -1,7 +1,7 @@
 import type { ExecutionContext } from "../../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { executors } from "./executors.ts";
+import { executors, proxy } from "./executors.ts";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -39,7 +39,7 @@ describe("Discord guild actions", () => {
 
     expect(result).toEqual({ ok: true, output: { success: true } });
     const [url, init] = fetch.mock.calls[0]!;
-    expect(url.toString()).toBe("https://discord.com/api/guilds/10/members/20");
+    expect(url.toString()).toBe("https://discord.com/api/v10/guilds/10/members/20");
     expect(init?.method).toBe("DELETE");
     const headers = new Headers(init?.headers);
     expect(headers.get("authorization")).toBe("Bot bot-token");
@@ -98,8 +98,30 @@ describe("Discord guild actions", () => {
 
     expect(result).toEqual({ ok: true, output: { pruned: 3 } });
     expect(fetch.mock.calls[0]![0].toString()).toBe(
-      "https://discord.com/api/guilds/10/prune?days=14&include_roles=1%2C2",
+      "https://discord.com/api/v10/guilds/10/prune?days=14&include_roles=1%2C2",
     );
+  });
+});
+
+describe("Discord API version", () => {
+  it.each([
+    ["delete_guild_role", { guild_id: "10", role_id: "30" }, "https://discord.com/api/v10/guilds/10/roles/30"],
+    ["create_message", { channel_id: "40", content: "hi" }, "https://discord.com/api/v10/channels/40/messages"],
+  ])("pins %s to API v10", async (action, input, expected) => {
+    const fetch = stubDiscord(() => Response.json({ id: "50" }));
+
+    await run(action, input);
+
+    expect(fetch.mock.calls[0]![0].toString()).toBe(expected);
+  });
+
+  it("keeps the proxy on the unversioned base so existing proxy paths resolve as before", async () => {
+    const fetch = stubDiscord(() => Response.json({ id: "20" }));
+
+    const result = await proxy({ method: "GET", endpoint: "/users/@me" }, context);
+
+    expect(result.ok).toBe(true);
+    expect(fetch.mock.calls[0]![0].toString()).toBe("https://discord.com/api/users/@me");
   });
 });
 

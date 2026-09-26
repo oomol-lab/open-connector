@@ -13,7 +13,7 @@ import {
 } from "../provider-runtime.ts";
 import { guildActionHandlers } from "./runtime-guilds.ts";
 import {
-  discordApiBaseUrl,
+  discordProxyBaseUrl,
   discordbotRequest,
   discordbotRequestJson,
   discordbotRequestNoContent,
@@ -103,7 +103,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
-  baseUrl: discordApiBaseUrl,
+  baseUrl: discordProxyBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bot " },
 });
 

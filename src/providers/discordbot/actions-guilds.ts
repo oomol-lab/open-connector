@@ -268,7 +268,7 @@ export const discordbotGuildActions: ActionDefinition[] = [
     ),
     outputSchema: s.requiredObject("The modify guild member response.", {
       member: s.nullable(
-        s.looseObject("The updated guild member, or null when Discord answers 204 No Content without a body.", {}),
+        s.looseObject("The updated guild member, or null only if Discord answers 204 No Content.", {}),
       ),
     }),
   }),

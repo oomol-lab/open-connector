@@ -1,7 +1,13 @@
 import { optionalString } from "../../core/cast.ts";
 import { providerInputError, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
-export const discordApiBaseUrl = "https://discord.com/api";
+// Pin actions to v10. An unversioned route goes to Discord's default version, which is
+// still the deprecated v6: 31-bit numeric permissions, no threads, and a 204 without the
+// member from Modify Guild Member.
+const discordRestBaseUrl = "https://discord.com/api/v10";
+// The proxy stays unversioned so existing proxy paths, including ones that already
+// start with a version such as /v10, keep resolving as before.
+export const discordProxyBaseUrl = "https://discord.com/api";
 
 export interface DiscordbotContext {
   apiKey: string;
@@ -46,7 +52,7 @@ export async function discordbotRequestNoContent(input: DiscordbotRequestOptions
 
 /** Send a Discord request, mapping non-2xx responses to provider errors unless `skipError` is set. */
 export async function discordbotRequest(input: DiscordbotRequestOptions): Promise<Response> {
-  const url = new URL(`${discordApiBaseUrl}${input.path}`);
+  const url = new URL(`${discordRestBaseUrl}${input.path}`);
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) {
       url.searchParams.set(key, String(value));
