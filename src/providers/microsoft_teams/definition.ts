@@ -18,7 +18,7 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize",
       tokenUrl: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
       scopes: microsoftTeamsOAuthScopes,
-      tokenEndpointAuthMethod: "client_secret_post",
+      tokenEndpointAuthMethod: "none",
       pkce: { method: "S256" },
       authorizationParams: { response_mode: "query" },
       clientConfigFields: [
@@ -36,9 +36,9 @@ export const provider: ProviderDefinition = {
       clientSetup: {
         docsUrl: "https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app",
         steps: [
-          "Register a multitenant web application in Microsoft Entra ID and add the callback URL shown by this runtime.",
+          "Register a multitenant application in Microsoft Entra ID.",
           "Add the Microsoft Graph delegated permissions listed by this provider; ChannelMessage.Read.All requires tenant administrator consent.",
-          "Create a client secret and save its value with the application client ID in this runtime.",
+          "Add the Mobile and desktop applications platform with the callback URL shown by this runtime and allow public client flows; the runtime redeems codes with PKCE, so save only the application client ID and leave Client Secret empty.",
         ],
       },
     },

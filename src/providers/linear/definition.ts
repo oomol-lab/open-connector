@@ -20,7 +20,10 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://api.linear.app/oauth/token",
       scopes: linearOAuthScopes,
       scopeSeparator: ",",
-      tokenEndpointAuthMethod: "client_secret_post",
+      // Public client: Linear documents client_secret as optional for a PKCE exchange and for
+      // refreshing PKCE-issued tokens, so no secret ships with the app.
+      tokenEndpointAuthMethod: "none",
+      pkce: { method: "S256" },
       authorizationParams: {},
     },
     {

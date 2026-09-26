@@ -645,7 +645,10 @@ describe("OAuthFlowService", () => {
         const tenant = body.get("code");
         expect(["tenant-a", "tenant-b"]).toContain(tenant);
         expect(body.get("client_id")).toBe(`${tenant}-client`);
-        expect(body.get("client_secret")).toBe(`${tenant}-secret`);
+        // A public client: the configured secret is never posted; the PKCE
+        // verifier the authorization started with is.
+        expect(body.get("client_secret")).toBeNull();
+        expect(body.get("code_verifier")).toMatch(/^[A-Za-z0-9_-]+$/);
         expect(body.get("redirect_uri")).toBe("http://localhost:3000/oauth/callback");
         return Response.json({
           ok: true,
@@ -669,6 +672,8 @@ describe("OAuthFlowService", () => {
       expect(url.searchParams.get("client_id")).toBe(`${tenant}-client`);
       expect(url.searchParams.get("scope")?.split(",").sort()).toEqual([...requestedScopes].sort());
       expect(url.searchParams.has("client_secret")).toBe(false);
+      expect(url.searchParams.get("code_challenge_method")).toBe("S256");
+      expect(url.searchParams.get("code_challenge")).toMatch(/^[A-Za-z0-9_-]+$/);
       expect(url.searchParams.has("user_scope")).toBe(false);
       attempts.push({ tenant, started });
     }
