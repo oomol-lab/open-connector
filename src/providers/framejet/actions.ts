@@ -32,7 +32,13 @@ const screenshotInputSchema = s.object(
       "A plain-language description of the page state to reach before the capture. Example: the pricing table with yearly billing selected",
       { maxLength: 300 },
     ),
-    values: s.stringArray("Exact strings goal mode may type into the page.", { maxItems: 10 }),
+    values: s.array(
+      "Exact strings goal mode may type into the page.",
+      s.nonEmptyString("One exact string. It cannot contain |, which Framejet uses to separate values.", {
+        pattern: "^[^|]+$",
+      }),
+      { maxItems: 10 },
+    ),
     cache: s.boolean(
       "Whether an identical earlier capture may be returned without spending a screenshot. Defaults to true.",
     ),
