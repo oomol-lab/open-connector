@@ -15,6 +15,12 @@ export type OAuthClientConfig = {
   clientSecret: string;
   /** Non-empty provider-declared scope subset to request. Omit to use every provider default. */
   requestedScopes?: string[];
+  /**
+   * Absolute redirect URI registered with the provider in place of the runtime's
+   * `<origin>/oauth/callback`; any scheme (a custom app scheme, RFC 8252 §7.1).
+   * Omit to use the runtime callback.
+   */
+  redirectUri?: string;
   extra: Record<string, string>;
   secretExtra: Record<string, string>;
 };
@@ -24,6 +30,8 @@ export interface OAuthClientConfigInput {
   clientSecret: string;
   /** Non-empty provider-declared scope subset to request. Omit to use every provider default. */
   requestedScopes?: string[];
+  /** Absolute redirect URI override, any scheme. Omit to use the runtime callback. */
+  redirectUri?: string;
   extra?: Record<string, unknown>;
   secretExtra?: Record<string, unknown>;
 }
@@ -36,7 +44,10 @@ export interface OAuthClientConfigSummary {
   configured: boolean;
   customClientAvailable: boolean;
   clientId: string | null;
+  /** Redirect URI the provider must send the browser to: the configured override, else the runtime callback. */
   expectedRedirectUri: string;
+  /** Configured redirect URI override, or null when the runtime callback is used. */
+  redirectUri: string | null;
   /** Required client inputs absent from the stored configuration; never contains values. */
   missingFields: string[];
   auth: OAuth2AuthDefinition;
@@ -132,6 +143,7 @@ export class OAuthClientConfigService {
       clientId,
       clientSecret,
       requestedScopes: normalizeRequestedScopes(service, input.requestedScopes, auth.scopes),
+      redirectUri: normalizeRedirectUri(input.redirectUri),
       extra: normalizeCredentialValues({
         fields: filterClientConfigFields(auth.clientConfigFields, "extra"),
         values: pickClientConfigFieldValues(auth.clientConfigFields, submittedExtra, "extra"),
@@ -156,9 +168,13 @@ export class OAuthClientConfigService {
     return { service, configured: false };
   }
 
-  expectedRedirectUri(service: string): string {
+  /**
+   * The redirect URI an authorization request and its code exchange carry: the
+   * config's override when it has one, else the runtime's own callback route.
+   */
+  expectedRedirectUri(service: string, config?: Pick<OAuthClientConfig, "redirectUri">): string {
     this.getOAuthDefinition(service);
-    return `${this.origin}${OAuthClientConfigService.callbackPath}`;
+    return config?.redirectUri ?? `${this.origin}${OAuthClientConfigService.callbackPath}`;
   }
 
   resolveEndpointUrl(service: string, endpointUrl: string, config: OAuthClientConfig): string {
@@ -211,7 +227,8 @@ export class OAuthClientConfigService {
       configured: config != null,
       customClientAvailable: this.isCustomClientConfigAvailable(service),
       clientId: config?.clientId ?? null,
-      expectedRedirectUri: this.expectedRedirectUri(service),
+      expectedRedirectUri: this.expectedRedirectUri(service, config),
+      redirectUri: config?.redirectUri ?? null,
       missingFields: oauthClientFields(auth)
         .filter((field) => {
           if (!field.required) return false;
@@ -247,6 +264,7 @@ export function readOAuthClientConfigMetadata(
     clientId,
     clientSecret: optionalString(value?.clientSecret) ?? "",
     requestedScopes: optionalStringArray(value?.requestedScopes),
+    redirectUri: optionalString(value?.redirectUri),
     extra: readStringRecord(value?.extra),
     secretExtra: readStringRecord(value?.secretExtra),
   };
@@ -337,6 +355,36 @@ function normalizeRequestedScopes(
   }
 
   return normalized;
+}
+
+/**
+ * Validate a redirect URI override. It must be an absolute URL; the scheme is
+ * free (a native app registers a custom scheme with the provider) but user info
+ * and a fragment are not part of any registered redirect (RFC 6749 §3.1.2). The
+ * trimmed input is kept verbatim: the provider compares it byte for byte with
+ * the value registered on the OAuth app, so it is never re-serialized.
+ */
+function normalizeRedirectUri(value: string | undefined): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (typeof value !== "string") {
+    throw new OAuthClientConfigError("invalid_input", "redirectUri must be an absolute URL.");
+  }
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  let url: URL;
+  try {
+    url = new URL(trimmed);
+  } catch {
+    throw new OAuthClientConfigError("invalid_input", "redirectUri must be an absolute URL.");
+  }
+  if (!/^[a-z][a-z0-9+.-]*:$/i.test(url.protocol) || url.username || url.password || url.hash) {
+    throw new OAuthClientConfigError("invalid_input", "redirectUri must be an absolute URL.");
+  }
+  return trimmed;
 }
 
 /**

@@ -111,6 +111,64 @@ describe("headless runtime", () => {
     );
   });
 
+  it("carries a configured redirect URI override through setup, the authorize URL and the code exchange", async () => {
+    runtime = await createConnectorRuntime(await fixture());
+    expect((await (await request("/v1/providers/github/setup")).json()).data.oauthClient).toMatchObject({
+      expectedRedirectUri: `${publicOrigin}/oauth/callback`,
+      redirectUri: null,
+    });
+    const refused = await request(
+      "/api/oauth/configs/github",
+      { clientId: "fixture-client", clientSecret: "fixture-secret", redirectUri: "oauth/callback" },
+      "admin-token",
+      "PUT",
+    );
+    expect(refused.status).toBe(400);
+    await expect(refused.json()).resolves.toMatchObject({ error: { code: "invalid_input" } });
+    const configured = await request(
+      "/api/oauth/configs/github",
+      { clientId: "fixture-client", clientSecret: "fixture-secret", redirectUri: "app://oauth/callback" },
+      "admin-token",
+      "PUT",
+    );
+    expect(configured.status).toBe(200);
+    const setup = (await (await request("/v1/providers/github/setup")).json()).data;
+    expect(setup.oauthClient).toMatchObject({
+      configured: true,
+      expectedRedirectUri: "app://oauth/callback",
+      redirectUri: "app://oauth/callback",
+      missingFields: [],
+    });
+    expect(JSON.stringify(setup)).not.toMatch(/fixture-client|fixture-secret/);
+
+    const started = await request("/v1/connections/github/connect", {
+      returnUri: "https://host.example/settings/connections",
+    });
+    expect(started.status).toBe(200);
+    const attempt = (await started.json()).data;
+    const authorization = new URL(attempt.authorizationUrl);
+    expect(authorization.searchParams.get("redirect_uri")).toBe("app://oauth/callback");
+
+    // The callback route is unchanged: the app that owns the scheme forwards the
+    // provider's query here, and the exchange repeats the registered redirect.
+    const fetcher = vi.fn(async (url: RequestInfo | URL, _init?: RequestInit) =>
+      String(url).includes("/login/oauth/access_token")
+        ? Response.json({ access_token: "fixture-access-token", token_type: "bearer", scope: "read:user" })
+        : Response.json({ id: 1, login: "fixture-account", name: "Fixture Account" }),
+    );
+    vi.stubGlobal("fetch", fetcher);
+    const callback = await request(
+      `/oauth/callback?state=${encodeURIComponent(authorization.searchParams.get("state")!)}&code=fixture-code`,
+    );
+    expect(callback.status).toBe(302);
+    expect(new URL(callback.headers.get("location")!).searchParams.get("status")).toBe("success");
+    const exchange = fetcher.mock.calls.find(([url]) => String(url).includes("/login/oauth/access_token"));
+    expect(new URLSearchParams(String(exchange?.[1]?.body)).get("redirect_uri")).toBe("app://oauth/callback");
+    expect((await (await request(`/v1/connection-requests/${attempt.connectionRequestId}`)).json()).data.status).toBe(
+      "connected",
+    );
+  });
+
   it("aborts active provider calls before closing storage and rejects requests after close", async () => {
     runtime = await createConnectorRuntime(await fixture());
     vi.stubGlobal("fetch", async () => Response.json({ id: 1, login: "fixture-account" }));
