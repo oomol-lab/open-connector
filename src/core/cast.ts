@@ -411,6 +411,22 @@ export function nullableString(value: unknown): string | null | undefined {
 }
 
 /**
+ * Return a string exactly as provided, null, or undefined when the value is not a string. Examples:
+ * `nullableRawString(null) => null`, `nullableRawString("") => ""`, `nullableRawString(1) => undefined`.
+ */
+export function nullableRawString(value: unknown): string | null | undefined {
+  return value === null ? null : optionalRawString(value);
+}
+
+/**
+ * Return a boolean, null, or undefined when the value is not a boolean. Examples:
+ * `nullableBoolean(null) => null`, `nullableBoolean(false) => false`, `nullableBoolean("true") => undefined`.
+ */
+export function nullableBoolean(value: unknown): boolean | null | undefined {
+  return value === null ? null : optionalBoolean(value);
+}
+
+/**
  * Return a string or null when the value is not a string.
  */
 export function optionalStringOrNull(value: unknown): string | null {
