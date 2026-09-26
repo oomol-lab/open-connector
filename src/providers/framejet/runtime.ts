@@ -8,6 +8,7 @@ import {
   providerInputError,
   providerResponseError,
   providerUserAgent,
+  readProviderErrorTextBody,
   ProviderRequestError,
   requiredInputString,
   requiredResponseRecord,
@@ -145,11 +146,12 @@ async function createFramejetSignedUrl(
 function buildFramejetQuery(input: Record<string, unknown>, extraParams: string[]): URLSearchParams {
   const query = new URLSearchParams({ url: requiredInputString(input.url, "url") });
   for (const name of [...framejetCaptureParams, ...extraParams]) {
-    const value = input[name];
+    const raw = input[name];
+    const value = Array.isArray(raw) ? raw.join("|") : raw;
     if (value === undefined || value === null || value === "") {
       continue;
     }
-    query.set(name, Array.isArray(value) ? value.join("|") : String(value));
+    query.set(name, String(value));
   }
   return query;
 }
@@ -162,7 +164,7 @@ function framejetHeaders(apiKey: string): Record<string, string> {
 }
 
 async function readFramejetError(response: Response): Promise<ProviderRequestError> {
-  const text = await response.text();
+  const text = (await readProviderErrorTextBody(response, "Framejet error response")).trim();
   let payload: Record<string, unknown> | undefined;
   try {
     payload = optionalRecord(JSON.parse(text));
