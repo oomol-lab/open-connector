@@ -165,6 +165,106 @@ describe("OAuthClientConfigService", () => {
       }),
     ).toThrow("requestedScopes must contain at least one scope.");
   });
+
+  // A provider whose OAuth app is registered with a native app's custom URL
+  // scheme (RFC 8252 §7.1) carries that redirect per provider.
+  // `expectedRedirectUri` mirrors `effectiveScopes` (the value the flow sends),
+  // `redirectUri` mirrors `requestedScopes` (the configured override, or null).
+  it("carries a per-provider redirect URI override on the summary and the expected redirect", async () => {
+    const service = new OAuthClientConfigService({
+      catalog: createCatalogStore([oauthProvider("custom_scheme"), oauthProvider("other")]),
+      origin: "http://localhost:8797",
+      store: new MemoryOAuthClientConfigStore(),
+    });
+
+    const saved = await service.upsertConfig({
+      service: "custom_scheme",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+      redirectUri: " app://oauth/callback ",
+    });
+    expect(saved).toMatchObject({
+      redirectUri: "app://oauth/callback",
+      expectedRedirectUri: "app://oauth/callback",
+    });
+    const config = await service.getConfig("custom_scheme");
+    expect(config).toMatchObject({ redirectUri: "app://oauth/callback" });
+    expect(service.expectedRedirectUri("custom_scheme", config)).toBe("app://oauth/callback");
+    // Without the config in hand the runtime callback answers, exactly as before.
+    expect(service.expectedRedirectUri("custom_scheme")).toBe("http://localhost:8797/oauth/callback");
+
+    await service.upsertConfig({ service: "other", clientId: "client-id", clientSecret: "client-secret" });
+    await expect(service.getSummary("other")).resolves.toMatchObject({
+      redirectUri: null,
+      expectedRedirectUri: "http://localhost:8797/oauth/callback",
+    });
+    await expect(service.listConfigs()).resolves.toMatchObject([
+      {
+        service: "custom_scheme",
+        redirectUri: "app://oauth/callback",
+        expectedRedirectUri: "app://oauth/callback",
+      },
+      { service: "other", redirectUri: null, expectedRedirectUri: "http://localhost:8797/oauth/callback" },
+    ]);
+
+    // A blank override is "unset": the runtime callback is back.
+    await service.upsertConfig({
+      service: "custom_scheme",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+      redirectUri: "  ",
+    });
+    await expect(service.getSummary("custom_scheme")).resolves.toMatchObject({
+      redirectUri: null,
+      expectedRedirectUri: "http://localhost:8797/oauth/callback",
+    });
+  });
+
+  it("answers the runtime callback for a stored config that predates redirectUri", async () => {
+    const store = new MemoryOAuthClientConfigStore();
+    await store.set({
+      service: "legacy",
+      clientId: "client",
+      clientSecret: "secret",
+      extra: {},
+      secretExtra: {},
+    });
+    const service = new OAuthClientConfigService({
+      catalog: createCatalogStore([oauthProvider("legacy")]),
+      origin: "http://localhost:8797",
+      store,
+    });
+
+    await expect(service.getSummary("legacy")).resolves.toMatchObject({
+      configured: true,
+      redirectUri: null,
+      expectedRedirectUri: "http://localhost:8797/oauth/callback",
+    });
+    expect(service.expectedRedirectUri("legacy", await service.getConfig("legacy"))).toBe(
+      "http://localhost:8797/oauth/callback",
+    );
+  });
+
+  it.each([
+    ["a relative path", "oauth/callback"],
+    ["not a URL", "not a url"],
+    ["carrying user info", "app://user:secret@oauth/callback"],
+    ["carrying a fragment", "http://localhost:8797/oauth/callback#fragment"],
+  ])("rejects a redirect URI override that is %s", (_case, redirectUri) => {
+    const service = new OAuthClientConfigService({
+      catalog: createCatalogStore([oauthProvider("example")]),
+      origin: "http://localhost:8797",
+      store: new MemoryOAuthClientConfigStore(),
+    });
+
+    expect(() =>
+      service.normalizeConfig("example", {
+        clientId: "client-id",
+        clientSecret: "client-secret",
+        redirectUri,
+      }),
+    ).toThrow(expect.objectContaining({ code: "invalid_input", message: "redirectUri must be an absolute URL." }));
+  });
 });
 
 function oauthProvider(service: string): ProviderDefinition {

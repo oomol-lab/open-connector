@@ -1083,6 +1083,7 @@ export class ConnectServer {
         clientId: optionalString(body.clientId) ?? "",
         clientSecret: optionalString(body.clientSecret) ?? "",
         requestedScopes: readOptionalStringArray(body, "requestedScopes"),
+        redirectUri: readOptionalString(body, "redirectUri"),
         extra: optionalRecord(body.extra),
         secretExtra: optionalRecord(body.secretExtra),
       }),
@@ -1257,7 +1258,7 @@ export class ConnectServer {
 }
 
 function readOAuthClientConfigInput(body: Record<string, unknown>): OAuthClientConfigInput | undefined {
-  const keys = ["clientId", "clientSecret", "requestedScopes", "extra", "secretExtra"];
+  const keys = ["clientId", "clientSecret", "requestedScopes", "redirectUri", "extra", "secretExtra"];
   if (!keys.some((key) => key in body)) {
     return undefined;
   }
@@ -1266,9 +1267,19 @@ function readOAuthClientConfigInput(body: Record<string, unknown>): OAuthClientC
     clientId: optionalString(body.clientId) ?? "",
     clientSecret: optionalString(body.clientSecret) ?? "",
     requestedScopes: readOptionalStringArray(body, "requestedScopes"),
+    redirectUri: readOptionalString(body, "redirectUri"),
     extra: optionalRecord(body.extra),
     secretExtra: optionalRecord(body.secretExtra),
   };
+}
+
+/** An absent field is undefined; a present one must be a string (a non-string is a 400, never silently dropped). */
+function readOptionalString(body: Record<string, unknown>, fieldName: string): string | undefined {
+  if (!(fieldName in body) || body[fieldName] === null) return undefined;
+  if (typeof body[fieldName] !== "string") {
+    throw new HttpRequestError("invalid_input", `${fieldName} must be a string.`);
+  }
+  return body[fieldName] as string;
 }
 
 function readOptionalStringArray(body: Record<string, unknown>, fieldName: string): string[] | undefined {

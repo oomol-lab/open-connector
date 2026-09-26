@@ -152,6 +152,14 @@ OOMOL_CONNECT_ORIGIN="https://your-tunnel.example" npm run dev
 
 Then use the new `expectedRedirectUri` returned by `/api/oauth/configs`.
 
+A provider whose OAuth app is registered with a different redirect URI (for example a native app's
+custom scheme such as `myapp://oauth/callback`) can carry it per provider on the client config:
+`{"clientId":"...","clientSecret":"...","redirectUri":"myapp://oauth/callback"}`. It must be an
+absolute URL; any scheme is accepted. The authorization request and the code exchange both send that
+value and `expectedRedirectUri` reports it. The runtime's `/oauth/callback` route is unchanged: the
+app that owns the scheme forwards the callback query (`code`, `state`, or `error`) to it. Other
+providers keep the runtime callback.
+
 Store the local client configuration:
 
 ```bash

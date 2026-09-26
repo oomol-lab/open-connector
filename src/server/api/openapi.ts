@@ -92,6 +92,10 @@ const oauthClientConfigRequestSchema = jsonSchema.object(
       minItems: 1,
       description: "Non-empty provider-declared scope subset to request. Omit to use every provider default.",
     }),
+    redirectUri: jsonSchema.string({
+      description:
+        "Absolute redirect URI registered with the provider instead of the runtime callback; any scheme. Omit to use the runtime callback.",
+    }),
     extra: {
       type: "object",
       additionalProperties: { type: "string" },
@@ -584,8 +588,14 @@ export function createOpenApiDocument(
             }),
             clientId: jsonSchema.nullable(jsonSchema.string({ description: "Configured OAuth client id." })),
             expectedRedirectUri: jsonSchema.string({
-              description: "Callback URL to configure in the provider OAuth app.",
+              description:
+                "Callback URL to configure in the provider OAuth app: the configured override, else the runtime callback.",
             }),
+            redirectUri: jsonSchema.nullable(
+              jsonSchema.string({
+                description: "Configured redirect URI override, or null when the runtime callback is used.",
+              }),
+            ),
             auth: jsonSchema.unknownObject("Provider OAuth capability metadata."),
             requestedScopes: jsonSchema.nullable(
               jsonSchema.array(jsonSchema.string(), {
@@ -603,6 +613,7 @@ export function createOpenApiDocument(
               "customClientAvailable",
               "clientId",
               "expectedRedirectUri",
+              "redirectUri",
               "auth",
               "requestedScopes",
               "effectiveScopes",
@@ -1643,7 +1654,12 @@ function connectionManagementPaths(): Record<string, unknown> {
       jsonSchema.object("OAuth client configuration state; present when the provider supports OAuth.", {
         configured: jsonSchema.boolean(),
         customClientAvailable: jsonSchema.boolean("Whether connections may carry their own OAuth client."),
-        expectedRedirectUri: jsonSchema.string("Callback URL to register with the provider."),
+        expectedRedirectUri: jsonSchema.string(
+          "Callback URL to register with the provider: the configured override, else the runtime callback.",
+        ),
+        redirectUri: jsonSchema.nullableString(
+          "Configured redirect URI override, or null when the runtime callback is used.",
+        ),
         missingFields: jsonSchema.stringArray("Required client inputs absent from the stored configuration."),
       }),
     ),

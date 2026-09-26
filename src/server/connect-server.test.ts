@@ -356,6 +356,56 @@ describe("ConnectServer", () => {
     await expect(response.json()).resolves.toMatchObject({ error: { code: "invalid_input" } });
   });
 
+  it("stores a per-provider redirect URI override through the public API and reports it", async () => {
+    const app = createTestServer([oauthProvider]).createApp();
+    const config = await app.request("/api/oauth/configs/oauth_example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        clientId: "client-id",
+        clientSecret: "client-secret",
+        redirectUri: "app://oauth/callback",
+      }),
+    });
+
+    expect(config.status).toBe(200);
+    await expect(config.json()).resolves.toMatchObject({
+      redirectUri: "app://oauth/callback",
+      expectedRedirectUri: "app://oauth/callback",
+    });
+    await expect((await app.request("/api/oauth/configs")).json()).resolves.toMatchObject([
+      { service: "oauth_example", redirectUri: "app://oauth/callback" },
+    ]);
+
+    const authorization = await app.request("/api/oauth/authorizations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ service: "oauth_example" }),
+    });
+    const body = (await authorization.json()) as { authorizationUrl: string };
+
+    expect(authorization.status).toBe(200);
+    expect(new URL(body.authorizationUrl).searchParams.get("redirect_uri")).toBe("app://oauth/callback");
+  });
+
+  it.each([
+    ["not an absolute URL", "oauth/callback", "redirectUri must be an absolute URL."],
+    ["not a string", 42, "redirectUri must be a string."],
+  ])("rejects a redirect URI override that is %s through the public API", async (_case, redirectUri, message) => {
+    const app = createTestServer([oauthProvider]).createApp();
+    const response = await app.request("/api/oauth/configs/oauth_example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ clientId: "client-id", clientSecret: "client-secret", redirectUri }),
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: { code: "invalid_input", message } });
+    await expect((await app.request("/api/oauth/configs")).json()).resolves.toMatchObject([
+      { service: "oauth_example", configured: false, redirectUri: null },
+    ]);
+  });
+
   it("lists providers without action schemas and serves full schemas per action", async () => {
     const app = createTestServer([
       {

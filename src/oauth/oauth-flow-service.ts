@@ -224,7 +224,7 @@ export class OAuthFlowService {
       authorizationUrl,
       auth.authorizationRequestFields?.redirectUri,
       "redirect_uri",
-      this.clientConfigs.expectedRedirectUri(service),
+      this.clientConfigs.expectedRedirectUri(service, config),
     );
     setAuthorizationParam(authorizationUrl, auth.authorizationRequestFields?.responseType, "response_type", "code");
     setAuthorizationParam(authorizationUrl, auth.authorizationRequestFields?.state, "state", state);
@@ -272,7 +272,8 @@ export class OAuthFlowService {
         );
       }
 
-      const redirectUri = this.clientConfigs.expectedRedirectUri(pending.service);
+      // The same config chose the authorize URL's redirect_uri; the exchange must repeat it.
+      const redirectUri = this.clientConfigs.expectedRedirectUri(pending.service, config);
       const tokenUrl = this.clientConfigs.resolveEndpointUrl(pending.service, auth.tokenUrl, config);
       const createError = (message: string): OAuthFlowError =>
         new OAuthFlowError("oauth_token_exchange_failed", message);
