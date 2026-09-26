@@ -30,11 +30,11 @@ const screenshotInputSchema = s.object(
   {
     ...captureOptionSchemas,
     goal: s.nonEmptyString(
-      "A plain-language description of the page state to reach before the capture. Example: the pricing table with yearly billing selected",
+      "A plain-language description of the page state to reach before the capture, ending with when to stop. Any text typed into the page must come from values. Example: switch the pricing table to yearly billing and stop when the yearly prices are shown",
       { maxLength: 300 },
     ),
     values: s.array(
-      "Exact strings goal mode may type into the page. Joined with | separators, the list may total at most 1000 characters.",
+      "Exact strings goal mode may type into the page. Framejet never invents text, so a goal that fills a field fails with values_required unless a fitting value is listed. Joined with | separators, the list may total at most 1000 characters.",
       s.nonEmptyString(
         "One exact string of at most 200 characters. It cannot contain |, which Framejet uses to separate values.",
         { pattern: "^[^|]+$", maxLength: 200 },
@@ -61,7 +61,7 @@ const signedUrlInputSchema = s.object(
 
 const screenshotOutputSchema = s.actionOutput(
   {
-    file: s.object("The captured image stored in local transit storage.", {
+    file: s.requiredObject("The captured image stored in local transit storage.", {
       fileId: s.nonEmptyString("The local transit file identifier."),
       downloadUrl: s.url("The local transit URL for downloading the image."),
       sizeBytes: s.integer("The image size in bytes."),
@@ -77,7 +77,7 @@ const screenshotOutputSchema = s.actionOutput(
 const signedUrlOutputSchema = s.actionOutput(
   {
     signed_url: s.url(
-      "A capture URL that works in an img src, a CMS or a spreadsheet without exposing the API key. The first load spends one screenshot; later loads are cached.",
+      "A capture URL that works in an img src, a CMS or a spreadsheet without exposing the API key. The first load spends one screenshot. Framejet serves later loads from its cache for seven days, then captures again, so a URL that keeps being viewed costs at most about one screenshot a week.",
     ),
   },
   "The output payload for a signed Framejet capture URL.",

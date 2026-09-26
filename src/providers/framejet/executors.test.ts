@@ -89,6 +89,12 @@ describe("framejet action schemas", () => {
     expect(validateActionInput(action, { url: "https://example.com", values: ["x".repeat(200)] }).valid).toBe(true);
     expect(validateActionInput(action, { url: "https://example.com", values: ["x".repeat(201)] }).valid).toBe(false);
   });
+
+  it("marks every transit file field as returned", () => {
+    expect(framejetAction("take_screenshot").outputSchema).toMatchObject({
+      properties: { file: { required: ["fileId", "downloadUrl", "sizeBytes", "name", "mimeType"] } },
+    });
+  });
 });
 
 describe("framejet.take_screenshot", () => {
