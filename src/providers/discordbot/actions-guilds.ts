@@ -479,6 +479,7 @@ export const discordbotGuildActions: ActionDefinition[] = [
       days: pruneDaysSchema,
       include_roles: snowflakeArraySchema(
         "Role ids whose holders may also be pruned. By default members with any role are skipped.",
+        { minItems: 1 },
       ),
     }),
     outputSchema: s.requiredObject("The prune count response.", {
@@ -495,6 +496,7 @@ export const discordbotGuildActions: ActionDefinition[] = [
       compute_prune_count: s.boolean("Whether Discord returns the number of pruned members. Discord defaults to true."),
       include_roles: snowflakeArraySchema(
         "Role ids whose holders may also be pruned. By default members with any role are skipped.",
+        { minItems: 1 },
       ),
       audit_log_reason: auditLogReasonSchema,
     }),

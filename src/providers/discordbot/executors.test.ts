@@ -1,6 +1,8 @@
 import type { ExecutionContext } from "../../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { validateActionInput } from "../../core/validation.ts";
+import { discordbotGuildActions } from "./actions-guilds.ts";
 import { executors, proxy } from "./executors.ts";
 
 afterEach(() => {
@@ -100,6 +102,17 @@ describe("Discord guild actions", () => {
     expect(fetch.mock.calls[0]![0].toString()).toBe(
       "https://discord.com/api/v10/guilds/10/prune?days=14&include_roles=1%2C2",
     );
+  });
+
+  // An empty list would send a blank `include_roles=` query value, which is not the
+  // documented comma-delimited snowflake list; omitting the field is the way to ask
+  // for the default.
+  it.each(["get_guild_prune_count", "begin_guild_prune"])("rejects an empty include_roles list for %s", (name) => {
+    const action = discordbotGuildActions.find((candidate) => candidate.name === name)!;
+
+    expect(validateActionInput(action, { guild_id: "10", include_roles: [] }).valid).toBe(false);
+    expect(validateActionInput(action, { guild_id: "10", include_roles: ["1"] }).valid).toBe(true);
+    expect(validateActionInput(action, { guild_id: "10" }).valid).toBe(true);
   });
 });
 
