@@ -46,14 +46,21 @@ describe("Discord guild actions", () => {
     expect(headers.get("x-audit-log-reason")).toBe("Spam%0D%0AX-Injected%3A%201%20%C3%BCn%C3%AF");
   });
 
-  it("rejects dot-segment ids instead of resolving them to another endpoint", async () => {
+  // URL parsing resolves `..`, and Discord decodes `%2F` before routing, so either
+  // would reach another endpoint with the same method, such as granting a role.
+  it.each([
+    ["remove_guild_member_role", { guild_id: "10", user_id: "20", role_id: ".." }, "role_id"],
+    ["add_guild_member", { guild_id: "10", user_id: "20/roles/30", access_token: "user-token" }, "user_id"],
+    ["modify_guild", { guild_id: "10/roles/30", name: "renamed" }, "guild_id"],
+    ["get_user", { user_id: "1/zzz" }, "user_id"],
+  ])("rejects a non-snowflake id for %s before sending a request", async (action, input, field) => {
     const fetch = stubDiscord(() => new Response(null, { status: 204 }));
 
-    const result = await run("remove_guild_member_role", { guild_id: "10", user_id: "20", role_id: ".." });
+    const result = await run(action, input);
 
     expect(result).toMatchObject({
       ok: false,
-      error: { code: "invalid_input", message: "role_id must not be . or .." },
+      error: { code: "invalid_input", message: `${field} must be a numeric Discord snowflake id` },
     });
     expect(fetch).not.toHaveBeenCalled();
   });

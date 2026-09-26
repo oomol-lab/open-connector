@@ -1,5 +1,4 @@
 import { optionalString } from "../../core/cast.ts";
-import { encodePathSegment } from "../../core/request.ts";
 import { providerInputError, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 export const discordApiBaseUrl = "https://discord.com/api";
@@ -78,16 +77,19 @@ export async function discordbotRequest(input: DiscordbotRequestOptions): Promis
 }
 
 /**
- * Read a required snowflake input and encode it as one URL path segment. A `.` or `..`
- * value survives encoding and URL parsing resolves it as a dot segment, which would send
- * the request to another endpoint, such as DELETE on the member or the guild itself.
+ * Read a required snowflake input for use as one URL path segment. Only digits are
+ * accepted, because percent-encoding cannot keep an arbitrary id inside one segment:
+ * URL parsing resolves `.` and `..` as dot segments, and Discord decodes `%2F` into a
+ * path separator before routing. Either would send the request, with the same method
+ * and bot token, to another endpoint: `role_id: ".."` turns a role DELETE into one on
+ * the guild itself, and `user_id: "U/roles/R"` on Add Guild Member grants role R.
  */
 export function requiredPath(value: unknown, field: string): string {
   const segment = requiredInputString(value, field);
-  if (segment === "." || segment === "..") {
-    throw providerInputError(`${field} must not be . or ..`);
+  if (!/^\d+$/.test(segment)) {
+    throw providerInputError(`${field} must be a numeric Discord snowflake id`);
   }
-  return encodePathSegment(segment);
+  return segment;
 }
 
 async function readDiscordbotJson(response: Response): Promise<unknown> {

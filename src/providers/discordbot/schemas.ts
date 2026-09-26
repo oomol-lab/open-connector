@@ -4,7 +4,7 @@ import { s } from "../../core/json-schema.ts";
 
 export const noInputSchema: JsonSchema = s.object({}, { description: "No input parameters are required." });
 export const rawObjectSchema: JsonSchema = s.looseObject({}, { description: "A raw Discord API object." });
-export const snowflakeSchema: JsonSchema = s.string("A Discord snowflake identifier.", { minLength: 1 });
+export const snowflakeSchema: JsonSchema = s.string("A Discord snowflake identifier.", { pattern: "^[0-9]+$" });
 export const successSchema: JsonSchema = s.requiredObject("The success response returned by the action.", {
   success: s.literal(true, { description: "The success flag." }),
 });
