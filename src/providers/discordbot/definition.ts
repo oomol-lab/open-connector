@@ -1,5 +1,6 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
+import { discordbotGuildActions } from "./actions-guilds.ts";
 import { discordbotActions } from "./actions.ts";
 
 const service = "discordbot";
@@ -20,5 +21,5 @@ export const provider: ProviderDefinition = {
     },
   ],
   homepageUrl: "https://discord.com/developers/docs",
-  actions: discordbotActions,
+  actions: [...discordbotActions, ...discordbotGuildActions],
 };

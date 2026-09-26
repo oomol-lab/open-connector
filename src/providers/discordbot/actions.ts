@@ -2,21 +2,9 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { noInputSchema, rawObjectSchema, snowflakeSchema, successSchema } from "./schemas.ts";
 
 const service = "discordbot";
-
-const noInputSchema = s.object({}, { description: "No input parameters are required." });
-const rawObjectSchema = s.looseObject({}, { description: "A raw Discord API object." });
-const snowflakeSchema = s.string("A Discord snowflake identifier.", { minLength: 1 });
-const successSchema = s.requiredObject("The success response returned by the action.", {
-  success: s.literal(true, { description: "The success flag." }),
-});
-const binaryFileSchema = s.requiredObject("A binary file payload encoded for transport.", {
-  filename: s.string("The file name."),
-  mimeType: s.string("The MIME type."),
-  sizeBytes: s.integer("The file size in bytes."),
-  dataBase64: s.string("The file contents encoded as base64."),
-});
 
 export const discordbotActions: ActionDefinition[] = [
   defineProviderAction(service, {
@@ -77,31 +65,6 @@ export const discordbotActions: ActionDefinition[] = [
     outputSchema: rawObjectSchema,
   }),
   defineProviderAction(service, {
-    name: "get_guild",
-    operationType: "read",
-    description: "Get a Discord guild by ID.",
-    inputSchema: guildInputSchema("Input parameters containing a guild id."),
-    outputSchema: rawObjectSchema,
-  }),
-  defineProviderAction(service, {
-    name: "list_guild_channels",
-    operationType: "read",
-    description: "List channels in a Discord guild.",
-    inputSchema: guildInputSchema("Input parameters containing a guild id."),
-    outputSchema: s.requiredObject("The guild channels response.", {
-      channels: s.array("The channels returned by Discord.", rawObjectSchema),
-    }),
-  }),
-  defineProviderAction(service, {
-    name: "list_guild_roles",
-    operationType: "read",
-    description: "List roles in a Discord guild.",
-    inputSchema: guildInputSchema("Input parameters containing a guild id."),
-    outputSchema: s.requiredObject("The guild roles response.", {
-      roles: s.array("The roles returned by Discord.", rawObjectSchema),
-    }),
-  }),
-  defineProviderAction(service, {
     name: "get_channel",
     operationType: "read",
     description: "Get a Discord channel by ID.",
@@ -160,28 +123,8 @@ export const discordbotActions: ActionDefinition[] = [
     }),
     outputSchema: successSchema,
   }),
-  defineProviderAction(service, {
-    name: "get_guild_widget_png",
-    operationType: "read",
-    description: "Get a Discord guild widget PNG.",
-    inputSchema: s.object(
-      "Input for retrieving a Discord guild widget PNG.",
-      {
-        guild_id: snowflakeSchema,
-        style: s.stringEnum(["shield", "banner1", "banner2", "banner3", "banner4"], {
-          description: "The visual style to use for the guild widget PNG.",
-        }),
-      },
-      { required: ["guild_id"], optional: ["style"] },
-    ),
-    outputSchema: binaryFileSchema,
-  }),
 ];
 
 function applicationInputSchema(description: string) {
   return s.requiredObject(description, { application_id: snowflakeSchema });
-}
-
-function guildInputSchema(description: string) {
-  return s.requiredObject(description, { guild_id: snowflakeSchema });
 }
