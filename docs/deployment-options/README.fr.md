@@ -105,5 +105,31 @@ les apps OAuth ; OOMOL hébergé est le chemin qui inclut l'OAuth géré.
         <a href="https://app.nibrun.com/deploy?name=open-connector&amp;binary=https%3A%2F%2Fgithub.com%2Foomol-lab%2Fopen-connector%2Freleases%2Flatest%2Fdownload%2Fopen-connector-linux-x64&amp;port=3000&amp;env=HOST%3D0.0.0.0&amp;env=OOMOL_CONNECT_DATA_DIR%3D%24%7BNIBRUN_DATA_DIR%7D&amp;env=OOMOL_CONNECT_ORIGIN%3Dhttps%3A%2F%2F%24%7BNIBRUN_HOSTNAME%7D&amp;env=OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS%3Dtrue&amp;env=OOMOL_CONNECT_ENCRYPTION_KEY&amp;env=OOMOL_CONNECT_ADMIN_TOKEN&amp;env=OOMOL_CONNECT_RUNTIME_TOKEN"><strong>Déployer en un clic</strong></a>
       </td>
     </tr>
+    <tr>
+      <td valign="middle" align="center">
+        <a href="https://nexusai.run/"><img src="../../assets/deployment-options/nexus-ai.svg" alt="NEXUS AI" width="140"></a>
+      </td>
+      <td valign="top">
+        Construit le <code>docker/Dockerfile</code> du dépôt dans un conteneur avec sa propre URL HTTPS. Le
+        lien de déploiement règle <code>OOMOL_CONNECT_ORIGIN</code> sur cette URL, demande le jeton admin dans
+        le formulaire et génère la clé de chiffrement et le jeton runtime, de sorte que la Web Console et
+        toutes les API exigent une authentification dès le premier démarrage. Les secrets sont saisis dans le
+        formulaire ou générés sur le serveur et n'apparaissent jamais dans le lien.
+        <br><br>
+        <strong>Avantages :</strong> déploiement en un clic depuis les sources, logs et redéploiements dans
+        un seul tableau de bord, et domaines personnalisés sur les offres payantes. La base SQLite vit dans le
+        conteneur : elle survit aux redémarrages mais pas aux reconstructions, donc réglez
+        <code>OOMOL_CONNECT_DATABASE_URL</code> sur PostgreSQL pour les données à conserver.
+        <br><br>
+        <strong>Prix :</strong> l'offre Free inclut 1 déploiement actif avec une URL HTTPS publique, sans
+        carte bancaire ; les déploiements de test expirent automatiquement. Starter coûte 29 $/mois pour
+        2 déploiements actifs et les domaines personnalisés, et Pro 149 $/mois pour 5. Chaque app dispose de
+        512 Mo de RAM. Voir
+        <a href="https://nexusai.run/pricing">les tarifs NEXUS AI</a>.
+      </td>
+      <td valign="middle" align="center">
+        <a href="https://nexusai.run/deploy?repo=https%3A%2F%2Fgithub.com%2Foomol-lab%2Fopen-connector&amp;dockerfile=docker%2FDockerfile&amp;env=OOMOL_CONNECT_ORIGIN%3D%7Burl%7D&amp;require=OOMOL_CONNECT_ADMIN_TOKEN&amp;generate=OOMOL_CONNECT_ENCRYPTION_KEY&amp;generate=OOMOL_CONNECT_RUNTIME_TOKEN&amp;template=open-connector"><strong>Déployer en un clic</strong></a>
+      </td>
+    </tr>
   </tbody>
 </table>

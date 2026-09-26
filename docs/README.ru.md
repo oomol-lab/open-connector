@@ -29,7 +29,7 @@ OpenConnector — open-source connector gateway для AI agents и альтер
   <tr>
     <td width="33.33%" valign="top">Managed OAuth и hosted runtime готовы к использованию. Не нужно разворачивать runtime или настраивать OAuth apps.</td>
     <td width="33.33%" valign="top">Запуск локально или в собственной инфраструктуре через Docker или Node.js. Вы управляете storage и OAuth apps.</td>
-    <td width="33.33%" valign="top"><strong>Cloudflare</strong>, <strong>Fly.io</strong>, <strong>RepoCloud</strong>, <strong>nibrun</strong> и другие.</td>
+    <td width="33.33%" valign="top"><strong>Cloudflare</strong>, <strong>Fly.io</strong>, <strong>RepoCloud</strong>, <strong>nibrun</strong>, <strong>NEXUS AI</strong> и другие.</td>
   </tr>
   <tr>
     <td width="33.33%" align="center">🚀 <a href="https://oomol.com/docs/connector-saas/"><strong>OOMOL Hosted</strong></a></td>

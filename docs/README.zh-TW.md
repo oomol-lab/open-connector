@@ -28,7 +28,7 @@ OpenConnector 是一套供 AI Agent 使用的開放原始碼連接器閘道，�
   <tr>
     <td width="33.33%" valign="top">代管 OAuth 與執行階段，開箱即用。無須部署或設定 OAuth 應用程式。</td>
     <td width="33.33%" valign="top">使用 Docker 或 Node.js 在本機或自己的基礎架構中執行。儲存空間與 OAuth 應用程式由你負責管理。</td>
-    <td width="33.33%" valign="top"><strong>Cloudflare</strong>、<strong>Fly.io</strong>、<strong>RepoCloud</strong>、<strong>nibrun</strong> 等。</td>
+    <td width="33.33%" valign="top"><strong>Cloudflare</strong>、<strong>Fly.io</strong>、<strong>RepoCloud</strong>、<strong>nibrun</strong>、<strong>NEXUS AI</strong> 等。</td>
   </tr>
   <tr>
     <td width="33.33%" align="center">🚀 <a href="https://oomol.com/docs/connector-saas/"><strong>OOMOL 代管</strong></a></td>

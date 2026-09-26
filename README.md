@@ -29,7 +29,7 @@ prebuilt Actions to agents and applications.
   <tr>
     <td width="33.33%" valign="top">Managed OAuth and hosted runtime, ready to use. No deployment or OAuth app setup.</td>
     <td width="33.33%" valign="top">Run locally or on your own infrastructure with Docker or Node.js. You manage storage and OAuth apps.</td>
-    <td width="33.33%" valign="top"><strong>Cloudflare</strong>, <strong>Fly.io</strong>, <strong>RepoCloud</strong>, <strong>nibrun</strong>, and more.</td>
+    <td width="33.33%" valign="top"><strong>Cloudflare</strong>, <strong>Fly.io</strong>, <strong>RepoCloud</strong>, <strong>nibrun</strong>, <strong>NEXUS AI</strong>, and more.</td>
   </tr>
   <tr>
     <td width="33.33%" align="center">🚀 <a href="https://oomol.com/docs/connector-saas/"><strong>OOMOL Hosted</strong></a></td>

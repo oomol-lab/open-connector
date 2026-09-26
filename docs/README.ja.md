@@ -29,7 +29,7 @@ catalog を Agent とアプリケーションに公開できます。
   <tr>
     <td width="33.33%" valign="top">マネージド OAuth と hosted runtime をすぐに利用できます。デプロイや OAuth app の設定は不要です。</td>
     <td width="33.33%" valign="top">Docker または Node.js を使い、ローカル環境や自分の infrastructure で実行します。storage と OAuth app は自身で管理します。</td>
-    <td width="33.33%" valign="top"><strong>Cloudflare</strong>、<strong>Fly.io</strong>、<strong>RepoCloud</strong>、<strong>nibrun</strong> など。</td>
+    <td width="33.33%" valign="top"><strong>Cloudflare</strong>、<strong>Fly.io</strong>、<strong>RepoCloud</strong>、<strong>nibrun</strong>、<strong>NEXUS AI</strong> など。</td>
   </tr>
   <tr>
     <td width="33.33%" align="center">🚀 <a href="https://oomol.com/docs/connector-saas/"><strong>OOMOL Hosted</strong></a></td>

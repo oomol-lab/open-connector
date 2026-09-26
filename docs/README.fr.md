@@ -29,7 +29,7 @@ providers et 10 000+ Actions prêtes à l'emploi aux agents et applications.
   <tr>
     <td width="33.33%" valign="top">OAuth géré et runtime hébergé, prêts à l'emploi. Aucun déploiement ni configuration d'app OAuth.</td>
     <td width="33.33%" valign="top">Exécutez OpenConnector en local ou sur votre infrastructure avec Docker ou Node.js. Vous gérez le stockage et les apps OAuth.</td>
-    <td width="33.33%" valign="top"><strong>Cloudflare</strong>, <strong>Fly.io</strong>, <strong>RepoCloud</strong>, <strong>nibrun</strong> et plus.</td>
+    <td width="33.33%" valign="top"><strong>Cloudflare</strong>, <strong>Fly.io</strong>, <strong>RepoCloud</strong>, <strong>nibrun</strong>, <strong>NEXUS AI</strong> et plus.</td>
   </tr>
   <tr>
     <td width="33.33%" align="center">🚀 <a href="https://oomol.com/docs/connector-saas/"><strong>OOMOL hébergé</strong></a></td>
