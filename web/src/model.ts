@@ -24,8 +24,8 @@ export interface OAuthAuthorizationOption {
 export type ProviderScenario =
   | "ai"
   | "cross-border-ecommerce"
+  | "investment"
   | "communication"
-  | "docs"
   | "productivity"
   | "marketing"
   | "data-storage"
@@ -85,7 +85,7 @@ export interface ProviderDefinition {
   displayName: string;
   description?: string;
   categories: string[];
-  scenario?: ProviderScenario;
+  scenario?: ProviderScenario | "docs";
   authTypes: string[];
   auth: AuthDefinition[];
   homepageUrl?: string;

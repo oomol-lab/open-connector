@@ -361,7 +361,7 @@ function AppShell(props: {
         <div className="brand">
           <img className="brand-mark" src={oomolConnectLogoUrl} alt="" />
           <div>
-            <div className="brand-name">OOMOL Connect</div>
+            <div className="brand-name">Open Connector</div>
             <div className="brand-subtitle">{t("brand.subtitle")}</div>
           </div>
         </div>
@@ -484,7 +484,7 @@ export function UnlockView(props: UnlockViewProps): ReactNode {
         <div className="brand">
           <img className="brand-mark" src={oomolConnectLogoUrl} alt="" />
           <div>
-            <div className="brand-name">OOMOL Connect</div>
+            <div className="brand-name">Open Connector</div>
             <div className="brand-subtitle">{t("brand.adminAccess")}</div>
           </div>
         </div>

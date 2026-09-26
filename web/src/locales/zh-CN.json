@@ -188,9 +188,9 @@
       "explore": "浏览应用",
       "scenarios": {
         "ai": { "title": "AI 与 Agent", "description": "模型、Agent、检索与媒体生成" },
+        "investment": { "title": "投资与交易", "description": "股票、加密资产、行情、持仓和交易记录" },
         "crossBorderEcommerce": { "title": "电商运营", "description": "店铺、订单、履约与市场数据" },
-        "communication": { "title": "团队协作", "description": "消息、邮件、会议与通知" },
-        "docs": { "title": "文档与知识", "description": "文档、知识库、网盘与表格" },
+        "communication": { "title": "协作与知识", "description": "消息、邮件、会议、文档、云盘和知识库" },
         "productivity": { "title": "项目与效率", "description": "项目、任务、日程与自动化" },
         "marketing": { "title": "营销与增长", "description": "广告、内容、线索与增长数据" },
         "dataStorage": { "title": "数据与分析", "description": "数据仓库、数据库、BI 与存储" },
@@ -606,7 +606,7 @@
     }
   },
   "hostedPromo": {
-    "title": "欢迎使用 Open Connect",
+    "title": "欢迎使用 Open Connector",
     "headline": "一个 Key，开始 AI 创作",
     "description": "使用 Kling、Seedance、MiniMax 等模型生成图像与视频",
     "offer": "部分模型低至 7 折",

@@ -188,11 +188,11 @@
       "explore": "アプリを見る",
       "scenarios": {
         "ai": { "title": "AI とエージェント", "description": "モデル、エージェント、検索、メディア生成" },
+        "investment": { "title": "投資と取引", "description": "株式、暗号資産、市場データ、保有資産、取引履歴" },
         "crossBorderEcommerce": { "title": "EC 運用", "description": "ストア、注文、フルフィルメント、市場データ" },
-        "communication": { "title": "チーム連携", "description": "メッセージ、メール、会議、通知" },
-        "docs": {
-          "title": "ドキュメントと知識",
-          "description": "ドキュメント、ナレッジベース、ドライブ、スプレッドシート"
+        "communication": {
+          "title": "コラボレーションと知識",
+          "description": "メッセージ、メール、会議、文書、ドライブ、ナレッジベース"
         },
         "productivity": { "title": "プロジェクトと生産性", "description": "プロジェクト、タスク、予定、自動化" },
         "marketing": { "title": "マーケティングと成長", "description": "広告、コンテンツ、リード、成長データ" },
@@ -609,7 +609,7 @@
     }
   },
   "hostedPromo": {
-    "title": "Open Connect へようこそ",
+    "title": "Open Connector へようこそ",
     "headline": "1つのキーで、AI 創作を始めよう",
     "description": "Kling、Seedance、MiniMax などのモデルで画像・動画を生成。",
     "offer": "一部モデルは最大30%オフ",

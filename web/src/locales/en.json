@@ -193,15 +193,18 @@
       "explore": "Explore apps",
       "scenarios": {
         "ai": { "title": "AI & agents", "description": "Models, agents, search, and media generation" },
+        "investment": {
+          "title": "Investing & trading",
+          "description": "Stocks, crypto, market data, portfolios, and trades"
+        },
         "crossBorderEcommerce": {
           "title": "E-commerce operations",
           "description": "Storefronts, orders, fulfillment, and market data"
         },
         "communication": {
-          "title": "Team collaboration",
-          "description": "Messaging, email, meetings, and notifications"
+          "title": "Collaboration & knowledge",
+          "description": "Messaging, email, meetings, docs, drives, and knowledge bases"
         },
-        "docs": { "title": "Docs & knowledge", "description": "Documents, knowledge bases, drives, and spreadsheets" },
         "productivity": {
           "title": "Projects & productivity",
           "description": "Projects, tasks, schedules, and automation"
@@ -623,7 +626,7 @@
     }
   },
   "hostedPromo": {
-    "title": "Welcome to Open Connect",
+    "title": "Welcome to Open Connector",
     "headline": "One key. Start creating with AI.",
     "description": "Generate images and videos with Kling, Seedance, MiniMax, and more.",
     "offer": "Up to 30% off selected models",

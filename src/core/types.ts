@@ -22,8 +22,8 @@ export type AuthType = "no_auth" | "api_key" | "custom_credential" | "oauth2";
 export type ProviderScenario =
   | "ai"
   | "cross-border-ecommerce"
+  | "investment"
   | "communication"
-  | "docs"
   | "productivity"
   | "marketing"
   | "data-storage"

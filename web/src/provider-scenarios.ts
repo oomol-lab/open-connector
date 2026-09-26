@@ -21,16 +21,16 @@ export const providerScenarioOptions: readonly ProviderScenarioOption[] = [
     titleKey: "providers.discovery.scenarios.crossBorderEcommerce.title",
   },
   {
-    id: "communication",
-    descriptionKey: "providers.discovery.scenarios.communication.description",
-    featuredServices: ["slack", "gmail", "discord", "telegram"],
-    titleKey: "providers.discovery.scenarios.communication.title",
+    id: "investment",
+    descriptionKey: "providers.discovery.scenarios.investment.description",
+    featuredServices: ["hithink_finance", "financial_modeling_prep", "coinbase", "investoday_mcp"],
+    titleKey: "providers.discovery.scenarios.investment.title",
   },
   {
-    id: "docs",
-    descriptionKey: "providers.discovery.scenarios.docs.description",
-    featuredServices: ["notion", "googledrive", "googledocs", "dropbox"],
-    titleKey: "providers.discovery.scenarios.docs.title",
+    id: "communication",
+    descriptionKey: "providers.discovery.scenarios.communication.description",
+    featuredServices: ["slack", "notion", "gmail", "googledrive"],
+    titleKey: "providers.discovery.scenarios.communication.title",
   },
   {
     id: "productivity",
@@ -59,7 +59,7 @@ export const providerScenarioOptions: readonly ProviderScenarioOption[] = [
 ];
 
 export function providerScenario(provider: ProviderDefinition): ProviderScenario {
-  return provider.scenario ?? "other";
+  return provider.scenario === "docs" ? "communication" : (provider.scenario ?? "other");
 }
 
 export function filterProvidersByScenario(

@@ -188,9 +188,9 @@
       "explore": "探索應用程式",
       "scenarios": {
         "ai": { "title": "AI 與 Agent", "description": "模型、Agent、搜尋與媒體生成" },
+        "investment": { "title": "投資與交易", "description": "股票、加密資產、行情、持倉與交易紀錄" },
         "crossBorderEcommerce": { "title": "電商營運", "description": "店面、訂單、履約與市場資料" },
-        "communication": { "title": "團隊協作", "description": "訊息、電子郵件、會議與通知" },
-        "docs": { "title": "文件與知識", "description": "文件、知識庫、雲端硬碟與試算表" },
+        "communication": { "title": "協作與知識", "description": "訊息、電子郵件、會議、文件、雲端硬碟與知識庫" },
         "productivity": { "title": "專案與效率", "description": "專案、工作、行程與自動化" },
         "marketing": { "title": "行銷與成長", "description": "廣告、內容、潛在客戶與成長資料" },
         "dataStorage": { "title": "資料與分析", "description": "資料倉儲、資料庫、BI 與儲存" },
@@ -606,7 +606,7 @@
     }
   },
   "hostedPromo": {
-    "title": "歡迎使用 Open Connect",
+    "title": "歡迎使用 Open Connector",
     "headline": "一個 Key，開始 AI 創作",
     "description": "使用 Kling、Seedance、MiniMax 等模型生成圖片與影片",
     "offer": "部分模型低至 7 折",

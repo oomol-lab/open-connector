@@ -290,7 +290,7 @@ describe("ProvidersPage route shell", () => {
 
     expect(markup).toContain("Discover apps");
     expect(markup).toContain("Browse by task");
-    expect(markup).toContain("Team collaboration");
+    expect(markup).toContain("Collaboration &amp; knowledge");
   });
 
   it("defaults to connection management after a local credential is configured", () => {

@@ -21,7 +21,6 @@ import {
   Cloud,
   Database,
   ExternalLink,
-  FileText,
   Megaphone,
   MessagesSquare,
   Plus,
@@ -30,6 +29,7 @@ import {
   ShoppingBag,
   SquareKanban,
   Trash2,
+  TrendingUp,
   X,
 } from "lucide-react";
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
@@ -190,8 +190,8 @@ const providerCardStyle = {
 const scenarioIconById: Record<ProviderDiscoveryScenario, ComponentType<{ className?: string }>> = {
   ai: Bot,
   "cross-border-ecommerce": ShoppingBag,
+  investment: TrendingUp,
   communication: MessagesSquare,
-  docs: FileText,
   productivity: SquareKanban,
   marketing: Megaphone,
   "data-storage": Database,
