@@ -168,11 +168,14 @@ export const provider: ProviderDefinition = {
     {
       type: "oauth2",
       authorizationUrl: "https://slack.com/oauth/v2_user/authorize",
+      // A public client: the user-token exchange AND the refresh ride
+      // oauth.v2.user.access with PKCE and no client secret (Slack app with
+      // token rotation on; no refreshTokenUrl, so refresh uses tokenUrl).
       tokenUrl: "https://slack.com/api/oauth.v2.user.access",
-      refreshTokenUrl: "https://slack.com/api/oauth.v2.access",
       scopes: slackAuthorizationOptions.map((option) => option.id),
       scopeSeparator: ",",
-      tokenEndpointAuthMethod: "client_secret_post",
+      tokenEndpointAuthMethod: "none",
+      pkce: { method: "S256" },
       authorizationOptions: slackAuthorizationOptions,
     },
     {

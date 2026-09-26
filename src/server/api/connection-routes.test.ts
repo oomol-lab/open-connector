@@ -3,7 +3,6 @@ import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "../../catalog-store.ts";
-import { requestAuthorizationCodeToken } from "../../oauth/oauth-token.ts";
 import { provider as githubProvider } from "../../providers/github/definition.ts";
 import { ProviderLoader } from "../../providers/provider-loader.ts";
 import { provider as slackProvider } from "../../providers/slack/definition.ts";
@@ -41,8 +40,9 @@ afterEach(() => {
   for (const database of databases.splice(0)) database.close();
 });
 
+/** `exchangeCode: null` leaves the provider without an OAuth runtime, so the generic token exchange runs. */
 async function setup(
-  exchangeCode?: ProviderOAuthRuntime["exchangeCode"],
+  exchangeCode?: ProviderOAuthRuntime["exchangeCode"] | null,
   auth: { adminToken?: string; runtimeToken?: string } = {},
   definition: ProviderDefinition = provider,
   credentialValidators?: CredentialValidators,
@@ -63,11 +63,14 @@ async function setup(
       example: async () => ({
         executors: {},
         credentialValidators,
-        oauth: {
-          exchangeCode:
-            exchangeCode ??
-            (async () => ({ accessToken: "access-secret", tokenType: "Bearer", metadata: { scope: "read" } })),
-        },
+        oauth:
+          exchangeCode === null
+            ? undefined
+            : {
+                exchangeCode:
+                  exchangeCode ??
+                  (async () => ({ accessToken: "access-secret", tokenType: "Bearer", metadata: { scope: "read" } })),
+              },
       }),
     }),
     transitFiles: new TransitFileService({
@@ -401,9 +404,15 @@ it("does not overwrite credentials when a synchronous replacement loses a valida
 });
 
 it("connects Slack using granted scopes from the nested user token response", async () => {
-  const fetcher = vi.fn(async (input: string | URL | Request) => {
+  const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
     const url = input instanceof Request ? input.url : String(input);
     if (url === "https://slack.com/api/oauth.v2.user.access") {
+      // A public client: the stored client secret is never posted; the
+      // PKCE verifier from the authorization request is.
+      const body = new URLSearchParams(String(init?.body));
+      expect(body.get("client_id")).toBe("client");
+      expect(body.get("client_secret")).toBeNull();
+      expect(body.get("code_verifier")).toMatch(/^[A-Za-z0-9_-]+$/);
       return Response.json({
         ok: true,
         access_token: "xoxp-user-token",
@@ -417,16 +426,7 @@ it("connects Slack using granted scopes from the nested user token response", as
   });
   vi.stubGlobal("fetch", fetcher);
   const { call } = await setup(
-    async () =>
-      requestAuthorizationCodeToken({
-        clientId: "client",
-        clientSecret: "secret",
-        code: "code",
-        redirectUri: "http://localhost/oauth/callback",
-        tokenUrl: "https://slack.com/api/oauth.v2.user.access",
-        tokenEndpointAuthMethod: "client_secret_post",
-        createError: (message) => new Error(message),
-      }),
+    null,
     {},
     { ...slackProvider, service: "example", actions: [] },
     slackCredentialValidators,
@@ -434,6 +434,7 @@ it("connects Slack using granted scopes from the nested user token response", as
   const started = await (await call("/v1/connections/example/connect", {})).json();
   expect(started).toMatchObject({ success: true });
   const request = started.data;
+  expect(new URL(request.authorizationUrl).searchParams.get("code_challenge_method")).toBe("S256");
   const callback = await call(`/oauth/callback?state=${request.stateHandle}&code=code`);
   expect(callback.status).toBe(200);
   const result = (await (await call(`/v1/connection-requests/${request.connectionRequestId}`)).json()).data;
