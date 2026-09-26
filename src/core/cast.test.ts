@@ -3,6 +3,8 @@ import {
   base64Bytes,
   booleanString,
   looseArray,
+  nullableBoolean,
+  nullableRawString,
   optionalIntegerOrNull,
   optionalNumberLike,
   optionalStringArray,
@@ -105,5 +107,19 @@ describe("cast helpers", () => {
     expect(booleanString(false)).toBe("false");
     expect(booleanString("true")).toBeUndefined();
     expect(booleanString(undefined)).toBeUndefined();
+  });
+
+  it("keeps null apart from absent values in the nullable raw string and boolean readers", () => {
+    expect(nullableRawString(null)).toBeNull();
+    expect(nullableRawString("")).toBe("");
+    expect(nullableRawString(" x ")).toBe(" x ");
+    expect(nullableRawString(1)).toBeUndefined();
+    expect(nullableRawString(undefined)).toBeUndefined();
+
+    expect(nullableBoolean(null)).toBeNull();
+    expect(nullableBoolean(false)).toBe(false);
+    expect(nullableBoolean(true)).toBe(true);
+    expect(nullableBoolean("true")).toBeUndefined();
+    expect(nullableBoolean(undefined)).toBeUndefined();
   });
 });
