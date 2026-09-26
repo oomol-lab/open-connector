@@ -931,8 +931,8 @@ export const linearActionHandlers: ProviderActionHandlers<"linear", LinearAction
     }>(
       context,
       `
-        query ListLinearIssues($after: String, $first: Int, $filter: IssueFilter) {
-          issues(after: $after, first: $first, includeArchived: false, filter: $filter) {
+        query ListLinearIssues($after: String, $first: Int, $filter: IssueFilter, $includeArchived: Boolean, $orderBy: PaginationOrderBy) {
+          issues(after: $after, first: $first, includeArchived: $includeArchived, filter: $filter, orderBy: $orderBy) {
             nodes {
               ${issueFields}
             }
@@ -945,7 +945,13 @@ export const linearActionHandlers: ProviderActionHandlers<"linear", LinearAction
       {
         after: getOptionalString(input.after),
         first: getOptionalNumber(input.first),
-        filter: buildIssuesFilter(getOptionalString(input.project_id), assigneeId),
+        filter: buildIssuesFilter(
+          getOptionalString(input.project_id),
+          assigneeId,
+          getOptionalString(input.updated_after),
+        ),
+        includeArchived: optionalBoolean(input.include_archived) ?? false,
+        orderBy: getOptionalString(input.order_by),
       },
     );
 
@@ -1931,10 +1937,11 @@ async function resolveAssigneeFilterId(context: LinearActionContext, assigneeId:
   return String(viewer.id);
 }
 
-function buildIssuesFilter(projectId: string | undefined, assigneeId: string | undefined) {
+function buildIssuesFilter(projectId: string | undefined, assigneeId: string | undefined, updatedAfter?: string) {
   const filter = compactObject({
     project: projectId ? { id: { eq: projectId } } : undefined,
     assignee: assigneeId ? { id: { eq: assigneeId } } : undefined,
+    updatedAt: updatedAfter ? { gte: updatedAfter } : undefined,
   });
 
   return Object.keys(filter).length > 0 ? filter : undefined;

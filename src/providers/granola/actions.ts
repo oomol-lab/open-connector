@@ -102,6 +102,8 @@ const noteSchema = s.looseObject(
     summary_text: s.string("The plain text summary of the note."),
     summary_markdown: s.nullable(s.string("The markdown summary of the note, when available.")),
     transcript: s.nullable(s.array("Transcript items returned by Granola.", transcriptItemSchema)),
+    date: s.optional(s.string("MCP only: meeting date when available, not a creation or update timestamp.")),
+    participants: s.optional(s.string("MCP only: participant names and email addresses as Granola lists them.")),
   },
 );
 

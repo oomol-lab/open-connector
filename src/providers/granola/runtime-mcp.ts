@@ -5,6 +5,7 @@ import type { Client } from "@modelcontextprotocol/client";
 
 import { SdkHttpError, UnauthorizedError } from "@modelcontextprotocol/client";
 import {
+  compactObject,
   objectArray,
   optionalString,
   positiveInteger,
@@ -58,6 +59,7 @@ export const granolaMcpActionHandlers: ProviderActionHandlers<
         title: meeting.title,
         summary_markdown: meeting.summary,
         transcript: input.include === "transcript" ? [{ text: await getGranolaTranscript(context, id) }] : undefined,
+        ...compactObject({ date: meeting.date, participants: meeting.attendees || undefined }),
       },
     };
   },

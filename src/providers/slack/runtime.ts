@@ -1138,6 +1138,15 @@ function normalizeConversation(conversation: Record<string, unknown>): Record<st
     purpose: typeof purpose?.value === "string" ? purpose.value : null,
     userId: optionalString(conversation.user),
     locale: optionalString(conversation.locale),
+    created: optionalInteger(conversation.created),
+    updated: optionalInteger(conversation.updated),
+    creatorId: optionalString(conversation.creator),
+    isShared: optionalBoolean(conversation.is_shared),
+    isExtShared: optionalBoolean(conversation.is_ext_shared),
+    isOrgShared: optionalBoolean(conversation.is_org_shared),
+    contextTeamId: optionalString(conversation.context_team_id),
+    lastRead: optionalString(conversation.last_read),
+    unreadCount: optionalInteger(conversation.unread_count),
   });
 }
 
@@ -1297,6 +1306,14 @@ function normalizeUser(user: Record<string, unknown>): Record<string, unknown> {
     isAdmin: typeof user.is_admin === "boolean" ? user.is_admin : null,
     isOwner: typeof user.is_owner === "boolean" ? user.is_owner : null,
     locale: optionalString(user.locale),
+    email: optionalString(profile.email),
+    tz: optionalString(user.tz),
+    tzOffset: optionalInteger(user.tz_offset),
+    updated: optionalInteger(user.updated),
+    teamId: optionalString(user.team_id),
+    isRestricted: optionalBoolean(user.is_restricted),
+    isUltraRestricted: optionalBoolean(user.is_ultra_restricted),
+    isAppUser: optionalBoolean(user.is_app_user),
   });
 }
 
