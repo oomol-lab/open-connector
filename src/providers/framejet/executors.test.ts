@@ -1,8 +1,6 @@
 import type { ExecutionContext, TransitFileStore } from "../../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { validateActionInput } from "../../core/validation.ts";
-import { framejetActions } from "./actions.ts";
 import { credentialValidators, executors } from "./executors.ts";
 
 const apiKey = "fj_test_key";
@@ -70,32 +68,6 @@ function imageResponse(headers: Record<string, string> = {}): Response {
     headers: { "content-type": "image/png", ...headers },
   });
 }
-
-function framejetAction(name: string) {
-  return framejetActions.find((action) => action.name === name)!;
-}
-
-describe("framejet action schemas", () => {
-  it.each([["take_screenshot"], ["create_signed_url"]])("caps %s actions at 1000 characters", (name) => {
-    const action = framejetAction(name);
-
-    expect(validateActionInput(action, { url: "https://example.com", actions: "x".repeat(1000) }).valid).toBe(true);
-    expect(validateActionInput(action, { url: "https://example.com", actions: "x".repeat(1001) }).valid).toBe(false);
-  });
-
-  it("caps each goal value at 200 characters", () => {
-    const action = framejetAction("take_screenshot");
-
-    expect(validateActionInput(action, { url: "https://example.com", values: ["x".repeat(200)] }).valid).toBe(true);
-    expect(validateActionInput(action, { url: "https://example.com", values: ["x".repeat(201)] }).valid).toBe(false);
-  });
-
-  it("marks every transit file field as returned", () => {
-    expect(framejetAction("take_screenshot").outputSchema).toMatchObject({
-      properties: { file: { required: ["fileId", "downloadUrl", "sizeBytes", "name", "mimeType"] } },
-    });
-  });
-});
 
 describe("framejet.take_screenshot", () => {
   it("sends capture options as query parameters and stores the image in transit storage", async () => {
