@@ -146,7 +146,10 @@ describe("framejet.take_screenshot", () => {
     const requests = stubFetch(() => imageResponse());
 
     const result = await executors["framejet.take_screenshot"]!(
-      { url: "https://example.com", values: ["x".repeat(499), "y".repeat(500)] },
+      {
+        url: "https://example.com",
+        values: ["a".repeat(200), "b".repeat(200), "c".repeat(200), "d".repeat(200), "e".repeat(196)],
+      },
       executionContext(transitStore([])),
     );
 
@@ -154,11 +157,29 @@ describe("framejet.take_screenshot", () => {
     expect(requests[0]!.url.searchParams.get("values")).toHaveLength(1000);
   });
 
+  it("counts goal values in code points, as the schema does, not UTF-16 units", async () => {
+    const requests = stubFetch(() => imageResponse());
+    // 803 code points once joined, but 1603 UTF-16 units.
+    const values = Array.from({ length: 4 }, () => "\u{1F600}".repeat(200));
+
+    const result = await executors["framejet.take_screenshot"]!(
+      { url: "https://example.com", values },
+      executionContext(transitStore([])),
+    );
+
+    expect(result).toMatchObject({ ok: true });
+    expect(requests).toHaveLength(1);
+    expect(requests[0]!.url.searchParams.get("values")).toBe(values.join("|"));
+  });
+
   it("rejects goal values over 1000 characters once joined, before any request", async () => {
     const requests = stubFetch(() => imageResponse());
 
     const result = await executors["framejet.take_screenshot"]!(
-      { url: "https://example.com", values: Array.from({ length: 10 }, () => "x".repeat(150)) },
+      {
+        url: "https://example.com",
+        values: ["a".repeat(200), "b".repeat(200), "c".repeat(200), "d".repeat(200), "e".repeat(197)],
+      },
       executionContext(transitStore([])),
     );
 
