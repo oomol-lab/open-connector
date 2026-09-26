@@ -246,6 +246,42 @@ describe("MCP server", () => {
     );
   });
 
+  it("summarizes capability in search results and keeps the full capability in guides", async () => {
+    await withAuthenticatedMcpClient(async (client) => {
+      const search = await client.callTool({ name: "search_actions", arguments: { service: "example_auth" } });
+      const guide = await client.callTool({
+        name: "get_action_guide",
+        arguments: { actionId: "example_auth.get_account" },
+      });
+
+      expect(search.structuredContent).toEqual({
+        ok: true,
+        data: [
+          expect.objectContaining({
+            id: "example_auth.get_account",
+            capability: {
+              execution: { locallyExecutable: true, needsCredential: true },
+              policy: { allowed: true, checks: [] },
+              connection: {
+                connectionName: "default",
+                profile: { accountId: "account-default", displayName: "Default Account" },
+              },
+            },
+          }),
+        ],
+      });
+      expect(guide.structuredContent).toMatchObject({
+        ok: true,
+        data: {
+          capability: {
+            requiredScopes: ["records:read"],
+            connection: { connectionName: "default", profile: defaultCredential.profile },
+          },
+        },
+      });
+    });
+  });
+
   it("uses an explicitly selected connection for guides and execution", async () => {
     const runs = new MemoryRunLogStore();
     await withAuthenticatedMcpClient(async (client) => {
