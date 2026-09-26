@@ -1,7 +1,7 @@
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString as asOptionalString, pickOptionalString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, withRetryAfterSeconds } from "../provider-runtime.ts";
 
 export const googlecalendarApiBaseUrl = "https://www.googleapis.com/calendar/v3";
 
@@ -183,7 +183,7 @@ async function assertGoogleResponse(response: Response): Promise<void> {
   }
 
   const { message, details } = await extractGoogleError(response);
-  throw new ProviderRequestError(response.status, message, details);
+  throw new ProviderRequestError(response.status, message, withRetryAfterSeconds(response, details));
 }
 
 async function extractGoogleError(response: Response): Promise<{ message: string; details: unknown }> {

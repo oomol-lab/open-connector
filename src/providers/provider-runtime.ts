@@ -1077,6 +1077,46 @@ export async function readProviderErrorTextBody(response: Response, fieldName: s
 }
 
 /**
+ * Read a `Retry-After` header as whole seconds from now: an integer delay
+ * verbatim, an HTTP-date as the seconds until that instant (never negative).
+ * Examples: `"73" => 73`; a date 90 s ahead `=> 90`; absent or unparseable
+ * `=> undefined`.
+ */
+export function readRetryAfterSeconds(headers: Headers, now: number = Date.now()): number | undefined {
+  const value = headers.get("retry-after")?.trim();
+  if (!value) {
+    return undefined;
+  }
+  if (/^\d+$/.test(value)) {
+    const seconds = Number(value);
+    return Number.isSafeInteger(seconds) ? seconds : undefined;
+  }
+  // An HTTP-date always names its weekday and month; without a letter the
+  // value is a malformed number, which Date.parse would still read as a year.
+  const retryAt = /[a-z]/i.test(value) ? Date.parse(value) : Number.NaN;
+  return Number.isFinite(retryAt) ? Math.max(0, Math.ceil((retryAt - now) / 1000)) : undefined;
+}
+
+/**
+ * Attach a rate-limited response's `Retry-After` to its error details in the
+ * shape Slack established, `details.retryAfterSeconds`, so every provider's
+ * 429 (and 503) reaches the action envelope with the same pacing hint.
+ * Other statuses, and responses without a usable header, return `details`
+ * untouched; non-record details are kept under `body`.
+ */
+export function withRetryAfterSeconds(response: Response, details?: unknown): unknown {
+  if (response.status !== 429 && response.status !== 503) {
+    return details;
+  }
+  const retryAfterSeconds = readRetryAfterSeconds(response.headers);
+  if (retryAfterSeconds === undefined) {
+    return details;
+  }
+  const record = optionalRecord(details) ?? (details == null ? {} : { body: details });
+  return { ...record, retryAfterSeconds };
+}
+
+/**
  * Read a JSON provider response or raise a structured provider request error.
  */
 export async function readProviderJson<T>(response: Response, source: string): Promise<T> {

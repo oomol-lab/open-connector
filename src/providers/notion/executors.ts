@@ -19,6 +19,7 @@ import {
   readProviderProxyResponse,
   requireBearerCredential,
   toProviderProxyError,
+  withRetryAfterSeconds,
 } from "../provider-runtime.ts";
 
 const service = "notion";
@@ -172,7 +173,11 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
     const response = await notionFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
-      throw new ProviderRequestError(response.status, text || `Notion request failed with HTTP ${response.status}`);
+      throw new ProviderRequestError(
+        response.status,
+        text || `Notion request failed with HTTP ${response.status}`,
+        withRetryAfterSeconds(response),
+      );
     }
 
     return { ok: true, response: await readProviderProxyResponse(response) };
@@ -895,7 +900,7 @@ async function assertNotionResponse(response: Response) {
     throw new ProviderRequestError(403, message);
   }
   if (response.status === 429) {
-    throw new ProviderRequestError(429, message);
+    throw new ProviderRequestError(429, message, withRetryAfterSeconds(response));
   }
 
   throw new ProviderRequestError(response.status, message);
