@@ -77,9 +77,17 @@ export async function discordbotRequest(input: DiscordbotRequestOptions): Promis
   return response;
 }
 
-/** Read a required snowflake input and encode it as one URL path segment. */
+/**
+ * Read a required snowflake input and encode it as one URL path segment. A `.` or `..`
+ * value survives encoding and URL parsing resolves it as a dot segment, which would send
+ * the request to another endpoint, such as DELETE on the member or the guild itself.
+ */
 export function requiredPath(value: unknown, field: string): string {
-  return encodePathSegment(requiredString(value, field, providerInputError));
+  const segment = requiredString(value, field, providerInputError);
+  if (segment === "." || segment === "..") {
+    throw providerInputError(`${field} must not be . or ..`);
+  }
+  return encodePathSegment(segment);
 }
 
 async function readDiscordbotJson(response: Response): Promise<unknown> {
