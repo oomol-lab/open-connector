@@ -1,6 +1,6 @@
-import { optionalString, requiredString } from "../../core/cast.ts";
+import { optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import { providerInputError, ProviderRequestError } from "../provider-runtime.ts";
+import { providerInputError, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 export const discordApiBaseUrl = "https://discord.com/api";
 
@@ -12,7 +12,7 @@ export interface DiscordbotContext {
 
 export type DiscordbotActionHandler = (input: Record<string, unknown>, context: DiscordbotContext) => Promise<unknown>;
 
-export interface DiscordbotRequestOptions {
+interface DiscordbotRequestOptions {
   method?: string;
   path: string;
   query?: Record<string, unknown>;
@@ -83,7 +83,7 @@ export async function discordbotRequest(input: DiscordbotRequestOptions): Promis
  * the request to another endpoint, such as DELETE on the member or the guild itself.
  */
 export function requiredPath(value: unknown, field: string): string {
-  const segment = requiredString(value, field, providerInputError);
+  const segment = requiredInputString(value, field);
   if (segment === "." || segment === "..") {
     throw providerInputError(`${field} must not be . or ..`);
   }

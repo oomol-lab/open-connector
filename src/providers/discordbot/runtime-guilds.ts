@@ -17,10 +17,9 @@ import {
   optionalString,
   optionalStringArray,
   recordOrEmpty,
-  requiredString,
 } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
-import { providerInputError } from "../provider-runtime.ts";
+import { providerInputError, requiredInputString } from "../provider-runtime.ts";
 import {
   discordbotRequest,
   discordbotRequestJson,
@@ -77,7 +76,7 @@ export const guildActionHandlers: ProviderActionHandlerSubset<"discordbot", Disc
       method: "POST",
       path: `${guildPath(input)}/channels`,
       body: jsonObject({
-        name: requiredString(input.name, "name", providerInputError),
+        name: requiredInputString(input.name, "name"),
         type: optionalInteger(input.type),
         topic: optionalRawString(input.topic),
         bitrate: optionalInteger(input.bitrate),
@@ -107,7 +106,7 @@ export const guildActionHandlers: ProviderActionHandlerSubset<"discordbot", Disc
       path: `${guildPath(input)}/channels`,
       body: requiredPositions(input.positions).map((position) =>
         jsonObject({
-          id: requiredString(position.id, "positions[].id", providerInputError),
+          id: requiredInputString(position.id, "positions[].id"),
           position: nullableInteger(position.position),
           lock_permissions: nullableBoolean(position.lock_permissions),
           parent_id: nullableString(position.parent_id),
@@ -137,7 +136,7 @@ export const guildActionHandlers: ProviderActionHandlerSubset<"discordbot", Disc
     return discordbotRequestJson({
       path: `${guildPath(input)}/members/search`,
       query: {
-        query: requiredString(input.query, "query", providerInputError),
+        query: requiredInputString(input.query, "query"),
         limit: optionalInteger(input.limit),
       },
       context,
@@ -277,7 +276,7 @@ export const guildActionHandlers: ProviderActionHandlerSubset<"discordbot", Disc
       path: `${guildPath(input)}/roles`,
       body: requiredPositions(input.positions).map((position) =>
         jsonObject({
-          id: requiredString(position.id, "positions[].id", providerInputError),
+          id: requiredInputString(position.id, "positions[].id"),
           position: nullableInteger(position.position),
         }),
       ),
@@ -425,7 +424,7 @@ async function addGuildMember(input: Record<string, unknown>, context: Discordbo
     method: "PUT",
     path: memberPath(input),
     body: jsonObject({
-      access_token: requiredString(input.access_token, "access_token", providerInputError),
+      access_token: requiredInputString(input.access_token, "access_token"),
       nick: optionalRawString(input.nick),
       roles: optionalStringArray(input.roles),
       mute: optionalBoolean(input.mute),
@@ -437,7 +436,7 @@ async function addGuildMember(input: Record<string, unknown>, context: Discordbo
 }
 
 async function getGuildWidgetPng(input: Record<string, unknown>, context: DiscordbotContext): Promise<unknown> {
-  const guildId = requiredString(input.guild_id, "guild_id", providerInputError);
+  const guildId = requiredInputString(input.guild_id, "guild_id");
   const response = await discordbotRequest({
     path: `${guildPath(input)}/widget.png`,
     query: { style: optionalString(input.style) },
