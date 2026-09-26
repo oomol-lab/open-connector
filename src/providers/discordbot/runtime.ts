@@ -92,8 +92,14 @@ async function toDiscordbotError(response: Response, authenticated: boolean): Pr
     } catch {}
   }
   const resolvedMessage = message || `Discord request failed with ${response.status}`;
-  if (authenticated && (response.status === 401 || response.status === 403)) {
+  if (authenticated && response.status === 401) {
     return new ProviderRequestError(401, resolvedMessage);
+  }
+  // Discord answers 403 when the bot lacks a guild or channel permission, such as
+  // "Missing Permissions" or "Missing Access". The token still works, so this must
+  // not read as authorization_failed, which clients treat as "reconnect".
+  if (response.status === 403) {
+    return new ProviderRequestError(403, resolvedMessage, undefined, "invalid_input");
   }
   if (response.status === 429) {
     return new ProviderRequestError(429, resolvedMessage);
