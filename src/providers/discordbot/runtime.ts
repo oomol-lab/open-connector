@@ -77,7 +77,7 @@ export async function discordbotRequest(input: DiscordbotRequestOptions): Promis
     signal: input.context.signal,
   });
   if (!input.skipError && !response.ok) {
-    throw await toDiscordbotError(response, input.authenticated !== false);
+    throw await toDiscordbotError(response);
   }
   return response;
 }
@@ -106,7 +106,7 @@ async function readDiscordbotJson(response: Response): Promise<unknown> {
   }
 }
 
-async function toDiscordbotError(response: Response, authenticated: boolean): Promise<ProviderRequestError> {
+async function toDiscordbotError(response: Response): Promise<ProviderRequestError> {
   const text = await response.text().catch(() => "");
   let message = text;
   if (text) {
@@ -120,17 +120,11 @@ async function toDiscordbotError(response: Response, authenticated: boolean): Pr
     } catch {}
   }
   const resolvedMessage = message || `Discord request failed with ${response.status}`;
-  if (authenticated && response.status === 401) {
-    return new ProviderRequestError(401, resolvedMessage);
-  }
   // Discord answers 403 when the bot lacks a guild or channel permission, such as
   // "Missing Permissions" or "Missing Access". The token still works, so this must
   // not read as authorization_failed, which clients treat as "reconnect".
   if (response.status === 403) {
     return new ProviderRequestError(403, resolvedMessage, undefined, "invalid_input");
-  }
-  if (response.status === 429) {
-    return new ProviderRequestError(429, resolvedMessage);
   }
   return new ProviderRequestError(response.status, resolvedMessage);
 }
