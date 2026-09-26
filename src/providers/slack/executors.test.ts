@@ -1025,3 +1025,120 @@ describe("Slack message and member page validation", () => {
     }
   });
 });
+
+describe("Slack conversation and user extra fields", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const context: ExecutionContext = { getCredential: async () => oauthCredential("user") };
+  const bareChannel = { id: "C111", is_channel: true, is_private: false };
+  const bareUser = { id: "U111", name: "alice", profile: { real_name: "Alice" } };
+
+  it("keeps the extra conversation fields Slack sends and omits them otherwise", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          ok: true,
+          channels: [
+            {
+              ...bareChannel,
+              created: 1700000000,
+              updated: 1758844800000,
+              creator: "U222",
+              is_shared: true,
+              is_ext_shared: false,
+              is_org_shared: false,
+              context_team_id: "T111",
+              last_read: "1758844800.000100",
+              unread_count: 3,
+            },
+            { ...bareChannel, id: "C222" },
+          ],
+        }),
+      ),
+    );
+    const result = await slackExecutors["slack.list_conversations"]!({}, context);
+    expect(result).toMatchObject({
+      ok: true,
+      output: {
+        conversations: [
+          {
+            channelId: "C111",
+            created: 1700000000,
+            updated: 1758844800000,
+            creatorId: "U222",
+            isShared: true,
+            isExtShared: false,
+            isOrgShared: false,
+            contextTeamId: "T111",
+            lastRead: "1758844800.000100",
+            unreadCount: 3,
+          },
+          { channelId: "C222" },
+        ],
+      },
+    });
+    const bare = (result as { output: { conversations: Record<string, unknown>[] } }).output.conversations[1]!;
+    for (const key of ["created", "updated", "creatorId", "isShared", "contextTeamId", "lastRead", "unreadCount"]) {
+      expect(bare).not.toHaveProperty(key);
+    }
+  });
+
+  it("keeps the extra user fields Slack sends and omits them otherwise", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          ok: true,
+          members: [
+            {
+              ...bareUser,
+              profile: { ...bareUser.profile, email: "alice@example.com" },
+              tz: "Asia/Shanghai",
+              tz_offset: 28800,
+              updated: 1758844800,
+              team_id: "T111",
+              is_restricted: false,
+              is_ultra_restricted: false,
+              is_app_user: false,
+            },
+            { ...bareUser, id: "U222" },
+          ],
+        }),
+      ),
+    );
+    const result = await slackExecutors["slack.list_users"]!({}, context);
+    expect(result).toMatchObject({
+      ok: true,
+      output: {
+        users: [
+          {
+            userId: "U111",
+            email: "alice@example.com",
+            tz: "Asia/Shanghai",
+            tzOffset: 28800,
+            updated: 1758844800,
+            teamId: "T111",
+            isRestricted: false,
+            isUltraRestricted: false,
+            isAppUser: false,
+          },
+          { userId: "U222", realName: "Alice" },
+        ],
+      },
+    });
+    const bare = (result as { output: { users: Record<string, unknown>[] } }).output.users[1]!;
+    for (const key of [
+      "email",
+      "tz",
+      "tzOffset",
+      "updated",
+      "teamId",
+      "isRestricted",
+      "isUltraRestricted",
+      "isAppUser",
+    ]) {
+      expect(bare).not.toHaveProperty(key);
+    }
+  });
+});

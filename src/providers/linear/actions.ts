@@ -312,6 +312,12 @@ const actions: LinearActionSource[] = [
       first,
       project_id: stringId,
       assignee_id: stringId,
+      updated_after: s.string({
+        minLength: 1,
+        description: "Only issues updated at or after this ISO 8601 date-time, such as 2026-01-27T15:30:00Z.",
+      }),
+      include_archived: s.boolean({ description: "Include archived issues." }),
+      order_by: s.stringEnum(["createdAt", "updatedAt"], { description: "Sort order for the page." }),
     }),
     object({ issues: s.array(objectSchema), page_info: pageInfo }),
   ),

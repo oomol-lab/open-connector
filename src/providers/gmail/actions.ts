@@ -44,6 +44,10 @@ const messageSummaryProperties = {
   sender: s.string({ description: "Message sender." }),
   to: s.string({ description: "Message recipients." }),
   messageTimestamp: s.string({ description: "Message timestamp." }),
+  historyId: s.string({ description: "Gmail history ID when the resource carries one." }),
+  internalDate: s.string({ description: "Gmail internal date as epoch milliseconds when present." }),
+  sizeEstimate: s.integer({ description: "Estimated message size in bytes when present." }),
+  snippet: s.string({ description: "Gmail snippet when present." }),
 };
 
 const messageSummary = s.object(messageSummaryProperties, {
