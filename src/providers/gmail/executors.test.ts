@@ -87,6 +87,25 @@ describe("Gmail quota failures on the runtime action route", () => {
   });
 });
 
+describe.each(["action", "proxy"])("Gmail %s rate limit details", (path) => {
+  it("preserves Retry-After through the action error envelope", async () => {
+    vi.stubGlobal("fetch", async () =>
+      Response.json(
+        { error: { code: 429, message: "Too many requests", errors: [{ reason: "rateLimitExceeded" }] } },
+        { status: 429, headers: { "Retry-After": "73" } },
+      ),
+    );
+    const result =
+      path === "action"
+        ? await executors["gmail.get_profile"]!({}, credentialContext)
+        : await proxy({ method: "GET", endpoint: "/users/me/profile" }, credentialContext);
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "rate_limited", details: { status: 429, details: { retryAfterSeconds: 73 } } },
+    });
+  });
+});
+
 function actionContext(fetcher: typeof fetch) {
   return {
     userId: "me",

@@ -7,6 +7,7 @@ import {
   readProviderJsonBody,
   runProviderRequest,
   setSearchParams,
+  withRetryAfterSeconds,
 } from "../provider-runtime.ts";
 
 const graphBaseUrl = "https://graph.microsoft.com/v1.0/";
@@ -105,5 +106,9 @@ async function microsoftGraphResponseError(
       // Keep the upstream text when it is not JSON.
     }
   }
-  return new ProviderRequestError(response.status, options.refineErrorMessage?.(code, message) ?? message);
+  return new ProviderRequestError(
+    response.status,
+    options.refineErrorMessage?.(code, message) ?? message,
+    withRetryAfterSeconds(response),
+  );
 }

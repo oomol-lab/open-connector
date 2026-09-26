@@ -23,6 +23,7 @@ import {
   requiredInputString,
   requiredResponseRecord,
   runProviderRequest,
+  withRetryAfterSeconds,
 } from "../provider-runtime.ts";
 
 export const granolaApiBaseUrl = "https://public-api.granola.ai";
@@ -249,5 +250,9 @@ async function assertGranolaResponse(response: Response, mode: GranolaRequestMod
     throw new ProviderRequestError(400, message);
   }
 
-  throw new ProviderRequestError(response.status >= 500 ? 502 : response.status || 502, message);
+  throw new ProviderRequestError(
+    response.status >= 500 ? 502 : response.status || 502,
+    message,
+    withRetryAfterSeconds(response),
+  );
 }
