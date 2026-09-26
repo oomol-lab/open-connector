@@ -88,6 +88,20 @@ const dataSource = s.looseObject(
   { description: "A Notion data source object." },
 );
 
+const comment = s.looseObject(
+  {
+    object: s.literal("comment", { description: "The Notion object type." }),
+    id: s.string({ description: "The comment ID." }),
+    parent: notionParent,
+    discussion_id: s.string({ description: "The discussion thread the comment belongs to." }),
+    created_time: s.dateTime("The time when the comment was created."),
+    last_edited_time: s.dateTime("The time when the comment was last edited."),
+    created_by: notionObject,
+    rich_text: notionRichText,
+  },
+  { description: "A Notion comment object." },
+);
+
 const listOutput = (items: JsonSchema, description: string): JsonSchema =>
   s.object(
     {
@@ -644,5 +658,35 @@ export const notionActions: ActionDefinition[] = [
     requiredScopes: notionReadScopes,
     inputSchema: paginationInput("dataSourceId", "The data source ID whose templates should be listed."),
     outputSchema: listOutput(notionObject, "Data source templates returned by Notion."),
+  }),
+  action({
+    name: "list_comments",
+    operationType: "read",
+    description:
+      "List the unresolved comments on a Notion page or block with pagination. Comments on a page's blocks are listed by the block's ID. The integration needs the read comments capability.",
+    requiredScopes: notionReadScopes,
+    inputSchema: paginationInput("blockId", "The page or block ID whose comments should be listed."),
+    outputSchema: listOutput(comment, "Comments returned by Notion."),
+  }),
+  action({
+    name: "create_comment",
+    operationType: "write",
+    description:
+      "Create a Notion comment: on a page or block through parent, or as a reply in an existing discussion through discussion_id. The integration needs the insert comments capability.",
+    requiredScopes: notionWriteScopes,
+    inputSchema: s.requireExactlyOneProperty(
+      s.object(
+        {
+          parent: notionParent,
+          discussion_id: s.string({ minLength: 1, description: "The discussion thread to reply in." }),
+          rich_text: richTextArray("The comment body as Notion rich text objects."),
+          attachments: s.array(notionObject, { description: "File upload attachments for the comment." }),
+          display_name: notionObject,
+        },
+        { required: ["rich_text"], description: "The input payload for this action." },
+      ),
+      ["parent", "discussion_id"],
+    ),
+    outputSchema: comment,
   }),
 ];
