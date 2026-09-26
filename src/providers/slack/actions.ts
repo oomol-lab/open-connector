@@ -66,6 +66,32 @@ const messageContentProperties = {
   metadata: s.unknownObject("Slack message metadata to attach to the message."),
 };
 
+// Shared by the message-reading actions: opt in to the untouched vendor
+// record. Off by default so the normalized row stays the documented shape.
+const includeRawProperties = {
+  includeRaw: s.boolean({
+    description:
+      "When true, each returned message also carries the untouched Slack record under raw. Defaults to false.",
+  }),
+};
+
+const slackFileSchema = s.unknownObject("A Slack file object, exactly as the Slack API returned it.");
+const slackMessageMetadataSchema = s.unknownObject("Slack message metadata, exactly as the Slack API returned it.");
+const rawMessageSchema = s.unknownObject(
+  "The untouched Slack message record, exactly as the Slack API returned it. Present only when includeRaw is true.",
+);
+
+// The open vendor payloads a message row carries, passed through untouched.
+const messagePayloadOutputProperties = {
+  files: s.array(slackFileSchema, { description: "The files attached to the message, as Slack returned them." }),
+  attachments: s.array(slackAttachmentSchema, {
+    description: "The legacy attachments on the message, as Slack returned them.",
+  }),
+  blocks: s.array(slackBlockSchema, { description: "The Block Kit blocks of the message, as Slack returned them." }),
+  metadata: slackMessageMetadataSchema,
+  raw: rawMessageSchema,
+};
+
 const slackReactionSchema = s.looseObject(
   {
     name: s.string({ description: "The emoji name of the reaction." }),
@@ -80,9 +106,9 @@ const slackReactionSchema = s.looseObject(
 // Only fields the executor actually normalizes are declared. The object is
 // loose, but that permits extras it does NOT make them appear: the executor
 // builds each row explicitly, so an undeclared Slack field is simply not
-// emitted. Deliberately absent: `blocks`, `attachments` and `files`. Those
-// are unbounded nested payloads on a row shape that ETL reads in bulk, and
-// each wants its own normalized contract rather than a raw passthrough.
+// emitted. `blocks`, `attachments`, `files` and `metadata` are passed through
+// as Slack sent them, and `raw` carries the whole record when the caller
+// asked for it with includeRaw.
 const slackMessageSchema = s.looseObject(
   {
     ts: s.string({ description: "The message timestamp identifier." }),
@@ -98,6 +124,7 @@ const slackMessageSchema = s.looseObject(
     clientMsgId: s.string({ description: "The client-generated message identifier when Slack returns one." }),
     text: s.string({ description: "The text content of the message." }),
     editedTs: s.string({ description: "The timestamp of the most recent edit, when the message was edited." }),
+    editedUserId: s.string({ description: "The user ID of the most recent editor, when the message was edited." }),
     threadTs: s.string({
       description:
         "The timestamp of the thread parent. Equal to ts on a thread parent, and absent on a message that is not in a thread.",
@@ -105,9 +132,17 @@ const slackMessageSchema = s.looseObject(
     parentUserId: s.string({ description: "The author of the thread parent, on a threaded reply." }),
     replyCount: s.integer({ description: "The number of replies to this thread parent." }),
     replyUsersCount: s.integer({ description: "The number of distinct users who replied to this thread parent." }),
+    replyUserIds: s.array(s.string({ description: "A Slack user ID." }), {
+      description: "The users who replied to this thread parent, as far as Slack reports them.",
+    }),
     latestReply: s.string({ description: "The timestamp of the most recent reply to this thread parent." }),
+    rootTs: s.string({
+      description:
+        "The timestamp of the thread parent a broadcast reply was copied from, on a thread_broadcast message.",
+    }),
     isLocked: s.boolean({ description: "Whether the thread is locked." }),
     reactions: s.array(slackReactionSchema, { description: "Reaction summaries attached to the message." }),
+    ...messagePayloadOutputProperties,
   },
   { description: "A Slack message record." },
 );
@@ -124,6 +159,7 @@ const searchMessageMatchSchema = s.looseObject(
     permalink: s.string({ description: "A Slack permalink for the matching message." }),
     teamId: s.string({ description: "The Slack team ID returned for the match." }),
     type: s.string({ description: "The Slack result type." }),
+    ...messagePayloadOutputProperties,
   },
   { description: "A normalized Slack message search match." },
 );
@@ -253,6 +289,7 @@ export const slackActions: ActionDefinition[] = [
           description: "The Slack pagination cursor from a previous page. Omit for the first page.",
         }),
         ...historyWindowProperties,
+        ...includeRawProperties,
       },
       { required: ["channelId"], description: "Input parameters for reading Slack conversation history." },
     ),
@@ -321,6 +358,7 @@ export const slackActions: ActionDefinition[] = [
         sort: searchSortSchema,
         sortDir: sortDirectionSchema,
         teamId: s.string({ description: "The encoded team ID to search when using an org-level token." }),
+        ...includeRawProperties,
       },
       { required: ["query"], description: "Input parameters for searching Slack messages." },
     ),
@@ -422,6 +460,7 @@ export const slackActions: ActionDefinition[] = [
           description: "The Slack pagination cursor from a previous page. Omit for the first page.",
         }),
         ...historyWindowProperties,
+        ...includeRawProperties,
       },
       { required: ["channelId", "threadTs"], description: "Input parameters for reading a Slack thread." },
     ),
