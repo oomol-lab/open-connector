@@ -130,6 +130,12 @@ export const notionActionHandlers: ProviderActionHandlers<"notion", NotionAction
   list_data_source_templates(input, context): Promise<unknown> {
     return notionListDataSourceTemplates(input, context.accessToken, context.fetcher);
   },
+  list_comments(input, context): Promise<unknown> {
+    return notionListComments(input, context.accessToken, context.fetcher);
+  },
+  create_comment(input, context): Promise<unknown> {
+    return notionCreateComment(input, context.accessToken, context.fetcher);
+  },
 };
 
 export const executors: ProviderExecutors = defineProviderExecutors<NotionActionContext>({
@@ -818,6 +824,49 @@ async function notionListDataSourceTemplates(
       query: compactQuery({
         page_size: asNumber(input.pageSize),
         start_cursor: asNonEmptyString(input.startCursor),
+      }),
+    },
+    fetcher,
+  );
+
+  return payload ?? {};
+}
+
+async function notionListComments(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
+  const payload = await notionRequest<NotionObject>(
+    accessToken,
+    {
+      path: "/comments",
+      query: compactQuery({
+        block_id: String(input.blockId),
+        page_size: asNumber(input.pageSize),
+        start_cursor: asNonEmptyString(input.startCursor),
+      }),
+    },
+    fetcher,
+  );
+
+  return payload ?? {};
+}
+
+async function notionCreateComment(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {
+  const parent = asObject(input.parent);
+  const discussionId = asNonEmptyString(input.discussion_id);
+  if (!parent === !discussionId) {
+    throw new ProviderRequestError(400, "exactly one of parent or discussion_id is required");
+  }
+
+  const payload = await notionRequest<NotionObject>(
+    accessToken,
+    {
+      method: "POST",
+      path: "/comments",
+      body: compactObject({
+        parent,
+        discussion_id: discussionId,
+        rich_text: Array.isArray(input.rich_text) ? input.rich_text : [],
+        attachments: Array.isArray(input.attachments) ? input.attachments : undefined,
+        display_name: asObject(input.display_name),
       }),
     },
     fetcher,
