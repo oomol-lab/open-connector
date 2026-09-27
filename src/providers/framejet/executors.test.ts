@@ -1,7 +1,7 @@
 import type { ExecutionContext, TransitFileStore } from "../../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { credentialValidators, executors } from "./executors.ts";
+import { credentialValidators, executors, proxy } from "./executors.ts";
 
 const apiKey = "fj_test_key";
 
@@ -301,6 +301,61 @@ describe("framejet.create_signed_url", () => {
         details: { status: 502, details: undefined },
       },
     });
+  });
+});
+
+describe("framejet proxy", () => {
+  it("maps the monthly quota response to insufficient_credit, as the action does", async () => {
+    const requests = stubFetch(() =>
+      Response.json({ error: "Monthly screenshot limit reached", code: "quota_exceeded" }, { status: 402 }),
+    );
+
+    const result = await proxy(
+      { method: "GET", endpoint: "/v1/take", query: { url: "https://example.com" } },
+      executionContext(),
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "insufficient_credit",
+        message: "Monthly screenshot limit reached (quota_exceeded)",
+        details: { status: 402 },
+      },
+    });
+    expect(requests[0]!.url.href).toBe("https://framejet.dev/v1/take?url=https%3A%2F%2Fexample.com");
+    expect(requests[0]!.headers.get("x-api-key")).toBe(apiKey);
+  });
+
+  it("gives a proxied capture the same 90 second budget as the action", async () => {
+    vi.useFakeTimers();
+    try {
+      vi.stubGlobal("fetch", (_input: RequestInfo | URL, init?: RequestInit) => {
+        return new Promise<never>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")));
+        });
+      });
+      const pending = proxy(
+        { method: "GET", endpoint: "/v1/take", query: { url: "https://example.com", goal: "the pricing table" } },
+        executionContext(),
+      );
+      let settled = false;
+      void pending.then(() => {
+        settled = true;
+      });
+
+      await vi.advanceTimersByTimeAsync(30_001);
+      expect(settled).toBe(false);
+
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(settled).toBe(true);
+      await expect(pending).resolves.toMatchObject({
+        ok: false,
+        error: { code: "provider_error", message: "framejet request timed out", details: { status: 504 } },
+      });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

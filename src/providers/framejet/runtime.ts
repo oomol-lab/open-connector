@@ -18,7 +18,8 @@ import {
 export const framejetApiBaseUrl = "https://framejet.dev";
 
 // A capture may wait for slow pages, page steps and goal mode, so it gets more than the default budget.
-const framejetCaptureTimeoutMs = 90_000;
+// The proxy shares this budget, since GET /v1/take is the capture endpoint on both paths.
+export const framejetCaptureTimeoutMs = 90_000;
 
 const framejetCaptureParams = ["format", "full_page", "width", "height", "dpr", "clean", "delay", "actions"];
 
@@ -172,7 +173,10 @@ function framejetHeaders(apiKey: string): Record<string, string> {
   };
 }
 
-async function readFramejetError(response: Response): Promise<ProviderRequestError> {
+/**
+ * Map a failed Framejet response for both actions and the proxy, so a spent quota reads the same on either path.
+ */
+export async function readFramejetError(response: Response): Promise<ProviderRequestError> {
   const text = (await readProviderErrorTextBody(response, "Framejet error response")).trim();
   let payload: Record<string, unknown> | undefined;
   try {
