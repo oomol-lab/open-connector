@@ -78,7 +78,7 @@ export const guildActionHandlers: ProviderActionHandlerSubset<"discordbot", Disc
       body: jsonObject({
         name: requiredInputString(input.name, "name"),
         type: optionalInteger(input.type),
-        topic: optionalRawString(input.topic),
+        topic: channelTopic(input),
         bitrate: optionalInteger(input.bitrate),
         user_limit: optionalInteger(input.user_limit),
         rate_limit_per_user: optionalInteger(input.rate_limit_per_user),
@@ -450,6 +450,19 @@ async function getGuildWidgetPng(input: Record<string, unknown>, context: Discor
     sizeBytes: buffer.byteLength,
     dataBase64: buffer.toString("base64"),
   };
+}
+
+/**
+ * Discord allows 4096 characters in the topic of a forum (15) or media (16) channel
+ * and 1024 in every other channel type, including the default text channel.
+ */
+function channelTopic(input: Record<string, unknown>): string | undefined {
+  const topic = optionalRawString(input.topic);
+  const type = optionalInteger(input.type);
+  if (topic !== undefined && type !== 15 && type !== 16 && [...topic].length > 1024) {
+    throw providerInputError("topic must be at most 1024 characters unless type is 15 (forum) or 16 (media)");
+  }
+  return topic;
 }
 
 function roleBody(input: Record<string, unknown>): Record<string, unknown> {

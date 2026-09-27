@@ -67,6 +67,35 @@ describe("Discord guild actions", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it("limits the topic to 1024 characters unless the channel is a forum or media channel", async () => {
+    const fetch = stubDiscord(() => Response.json({ id: "30" }));
+
+    for (const type of [undefined, 0, 5]) {
+      await expect(
+        run("create_guild_channel", { guild_id: "10", name: "c", type, topic: "a".repeat(1025) }),
+      ).resolves.toMatchObject({
+        ok: false,
+        error: {
+          code: "invalid_input",
+          message: "topic must be at most 1024 characters unless type is 15 (forum) or 16 (media)",
+        },
+      });
+    }
+    expect(fetch).not.toHaveBeenCalled();
+
+    const accepted: Array<[number, string]> = [
+      [0, "a".repeat(1024)],
+      [15, "a".repeat(1025)],
+      [16, "a".repeat(4096)],
+    ];
+    for (const [type, topic] of accepted) {
+      await expect(run("create_guild_channel", { guild_id: "10", name: "c", type, topic })).resolves.toMatchObject({
+        ok: true,
+      });
+    }
+    expect(fetch).toHaveBeenCalledTimes(3);
+  });
+
   it("returns a null member when Modify Guild Member answers 204", async () => {
     const fetch = stubDiscord(() => new Response(null, { status: 204 }));
 
@@ -116,7 +145,7 @@ describe("Discord guild actions", () => {
   });
 
   // Forum and media channels hold post guidelines in the topic, which Discord allows up
-  // to 4096 characters; the stricter 1024 limit for other types is left to Discord.
+  // to 4096 characters; the executor enforces the 1024 limit of every other type.
   it("accepts a forum channel topic up to 4096 characters for create_guild_channel", () => {
     const action = discordbotGuildActions.find((candidate) => candidate.name === "create_guild_channel")!;
 
