@@ -176,7 +176,11 @@ describe("Discord error mapping", () => {
 
     expect(result).toEqual({
       ok: false,
-      error: { code: "invalid_input", message: "Missing Permissions", details: { status: 403 } },
+      error: {
+        code: "invalid_input",
+        message: "Missing Permissions",
+        details: { status: 403, details: { code: 50013 } },
+      },
     });
   });
 
@@ -187,7 +191,70 @@ describe("Discord error mapping", () => {
 
     expect(result).toEqual({
       ok: false,
-      error: { code: "authorization_failed", message: "401: Unauthorized", details: { status: 401 } },
+      error: {
+        code: "authorization_failed",
+        message: "401: Unauthorized",
+        details: { status: 401, details: { code: 0 } },
+      },
+    });
+  });
+
+  // Since API v8 a form error's message is only "Invalid Form Body"; the field that
+  // failed and the reason are nested under `errors`, with array items keyed by index.
+  it("keeps Discord's field-level form errors in the message and details", async () => {
+    const errors = {
+      name: { _errors: [{ code: "BASE_TYPE_BAD_LENGTH", message: "Must be between 1 and 100 in length." }] },
+      permission_overwrites: {
+        "0": { type: { _errors: [{ code: "BASE_TYPE_CHOICES", message: "Value must be one of {0, 1}." }] } },
+      },
+    };
+    stubDiscord(() => Response.json({ code: 50035, errors, message: "Invalid Form Body" }, { status: 400 }));
+
+    const result = await run("create_guild_channel", {
+      guild_id: "10",
+      name: "x".repeat(100),
+      permission_overwrites: [{ id: "20", type: 5 }],
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        code: "invalid_input",
+        message:
+          "Invalid Form Body: name: Must be between 1 and 100 in length.; permission_overwrites.0.type: Value must be one of {0, 1}.",
+        details: { status: 400, details: { code: 50035, errors } },
+      },
+    });
+  });
+
+  it("reports a request-level form error without a field path", async () => {
+    const errors = {
+      _errors: [{ code: "APPLICATION_COMMAND_TOO_LARGE", message: "Command exceeds maximum size (8000)" }],
+    };
+    stubDiscord(() => Response.json({ code: 50035, message: "Invalid Form Body", errors }, { status: 400 }));
+
+    const result = await run("create_message", { channel_id: "40", content: "hi" });
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: { message: "Invalid Form Body: Command exceeds maximum size (8000)" },
+    });
+  });
+
+  it("keeps retry_after from a rate-limited response", async () => {
+    stubDiscord(() =>
+      Response.json({ message: "You are being rate limited.", retry_after: 1.5, global: false }, { status: 429 }),
+    );
+
+    const result = await run("get_guild", { guild_id: "10" });
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        code: "rate_limited",
+        message: "You are being rate limited.",
+        details: { status: 429, details: { retry_after: 1.5 } },
+      },
     });
   });
 });

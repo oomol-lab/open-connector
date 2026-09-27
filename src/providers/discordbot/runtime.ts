@@ -1,4 +1,5 @@
-import { optionalString } from "../../core/cast.ts";
+import { looseArray, optionalRecord, optionalString, recordOrEmpty } from "../../core/cast.ts";
+import { jsonObject } from "../../core/request.ts";
 import { providerInputError, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 // Pin actions to v10. An unversioned route goes to Discord's default version, which is
@@ -108,23 +109,46 @@ async function readDiscordbotJson(response: Response): Promise<unknown> {
 
 async function toDiscordbotError(response: Response): Promise<ProviderRequestError> {
   const text = await response.text().catch(() => "");
-  let message = text;
-  if (text) {
-    try {
-      const parsed = JSON.parse(text) as Record<string, unknown>;
-      message =
-        optionalString(parsed.message) ??
-        optionalString(parsed.error_description) ??
-        optionalString(parsed.error) ??
-        text;
-    } catch {}
-  }
-  const resolvedMessage = message || `Discord request failed with ${response.status}`;
+  let payload: Record<string, unknown> | undefined;
+  try {
+    payload = optionalRecord(JSON.parse(text));
+  } catch {}
+  const message =
+    optionalString(payload?.message) ??
+    optionalString(payload?.error_description) ??
+    optionalString(payload?.error) ??
+    text;
+  // A form error's message is only "Invalid Form Body"; the failing fields are in `errors`.
+  const formErrors = collectDiscordbotFormErrors(payload?.errors, "");
+  const resolvedMessage =
+    formErrors.length > 0
+      ? `${message}: ${formErrors.join("; ")}`
+      : message || `Discord request failed with ${response.status}`;
+  const details = payload
+    ? jsonObject({ code: payload.code, errors: payload.errors, retry_after: payload.retry_after })
+    : undefined;
   // Discord answers 403 when the bot lacks a guild or channel permission, such as
   // "Missing Permissions" or "Missing Access". The token still works, so this must
   // not read as authorization_failed, which clients treat as "reconnect".
   if (response.status === 403) {
-    return new ProviderRequestError(403, resolvedMessage, undefined, "invalid_input");
+    return new ProviderRequestError(403, resolvedMessage, details, "invalid_input");
   }
-  return new ProviderRequestError(response.status, resolvedMessage);
+  return new ProviderRequestError(response.status, resolvedMessage, details);
+}
+
+/**
+ * Flatten Discord's form errors into `path: message` entries. Each failing JSON key,
+ * or array index, nests down to an `_errors` list of `{ code, message }`; an `_errors`
+ * list at the top level describes the request as a whole and has no path.
+ */
+function collectDiscordbotFormErrors(errors: unknown, path: string): string[] {
+  return Object.entries(recordOrEmpty(errors)).flatMap(([key, value]) => {
+    if (key !== "_errors") {
+      return collectDiscordbotFormErrors(value, path ? `${path}.${key}` : key);
+    }
+    return looseArray(value).flatMap((item) => {
+      const message = optionalString(optionalRecord(item)?.message);
+      return message ? [path ? `${path}: ${message}` : message] : [];
+    });
+  });
 }
