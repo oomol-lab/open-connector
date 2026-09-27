@@ -7,7 +7,7 @@ import { providerIconsPlugin } from "./provider-icons-plugin";
 const envDir = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineConfig(({ mode }) => {
-  const apiTarget = loadEnv(mode, envDir, "VITE_").VITE_API_TARGET ?? "http://localhost:3000";
+  const apiTarget = loadEnv(mode, envDir, "VITE_").VITE_API_TARGET || `http://localhost:${process.env.PORT ?? "3000"}`;
 
   return {
     plugins: [react(), tailwindcss(), providerIconsPlugin()],
