@@ -114,11 +114,13 @@ platform에서는 OAuth app을 직접 등록해야 합니다. 관리형 OAuth가
         <br><br>
         <strong>장점:</strong> 소스에서 원클릭 배포, 하나의 대시보드에서 로그와 재배포 관리, 유료 플랜의 커스텀
         도메인. SQLite 데이터베이스는 컨테이너 안에 있어 재시작 후에는 유지되지만 재빌드 후에는 유지되지
-        않으므로, 오래 보관할 데이터는 <code>OOMOL_CONNECT_DATABASE_URL</code>을 PostgreSQL로 설정하세요.
+        않습니다. 오래 보관할 데이터는 <code>OOMOL_CONNECT_DATABASE_URL</code>을 PostgreSQL로 설정하고, 첫 시작 전과
+        새 마이그레이션이 포함된 재배포 전에 <a href="../configuration.md#runtime-database">PostgreSQL 마이그레이션</a>을
+        실행하세요. 저장된 자격 증명은 <code>OOMOL_CONNECT_ENCRYPTION_KEY</code>로 암호화되므로 이 값을 바꾸지 마세요.
         <br><br>
         <strong>가격:</strong> Free 플랜은 공개 HTTPS URL이 있는 활성 배포 1개를 포함하며 신용카드가 필요
-        없습니다. 테스트 배포는 자동으로 만료됩니다. Starter는 월 $29로 활성 배포 2개와 커스텀 도메인, Pro는
-        월 $149로 5개입니다. 각 앱은 512 MB RAM을 사용합니다.
+        없지만 테스트와 평가 용도로만 쓸 수 있고, 테스트 배포는 자동으로 만료됩니다. Starter는 월 $29로 활성 배포
+        2개와 커스텀 도메인, Pro는 월 $149로 5개입니다. 각 앱은 512 MB RAM을 사용합니다.
         <a href="https://nexusai.run/pricing">NEXUS AI 가격</a>을 참고하세요.
       </td>
       <td valign="middle" align="center">

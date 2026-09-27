@@ -118,13 +118,16 @@ les apps OAuth ; OOMOL hébergé est le chemin qui inclut l'OAuth géré.
         <br><br>
         <strong>Avantages :</strong> déploiement en un clic depuis les sources, logs et redéploiements dans
         un seul tableau de bord, et domaines personnalisés sur les offres payantes. La base SQLite vit dans le
-        conteneur : elle survit aux redémarrages mais pas aux reconstructions, donc réglez
-        <code>OOMOL_CONNECT_DATABASE_URL</code> sur PostgreSQL pour les données à conserver.
+        conteneur : elle survit aux redémarrages mais pas aux reconstructions. Pour les données à conserver,
+        réglez <code>OOMOL_CONNECT_DATABASE_URL</code> sur PostgreSQL, exécutez les
+        <a href="../configuration.md#runtime-database">migrations PostgreSQL</a> avant le premier démarrage et
+        avant chaque redéploiement qui en ajoute, et ne changez pas <code>OOMOL_CONNECT_ENCRYPTION_KEY</code>,
+        car les identifiants stockés sont chiffrés avec cette clé.
         <br><br>
         <strong>Prix :</strong> l'offre Free inclut 1 déploiement actif avec une URL HTTPS publique, sans
-        carte bancaire ; les déploiements de test expirent automatiquement. Starter coûte 29 $/mois pour
-        2 déploiements actifs et les domaines personnalisés, et Pro 149 $/mois pour 5. Chaque app dispose de
-        512 Mo de RAM. Voir
+        carte bancaire ; elle est réservée aux tests et à l'évaluation, et les déploiements de test expirent
+        automatiquement. Starter coûte 29 $/mois pour 2 déploiements actifs et les domaines personnalisés, et
+        Pro 149 $/mois pour 5. Chaque app dispose de 512 Mo de RAM. Voir
         <a href="https://nexusai.run/pricing">les tarifs NEXUS AI</a>.
       </td>
       <td valign="middle" align="center">

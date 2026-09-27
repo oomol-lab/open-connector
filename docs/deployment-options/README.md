@@ -115,11 +115,15 @@ path that includes managed OAuth.
         <br><br>
         <strong>Advantages:</strong> one-click deploy from source, logs and redeploys in one dashboard,
         and custom domains on paid plans. The SQLite database lives in the container: it survives restarts
-        but not rebuilds, so set <code>OOMOL_CONNECT_DATABASE_URL</code> to PostgreSQL for data that must last.
+        but not rebuilds. For data that must last, set <code>OOMOL_CONNECT_DATABASE_URL</code> to PostgreSQL,
+        run the <a href="../configuration.md#runtime-database">PostgreSQL migrations</a> before the first start
+        and before each redeploy that adds new ones, and keep <code>OOMOL_CONNECT_ENCRYPTION_KEY</code>
+        unchanged, because stored credentials are encrypted with it.
         <br><br>
         <strong>Pricing:</strong> the Free plan includes 1 active deployment with a public HTTPS URL
-        and no credit card; test deployments expire automatically. Starter is $29/month for 2 active
-        deployments and custom domains, and Pro is $149/month for 5. Each app gets 512 MB of RAM. See
+        and no credit card; it is for testing and evaluation only, and test deployments expire
+        automatically. Starter is $29/month for 2 active deployments and custom domains, and Pro is
+        $149/month for 5. Each app gets 512 MB of RAM. See
         <a href="https://nexusai.run/pricing">NEXUS AI pricing</a>.
       </td>
       <td valign="middle" align="center">

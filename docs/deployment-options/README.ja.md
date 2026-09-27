@@ -114,13 +114,16 @@ platform では OAuth app を自分で登録する必要があります。マネ
         <br><br>
         <strong>利点:</strong> source からワンクリックでデプロイでき、log と redeploy を 1 つの dashboard で
         管理でき、有料プランでは custom domain を使えます。SQLite database は container 内にあり、再起動では
-        保持されますが rebuild では保持されないため、長期保存するデータには
-        <code>OOMOL_CONNECT_DATABASE_URL</code> を PostgreSQL に設定してください。
+        保持されますが rebuild では保持されません。長期保存するデータには
+        <code>OOMOL_CONNECT_DATABASE_URL</code> を PostgreSQL に設定し、初回起動前と新しい migration を含む
+        redeploy の前に <a href="../configuration.md#runtime-database">PostgreSQL migration</a> を実行してください。
+        保存済みの credential はこの key で暗号化されるため、<code>OOMOL_CONNECT_ENCRYPTION_KEY</code> は変更しないで
+        ください。
         <br><br>
         <strong>料金:</strong> Free プランは public HTTPS URL 付きの active deployment 1 つを含み、
-        クレジットカードは不要です。test deployment は自動的に期限切れになります。Starter は $29/月で
-        active deployment 2 つと custom domain、Pro は $149/月で 5 つです。各 app は 512 MB RAM です。
-        <a href="https://nexusai.run/pricing">NEXUS AI の料金</a> を参照してください。
+        クレジットカードは不要ですが、テストと評価専用です。test deployment は自動的に期限切れになります。
+        Starter は $29/月で active deployment 2 つと custom domain、Pro は $149/月で 5 つです。各 app は
+        512 MB RAM です。<a href="https://nexusai.run/pricing">NEXUS AI の料金</a> を参照してください。
       </td>
       <td valign="middle" align="center">
         <a href="https://nexusai.run/deploy?repo=https%3A%2F%2Fgithub.com%2Foomol-lab%2Fopen-connector&amp;dockerfile=docker%2FDockerfile&amp;env=OOMOL_CONNECT_ORIGIN%3D%7Burl%7D&amp;require=OOMOL_CONNECT_ADMIN_TOKEN&amp;generate=OOMOL_CONNECT_ENCRYPTION_KEY&amp;generate=OOMOL_CONNECT_RUNTIME_TOKEN&amp;template=open-connector"><strong>ワンクリックデプロイ</strong></a>
