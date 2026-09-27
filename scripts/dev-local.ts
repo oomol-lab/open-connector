@@ -11,12 +11,15 @@ const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
 
 runChecked(process.execPath, ["scripts/ensure-generated.ts"]);
 
+const apiPort = process.env.PORT ?? "3000";
+process.env.VITE_API_TARGET ??= `http://localhost:${apiPort}`;
+
 const processes: DevProcess[] = [
   startProcess("api", process.execPath, ["--watch", "--watch-preserve-output", "src/server/index.ts"]),
   startProcess("web", npmCommand, ["run", "dev", "--workspace", "web", "--", "--clearScreen", "false"]),
 ];
 
-console.log(`API runtime: http://localhost:${process.env.PORT ?? "3000"}`);
+console.log(`API runtime: http://localhost:${apiPort}`);
 console.log("Web console: http://localhost:5173");
 
 await waitForProcesses(processes);
