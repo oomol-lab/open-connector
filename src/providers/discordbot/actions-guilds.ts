@@ -121,7 +121,10 @@ export const discordbotGuildActions: ActionDefinition[] = [
       {
         name: s.string("The channel name.", { minLength: 1, maxLength: 100 }),
         type: s.integer("The channel type, such as 0 for text, 2 for voice, 4 for category, or 15 for forum."),
-        topic: s.string("The channel topic.", { maxLength: 1024 }),
+        topic: s.string(
+          "The channel topic. Forum and media channels allow up to 4096 characters; other channel types allow up to 1024.",
+          { maxLength: 4096 },
+        ),
         bitrate: s.integer("The bitrate in bits per second for voice and stage channels.", { minimum: 8000 }),
         user_limit: s.integer("The user limit for voice and stage channels.", { minimum: 0 }),
         rate_limit_per_user: s.integer("The slowmode delay in seconds.", { minimum: 0, maximum: 21600 }),

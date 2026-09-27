@@ -115,6 +115,19 @@ describe("Discord guild actions", () => {
     expect(validateActionInput(action, { guild_id: "10" }).valid).toBe(true);
   });
 
+  // Forum and media channels hold post guidelines in the topic, which Discord allows up
+  // to 4096 characters; the stricter 1024 limit for other types is left to Discord.
+  it("accepts a forum channel topic up to 4096 characters for create_guild_channel", () => {
+    const action = discordbotGuildActions.find((candidate) => candidate.name === "create_guild_channel")!;
+
+    expect(validateActionInput(action, { guild_id: "10", name: "f", type: 15, topic: "a".repeat(4096) }).valid).toBe(
+      true,
+    );
+    expect(validateActionInput(action, { guild_id: "10", name: "f", type: 15, topic: "a".repeat(4097) }).valid).toBe(
+      false,
+    );
+  });
+
   // Begin Guild Prune takes include_roles as a JSON array in the body, so an empty
   // array is still a valid snowflake list and matches the documented default of none.
   it("sends an empty include_roles list in the begin_guild_prune body", async () => {
