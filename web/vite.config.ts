@@ -4,6 +4,8 @@ import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 import { providerIconsPlugin } from "./provider-icons-plugin";
 
+const apiTarget = process.env.VITE_API_TARGET ?? "http://localhost:3000";
+
 export default defineConfig({
   plugins: [react(), tailwindcss(), providerIconsPlugin()],
   resolve: {
@@ -14,11 +16,11 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      "/api": "http://localhost:3000",
-      "/docs": "http://localhost:3000",
-      "/mcp": "http://localhost:3000",
-      "/openapi.json": "http://localhost:3000",
-      "/v1": "http://localhost:3000",
+      "/api": apiTarget,
+      "/docs": apiTarget,
+      "/mcp": apiTarget,
+      "/openapi.json": apiTarget,
+      "/v1": apiTarget,
     },
   },
   build: {

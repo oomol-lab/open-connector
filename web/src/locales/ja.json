@@ -182,7 +182,7 @@
   "providers": {
     "catalogTitle": "プロバイダー",
     "viewLabel": "プロバイダー表示",
-    "views": { "manage": "接続済み", "discover": "アプリを探す" },
+    "views": { "manage": "接続済み", "discover": "すべてのアプリ" },
     "discovery": {
       "browseByTask": "目的から探す",
       "explore": "アプリを見る",
@@ -206,6 +206,7 @@
     "filters": {
       "all": "すべて",
       "connected": "接続済み",
+      "noSetup": "設定不要",
       "notConnected": "未接続",
       "oauthNeedsConfig": "OAuth 設定が必要"
     },

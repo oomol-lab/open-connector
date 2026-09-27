@@ -16,7 +16,7 @@ const processes: DevProcess[] = [
   startProcess("web", npmCommand, ["run", "dev", "--workspace", "web", "--", "--clearScreen", "false"]),
 ];
 
-console.log("API runtime: http://localhost:3000");
+console.log(`API runtime: http://localhost:${process.env.PORT ?? "3000"}`);
 console.log("Web console: http://localhost:5173");
 
 await waitForProcesses(processes);

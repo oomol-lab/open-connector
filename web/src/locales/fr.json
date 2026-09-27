@@ -187,7 +187,7 @@
   "providers": {
     "catalogTitle": "Fournisseurs",
     "viewLabel": "Vue des fournisseurs",
-    "views": { "manage": "Mes connexions", "discover": "Découvrir des apps" },
+    "views": { "manage": "Mes connexions", "discover": "Toutes les apps" },
     "discovery": {
       "browseByTask": "Parcourir par tâche",
       "explore": "Explorer les apps",
@@ -226,6 +226,7 @@
     "filters": {
       "all": "Tous",
       "connected": "Connectés",
+      "noSetup": "Sans configuration",
       "notConnected": "Non connectés",
       "oauthNeedsConfig": "OAuth à configurer"
     },

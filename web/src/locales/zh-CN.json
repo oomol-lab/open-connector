@@ -182,7 +182,7 @@
   "providers": {
     "catalogTitle": "提供商",
     "viewLabel": "提供商视图",
-    "views": { "manage": "我的连接", "discover": "发现应用" },
+    "views": { "manage": "我的连接", "discover": "全部应用" },
     "discovery": {
       "browseByTask": "按任务浏览",
       "explore": "浏览应用",
@@ -203,6 +203,7 @@
     "filters": {
       "all": "全部",
       "connected": "已连接",
+      "noSetup": "免配置",
       "notConnected": "未连接",
       "oauthNeedsConfig": "OAuth 待配置"
     },

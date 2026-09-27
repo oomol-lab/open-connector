@@ -182,7 +182,7 @@
   "providers": {
     "catalogTitle": "服務提供者",
     "viewLabel": "服務提供者檢視",
-    "views": { "manage": "我的連線", "discover": "探索應用程式" },
+    "views": { "manage": "我的連線", "discover": "全部應用程式" },
     "discovery": {
       "browseByTask": "依任務瀏覽",
       "explore": "探索應用程式",
@@ -203,6 +203,7 @@
     "filters": {
       "all": "全部",
       "connected": "已連線",
+      "noSetup": "免設定",
       "notConnected": "尚未連線",
       "oauthNeedsConfig": "OAuth 需要設定"
     },
