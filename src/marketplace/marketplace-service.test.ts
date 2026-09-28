@@ -28,6 +28,58 @@ const provider: ProviderDefinition = {
 };
 
 describe("MarketplaceService", () => {
+  it.each([
+    { failure: new TypeError("terminated"), status: 502, message: "Marketplace request failed: terminated" },
+    { failure: new DOMException("Timed out", "TimeoutError"), status: 504, message: "Marketplace request timed out." },
+    { failure: new DOMException("Aborted", "AbortError"), status: 504, message: "Marketplace request timed out." },
+  ])("maps discovery body failures to HTTP $status", async ({ failure, status, message }) => {
+    let reads = 0;
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (reads++ === 0) controller.enqueue(new TextEncoder().encode('{"version":'));
+        else controller.error(failure);
+      },
+    });
+    const store = new MemoryMarketplaceStore();
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(new Response(body));
+    const service = new MarketplaceService({
+      catalog: createCatalogStore([provider]),
+      store,
+      secretCodec: reversibleCodec,
+      fetcher,
+    });
+    await expect(service.configure({ apiKey: "secret" })).rejects.toMatchObject({
+      code: "marketplace_unavailable",
+      status,
+      message,
+    });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(await store.getConfig()).toBeUndefined();
+    expect(service.getState().configured).toBe(false);
+  });
+
+  it("preserves the discovery size-limit error and cancels the body", async () => {
+    const cancel = vi.fn();
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new Uint8Array(4 * 1024 * 1024 + 1));
+      },
+      cancel,
+    });
+    const service = new MarketplaceService({
+      catalog: createCatalogStore([provider]),
+      store: new MemoryMarketplaceStore(),
+      secretCodec: reversibleCodec,
+      fetcher: vi.fn<typeof fetch>().mockResolvedValue(new Response(body)),
+    });
+    await expect(service.configure({ apiKey: "secret" })).rejects.toMatchObject({
+      code: "invalid_marketplace_discovery",
+      status: 400,
+      message: "Marketplace discovery exceeds 4 MiB.",
+    });
+    expect(cancel).toHaveBeenCalledTimes(1);
+  });
+
   it.each(["discovery", "validation"])("reports %s network failures as Marketplace errors", async (stage) => {
     const fetcher = vi.fn<typeof fetch>();
     if (stage === "validation") {

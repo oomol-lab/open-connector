@@ -299,7 +299,13 @@ export class MarketplaceService {
         `Marketplace discovery failed with HTTP ${response.status}.`,
         502,
       );
-    return parseDiscovery(await readBoundedJson(response, maximumDiscoveryBytes), url);
+    let discovery: unknown;
+    try {
+      discovery = await readBoundedJson(response, maximumDiscoveryBytes);
+    } catch (error) {
+      throw marketplaceRequestError(error);
+    }
+    return parseDiscovery(discovery, url);
   }
 
   private async validateApiKey(discoveryUrl: string, validatePath: string, apiKey: string): Promise<void> {
@@ -336,17 +342,21 @@ export class MarketplaceService {
     try {
       return await (this.options.fetcher ?? providerFetch)(input, init);
     } catch (error) {
-      if (error instanceof MarketplaceError) throw error;
-      if (isAbortLikeError(error)) {
-        throw new MarketplaceError("marketplace_unavailable", "Marketplace request timed out.", 504);
-      }
-      throw new MarketplaceError(
-        "marketplace_unavailable",
-        error instanceof Error ? `Marketplace request failed: ${error.message}` : "Marketplace request failed.",
-        502,
-      );
+      throw marketplaceRequestError(error);
     }
   }
+}
+
+function marketplaceRequestError(error: unknown): MarketplaceError {
+  if (error instanceof MarketplaceError) return error;
+  if (isAbortLikeError(error)) {
+    return new MarketplaceError("marketplace_unavailable", "Marketplace request timed out.", 504);
+  }
+  return new MarketplaceError(
+    "marketplace_unavailable",
+    error instanceof Error ? `Marketplace request failed: ${error.message}` : "Marketplace request failed.",
+    502,
+  );
 }
 
 async function readBoundedJson(response: Response, maximumBytes: number): Promise<unknown> {
