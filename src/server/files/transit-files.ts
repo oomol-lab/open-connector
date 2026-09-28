@@ -7,7 +7,7 @@ import { createReadStream, createWriteStream } from "node:fs";
 import { mkdir, readFile, readdir, rename, stat, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { Readable } from "node:stream";
-import { finished, pipeline } from "node:stream/promises";
+import { pipeline } from "node:stream/promises";
 import {
   assertFileSize,
   assertSafeFileId,
@@ -170,12 +170,13 @@ export class TransitFileService implements IStagedTransitFileService {
   private async writeStream(file: TransitFileStream, tempPath: string): Promise<number> {
     let sizeBytes = 0;
     const maxBytes = this.maxBytes;
+    const source = Readable.fromWeb(file.body as NodeReadableStream<Uint8Array>);
     const destination = createWriteStream(tempPath, { flags: "wx" });
     // Pipeline can reject while the file is still opening. Wait for close before unlinking it.
-    const closed = finished(destination, { cleanup: true }).catch(() => undefined);
+    const closed = new Promise<void>((resolve) => destination.once("close", resolve));
     try {
       await pipeline(
-        Readable.fromWeb(file.body as NodeReadableStream<Uint8Array>),
+        source,
         async function* (source) {
           for await (const chunk of source) {
             sizeBytes += chunk.byteLength;
