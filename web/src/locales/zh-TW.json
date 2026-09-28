@@ -15,7 +15,9 @@
     "runtimeReady": "執行階段已就緒",
     "showMore": "顯示更多",
     "showing": "顯示 {{shown}} / {{total}}",
-    "success": "成功"
+    "success": "成功",
+    "cancel": "取消",
+    "undo": "復原"
   },
   "brand": {
     "subtitle": "本機執行階段控制台",
@@ -78,7 +80,11 @@
       "resources": {
         "title": "資源"
       }
-    }
+    },
+    "settings": "設定",
+    "settingsDescription": "管理語言、外觀、連接與執行環境。",
+    "oomolKeyDescription": "查看支援的服務與優惠，再選擇接入或管理 Key。",
+    "notifications": "通知"
   },
   "unlock": {
     "token": "管理員權杖",
@@ -115,21 +121,22 @@
     "oneKey": {
       "headline": "一個 Key，接入多種 AI 與資料服務",
       "description": "透過 OOMOL 官方 Key 使用目前目錄中相容的服務，無須逐家註冊與設定。依實際用量計費。",
-      "getKey": "取得 OneKey Plan Key",
+      "getKey": "取得 OOMOL Key",
       "haveKey": "已有 Key？立即連接",
-      "benefitsLabel": "OneKey Plan 的接入方式",
+      "benefitsLabel": "OOMOL Key 的接入方式",
       "benefitSetup": "免去逐家註冊與設定 API Key",
       "benefitChoice": "仍可選擇使用服務商原廠 Key",
       "benefitPricing": "部分模型有優惠，費用依實際用量計算",
-      "connectTitle": "連接 OneKey Plan",
+      "connectTitle": "接入 OOMOL Key",
       "connectDescription": "貼上 OOMOL 官方 Key，驗證後即可管理相容服務。",
-      "keyLabel": "OOMOL 官方 API Key",
+      "keyLabel": "OOMOL Key",
       "keyHelp": "從 OOMOL 控制台複製 Key。連接後可查看並啟用相容服務。",
-      "advanced": "進階設定：Marketplace 來源"
+      "advanced": "進階設定：Marketplace 來源",
+      "keyPlaceholder": "貼上 OOMOL 官方 API Key"
     },
     "default": {
       "browseDescription": "瀏覽可用功能",
-      "title": "OneKey Plan 支援的服務與功能",
+      "title": "OOMOL Key 支援的服務與功能",
       "description": "僅列出目前版本相容的操作。支援部分操作不代表支援服務商的全部功能。",
       "failed": "暫時無法載入官方目錄，請稍後重試。",
       "retry": "重試",
@@ -148,7 +155,8 @@
         "seedance": "9 折"
       },
       "supportedActions": "{{count}} 項支援操作",
-      "connected": "已連接"
+      "connected": "已連接",
+      "providerDetails": "查看提供商詳情"
     },
     "summary": {
       "title": "Connector Marketplace",
@@ -209,22 +217,24 @@
   "providers": {
     "managedEmpty": {
       "title": "尚無已設定的連接",
-      "description": "使用上方的 OneKey Plan，或在「發現連接」中設定自己的憑證。"
+      "description": "使用上方的 OOMOL Key，或在「發現連接」中設定自己的憑證。"
     },
     "hostedAccess": {
       "connectedCustom": "託管來源已連接。可在已設定連接中查看可用服務。",
-      "intro": "一個 OOMOL Key 接入相容的 AI 與資料服務，也可繼續使用原廠 Key。",
+      "intro": "使用一個 OOMOL Key 接入多種 AI 與資料服務，也可使用自己的服務商憑證。",
       "connected": "內建帳號已接入。可在已設定連接中查看可用服務。",
-      "connect": "連接官方 Key",
-      "manage": "管理內建帳號",
+      "connect": "接入 OOMOL Key",
+      "manage": "管理 OOMOL Key",
       "close": "收起設定",
-      "features": "展開功能",
+      "features": "支援的服務",
       "hideFeatures": "收起功能",
       "removeKey": "刪除 Key",
       "removeHelp": "刪除已儲存的 Key 並停用全部內建帳號？自行設定的憑證會保留。",
       "confirmRemove": "確認刪除 Key",
-      "hide": "隱藏 OneKey 推薦",
-      "restore": "連接設定"
+      "hide": "隱藏 OOMOL Key 推薦",
+      "restore": "OOMOL Key",
+      "hiddenNotice": "可在右上角設定 → OOMOL Key 中重新顯示。",
+      "hiddenTitle": "已隱藏 OOMOL Key"
     },
     "managedSources": {
       "label": "連接來源",
@@ -233,11 +243,11 @@
       "ownKey": "自有憑證"
     },
     "oneKey": {
-      "title": "透過 OneKey Plan 使用",
+      "title": "使用 OOMOL Key 接入",
       "description": "使用一個 OOMOL Key 接入 {{name}}，無須另外設定服務商的 API Key。",
       "alternative": "也可以在下方自行設定服務商原廠 Key。",
-      "connect": "連接 OneKey Plan",
-      "available": "OneKey 可接入",
+      "connect": "接入 OOMOL Key",
+      "available": "支援 OOMOL Key",
       "builtIn": "內建帳號",
       "connectedTitle": "內建帳號",
       "connectedDescription": "此服務可透過 {{name}} 的內建帳號執行。"
@@ -292,7 +302,7 @@
     "filters": {
       "all": "全部",
       "connected": "已連線",
-      "oneKey": "OneKey 可接入",
+      "oneKey": "支援 OOMOL Key",
       "noSetup": "免設定",
       "notConnected": "尚未連線",
       "oauthNeedsConfig": "OAuth 需要設定"

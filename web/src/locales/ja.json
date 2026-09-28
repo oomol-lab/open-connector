@@ -15,7 +15,9 @@
     "runtimeReady": "ランタイム準備完了",
     "showMore": "さらに表示",
     "showing": "{{shown}} / {{total}} を表示中",
-    "success": "成功"
+    "success": "成功",
+    "cancel": "キャンセル",
+    "undo": "元に戻す"
   },
   "brand": {
     "subtitle": "ローカルランタイムコンソール",
@@ -78,7 +80,11 @@
       "resources": {
         "title": "リソース"
       }
-    }
+    },
+    "settings": "設定",
+    "settingsDescription": "言語、外観、接続、ランタイムを管理します。",
+    "oomolKeyDescription": "対応サービスと割引を確認し、キーの接続や管理を選択できます。",
+    "notifications": "通知"
   },
   "unlock": {
     "token": "管理者 token",
@@ -115,21 +121,22 @@
     "oneKey": {
       "headline": "1つのキーでAI・データサービスを利用",
       "description": "公式OOMOLキーで、このカタログに対応するサービスを利用できます。サービスごとの登録や設定は不要で、利用量に応じて課金されます。",
-      "getKey": "OneKey Planキーを取得",
+      "getKey": "OOMOL Keyを取得",
       "haveKey": "キーをお持ちですか？接続する",
-      "benefitsLabel": "OneKey Planの利用方法",
+      "benefitsLabel": "OOMOL Keyの利用方法",
       "benefitSetup": "サービスごとのAPIキー設定が不要",
       "benefitChoice": "各サービスのキーも引き続き利用可能",
       "benefitPricing": "一部モデルは割引あり、従量課金",
-      "connectTitle": "OneKey Planに接続",
+      "connectTitle": "OOMOL Keyを接続",
       "connectDescription": "公式OOMOLキーを貼り付け、対応サービスを確認・管理します。",
-      "keyLabel": "公式OOMOL APIキー",
+      "keyLabel": "OOMOL Key",
       "keyHelp": "OOMOLコンソールからキーをコピーしてください。接続後、対応サービスを管理できます。",
-      "advanced": "詳細設定：Marketplaceソース"
+      "advanced": "詳細設定：Marketplaceソース",
+      "keyPlaceholder": "公式OOMOL APIキーを貼り付け"
     },
     "default": {
       "browseDescription": "利用可能な機能を見る",
-      "title": "OneKey Planに対応するサービスと機能",
+      "title": "OOMOL Keyに対応するサービスと機能",
       "description": "このバージョンに対応する操作のみ表示します。提供元のすべての機能に対応するとは限りません。",
       "failed": "公式カタログを読み込めませんでした。再試行してください。",
       "retry": "再試行",
@@ -148,7 +155,8 @@
         "seedance": "10%オフ"
       },
       "supportedActions": "対応する操作：{{count}}件",
-      "connected": "接続済み"
+      "connected": "接続済み",
+      "providerDetails": "サービスの詳細"
     },
     "summary": {
       "title": "Connector Marketplace",
@@ -209,22 +217,24 @@
   "providers": {
     "managedEmpty": {
       "title": "設定済みの接続はありません",
-      "description": "上のOneKey Planを接続するか、接続を探すからサービスの認証情報を設定してください。"
+      "description": "上のOOMOL Keyを接続するか、接続を探すからサービスの認証情報を設定してください。"
     },
     "hostedAccess": {
       "connectedCustom": "管理対象のソースが接続されました。設定済みの接続でサービスを確認できます。",
       "intro": "1つのOOMOLキーで対応するAI・データサービスを利用できます。各サービスのキーも使用可能です。",
       "connected": "内蔵アカウントが接続されました。設定済みの接続でサービスを確認できます。",
-      "connect": "公式キーを接続",
-      "manage": "内蔵アカウントを管理",
+      "connect": "OOMOL Keyを接続",
+      "manage": "OOMOL Keyを管理",
       "close": "設定を閉じる",
-      "features": "機能を展開",
+      "features": "対応サービス",
       "hideFeatures": "機能を閉じる",
       "removeKey": "キーを削除",
       "removeHelp": "保存したキーを削除し、すべての内蔵アカウントを無効にしますか？個別に設定した認証情報は保持されます。",
       "confirmRemove": "キーの削除を確認",
-      "hide": "OneKeyの紹介を非表示",
-      "restore": "接続設定"
+      "hide": "OOMOL Keyの紹介を非表示",
+      "restore": "OOMOL Key",
+      "hiddenNotice": "右上の設定 → OOMOL Keyから再表示できます。",
+      "hiddenTitle": "OOMOL Keyを非表示にしました"
     },
     "managedSources": {
       "label": "接続元",
@@ -233,11 +243,11 @@
       "ownKey": "自分の認証情報"
     },
     "oneKey": {
-      "title": "OneKey Planで利用",
+      "title": "OOMOL Keyで利用",
       "description": "サービスごとのAPIキーを設定せず、1つのOOMOLキーで{{name}}にアクセスできます。",
       "alternative": "下でサービス提供元のキーを直接設定することもできます。",
-      "connect": "OneKey Planに接続",
-      "available": "OneKey対応",
+      "connect": "OOMOL Keyを接続",
+      "available": "OOMOL Key対応",
       "builtIn": "内蔵アカウント",
       "connectedTitle": "内蔵アカウント",
       "connectedDescription": "{{name}}の内蔵アカウントでこのサービスを利用できます。"
@@ -292,7 +302,7 @@
     "filters": {
       "all": "すべて",
       "connected": "接続済み",
-      "oneKey": "OneKey対応",
+      "oneKey": "OOMOL Key対応",
       "noSetup": "設定不要",
       "notConnected": "未接続",
       "oauthNeedsConfig": "OAuth 設定が必要"

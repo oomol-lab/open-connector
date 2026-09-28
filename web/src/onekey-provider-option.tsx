@@ -40,7 +40,7 @@ export function OneKeyProviderOption({ marketplace, provider, connected }: OneKe
         <KeyRound size={20} aria-hidden="true" />
       </div>
       <div className="provider-onekey-copy">
-        <span className="provider-onekey-eyebrow">OOMOL · OneKey Plan</span>
+        <span className="provider-onekey-eyebrow">OOMOL Key</span>
         <h3 id="provider-onekey-title">{t("providers.oneKey.title")}</h3>
         <p>{t("providers.oneKey.description", { name: provider.displayName })}</p>
         <small>{t("providers.oneKey.alternative")}</small>

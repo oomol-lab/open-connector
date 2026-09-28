@@ -23,11 +23,12 @@ import {
   Monitor,
   Moon,
   RefreshCw,
+  Settings,
   Sun,
   TerminalSquare,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Navigate, NavLink, Route, Routes, useLocation } from "react-router";
+import { Link, Navigate, NavLink, Route, Routes, useLocation } from "react-router";
 import { AccessPage } from "./access-page";
 import { ActionsPage } from "./actions-page";
 import { ApiError, apiGet, apiPost } from "./api";
@@ -42,9 +43,11 @@ import { RunsPage } from "./runs-page";
 import { InlineError, StatusDot } from "./shared-ui";
 import { useThemeMode } from "./theme";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Toaster } from "@/components/ui/sonner";
 
 const navItems = [
   { path: "/overview", labelKey: "nav.overview", icon: Home },
@@ -335,6 +338,12 @@ function AppShell(props: {
 }): ReactNode {
   const t = useTranslate();
   const location = useLocation();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const connectionSettingsParams = new URLSearchParams(location.pathname === "/providers" ? location.search : "");
+  if (connectionSettingsParams.get("onekey") === "features") connectionSettingsParams.set("features", "1");
+  connectionSettingsParams.set("onekey", "overview");
+  connectionSettingsParams.set("features", "1");
+  const connectionSettingsUrl = `/providers?${connectionSettingsParams}`;
   const heading = headingForPath(location.pathname);
   const section = location.pathname.split("/").filter(Boolean)[0];
   const isOverviewPage = heading === "overview";
@@ -378,25 +387,6 @@ function AppShell(props: {
             })}
           </nav>
         </div>
-
-        <div className="sidebar-footer">
-          <LanguageSelect />
-          <ThemeControl theme={props.theme} onThemeChange={props.onThemeChange} />
-          <div className="runtime-status">
-            <StatusDot ok={!props.error} />
-            <span>{props.error ? t("common.apiUnavailable") : t("common.runtimeReady")}</span>
-          </div>
-          <div className="button-row tight">
-            <Button variant="outline" size="icon-sm" onClick={props.onRefresh} aria-label={t("shell.refreshData")}>
-              {props.loading ? <Loader2 className="spin" size={15} /> : <RefreshCw size={15} />}
-            </Button>
-            {props.showLogout ? (
-              <Button variant="outline" size="sm" onClick={props.onLogout}>
-                {t("shell.logout")}
-              </Button>
-            ) : null}
-          </div>
-        </div>
       </aside>
 
       <div className={isBrowserPage ? "main-region main-region-browser" : "main-region"}>
@@ -405,12 +395,61 @@ function AppShell(props: {
             <CurrentNavIcon size={16} />
             <h1>{t(`shell.headings.${heading}.title`)}</h1>
           </div>
-          {props.loading ? (
-            <div className="loading-panel page-loading">
-              <Loader2 className="spin" size={16} />
-              {t("common.loadingRuntimeData")}
-            </div>
-          ) : null}
+          <div className="shell-header-actions">
+            {props.loading ? (
+              <div className="loading-panel page-loading">
+                <Loader2 className="spin" size={16} />
+                {t("common.loadingRuntimeData")}
+              </div>
+            ) : null}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={t("shell.settings")}
+              aria-haspopup="dialog"
+              aria-expanded={settingsOpen}
+              title={t("shell.settings")}
+              onClick={() => setSettingsOpen(true)}
+            >
+              <Settings size={18} aria-hidden="true" />
+            </Button>
+          </div>
+          <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+            <DialogContent className="console-settings-panel">
+              <DialogHeader>
+                <DialogTitle>{t("shell.settings")}</DialogTitle>
+                <DialogDescription>{t("shell.settingsDescription")}</DialogDescription>
+              </DialogHeader>
+              <div className="console-settings-controls">
+                <LanguageSelect />
+                <ThemeControl theme={props.theme} onThemeChange={props.onThemeChange} />
+              </div>
+              <div className="console-settings-section">
+                <Button asChild variant="outline">
+                  <Link to={connectionSettingsUrl} onClick={() => setSettingsOpen(false)}>
+                    <Cable size={15} aria-hidden="true" />
+                    {t("providers.hostedAccess.restore")}
+                  </Link>
+                </Button>
+                <p className="console-settings-feature-description">{t("shell.oomolKeyDescription")}</p>
+              </div>
+              <div className="console-settings-runtime">
+                <div className="runtime-status">
+                  <StatusDot ok={!props.error} />
+                  <span>{props.error ? t("common.apiUnavailable") : t("common.runtimeReady")}</span>
+                </div>
+                <Button variant="outline" size="sm" onClick={props.onRefresh} disabled={props.loading}>
+                  {props.loading ? <Loader2 className="spin" size={15} /> : <RefreshCw size={15} />}
+                  {t("common.refresh")}
+                </Button>
+              </div>
+              {props.showLogout ? (
+                <Button variant="outline" onClick={props.onLogout}>
+                  {t("shell.logout")}
+                </Button>
+              ) : null}
+            </DialogContent>
+          </Dialog>
         </header>
 
         <main className={mainClassName}>
@@ -449,6 +488,12 @@ function AppShell(props: {
           </Routes>
         </main>
       </div>
+      <Toaster
+        position="bottom-right"
+        closeButton
+        containerAriaLabel={t("shell.notifications")}
+        toastOptions={{ closeButtonAriaLabel: t("common.close") }}
+      />
     </div>
   );
 }

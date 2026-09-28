@@ -7,6 +7,7 @@ import { ChevronRight, Loader2, Store } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { Button } from "./components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./components/ui/dialog";
 import { loadDefaultMarketplaceCatalog } from "./default-marketplace-discovery";
 import { Badge, EmptyState, ProviderIcon } from "./shared-ui";
 
@@ -35,6 +36,7 @@ export function DefaultMarketplaceCatalog({
   const [catalog, setCatalog] = useState<DefaultMarketplaceDiscovery>();
   const [failure, setFailure] = useState<Error>();
   const [attempt, setAttempt] = useState(0);
+  const [selectedProvider, setSelectedProvider] = useState<ProviderDefinition>();
 
   useEffect(() => {
     let active = true;
@@ -108,13 +110,18 @@ export function DefaultMarketplaceCatalog({
         <div className="marketplace-default-grid">
           {rows.map((provider) => {
             const promoted = promotedServices.includes(provider.service);
-            const path = `/providers/${encodeURIComponent(provider.service)}`;
             const actions = provider.actions.filter((action) => available.has(action.id));
             return (
-              <div className="marketplace-service-card" key={provider.service}>
+              <Button
+                type="button"
+                variant="ghost"
+                className="marketplace-service-card"
+                key={provider.service}
+                onClick={() => setSelectedProvider(provider)}
+              >
                 <ProviderIcon provider={provider} />
-                <div className="marketplace-default-copy">
-                  <Link className="marketplace-service-heading" to={path}>
+                <span className="marketplace-default-copy">
+                  <span className="marketplace-service-heading">
                     <span className="marketplace-service-title">
                       <strong>{provider.displayName}</strong>
                       {promoted ? (
@@ -124,21 +131,12 @@ export function DefaultMarketplaceCatalog({
                       ) : null}
                     </span>
                     <ChevronRight size={15} aria-hidden="true" />
-                  </Link>
-                  <details className="marketplace-supported-actions">
-                    <summary>{t("marketplace.default.supportedActions", { count: actions.length })}</summary>
-                    <ul>
-                      {actions.map((action) => (
-                        <li key={action.id}>
-                          <Link to={`/actions/${encodeURIComponent(action.id)}`}>
-                            {action.description || action.name}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </details>
-                </div>
-              </div>
+                  </span>
+                  <span className="marketplace-service-count">
+                    {t("marketplace.default.supportedActions", { count: actions.length })}
+                  </span>
+                </span>
+              </Button>
             );
           })}
         </div>
@@ -148,6 +146,47 @@ export function DefaultMarketplaceCatalog({
           {catalog.name} · {t(connected ? "marketplace.default.connected" : "marketplace.default.disconnected")}
         </footer>
       ) : null}
+      <Dialog
+        open={selectedProvider != null}
+        onOpenChange={(open) => {
+          if (!open) setSelectedProvider(undefined);
+        }}
+      >
+        <DialogContent className="onekey-operations-panel">
+          <DialogHeader>
+            <DialogTitle>{selectedProvider?.displayName}</DialogTitle>
+            <DialogDescription>{t("marketplace.default.description")}</DialogDescription>
+          </DialogHeader>
+          {selectedProvider ? (
+            <>
+              {promotedModels[selectedProvider.service] ? (
+                <div className="marketplace-operation-offer">
+                  <Badge tone="success">{t(`marketplace.default.offers.${selectedProvider.service}`)}</Badge>
+                  <span>{promotedModels[selectedProvider.service].join(" · ")}</span>
+                </div>
+              ) : null}
+              <ul className="marketplace-operation-list">
+                {selectedProvider.actions
+                  .filter((action) => available.has(action.id))
+                  .map((action) => (
+                    <li key={action.id}>
+                      <Link to={`/actions/${encodeURIComponent(action.id)}`}>
+                        <strong>{action.name}</strong>
+                        <span>{action.description}</span>
+                        <ChevronRight size={15} aria-hidden="true" />
+                      </Link>
+                    </li>
+                  ))}
+              </ul>
+              <Button asChild variant="outline">
+                <Link to={`/providers/${encodeURIComponent(selectedProvider.service)}`}>
+                  {t("marketplace.default.providerDetails")}
+                </Link>
+              </Button>
+            </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

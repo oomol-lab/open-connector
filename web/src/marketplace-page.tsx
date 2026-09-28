@@ -28,6 +28,7 @@ interface MarketplacePageProps {
   data: AppData;
   embedded?: boolean;
   onConnected?(): void;
+  onCancel?(): void;
   onRefresh(): void;
 }
 
@@ -103,7 +104,7 @@ export function MarketplacePage(props: MarketplacePageProps): ReactNode {
       {props.embedded ? null : officialMarketplace ? (
         <section className="marketplace-onekey-hero">
           <div className="marketplace-onekey-copy">
-            <span className="marketplace-onekey-eyebrow">OOMOL · OneKey Plan</span>
+            <span className="marketplace-onekey-eyebrow">OOMOL Key</span>
             <h2>{t("marketplace.oneKey.headline")}</h2>
             <p>{t("marketplace.oneKey.description")}</p>
             <div className="marketplace-onekey-actions">
@@ -138,23 +139,37 @@ export function MarketplacePage(props: MarketplacePageProps): ReactNode {
       )}
 
       <section className="marketplace-panel" id="marketplace-connect">
-        <header className="marketplace-panel-header">
-          <div>
-            <h2>{t(officialMarketplace ? "marketplace.oneKey.connectTitle" : "marketplace.configuration.title")}</h2>
-            <p>
-              {t(
-                officialMarketplace ? "marketplace.oneKey.connectDescription" : "marketplace.configuration.description",
-              )}
-            </p>
-          </div>
-          {marketplace?.configured ? <Badge tone="success">{t("marketplace.configuration.configured")}</Badge> : null}
-        </header>
+        {!props.embedded ? (
+          <header className="marketplace-panel-header">
+            <div>
+              <h2>{t(officialMarketplace ? "marketplace.oneKey.connectTitle" : "marketplace.configuration.title")}</h2>
+              <p>
+                {t(
+                  officialMarketplace
+                    ? "marketplace.oneKey.connectDescription"
+                    : "marketplace.configuration.description",
+                )}
+              </p>
+            </div>
+            {marketplace?.configured ? <Badge tone="success">{t("marketplace.configuration.configured")}</Badge> : null}
+          </header>
+        ) : null}
         <form className="marketplace-form" onSubmit={(event) => void save(event)}>
           <div className="marketplace-field">
             <div className="marketplace-field-heading">
               <Label htmlFor="marketplace-api-key">
                 {t(officialMarketplace ? "marketplace.oneKey.keyLabel" : "marketplace.configuration.apiKey")}
               </Label>
+              {officialMarketplace ? (
+                <a
+                  className="marketplace-get-key"
+                  href="https://console.oomol.com/api-key"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t("marketplace.oneKey.getKey")} <ArrowUpRight size={14} aria-hidden="true" />
+                </a>
+              ) : null}
             </div>
             <div className="marketplace-secret-input">
               <Input
@@ -165,7 +180,9 @@ export function MarketplacePage(props: MarketplacePageProps): ReactNode {
                 placeholder={t(
                   marketplace?.configured
                     ? "marketplace.configuration.keepCurrentKey"
-                    : "marketplace.configuration.apiKeyPlaceholder",
+                    : officialMarketplace
+                      ? "marketplace.oneKey.keyPlaceholder"
+                      : "marketplace.configuration.apiKeyPlaceholder",
                 )}
               />
               <Button
@@ -218,10 +235,21 @@ export function MarketplacePage(props: MarketplacePageProps): ReactNode {
                 marketplace?.configured ? "marketplace.configuration.revalidate" : "marketplace.configuration.connect",
               )}
             </Button>
+            {props.onCancel ? (
+              <Button type="button" variant="outline" disabled={pending} onClick={props.onCancel}>
+                {t("common.cancel")}
+              </Button>
+            ) : null}
             {marketplace?.configured ? (
               confirmRemove ? (
                 <div className="marketplace-remove-confirmation">
-                  <span>{t("marketplace.configuration.removeConfirmation")}</span>
+                  <span>
+                    {t(
+                      officialMarketplace
+                        ? "providers.hostedAccess.removeHelp"
+                        : "marketplace.configuration.removeConfirmation",
+                    )}
+                  </span>
                   <Button
                     type="button"
                     variant="destructive"
@@ -238,7 +266,7 @@ export function MarketplacePage(props: MarketplacePageProps): ReactNode {
               ) : (
                 <Button type="button" variant="ghost" disabled={pending} onClick={() => setConfirmRemove(true)}>
                   <Trash2 size={15} />
-                  {t("marketplace.configuration.remove")}
+                  {t("providers.hostedAccess.removeKey")}
                 </Button>
               )
             ) : null}

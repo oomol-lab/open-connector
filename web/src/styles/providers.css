@@ -67,14 +67,6 @@
   max-width: 580px;
   justify-content: flex-end;
 }
-.provider-view-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.provider-view-toolbar > [data-slot="button"] {
-  flex-shrink: 0;
-}
 .provider-hosted-removal {
   display: flex;
   grid-column: 1 / -1;

@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
+import { toast } from "sonner";
 import { defaultMarketplaceDiscoveryUrl, isDefaultMarketplace } from "../../src/marketplace/default-marketplace";
 import { apiDelete, apiPost, apiPut } from "./api";
 import { CredentialInput } from "./credential-input";
@@ -71,6 +72,7 @@ import {
 import { Badge, EmptyState, FormStatus, ProviderIcon, TagList } from "./shared-ui";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -99,12 +101,11 @@ interface ProviderBrowserProps {
 interface HostedAccessCardProps {
   marketplace?: MarketplaceState;
   officialMarketplace: boolean;
-  settingsOpen: boolean;
   previewOpen: boolean;
+  serviceCount: number;
   onPreview(): void;
   onHide(): void;
-  onRefresh(): void;
-  onToggle(): void;
+  onConnect(): void;
 }
 
 interface ProviderCardProps {
@@ -265,8 +266,21 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
   const t = useTranslate();
   const [searchParams, setSearchParams] = useSearchParams();
   const showHostedSettings = searchParams.get("onekey") === "1";
-  const showSupportedFeatures = searchParams.get("onekey") === "features";
+  const showHostedOverview = searchParams.get("onekey") === "overview";
+  const showSupportedFeatures = searchParams.get("features") === "1" || searchParams.get("onekey") === "features";
   const [oneKeyHidden, setOneKeyHidden] = useState(isOneKeyPromotionHidden);
+  const hiddenNoticeId = useRef<string | number | undefined>(undefined);
+  useEffect(() => {
+    return () => {
+      if (hiddenNoticeId.current !== undefined) toast.dismiss(hiddenNoticeId.current);
+    };
+  }, []);
+  useEffect(() => {
+    if (!showHostedSettings && !showHostedOverview) return;
+    setOneKeyHidden(false);
+    setOneKeyPromotionHidden(false);
+    if (hiddenNoticeId.current !== undefined) toast.dismiss(hiddenNoticeId.current);
+  }, [showHostedOverview, showHostedSettings]);
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
   const [view, setView] = useState<ProviderBrowserView>("discover");
@@ -395,11 +409,19 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
     setCategoryFilter("all");
   }
 
-  function toggleHostedSettings(): void {
+  function openHostedSettings(): void {
     setSearchParams((current) => {
       const next = new URLSearchParams(current);
-      if (showHostedSettings) next.delete("onekey");
-      else next.set("onekey", "1");
+      if (next.get("onekey") === "features") next.set("features", "1");
+      next.set("onekey", "1");
+      return next;
+    });
+  }
+
+  function closeHostedSettings(): void {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      if (next.get("onekey") === "1") next.delete("onekey");
       return next;
     });
   }
@@ -418,44 +440,49 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
       onValueChange={(value) => selectView(value as ProviderBrowserView)}
       className="provider-browser-tabs"
     >
-      <div className="provider-view-toolbar">
-        <TabsList variant="line" className="provider-browser-tabs-list" aria-label={t("providers.viewLabel")}>
-          <TabsTrigger value="discover" className="flex-none px-4">
-            {t("providers.views.discover")} <span className="provider-view-count">{sortedProviders.length}</span>
-          </TabsTrigger>
-          <TabsTrigger value="manage" className="flex-none px-4">
-            {t("providers.views.manage")} <span className="provider-view-count">{managedProviders.length}</span>
-          </TabsTrigger>
-        </TabsList>
-        {oneKeyHidden && !props.data.marketplace?.configured ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setOneKeyHidden(false);
-              setOneKeyPromotionHidden(false);
-            }}
-          >
-            {t("providers.hostedAccess.restore")}
-          </Button>
-        ) : null}
-      </div>
+      <TabsList variant="line" className="provider-browser-tabs-list" aria-label={t("providers.viewLabel")}>
+        <TabsTrigger value="discover" className="flex-none px-4">
+          {t("providers.views.discover")} <span className="provider-view-count">{sortedProviders.length}</span>
+        </TabsTrigger>
+        <TabsTrigger value="manage" className="flex-none px-4">
+          {t("providers.views.manage")} <span className="provider-view-count">{managedProviders.length}</span>
+        </TabsTrigger>
+      </TabsList>
       {!oneKeyHidden || props.data.marketplace?.configured || showHostedSettings || showSupportedFeatures ? (
         <div className="provider-hosted-section">
           <HostedAccessCard
             marketplace={props.data.marketplace}
             officialMarketplace={officialMarketplace}
-            settingsOpen={showHostedSettings}
             previewOpen={showSupportedFeatures}
-            onPreview={() => setSearchParams(showSupportedFeatures ? {} : { onekey: "features" })}
+            serviceCount={oneKeyServices.size}
+            onPreview={() =>
+              setSearchParams((current) => {
+                const next = new URLSearchParams(current);
+                if (next.get("onekey") === "features") next.delete("onekey");
+                if (showSupportedFeatures) next.delete("features");
+                else next.set("features", "1");
+                return next;
+              })
+            }
             onHide={() => {
               setOneKeyHidden(true);
               setOneKeyPromotionHidden(true);
+              if (hiddenNoticeId.current !== undefined) toast.dismiss(hiddenNoticeId.current);
+              hiddenNoticeId.current = toast(t("providers.hostedAccess.hiddenTitle"), {
+                description: t("providers.hostedAccess.hiddenNotice"),
+                duration: 8_000,
+                action: {
+                  label: t("common.undo"),
+                  onClick: () => {
+                    setOneKeyHidden(false);
+                    setOneKeyPromotionHidden(false);
+                  },
+                },
+              });
               setStatusFilter("all");
               setSearchParams({});
             }}
-            onRefresh={props.onRefresh}
-            onToggle={toggleHostedSettings}
+            onConnect={openHostedSettings}
           />
           {showSupportedFeatures && officialMarketplace ? (
             <DefaultMarketplaceCatalog
@@ -467,21 +494,41 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
           ) : null}
         </div>
       ) : null}
-      {showHostedSettings ? (
-        <MarketplacePage
-          data={props.data}
-          embedded
-          onRefresh={props.onRefresh}
-          onConnected={() => {
-            selectView("manage");
-            setSearchParams((current) => {
-              const next = new URLSearchParams(current);
-              next.delete("onekey");
-              return next;
-            });
-          }}
-        />
-      ) : null}
+      <Dialog
+        open={showHostedSettings}
+        onOpenChange={(open) => {
+          if (!open) closeHostedSettings();
+        }}
+      >
+        <DialogContent className="onekey-connection-dialog">
+          <DialogHeader>
+            <DialogTitle>
+              {t(
+                officialMarketplace
+                  ? props.data.marketplace?.configured
+                    ? "providers.hostedAccess.manage"
+                    : "marketplace.oneKey.connectTitle"
+                  : "marketplace.configuration.title",
+              )}
+            </DialogTitle>
+            <DialogDescription>
+              {t(
+                officialMarketplace ? "marketplace.oneKey.connectDescription" : "marketplace.configuration.description",
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <MarketplacePage
+            data={props.data}
+            embedded
+            onRefresh={props.onRefresh}
+            onCancel={closeHostedSettings}
+            onConnected={() => {
+              selectView("manage");
+              closeHostedSettings();
+            }}
+          />
+        </DialogContent>
+      </Dialog>
       <TabsContent value="manage" className="provider-browser-tab-content flex flex-col gap-4">
         {view === "manage" ? (
           <>
@@ -584,25 +631,9 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
 
 function HostedAccessCard(props: HostedAccessCardProps): ReactNode {
   const t = useTranslate();
-  const [confirmRemove, setConfirmRemove] = useState(false);
-  const [removing, setRemoving] = useState(false);
-  const [error, setError] = useState<string>();
-  async function removeKey(): Promise<void> {
-    setRemoving(true);
-    setError(undefined);
-    try {
-      await apiDelete("/api/marketplace");
-      setConfirmRemove(false);
-      props.onRefresh();
-    } catch (error) {
-      setError(error instanceof Error ? error.message : t("marketplace.messages.removeFailed"));
-    } finally {
-      setRemoving(false);
-    }
-  }
   const available = props.marketplace?.status === "available";
   const sourceName = props.officialMarketplace
-    ? "OneKey Plan"
+    ? "OOMOL Key"
     : (props.marketplace?.marketplace?.name ?? t("nav.marketplace"));
 
   return (
@@ -638,7 +669,8 @@ function HostedAccessCard(props: HostedAccessCardProps): ReactNode {
             aria-expanded={props.previewOpen}
             aria-controls="onekey-supported-features"
           >
-            {t(props.previewOpen ? "providers.hostedAccess.hideFeatures" : "providers.hostedAccess.features")}
+            {t("providers.hostedAccess.features")}
+            {props.serviceCount > 0 ? ` (${props.serviceCount})` : ""}
             <ChevronDown
               className={props.previewOpen ? "provider-hosted-chevron-open" : undefined}
               size={15}
@@ -646,32 +678,15 @@ function HostedAccessCard(props: HostedAccessCardProps): ReactNode {
             />
           </Button>
         ) : null}
-        {!props.marketplace?.configured && props.officialMarketplace ? (
-          <Button asChild variant="outline" size="sm">
-            <a href="https://console.oomol.com/api-key" target="_blank" rel="noopener noreferrer">
-              {t("marketplace.oneKey.getKey")} <ArrowUpRight size={14} aria-hidden="true" />
-            </a>
-          </Button>
-        ) : null}
         <Button
           type="button"
           size="sm"
           variant={props.marketplace?.configured ? "outline" : "default"}
-          onClick={props.onToggle}
+          onClick={props.onConnect}
         >
-          {t(
-            props.settingsOpen
-              ? "providers.hostedAccess.close"
-              : props.marketplace?.configured
-                ? "providers.hostedAccess.manage"
-                : "providers.hostedAccess.connect",
-          )}
+          {t(props.marketplace?.configured ? "providers.hostedAccess.manage" : "providers.hostedAccess.connect")}
         </Button>
-        {props.marketplace?.configured ? (
-          <Button variant="ghost" size="sm" onClick={() => setConfirmRemove(true)}>
-            {t("providers.hostedAccess.removeKey")}
-          </Button>
-        ) : (
+        {!props.marketplace?.configured ? (
           <Button
             variant="ghost"
             size="icon-sm"
@@ -681,20 +696,8 @@ function HostedAccessCard(props: HostedAccessCardProps): ReactNode {
           >
             <X size={15} aria-hidden="true" />
           </Button>
-        )}
+        ) : null}
       </div>
-      {confirmRemove ? (
-        <div className="provider-hosted-removal">
-          <p>{t("providers.hostedAccess.removeHelp")}</p>
-          <Button variant="destructive" size="sm" disabled={removing} onClick={() => void removeKey()}>
-            {t("providers.hostedAccess.confirmRemove")}
-          </Button>
-          <Button variant="outline" size="sm" disabled={removing} onClick={() => setConfirmRemove(false)}>
-            {t("common.close")}
-          </Button>
-        </div>
-      ) : null}
-      {error ? <FormStatus message={error} /> : null}
     </section>
   );
 }

@@ -15,7 +15,9 @@
     "runtimeReady": "Runtime prêt",
     "showMore": "Afficher plus",
     "showing": "{{shown}} sur {{total}} affichés",
-    "success": "Succès"
+    "success": "Succès",
+    "cancel": "Annuler",
+    "undo": "Annuler"
   },
   "brand": {
     "subtitle": "Console du runtime local",
@@ -78,7 +80,11 @@
       "resources": {
         "title": "Ressources"
       }
-    }
+    },
+    "settings": "Paramètres",
+    "settingsDescription": "Gérer la langue, l’apparence, les connexions et le runtime.",
+    "oomolKeyDescription": "Découvrez les services et les offres, puis connectez ou gérez votre clé.",
+    "notifications": "Notifications"
   },
   "unlock": {
     "token": "Token administrateur",
@@ -115,22 +121,23 @@
     "oneKey": {
       "headline": "Une clé pour les services IA et de données",
       "description": "Utilisez les services compatibles du catalogue avec une clé officielle OOMOL, sans inscription ni configuration séparée. Facturation à l’usage.",
-      "getKey": "Obtenir une clé OneKey Plan",
+      "getKey": "Obtenir une OOMOL Key",
       "haveKey": "Déjà une clé ? La connecter",
-      "benefitsLabel": "Fonctionnement de OneKey Plan",
+      "benefitsLabel": "Fonctionnement de OOMOL Key",
       "benefitSetup": "Pas de clé API à configurer pour chaque fournisseur",
       "benefitChoice": "Les clés des fournisseurs restent utilisables",
       "benefitPricing": "Réductions sur certains modèles, facturation à l’usage",
-      "connectTitle": "Connecter OneKey Plan",
+      "connectTitle": "Connecter OOMOL Key",
       "connectDescription": "Collez votre clé OOMOL pour vérifier et gérer les services compatibles.",
-      "keyLabel": "Clé API officielle OOMOL",
+      "keyLabel": "OOMOL Key",
       "keyHelp": "Copiez la clé depuis la console OOMOL. Gérez ensuite les services compatibles ici.",
-      "advanced": "Avancé : source Marketplace"
+      "advanced": "Avancé : source Marketplace",
+      "keyPlaceholder": "Collez votre clé API officielle OOMOL"
     },
     "default": {
       "browseDescription": "Parcourir les fonctions disponibles",
-      "title": "Services et actions disponibles avec OneKey Plan",
-      "description": "Seules les actions compatibles sont affichées. Certains services ne proposent pas toutes leurs fonctions via OneKey Plan.",
+      "title": "Services et actions disponibles avec OOMOL Key",
+      "description": "Seules les actions compatibles sont affichées. Certains services ne proposent pas toutes leurs fonctions via OOMOL Key.",
       "failed": "Le catalogue officiel est indisponible. Réessayez plus tard.",
       "retry": "Réessayer",
       "loading": "Chargement des applications…",
@@ -148,7 +155,8 @@
         "seedance": "−10 %"
       },
       "supportedActions": "{{count}} actions disponibles",
-      "connected": "Connecté"
+      "connected": "Connecté",
+      "providerDetails": "Voir le fournisseur"
     },
     "summary": {
       "title": "Connector Marketplace",
@@ -209,22 +217,24 @@
   "providers": {
     "managedEmpty": {
       "title": "Aucune connexion configurée",
-      "description": "Connectez OneKey Plan ci-dessus ou ouvrez un fournisseur dans Découvrir les connexions pour ajouter vos identifiants."
+      "description": "Connectez OOMOL Key ci-dessus ou ouvrez un fournisseur dans Découvrir les connexions pour ajouter vos identifiants."
     },
     "hostedAccess": {
       "connectedCustom": "La source gérée est connectée. Consultez les services dans les connexions configurées.",
       "intro": "Une clé OOMOL pour les services IA et de données compatibles, ou vos propres clés fournisseur.",
       "connected": "Les comptes intégrés sont connectés. Consultez les services dans les connexions configurées.",
-      "connect": "Connecter la clé officielle",
-      "manage": "Gérer les comptes intégrés",
+      "connect": "Connecter OOMOL Key",
+      "manage": "Gérer OOMOL Key",
       "close": "Masquer les paramètres",
-      "features": "Afficher les fonctions",
+      "features": "Services disponibles",
       "hideFeatures": "Replier les fonctions",
       "removeKey": "Supprimer la clé",
       "removeHelp": "Supprimer la clé enregistrée et désactiver tous les comptes intégrés ? Vos identifiants personnels seront conservés.",
       "confirmRemove": "Confirmer la suppression",
-      "hide": "Masquer la recommandation OneKey",
-      "restore": "Paramètres de connexion"
+      "hide": "Masquer la recommandation OOMOL Key",
+      "restore": "OOMOL Key",
+      "hiddenNotice": "Retrouvez-le dans Paramètres en haut à droite → OOMOL Key.",
+      "hiddenTitle": "OOMOL Key masqué"
     },
     "managedSources": {
       "label": "Source de connexion",
@@ -233,11 +243,11 @@
       "ownKey": "Identifiants personnels"
     },
     "oneKey": {
-      "title": "Utiliser OneKey Plan",
+      "title": "Utiliser OOMOL Key",
       "description": "Accédez à {{name}} avec une seule clé OOMOL, sans configurer séparément la clé du fournisseur.",
       "alternative": "Vous pouvez aussi configurer la clé du fournisseur ci-dessous.",
-      "connect": "Connecter OneKey Plan",
-      "available": "OneKey disponible",
+      "connect": "Connecter OOMOL Key",
+      "available": "Compatible avec OOMOL Key",
       "builtIn": "Compte intégré",
       "connectedTitle": "Compte intégré",
       "connectedDescription": "Ce service peut utiliser le compte intégré fourni par {{name}}."
@@ -292,7 +302,7 @@
     "filters": {
       "all": "Tous",
       "connected": "Connectés",
-      "oneKey": "OneKey disponible",
+      "oneKey": "Compatible avec OOMOL Key",
       "noSetup": "Sans configuration",
       "notConnected": "Non connectés",
       "oauthNeedsConfig": "OAuth à configurer"

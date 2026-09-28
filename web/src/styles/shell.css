@@ -9,7 +9,7 @@
   top: 0;
   align-self: start;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
   height: 100svh;
   min-height: 0;
   border-right: 1px solid var(--sidebar-border);
@@ -96,15 +96,6 @@
 .nav-item.active {
   font-weight: 560;
   box-shadow: none;
-}
-
-.sidebar-footer {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px 8px;
-  padding: 12px;
-  border-top: 1px solid var(--sidebar-border);
 }
 
 .language-select {
@@ -240,6 +231,42 @@
   min-width: 0;
   gap: 10px;
 }
+.shell-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+.console-settings-panel[data-slot="dialog-content"] {
+  top: 64px;
+  right: 24px;
+  left: auto;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  transform: none;
+  translate: none;
+}
+.console-settings-controls {
+  display: grid;
+  gap: 16px;
+}
+.console-settings-section {
+  display: grid;
+  padding-block: 16px;
+  border-block: 1px solid var(--border);
+}
+.console-settings-feature-description {
+  margin: 8px 0 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.console-settings-runtime {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
 
 .shell-header-title svg {
   flex: 0 0 auto;
@@ -311,7 +338,7 @@
 
   .sidebar {
     position: static;
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto auto;
     gap: 12px;
   }
 
@@ -348,14 +375,6 @@
 
   .nav-item span {
     white-space: nowrap;
-  }
-
-  .sidebar-footer {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0;
-    border-top: 0;
   }
 
   .language-select {
@@ -430,4 +449,25 @@
   .shell-header {
     padding: 0 12px;
   }
+}
+
+.console-settings-panel .language-select,
+.console-settings-panel .theme-control {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  min-width: 0;
+}
+.console-settings-panel .language-select-label,
+.console-settings-panel .theme-control > span {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+}
+.console-settings-panel .theme-segmented-control {
+  width: 100%;
+}
+.console-settings-panel .runtime-status {
+  display: flex;
 }
