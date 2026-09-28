@@ -40,7 +40,7 @@
     "actions": "操作",
     "runs": "运行记录",
     "access": "API Key",
-    "docs": "文档"
+    "docs": "接入指南"
   },
   "shell": {
     "invalidUnlockToken": "请输入有效的管理员 token 来解锁控制台。",
@@ -78,7 +78,7 @@
         "title": "API Key"
       },
       "resources": {
-        "title": "资源"
+        "title": "接入指南"
       }
     },
     "settings": "设置",
@@ -233,7 +233,7 @@
       "confirmRemove": "确认删除 Key",
       "hide": "隐藏 OOMOL Key 推荐",
       "restore": "OOMOL Key",
-      "hiddenNotice": "可在右上角设置 → OOMOL Key 中重新显示。",
+      "hiddenNotice": "可在右上角设置 ⚙️ → OOMOL Key 中重新显示。",
       "hiddenTitle": "已隐藏 OOMOL Key"
     },
     "managedSources": {
@@ -478,7 +478,10 @@
     "running": "运行中",
     "runningAction": "正在运行操作...",
     "actionFailed": "操作失败。",
-    "loadingDetails": "正在加载动作详情..."
+    "loadingDetails": "正在加载动作详情...",
+    "useFromClient": "在端侧使用",
+    "clientExampleHelp": "复制当前网关的调用示例。多个账号时，先选择使用的连接。",
+    "clientGuide": "接入指南"
   },
   "runs": {
     "noRunsTitle": "暂无运行记录",
@@ -704,6 +707,62 @@
     "openapi": {
       "title": "OpenAPI JSON",
       "description": "在脚本或工具导入器中使用生成的规格。"
+    },
+    "onboarding": {
+      "eyebrow": "网关已部署，接下来连接你的客户端",
+      "title": "让应用与 Agent 用上你的网关",
+      "description": "选一种适合你的接入方式，先跑通一个 Action，再使用已经连接的服务。",
+      "stepAddress": "确认网关地址",
+      "stepClient": "选择接入方式",
+      "stepAction": "调用第一个 Action",
+      "prepare": "确认连接信息",
+      "prepareHelp": "填写一次网关地址，下方所有示例都会同步更新。",
+      "gatewayUrl": "你的网关 Base URL",
+      "gatewayHelp": "填写客户端能访问的地址，不要添加 /v1 或 /mcp。",
+      "urlError": "请输入完整的 HTTP 或 HTTPS 地址，不包含账号密码、查询参数或片段。",
+      "authLabel": "运行时认证",
+      "tokenAuth": "使用 Runtime Token",
+      "noAuth": "尚未开启鉴权",
+      "tokenHelp": "创建 Token 后，替换代码中的 <RUNTIME_TOKEN>。此页面不会存储 Token。",
+      "createToken": "创建 Runtime Token",
+      "tokenDifferenceTitle": "这里应该使用哪一种 Key？",
+      "tokenDifference": "Runtime Token 用于访问你部署的网关；OOMOL Key 用于启用网关里的托管服务。服务商凭证保存在网关内。",
+      "localhostHelp": "localhost 指的是运行客户端的设备。如果网关在另一台服务器上，请填写那台服务器的访问地址。",
+      "clientTitle": "选择你使用网关的方式",
+      "clientHelp": "三种方式都能发现和调用同一批 Action，选择适合你的客户端即可。",
+      "mcpAudience": "Agent 客户端",
+      "cliAudience": "终端与脚本",
+      "sdkAudience": "应用代码",
+      "mcpTitle": "让 Agent 调用网关里的能力",
+      "mcpHelp": "适用于支持远程 HTTP 服务和 Authorization 请求头的 MCP 客户端。",
+      "mcpConfigure": "将配置复制到客户端的 MCP 服务设置中。启用鉴权时，替换 Token 占位符。",
+      "mcpDiscover": "让 Agent 先使用 search_actions 查找能力，再用 get_action_guide 了解操作参数。",
+      "mcpExecute": "使用右侧参数调用 execute_action。需要选择账号时，可先调用 list_connections。",
+      "cliTitle": "在终端里调用 Action",
+      "cliHelp": "oo connector 会请求你自己的网关，这些命令不要求登录 OOMOL 账号。",
+      "cliInstall": "在准备执行命令的设备上安装 oo。",
+      "cliConfigure": "在同一个终端设置网关环境变量。这些变量优先于已保存的连接和托管 Key。",
+      "cliExecute": "搜索 Action，查看参数 Schema，再传入 JSON 执行。",
+      "sdkTitle": "从你的应用代码接入",
+      "sdkHelp": "自部署网关使用 OpenConnector。SDK 负责请求，服务商凭证和执行逻辑由网关管理。",
+      "sdkInstall": "在 Node.js 或 TypeScript 项目里安装 SDK。",
+      "sdkConfigure": "启用鉴权时，在应用运行环境设置 OOMOL_CONNECT_RUNTIME_TOKEN。",
+      "sdkExecute": "检查连接，读取目录，再从代码调用同一个 Action。",
+      "install": "安装客户端",
+      "configure": "连接你的网关",
+      "firstAction": "试用 hackernews.get_top_stories",
+      "copy": "复制代码",
+      "copied": "代码已复制",
+      "fullGuide": "查看完整教程",
+      "platform": "客户端操作系统",
+      "tokenEnv": "设置应用环境的 Runtime Token",
+      "nextTitle": "接下来，用于你的业务流程",
+      "nextHelp": "Hacker News 不需要服务商凭证。跑通后，可选择已连接的服务；每个 Action 都有 CLI 和 SDK 示例。",
+      "browseActions": "探索 Action",
+      "actionDetails": "查看这个 Action",
+      "moreTitle": "协议与接口参考",
+      "sdkRunHelp": "将上面的代码保存为 client.mjs，再在同一个终端执行。",
+      "runExample": "运行示例"
     }
   }
 }

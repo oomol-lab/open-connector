@@ -40,7 +40,7 @@
     "actions": "アクション",
     "runs": "実行履歴",
     "access": "API Key",
-    "docs": "ドキュメント"
+    "docs": "接続ガイド"
   },
   "shell": {
     "invalidUnlockToken": "有効な管理者 token を入力してコンソールをロック解除してください。",
@@ -78,7 +78,7 @@
         "title": "API Key"
       },
       "resources": {
-        "title": "リソース"
+        "title": "接続ガイド"
       }
     },
     "settings": "設定",
@@ -233,7 +233,7 @@
       "confirmRemove": "キーの削除を確認",
       "hide": "OOMOL Keyの紹介を非表示",
       "restore": "OOMOL Key",
-      "hiddenNotice": "右上の設定 → OOMOL Keyから再表示できます。",
+      "hiddenNotice": "右上の設定 ⚙️ → OOMOL Keyから再表示できます。",
       "hiddenTitle": "OOMOL Keyを非表示にしました"
     },
     "managedSources": {
@@ -478,7 +478,10 @@
     "running": "実行中",
     "runningAction": "アクションを実行中...",
     "actionFailed": "アクションに失敗しました。",
-    "loadingDetails": "アクションの詳細を読み込み中..."
+    "loadingDetails": "アクションの詳細を読み込み中...",
+    "useFromClient": "クライアントから利用",
+    "clientExampleHelp": "ゲートウェイのサンプルをコピーできます。複数のアカウントがある場合は接続を選んでください。",
+    "clientGuide": "接続ガイド"
   },
   "runs": {
     "noRunsTitle": "実行履歴はまだありません",
@@ -704,6 +707,62 @@
     "openapi": {
       "title": "OpenAPI JSON",
       "description": "生成された spec を script や tool importer で使用します。"
+    },
+    "onboarding": {
+      "eyebrow": "ゲートウェイの準備ができました。クライアントを接続しましょう。",
+      "title": "アプリやAgentからゲートウェイを利用する",
+      "description": "自分のゲートウェイに接続する方法を選び、最初のActionを実行してから、接続済みのサービスを利用しましょう。",
+      "stepAddress": "アドレスを確認",
+      "stepClient": "接続方法を選択",
+      "stepAction": "最初のActionを実行",
+      "prepare": "接続情報を確認",
+      "prepareHelp": "アドレスを入力すると、下のすべてのサンプルに反映されます。",
+      "gatewayUrl": "ゲートウェイのベースURL",
+      "gatewayHelp": "クライアントからアクセスできるアドレスを指定してください。/v1や/mcpは不要です。",
+      "urlError": "認証情報、クエリ、フラグメントを含まない完全なHTTPまたはHTTPSのURLを入力してください。",
+      "authLabel": "ランタイム認証",
+      "tokenAuth": "Runtime Tokenを使用",
+      "noAuth": "認証は無効",
+      "tokenHelp": "トークンを作成し、<RUNTIME_TOKEN>を置き換えてください。このページではトークンを保存しません。",
+      "createToken": "Runtime Tokenを作成",
+      "tokenDifferenceTitle": "どのキーを使いますか？",
+      "tokenDifference": "Runtime Tokenはゲートウェイへのアクセス用、OOMOL Keyはホスト型サービスの有効化用です。サービスの認証情報はゲートウェイに保存されます。",
+      "localhostHelp": "localhostはクライアントの端末を指します。ゲートウェイが別のサーバーにある場合は、そのサーバーのアドレスを指定してください。",
+      "clientTitle": "ゲートウェイの利用方法を選択",
+      "clientHelp": "どの方法でも同じActionを検索・実行できます。利用するクライアントに合わせて選んでください。",
+      "mcpAudience": "Agentクライアント",
+      "cliAudience": "ターミナル・スクリプト",
+      "sdkAudience": "アプリのコード",
+      "mcpTitle": "Agentからゲートウェイを利用",
+      "mcpHelp": "リモートHTTPサーバーとAuthorizationヘッダーに対応するMCPクライアントを使用してください。",
+      "mcpConfigure": "設定をクライアントのMCPサーバー設定にコピーし、認証が有効ならトークンを置き換えてください。",
+      "mcpDiscover": "search_actionsで検索し、get_action_guideで操作のパラメーターを確認します。",
+      "mcpExecute": "右の引数でexecute_actionを試します。アカウントの選択にはlist_connectionsを使えます。",
+      "cliTitle": "ターミナルからActionを実行",
+      "cliHelp": "oo connectorは自分のゲートウェイを使用します。これらのコマンドにOOMOLへのログインは不要です。",
+      "cliInstall": "コマンドを実行する端末にooをインストールします。",
+      "cliConfigure": "同じターミナルで環境変数を設定します。保存済みの接続やホスト型キーより優先されます。",
+      "cliExecute": "Actionを検索し、スキーマを確認してJSONで実行します。",
+      "sdkTitle": "アプリのコードから呼び出す",
+      "sdkHelp": "自分のゲートウェイにはOpenConnectorを使用します。認証情報とサービスへのリクエストはゲートウェイが管理します。",
+      "sdkInstall": "Node.jsまたはTypeScriptプロジェクトにSDKをインストールします。",
+      "sdkConfigure": "認証が有効なら、アプリの環境にOOMOL_CONNECT_RUNTIME_TOKENを設定します。",
+      "sdkExecute": "接続を確認し、カタログを読み取り、同じActionをコードから実行します。",
+      "install": "クライアントをインストール",
+      "configure": "ゲートウェイに接続",
+      "firstAction": "hackernews.get_top_storiesを試す",
+      "copy": "コードをコピー",
+      "copied": "コピーしました",
+      "fullGuide": "完全なガイドを読む",
+      "platform": "クライアントのOS",
+      "tokenEnv": "アプリ環境のランタイムトークン",
+      "nextTitle": "次は自分の業務で使いましょう",
+      "nextHelp": "Hacker Newsにはサービスの認証情報が不要です。成功後は接続済みサービスを選びましょう。各ActionにCLIとSDKのサンプルがあります。",
+      "browseActions": "Actionを探す",
+      "actionDetails": "このActionを見る",
+      "moreTitle": "プロトコルとAPIの参考資料",
+      "sdkRunHelp": "上のコードをclient.mjsに保存し、同じターミナルから実行してください。",
+      "runExample": "サンプルを実行"
     }
   }
 }

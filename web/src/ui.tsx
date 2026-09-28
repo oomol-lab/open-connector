@@ -33,6 +33,7 @@ import { AccessPage } from "./access-page";
 import { ActionsPage } from "./actions-page";
 import { ApiError, apiGet, apiPost } from "./api";
 import oomolConnectLogoUrl from "./assets/oomol-connect-logo.png";
+import { normalizeGatewayUrl } from "./client-onboarding";
 import { persistLang, supportedLangs } from "./i18n";
 import { emptyData } from "./model";
 import { OAuthAppsPage } from "./oauth-apps-page";
@@ -339,10 +340,15 @@ function AppShell(props: {
   const t = useTranslate();
   const location = useLocation();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [clientGatewayUrl, setClientGatewayUrl] = useState(() =>
+    typeof window === "undefined" ? "http://localhost:3000" : window.location.origin,
+  );
+  const clientBaseUrl =
+    normalizeGatewayUrl(clientGatewayUrl) ??
+    (typeof window === "undefined" ? "http://localhost:3000" : window.location.origin);
   const connectionSettingsParams = new URLSearchParams(location.pathname === "/providers" ? location.search : "");
-  if (connectionSettingsParams.get("onekey") === "features") connectionSettingsParams.set("features", "1");
   connectionSettingsParams.set("onekey", "overview");
-  connectionSettingsParams.set("features", "1");
+  connectionSettingsParams.delete("features");
   const connectionSettingsUrl = `/providers?${connectionSettingsParams}`;
   const heading = headingForPath(location.pathname);
   const section = location.pathname.split("/").filter(Boolean)[0];
@@ -356,7 +362,7 @@ function AppShell(props: {
   ]
     .filter(Boolean)
     .join(" ");
-  const currentNavItem = navItems.find((item) => item.labelKey === `nav.${heading}`) ?? navItems[0];
+  const currentNavItem = navItems.find((item) => item.path === `/${section}`) ?? navItems[0];
   const CurrentNavIcon = currentNavItem.icon;
 
   return (
@@ -465,8 +471,14 @@ function AppShell(props: {
               element={<ProvidersPage data={props.data} onRefresh={props.onRefresh} />}
             />
             <Route path="/oauth-apps" element={<OAuthAppsPage data={props.data} onRefresh={props.onRefresh} />} />
-            <Route path="/actions" element={<ActionsPage data={props.data} onRefresh={props.onRefresh} />} />
-            <Route path="/actions/:actionId" element={<ActionsPage data={props.data} onRefresh={props.onRefresh} />} />
+            <Route
+              path="/actions"
+              element={<ActionsPage data={props.data} gatewayUrl={clientBaseUrl} onRefresh={props.onRefresh} />}
+            />
+            <Route
+              path="/actions/:actionId"
+              element={<ActionsPage data={props.data} gatewayUrl={clientBaseUrl} onRefresh={props.onRefresh} />}
+            />
             <Route
               path="/runs"
               element={<RunsPage initialRuns={props.data.runs} nextCursor={props.data.runsNextCursor} />}
@@ -483,7 +495,10 @@ function AppShell(props: {
                 />
               }
             />
-            <Route path="/resources" element={<ResourcesPage />} />
+            <Route
+              path="/resources"
+              element={<ResourcesPage gatewayUrl={clientGatewayUrl} onGatewayUrlChange={setClientGatewayUrl} />}
+            />
             <Route path="*" element={<Navigate to="/overview" replace />} />
           </Routes>
         </main>

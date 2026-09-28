@@ -40,7 +40,7 @@
     "actions": "Actions",
     "runs": "Runs",
     "access": "API Key",
-    "docs": "Docs"
+    "docs": "Connect clients"
   },
   "shell": {
     "invalidUnlockToken": "Enter a valid admin token to unlock the console.",
@@ -78,7 +78,7 @@
         "title": "API Key"
       },
       "resources": {
-        "title": "Resources"
+        "title": "Connect clients"
       }
     },
     "settings": "Settings",
@@ -233,7 +233,7 @@
       "confirmRemove": "Confirm key deletion",
       "hide": "Hide OOMOL Key recommendation",
       "restore": "OOMOL Key",
-      "hiddenNotice": "Show it again from Settings in the top right → OOMOL Key.",
+      "hiddenNotice": "Show it again from Settings ⚙️ in the top right → OOMOL Key.",
       "hiddenTitle": "OOMOL Key hidden"
     },
     "managedSources": {
@@ -478,7 +478,10 @@
     "running": "Running",
     "runningAction": "Running action...",
     "actionFailed": "Action failed.",
-    "loadingDetails": "Loading action details..."
+    "loadingDetails": "Loading action details...",
+    "useFromClient": "Use from your client",
+    "clientExampleHelp": "Copy an example for your gateway. Choose a connection when you have more than one.",
+    "clientGuide": "Setup guide"
   },
   "runs": {
     "noRunsTitle": "No runs yet",
@@ -704,6 +707,62 @@
     "openapi": {
       "title": "OpenAPI JSON",
       "description": "Use the generated spec from scripts or tool importers."
+    },
+    "onboarding": {
+      "eyebrow": "Your gateway is ready. Connect a client.",
+      "title": "Bring your gateway to your apps and agents",
+      "description": "Choose how you want to use this self-hosted gateway. Start with one action, then explore the services you have connected.",
+      "stepAddress": "Confirm the gateway address",
+      "stepClient": "Choose a client",
+      "stepAction": "Run your first action",
+      "prepare": "Confirm your connection details",
+      "prepareHelp": "Set the address once. Every example below uses your gateway.",
+      "gatewayUrl": "Your gateway base URL",
+      "gatewayHelp": "Use an address reachable from the client. Do not append /v1 or /mcp.",
+      "urlError": "Enter a full HTTP or HTTPS URL without credentials, query parameters, or a fragment.",
+      "authLabel": "Runtime authentication",
+      "tokenAuth": "Use a Runtime Token",
+      "noAuth": "Authentication is off",
+      "tokenHelp": "Create a token, then replace <RUNTIME_TOKEN> in the examples. Tokens are never stored on this page.",
+      "createToken": "Create a Runtime Token",
+      "tokenDifferenceTitle": "Which key do I need?",
+      "tokenDifference": "A Runtime Token authorizes clients to call your gateway. An OOMOL Key enables hosted services inside the gateway. Provider credentials stay on the gateway.",
+      "localhostHelp": "localhost refers to the client’s own device. Use your server address when the gateway runs on another machine.",
+      "clientTitle": "Choose how you will use the gateway",
+      "clientHelp": "All three clients discover and execute the same actions. Pick the workflow that fits your client.",
+      "mcpAudience": "Agent clients",
+      "cliAudience": "Terminal and scripts",
+      "sdkAudience": "Application code",
+      "mcpTitle": "Give your agent access to the gateway",
+      "mcpHelp": "Use an MCP client that supports remote HTTP servers and Authorization headers.",
+      "mcpConfigure": "Copy the configuration into your client’s MCP server settings. Replace the token placeholder if authentication is enabled.",
+      "mcpDiscover": "Ask the agent to use search_actions, then get_action_guide to inspect the selected action.",
+      "mcpExecute": "Try execute_action with the arguments shown on the right. list_connections helps select an account.",
+      "cliTitle": "Run actions from your terminal",
+      "cliHelp": "oo connector sends requests to your own gateway. You do not need to sign in to OOMOL for these commands.",
+      "cliInstall": "Install oo on the machine that will run your commands.",
+      "cliConfigure": "Set the gateway environment variables in the same terminal. They take precedence over saved connections and hosted keys.",
+      "cliExecute": "Search for an action, read its schema, and run it with JSON input.",
+      "sdkTitle": "Call actions from your application",
+      "sdkHelp": "Use OpenConnector for a self-hosted gateway. It is a thin client; credentials and provider requests stay on the gateway.",
+      "sdkInstall": "Install the SDK in your Node.js or TypeScript project.",
+      "sdkConfigure": "If authentication is enabled, set OOMOL_CONNECT_RUNTIME_TOKEN in your application environment.",
+      "sdkExecute": "Check health, inspect the catalog, and execute the same action from code.",
+      "install": "Install the client",
+      "configure": "Connect to your gateway",
+      "firstAction": "Try hackernews.get_top_stories",
+      "copy": "Copy code",
+      "copied": "Code copied",
+      "fullGuide": "Read the complete guide",
+      "platform": "Client operating system",
+      "tokenEnv": "Runtime Token in your application environment",
+      "nextTitle": "Ready for your own workflow?",
+      "nextHelp": "Hacker News needs no provider credentials. Next, choose one of your connected services. Every action has CLI and SDK examples.",
+      "browseActions": "Explore actions",
+      "actionDetails": "View this action",
+      "moreTitle": "Protocol references",
+      "sdkRunHelp": "Save the code above as client.mjs, then run it from the same terminal.",
+      "runExample": "Run the example"
     }
   }
 }

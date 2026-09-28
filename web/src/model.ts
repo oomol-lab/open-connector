@@ -1,3 +1,5 @@
+import { buildCliActionExample, buildSdkActionExample, shellSingleQuote } from "./client-onboarding";
+
 /** The setup projection supplied by Open Connector, without OAuth protocol configuration. */
 export type AuthDefinition =
   | { type: "no_auth" }
@@ -496,30 +498,35 @@ export function parameterSummaries(
 export function buildActionExamples(
   action: FullActionDefinition,
   origin: string,
-): { curl: string; typescript: string } {
+  connectionName?: string,
+): { curl: string; typescript: string; cli: string; sdk: string } {
   const endpoint = `${origin}/v1/actions/${action.id}`;
   const body = { input: JSON.parse(exampleInput(action.inputSchema)) as unknown };
   const bodyText = JSON.stringify(body, null, 2);
+  const clientAction = { id: action.id, service: action.service, name: action.name, input: body.input, connectionName };
   return {
     curl: [
       `curl -s ${endpoint} \\`,
       "  -H 'content-type: application/json' \\",
+      '  -H "Authorization: Bearer $OOMOL_CONNECT_RUNTIME_TOKEN" \\',
+      ...(connectionName ? [`  -H ${shellSingleQuote(`x-oo-connector-alias: ${connectionName}`)} \\`] : []),
       `  -d ${shellSingleQuote(JSON.stringify(body))}`,
     ].join("\n"),
     typescript: [
+      'const headers = new Headers({ "content-type": "application/json" });',
+      "const runtimeToken = process.env.OOMOL_CONNECT_RUNTIME_TOKEN;",
+      'if (runtimeToken) headers.set("authorization", `Bearer ${runtimeToken}`);',
+      ...(connectionName ? [`headers.set("x-oo-connector-alias", ${JSON.stringify(connectionName)});`] : []),
       `const response = await fetch(${JSON.stringify(endpoint)}, {`,
       `  method: "POST",`,
-      `  headers: { "content-type": "application/json" },`,
+      `  headers,`,
       `  body: JSON.stringify(${bodyText}),`,
       `});`,
       `const result = await response.json();`,
     ].join("\n"),
+    cli: buildCliActionExample(origin, clientAction),
+    sdk: buildSdkActionExample(origin, clientAction),
   };
-}
-
-/** Quote a value for a POSIX shell so an apostrophe inside an example does not end the argument. */
-function shellSingleQuote(value: string): string {
-  return `'${value.replace(/'/g, "'\\''")}'`;
 }
 
 export function formatDate(value: string): string {

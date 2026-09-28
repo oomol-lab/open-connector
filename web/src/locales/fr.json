@@ -40,7 +40,7 @@
     "actions": "Actions",
     "runs": "Exécutions",
     "access": "API Key",
-    "docs": "Docs"
+    "docs": "Connecter des clients"
   },
   "shell": {
     "invalidUnlockToken": "Saisissez un token administrateur valide pour déverrouiller la console.",
@@ -78,7 +78,7 @@
         "title": "API Key"
       },
       "resources": {
-        "title": "Ressources"
+        "title": "Connecter des clients"
       }
     },
     "settings": "Paramètres",
@@ -233,7 +233,7 @@
       "confirmRemove": "Confirmer la suppression",
       "hide": "Masquer la recommandation OOMOL Key",
       "restore": "OOMOL Key",
-      "hiddenNotice": "Retrouvez-le dans Paramètres en haut à droite → OOMOL Key.",
+      "hiddenNotice": "Retrouvez-le dans Paramètres ⚙️ en haut à droite → OOMOL Key.",
       "hiddenTitle": "OOMOL Key masqué"
     },
     "managedSources": {
@@ -478,7 +478,10 @@
     "running": "Exécution",
     "runningAction": "Exécution de l’action...",
     "actionFailed": "Échec de l’action.",
-    "loadingDetails": "Chargement des détails de l’action…"
+    "loadingDetails": "Chargement des détails de l’action…",
+    "useFromClient": "Utiliser depuis votre client",
+    "clientExampleHelp": "Copiez un exemple pour votre passerelle. Choisissez une connexion si vous avez plusieurs comptes.",
+    "clientGuide": "Guide de connexion"
   },
   "runs": {
     "noRunsTitle": "Aucune exécution",
@@ -704,6 +707,62 @@
     "openapi": {
       "title": "JSON OpenAPI",
       "description": "Utilisez la spec générée depuis des scripts ou des importateurs d’outils."
+    },
+    "onboarding": {
+      "eyebrow": "Votre passerelle est prête. Connectez un client.",
+      "title": "Utilisez votre passerelle dans vos applications et agents",
+      "description": "Choisissez un mode de connexion à votre passerelle auto-hébergée. Exécutez une action, puis découvrez vos services connectés.",
+      "stepAddress": "Vérifier l’adresse",
+      "stepClient": "Choisir un client",
+      "stepAction": "Exécuter une action",
+      "prepare": "Vérifiez la connexion",
+      "prepareHelp": "Renseignez l’adresse une fois. Tous les exemples utilisent votre passerelle.",
+      "gatewayUrl": "URL de base de votre passerelle",
+      "gatewayHelp": "Utilisez une adresse accessible au client, sans ajouter /v1 ou /mcp.",
+      "urlError": "Saisissez une URL HTTP ou HTTPS complète, sans identifiants, paramètres ni fragment.",
+      "authLabel": "Authentification du runtime",
+      "tokenAuth": "Utiliser un Runtime Token",
+      "noAuth": "Authentification désactivée",
+      "tokenHelp": "Créez un jeton et remplacez <RUNTIME_TOKEN>. Cette page ne conserve aucun jeton.",
+      "createToken": "Créer un Runtime Token",
+      "tokenDifferenceTitle": "Quelle clé utiliser ?",
+      "tokenDifference": "Le Runtime Token autorise les appels à votre passerelle. OOMOL Key active les services hébergés. Les identifiants des fournisseurs restent sur la passerelle.",
+      "localhostHelp": "localhost désigne la machine du client. Utilisez l’adresse du serveur si la passerelle est sur une autre machine.",
+      "clientTitle": "Choisissez votre mode de connexion",
+      "clientHelp": "Les trois clients découvrent et exécutent les mêmes actions. Choisissez celui qui vous convient.",
+      "mcpAudience": "Clients agents",
+      "cliAudience": "Terminal et scripts",
+      "sdkAudience": "Code applicatif",
+      "mcpTitle": "Donnez accès à la passerelle à votre agent",
+      "mcpHelp": "Utilisez un client MCP compatible avec les serveurs HTTP distants et les en-têtes Authorization.",
+      "mcpConfigure": "Copiez la configuration dans les paramètres MCP du client. Remplacez le jeton si nécessaire.",
+      "mcpDiscover": "Utilisez search_actions, puis get_action_guide pour consulter les paramètres.",
+      "mcpExecute": "Essayez execute_action avec les arguments affichés. list_connections permet de choisir un compte.",
+      "cliTitle": "Exécutez les actions dans un terminal",
+      "cliHelp": "oo connector utilise votre propre passerelle. Ces commandes ne nécessitent pas de compte OOMOL.",
+      "cliInstall": "Installez oo sur la machine qui exécutera les commandes.",
+      "cliConfigure": "Définissez les variables dans le même terminal. Elles ont priorité sur les connexions enregistrées et les clés hébergées.",
+      "cliExecute": "Recherchez une action, consultez son schéma et exécutez-la avec du JSON.",
+      "sdkTitle": "Appelez les actions depuis votre application",
+      "sdkHelp": "Utilisez OpenConnector pour votre passerelle. Le SDK est un client léger ; les identifiants et les appels aux fournisseurs restent sur la passerelle.",
+      "sdkInstall": "Installez le SDK dans votre projet Node.js ou TypeScript.",
+      "sdkConfigure": "Si l’authentification est activée, définissez OOMOL_CONNECT_RUNTIME_TOKEN dans l’environnement de l’application.",
+      "sdkExecute": "Vérifiez la connexion, consultez le catalogue et exécutez une action.",
+      "install": "Installer le client",
+      "configure": "Connecter votre passerelle",
+      "firstAction": "Essayer hackernews.get_top_stories",
+      "copy": "Copier le code",
+      "copied": "Code copié",
+      "fullGuide": "Lire le guide complet",
+      "platform": "Système du client",
+      "tokenEnv": "Jeton dans l’environnement de l’application",
+      "nextTitle": "Prêt pour votre propre workflow ?",
+      "nextHelp": "Hacker News ne nécessite pas d’identifiants fournisseur. Choisissez ensuite un service connecté : chaque action propose des exemples CLI et SDK.",
+      "browseActions": "Explorer les actions",
+      "actionDetails": "Voir cette action",
+      "moreTitle": "Références des protocoles",
+      "sdkRunHelp": "Enregistrez le code dans client.mjs et exécutez-le dans le même terminal.",
+      "runExample": "Exécuter l’exemple"
     }
   }
 }

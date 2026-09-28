@@ -5,6 +5,9 @@ for application and agent workflows. The Connector SDK and `oo CLI` both work wi
 runtime and with OOMOL-hosted connector services, using the same provider ids, Action ids, and
 schemas.
 
+For the complete deployment-to-first-action walkthrough, start with
+[Client onboarding](client-onboarding.md) or [中文接入指南](client-onboarding.zh-CN.md).
+
 ## Connector SDK
 
 [Connector SDK](https://github.com/oomol-lab/connector-sdk) is the TypeScript client for calling
@@ -35,8 +38,10 @@ console.log(stories);
 For OOMOL-hosted connector services, use `Connector` for personal connections or `ProjectConnector`
 for end-user connections in a SaaS product. All clients use the same Action model; the gateway keeps
 provider credentials behind the runtime boundary, authorizes the request, and executes the provider
-Action. The SDK is intentionally just a client: it does not run provider integrations locally or
-manage OAuth setup.
+Action. The SDK is a client; provider integrations and the OAuth credential lifecycle run on the
+gateway. `OpenConnector.connect.*` can create connections with a separate `adminToken`, while
+ordinary Action calls use `runtimeToken`. OAuth client setup, token creation, and deleting
+connections remain Web Console administration.
 
 For an end-to-end Gmail OAuth and SDK example, see
 [gmail-oauth-sdk.md](gmail-oauth-sdk.md).

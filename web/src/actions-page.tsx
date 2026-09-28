@@ -33,6 +33,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 interface ActionsPageProps {
   data: AppData;
+  gatewayUrl?: string;
   onRefresh(): void;
 }
 
@@ -40,12 +41,14 @@ interface ActionDetailProps {
   action: ActionDefinition;
   providerName: string;
   connections: ConnectionRecord[];
+  gatewayUrl: string;
   onRefresh(): void;
 }
 
 interface ExampleTabsProps {
   action: FullActionDefinition;
-  examples: { curl: string; typescript: string };
+  gatewayUrl: string;
+  connections: ConnectionRecord[];
 }
 
 const actionPageSize = 120;
@@ -195,6 +198,7 @@ export function ActionsPage(props: ActionsPageProps): ReactNode {
               action={selectedAction}
               providerName={providerNames.get(selectedAction.service) ?? selectedAction.service}
               connections={usableConnectionsForService(props.data.connections, selectedAction.service)}
+              gatewayUrl={props.gatewayUrl ?? window.location.origin}
               onRefresh={props.onRefresh}
             />
           ) : (
@@ -243,11 +247,6 @@ function ActionDetail(props: ActionDetailProps): ReactNode {
     };
   }, [actionId]);
 
-  const examples = useMemo(
-    () => (fullAction ? buildActionExamples(fullAction, window.location.origin) : null),
-    [fullAction],
-  );
-
   return (
     <>
       <div className="action-detail-header">
@@ -288,10 +287,10 @@ function ActionDetail(props: ActionDetailProps): ReactNode {
         <h3>{t("actions.requiredScopes")}</h3>
         <TagList values={props.action.requiredScopes} empty={t("providers.noScopes")} />
       </div>
-      {fullAction && examples ? (
+      {fullAction ? (
         <>
           <ParameterList schema={fullAction.inputSchema} />
-          <ExampleTabs action={fullAction} examples={examples} />
+          <ExampleTabs action={fullAction} gatewayUrl={props.gatewayUrl} connections={props.connections} />
         </>
       ) : schemaError ? (
         <p className="detail-description">{schemaError}</p>
@@ -345,18 +344,52 @@ function ParameterList(props: { schema: JsonSchema }): ReactNode {
 
 function ExampleTabs(props: ExampleTabsProps): ReactNode {
   const t = useTranslate();
-  const [active, setActive] = useState<"curl" | "typescript" | "agent">("curl");
+  const [active, setActive] = useState<"sdk" | "cli" | "curl" | "typescript" | "agent">("sdk");
+  const [connectionName, setConnectionName] = useState(() => initialActionConnectionName(props.connections));
+  const connectionSignature = props.connections.map(actionConnectionName).join("\0");
+  const connectionsRef = useRef(props.connections);
+  connectionsRef.current = props.connections;
+  useEffect(
+    () => setConnectionName((current) => reconcileActionConnectionName(current, connectionsRef.current)),
+    [connectionSignature],
+  );
+  const examples = buildActionExamples(props.action, props.gatewayUrl, connectionName);
   const { copy, copied } = useClipboard();
-  const agent = buildAgentPrompt(props.action);
+  const agent = buildAgentPrompt(props.action, props.gatewayUrl);
   const tabs = [
-    { id: "curl", label: "cURL", code: props.examples.curl },
-    { id: "typescript", label: "TypeScript", code: props.examples.typescript },
+    { id: "sdk", label: "SDK", code: examples.sdk },
+    { id: "cli", label: "CLI", code: examples.cli },
+    { id: "curl", label: "cURL", code: examples.curl },
+    { id: "typescript", label: "HTTP / TS", code: examples.typescript },
     { id: "agent", label: "Agent.md", code: agent.prompt },
   ] as const;
   const selected = tabs.find((tab) => tab.id === active) ?? tabs[0];
 
   return (
     <section className="example-card">
+      <div className="action-client-heading">
+        <div>
+          <h3>{t("actions.useFromClient")}</h3>
+          <p>{t("actions.clientExampleHelp")}</p>
+        </div>
+        <Button asChild variant="outline" size="sm">
+          <Link to="/resources">{t("actions.clientGuide")}</Link>
+        </Button>
+      </div>
+      {props.connections.length > 1 ? (
+        <Select value={connectionName ?? ""} onValueChange={setConnectionName}>
+          <SelectTrigger aria-label={t("actions.connection")}>
+            <SelectValue placeholder={t("actions.selectConnection")} />
+          </SelectTrigger>
+          <SelectContent>
+            {props.connections.map((connection) => (
+              <SelectItem key={connection.id ?? connection.connectionName} value={actionConnectionName(connection)}>
+                {actionConnectionLabel(connection)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : null}
       <Tabs value={active} onValueChange={(value) => setActive(value as typeof active)}>
         <div className="tab-row">
           <TabsList aria-label={t("actions.actionExamples")}>
@@ -378,6 +411,7 @@ function ExampleTabs(props: ExampleTabsProps): ReactNode {
             <Button
               variant="ghost"
               size="icon-sm"
+              disabled={props.connections.length > 1 && !connectionName}
               onClick={() => void copy(selected.code)}
               aria-label={
                 copied
@@ -590,11 +624,11 @@ function actionConnectionLabel(connection: ConnectionRecord): string {
     : connectionName;
 }
 
-function buildAgentPrompt(action: ActionDefinition): { prompt: string } {
-  const markdownUrl = `${window.location.origin}/api/actions/${action.id}/agent.md`;
+function buildAgentPrompt(action: ActionDefinition, origin: string): { prompt: string } {
+  const markdownUrl = `${origin}/api/actions/${action.id}/agent.md`;
   const prompt = [
     `Read ${markdownUrl} to discover the request contract for ${action.name}.`,
-    `Then call ${window.location.origin}/v1/actions/${action.id} with JSON shaped as { "input": ... }.`,
+    `Then call ${origin}/v1/actions/${action.id} with JSON shaped as { "input": ... }.`,
     "Use the runtime endpoint above. Do not call the provider API directly unless I explicitly ask.",
   ].join("\n");
 

@@ -1,135 +1,304 @@
-.resources-layout {
+.client-onboarding {
   display: grid;
-  gap: 14px;
-}
-
-.mcp-config-card {
-  display: grid;
-  grid-template-columns: minmax(0, 4fr) minmax(0, 6fr);
   gap: 24px;
-  padding: 18px;
+  max-width: 1180px;
+  margin-inline: auto;
+  padding-bottom: 16px;
 }
-
-.mcp-config-summary {
+.onboarding-intro {
+  padding: 8px 0 4px;
+}
+.onboarding-eyebrow {
+  color: var(--success);
+  font-size: 12px;
+  font-weight: 650;
+}
+.onboarding-intro h2 {
+  margin: 10px 0;
+  font-size: clamp(24px, 2.8vw, 34px);
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.onboarding-intro > p {
+  max-width: 780px;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 14px;
+  line-height: 1.65;
+}
+.onboarding-journey {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 30px;
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0;
+}
+.onboarding-journey li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.onboarding-journey li span {
   display: grid;
-  align-content: start;
-  justify-items: start;
-  gap: 18px;
-  min-width: 0;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  font-family: var(--font-mono);
+  font-size: 11px;
 }
-
-.mcp-config-heading {
+.onboarding-panel {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  box-shadow: var(--console-shadow-sm);
+  padding: 24px;
+}
+.onboarding-panel-heading {
   display: flex;
   align-items: flex-start;
   gap: 12px;
 }
-
-.mcp-config-heading h2 {
+.onboarding-step {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.onboarding-panel-heading h3 {
   margin: 1px 0 5px;
   font-size: 16px;
+  font-weight: 600;
 }
-
-.mcp-config-heading p {
+.onboarding-panel-heading p {
   margin: 0;
   color: var(--muted-foreground);
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.6;
 }
-
-.mcp-config-field {
+.onboarding-connection-grid {
   display: grid;
-  gap: 7px;
-  width: 100%;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 24px;
+  margin-top: 22px;
+}
+.onboarding-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
   min-width: 0;
 }
-
-.mcp-config-field > span {
+.onboarding-field input {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+.onboarding-field > p {
+  margin: 0;
   color: var(--muted-foreground);
   font-size: 12px;
-  font-weight: 620;
+  line-height: 1.6;
 }
-
-.mcp-endpoint {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.onboarding-field [data-slot="toggle-group"] {
+  flex-wrap: wrap;
+}
+.onboarding-note {
+  padding-top: 14px;
+  margin-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.onboarding-note summary {
+  cursor: pointer;
+  width: fit-content;
+}
+.onboarding-note p {
+  line-height: 1.6;
+  margin: 10px 0 0;
+}
+.onboarding-client-panel > [data-slot="tabs"] {
+  margin-top: 20px;
+}
+.onboarding-methods[data-slot="tabs-list"] {
   width: 100%;
+  height: auto;
+  justify-content: flex-start;
+}
+.onboarding-methods [data-slot="tabs-trigger"] {
+  flex: 1;
+  min-height: 42px;
+  gap: 8px;
+}
+.onboarding-methods [data-slot="tabs-trigger"] > span {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 400;
+}
+.onboarding-method-content[data-slot="tabs-content"] {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.6fr);
+  align-items: start;
+  gap: 32px;
+  padding-top: 22px;
+}
+.onboarding-instructions {
   min-width: 0;
-  padding: 4px 4px 4px 10px;
+}
+.onboarding-instructions h4 {
+  margin: 14px 0 10px;
+  font-size: 20px;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.onboarding-instructions p,
+.onboarding-instructions li {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.65;
+}
+.onboarding-instructions ol {
+  padding-left: 18px;
+  margin: 20px 0;
+}
+.onboarding-instructions li + li {
+  margin-top: 12px;
+}
+.onboarding-instructions > a {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  margin-top: 16px;
+  color: var(--foreground);
+  font-size: 12px;
+}
+.onboarding-endpoint {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+  padding: 10px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: color-mix(in oklab, var(--muted) 58%, transparent);
+  background: var(--muted);
 }
-
-.mcp-endpoint code {
-  flex: 1;
+.onboarding-snippets {
+  display: grid;
   min-width: 0;
-  overflow: auto;
-  font-family: var(--oomol-font-mono);
-  font-size: 12px;
-  white-space: nowrap;
+  gap: 12px;
 }
-
-.mcp-config-code {
+.onboarding-run-help {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.onboarding-code {
   min-width: 0;
   overflow: hidden;
-  border-radius: 6px;
-  background: color-mix(in oklab, var(--muted) 58%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--muted) 45%, var(--card));
 }
-
-.mcp-config-code-header {
+.onboarding-code > div {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 42px;
-  padding: 4px 6px 4px 14px;
+  gap: 8px;
+  min-height: 38px;
+  padding: 3px 8px 3px 14px;
   border-bottom: 1px solid var(--border);
 }
-
-.mcp-config-code-header strong {
-  font-size: 13px;
+.onboarding-code strong {
+  font-size: 12px;
+  font-weight: 550;
 }
-
-.mcp-config-code pre {
-  min-height: 192px;
+.onboarding-code pre {
+  overflow: auto;
+  max-height: 380px;
   margin: 0;
   padding: 14px;
-  overflow: auto;
-  font-family: var(--oomol-font-mono);
   font-size: 12px;
-  line-height: 1.55;
+  line-height: 1.65;
 }
-
+.onboarding-next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 22px 24px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--success) 5%, var(--card));
+}
+.onboarding-next-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.onboarding-reference-title {
+  margin: 0 0 -12px;
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--muted-foreground);
+}
 .docs-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
-
 .doc-card {
-  position: relative;
   display: grid;
-  gap: 10px;
-  min-height: 172px;
-  padding: 18px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+  padding: 16px;
+  min-height: 0;
   text-decoration: none;
 }
-
+.doc-card strong {
+  font-size: 13px;
+}
 .doc-card p {
+  margin: 5px 0 0;
   color: var(--muted-foreground);
+  font-size: 12px;
   line-height: 1.5;
 }
-
 .doc-card > svg {
-  position: absolute;
-  right: 18px;
-  top: 18px;
   color: var(--muted-foreground);
 }
-
-@media (max-width: 960px) {
-  .mcp-config-card,
-  .docs-grid {
-    display: grid;
+@media (max-width: 900px) {
+  .onboarding-connection-grid,
+  .onboarding-method-content[data-slot="tabs-content"] {
     grid-template-columns: 1fr;
+    gap: 22px;
+  }
+}
+@media (max-width: 640px) {
+  .onboarding-panel {
+    padding: 18px;
+  }
+  .onboarding-methods [data-slot="tabs-trigger"] > span {
+    display: none;
+  }
+  .docs-grid {
+    grid-template-columns: 1fr;
+  }
+  .onboarding-next {
+    padding: 18px;
   }
 }

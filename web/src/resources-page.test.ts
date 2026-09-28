@@ -16,7 +16,11 @@ describe("ResourcesPage", () => {
       createElement(
         I18nProvider,
         { i18n: createAppI18n("en") },
-        createElement(MemoryRouter, {}, createElement(ResourcesPage)),
+        createElement(
+          MemoryRouter,
+          {},
+          createElement(ResourcesPage, { gatewayUrl: "http://localhost:4321", onGatewayUrlChange() {} }),
+        ),
       ),
     );
 
@@ -25,8 +29,9 @@ describe("ResourcesPage", () => {
     expect(markup).toContain("open-connector");
     expect(markup).not.toContain("oomol-connect");
     expect(markup).toContain("Bearer &lt;RUNTIME_TOKEN&gt;");
-    expect(markup).toContain("Copy MCP URL");
-    expect(markup).toContain("Copy JSON configuration");
+    expect(markup).toContain("Copy code");
+    expect(markup).toContain("Choose a client");
+    expect(markup).toContain("Run your first action");
     expect(markup).toMatch(/href="\/access"/);
     expect(markup).not.toMatch(/href="\/mcp\/tools"/);
   });

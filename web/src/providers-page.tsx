@@ -267,7 +267,8 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
   const [searchParams, setSearchParams] = useSearchParams();
   const showHostedSettings = searchParams.get("onekey") === "1";
   const showHostedOverview = searchParams.get("onekey") === "overview";
-  const showSupportedFeatures = searchParams.get("features") === "1" || searchParams.get("onekey") === "features";
+  const showSupportedFeatures =
+    !showHostedOverview && (searchParams.get("features") === "1" || searchParams.get("onekey") === "features");
   const [oneKeyHidden, setOneKeyHidden] = useState(isOneKeyPromotionHidden);
   const hiddenNoticeId = useRef<string | number | undefined>(undefined);
   useEffect(() => {
@@ -458,7 +459,7 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
             onPreview={() =>
               setSearchParams((current) => {
                 const next = new URLSearchParams(current);
-                if (next.get("onekey") === "features") next.delete("onekey");
+                if (next.get("onekey") === "features" || next.get("onekey") === "overview") next.delete("onekey");
                 if (showSupportedFeatures) next.delete("features");
                 else next.set("features", "1");
                 return next;

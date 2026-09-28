@@ -201,6 +201,7 @@ OpenConnector 与 [Wanta](https://github.com/oomol-lab/wanta) 是 OOMOL 开源�
 
 - [快速开始](quickstart.md)
 - [开发者工具](sdk-cli.md)
+- [客户端接入：MCP、CLI 和 SDK](client-onboarding.zh-CN.md)
 - [Gmail OAuth 和 SDK 接入教程](gmail-oauth-sdk.zh-CN.md)
 - [Runtime API 和 MCP](runtime-api.md)
 - [部署方案](deployment-options/README.zh-CN.md)

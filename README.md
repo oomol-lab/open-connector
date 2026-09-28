@@ -234,6 +234,7 @@ Issues and pull requests are welcome.
 - [Quickstart](docs/quickstart.md)
 - [Developer tools](docs/sdk-cli.md)
 - [Programmatic connection management](docs/programmatic-connections.md)
+- [Connect your clients: MCP, CLI, and SDK](docs/client-onboarding.md)
 - [Gmail OAuth and SDK tutorial](docs/gmail-oauth-sdk.md)
 - [Instagram OAuth and Actions](docs/instagram-oauth.md)
 - [Runtime API and MCP](docs/runtime-api.md)
