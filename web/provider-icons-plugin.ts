@@ -32,14 +32,18 @@ export function providerIconsPlugin(options: ProviderIconsPluginOptions = {}): P
       }
       cachedModule ??= options.iconUrls
         ? Promise.resolve(serializeProviderIcons(options.iconUrls))
-        : loadProviderIconsModule();
+        : loadProviderIconsModule().catch((error: unknown) => {
+            const reason = error instanceof Error ? error.message : String(error);
+            this.warn(`Provider icon catalog unavailable: ${reason}. Using default provider icons.`);
+            return serializeProviderIcons({});
+          });
       return cachedModule;
     },
   };
 }
 
 async function loadProviderIconsModule(): Promise<string> {
-  const response = await fetch(catalogUrl);
+  const response = await fetch(catalogUrl, { signal: AbortSignal.timeout(10_000) });
   if (!response.ok) {
     throw new Error(`Could not load OOMOL provider icons: ${response.status} ${response.statusText}`);
   }
