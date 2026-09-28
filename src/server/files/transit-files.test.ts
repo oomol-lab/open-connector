@@ -1,17 +1,70 @@
+import * as fs from "node:fs";
 import { mkdtemp, readdir, rm, stat, unlink, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { TransitFileError } from "./transit-file-store.ts";
 import { TransitFileService } from "./transit-files.ts";
+
+vi.mock("node:fs", async (importOriginal) => {
+  const actual = await importOriginal<typeof fs>();
+  return { ...actual, createWriteStream: vi.fn(actual.createWriteStream) };
+});
 
 const roots: string[] = [];
 
 afterEach(async () => {
+  vi.restoreAllMocks();
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
 
 describe("TransitFileService", () => {
+  it("waits for a pending file open to close before cleaning up a failed source", async () => {
+    const { rootDir, service } = await createService();
+    const releaseOpen = Promise.withResolvers<void>();
+    const opened = Promise.withResolvers<fs.WriteStream>();
+    const { createWriteStream } = await vi.importActual<typeof fs>("node:fs");
+    vi.mocked(fs.createWriteStream).mockImplementationOnce((path) => {
+      const destination = createWriteStream(path, {
+        flags: "wx",
+        fs: {
+          open(path, flags, mode, callback) {
+            opened.resolve(destination);
+            void releaseOpen.promise.then(() => fs.open(path, flags, mode, callback));
+          },
+          close: fs.close,
+          write: fs.write,
+          writev: fs.writev,
+        },
+      });
+      return destination;
+    });
+    let source: ReadableStreamDefaultController<Uint8Array>;
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        source = controller;
+      },
+    });
+    const failure = new Error("Malformed upstream payload");
+    let settled = false;
+    const pending = service
+      .createFromStream({ body, name: "partial.bin", mimeType: "application/octet-stream" })
+      .catch((error: unknown) => {
+        settled = true;
+        return error;
+      });
+    try {
+      const destination = await opened.promise;
+      source!.error(failure);
+      await expect.poll(() => destination.destroyed).toBe(true);
+      expect(settled).toBe(false);
+    } finally {
+      releaseOpen.resolve();
+    }
+    expect(await pending).toBe(failure);
+    expect(await readdir(rootDir)).toEqual([]);
+  });
+
   it("cancels a stalled source and removes the partial write when its signal aborts", async () => {
     const { rootDir, service } = await createService();
     const abort = new AbortController();
