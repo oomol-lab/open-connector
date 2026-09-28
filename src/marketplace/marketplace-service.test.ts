@@ -28,6 +28,51 @@ const provider: ProviderDefinition = {
 };
 
 describe("MarketplaceService", () => {
+  it.each(["discovery", "validation"])("reports %s network failures as Marketplace errors", async (stage) => {
+    const fetcher = vi.fn<typeof fetch>();
+    if (stage === "validation") {
+      fetcher.mockResolvedValueOnce(
+        jsonResponse({
+          version: 1,
+          id: "test",
+          name: "Test Marketplace",
+          pricing: "metered",
+          validate: "/validate",
+          endpoint: "/actions",
+          actions: ["example.run"],
+        }),
+      );
+    }
+    fetcher.mockRejectedValueOnce(new Error("request URL must not resolve to private or reserved IP addresses"));
+    const store = new MemoryMarketplaceStore();
+    const service = new MarketplaceService({
+      catalog: createCatalogStore([provider]),
+      store,
+      secretCodec: reversibleCodec,
+      fetcher,
+    });
+    await expect(service.configure({ apiKey: "secret" })).rejects.toMatchObject({
+      code: "marketplace_unavailable",
+      status: 502,
+      message: "Marketplace request failed: request URL must not resolve to private or reserved IP addresses",
+    });
+    expect(await store.getConfig()).toBeUndefined();
+    expect(service.getState().configured).toBe(false);
+  });
+
+  it("reports network timeouts as gateway timeouts", async () => {
+    const service = new MarketplaceService({
+      catalog: createCatalogStore([provider]),
+      store: new MemoryMarketplaceStore(),
+      secretCodec: reversibleCodec,
+      fetcher: vi.fn<typeof fetch>().mockRejectedValue(new DOMException("Timed out", "TimeoutError")),
+    });
+    await expect(service.configure({ apiKey: "secret" })).rejects.toMatchObject({
+      code: "marketplace_unavailable",
+      status: 504,
+      message: "Marketplace request timed out.",
+    });
+  });
   it("keeps the current source on failed replacement and hides old preferences after a successful switch", async () => {
     const fetcher = vi.fn<typeof fetch>().mockImplementation(async (input) => {
       const url = new URL(String(input));

@@ -270,6 +270,11 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
   const showSupportedFeatures =
     !showHostedOverview && (searchParams.get("features") === "1" || searchParams.get("onekey") === "features");
   const [oneKeyHidden, setOneKeyHidden] = useState(isOneKeyPromotionHidden);
+  const showHostedCard =
+    (props.data.marketplace?.status !== "available" && (!oneKeyHidden || props.data.marketplace?.configured)) ||
+    showHostedOverview ||
+    showHostedSettings ||
+    showSupportedFeatures;
   const hiddenNoticeId = useRef<string | number | undefined>(undefined);
   useEffect(() => {
     return () => {
@@ -449,7 +454,7 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
           {t("providers.views.manage")} <span className="provider-view-count">{managedProviders.length}</span>
         </TabsTrigger>
       </TabsList>
-      {!oneKeyHidden || props.data.marketplace?.configured || showHostedSettings || showSupportedFeatures ? (
+      {showHostedCard ? (
         <div className="provider-hosted-section">
           <HostedAccessCard
             marketplace={props.data.marketplace}
@@ -477,6 +482,13 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
                   onClick: () => {
                     setOneKeyHidden(false);
                     setOneKeyPromotionHidden(false);
+                    if (props.data.marketplace?.status === "available") {
+                      setSearchParams((current) => {
+                        const next = new URLSearchParams(current);
+                        next.set("onekey", "overview");
+                        return next;
+                      });
+                    }
                   },
                 },
               });
@@ -687,7 +699,7 @@ function HostedAccessCard(props: HostedAccessCardProps): ReactNode {
         >
           {t(props.marketplace?.configured ? "providers.hostedAccess.manage" : "providers.hostedAccess.connect")}
         </Button>
-        {!props.marketplace?.configured ? (
+        {!props.marketplace?.configured || available ? (
           <Button
             variant="ghost"
             size="icon-sm"

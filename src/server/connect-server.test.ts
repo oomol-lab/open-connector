@@ -36,6 +36,7 @@ import { createCatalogStore } from "../catalog-store.ts";
 import { ConnectionService } from "../connection-service.ts";
 import { ActionPolicyService as LocalActionPolicyService } from "../core/action-policy.ts";
 import { buildActionSearchIndex } from "../core/action-search.ts";
+import { MarketplaceError, MarketplaceService } from "../marketplace/marketplace-service.ts";
 import { OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
 import { actionInputMaxDepth, hashActionRequest, hashIdempotencyKey } from "./actions/action-idempotency.ts";
@@ -43,7 +44,7 @@ import { ActionRunner } from "./actions/action-runner.ts";
 import { registerStaticRoutes } from "./api/static-routes.ts";
 import { ConnectServer } from "./connect-server.ts";
 import { TransitFileService } from "./files/transit-files.ts";
-import { AesGcmSecretCodec } from "./secrets/secret-codec.ts";
+import { AesGcmSecretCodec, PlainTextSecretCodec } from "./secrets/secret-codec.ts";
 import { decodeRunLogCursor, encodeRunLogCursor } from "./storage/runtime-store.ts";
 import { RuntimeTokenService } from "./storage/runtime-token-service.ts";
 import { SqliteRuntimeDatabase } from "./storage/sqlite-runtime-store.ts";
@@ -141,6 +142,29 @@ afterEach(() => {
 });
 
 describe("ConnectServer", () => {
+  it.each([401, 403, 502, 504])("preserves Marketplace error status %s", async (status) => {
+    const database = new SqliteRuntimeDatabase(":memory:");
+    requestDatabases.push(database);
+    const marketplace = new MarketplaceService({
+      catalog: createCatalogStore([apiKeyProvider]),
+      store: database.marketplaceStore,
+      secretCodec: new PlainTextSecretCodec(),
+    });
+    vi.spyOn(marketplace, "configure").mockRejectedValue(
+      new MarketplaceError("marketplace_unavailable", "Marketplace request failed.", status),
+    );
+    const app = createTestServer([apiKeyProvider], { marketplace }).createApp();
+    const response = await app.request("/api/marketplace", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ apiKey: "secret" }),
+    });
+    expect(response.status).toBe(status);
+    expect(await response.json()).toEqual({
+      error: { code: "marketplace_unavailable", message: "Marketplace request failed." },
+    });
+  });
+
   it("rejects connections for providers unavailable in the current runtime", async () => {
     const app = createTestServer([catalogOnlyProvider]).createApp();
 
@@ -3780,6 +3804,7 @@ interface TestAuthOptions {
 }
 
 interface CreateTestServerOptions {
+  marketplace?: MarketplaceService;
   auth?: TestAuthOptions;
   publicOrigin?: string;
   actionPolicy?: ActionPolicyService;
@@ -3842,6 +3867,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
   const staticRoot = typeof options.staticRoot === "string" ? options.staticRoot : undefined;
 
   return new ConnectServer({
+    marketplace: options.marketplace,
     catalog,
     publicOrigin: options.publicOrigin ?? "http://localhost:3000",
     providerLoader,

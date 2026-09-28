@@ -3,7 +3,7 @@ import type { ExecutionResult } from "../core/types.ts";
 import type { ISecretCodec } from "../server/secrets/secret-codec-core.ts";
 
 import { assertPublicHttpUrl } from "../core/request.ts";
-import { providerFetch } from "../providers/provider-runtime.ts";
+import { isAbortLikeError, providerFetch } from "../providers/provider-runtime.ts";
 import { defaultMarketplaceDiscoveryUrl } from "./default-marketplace.ts";
 const maximumDiscoveryBytes = 4 * 1024 * 1024;
 
@@ -332,8 +332,20 @@ export class MarketplaceService {
     }
   }
 
-  private fetch(input: URL, init: RequestInit): Promise<Response> {
-    return (this.options.fetcher ?? providerFetch)(input, init);
+  private async fetch(input: URL, init: RequestInit): Promise<Response> {
+    try {
+      return await (this.options.fetcher ?? providerFetch)(input, init);
+    } catch (error) {
+      if (error instanceof MarketplaceError) throw error;
+      if (isAbortLikeError(error)) {
+        throw new MarketplaceError("marketplace_unavailable", "Marketplace request timed out.", 504);
+      }
+      throw new MarketplaceError(
+        "marketplace_unavailable",
+        error instanceof Error ? `Marketplace request failed: ${error.message}` : "Marketplace request failed.",
+        502,
+      );
+    }
   }
 }
 

@@ -331,7 +331,13 @@ export class ConnectServer {
       return context.json(await this.options.marketplace!.configure(input));
     } catch (error) {
       if (error instanceof MarketplaceError) {
-        return jsonError(context, error.status === 404 ? 404 : 400, error.code, error.message);
+        const status = error.status;
+        return jsonError(
+          context,
+          status === 401 || status === 403 || status === 404 || status === 502 || status === 504 ? status : 400,
+          error.code,
+          error.message,
+        );
       }
       throw error;
     }
