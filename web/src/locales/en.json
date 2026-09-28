@@ -60,7 +60,9 @@
       "providers": {
         "title": "Providers"
       },
-      "marketplace": { "title": "Marketplace" },
+      "marketplace": {
+        "title": "Marketplace"
+      },
       "oauthApps": {
         "title": "OAuth Apps"
       },
@@ -110,10 +112,25 @@
     "noRecentCallsDescription": "Run an action to see provider call counts."
   },
   "marketplace": {
+    "oneKey": {
+      "headline": "One key for AI and data services",
+      "description": "Use compatible services in this catalog with an official OOMOL key. Skip separate provider signups and setup. Pay for what you use.",
+      "getKey": "Get a OneKey Plan key",
+      "haveKey": "Already have a key? Connect it",
+      "benefitsLabel": "How OneKey Plan works",
+      "benefitSetup": "Skip separate API key setup for each provider",
+      "benefitChoice": "Keep the option to use provider keys directly",
+      "benefitPricing": "Selected models have discounts; usage is metered",
+      "connectTitle": "Connect OneKey Plan",
+      "connectDescription": "Paste your official OOMOL key to verify and manage compatible services.",
+      "keyLabel": "Official OOMOL API key",
+      "keyHelp": "Copy your key from the OOMOL console. After connecting, manage compatible services here.",
+      "advanced": "Advanced: Marketplace source"
+    },
     "default": {
       "browseDescription": "Browse available features",
-      "title": "Official apps",
-      "description": "Provided by OOMOL Marketplace. Connect an official API key to use these services.",
+      "title": "Services and actions supported by OneKey Plan",
+      "description": "Only actions compatible with this version are listed. Support for some actions does not include every feature offered by a provider.",
       "failed": "The official catalog could not be loaded. Please try again.",
       "retry": "Retry",
       "loading": "Loading official apps…",
@@ -129,7 +146,9 @@
         "kling": "30% off",
         "minimax": "20% off",
         "seedance": "10% off"
-      }
+      },
+      "supportedActions": "{{count}} supported actions",
+      "connected": "Connected"
     },
     "summary": {
       "title": "Connector Marketplace",
@@ -143,7 +162,10 @@
       "unavailable": "Unavailable",
       "auth_error": "Authentication error"
     },
-    "pricing": { "free": "Free", "metered": "Metered usage" },
+    "pricing": {
+      "free": "Free",
+      "metered": "Metered usage"
+    },
     "configuration": {
       "reconnect": "This source is not ready. Check the configuration above and validate again.",
       "title": "Configuration",
@@ -185,14 +207,55 @@
     }
   },
   "providers": {
+    "managedEmpty": {
+      "title": "No configured connections yet",
+      "description": "Connect OneKey Plan above, or open a provider in Discover connections and add your credentials."
+    },
+    "hostedAccess": {
+      "connectedCustom": "The managed source is connected. View available services under Configured connections.",
+      "intro": "Use one OOMOL key for compatible AI and data services, or connect provider keys directly.",
+      "connected": "Built-in accounts are connected. View available services under Configured connections.",
+      "connect": "Connect official key",
+      "manage": "Manage built-in accounts",
+      "close": "Hide settings",
+      "features": "Expand features",
+      "hideFeatures": "Collapse features",
+      "removeKey": "Delete key",
+      "removeHelp": "Delete the saved key and disable all built-in accounts? Your own provider credentials will be kept.",
+      "confirmRemove": "Confirm key deletion",
+      "hide": "Hide OneKey recommendation",
+      "restore": "Connection settings"
+    },
+    "managedSources": {
+      "label": "Connection source",
+      "all": "All",
+      "builtIn": "Built-in accounts",
+      "ownKey": "Own credentials"
+    },
+    "oneKey": {
+      "title": "Use OneKey Plan",
+      "description": "Access {{name}} with one OOMOL key, without configuring this provider’s API key separately.",
+      "alternative": "You can also configure a provider key below.",
+      "connect": "Connect OneKey Plan",
+      "available": "OneKey available",
+      "builtIn": "Built-in account",
+      "connectedTitle": "Built-in account",
+      "connectedDescription": "This service can run through the built-in account provided by {{name}}."
+    },
     "catalogTitle": "Providers",
     "viewLabel": "Provider view",
-    "views": { "manage": "My connections", "discover": "All apps" },
+    "views": {
+      "manage": "Configured connections",
+      "discover": "Discover connections"
+    },
     "discovery": {
       "browseByTask": "Browse by task",
       "explore": "Explore apps",
       "scenarios": {
-        "ai": { "title": "AI & agents", "description": "Models, agents, search, and media generation" },
+        "ai": {
+          "title": "AI & agents",
+          "description": "Models, agents, search, and media generation"
+        },
         "investment": {
           "title": "Investing & trading",
           "description": "Stocks, crypto, market data, portfolios, and trades"
@@ -209,8 +272,14 @@
           "title": "Projects & productivity",
           "description": "Projects, tasks, schedules, and automation"
         },
-        "marketing": { "title": "Marketing & growth", "description": "Ads, content, leads, and growth data" },
-        "dataStorage": { "title": "Data & analytics", "description": "Warehouses, databases, BI, and storage" },
+        "marketing": {
+          "title": "Marketing & growth",
+          "description": "Ads, content, leads, and growth data"
+        },
+        "dataStorage": {
+          "title": "Data & analytics",
+          "description": "Warehouses, databases, BI, and storage"
+        },
         "developer": {
           "title": "Development & cloud",
           "description": "Code, deployment, cloud services, and observability"
@@ -223,6 +292,7 @@
     "filters": {
       "all": "All",
       "connected": "Connected",
+      "oneKey": "OneKey available",
       "noSetup": "No setup",
       "notConnected": "Not connected",
       "oauthNeedsConfig": "OAuth needs config"
@@ -625,13 +695,5 @@
       "title": "OpenAPI JSON",
       "description": "Use the generated spec from scripts or tool importers."
     }
-  },
-  "hostedPromo": {
-    "title": "Welcome to Open Connector",
-    "headline": "One key. Start creating with AI.",
-    "description": "Generate images and videos with Kling, Seedance, MiniMax, and more.",
-    "offer": "Up to 30% off selected models",
-    "cta": "Get API key",
-    "dismiss": "Dismiss and don’t show again"
   }
 }

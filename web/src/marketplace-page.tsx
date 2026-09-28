@@ -2,7 +2,17 @@ import type { AppData, MarketplaceState, ProviderPreference } from "./model";
 import type { ReactNode, SubmitEvent } from "react";
 
 import { useTranslate } from "@embra/i18n/react";
-import { ArrowUpRight, CheckCircle2, Eye, EyeOff, Loader2, Store, Trash2, TriangleAlert } from "lucide-react";
+import {
+  ArrowUpRight,
+  CheckCircle2,
+  ChevronDown,
+  Eye,
+  EyeOff,
+  Loader2,
+  Store,
+  Trash2,
+  TriangleAlert,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { defaultMarketplaceDiscoveryUrl, isDefaultMarketplace } from "../../src/marketplace/default-marketplace";
@@ -16,6 +26,8 @@ import { Label } from "@/components/ui/label";
 
 interface MarketplacePageProps {
   data: AppData;
+  embedded?: boolean;
+  onConnected?(): void;
   onRefresh(): void;
 }
 
@@ -28,6 +40,10 @@ export function MarketplacePage(props: MarketplacePageProps): ReactNode {
   const [message, setMessage] = useState<string>();
   const [pending, setPending] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(
+    !isDefaultMarketplace(marketplace?.discoveryUrl ?? defaultMarketplaceDiscoveryUrl),
+  );
+  const officialMarketplace = isDefaultMarketplace(discoveryUrl);
   const providers = useMemo(
     () =>
       (props.data.providerPreferences ?? []).flatMap((preference) => {
@@ -46,6 +62,7 @@ export function MarketplacePage(props: MarketplacePageProps): ReactNode {
       setApiKey("");
       setMessage(t("marketplace.messages.saved"));
       props.onRefresh();
+      props.onConnected?.();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : t("marketplace.messages.saveFailed"));
     } finally {
@@ -83,33 +100,61 @@ export function MarketplacePage(props: MarketplacePageProps): ReactNode {
 
   return (
     <div className="marketplace-page">
-      <MarketplaceSummary marketplace={marketplace} />
+      {props.embedded ? null : officialMarketplace ? (
+        <section className="marketplace-onekey-hero">
+          <div className="marketplace-onekey-copy">
+            <span className="marketplace-onekey-eyebrow">OOMOL · OneKey Plan</span>
+            <h2>{t("marketplace.oneKey.headline")}</h2>
+            <p>{t("marketplace.oneKey.description")}</p>
+            <div className="marketplace-onekey-actions">
+              <Button asChild>
+                <a href="https://console.oomol.com/api-key" target="_blank" rel="noopener noreferrer">
+                  {t("marketplace.oneKey.getKey")}
+                  <ArrowUpRight size={15} aria-hidden="true" />
+                </a>
+              </Button>
+              <Button asChild variant="outline">
+                <a href="#marketplace-connect">{t("marketplace.oneKey.haveKey")}</a>
+              </Button>
+            </div>
+          </div>
+          <div className="marketplace-onekey-benefits" aria-label={t("marketplace.oneKey.benefitsLabel")}>
+            <div>
+              <strong>01</strong>
+              <span>{t("marketplace.oneKey.benefitSetup")}</span>
+            </div>
+            <div>
+              <strong>02</strong>
+              <span>{t("marketplace.oneKey.benefitChoice")}</span>
+            </div>
+            <div>
+              <strong>03</strong>
+              <span>{t("marketplace.oneKey.benefitPricing")}</span>
+            </div>
+          </div>
+        </section>
+      ) : (
+        <MarketplaceSummary marketplace={marketplace} />
+      )}
 
-      <section className="marketplace-panel">
+      <section className="marketplace-panel" id="marketplace-connect">
         <header className="marketplace-panel-header">
           <div>
-            <h2>{t("marketplace.configuration.title")}</h2>
-            <p>{t("marketplace.configuration.description")}</p>
+            <h2>{t(officialMarketplace ? "marketplace.oneKey.connectTitle" : "marketplace.configuration.title")}</h2>
+            <p>
+              {t(
+                officialMarketplace ? "marketplace.oneKey.connectDescription" : "marketplace.configuration.description",
+              )}
+            </p>
           </div>
           {marketplace?.configured ? <Badge tone="success">{t("marketplace.configuration.configured")}</Badge> : null}
         </header>
         <form className="marketplace-form" onSubmit={(event) => void save(event)}>
-          <Label className="marketplace-field">
-            <span>{t("marketplace.configuration.discoveryUrl")}</span>
-            <Input value={discoveryUrl} onChange={(event) => setDiscoveryUrl(event.target.value)} required />
-            <small>{t("marketplace.configuration.discoveryHelp")}</small>
-          </Label>
           <div className="marketplace-field">
             <div className="marketplace-field-heading">
-              <Label htmlFor="marketplace-api-key">{t("marketplace.configuration.apiKey")}</Label>
-              {isDefaultMarketplace(discoveryUrl) ? (
-                <Button asChild variant="outline" size="sm">
-                  <a href="https://console.oomol.com/api-key" target="_blank" rel="noopener noreferrer">
-                    {t("marketplace.configuration.getDefaultKey")}
-                    <ArrowUpRight size={15} aria-hidden="true" />
-                  </a>
-                </Button>
-              ) : null}
+              <Label htmlFor="marketplace-api-key">
+                {t(officialMarketplace ? "marketplace.oneKey.keyLabel" : "marketplace.configuration.apiKey")}
+              </Label>
             </div>
             <div className="marketplace-secret-input">
               <Input
@@ -135,8 +180,30 @@ export function MarketplacePage(props: MarketplacePageProps): ReactNode {
                 {showApiKey ? <EyeOff size={15} /> : <Eye size={15} />}
               </Button>
             </div>
-            <small>{t("marketplace.configuration.apiKeyHelp")}</small>
+            <small>
+              {t(officialMarketplace ? "marketplace.oneKey.keyHelp" : "marketplace.configuration.apiKeyHelp")}
+            </small>
           </div>
+          <details
+            className="marketplace-advanced"
+            open={advancedOpen}
+            onToggle={(event) => setAdvancedOpen(event.currentTarget.open)}
+          >
+            <summary>
+              {t("marketplace.oneKey.advanced")} <ChevronDown size={15} aria-hidden="true" />
+            </summary>
+            <Label className="marketplace-field">
+              <span>{t("marketplace.configuration.discoveryUrl")}</span>
+              <Input
+                type="url"
+                value={discoveryUrl}
+                onChange={(event) => setDiscoveryUrl(event.target.value)}
+                required
+                spellCheck={false}
+              />
+              <small>{t("marketplace.configuration.discoveryHelp")}</small>
+            </Label>
+          </details>
           {message ? <FormStatus message={message} /> : null}
           {marketplace?.error ? (
             <Alert variant="destructive">
@@ -179,7 +246,7 @@ export function MarketplacePage(props: MarketplacePageProps): ReactNode {
         </form>
       </section>
 
-      {!marketplace?.configured ? (
+      {props.embedded && !marketplace?.configured ? null : !marketplace?.configured ? (
         isDefaultMarketplace(marketplace?.discoveryUrl ?? defaultMarketplaceDiscoveryUrl) ? (
           <DefaultMarketplaceCatalog providers={props.data.providers} discoveryUrl={defaultMarketplaceDiscoveryUrl} />
         ) : null

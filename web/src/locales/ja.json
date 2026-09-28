@@ -60,7 +60,9 @@
       "providers": {
         "title": "プロバイダー"
       },
-      "marketplace": { "title": "Marketplace" },
+      "marketplace": {
+        "title": "Marketplace"
+      },
       "oauthApps": {
         "title": "OAuth Apps"
       },
@@ -110,10 +112,25 @@
     "noRecentCallsDescription": "アクションを実行するとプロバイダー別の呼び出し数が表示されます。"
   },
   "marketplace": {
+    "oneKey": {
+      "headline": "1つのキーでAI・データサービスを利用",
+      "description": "公式OOMOLキーで、このカタログに対応するサービスを利用できます。サービスごとの登録や設定は不要で、利用量に応じて課金されます。",
+      "getKey": "OneKey Planキーを取得",
+      "haveKey": "キーをお持ちですか？接続する",
+      "benefitsLabel": "OneKey Planの利用方法",
+      "benefitSetup": "サービスごとのAPIキー設定が不要",
+      "benefitChoice": "各サービスのキーも引き続き利用可能",
+      "benefitPricing": "一部モデルは割引あり、従量課金",
+      "connectTitle": "OneKey Planに接続",
+      "connectDescription": "公式OOMOLキーを貼り付け、対応サービスを確認・管理します。",
+      "keyLabel": "公式OOMOL APIキー",
+      "keyHelp": "OOMOLコンソールからキーをコピーしてください。接続後、対応サービスを管理できます。",
+      "advanced": "詳細設定：Marketplaceソース"
+    },
     "default": {
       "browseDescription": "利用可能な機能を見る",
-      "title": "公式アプリ",
-      "description": "OOMOL Marketplace が提供するサービスです。公式 API キーを接続すると利用できます。",
+      "title": "OneKey Planに対応するサービスと機能",
+      "description": "このバージョンに対応する操作のみ表示します。提供元のすべての機能に対応するとは限りません。",
       "failed": "公式カタログを読み込めませんでした。再試行してください。",
       "retry": "再試行",
       "loading": "公式アプリを読み込み中…",
@@ -129,7 +146,9 @@
         "kling": "30%オフ",
         "minimax": "20%オフ",
         "seedance": "10%オフ"
-      }
+      },
+      "supportedActions": "対応する操作：{{count}}件",
+      "connected": "接続済み"
     },
     "summary": {
       "title": "Connector Marketplace",
@@ -137,8 +156,16 @@
       "providers": "プロバイダー",
       "actions": "アクション"
     },
-    "status": { "disabled": "無効", "available": "利用可能", "unavailable": "利用不可", "auth_error": "認証エラー" },
-    "pricing": { "free": "無料", "metered": "従量課金" },
+    "status": {
+      "disabled": "無効",
+      "available": "利用可能",
+      "unavailable": "利用不可",
+      "auth_error": "認証エラー"
+    },
+    "pricing": {
+      "free": "無料",
+      "metered": "従量課金"
+    },
     "configuration": {
       "reconnect": "この接続先は利用できません。上の設定を確認し、再検証してください。",
       "title": "接続設定",
@@ -180,24 +207,83 @@
     }
   },
   "providers": {
+    "managedEmpty": {
+      "title": "設定済みの接続はありません",
+      "description": "上のOneKey Planを接続するか、接続を探すからサービスの認証情報を設定してください。"
+    },
+    "hostedAccess": {
+      "connectedCustom": "管理対象のソースが接続されました。設定済みの接続でサービスを確認できます。",
+      "intro": "1つのOOMOLキーで対応するAI・データサービスを利用できます。各サービスのキーも使用可能です。",
+      "connected": "内蔵アカウントが接続されました。設定済みの接続でサービスを確認できます。",
+      "connect": "公式キーを接続",
+      "manage": "内蔵アカウントを管理",
+      "close": "設定を閉じる",
+      "features": "機能を展開",
+      "hideFeatures": "機能を閉じる",
+      "removeKey": "キーを削除",
+      "removeHelp": "保存したキーを削除し、すべての内蔵アカウントを無効にしますか？個別に設定した認証情報は保持されます。",
+      "confirmRemove": "キーの削除を確認",
+      "hide": "OneKeyの紹介を非表示",
+      "restore": "接続設定"
+    },
+    "managedSources": {
+      "label": "接続元",
+      "all": "すべて",
+      "builtIn": "内蔵アカウント",
+      "ownKey": "自分の認証情報"
+    },
+    "oneKey": {
+      "title": "OneKey Planで利用",
+      "description": "サービスごとのAPIキーを設定せず、1つのOOMOLキーで{{name}}にアクセスできます。",
+      "alternative": "下でサービス提供元のキーを直接設定することもできます。",
+      "connect": "OneKey Planに接続",
+      "available": "OneKey対応",
+      "builtIn": "内蔵アカウント",
+      "connectedTitle": "内蔵アカウント",
+      "connectedDescription": "{{name}}の内蔵アカウントでこのサービスを利用できます。"
+    },
     "catalogTitle": "プロバイダー",
     "viewLabel": "プロバイダー表示",
-    "views": { "manage": "接続済み", "discover": "すべてのアプリ" },
+    "views": {
+      "manage": "設定済みの接続",
+      "discover": "接続を探す"
+    },
     "discovery": {
       "browseByTask": "目的から探す",
       "explore": "アプリを見る",
       "scenarios": {
-        "ai": { "title": "AI とエージェント", "description": "モデル、エージェント、検索、メディア生成" },
-        "investment": { "title": "投資と取引", "description": "株式、暗号資産、市場データ、保有資産、取引履歴" },
-        "crossBorderEcommerce": { "title": "EC 運用", "description": "ストア、注文、フルフィルメント、市場データ" },
+        "ai": {
+          "title": "AI とエージェント",
+          "description": "モデル、エージェント、検索、メディア生成"
+        },
+        "investment": {
+          "title": "投資と取引",
+          "description": "株式、暗号資産、市場データ、保有資産、取引履歴"
+        },
+        "crossBorderEcommerce": {
+          "title": "EC 運用",
+          "description": "ストア、注文、フルフィルメント、市場データ"
+        },
         "communication": {
           "title": "コラボレーションと知識",
           "description": "メッセージ、メール、会議、文書、ドライブ、ナレッジベース"
         },
-        "productivity": { "title": "プロジェクトと生産性", "description": "プロジェクト、タスク、予定、自動化" },
-        "marketing": { "title": "マーケティングと成長", "description": "広告、コンテンツ、リード、成長データ" },
-        "dataStorage": { "title": "データと分析", "description": "データウェアハウス、データベース、BI、ストレージ" },
-        "developer": { "title": "開発とクラウド", "description": "コード、デプロイ、クラウド、オブザーバビリティ" }
+        "productivity": {
+          "title": "プロジェクトと生産性",
+          "description": "プロジェクト、タスク、予定、自動化"
+        },
+        "marketing": {
+          "title": "マーケティングと成長",
+          "description": "広告、コンテンツ、リード、成長データ"
+        },
+        "dataStorage": {
+          "title": "データと分析",
+          "description": "データウェアハウス、データベース、BI、ストレージ"
+        },
+        "developer": {
+          "title": "開発とクラウド",
+          "description": "コード、デプロイ、クラウド、オブザーバビリティ"
+        }
       }
     },
     "brandNotice": "第三者の名称、ロゴ、および商標は各権利者に帰属し、対応するプロバイダーを識別する目的でのみ表示されています。本プロジェクトはこれらの権利を主張しません。本プロジェクトを再配布または商用利用する場合、利用者の責任で該当するブランドガイドラインを確認し、用途に必要な許可を取得してください。",
@@ -206,6 +292,7 @@
     "filters": {
       "all": "すべて",
       "connected": "接続済み",
+      "oneKey": "OneKey対応",
       "noSetup": "設定不要",
       "notConnected": "未接続",
       "oauthNeedsConfig": "OAuth 設定が必要"
@@ -608,13 +695,5 @@
       "title": "OpenAPI JSON",
       "description": "生成された spec を script や tool importer で使用します。"
     }
-  },
-  "hostedPromo": {
-    "title": "Open Connector へようこそ",
-    "headline": "1つのキーで、AI 創作を始めよう",
-    "description": "Kling、Seedance、MiniMax などのモデルで画像・動画を生成。",
-    "offer": "一部モデルは最大30%オフ",
-    "cta": "API キーを取得",
-    "dismiss": "閉じて今後表示しない"
   }
 }

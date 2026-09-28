@@ -46,11 +46,11 @@ it("shows default branding before connection but not for custom sources with the
     );
   }
   const defaultMarkup = render(defaultMarketplaceDiscoveryUrl, false);
-  expect(defaultMarkup).toContain("Official apps");
+  expect(defaultMarkup).toContain("Services and actions supported by OneKey Plan");
   expect(defaultMarkup).toContain("https://console.oomol.com/api-key");
   const customMarkup = render("https://custom.example/discovery", true);
   expect(customMarkup).toContain("OOMOL Marketplace");
-  expect(customMarkup).not.toContain("Official apps");
+  expect(customMarkup).not.toContain("Services and actions supported by OneKey Plan");
   expect(customMarkup).not.toContain("https://console.oomol.com/api-key");
   expect(customMarkup).not.toContain("30% off");
 });

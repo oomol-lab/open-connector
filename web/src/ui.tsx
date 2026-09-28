@@ -21,7 +21,6 @@ import {
   KeyRound,
   Loader2,
   Monitor,
-  Store,
   Moon,
   RefreshCw,
   Sun,
@@ -29,14 +28,11 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Navigate, NavLink, Route, Routes, useLocation } from "react-router";
-import { defaultMarketplaceDiscoveryUrl, isDefaultMarketplace } from "../../src/marketplace/default-marketplace";
 import { AccessPage } from "./access-page";
 import { ActionsPage } from "./actions-page";
 import { ApiError, apiGet, apiPost } from "./api";
 import oomolConnectLogoUrl from "./assets/oomol-connect-logo.png";
-import { HostedServicePromo } from "./hosted-service-promo";
 import { persistLang, supportedLangs } from "./i18n";
-import { MarketplacePage } from "./marketplace-page";
 import { emptyData } from "./model";
 import { OAuthAppsPage } from "./oauth-apps-page";
 import { OverviewPage } from "./overview-page";
@@ -53,7 +49,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const navItems = [
   { path: "/overview", labelKey: "nav.overview", icon: Home },
   { path: "/providers", labelKey: "nav.providers", icon: Cable },
-  { path: "/marketplace", labelKey: "nav.marketplace", icon: Store },
   { path: "/oauth-apps", labelKey: "nav.oauthApps", icon: Fingerprint },
   { path: "/actions", labelKey: "nav.actions", icon: TerminalSquare },
   { path: "/runs", labelKey: "nav.runs", icon: Activity },
@@ -382,9 +377,6 @@ function AppShell(props: {
               );
             })}
           </nav>
-          {isDefaultMarketplace(props.data.marketplace?.discoveryUrl ?? defaultMarketplaceDiscoveryUrl) ? (
-            <HostedServicePromo />
-          ) : null}
         </div>
 
         <div className="sidebar-footer">
@@ -428,7 +420,7 @@ function AppShell(props: {
             <Route index element={<Navigate to="/overview" replace />} />
             <Route path="/overview" element={<OverviewPage data={props.data} onRefresh={props.onRefresh} />} />
             <Route path="/providers" element={<ProvidersPage data={props.data} onRefresh={props.onRefresh} />} />
-            <Route path="/marketplace" element={<MarketplacePage data={props.data} onRefresh={props.onRefresh} />} />
+            <Route path="/marketplace" element={<Navigate to="/providers?onekey=1" replace />} />
             <Route
               path="/providers/:service"
               element={<ProvidersPage data={props.data} onRefresh={props.onRefresh} />}

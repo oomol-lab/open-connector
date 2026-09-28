@@ -60,7 +60,9 @@
       "providers": {
         "title": "提供商"
       },
-      "marketplace": { "title": "Marketplace" },
+      "marketplace": {
+        "title": "Marketplace"
+      },
       "oauthApps": {
         "title": "OAuth Apps"
       },
@@ -110,10 +112,25 @@
     "noRecentCallsDescription": "运行一个操作后会显示提供商调用次数。"
   },
   "marketplace": {
+    "oneKey": {
+      "headline": "一个 Key，接入多种 AI 与数据服务",
+      "description": "通过 OOMOL 官方 Key 使用当前目录中兼容的服务，无需逐家注册和配置。按实际用量计费。",
+      "getKey": "获取 OneKey Plan Key",
+      "haveKey": "已有 Key？立即连接",
+      "benefitsLabel": "OneKey Plan 的接入方式",
+      "benefitSetup": "免去逐家注册和配置 API Key",
+      "benefitChoice": "仍可选择使用服务商原厂 Key",
+      "benefitPricing": "部分模型有优惠，费用按实际用量计算",
+      "connectTitle": "连接 OneKey Plan",
+      "connectDescription": "粘贴 OOMOL 官方 Key，验证后即可管理兼容服务。",
+      "keyLabel": "OOMOL 官方 API Key",
+      "keyHelp": "从 OOMOL 控制台复制 Key。连接后可查看并启用兼容服务。",
+      "advanced": "高级设置：Marketplace 来源"
+    },
     "default": {
       "browseDescription": "浏览可用功能",
-      "title": "官方应用",
-      "description": "由 OOMOL Marketplace 提供，连接官方 API Key 后可用。",
+      "title": "OneKey Plan 支持的服务与功能",
+      "description": "仅列出当前版本兼容的操作。支持部分操作不代表支持该服务商的全部功能。",
       "failed": "官方目录暂时无法加载，请稍后重试。",
       "retry": "重试",
       "loading": "正在加载官方应用…",
@@ -129,7 +146,9 @@
         "kling": "7 折",
         "minimax": "8 折",
         "seedance": "9 折"
-      }
+      },
+      "supportedActions": "{{count}} 项支持操作",
+      "connected": "已连接"
     },
     "summary": {
       "title": "Connector Marketplace",
@@ -137,8 +156,16 @@
       "providers": "提供商",
       "actions": "操作"
     },
-    "status": { "disabled": "未启用", "available": "可用", "unavailable": "不可用", "auth_error": "鉴权失败" },
-    "pricing": { "free": "免费", "metered": "按量计费" },
+    "status": {
+      "disabled": "未启用",
+      "available": "可用",
+      "unavailable": "不可用",
+      "auth_error": "鉴权失败"
+    },
+    "pricing": {
+      "free": "免费",
+      "metered": "按量计费"
+    },
     "configuration": {
       "reconnect": "当前来源尚未就绪，请在上方检查配置并重新验证。",
       "title": "连接配置",
@@ -180,21 +207,83 @@
     }
   },
   "providers": {
+    "managedEmpty": {
+      "title": "还没有已配置的连接",
+      "description": "选择上方的 OneKey Plan，或在“发现连接”中打开提供商并配置自己的凭证。"
+    },
+    "hostedAccess": {
+      "connectedCustom": "托管来源已连接。可在已配置连接中查看可用服务。",
+      "intro": "一个 OOMOL Key 接入兼容的 AI 与数据服务，也可以继续使用原厂 Key。",
+      "connected": "内置账号已接入。可在已配置连接中查看可用服务。",
+      "connect": "连接官方 Key",
+      "manage": "管理内置账号",
+      "close": "收起设置",
+      "features": "展开功能",
+      "hideFeatures": "收起功能",
+      "removeKey": "删除 Key",
+      "removeHelp": "删除已保存的 Key 并停用全部内置账号？自行配置的凭证会保留。",
+      "confirmRemove": "确认删除 Key",
+      "hide": "隐藏 OneKey 推荐",
+      "restore": "连接设置"
+    },
+    "managedSources": {
+      "label": "连接来源",
+      "all": "全部",
+      "builtIn": "内置账号",
+      "ownKey": "自有凭证"
+    },
+    "oneKey": {
+      "title": "通过 OneKey Plan 使用",
+      "description": "使用一个 OOMOL Key 接入 {{name}}，无需单独配置该服务商的 API Key。",
+      "alternative": "也可以在下方自行配置服务商原厂 Key。",
+      "connect": "连接 OneKey Plan",
+      "available": "OneKey 可接入",
+      "builtIn": "内置账号",
+      "connectedTitle": "内置账号",
+      "connectedDescription": "此服务可通过 {{name}} 的内置账号运行。"
+    },
     "catalogTitle": "提供商",
     "viewLabel": "提供商视图",
-    "views": { "manage": "我的连接", "discover": "全部应用" },
+    "views": {
+      "manage": "已配置连接",
+      "discover": "发现连接"
+    },
     "discovery": {
       "browseByTask": "按任务浏览",
       "explore": "浏览应用",
       "scenarios": {
-        "ai": { "title": "AI 与 Agent", "description": "模型、Agent、检索与媒体生成" },
-        "investment": { "title": "投资与交易", "description": "股票、加密资产、行情、持仓和交易记录" },
-        "crossBorderEcommerce": { "title": "电商运营", "description": "店铺、订单、履约与市场数据" },
-        "communication": { "title": "协作与知识", "description": "消息、邮件、会议、文档、云盘和知识库" },
-        "productivity": { "title": "项目与效率", "description": "项目、任务、日程与自动化" },
-        "marketing": { "title": "营销与增长", "description": "广告、内容、线索与增长数据" },
-        "dataStorage": { "title": "数据与分析", "description": "数据仓库、数据库、BI 与存储" },
-        "developer": { "title": "开发与云服务", "description": "代码、部署、云服务与可观测性" }
+        "ai": {
+          "title": "AI 与 Agent",
+          "description": "模型、Agent、检索与媒体生成"
+        },
+        "investment": {
+          "title": "投资与交易",
+          "description": "股票、加密资产、行情、持仓和交易记录"
+        },
+        "crossBorderEcommerce": {
+          "title": "电商运营",
+          "description": "店铺、订单、履约与市场数据"
+        },
+        "communication": {
+          "title": "协作与知识",
+          "description": "消息、邮件、会议、文档、云盘和知识库"
+        },
+        "productivity": {
+          "title": "项目与效率",
+          "description": "项目、任务、日程与自动化"
+        },
+        "marketing": {
+          "title": "营销与增长",
+          "description": "广告、内容、线索与增长数据"
+        },
+        "dataStorage": {
+          "title": "数据与分析",
+          "description": "数据仓库、数据库、BI 与存储"
+        },
+        "developer": {
+          "title": "开发与云服务",
+          "description": "代码、部署、云服务与可观测性"
+        }
       }
     },
     "brandNotice": "第三方名称、标志及商标归其各自权利人所有，此处仅用于识别对应的提供商。本项目不主张拥有相关权利。再分发本项目或将其用于商业用途的用户，应自行查阅适用的品牌规范，并按其具体用途取得所需许可。",
@@ -203,6 +292,7 @@
     "filters": {
       "all": "全部",
       "connected": "已连接",
+      "oneKey": "OneKey 可接入",
       "noSetup": "免配置",
       "notConnected": "未连接",
       "oauthNeedsConfig": "OAuth 待配置"
@@ -605,13 +695,5 @@
       "title": "OpenAPI JSON",
       "description": "在脚本或工具导入器中使用生成的规格。"
     }
-  },
-  "hostedPromo": {
-    "title": "欢迎使用 Open Connector",
-    "headline": "一个 Key，开始 AI 创作",
-    "description": "使用 Kling、Seedance、MiniMax 等模型生成图像与视频",
-    "offer": "部分模型低至 7 折",
-    "cta": "获取 API Key",
-    "dismiss": "关闭，不再显示"
   }
 }

@@ -3,7 +3,7 @@ import type { ProviderDefinition } from "./model";
 import type { ReactNode } from "react";
 
 import { useTranslate } from "@embra/i18n/react";
-import { Loader2, Store } from "lucide-react";
+import { ChevronRight, Loader2, Store } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { Button } from "./components/ui/button";
@@ -13,6 +13,8 @@ import { Badge, EmptyState, ProviderIcon } from "./shared-ui";
 interface DefaultMarketplaceCatalogProps {
   providers: ProviderDefinition[];
   discoveryUrl: string;
+  connected?: boolean;
+  embedded?: boolean;
 }
 
 // Default promotions apply only to the named models, never to custom marketplaces.
@@ -23,7 +25,12 @@ const promotedModels: Record<string, string[]> = {
 };
 const promotedServices = Object.keys(promotedModels);
 
-export function DefaultMarketplaceCatalog({ providers, discoveryUrl }: DefaultMarketplaceCatalogProps): ReactNode {
+export function DefaultMarketplaceCatalog({
+  providers,
+  discoveryUrl,
+  connected,
+  embedded,
+}: DefaultMarketplaceCatalogProps): ReactNode {
   const t = useTranslate();
   const [catalog, setCatalog] = useState<DefaultMarketplaceDiscovery>();
   const [failure, setFailure] = useState<Error>();
@@ -62,10 +69,17 @@ export function DefaultMarketplaceCatalog({ providers, discoveryUrl }: DefaultMa
     });
 
   return (
-    <section className="marketplace-panel">
+    <section
+      className={
+        embedded
+          ? "marketplace-panel marketplace-preview-panel marketplace-preview-embedded"
+          : "marketplace-panel marketplace-preview-panel"
+      }
+      id={embedded ? "onekey-supported-features" : undefined}
+    >
       <header className="marketplace-panel-header">
         <div>
-          <h2>{t("marketplace.default.title")}</h2>
+          {embedded ? null : <h2>{t("marketplace.default.title")}</h2>}
           <p>{t("marketplace.default.description")}</p>
         </div>
         {catalog ? <Badge>{t("marketplace.providers.count", { count: rows.length })}</Badge> : null}
@@ -91,36 +105,39 @@ export function DefaultMarketplaceCatalog({ providers, discoveryUrl }: DefaultMa
           density="compact"
         />
       ) : (
-        <div className="marketplace-provider-list">
+        <div className="marketplace-default-grid">
           {rows.map((provider) => {
             const promoted = promotedServices.includes(provider.service);
             const path = `/providers/${encodeURIComponent(provider.service)}`;
+            const actions = provider.actions.filter((action) => available.has(action.id));
             return (
-              <div className="marketplace-provider-row marketplace-default-row" key={provider.service}>
+              <div className="marketplace-service-card" key={provider.service}>
                 <ProviderIcon provider={provider} />
                 <div className="marketplace-default-copy">
-                  <Link className="marketplace-provider-copy" to={path}>
-                    <strong>{provider.displayName}</strong>
-                    <span>
-                      {promoted
-                        ? t(`marketplace.default.descriptions.${provider.service}`)
-                        : provider.description || t("marketplace.default.browseDescription")}
-                    </span>
-                  </Link>
-                  {promoted ? (
-                    <div className="marketplace-default-tags">
-                      {promotedModels[provider.service].map((model) => (
-                        <span className="marketplace-model-tag" key={model}>
-                          {model}
+                  <Link className="marketplace-service-heading" to={path}>
+                    <span className="marketplace-service-title">
+                      <strong>{provider.displayName}</strong>
+                      {promoted ? (
+                        <span title={promotedModels[provider.service].join(" · ")}>
+                          <Badge tone="success">{t(`marketplace.default.offers.${provider.service}`)}</Badge>
                         </span>
+                      ) : null}
+                    </span>
+                    <ChevronRight size={15} aria-hidden="true" />
+                  </Link>
+                  <details className="marketplace-supported-actions">
+                    <summary>{t("marketplace.default.supportedActions", { count: actions.length })}</summary>
+                    <ul>
+                      {actions.map((action) => (
+                        <li key={action.id}>
+                          <Link to={`/actions/${encodeURIComponent(action.id)}`}>
+                            {action.description || action.name}
+                          </Link>
+                        </li>
                       ))}
-                      <Badge tone="success">{t(`marketplace.default.offers.${provider.service}`)}</Badge>
-                    </div>
-                  ) : null}
+                    </ul>
+                  </details>
                 </div>
-                <Button asChild variant="outline" size="sm">
-                  <Link to={path}>{t("marketplace.default.view")}</Link>
-                </Button>
               </div>
             );
           })}
@@ -128,7 +145,7 @@ export function DefaultMarketplaceCatalog({ providers, discoveryUrl }: DefaultMa
       )}
       {catalog ? (
         <footer className="marketplace-catalog-footer">
-          {catalog.name} · {t("marketplace.default.disconnected")}
+          {catalog.name} · {t(connected ? "marketplace.default.connected" : "marketplace.default.disconnected")}
         </footer>
       ) : null}
     </section>

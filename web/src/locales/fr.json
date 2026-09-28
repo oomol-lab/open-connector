@@ -60,7 +60,9 @@
       "providers": {
         "title": "Fournisseurs"
       },
-      "marketplace": { "title": "Marketplace" },
+      "marketplace": {
+        "title": "Marketplace"
+      },
       "oauthApps": {
         "title": "Apps OAuth"
       },
@@ -110,10 +112,25 @@
     "noRecentCallsDescription": "Exécutez une action pour voir les appels par fournisseur."
   },
   "marketplace": {
+    "oneKey": {
+      "headline": "Une clé pour les services IA et de données",
+      "description": "Utilisez les services compatibles du catalogue avec une clé officielle OOMOL, sans inscription ni configuration séparée. Facturation à l’usage.",
+      "getKey": "Obtenir une clé OneKey Plan",
+      "haveKey": "Déjà une clé ? La connecter",
+      "benefitsLabel": "Fonctionnement de OneKey Plan",
+      "benefitSetup": "Pas de clé API à configurer pour chaque fournisseur",
+      "benefitChoice": "Les clés des fournisseurs restent utilisables",
+      "benefitPricing": "Réductions sur certains modèles, facturation à l’usage",
+      "connectTitle": "Connecter OneKey Plan",
+      "connectDescription": "Collez votre clé OOMOL pour vérifier et gérer les services compatibles.",
+      "keyLabel": "Clé API officielle OOMOL",
+      "keyHelp": "Copiez la clé depuis la console OOMOL. Gérez ensuite les services compatibles ici.",
+      "advanced": "Avancé : source Marketplace"
+    },
     "default": {
       "browseDescription": "Parcourir les fonctions disponibles",
-      "title": "Applications officielles",
-      "description": "Proposées par OOMOL Marketplace. Connectez une clé API officielle pour les utiliser.",
+      "title": "Services et actions disponibles avec OneKey Plan",
+      "description": "Seules les actions compatibles sont affichées. Certains services ne proposent pas toutes leurs fonctions via OneKey Plan.",
       "failed": "Le catalogue officiel est indisponible. Réessayez plus tard.",
       "retry": "Réessayer",
       "loading": "Chargement des applications…",
@@ -129,7 +146,9 @@
         "kling": "−30 %",
         "minimax": "−20 %",
         "seedance": "−10 %"
-      }
+      },
+      "supportedActions": "{{count}} actions disponibles",
+      "connected": "Connecté"
     },
     "summary": {
       "title": "Connector Marketplace",
@@ -143,7 +162,10 @@
       "unavailable": "Indisponible",
       "auth_error": "Erreur d’authentification"
     },
-    "pricing": { "free": "Gratuit", "metered": "Usage mesuré" },
+    "pricing": {
+      "free": "Gratuit",
+      "metered": "Usage mesuré"
+    },
     "configuration": {
       "reconnect": "Cette source n’est pas prête. Vérifiez la configuration ci-dessus et relancez la validation.",
       "title": "Configuration",
@@ -185,14 +207,55 @@
     }
   },
   "providers": {
+    "managedEmpty": {
+      "title": "Aucune connexion configurée",
+      "description": "Connectez OneKey Plan ci-dessus ou ouvrez un fournisseur dans Découvrir les connexions pour ajouter vos identifiants."
+    },
+    "hostedAccess": {
+      "connectedCustom": "La source gérée est connectée. Consultez les services dans les connexions configurées.",
+      "intro": "Une clé OOMOL pour les services IA et de données compatibles, ou vos propres clés fournisseur.",
+      "connected": "Les comptes intégrés sont connectés. Consultez les services dans les connexions configurées.",
+      "connect": "Connecter la clé officielle",
+      "manage": "Gérer les comptes intégrés",
+      "close": "Masquer les paramètres",
+      "features": "Afficher les fonctions",
+      "hideFeatures": "Replier les fonctions",
+      "removeKey": "Supprimer la clé",
+      "removeHelp": "Supprimer la clé enregistrée et désactiver tous les comptes intégrés ? Vos identifiants personnels seront conservés.",
+      "confirmRemove": "Confirmer la suppression",
+      "hide": "Masquer la recommandation OneKey",
+      "restore": "Paramètres de connexion"
+    },
+    "managedSources": {
+      "label": "Source de connexion",
+      "all": "Tout",
+      "builtIn": "Comptes intégrés",
+      "ownKey": "Identifiants personnels"
+    },
+    "oneKey": {
+      "title": "Utiliser OneKey Plan",
+      "description": "Accédez à {{name}} avec une seule clé OOMOL, sans configurer séparément la clé du fournisseur.",
+      "alternative": "Vous pouvez aussi configurer la clé du fournisseur ci-dessous.",
+      "connect": "Connecter OneKey Plan",
+      "available": "OneKey disponible",
+      "builtIn": "Compte intégré",
+      "connectedTitle": "Compte intégré",
+      "connectedDescription": "Ce service peut utiliser le compte intégré fourni par {{name}}."
+    },
     "catalogTitle": "Fournisseurs",
     "viewLabel": "Vue des fournisseurs",
-    "views": { "manage": "Mes connexions", "discover": "Toutes les apps" },
+    "views": {
+      "manage": "Connexions configurées",
+      "discover": "Découvrir les connexions"
+    },
     "discovery": {
       "browseByTask": "Parcourir par tâche",
       "explore": "Explorer les apps",
       "scenarios": {
-        "ai": { "title": "IA et agents", "description": "Modèles, agents, recherche et génération de médias" },
+        "ai": {
+          "title": "IA et agents",
+          "description": "Modèles, agents, recherche et génération de médias"
+        },
         "investment": {
           "title": "Investissement et trading",
           "description": "Actions, cryptoactifs, données de marché, portefeuilles et transactions"
@@ -217,7 +280,10 @@
           "title": "Données et analytique",
           "description": "Entrepôts, bases de données, BI et stockage"
         },
-        "developer": { "title": "Développement et cloud", "description": "Code, déploiement, cloud et observabilité" }
+        "developer": {
+          "title": "Développement et cloud",
+          "description": "Code, déploiement, cloud et observabilité"
+        }
       }
     },
     "brandNotice": "Les noms, logos et marques de tiers appartiennent à leurs propriétaires respectifs et sont affichés uniquement pour identifier les fournisseurs correspondants. Ce projet ne revendique aucun droit sur ceux-ci. Les utilisateurs qui redistribuent ou commercialisent ce projet doivent consulter les règles applicables aux marques et obtenir les autorisations nécessaires à leur usage.",
@@ -226,6 +292,7 @@
     "filters": {
       "all": "Tous",
       "connected": "Connectés",
+      "oneKey": "OneKey disponible",
       "noSetup": "Sans configuration",
       "notConnected": "Non connectés",
       "oauthNeedsConfig": "OAuth à configurer"
@@ -628,13 +695,5 @@
       "title": "JSON OpenAPI",
       "description": "Utilisez la spec générée depuis des scripts ou des importateurs d’outils."
     }
-  },
-  "hostedPromo": {
-    "title": "Bienvenue sur Open Connector",
-    "headline": "Une clé pour créer avec l’IA",
-    "description": "Générez des images et des vidéos avec Kling, Seedance, MiniMax et d’autres modèles.",
-    "offer": "Jusqu’à −30 % sur certains modèles",
-    "cta": "Obtenir une clé API",
-    "dismiss": "Fermer et ne plus afficher"
   }
 }

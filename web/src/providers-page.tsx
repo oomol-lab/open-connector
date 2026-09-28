@@ -2,6 +2,7 @@ import type {
   AppData,
   AuthDefinition,
   ConnectionRecord,
+  MarketplaceState,
   OAuthConfig,
   ProviderConnectionStatus,
   ProviderDefinition,
@@ -16,11 +17,13 @@ import {
   Bot,
   Check,
   CheckCircle2,
+  ChevronDown,
   ChevronRight,
   CircleSlash2,
   Cloud,
   Database,
   ExternalLink,
+  KeyRound,
   Megaphone,
   MessagesSquare,
   Plus,
@@ -33,9 +36,13 @@ import {
   X,
 } from "lucide-react";
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useParams, useSearchParams } from "react-router";
+import { defaultMarketplaceDiscoveryUrl, isDefaultMarketplace } from "../../src/marketplace/default-marketplace";
 import { apiDelete, apiPost, apiPut } from "./api";
 import { CredentialInput } from "./credential-input";
+import { DefaultMarketplaceCatalog } from "./default-marketplace-catalog";
+import { loadDefaultMarketplaceCatalog } from "./default-marketplace-discovery";
+import { MarketplacePage } from "./marketplace-page";
 import {
   credentialFieldsFor,
   filterProviders,
@@ -52,6 +59,8 @@ import {
   splitClientConfigFieldValues,
 } from "./oauth-app-form";
 import { useOAuthAuthorizationOptions } from "./oauth-authorization-options";
+import { OneKeyProviderOption } from "./onekey-provider-option";
+import { isOneKeyPromotionHidden, setOneKeyPromotionHidden } from "./onekey-visibility";
 import {
   featuredProvidersForScenario,
   filterProvidersByScenario,
@@ -75,6 +84,7 @@ interface ProvidersPageProps {
 
 interface ProviderDetailProps {
   provider: ProviderDefinition;
+  marketplace?: MarketplaceState;
   connections: ConnectionRecord[];
   connectionStatus: ProviderConnectionStatus;
   oauthConfig?: OAuthConfig;
@@ -83,11 +93,25 @@ interface ProviderDetailProps {
 
 interface ProviderBrowserProps {
   data: AppData;
+  onRefresh(): void;
+}
+
+interface HostedAccessCardProps {
+  marketplace?: MarketplaceState;
+  officialMarketplace: boolean;
+  settingsOpen: boolean;
+  previewOpen: boolean;
+  onPreview(): void;
+  onHide(): void;
+  onRefresh(): void;
+  onToggle(): void;
 }
 
 interface ProviderCardProps {
   provider: ProviderDefinition;
   status: ProviderConnectionStatus;
+  oneKeyAvailable: boolean;
+  officialMarketplace: boolean;
 }
 
 interface ProviderScenarioGridProps {
@@ -108,7 +132,12 @@ interface ProviderCatalogProps {
   query: string;
   scenarioFilter?: ProviderDiscoveryScenario | "all";
   showStatusFilters: boolean;
+  showBrandNotice: boolean;
+  emptyTitleKey?: string;
+  emptyDescriptionKey?: string;
   statusByService: Map<string, ProviderConnectionStatus>;
+  oneKeyServices: Set<string>;
+  officialMarketplace: boolean;
   providerCount: number;
   selected: ProviderStatusFilter;
   totalProviderCount: number;
@@ -170,8 +199,9 @@ export interface ManualOAuthAuthorizationInput {
   values: ManualOAuthClientValues;
 }
 
-type ProviderStatusFilter = "all" | "connected" | "no_setup" | "not_connected" | "oauth_needs_config";
+type ProviderStatusFilter = "all" | "connected" | "one_key" | "no_setup" | "not_connected" | "oauth_needs_config";
 type ProviderBrowserView = "manage" | "discover";
+type ManagedSourceFilter = "all" | "built_in" | "own_key";
 type ProviderDiscoveryScenario = Exclude<ProviderScenario, "other">;
 
 const providerPageSize = 48;
@@ -205,7 +235,7 @@ export function ProvidersPage(props: ProvidersPageProps): ReactNode {
     : undefined;
 
   if (!params.service) {
-    return <ProviderBrowser data={props.data} />;
+    return <ProviderBrowser data={props.data} onRefresh={props.onRefresh} />;
   }
 
   if (!routeProvider) {
@@ -222,6 +252,7 @@ export function ProvidersPage(props: ProvidersPageProps): ReactNode {
     <ProviderDetail
       key={routeProvider.service}
       provider={routeProvider}
+      marketplace={props.data.marketplace}
       connections={configurableConnectionsForProvider(props.data.connections, routeProvider.service)}
       connectionStatus={connectionStatus}
       oauthConfig={oauthConfigForProvider(props.data.oauthConfigs, routeProvider.service)}
@@ -232,9 +263,43 @@ export function ProvidersPage(props: ProvidersPageProps): ReactNode {
 
 function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
   const t = useTranslate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const showHostedSettings = searchParams.get("onekey") === "1";
+  const showSupportedFeatures = searchParams.get("onekey") === "features";
+  const [oneKeyHidden, setOneKeyHidden] = useState(isOneKeyPromotionHidden);
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
   const [view, setView] = useState<ProviderBrowserView>("discover");
+  const [managedSource, setManagedSource] = useState<ManagedSourceFilter>("all");
+  const [oneKeyServices, setOneKeyServices] = useState<Set<string>>(() => new Set());
+  const officialMarketplace = isDefaultMarketplace(
+    props.data.marketplace?.discoveryUrl ?? defaultMarketplaceDiscoveryUrl,
+  );
+
+  useEffect(() => {
+    if (!officialMarketplace || (oneKeyHidden && !props.data.marketplace?.configured && !showSupportedFeatures)) return;
+    const controller = new AbortController();
+    void loadDefaultMarketplaceCatalog(defaultMarketplaceDiscoveryUrl, controller.signal).then(
+      (catalog) => {
+        const actions = new Set(catalog.actions);
+        setOneKeyServices(
+          new Set(
+            props.data.providers
+              .filter((provider) => provider.actions.some((action) => actions.has(action.id)))
+              .map((provider) => provider.service),
+          ),
+        );
+      },
+      () => setOneKeyServices(new Set()),
+    );
+    return () => controller.abort();
+  }, [
+    officialMarketplace,
+    oneKeyHidden,
+    props.data.marketplace?.configured,
+    props.data.providers,
+    showSupportedFeatures,
+  ]);
   const [statusFilter, setStatusFilter] = useState<ProviderStatusFilter>("all");
   const [scenarioFilter, setScenarioFilter] = useState<ProviderDiscoveryScenario | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -266,14 +331,22 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
     () => sortedProviders.filter((provider) => statusByService.get(provider.service)?.connected),
     [sortedProviders, statusByService],
   );
-  const browserProviders = view === "manage" ? managedProviders : sortedProviders;
+  const sourceManagedProviders = managedProviders.filter((provider) => {
+    const connections = statusByService.get(provider.service)?.connections ?? [];
+    return (
+      managedSource === "all" ||
+      (managedSource === "built_in" && connections.some((connection) => connection.authType === "marketplace")) ||
+      (managedSource === "own_key" && connections.some((connection) => connection.authType !== "marketplace"))
+    );
+  });
+  const browserProviders = view === "manage" ? sourceManagedProviders : sortedProviders;
   const searchedProviders = filterProviders(browserProviders, deferredQuery);
   const scenarioFilteredProviders = filterProvidersByScenario(searchedProviders, scenarioFilter);
   const categoryFilteredProviders = filterProvidersByCategory(scenarioFilteredProviders, categoryFilter);
   const statusFilteredProviders =
     view === "manage"
       ? scenarioFilteredProviders
-      : filterProvidersByStatus(scenarioFilteredProviders, statusFilter, statusByService);
+      : filterProvidersByStatus(scenarioFilteredProviders, statusFilter, statusByService, oneKeyServices);
   const visibleProviders = filterProvidersByCategory(statusFilteredProviders, categoryFilter);
   const {
     hasMore: hasMoreProviders,
@@ -286,11 +359,13 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
     query.trim().length > 0 || scenarioFilter !== "all" || categoryFilter !== "all" || statusFilter !== "all";
   const statusCounts = useMemo(
     () =>
-      providerStatusOptions.map((option) => ({
-        ...option,
-        count: countProvidersForStatus(categoryFilteredProviders, option.id, statusByService),
-      })),
-    [categoryFilteredProviders, statusByService],
+      providerStatusOptions
+        .filter((option) => !oneKeyHidden || option.id !== "one_key")
+        .map((option) => ({
+          ...option,
+          count: countProvidersForStatus(categoryFilteredProviders, option.id, statusByService, oneKeyServices),
+        })),
+    [categoryFilteredProviders, oneKeyHidden, oneKeyServices, statusByService],
   );
   const categoryCounts = useMemo(() => providerCategoryCounts(statusFilteredProviders), [statusFilteredProviders]);
   const categoryOptions = useMemo(
@@ -320,6 +395,15 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
     setCategoryFilter("all");
   }
 
+  function toggleHostedSettings(): void {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      if (showHostedSettings) next.delete("onekey");
+      else next.set("onekey", "1");
+      return next;
+    });
+  }
+
   function selectScenario(scenario: ProviderDiscoveryScenario): void {
     setView("discover");
     setQuery("");
@@ -334,45 +418,137 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
       onValueChange={(value) => selectView(value as ProviderBrowserView)}
       className="provider-browser-tabs"
     >
-      <TabsList variant="line" className="provider-browser-tabs-list" aria-label={t("providers.viewLabel")}>
-        <TabsTrigger value="manage" className="flex-none px-4">
-          {t("providers.views.manage")} <span className="provider-view-count">{managedProviders.length}</span>
-        </TabsTrigger>
-        <TabsTrigger value="discover" className="flex-none px-4">
-          {t("providers.views.discover")} <span className="provider-view-count">{sortedProviders.length}</span>
-        </TabsTrigger>
-      </TabsList>
-      <TabsContent value="manage" className="provider-browser-tab-content">
-        {view === "manage" ? (
-          <ProviderCatalog
-            categoryFilter={categoryFilter}
-            categoryOptions={categoryOptions}
-            filtersActive={filtersActive}
-            hasMoreProviders={hasMoreProviders}
-            loadMoreProviders={loadMoreProviders}
-            loadMoreProvidersRef={loadMoreProvidersRef}
-            onCategoryFilterChange={setCategoryFilter}
-            onQueryChange={setQuery}
-            onReset={resetFilters}
-            providerCount={renderedProviders.length}
-            providers={renderedProviders}
-            query={query}
-            showStatusFilters={false}
-            statusByService={statusByService}
-            counts={statusCounts}
-            selected={statusFilter}
-            totalProviderCount={visibleProviders.length}
+      <div className="provider-view-toolbar">
+        <TabsList variant="line" className="provider-browser-tabs-list" aria-label={t("providers.viewLabel")}>
+          <TabsTrigger value="discover" className="flex-none px-4">
+            {t("providers.views.discover")} <span className="provider-view-count">{sortedProviders.length}</span>
+          </TabsTrigger>
+          <TabsTrigger value="manage" className="flex-none px-4">
+            {t("providers.views.manage")} <span className="provider-view-count">{managedProviders.length}</span>
+          </TabsTrigger>
+        </TabsList>
+        {oneKeyHidden && !props.data.marketplace?.configured ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setOneKeyHidden(false);
+              setOneKeyPromotionHidden(false);
+            }}
+          >
+            {t("providers.hostedAccess.restore")}
+          </Button>
+        ) : null}
+      </div>
+      {!oneKeyHidden || props.data.marketplace?.configured || showHostedSettings || showSupportedFeatures ? (
+        <div className="provider-hosted-section">
+          <HostedAccessCard
+            marketplace={props.data.marketplace}
+            officialMarketplace={officialMarketplace}
+            settingsOpen={showHostedSettings}
+            previewOpen={showSupportedFeatures}
+            onPreview={() => setSearchParams(showSupportedFeatures ? {} : { onekey: "features" })}
+            onHide={() => {
+              setOneKeyHidden(true);
+              setOneKeyPromotionHidden(true);
+              setStatusFilter("all");
+              setSearchParams({});
+            }}
+            onRefresh={props.onRefresh}
+            onToggle={toggleHostedSettings}
           />
+          {showSupportedFeatures && officialMarketplace ? (
+            <DefaultMarketplaceCatalog
+              embedded
+              providers={props.data.providers}
+              discoveryUrl={defaultMarketplaceDiscoveryUrl}
+              connected={props.data.marketplace?.status === "available"}
+            />
+          ) : null}
+        </div>
+      ) : null}
+      {showHostedSettings ? (
+        <MarketplacePage
+          data={props.data}
+          embedded
+          onRefresh={props.onRefresh}
+          onConnected={() => {
+            selectView("manage");
+            setSearchParams((current) => {
+              const next = new URLSearchParams(current);
+              next.delete("onekey");
+              return next;
+            });
+          }}
+        />
+      ) : null}
+      <TabsContent value="manage" className="provider-browser-tab-content flex flex-col gap-4">
+        {view === "manage" ? (
+          <>
+            {managedProviders.length > 0 ? (
+              <ToggleGroup
+                className="provider-managed-sources"
+                type="single"
+                value={managedSource}
+                onValueChange={(value) => {
+                  if (value) setManagedSource(value as ManagedSourceFilter);
+                }}
+                aria-label={t("providers.managedSources.label")}
+              >
+                <ToggleGroupItem value="all">
+                  {t("providers.managedSources.all")} {managedProviders.length}
+                </ToggleGroupItem>
+                <ToggleGroupItem value="built_in">
+                  {t(officialMarketplace ? "providers.managedSources.builtIn" : "providers.marketplaceBadge")}{" "}
+                  {
+                    managedProviders.filter((provider) => statusByService.get(provider.service)?.marketplaceConnection)
+                      .length
+                  }
+                </ToggleGroupItem>
+                <ToggleGroupItem value="own_key">
+                  {t("providers.managedSources.ownKey")}{" "}
+                  {
+                    managedProviders.filter((provider) =>
+                      statusByService
+                        .get(provider.service)
+                        ?.connections.some((connection) => connection.authType !== "marketplace"),
+                    ).length
+                  }
+                </ToggleGroupItem>
+              </ToggleGroup>
+            ) : null}
+            <ProviderCatalog
+              categoryFilter={categoryFilter}
+              categoryOptions={categoryOptions}
+              filtersActive={filtersActive}
+              hasMoreProviders={hasMoreProviders}
+              loadMoreProviders={loadMoreProviders}
+              loadMoreProvidersRef={loadMoreProvidersRef}
+              onCategoryFilterChange={setCategoryFilter}
+              onQueryChange={setQuery}
+              onReset={resetFilters}
+              providerCount={renderedProviders.length}
+              providers={renderedProviders}
+              query={query}
+              showStatusFilters={false}
+              showBrandNotice={false}
+              emptyTitleKey="providers.managedEmpty.title"
+              emptyDescriptionKey="providers.managedEmpty.description"
+              statusByService={statusByService}
+              oneKeyServices={oneKeyHidden ? new Set() : oneKeyServices}
+              officialMarketplace={officialMarketplace}
+              counts={statusCounts}
+              selected={statusFilter}
+              totalProviderCount={visibleProviders.length}
+            />
+          </>
         ) : null}
       </TabsContent>
       <TabsContent value="discover" className="provider-browser-tab-content flex flex-col gap-6">
         {view === "discover" ? (
           <>
             {!query.trim() ? (
-              <details className="provider-scenario-disclosure">
-                <summary>{t("providers.discovery.browseByTask")}</summary>
-                <ProviderScenarioGrid counts={scenarioCounts} providers={sortedProviders} onSelect={selectScenario} />
-              </details>
+              <ProviderScenarioGrid counts={scenarioCounts} providers={sortedProviders} onSelect={selectScenario} />
             ) : null}
             <ProviderCatalog
               categoryFilter={categoryFilter}
@@ -390,7 +566,10 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
               query={query}
               scenarioFilter={scenarioFilter}
               showStatusFilters
+              showBrandNotice
               statusByService={statusByService}
+              oneKeyServices={oneKeyHidden ? new Set() : oneKeyServices}
+              officialMarketplace={officialMarketplace}
               counts={statusCounts}
               selected={statusFilter}
               totalProviderCount={visibleProviders.length}
@@ -400,6 +579,123 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
         ) : null}
       </TabsContent>
     </Tabs>
+  );
+}
+
+function HostedAccessCard(props: HostedAccessCardProps): ReactNode {
+  const t = useTranslate();
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [error, setError] = useState<string>();
+  async function removeKey(): Promise<void> {
+    setRemoving(true);
+    setError(undefined);
+    try {
+      await apiDelete("/api/marketplace");
+      setConfirmRemove(false);
+      props.onRefresh();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : t("marketplace.messages.removeFailed"));
+    } finally {
+      setRemoving(false);
+    }
+  }
+  const available = props.marketplace?.status === "available";
+  const sourceName = props.officialMarketplace
+    ? "OneKey Plan"
+    : (props.marketplace?.marketplace?.name ?? t("nav.marketplace"));
+
+  return (
+    <section className="provider-hosted-access" aria-labelledby="provider-hosted-access-title">
+      <div className="provider-hosted-access-icon">
+        <KeyRound size={20} aria-hidden="true" />
+      </div>
+      <div className="provider-hosted-access-copy">
+        <div className="provider-hosted-access-title">
+          <h2 id="provider-hosted-access-title">{sourceName}</h2>
+          {props.marketplace?.configured ? (
+            <Badge tone={available ? "success" : "warning"}>
+              {t(`marketplace.status.${props.marketplace.status}`)}
+            </Badge>
+          ) : null}
+        </div>
+        <p>
+          {t(
+            props.marketplace?.configured
+              ? props.officialMarketplace
+                ? "providers.hostedAccess.connected"
+                : "providers.hostedAccess.connectedCustom"
+              : "providers.hostedAccess.intro",
+          )}
+        </p>
+      </div>
+      <div className="provider-hosted-access-actions">
+        {props.officialMarketplace ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={props.onPreview}
+            aria-expanded={props.previewOpen}
+            aria-controls="onekey-supported-features"
+          >
+            {t(props.previewOpen ? "providers.hostedAccess.hideFeatures" : "providers.hostedAccess.features")}
+            <ChevronDown
+              className={props.previewOpen ? "provider-hosted-chevron-open" : undefined}
+              size={15}
+              aria-hidden="true"
+            />
+          </Button>
+        ) : null}
+        {!props.marketplace?.configured && props.officialMarketplace ? (
+          <Button asChild variant="outline" size="sm">
+            <a href="https://console.oomol.com/api-key" target="_blank" rel="noopener noreferrer">
+              {t("marketplace.oneKey.getKey")} <ArrowUpRight size={14} aria-hidden="true" />
+            </a>
+          </Button>
+        ) : null}
+        <Button
+          type="button"
+          size="sm"
+          variant={props.marketplace?.configured ? "outline" : "default"}
+          onClick={props.onToggle}
+        >
+          {t(
+            props.settingsOpen
+              ? "providers.hostedAccess.close"
+              : props.marketplace?.configured
+                ? "providers.hostedAccess.manage"
+                : "providers.hostedAccess.connect",
+          )}
+        </Button>
+        {props.marketplace?.configured ? (
+          <Button variant="ghost" size="sm" onClick={() => setConfirmRemove(true)}>
+            {t("providers.hostedAccess.removeKey")}
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={props.onHide}
+            aria-label={t("providers.hostedAccess.hide")}
+            title={t("providers.hostedAccess.hide")}
+          >
+            <X size={15} aria-hidden="true" />
+          </Button>
+        )}
+      </div>
+      {confirmRemove ? (
+        <div className="provider-hosted-removal">
+          <p>{t("providers.hostedAccess.removeHelp")}</p>
+          <Button variant="destructive" size="sm" disabled={removing} onClick={() => void removeKey()}>
+            {t("providers.hostedAccess.confirmRemove")}
+          </Button>
+          <Button variant="outline" size="sm" disabled={removing} onClick={() => setConfirmRemove(false)}>
+            {t("common.close")}
+          </Button>
+        </div>
+      ) : null}
+      {error ? <FormStatus message={error} /> : null}
+    </section>
   );
 }
 
@@ -596,11 +892,14 @@ function ProviderCatalog(props: ProviderCatalogProps): ReactNode {
         </div>
       </div>
 
-      <p className="provider-brand-notice">{t("providers.brandNotice")}</p>
+      {props.showBrandNotice ? <p className="provider-brand-notice">{t("providers.brandNotice")}</p> : null}
 
       {props.providers.length === 0 ? (
         <div className="provider-empty-row">
-          <EmptyState title={t("providers.noProvidersTitle")} description={t("providers.noProvidersDescription")} />
+          <EmptyState
+            title={t(props.emptyTitleKey ?? "providers.noProvidersTitle")}
+            description={t(props.emptyDescriptionKey ?? "providers.noProvidersDescription")}
+          />
           {props.filtersActive ? (
             <Button variant="outline" size="sm" type="button" onClick={props.onReset}>
               <X data-icon="inline-start" />
@@ -615,6 +914,8 @@ function ProviderCatalog(props: ProviderCatalogProps): ReactNode {
               key={provider.service}
               provider={provider}
               status={props.statusByService.get(provider.service) ?? resolveProviderConnectionStatus(provider, [], [])}
+              oneKeyAvailable={props.oneKeyServices.has(provider.service)}
+              officialMarketplace={props.officialMarketplace}
             />
           ))}
           {props.hasMoreProviders ? (
@@ -639,6 +940,7 @@ function scenarioTranslationKey(scenario: ProviderDiscoveryScenario): string {
 }
 
 function ProviderCard(props: ProviderCardProps): ReactNode {
+  const t = useTranslate();
   const to = `/providers/${encodeURIComponent(props.provider.service)}`;
   const locallyAvailable = isProviderLocallyAvailable(props.provider) || Boolean(props.status.marketplaceConnection);
 
@@ -652,9 +954,11 @@ function ProviderCard(props: ProviderCardProps): ReactNode {
             <ProviderStatusBadges
               status={props.status}
               locallyAvailable={locallyAvailable}
+              officialMarketplace={props.officialMarketplace}
               compact
               includeDisconnected
             />
+            {props.oneKeyAvailable && !props.status.connected ? <Badge>{t("providers.oneKey.available")}</Badge> : null}
           </span>
         </span>
       </span>
@@ -666,6 +970,7 @@ function ProviderCard(props: ProviderCardProps): ReactNode {
 function ProviderStatusBadges(props: {
   status: ProviderConnectionStatus;
   locallyAvailable: boolean;
+  officialMarketplace?: boolean;
   compact?: boolean;
   includeDisconnected?: boolean;
 }): ReactNode {
@@ -691,7 +996,11 @@ function ProviderStatusBadges(props: {
       </Badge>,
     );
     if (props.status.marketplaceConnection) {
-      badges.push(<Badge key="marketplace">{t("providers.marketplaceBadge")}</Badge>);
+      badges.push(
+        <Badge key="marketplace">
+          {t(props.officialMarketplace ? "providers.oneKey.builtIn" : "providers.marketplaceBadge")}
+        </Badge>,
+      );
     }
     if (props.status.connections.length > 1) {
       badges.push(
@@ -871,6 +1180,9 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
               <ProviderStatusBadges
                 status={props.connectionStatus}
                 locallyAvailable={locallyAvailable}
+                officialMarketplace={isDefaultMarketplace(
+                  props.marketplace?.discoveryUrl ?? defaultMarketplaceDiscoveryUrl,
+                )}
                 includeDisconnected
               />
             </div>
@@ -897,6 +1209,12 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
         </div>
       </div>
 
+      <OneKeyProviderOption
+        marketplace={props.marketplace}
+        provider={props.provider}
+        connected={Boolean(props.connectionStatus.marketplaceConnection)}
+      />
+
       <div className="provider-detail-layout">
         <section className="detail-panel provider-detail-card provider-connection-card">
           <div className="provider-panel-title-row">
@@ -908,18 +1226,35 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
           {props.connectionStatus.marketplaceConnection ? (
             <div className="provider-marketplace-connection">
               <div>
-                <strong>{t("providers.marketplaceConnection.title")}</strong>
+                <strong>
+                  {t(
+                    isDefaultMarketplace(props.marketplace?.discoveryUrl ?? defaultMarketplaceDiscoveryUrl)
+                      ? "providers.oneKey.connectedTitle"
+                      : "providers.marketplaceConnection.title",
+                  )}
+                </strong>
                 <span>
-                  {t("providers.marketplaceConnection.description", {
-                    name:
-                      typeof props.connectionStatus.marketplaceConnection.profile?.displayName === "string"
-                        ? props.connectionStatus.marketplaceConnection.profile.displayName
-                        : t("nav.marketplace"),
-                  })}
+                  {t(
+                    isDefaultMarketplace(props.marketplace?.discoveryUrl ?? defaultMarketplaceDiscoveryUrl)
+                      ? "providers.oneKey.connectedDescription"
+                      : "providers.marketplaceConnection.description",
+                    {
+                      name:
+                        typeof props.connectionStatus.marketplaceConnection.profile?.displayName === "string"
+                          ? props.connectionStatus.marketplaceConnection.profile.displayName
+                          : t("nav.marketplace"),
+                    },
+                  )}
                 </span>
               </div>
               <Button asChild variant="outline" size="sm">
-                <Link to="/marketplace">{t("providers.marketplaceConnection.manage")}</Link>
+                <Link to="/providers?onekey=1">
+                  {t(
+                    isDefaultMarketplace(props.marketplace?.discoveryUrl ?? defaultMarketplaceDiscoveryUrl)
+                      ? "providers.hostedAccess.manage"
+                      : "providers.marketplaceConnection.manage",
+                  )}
+                </Link>
               </Button>
             </div>
           ) : null}
@@ -1657,8 +1992,10 @@ function filterProvidersByStatus(
   providers: ProviderDefinition[],
   status: ProviderStatusFilter,
   statusByService: Map<string, ProviderConnectionStatus>,
+  oneKeyServices: Set<string>,
 ): ProviderDefinition[] {
   if (status === "all") return providers;
+  if (status === "one_key") return providers.filter((provider) => oneKeyServices.has(provider.service));
   return providers.filter((provider) => {
     const providerStatus = statusByService.get(provider.service);
     if (status === "connected") return providerStatus?.connected;
@@ -1672,8 +2009,9 @@ function countProvidersForStatus(
   providers: ProviderDefinition[],
   status: ProviderStatusFilter,
   statusByService: Map<string, ProviderConnectionStatus>,
+  oneKeyServices: Set<string>,
 ): number {
-  return filterProvidersByStatus(providers, status, statusByService).length;
+  return filterProvidersByStatus(providers, status, statusByService, oneKeyServices).length;
 }
 
 export function providerBrowserResetKey(
@@ -1697,6 +2035,7 @@ export function oauthConfigForProvider(configs: OAuthConfig[], service: string):
 const providerStatusOptions: Array<{ id: ProviderStatusFilter; labelKey: string }> = [
   { id: "all", labelKey: "providers.filters.all" },
   { id: "connected", labelKey: "providers.filters.connected" },
+  { id: "one_key", labelKey: "providers.filters.oneKey" },
   { id: "no_setup", labelKey: "providers.filters.noSetup" },
   { id: "not_connected", labelKey: "providers.filters.notConnected" },
   { id: "oauth_needs_config", labelKey: "providers.filters.oauthNeedsConfig" },
