@@ -23,7 +23,7 @@ import { preloadOptionalServerModules } from "./connect-server.ts";
 import { KVTransitFileService } from "./files/kv-transit-files.ts";
 import { R2TransitFileService } from "./files/r2-transit-files.ts";
 import { createWorkerSecretCodec } from "./secrets/worker-secret-codec.ts";
-import { D1RuntimeDatabase } from "./storage/d1-runtime-store.ts";
+import { D1RuntimeDatabase } from "./storage/d1/runtime-store.ts";
 import { DEFAULT_RUN_LIMIT } from "./storage/runtime-store.ts";
 
 interface CloudflareExecutionContext {

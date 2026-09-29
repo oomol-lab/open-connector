@@ -19,7 +19,7 @@ import { provider as slackProvider } from "../providers/slack/definition.ts";
 import { provider as slackbotProvider } from "../providers/slackbot/definition.ts";
 import { provider as tencentDocsProvider } from "../providers/tencent_docs/definition.ts";
 import { AesGcmSecretCodec } from "../server/secrets/secret-codec.ts";
-import { SqliteRuntimeDatabase } from "../server/storage/sqlite-runtime-store.ts";
+import { SqliteRuntimeDatabase } from "../server/storage/sqlite/runtime-store.ts";
 import { OAuthClientConfigService } from "./oauth-client-config-service.ts";
 import { OAuthFlowService } from "./oauth-flow-service.ts";
 

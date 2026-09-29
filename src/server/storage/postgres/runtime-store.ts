@@ -1,33 +1,33 @@
-import type { IConnectionStore, StoredConnection } from "../../connection-service.ts";
-import type { TokenPolicy } from "../../core/action-policy.ts";
-import type { ResolvedCredential, RuntimeLogger } from "../../core/types.ts";
+import type { IConnectionStore, StoredConnection } from "../../../connection-service.ts";
+import type { TokenPolicy } from "../../../core/action-policy.ts";
+import type { ResolvedCredential, RuntimeLogger } from "../../../core/types.ts";
 import type {
   IMarketplaceStore,
   ProviderPreference,
   StoredMarketplaceConfig,
-} from "../../marketplace/marketplace-service.ts";
-import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
-import type { IOAuthStateStore, OAuthAuthorizationState } from "../../oauth/oauth-flow-service.ts";
-import type { ISecretCodec } from "../secrets/secret-codec-core.ts";
+} from "../../../marketplace/marketplace-service.ts";
+import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../../oauth/oauth-client-config-service.ts";
+import type { IOAuthStateStore, OAuthAuthorizationState } from "../../../oauth/oauth-flow-service.ts";
+import type { ISecretCodec } from "../../secrets/secret-codec-core.ts";
 import type {
   CompleteIdempotencyInput,
   IdempotencyClaimInput,
   IdempotencyClaimResult,
   IIdempotencyStore,
-} from "./idempotency-store.ts";
-import type { MigrationSource } from "./migration-source.ts";
-import type { RuntimeDatabase } from "./runtime-database.ts";
-import type { IRuntimePolicyStore, RuntimePolicyRecord } from "./runtime-policy-store.ts";
-import type { RuntimeRow } from "./runtime-sql.ts";
-import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage, RunLogWriteResult } from "./runtime-store.ts";
-import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./runtime-token-service.ts";
+} from "../idempotency-store.ts";
+import type { MigrationSource } from "../migration-source.ts";
+import type { RuntimeDatabase } from "../runtime-database.ts";
+import type { IRuntimePolicyStore, RuntimePolicyRecord } from "../runtime-policy-store.ts";
+import type { RuntimeRow } from "../runtime-sql.ts";
+import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage, RunLogWriteResult } from "../runtime-store.ts";
+import type { IRuntimeTokenStore, RuntimeTokenRecord } from "../runtime-token-service.ts";
 import type { PoolClient } from "pg";
 
 import { Pool } from "pg";
-import { parseRuntimeActionHttpResult } from "../api/runtime-api.ts";
-import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
-import { ConnectionRequestStore } from "./connection-request-store.ts";
-import { assertPostgresSchemaReady } from "./postgres-migrations.ts";
+import { parseRuntimeActionHttpResult } from "../../api/runtime-api.ts";
+import { PlainTextSecretCodec } from "../../secrets/secret-codec-core.ts";
+import { ConnectionRequestStore } from "../connection-request-store.ts";
+import { assertPostgresSchemaReady } from "./migrations.ts";
 import {
   listRunLogs,
   parseJson,
@@ -36,8 +36,8 @@ import {
   readRuntimeTokenRow,
   readString,
   runtimeTokenColumns,
-} from "./runtime-sql.ts";
-import { DEFAULT_RUN_LIMIT } from "./runtime-store.ts";
+} from "../runtime-sql.ts";
+import { DEFAULT_RUN_LIMIT } from "../runtime-store.ts";
 
 export interface PostgresRuntimeDatabaseOptions {
   logger?: RuntimeLogger;

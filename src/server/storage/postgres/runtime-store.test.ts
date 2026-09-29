@@ -1,17 +1,17 @@
-import type { RuntimeActionHttpResult } from "../api/runtime-api.ts";
-import type { MigrationSource } from "./migration-source.ts";
+import type { RuntimeActionHttpResult } from "../../api/runtime-api.ts";
+import type { MigrationSource } from "../migration-source.ts";
 
 import { PGlite } from "@electric-sql/pglite";
 import { PGLiteSocketServer } from "@electric-sql/pglite-socket";
 import { Pool } from "pg";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { AesGcmSecretCodec } from "../secrets/secret-codec.ts";
-import { connectionRequestStoreTests } from "./connection-request-store.cases.ts";
-import { defaultMigrationSource } from "./migration-source.ts";
-import { createNodeRuntimeDatabase, migratePostgresRuntimeDatabase } from "./node-runtime-database.ts";
-import { assertPostgresSchemaReady, migratePostgresDatabase } from "./postgres-migrations.ts";
-import { PostgresRuntimeDatabase } from "./postgres-runtime-store.ts";
-import { RuntimeTokenService } from "./runtime-token-service.ts";
+import { AesGcmSecretCodec } from "../../secrets/secret-codec.ts";
+import { connectionRequestStoreTests } from "../connection-request-store.cases.ts";
+import { defaultMigrationSource } from "../migration-source.ts";
+import { createNodeRuntimeDatabase, migratePostgresRuntimeDatabase } from "../node-runtime-database.ts";
+import { assertPostgresSchemaReady, migratePostgresDatabase } from "./migrations.ts";
+import { PostgresRuntimeDatabase } from "./runtime-store.ts";
+import { RuntimeTokenService } from "../runtime-token-service.ts";
 
 const githubProfile = {
   accountId: "github:octocat",

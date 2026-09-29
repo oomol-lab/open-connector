@@ -47,7 +47,7 @@ import { TransitFileService } from "./files/transit-files.ts";
 import { AesGcmSecretCodec, PlainTextSecretCodec } from "./secrets/secret-codec.ts";
 import { decodeRunLogCursor, encodeRunLogCursor } from "./storage/runtime-store.ts";
 import { RuntimeTokenService } from "./storage/runtime-token-service.ts";
-import { SqliteRuntimeDatabase } from "./storage/sqlite-runtime-store.ts";
+import { SqliteRuntimeDatabase } from "./storage/sqlite/runtime-store.ts";
 
 const apiKeyProvider: ProviderDefinition = {
   service: "example",

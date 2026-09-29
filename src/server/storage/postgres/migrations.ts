@@ -1,8 +1,8 @@
-import type { RuntimeLogger } from "../../core/types.ts";
-import type { MigrationSource } from "./migration-source.ts";
+import type { RuntimeLogger } from "../../../core/types.ts";
+import type { MigrationSource } from "../migration-source.ts";
 import type { Pool, PoolClient } from "pg";
 
-import { defaultMigrationSource } from "./migration-source.ts";
+import { defaultMigrationSource } from "../migration-source.ts";
 
 const migrationLockNamespace = 1_326_382_671;
 const migrationLockId = 1;

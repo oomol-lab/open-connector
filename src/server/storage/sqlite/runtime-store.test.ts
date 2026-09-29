@@ -1,4 +1,4 @@
-import type { RuntimeActionHttpResult } from "../api/runtime-api.ts";
+import type { RuntimeActionHttpResult } from "../../api/runtime-api.ts";
 
 import { readFileSync } from "node:fs";
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
@@ -6,11 +6,11 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AesGcmSecretCodec } from "../secrets/secret-codec.ts";
-import { connectionRequestStoreTests } from "./connection-request-store.cases.ts";
-import { createDirectoryMigrationSource } from "./migration-source.ts";
-import { RuntimeTokenService } from "./runtime-token-service.ts";
-import { SqliteRunLogStore, SqliteRuntimeDatabase } from "./sqlite-runtime-store.ts";
+import { AesGcmSecretCodec } from "../../secrets/secret-codec.ts";
+import { connectionRequestStoreTests } from "../connection-request-store.cases.ts";
+import { createDirectoryMigrationSource } from "../migration-source.ts";
+import { RuntimeTokenService } from "../runtime-token-service.ts";
+import { SqliteRunLogStore, SqliteRuntimeDatabase } from "./runtime-store.ts";
 
 const tempDirs: string[] = [];
 const githubProfile = {
@@ -502,7 +502,7 @@ describe("SqliteRuntimeDatabase", () => {
       "0010_connection_revision.sql",
       "0011_runtime_token_connection_scope.sql",
     ]) {
-      raw.exec(readFileSync(new URL(`../../../migrations/${migration}`, import.meta.url), "utf8"));
+      raw.exec(readFileSync(new URL(`../../../../migrations/${migration}`, import.meta.url), "utf8"));
     }
     const store = new SqliteRunLogStore(raw, 1);
     await store.add(createRun("run-1", "2026-06-30T00:00:00.000Z"));
@@ -522,7 +522,7 @@ describe("SqliteRuntimeDatabase", () => {
   it("applies pending runtime migrations to existing local databases", async () => {
     const databasePath = await createDatabasePath();
     const legacy = new DatabaseSync(databasePath);
-    legacy.exec(readFileSync(new URL("../../../migrations/0001_runtime.sql", import.meta.url), "utf8"));
+    legacy.exec(readFileSync(new URL("../../../../migrations/0001_runtime.sql", import.meta.url), "utf8"));
     legacy
       .prepare("insert into connections (service, connection_name, value, updated_at) values (?, ?, ?, ?)")
       .run(

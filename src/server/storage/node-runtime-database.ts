@@ -3,8 +3,8 @@ import type { ISecretCodec } from "../secrets/secret-codec-core.ts";
 import type { MigrationSource } from "./migration-source.ts";
 import type { RuntimeDatabase } from "./runtime-database.ts";
 
-import { migratePostgresDatabase } from "./postgres-migrations.ts";
-import { SqliteRuntimeDatabase } from "./sqlite-runtime-store.ts";
+import { migratePostgresDatabase } from "./postgres/migrations.ts";
+import { SqliteRuntimeDatabase } from "./sqlite/runtime-store.ts";
 
 export interface NodeRuntimeDatabase extends RuntimeDatabase {
   close(): void | Promise<void>;
@@ -48,7 +48,7 @@ export async function createNodeRuntimeDatabase(options: NodeRuntimeDatabaseOpti
   const connectionString = options.connectionString.trim();
   assertPostgresDatabaseUrl(connectionString);
   // pg is loaded only when OOMOL_CONNECT_DATABASE_URL selects PostgreSQL; the SQLite default never pays for it.
-  const { PostgresRuntimeDatabase } = await import("./postgres-runtime-store.ts");
+  const { PostgresRuntimeDatabase } = await import("./postgres/runtime-store.ts");
   return await PostgresRuntimeDatabase.open(connectionString, options);
 }
 

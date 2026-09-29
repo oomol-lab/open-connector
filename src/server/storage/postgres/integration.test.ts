@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { Pool } from "pg";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { migratePostgresDatabase } from "./postgres-migrations.ts";
-import { PostgresRuntimeDatabase } from "./postgres-runtime-store.ts";
+import { migratePostgresDatabase } from "./migrations.ts";
+import { PostgresRuntimeDatabase } from "./runtime-store.ts";
 
 const testPostgresUrl = process.env.TEST_POSTGRES_URL;
 

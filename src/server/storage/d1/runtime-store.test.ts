@@ -1,13 +1,13 @@
-import type { RuntimeActionHttpResult } from "../api/runtime-api.ts";
-import type { D1DatabaseBinding, D1PreparedStatementBinding } from "../cloudflare/cloudflare-bindings.ts";
+import type { RuntimeActionHttpResult } from "../../api/runtime-api.ts";
+import type { D1DatabaseBinding, D1PreparedStatementBinding } from "../../cloudflare/cloudflare-bindings.ts";
 
 import { DatabaseSync } from "node:sqlite";
 import { beforeEach, describe, expect, it } from "vitest";
-import { AesGcmSecretCodec } from "../secrets/secret-codec.ts";
-import { connectionRequestStoreTests } from "./connection-request-store.cases.ts";
-import { D1RuntimeDatabase } from "./d1-runtime-store.ts";
-import { defaultMigrationSource } from "./migration-source.ts";
-import { RuntimeTokenService } from "./runtime-token-service.ts";
+import { AesGcmSecretCodec } from "../../secrets/secret-codec.ts";
+import { connectionRequestStoreTests } from "../connection-request-store.cases.ts";
+import { D1RuntimeDatabase } from "./runtime-store.ts";
+import { defaultMigrationSource } from "../migration-source.ts";
+import { RuntimeTokenService } from "../runtime-token-service.ts";
 
 const githubProfile = {
   accountId: "github:octocat",

@@ -11,7 +11,7 @@ import { slackCredentialValidators } from "../../providers/slack/runtime.ts";
 import { createConnectApp } from "../connect-app.ts";
 import { TransitFileService } from "../files/transit-files.ts";
 import { PlainTextSecretCodec } from "../secrets/secret-codec-core.ts";
-import { SqliteRuntimeDatabase } from "../storage/sqlite-runtime-store.ts";
+import { SqliteRuntimeDatabase } from "../storage/sqlite/runtime-store.ts";
 
 const provider: ProviderDefinition = {
   service: "example",
