@@ -29,7 +29,7 @@ const provider: ProviderDefinition = {
 
 describe("MarketplaceService", () => {
   it.each([
-    { failure: new TypeError("terminated"), status: 502, message: "Marketplace request failed: terminated" },
+    { failure: new TypeError("terminated"), status: 502, message: "Marketplace discovery could not be read." },
     { failure: new DOMException("Timed out", "TimeoutError"), status: 504, message: "Marketplace request timed out." },
     { failure: new DOMException("Aborted", "AbortError"), status: 504, message: "Marketplace request timed out." },
   ])("maps discovery body failures to HTTP $status", async ({ failure, status, message }) => {
@@ -106,7 +106,7 @@ describe("MarketplaceService", () => {
     await expect(service.configure({ apiKey: "secret" })).rejects.toMatchObject({
       code: "marketplace_unavailable",
       status: 502,
-      message: "Marketplace request failed: request URL must not resolve to private or reserved IP addresses",
+      message: `Marketplace ${stage} request failed.`,
     });
     expect(await store.getConfig()).toBeUndefined();
     expect(service.getState().configured).toBe(false);
@@ -153,7 +153,7 @@ describe("MarketplaceService", () => {
     expect(fetcher).toHaveBeenCalledTimes(count);
     await expect(
       service.configure({ discoveryUrl: "https://broken.example/discovery", apiKey: "new-key" }),
-    ).rejects.toThrow("offline");
+    ).rejects.toThrow("Marketplace discovery request failed.");
     expect(service.getState().discoveryUrl).toBe("https://first.example/discovery");
     expect(await service.listProviderPreferences()).toHaveLength(1);
     await service.configure({ discoveryUrl: "https://other.example/discovery", apiKey: "new-key" });
@@ -267,6 +267,56 @@ describe("MarketplaceService", () => {
 
     await expect(store.getConfig()).resolves.toMatchObject({ apiKeyEncrypted: "local-key" });
   });
+  it("keeps action output above the discovery limit intact", async () => {
+    const output = { content: "a".repeat(4 * 1024 * 1024 + 1) };
+    const service = await configuredService(jsonResponse({ success: true, data: output }));
+    await expect(service.execute("example.run", {})).resolves.toEqual({ ok: true, output });
+  });
+
+  it("preserves structured business errors including retry hints", async () => {
+    const service = await configuredService(
+      new Response(
+        JSON.stringify({
+          success: false,
+          errorCode: "rate_limit_exceeded",
+          message: "Slow down",
+          data: { retryAfterSeconds: 12 },
+        }),
+        { status: 429 },
+      ),
+    );
+    await expect(service.execute("example.run", {})).resolves.toEqual({
+      ok: false,
+      error: { code: "rate_limit_exceeded", message: "Slow down", details: { retryAfterSeconds: 12 } },
+    });
+  });
+
+  it("does not expose plain unauthorized bodies or malformed envelopes", async () => {
+    const service = await configuredService(new Response("Unauthorized secret-token", { status: 401 }));
+    await expect(service.execute("example.run", {})).resolves.toEqual({
+      ok: false,
+      error: { code: "marketplace_unavailable", message: "Marketplace action response is not valid JSON." },
+    });
+    const malformed = await configuredService(jsonResponse({ success: true }));
+    await expect(malformed.execute("example.run", {})).resolves.toMatchObject({
+      ok: false,
+      error: { code: "provider_error" },
+    });
+  });
+
+  it("rejects action redirects even when their body looks successful", async () => {
+    const cancel = vi.fn();
+    const response = new Response(new ReadableStream({ cancel }), {
+      status: 307,
+      headers: { location: "https://attacker.example" },
+    });
+    const service = await configuredService(response);
+    await expect(service.execute("example.run", {})).resolves.toMatchObject({
+      ok: false,
+      error: { code: "marketplace_unavailable" },
+    });
+    expect(cancel).toHaveBeenCalledOnce();
+  });
 });
 
 const reversibleCodec: ISecretCodec = {
@@ -312,4 +362,30 @@ class MemoryMarketplaceStore implements IMarketplaceStore {
 
 function jsonResponse(value: unknown): Response {
   return new Response(JSON.stringify(value), { status: 200, headers: { "content-type": "application/json" } });
+}
+
+async function configuredService(response: Response): Promise<MarketplaceService> {
+  const fetcher = vi
+    .fn<typeof fetch>()
+    .mockResolvedValueOnce(
+      jsonResponse({
+        version: 1,
+        id: "test",
+        name: "Test",
+        pricing: "free",
+        validate: "/validate",
+        endpoint: "/actions",
+        actions: ["example.run"],
+      }),
+    )
+    .mockResolvedValueOnce(new Response(null, { status: 204 }))
+    .mockResolvedValueOnce(response);
+  const service = new MarketplaceService({
+    catalog: createCatalogStore([provider]),
+    store: new MemoryMarketplaceStore(),
+    secretCodec: reversibleCodec,
+    fetcher,
+  });
+  await service.configure({ discoveryUrl: "https://marketplace.example/discovery", apiKey: "secret" });
+  return service;
 }

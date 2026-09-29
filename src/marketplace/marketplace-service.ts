@@ -2,8 +2,14 @@ import type { CatalogStore } from "../catalog-store.ts";
 import type { ExecutionResult } from "../core/types.ts";
 import type { ISecretCodec } from "../server/secrets/secret-codec-core.ts";
 
-import { assertPublicHttpUrl } from "../core/request.ts";
-import { isAbortLikeError, providerFetch } from "../providers/provider-runtime.ts";
+import {
+  isFailureEnvelope,
+  isSuccessEnvelope,
+  readRemoteJson,
+  RemoteHttpError,
+  requestRemote,
+} from "../core/remote-http.ts";
+import { isAbortLikeError } from "../providers/provider-runtime.ts";
 import { defaultMarketplaceDiscoveryUrl } from "./default-marketplace.ts";
 const maximumDiscoveryBytes = 4 * 1024 * 1024;
 
@@ -203,33 +209,33 @@ export class MarketplaceService {
       return { ok: false, error: { code: "connection_not_found", message: "Marketplace connection is unavailable." } };
     }
     const url = new URL(`${snapshot.definition.endpoint}/${encodeURIComponent(actionId)}`, snapshot.discoveryUrl);
-    let response: Response;
-    try {
-      response = await this.fetch(url, {
-        method: "POST",
-        headers: { authorization: `Bearer ${snapshot.apiKey}`, "content-type": "application/json" },
-        body: JSON.stringify({ input }),
-        redirect: "manual",
-        signal,
-      });
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: "marketplace_unavailable",
-          message: error instanceof Error ? error.message : "Marketplace request failed.",
-        },
-      };
-    }
     let payload: unknown;
     try {
-      payload = await readJsonResponse(response, "Marketplace action response");
+      payload = await requestRemote(
+        {
+          url,
+          label: "Marketplace action",
+          fetcher: this.options.fetcher,
+          init: {
+            method: "POST",
+            headers: { authorization: `Bearer ${snapshot.apiKey}`, "content-type": "application/json" },
+            body: JSON.stringify({ input }),
+            signal,
+          },
+        },
+        (response, signal) =>
+          readRemoteJson(response, {
+            label: "Marketplace action response",
+            maxBytes: Infinity,
+            signal,
+          }),
+      );
     } catch (error) {
       return {
         ok: false,
         error: {
           code: "marketplace_unavailable",
-          message: error instanceof Error ? error.message : "Marketplace returned an invalid response.",
+          message: error instanceof RemoteHttpError ? error.message : "Marketplace request failed.",
         },
       };
     }
@@ -281,52 +287,87 @@ export class MarketplaceService {
   }
 
   private async discover(discoveryUrl: string): Promise<MarketplaceDiscovery> {
-    const url = assertPublicHttpUrl(discoveryUrl, {
-      fieldName: "discoveryUrl",
-      createError: (message) => new MarketplaceError("invalid_marketplace_discovery", message),
-    });
-    const response = await this.fetch(url, {
-      headers: { accept: "application/json" },
-      redirect: "manual",
-      signal: AbortSignal.timeout(15_000),
-    });
-    if (300 <= response.status && response.status < 400) {
-      throw new MarketplaceError("invalid_marketplace_discovery", "Marketplace discovery redirects are not allowed.");
-    }
-    if (!response.ok)
-      throw new MarketplaceError(
-        "marketplace_unavailable",
-        `Marketplace discovery failed with HTTP ${response.status}.`,
-        502,
-      );
-    let discovery: unknown;
     try {
-      discovery = await readBoundedJson(response, maximumDiscoveryBytes);
+      return await requestRemote(
+        {
+          url: discoveryUrl,
+          label: "Marketplace discovery",
+          fetcher: this.options.fetcher,
+          timeoutMs: 15_000,
+          init: { headers: { accept: "application/json" } },
+        },
+        async (response, signal) => {
+          if (!response.ok)
+            throw new MarketplaceError(
+              "marketplace_unavailable",
+              `Marketplace discovery failed with HTTP ${response.status}.`,
+              502,
+            );
+          return parseDiscovery(
+            await readRemoteJson(response, {
+              label: "Marketplace discovery",
+              maxBytes: maximumDiscoveryBytes,
+              signal,
+            }),
+            new URL(discoveryUrl),
+          );
+        },
+      );
     } catch (error) {
-      throw marketplaceRequestError(error);
+      if (error instanceof MarketplaceError) throw error;
+      if (isAbortLikeError(error)) {
+        throw new MarketplaceError("marketplace_unavailable", "Marketplace request timed out.", 504);
+      }
+      if (error instanceof RemoteHttpError) {
+        if (error.kind === "too_large") {
+          throw new MarketplaceError("invalid_marketplace_discovery", "Marketplace discovery exceeds 4 MiB.");
+        }
+        if (error.kind === "invalid_url" || error.kind === "redirect" || error.kind === "invalid_json") {
+          throw new MarketplaceError("invalid_marketplace_discovery", error.message);
+        }
+        throw new MarketplaceError("marketplace_unavailable", error.message, 502);
+      }
+      throw new MarketplaceError("marketplace_unavailable", "Marketplace discovery request failed.", 502);
     }
-    return parseDiscovery(discovery, url);
   }
 
   private async validateApiKey(discoveryUrl: string, validatePath: string, apiKey: string): Promise<void> {
-    const response = await this.fetch(new URL(validatePath, discoveryUrl), {
-      method: "POST",
-      headers: { authorization: `Bearer ${apiKey}` },
-      redirect: "manual",
-    });
-    if (response.status === 204) return;
-    if (response.status === 401 || response.status === 403) {
+    try {
+      await requestRemote(
+        {
+          url: new URL(validatePath, discoveryUrl),
+          label: "Marketplace validation",
+          fetcher: this.options.fetcher,
+          timeoutMs: 15_000,
+          init: { method: "POST", headers: { authorization: `Bearer ${apiKey}` } },
+        },
+        async (response) => {
+          if (response.status === 204) return;
+          if (response.status === 401 || response.status === 403) {
+            throw new MarketplaceError(
+              "marketplace_auth_error",
+              "The Marketplace API key is invalid or not permitted.",
+              response.status,
+            );
+          }
+          throw new MarketplaceError(
+            "marketplace_unavailable",
+            `Marketplace validation failed with HTTP ${response.status}.`,
+            502,
+          );
+        },
+      );
+    } catch (error) {
+      if (error instanceof MarketplaceError) throw error;
+      if (isAbortLikeError(error)) {
+        throw new MarketplaceError("marketplace_unavailable", "Marketplace request timed out.", 504);
+      }
       throw new MarketplaceError(
-        "marketplace_auth_error",
-        "The Marketplace API key is invalid or not permitted.",
-        response.status,
+        "marketplace_unavailable",
+        error instanceof RemoteHttpError ? error.message : "Marketplace validation request failed.",
+        502,
       );
     }
-    throw new MarketplaceError(
-      "marketplace_unavailable",
-      `Marketplace validation failed with HTTP ${response.status}.`,
-      502,
-    );
   }
 
   private async ensureProviderPreferences(): Promise<void> {
@@ -337,50 +378,6 @@ export class MarketplaceService {
         await this.options.store.setProviderPreference({ service, enabled: true, createdAt: now, updatedAt: now });
     }
   }
-
-  private async fetch(input: URL, init: RequestInit): Promise<Response> {
-    try {
-      return await (this.options.fetcher ?? providerFetch)(input, init);
-    } catch (error) {
-      throw marketplaceRequestError(error);
-    }
-  }
-}
-
-function marketplaceRequestError(error: unknown): MarketplaceError {
-  if (error instanceof MarketplaceError) return error;
-  if (isAbortLikeError(error)) {
-    return new MarketplaceError("marketplace_unavailable", "Marketplace request timed out.", 504);
-  }
-  return new MarketplaceError(
-    "marketplace_unavailable",
-    error instanceof Error ? `Marketplace request failed: ${error.message}` : "Marketplace request failed.",
-    502,
-  );
-}
-
-async function readBoundedJson(response: Response, maximumBytes: number): Promise<unknown> {
-  if (!response.body) return JSON.parse(await response.text()) as unknown;
-  const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let size = 0;
-  while (true) {
-    const chunk = await reader.read();
-    if (chunk.done) break;
-    size += chunk.value.byteLength;
-    if (size > maximumBytes) {
-      await reader.cancel();
-      throw new MarketplaceError("invalid_marketplace_discovery", "Marketplace discovery exceeds 4 MiB.");
-    }
-    chunks.push(chunk.value);
-  }
-  const bytes = new Uint8Array(size);
-  let offset = 0;
-  for (const chunk of chunks) {
-    bytes.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return JSON.parse(new TextDecoder().decode(bytes)) as unknown;
 }
 
 function parseDiscovery(value: unknown, discoveryUrl: URL): MarketplaceDiscovery {
@@ -430,26 +427,4 @@ function isAbsolutePath(value: unknown): boolean {
   if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return false;
   const url = new URL(value, "https://marketplace.invalid");
   return !url.username && !url.password && !url.search && !url.hash;
-}
-
-async function readJsonResponse(response: Response, label: string): Promise<unknown> {
-  try {
-    return JSON.parse(await response.text()) as unknown;
-  } catch {
-    throw new MarketplaceError("invalid_marketplace_response", `${label} is not valid JSON.`, 502);
-  }
-}
-
-function isSuccessEnvelope(value: unknown): value is { success: true; data: unknown } {
-  return Boolean(
-    value && typeof value === "object" && (value as Record<string, unknown>).success === true && "data" in value,
-  );
-}
-
-function isFailureEnvelope(
-  value: unknown,
-): value is { success: false; message: string; errorCode: string; data: unknown } {
-  if (!value || typeof value !== "object") return false;
-  const record = value as Record<string, unknown>;
-  return record.success === false && typeof record.message === "string" && typeof record.errorCode === "string";
 }

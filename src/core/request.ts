@@ -71,6 +71,7 @@ export interface BoundedResponseBytesOptions {
   maxBytes: number;
   fieldName: string;
   createError: (message: string) => Error;
+  signal?: AbortSignal;
 }
 
 /**
@@ -80,6 +81,7 @@ export async function readBoundedResponseBytes(
   response: Response,
   options: BoundedResponseBytesOptions,
 ): Promise<Uint8Array> {
+  options.signal?.throwIfAborted();
   const contentLength = parseContentLength(response.headers.get("content-length"));
   if (contentLength !== undefined) {
     if (contentLength > options.maxBytes) {
@@ -95,11 +97,16 @@ export async function readBoundedResponseBytes(
   }
 
   const reader = response.body.getReader();
+  const abort = (): void => {
+    void reader.cancel().catch(() => undefined);
+  };
+  options.signal?.addEventListener("abort", abort, { once: true });
   const chunks: Uint8Array[] = [];
   let totalBytes = 0;
   try {
     while (true) {
       const { done, value } = await reader.read();
+      options.signal?.throwIfAborted();
       if (done) {
         break;
       }
@@ -111,6 +118,7 @@ export async function readBoundedResponseBytes(
       chunks.push(value);
     }
   } finally {
+    options.signal?.removeEventListener("abort", abort);
     reader.releaseLock();
   }
 
