@@ -19,6 +19,14 @@ PostgreSQL database instead; see [configuration](configuration.md#runtime-databa
 - `api_key` and `custom_credential` providers store their local secrets in the selected runtime database.
 - `oauth2` providers use user-provided OAuth client configuration and a runtime callback URL.
 
+## SaaS OAuth credentials
+
+A SaaS OAuth connection stores a remote account reference instead of a local OAuth credential.
+Provider tokens and app secrets remain on SaaS; Connect encrypts the project API key and sensitive
+authorization request data. Encryption and an explicit public origin are required before configuring
+a project. See [SaaS OAuth](saas-oauth.md) for configuration, execution boundaries and outage handling,
+and [maintenance](saas-maintenance.md) for backup restoration versus independent clone reset.
+
 ## Encryption
 
 Set `OOMOL_CONNECT_ENCRYPTION_KEY` to encrypt stored credentials, OAuth client configuration,

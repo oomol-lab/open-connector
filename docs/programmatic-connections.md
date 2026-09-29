@@ -5,6 +5,19 @@ management through the same HTTP paths and envelopes as OOMOL Hosted Connector. 
 OAuth authorization, polling one authorization attempt, connection details, and synchronous
 API-key or custom-credential creation and replacement.
 
+## SaaS OAuth sources
+
+For a service configured with a SaaS source, the connection endpoints below authorize remotely
+without a local OAuth client. Reconnecting an existing connection retains its source.
+Read the four setup fields inside oauthClient: SaaS sets customClientAvailable to false,
+uses its callback URL and requires no local client fields. Send no OAuth overrides in SaaS mode.
+
+An explicit valid administrator Bearer GET synchronizes a known SaaS request; cookie-only GET
+does not. Poll at least two seconds apart and honor Retry-After. Browser clients use the protected
+same-origin POST described in [SaaS OAuth](saas-oauth.md#programmatic-authorization).
+Never replay link creation after an unknown result. Completed connections use the same execution
+selectors and policies, with provider credentials and execution remaining on SaaS.
+
 ## Authentication
 
 Use the local administrator bearer token (`OOMOL_CONNECT_ADMIN_TOKEN`) to manage connections.

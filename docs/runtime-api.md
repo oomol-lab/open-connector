@@ -184,6 +184,86 @@ credential lookup. `/v1/apps` discovery for that token is filtered to granted cr
 Unknown Action ids return `404 unknown_action` on both `/v1` and MCP `execute_action` /
 `get_action_guide`. Schema and idempotency-key failures stay `400 invalid_input`.
 
+### OAuth Authorization Requests
+
+Create an authorization request with `POST /v1/connections/:service/connect`, or reconnect a
+saved connection with `POST /v1/connections/by-id/:appId/connect`. New connections use the
+configured OAuth source; reconnecting preserves the saved connection's source. A SaaS source
+uses its configured provider configuration and rejects per-request OAuth overrides.
+
+Poll `GET /v1/connection-requests/:connectionRequestId` with the administrator Bearer token
+that owns the request. For SaaS authorization, an explicit valid administrator Bearer token
+allows this GET to query the remote result and commit the local connection. Cookie-only GETs
+and GETs in a local installation without authentication only read the stored result. An invalid
+Bearer token never falls back to a valid cookie. Poll no faster than once every two seconds and
+honor `Retry-After`; transient upstream failures do not permanently fail the authorization.
+
+The browser completion page uses authenticated
+`POST /api/oauth/connection-requests/:connectionRequestId/sync` with `Content-Type: application/json`,
+`X-OpenConnector-Request: sync`, and an `Origin` matching the explicitly configured public origin.
+Its initial GET is read-only. An SDK flow without a browser management session completes through
+Bearer polling. Authorization results and completion responses use `Cache-Control: private, no-store`.
+
+SaaS receives only the configured HTTP(S) completion URL. The caller's final `returnUri`, including
+a native application's custom scheme, stays in Connect and is returned to the browser only after
+a terminal local result. URL parameters on the completion page cannot declare authorization success.
+`connected` means the local connection has been committed; a late result cannot restore a deleted
+connection or overwrite a newer reconnect.
+
+If creating the remote authorization has an uncertain outcome, Connect reports
+`oauth_source_result_unknown` with `data.connectionRequestId`. It does not automatically repeat
+the link request. Inspect the request and resolve any unknown remote account manually before
+starting a replacement authorization. Known cleanup references are saved for cleanup processing.
+
+Project configuration, Console source selection, setup field semantics and recovery steps are
+documented in [SaaS OAuth](saas-oauth.md). Console starts named configured requests through
+POST /api/oauth/connection-requests; SDK clients continue using the /v1 endpoints above.
+
+### SaaS Connection Execution
+
+A saved SaaS connection sends action and proxy requests through its bound project and exact
+provider configuration, user and account identifiers. Changing the default OAuth source does
+not change existing connections. Runtime policy, connection grants and local input validation
+run before remote discovery or execution. The runtime checks the selected configuration's
+capabilities without removing actions from the global catalog. It does not load local provider
+executors or refresh local OAuth credentials for a SaaS connection, and does not fall back to
+another connection after a failure.
+
+Action responses keep the usual action output in `data`. The local `meta.executionId` stays
+unchanged; `meta.remoteExecutionId` identifies the SaaS execution when available and is also
+stored in the action run log. Proxy responses keep the provider's `status`, `headers` and `data`
+inside the normal response `data` object. An outer HTTP 200 means the proxy completed; the
+provider status can still be 404 or another non-success status. SaaS proxy metadata contains
+distinct local and remote execution IDs.
+
+SaaS proxy accepts GET, POST, PUT, PATCH and DELETE, primitive query values (string, finite
+number, boolean or null), string non-authentication headers, and JSON or text request bodies.
+HEAD, `accessGrant`, unknown request fields, array/object query values, binary bodies and
+non-finite numbers are rejected before contacting SaaS. Local `alias` and `connectionName`
+selectors remain supported. Responses support JSON and UTF-8 text; explicitly unsupported
+media types or charsets are rejected, and SaaS responses do not acquire a `bodyEncoding` field.
+
+Each SaaS execution POST has a **300-second** budget covering the HTTP request and response
+body, subject to earlier caller cancellation or a shorter provider/deployment timeout.
+Capability discovery uses the separate 30-second management budget. The complete decoded
+JSON execution response, including errors, is limited to **64 MiB**. This accommodates a
+10 MiB text payload even when JSON escaping expands it to about 60 MiB; it does not promise
+unlimited provider output. Management and discovery responses retain their 4 MiB limit.
+
+Business errors such as `invalid_input`, `scope_missing`, `credential_expired`,
+`insufficient_credit` and `rate_limited` keep distinct codes with sanitized messages.
+Rejected project keys use `oauth_source_unauthorized`; incompatible responses use
+`oauth_source_protocol_error`; oversized execution responses use `oauth_source_response_too_large`.
+HTTP 429 preserves a valid `Retry-After`, including when replaying a stored idempotent action result.
+
+Timeouts, lost responses and cancellations never automatically replay action or proxy POSTs.
+A cancelled call reports `execution_cancelled`, but SaaS or the provider may already have
+completed the operation. Local idempotency prevents repeat dispatch through its existing
+recorded request boundary; it does not guarantee exactly-once execution across the network.
+
+SaaS deletion is asynchronous after local removal. Scheduling, key-error pause recovery and
+offline clone reset procedures are documented in [SaaS maintenance](saas-maintenance.md).
+
 ### Idempotent Action Retries
 
 `POST /v1/actions/:actionId` accepts an optional `Idempotency-Key` header. Without this header,

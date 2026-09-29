@@ -8,6 +8,20 @@ Worker runtime uses:
 - R2 or Workers KV for temporary transit files.
 - Static Assets for the Web Console.
 
+## SaaS OAuth deployment
+
+Set OOMOL_CONNECT_ORIGIN explicitly to the public Console origin and configure encrypted storage
+before saving a project key. The SaaS callback returns to that origin's completion page; the
+browser synchronization POST must carry the same origin. Reverse proxies must preserve it.
+Workers do not infer trusted SaaS origin from the incoming request.
+
+Apply D1 migrations through 0015_saas_cleanup_runtime.sql, deploy the scheduled handler and
+copy the once-per-minute triggers.crons from the example configuration. Verify actual scheduled
+invocations and cleanup progress after deployment; HTTP traffic does not replace cron.
+See [SaaS OAuth](saas-oauth.md) and [D1 maintenance](saas-maintenance.md#offline-d1-maintenance).
+The temporary reset Worker has automatic batch/retry coverage; real D1 reset remains a dedicated
+test-database acceptance step, not a claim established by local test adapters.
+
 ## Prerequisites
 
 - A Cloudflare account with Workers, D1, and either R2 or Workers KV access.

@@ -1,5 +1,7 @@
 # Gmail OAuth 和 SDK 接入教程
 
+本教程使用**本地 OAuth 应用**。如果使用 SaaS 托管 Gmail 账号，请先配置 project 和 provider config，再通过标准连接请求接口发起授权，不传自定义 client。第三方 token 和执行保留在 SaaS，重连沿用已有连接来源。参见 [SaaS OAuth 操作说明](saas-oauth.md)和[程序化连接](programmatic-connections.md)。
+
 这篇教程从你已经拥有 Gmail OAuth client 开始，不包含在 Google Cloud 创建或配置 OAuth app 的步骤。OpenConnector 只需要这个 OAuth app 的 `clientId`、`clientSecret`，以及它允许当前 runtime 使用的 redirect URI。
 
 ## 前置条件

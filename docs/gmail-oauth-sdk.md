@@ -1,5 +1,7 @@
 # Gmail OAuth And SDK Tutorial
 
+This tutorial uses a **local OAuth client**. For a SaaS-managed Gmail account, configure its project and provider config first, then use the standard connection request endpoints with no client override. Tokens and execution stay on SaaS; reconnect preserves the saved source. See [SaaS OAuth](saas-oauth.md) and [programmatic connections](programmatic-connections.md).
+
 This guide starts after you already have a Gmail OAuth client. It does not cover creating or
 configuring the OAuth app in Google Cloud. OpenConnector only needs the resulting client id, client
 secret, and a redirect URI that the OAuth app allows.
