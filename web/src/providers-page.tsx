@@ -60,6 +60,7 @@ import {
   splitClientConfigFieldValues,
 } from "./oauth-app-form";
 import { useOAuthAuthorizationOptions } from "./oauth-authorization-options";
+import { usesSaasOAuth, watchOAuthRequest } from "./oauth-connection-request";
 import { OneKeyProviderOption } from "./onekey-provider-option";
 import { isOneKeyPromotionHidden, setOneKeyPromotionHidden } from "./onekey-visibility";
 import {
@@ -1086,7 +1087,10 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
   const oauthAuth = props.provider.auth.find((auth) => auth.type === "oauth2");
   const hasMultipleAuthMethods = props.provider.auth.length > 1;
   const locallyAvailable =
-    isProviderLocallyAvailable(props.provider) || Boolean(props.connectionStatus.marketplaceConnection);
+    isProviderLocallyAvailable(props.provider) ||
+    Boolean(props.connectionStatus.marketplaceConnection) ||
+    props.oauthConfig?.oauthSource?.mode === "saas" ||
+    Boolean(selectedConnection?.saas);
   const supportsCredentialConnections = props.provider.auth.some((auth) => shouldShowConnectionActions(auth));
   const connectionEditorOpen = !supportsCredentialConnections || creatingConnection || selectedConnection != null;
   const formConnectionName = creatingConnection ? newConnectionName.trim() : (selectedConnectionName ?? "");
@@ -1600,7 +1604,10 @@ function ConnectionManager(props: ConnectionManagerProps): ReactNode {
                       <Badge>{t("providers.defaultConnection")}</Badge>
                     ) : null}
                   </div>
-                  <small>{authTypeLabel(connection.authType, t)}</small>
+                  <small>
+                    {authTypeLabel(connection.authType, t)}
+                    {connection.authType === "oauth2" ? " · " + t(connection.saas ? "saas.remote" : "saas.local") : ""}
+                  </small>
                 </div>
                 <Button
                   variant={selected ? "default" : "outline"}
@@ -1710,8 +1717,11 @@ function UnavailableProviderConnection(props: {
 
 function ConnectionForm(props: ConnectionFormProps): ReactNode {
   const t = useTranslate();
+  const remote = props.auth.type === "oauth2" && usesSaasOAuth(props.connection, props.oauthConfig);
+  const [pending, setPending] = useState(false);
+  const [authorizationUrl, setAuthorizationUrl] = useState<string>();
   const [values, setValues] = useState<Record<string, string>>({});
-  const authorizationOptions = props.auth.type === "oauth2" ? props.auth.authorizationOptions : undefined;
+  const authorizationOptions = props.auth.type === "oauth2" && !remote ? props.auth.authorizationOptions : undefined;
   const { selectedOptionIds: selectedAuthorizationOptionIds, toggleOption } = useOAuthAuthorizationOptions(
     authorizationOptions,
     props.connection?.profile?.grantedScopes,
@@ -1729,23 +1739,28 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
   const showActions = shouldShowConnectionActions(props.auth);
   const connected = props.connection != null;
   const customOAuthClientAvailable =
-    props.auth.type === "oauth2" && (props.oauthConfig?.customClientAvailable ?? false);
+    props.auth.type === "oauth2" &&
+    !remote &&
+    props.oauthConfig?.oauthSource?.mode !== "saas" &&
+    (props.oauthConfig?.customClientAvailable ?? false);
   const manualValues: ManualOAuthClientValues = {
     clientId: manualClientId,
     clientSecret: manualClientSecret,
     extraValues: manualExtraValues,
   };
   const needsOAuthClient =
-    props.auth.type === "oauth2" && props.oauthClientMode === "configured" && !props.oauthConfig?.configured;
+    props.auth.type === "oauth2" && !remote && props.oauthClientMode === "configured" && !props.oauthConfig?.configured;
   const canSubmit =
     props.connectionName.length > 0 &&
     props.connectionNameValid &&
-    (props.oauthClientMode !== "manual" || customOAuthClientAvailable) &&
-    shouldEnableConnectionSubmit(
-      props.auth,
-      props.oauthConfig,
-      props.oauthClientMode === "manual" ? manualValues : undefined,
-    );
+    !pending &&
+    (remote ||
+      ((props.oauthClientMode !== "manual" || customOAuthClientAvailable) &&
+        shouldEnableConnectionSubmit(
+          props.auth,
+          props.oauthConfig,
+          props.oauthClientMode === "manual" ? manualValues : undefined,
+        )));
   const submitLabel =
     props.auth.type === "oauth2"
       ? t(connected ? "providers.buttons.reconnectProvider" : "providers.buttons.connectProvider", {
@@ -1759,13 +1774,6 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
     },
     [],
   );
-
-  useEffect(() => {
-    if (props.connection) {
-      stopOAuthRefreshPolling.current?.();
-      stopOAuthRefreshPolling.current = undefined;
-    }
-  }, [props.connection]);
 
   useEffect(() => {
     if (!customOAuthClientAvailable && props.oauthClientMode === "manual") {
@@ -1788,6 +1796,8 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
         ? t("providers.connectionMessages.openingOAuth")
         : t("providers.connectionMessages.saving"),
     );
+    setPending(true);
+    setAuthorizationUrl(undefined);
     props.onConnectionPendingChange?.(connectionName);
     try {
       if (props.auth.type === "no_auth") {
@@ -1806,15 +1816,27 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
           credentialConnectionRequestBody("custom_credential", connectionName, values),
         );
       } else {
-        const result = await apiPost<{ authorizationUrl?: string }>(
-          `/api/oauth/authorizations`,
-          oauthAuthorizationRequestBody(
-            props.provider.service,
-            connectionName,
-            props.oauthClientMode === "manual" ? { auth: props.auth, values: manualValues } : undefined,
-            selectedAuthorizationOptionIds,
-          ),
-        );
+        const manual = props.oauthClientMode === "manual" && !remote;
+        const result = manual
+          ? await apiPost<{ authorizationUrl: string; connectionRequestId?: string; expiresAt?: string }>(
+              "/api/oauth/authorizations",
+              oauthAuthorizationRequestBody(
+                props.provider.service,
+                connectionName,
+                { auth: props.auth, values: manualValues },
+                selectedAuthorizationOptionIds,
+              ),
+            )
+          : await apiPost<{ authorizationUrl: string; connectionRequestId: string; expiresAt: string }>(
+              "/api/oauth/connection-requests",
+              {
+                service: props.provider.service,
+                connectionName,
+                appId: props.connection?.id,
+                authorizationOptionIds: authorizationOptions ? selectedAuthorizationOptionIds : undefined,
+              },
+            );
+        setAuthorizationUrl(result.authorizationUrl);
         if (result.authorizationUrl) {
           window.open(
             result.authorizationUrl,
@@ -1827,7 +1849,28 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
             }),
           );
           stopOAuthRefreshPolling.current?.();
-          stopOAuthRefreshPolling.current = startOAuthRefreshPolling(props.onRefresh);
+          stopOAuthRefreshPolling.current =
+            result.connectionRequestId && result.expiresAt
+              ? watchOAuthRequest({
+                  id: result.connectionRequestId,
+                  remote,
+                  expiresAt: result.expiresAt,
+                  onUpdate(request) {
+                    if (request.status === "initiated") return;
+                    setStatus(
+                      request.status === "connected"
+                        ? t("saas.connected")
+                        : (request.errorMessage ?? t("saas.manualResult")),
+                    );
+                    setAuthorizationUrl(undefined);
+                    if (request.status === "failed") props.onConnectionPendingChange?.(undefined);
+                    props.onRefresh();
+                  },
+                  onError(error) {
+                    setStatus(error instanceof Error ? error.message : t("saas.failed"));
+                  },
+                })
+              : startOAuthRefreshPolling(props.onRefresh);
         }
         setStatus(t("providers.connectionMessages.oauthWindowOpened"));
         return;
@@ -1837,6 +1880,8 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
     } catch (error) {
       props.onConnectionPendingChange?.(undefined);
       setStatus(error instanceof Error ? error.message : t("providers.connectionMessages.failed"));
+    } finally {
+      setPending(false);
     }
   }
 
@@ -1891,17 +1936,19 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
         <Alert variant={needsOAuthClient ? "warning" : "default"}>
           {needsOAuthClient ? <Settings size={16} /> : <ExternalLink size={16} />}
           <AlertDescription>
-            {needsOAuthClient
-              ? t("providers.connectionMessages.needsOAuthClient", { name: props.provider.displayName })
-              : props.oauthClientMode === "manual"
-                ? t("providers.connectionMessages.manualOAuthClient", { name: props.provider.displayName })
-                : connected
-                  ? t("providers.connectionMessages.connectedOAuth", { name: props.provider.displayName })
-                  : t("providers.connectionMessages.connectOAuth", { name: props.provider.displayName })}
+            {remote
+              ? t("saas.remoteNotice")
+              : needsOAuthClient
+                ? t("providers.connectionMessages.needsOAuthClient", { name: props.provider.displayName })
+                : props.oauthClientMode === "manual"
+                  ? t("providers.connectionMessages.manualOAuthClient", { name: props.provider.displayName })
+                  : connected
+                    ? t("providers.connectionMessages.connectedOAuth", { name: props.provider.displayName })
+                    : t("providers.connectionMessages.connectOAuth", { name: props.provider.displayName })}
           </AlertDescription>
         </Alert>
       ) : null}
-      {props.auth.type === "oauth2" && props.oauthClientMode === "manual" ? (
+      {props.auth.type === "oauth2" && !remote && props.oauthClientMode === "manual" ? (
         <>
           {props.oauthConfig?.expectedRedirectUri ? (
             <Label className="field">
@@ -1983,7 +2030,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
                 {props.auth.type === "oauth2" ? <ExternalLink size={16} /> : <Check size={16} />}
                 {submitLabel}
               </Button>
-              {props.auth.type === "oauth2" && props.oauthClientMode === "configured" ? (
+              {props.auth.type === "oauth2" && !remote && props.oauthClientMode === "configured" ? (
                 <Button variant="outline" type="button" onClick={props.onConfigureOAuthClient}>
                   <Settings size={16} />
                   {t("providers.buttons.editOAuthClient")}
@@ -1992,12 +2039,17 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
             </>
           )}
           {shouldShowDisconnectAction(props.connection) ? (
-            <Button variant="outline" type="button" onClick={() => void disconnect()}>
+            <Button variant="outline" type="button" disabled={pending} onClick={() => void disconnect()}>
               <Trash2 size={16} />
               {t("providers.buttons.disconnect")}
             </Button>
           ) : null}
         </div>
+      ) : null}
+      {authorizationUrl ? (
+        <a className="text-sm underline" href={authorizationUrl} target="_blank" rel="noopener noreferrer">
+          {t("saas.pending")}
+        </a>
       ) : null}
       {status ? <FormStatus message={status} /> : null}
     </form>

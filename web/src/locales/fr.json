@@ -764,5 +764,45 @@
       "sdkRunHelp": "Enregistrez le code dans client.mjs et exécutez-le dans le même terminal.",
       "runExample": "Exécuter l’exemple"
     }
+  },
+  "saas": {
+    "openProjects": "Ouvrir les projets cloud",
+    "project": "Autorisation via le cloud OOMOL",
+    "projectDescription": "Connectez des comptes tiers comme Gmail via le cloud OOMOL sans configurer d’application OAuth en local. Les actions sur ces connexions sont exécutées dans le cloud.",
+    "remoteNotice": "Les données envoyées et les résultats transitent par le cloud OOMOL. Les appels peuvent consommer des crédits du projet ; aucun plafond de dépenses n’est défini ici.",
+    "projectId": "Identifiant du projet",
+    "projectKey": "Clé API du projet",
+    "keyHint": "Saisissez la clé API de votre projet cloud OOMOL, pas celle du Marketplace. Les clés enregistrées ne sont jamais affichées. Saisissez une nouvelle clé pour la remplacer.",
+    "cleanup": "Nettoyage : {{pending}} en attente · {{manual}} à vérifier",
+    "paused": "Le nettoyage est suspendu. Mettez à jour la clé du projet pour le reprendre.",
+    "save": "Enregistrer le projet",
+    "saving": "Enregistrement…",
+    "saved": "Enregistré.",
+    "failed": "Échec de l’opération. Réessayez.",
+    "remove": "Retirer la configuration",
+    "removed": "Configuration retirée.",
+    "removeHint": "Rétablissez les sources locales par défaut, retirez les connexions SaaS et traitez les demandes et nettoyages en attente. Retirer cette configuration ne supprime pas le projet SaaS.",
+    "confirmRemove": "Confirmer le retrait",
+    "defaultSource": "Source OAuth par défaut",
+    "local": "OAuth local",
+    "remote": "Connexion gérée par SaaS",
+    "sourceHint": "S’applique uniquement aux nouvelles connexions. Les connexions existantes conservent leur source lors de la reconnexion.",
+    "loading": "Chargement…",
+    "noConfigs": "Configurez un projet SaaS avec un fournisseur compatible pour sélectionner une source distante.",
+    "saveSource": "Enregistrer la source",
+    "capabilities": "{{count}} opérations compatibles",
+    "proxyYes": "Proxy pris en charge",
+    "proxyNo": "Proxy indisponible",
+    "scopes": "Autorisations",
+    "pending": "En attente d’autorisation. Gardez la page de confirmation ouverte.",
+    "connected": "Connexion établie.",
+    "manualResult": "L’autorisation n’a pas pu être confirmée. Vérifiez le projet SaaS avant de recommencer.",
+    "status": {
+      "unconfigured": "Non configuré",
+      "available": "Disponible",
+      "unavailable": "Indisponible",
+      "auth_error": "Clé du projet invalide"
+    },
+    "retry": "Vérifier à nouveau"
   }
 }

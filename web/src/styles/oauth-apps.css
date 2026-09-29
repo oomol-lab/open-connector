@@ -126,3 +126,47 @@
     grid-column: 2;
   }
 }
+
+.saas-project-header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.saas-project-header > div {
+  gap: 6px;
+}
+
+.saas-project-header > div > p {
+  max-width: 75ch;
+  line-height: 1.6;
+}
+
+.saas-settings {
+  padding: 16px;
+  max-width: 720px;
+}
+
+.saas-project-key-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.saas-project-notice {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+@media (max-width: 600px) {
+  .saas-project-header,
+  .saas-project-key-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .saas-project-header > a {
+    justify-self: start;
+  }
+}

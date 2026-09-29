@@ -764,5 +764,45 @@
       "sdkRunHelp": "將上面的程式碼儲存為 client.mjs，再於同一個終端執行。",
       "runExample": "執行範例"
     }
+  },
+  "saas": {
+    "openProjects": "開啟雲端專案",
+    "project": "OOMOL 雲端授權",
+    "projectDescription": "透過 OOMOL 雲端連接 Gmail 等第三方帳號，無需在本機設定 OAuth 應用程式。連接後的操作由雲端執行。",
+    "remoteNotice": "操作的輸入與結果會經過 OOMOL 雲端，並可能消耗專案額度。此處不設消費上限。",
+    "projectId": "專案 ID",
+    "projectKey": "專案 API 金鑰",
+    "keyHint": "填入 OOMOL 雲端專案的 API 金鑰，不能使用 Marketplace 金鑰。已儲存的金鑰不會顯示；更換時請輸入新金鑰。",
+    "cleanup": "清理待辦：{{pending}} 項待處理 · {{manual}} 項需人工處理",
+    "paused": "清理已暫停，請更新專案金鑰以恢復。",
+    "save": "儲存專案",
+    "saving": "正在儲存…",
+    "saved": "已儲存。",
+    "failed": "操作失敗，請重試。",
+    "remove": "移除專案設定",
+    "removed": "已移除專案設定。",
+    "removeHint": "請先將服務預設來源切回本機、移除 SaaS 連線，並處理授權請求與清理待辦。移除此設定不會刪除 SaaS 專案。",
+    "confirmRemove": "確認移除",
+    "defaultSource": "預設 OAuth 來源",
+    "local": "本機 OAuth",
+    "remote": "SaaS 託管連線",
+    "sourceHint": "僅影響新建連線。既有連線重新連線時仍使用原來源。",
+    "loading": "正在載入…",
+    "noConfigs": "請先設定 SaaS 專案及相容的供應商設定，再選擇遠端來源。",
+    "saveSource": "儲存來源",
+    "capabilities": "{{count}} 個相容操作",
+    "proxyYes": "支援代理",
+    "proxyNo": "不支援代理",
+    "scopes": "授權範圍",
+    "pending": "正在等待授權，請保持完成頁開啟。",
+    "connected": "連線已完成。",
+    "manualResult": "無法確認授權結果，請先檢查 SaaS 專案再重新發起。",
+    "status": {
+      "unconfigured": "未設定",
+      "available": "可用",
+      "unavailable": "暫時無法使用",
+      "auth_error": "專案金鑰無效"
+    },
+    "retry": "重新檢查"
   }
 }

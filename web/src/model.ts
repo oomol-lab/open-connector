@@ -96,6 +96,7 @@ export interface ProviderDefinition {
 }
 
 export interface ConnectionRecord {
+  saas?: { managedProjectId: string; providerConfigId: string };
   id?: string;
   service: string;
   connectionName?: string;
@@ -125,7 +126,35 @@ export interface ProviderPreference {
   updatedAt: string;
 }
 
+export type OAuthSource =
+  | { mode: "local" }
+  | {
+      mode: "saas";
+      managedProjectId: string;
+      projectId: string;
+      providerConfigId: string;
+    };
+
+export interface SaasProjectState {
+  configured: boolean;
+  projectId: string | null;
+  baseUrl: string | null;
+  status: "unconfigured" | "available" | "unavailable" | "auth_error";
+  cleanup: { pending: number; manual: number; paused: boolean };
+}
+
+export interface SaasProviderConfig {
+  id: string;
+  service: string;
+  displayName: string;
+  callbackUrl: string;
+  effectiveScopes: string[];
+  actionIds: string[];
+  proxyAvailable: boolean;
+}
+
 export interface OAuthConfig {
+  oauthSource?: OAuthSource;
   service: string;
   configured: boolean;
   customClientAvailable?: boolean;
@@ -391,7 +420,9 @@ function providerRequiresOAuth(provider: ProviderDefinition): boolean {
 }
 
 function oauthClientConfigured(service: string, oauthConfigs: OAuthConfig[]): boolean {
-  return oauthConfigs.some((config) => config.service === service && config.configured);
+  return oauthConfigs.some(
+    (config) => config.service === service && (config.configured || config.oauthSource?.mode === "saas"),
+  );
 }
 
 export function credentialFieldsFor(auth: AuthDefinition): CredentialField[] {

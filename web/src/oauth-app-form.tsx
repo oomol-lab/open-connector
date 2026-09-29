@@ -6,6 +6,7 @@ import { ExternalLink, Settings, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { apiDelete, apiPut } from "./api";
 import { CredentialInput } from "./credential-input";
+import { OAuthSourceForm } from "./saas-project-settings";
 import { FormStatus } from "./shared-ui";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -44,16 +45,20 @@ export function OAuthAppDialog(props: OAuthAppDialogProps): ReactNode {
               : props.provider.service}
           </DialogDescription>
         </DialogHeader>
-        <OAuthAppForm
-          provider={props.provider}
-          auth={props.auth}
-          config={props.config}
-          onRefresh={props.onRefresh}
-          onSaved={() => {
-            props.onSaved?.();
-            props.onOpenChange(false);
-          }}
-        />
+        <OAuthSourceForm service={props.provider.service} config={props.config} onRefresh={props.onRefresh} />
+        <details open={props.config?.oauthSource?.mode !== "saas"}>
+          <summary className="cursor-pointer text-sm font-medium mb-3">{t("saas.local")}</summary>
+          <OAuthAppForm
+            provider={props.provider}
+            auth={props.auth}
+            config={props.config}
+            onRefresh={props.onRefresh}
+            onSaved={() => {
+              props.onSaved?.();
+              props.onOpenChange(false);
+            }}
+          />
+        </details>
       </DialogContent>
     </Dialog>
   );

@@ -764,5 +764,45 @@
       "sdkRunHelp": "Save the code above as client.mjs, then run it from the same terminal.",
       "runExample": "Run the example"
     }
+  },
+  "saas": {
+    "openProjects": "Open cloud projects",
+    "project": "OOMOL cloud authorization",
+    "projectDescription": "Connect third-party accounts such as Gmail through OOMOL cloud without configuring an OAuth app locally. Actions on these connections run in the cloud.",
+    "remoteNotice": "Action inputs and results pass through OOMOL cloud. Calls may consume project credits; no spending limit is set here.",
+    "projectId": "Project ID",
+    "projectKey": "Project API key",
+    "keyHint": "Enter the API key for your OOMOL cloud project, not a Marketplace key. Saved keys are never displayed. Enter a new key to replace it.",
+    "cleanup": "Cleanup: {{pending}} pending · {{manual}} need attention",
+    "paused": "Cleanup is paused. Update the project key to resume.",
+    "save": "Save project",
+    "saving": "Saving…",
+    "saved": "Saved.",
+    "failed": "The operation failed. Try again.",
+    "remove": "Remove project",
+    "removed": "Project removed.",
+    "removeHint": "First switch service defaults to local, remove SaaS connections, and resolve pending requests and cleanup tasks. Removing this configuration does not delete the SaaS project.",
+    "confirmRemove": "Confirm removal",
+    "defaultSource": "Default OAuth source",
+    "local": "Local OAuth",
+    "remote": "SaaS managed connection",
+    "sourceHint": "Applies to new connections only. Existing connections keep their source when reconnecting.",
+    "loading": "Loading…",
+    "noConfigs": "Configure a SaaS project with a compatible provider config to select a remote source.",
+    "saveSource": "Save source",
+    "capabilities": "{{count}} compatible actions",
+    "proxyYes": "Proxy supported",
+    "proxyNo": "Proxy unavailable",
+    "scopes": "Scopes",
+    "pending": "Waiting for authorization. Keep the completion page open.",
+    "connected": "Connection complete.",
+    "manualResult": "Authorization could not be confirmed. Check the SaaS project before starting again.",
+    "status": {
+      "unconfigured": "Not configured",
+      "available": "Available",
+      "unavailable": "Unavailable",
+      "auth_error": "Invalid project key"
+    },
+    "retry": "Check again"
   }
 }

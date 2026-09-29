@@ -764,5 +764,45 @@
       "sdkRunHelp": "将上面的代码保存为 client.mjs，再在同一个终端执行。",
       "runExample": "运行示例"
     }
+  },
+  "saas": {
+    "openProjects": "打开云端项目",
+    "project": "OOMOL 云端授权",
+    "projectDescription": "通过 OOMOL 云端连接 Gmail 等第三方账号，无需在本机配置 OAuth 应用。连接后的操作由云端执行。",
+    "remoteNotice": "操作的输入和结果会经过 OOMOL 云端，并可能消耗项目额度。此处不设消费上限。",
+    "projectId": "项目 ID",
+    "projectKey": "项目 API 密钥",
+    "keyHint": "填写 OOMOL 云端项目的 API 密钥，不能使用 Marketplace 密钥。已保存的密钥不会显示；更换时请输入新密钥。",
+    "cleanup": "清理待办：{{pending}} 项待处理 · {{manual}} 项需人工处理",
+    "paused": "清理已暂停，请更新项目密钥以恢复。",
+    "save": "保存项目",
+    "saving": "正在保存…",
+    "saved": "已保存。",
+    "failed": "操作失败，请重试。",
+    "remove": "移除项目配置",
+    "removed": "已移除项目配置。",
+    "removeHint": "请先将服务默认来源切回本地、移除 SaaS 连接，并处理授权请求和清理待办。移除此配置不会删除 SaaS 项目。",
+    "confirmRemove": "确认移除",
+    "defaultSource": "默认 OAuth 来源",
+    "local": "本地 OAuth",
+    "remote": "SaaS 托管连接",
+    "sourceHint": "仅影响新建连接。已有连接重连时仍使用原来源。",
+    "loading": "正在加载…",
+    "noConfigs": "请先配置 SaaS 项目及兼容的提供方配置，再选择远端来源。",
+    "saveSource": "保存来源",
+    "capabilities": "{{count}} 个兼容操作",
+    "proxyYes": "支持代理",
+    "proxyNo": "不支持代理",
+    "scopes": "授权范围",
+    "pending": "正在等待授权，请保持完成页打开。",
+    "connected": "连接已完成。",
+    "manualResult": "无法确认授权结果，请先检查 SaaS 项目再重新发起。",
+    "status": {
+      "unconfigured": "未配置",
+      "available": "可用",
+      "unavailable": "暂不可用",
+      "auth_error": "项目密钥无效"
+    },
+    "retry": "重新检查"
   }
 }

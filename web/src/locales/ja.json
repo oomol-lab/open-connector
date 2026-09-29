@@ -764,5 +764,45 @@
       "sdkRunHelp": "上のコードをclient.mjsに保存し、同じターミナルから実行してください。",
       "runExample": "サンプルを実行"
     }
+  },
+  "saas": {
+    "openProjects": "クラウドプロジェクトを開く",
+    "project": "OOMOL クラウド認可",
+    "projectDescription": "ローカルで OAuth アプリを設定せずに、OOMOL クラウド経由で Gmail などの外部アカウントを接続できます。接続後の操作はクラウドで実行されます。",
+    "remoteNotice": "操作の入力と結果は OOMOL クラウドを経由します。呼び出しでプロジェクトのクレジットを消費する場合があります。ここでは利用額の上限は設定されません。",
+    "projectId": "プロジェクト ID",
+    "projectKey": "プロジェクト API キー",
+    "keyHint": "OOMOL クラウドプロジェクトの API キーを入力してください。Marketplace キーは使用できません。保存済みのキーは表示されません。変更する場合は新しいキーを入力してください。",
+    "cleanup": "クリーンアップ：{{pending}} 件待機中 · {{manual}} 件要確認",
+    "paused": "クリーンアップは停止中です。プロジェクトキーを更新すると再開します。",
+    "save": "プロジェクトを保存",
+    "saving": "保存中…",
+    "saved": "保存しました。",
+    "failed": "操作に失敗しました。再試行してください。",
+    "remove": "プロジェクト設定を削除",
+    "removed": "プロジェクト設定を削除しました。",
+    "removeHint": "先にサービスの既定の接続元をローカルに戻し、SaaS 接続を削除して、保留中の認可とクリーンアップを処理してください。この設定の削除では SaaS プロジェクト自体は削除されません。",
+    "confirmRemove": "削除を確認",
+    "defaultSource": "既定の OAuth 接続元",
+    "local": "ローカル OAuth",
+    "remote": "SaaS 管理接続",
+    "sourceHint": "新しい接続にのみ適用されます。既存の接続は再接続時も元の接続元を使用します。",
+    "loading": "読み込み中…",
+    "noConfigs": "リモート接続元を選ぶには、互換性のあるプロバイダー設定を持つ SaaS プロジェクトを設定してください。",
+    "saveSource": "接続元を保存",
+    "capabilities": "互換操作 {{count}} 件",
+    "proxyYes": "プロキシ対応",
+    "proxyNo": "プロキシ非対応",
+    "scopes": "スコープ",
+    "pending": "認可を待っています。完了ページを開いたままにしてください。",
+    "connected": "接続が完了しました。",
+    "manualResult": "認可結果を確認できませんでした。再開する前に SaaS プロジェクトを確認してください。",
+    "status": {
+      "unconfigured": "未設定",
+      "available": "利用可能",
+      "unavailable": "利用不可",
+      "auth_error": "プロジェクトキーが無効"
+    },
+    "retry": "再確認"
   }
 }

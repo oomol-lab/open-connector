@@ -2,6 +2,7 @@ export class ApiError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    readonly retryAfter?: string | null,
   ) {
     super(message);
   }
@@ -12,8 +13,8 @@ export async function apiGet<T>(path: string, bearerToken?: string): Promise<T> 
   return request<T>(path, { headers: token ? { authorization: `Bearer ${token}` } : undefined });
 }
 
-export function apiPost<T = unknown>(path: string, body: unknown): Promise<T> {
-  return send<T>("POST", path, body);
+export function apiPost<T = unknown>(path: string, body: unknown, headers?: Record<string, string>): Promise<T> {
+  return send<T>("POST", path, body, headers);
 }
 
 export function apiPut<T = unknown>(path: string, body: unknown): Promise<T> {
@@ -28,8 +29,12 @@ export function apiDelete<T = unknown>(path: string): Promise<T> {
   return request<T>(path, { method: "DELETE" });
 }
 
-function send<T>(method: string, path: string, body: unknown): Promise<T> {
-  return request<T>(path, { method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+function send<T>(method: string, path: string, body: unknown, headers?: Record<string, string>): Promise<T> {
+  return request<T>(path, {
+    method,
+    headers: { ...headers, "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
 }
 
 async function request<T>(path: string, init: RequestInit): Promise<T> {
@@ -39,7 +44,11 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
 async function readJson<T>(response: Response): Promise<T> {
   const payload = parseJson(await response.text());
   if (!response.ok) {
-    throw new ApiError(response.status, errorMessage(payload) ?? `Request failed with ${response.status}`);
+    throw new ApiError(
+      response.status,
+      errorMessage(payload) ?? `Request failed with ${response.status}`,
+      response.headers.get("Retry-After"),
+    );
   }
   // A successful response whose body is not JSON means something rewrote it in
   // transit. Returning the failed parse as T would hand the caller a null typed

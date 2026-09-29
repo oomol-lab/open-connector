@@ -5,6 +5,7 @@ import { useTranslate } from "@embra/i18n/react";
 import { Fingerprint, Search, Settings } from "lucide-react";
 import { useMemo, useState } from "react";
 import { OAuthAppDialog } from "./oauth-app-form";
+import { SaasProjectSettings } from "./saas-project-settings";
 import { Badge, EmptyState, ProviderIcon } from "./shared-ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,68 +29,76 @@ export function OAuthAppsPage(props: OAuthAppsPageProps): ReactNode {
   const visibleProviders = useMemo(() => filterOAuthProviders(providers, query), [providers, query]);
 
   return (
-    <section className="oauth-apps-panel">
-      <header className="oauth-apps-header">
-        <div>
-          <h2>{t("oauthApps.title")}</h2>
-          <p>{t("oauthApps.description")}</p>
-        </div>
-        <label className="oauth-apps-search">
-          <Search size={15} />
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t("oauthApps.searchPlaceholder")}
-            aria-label={t("oauthApps.searchPlaceholder")}
+    <div className="grid gap-4">
+      <SaasProjectSettings onRefresh={props.onRefresh} />
+      <section className="oauth-apps-panel">
+        <header className="oauth-apps-header">
+          <div>
+            <h2>{t("oauthApps.title")}</h2>
+            <p>{t("oauthApps.description")}</p>
+          </div>
+          <label className="oauth-apps-search">
+            <Search size={15} />
+            <Input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={t("oauthApps.searchPlaceholder")}
+              aria-label={t("oauthApps.searchPlaceholder")}
+            />
+          </label>
+        </header>
+
+        {visibleProviders.length === 0 ? (
+          <EmptyState
+            icon={<Fingerprint size={20} />}
+            title={t(query ? "oauthApps.noResultsTitle" : "oauthApps.emptyTitle")}
+            description={t(query ? "oauthApps.noResultsDescription" : "oauthApps.emptyDescription")}
+            density="compact"
           />
-        </label>
-      </header>
-
-      {visibleProviders.length === 0 ? (
-        <EmptyState
-          icon={<Fingerprint size={20} />}
-          title={t(query ? "oauthApps.noResultsTitle" : "oauthApps.emptyTitle")}
-          description={t(query ? "oauthApps.noResultsDescription" : "oauthApps.emptyDescription")}
-          density="compact"
-        />
-      ) : (
-        <div className="oauth-apps-list">
-          {visibleProviders.map((item) => {
-            const configured = item.config?.configured ?? false;
-            return (
-              <div className="oauth-app-row" key={item.provider.service}>
-                <ProviderIcon provider={item.provider} />
-                <div className="oauth-app-provider">
-                  <strong>{item.provider.displayName}</strong>
-                  <span>{item.provider.service}</span>
+        ) : (
+          <div className="oauth-apps-list">
+            {visibleProviders.map((item) => {
+              const configured = item.config?.configured ?? false;
+              return (
+                <div className="oauth-app-row" key={item.provider.service}>
+                  <ProviderIcon provider={item.provider} />
+                  <div className="oauth-app-provider">
+                    <strong>{item.provider.displayName}</strong>
+                    <span>{item.provider.service}</span>
+                  </div>
+                  <div className="oauth-app-status">
+                    <Badge>{t(item.config?.oauthSource?.mode === "saas" ? "saas.remote" : "saas.local")}</Badge>
+                    {item.config?.oauthSource?.mode !== "saas" ? (
+                      <Badge tone={configured ? "success" : undefined}>
+                        {t(configured ? "oauthApps.configured" : "oauthApps.notConfigured")}
+                      </Badge>
+                    ) : (
+                      <code>{item.config.oauthSource.providerConfigId}</code>
+                    )}
+                    {item.config?.clientId ? <code>{item.config.clientId}</code> : null}
+                  </div>
+                  <Button variant="outline" size="sm" type="button" onClick={() => setSelected(item)}>
+                    <Settings size={15} />
+                    {t(configured ? "oauthApps.edit" : "oauthApps.configure")}
+                  </Button>
                 </div>
-                <div className="oauth-app-status">
-                  <Badge tone={configured ? "success" : undefined}>
-                    {t(configured ? "oauthApps.configured" : "oauthApps.notConfigured")}
-                  </Badge>
-                  {item.config?.clientId ? <code>{item.config.clientId}</code> : null}
-                </div>
-                <Button variant="outline" size="sm" type="button" onClick={() => setSelected(item)}>
-                  <Settings size={15} />
-                  {t(configured ? "oauthApps.edit" : "oauthApps.configure")}
-                </Button>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
 
-      {selected ? (
-        <OAuthAppDialog
-          open
-          provider={selected.provider}
-          auth={selected.auth}
-          config={props.data.oauthConfigs.find((config) => config.service === selected.provider.service)}
-          onOpenChange={(open) => (!open ? setSelected(null) : undefined)}
-          onRefresh={props.onRefresh}
-        />
-      ) : null}
-    </section>
+        {selected ? (
+          <OAuthAppDialog
+            open
+            provider={selected.provider}
+            auth={selected.auth}
+            config={props.data.oauthConfigs.find((config) => config.service === selected.provider.service)}
+            onOpenChange={(open) => (!open ? setSelected(null) : undefined)}
+            onRefresh={props.onRefresh}
+          />
+        ) : null}
+      </section>
+    </div>
   );
 }
 
