@@ -5,7 +5,7 @@ import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon
 import { Toaster as Sonner } from "sonner";
 import { useThemeMode } from "../../theme";
 
-function Toaster(props: ToasterProps): ReactNode {
+function Toaster({ toastOptions, ...props }: ToasterProps): ReactNode {
   const { resolvedTheme } = useThemeMode();
 
   return (
@@ -28,7 +28,9 @@ function Toaster(props: ToasterProps): ReactNode {
         } as CSSProperties
       }
       toastOptions={{
+        ...toastOptions,
         classNames: {
+          ...toastOptions?.classNames,
           toast: "cn-toast",
         },
       }}

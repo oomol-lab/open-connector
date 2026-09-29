@@ -626,13 +626,13 @@
 }
 
 .connection-manager-new {
-  display: flex;
-  align-items: end;
-  gap: 12px;
+  max-width: 760px;
 }
 
-.connection-manager-new .field {
-  flex: 1;
+.connection-manager-input-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .connection-add-button {

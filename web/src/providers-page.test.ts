@@ -236,7 +236,7 @@ describe("ProvidersPage OAuth client settings", () => {
   it("shows an edit action for a configured OAuth app", () => {
     const markup = renderProvidersPage(providerData, "/providers/gmail");
 
-    expect(markup).toContain("Edit Default App");
+    expect(markup).toContain("Authorization settings");
     expect(markup).not.toContain("Reset Default App");
   });
 
@@ -451,7 +451,7 @@ describe("ProvidersPage route shell", () => {
 
     expect(markup).toContain('value="default"');
     expect(markup).toContain("Connect Gmail");
-    expect(markup).toContain("Edit Default App");
+    expect(markup).toContain("Authorization settings");
     expect(markup).not.toContain("Add Connection");
   });
 
@@ -846,4 +846,24 @@ describe("oauthConfigForProvider", () => {
       ),
     ).toMatchObject({ service: "gmail", configured: false, customClientAvailable: true });
   });
+});
+
+it("keeps authorization settings accessible when the provider uses cloud OAuth", () => {
+  const markup = renderProvidersPage(
+    {
+      ...providerData,
+      oauthConfigs: [
+        {
+          service: "gmail",
+          configured: false,
+          clientId: null,
+          oauthSource: { mode: "saas", managedProjectId: "managed", projectId: "project", providerConfigId: "config" },
+        },
+      ],
+    },
+    "/providers/gmail",
+  );
+  expect(markup).toContain("Authorization settings");
+  expect(markup).toContain("Connect Gmail");
+  expect(markup).not.toContain("Configure Default App");
 });

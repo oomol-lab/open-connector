@@ -137,13 +137,36 @@
 }
 
 .saas-project-header > div > p {
-  max-width: 75ch;
   line-height: 1.6;
 }
 
 .saas-settings {
   padding: 16px;
+  gap: 16px;
+}
+
+.saas-project-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.saas-project-key-editor {
   max-width: 720px;
+}
+
+.saas-project-maintenance {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.saas-project-maintenance > summary {
+  cursor: pointer;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .saas-project-key-row {

@@ -504,7 +504,7 @@ function AppShell(props: {
         </main>
       </div>
       <Toaster
-        position="bottom-right"
+        position="top-right"
         closeButton
         containerAriaLabel={t("shell.notifications")}
         toastOptions={{ closeButtonAriaLabel: t("common.close") }}

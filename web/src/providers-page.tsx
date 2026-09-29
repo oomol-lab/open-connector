@@ -1626,9 +1626,9 @@ function ConnectionManager(props: ConnectionManagerProps): ReactNode {
       ) : null}
 
       {props.creating ? (
-        <div className="connection-manager-new">
-          <Label className="field" htmlFor={inputId}>
-            <span>{t("providers.connectionName")}</span>
+        <div className="field connection-manager-new">
+          <Label htmlFor={inputId}>{t("providers.connectionName")}</Label>
+          <div className="connection-manager-input-row">
             <Input
               id={inputId}
               maxLength={64}
@@ -1639,19 +1639,19 @@ function ConnectionManager(props: ConnectionManagerProps): ReactNode {
               value={props.newConnectionName}
               onChange={(event) => props.onNewConnectionNameChange(event.target.value)}
             />
-            <small id={errorId} className={props.newConnectionNameError ? "field-error" : undefined}>
-              {t(
-                props.newConnectionNameError
-                  ? `providers.connectionNameErrors.${props.newConnectionNameError}`
-                  : "providers.connectionNameDescription",
-              )}
-            </small>
-          </Label>
-          {props.connections.length > 0 ? (
-            <Button variant="outline" type="button" onClick={props.onCancel}>
-              {t("providers.buttons.cancel")}
-            </Button>
-          ) : null}
+            {props.connections.length > 0 ? (
+              <Button variant="outline" type="button" onClick={props.onCancel}>
+                {t("providers.buttons.cancel")}
+              </Button>
+            ) : null}
+          </div>
+          <small id={errorId} className={props.newConnectionNameError ? "field-error" : undefined}>
+            {t(
+              props.newConnectionNameError
+                ? `providers.connectionNameErrors.${props.newConnectionNameError}`
+                : "providers.connectionNameDescription",
+            )}
+          </small>
         </div>
       ) : (
         <div className="connection-manager-actions">
@@ -1680,16 +1680,24 @@ function UnavailableProviderConnection(props: {
   onRefresh(): void;
 }): ReactNode {
   const t = useTranslate();
+  const [pending, setPending] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
   async function disconnect(): Promise<void> {
+    setPending(true);
     setStatus(t("providers.connectionMessages.disconnecting"));
     try {
       await apiDelete(connectionDeletePath(props.provider.service, props.connectionName));
-      setStatus(t("providers.connectionMessages.disconnected"));
+      setStatus(null);
+      toast.success(t("providers.connectionMessages.disconnectNotice", { name: props.connectionName }), {
+        description: props.connection?.saas ? t("providers.connectionMessages.cloudDisconnectNotice") : undefined,
+      });
       props.onRefresh();
     } catch (error) {
       setStatus(error instanceof Error ? error.message : t("providers.connectionMessages.disconnectFailed"));
+      toast.error(t("providers.connectionMessages.disconnectFailed"));
+    } finally {
+      setPending(false);
     }
   }
 
@@ -1704,7 +1712,7 @@ function UnavailableProviderConnection(props: {
       </Alert>
       {props.connection ? (
         <div className="button-row">
-          <Button variant="outline" type="button" onClick={() => void disconnect()}>
+          <Button variant="outline" type="button" disabled={pending} onClick={() => void disconnect()}>
             <Trash2 size={16} />
             {t("providers.buttons.disconnect")}
           </Button>
@@ -1886,13 +1894,20 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
   }
 
   async function disconnect(): Promise<void> {
+    setPending(true);
     setStatus(t("providers.connectionMessages.disconnecting"));
     try {
       await apiDelete(connectionDeletePath(props.provider.service, props.connectionName));
-      setStatus(t("providers.connectionMessages.disconnected"));
+      setStatus(null);
+      toast.success(t("providers.connectionMessages.disconnectNotice", { name: props.connectionName }), {
+        description: props.connection?.saas ? t("providers.connectionMessages.cloudDisconnectNotice") : undefined,
+      });
       props.onRefresh();
     } catch (error) {
       setStatus(error instanceof Error ? error.message : t("providers.connectionMessages.disconnectFailed"));
+      toast.error(t("providers.connectionMessages.disconnectFailed"));
+    } finally {
+      setPending(false);
     }
   }
 
@@ -2030,10 +2045,10 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
                 {props.auth.type === "oauth2" ? <ExternalLink size={16} /> : <Check size={16} />}
                 {submitLabel}
               </Button>
-              {props.auth.type === "oauth2" && !remote && props.oauthClientMode === "configured" ? (
+              {props.auth.type === "oauth2" && (remote || props.oauthClientMode === "configured") ? (
                 <Button variant="outline" type="button" onClick={props.onConfigureOAuthClient}>
                   <Settings size={16} />
-                  {t("providers.buttons.editOAuthClient")}
+                  {t("saas.authorizationSettings")}
                 </Button>
               ) : null}
             </>

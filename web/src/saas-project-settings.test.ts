@@ -50,4 +50,30 @@ it("keeps an existing remote source visible while discovery loads", () => {
   expect(html).toContain("Existing connections keep their source");
   expect(html).toContain("Action inputs and results pass through OOMOL cloud");
   expect(html).toContain("Loading");
+  expect(html).toContain("OOMOL cloud");
+  expect(html).not.toContain("The saved cloud configuration is unavailable");
+  expect(html).not.toContain("No compatible cloud configurations");
+});
+
+it.each([false, true])("shows local app fields only for local authorization (cloud: %s)", (cloud) => {
+  const html = renderToStaticMarkup(
+    createElement(
+      I18nProvider,
+      { i18n: createAppI18n("en") },
+      createElement(OAuthSourceForm, {
+        service: "gmail",
+        onRefresh: vi.fn(),
+        localConfiguration: createElement("div", null, "Local client fields"),
+        config: {
+          service: "gmail",
+          configured: true,
+          clientId: "local-client",
+          oauthSource: cloud
+            ? { mode: "saas", managedProjectId: "managed", projectId: "project", providerConfigId: "config" }
+            : { mode: "local" },
+        },
+      }),
+    ),
+  );
+  expect(html.includes("Local client fields")).toBe(!cloud);
 });
