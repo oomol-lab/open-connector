@@ -104,12 +104,18 @@ export function OAuthAppsPage(props: OAuthAppsPageProps): ReactNode {
 
 function oauthProviders(data: AppData): OAuthProvider[] {
   const configs = new Map(data.oauthConfigs.map((config) => [config.service, config]));
-  return data.providers.flatMap((provider) => {
-    const auth = provider.auth.find(
-      (candidate): candidate is Extract<AuthDefinition, { type: "oauth2" }> => candidate.type === "oauth2",
-    );
-    return auth ? [{ provider, auth, config: configs.get(provider.service) }] : [];
-  });
+  return data.providers
+    .flatMap((provider) => {
+      const auth = provider.auth.find(
+        (candidate): candidate is Extract<AuthDefinition, { type: "oauth2" }> => candidate.type === "oauth2",
+      );
+      return auth ? [{ provider, auth, config: configs.get(provider.service) }] : [];
+    })
+    .sort((a, b) => {
+      const aConfigured = Boolean(a.config?.configured || a.config?.oauthSource?.mode === "saas");
+      const bConfigured = Boolean(b.config?.configured || b.config?.oauthSource?.mode === "saas");
+      return Number(bConfigured) - Number(aConfigured) || a.provider.displayName.localeCompare(b.provider.displayName);
+    });
 }
 
 function filterOAuthProviders(providers: OAuthProvider[], query: string): OAuthProvider[] {

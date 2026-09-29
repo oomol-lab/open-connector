@@ -26,6 +26,44 @@ const apiKeyProvider: ProviderDefinition = {
 };
 
 describe("OAuthAppsPage", () => {
+  it("lists configured local and cloud providers first, sorting each group by name", () => {
+    const data: AppData = {
+      providers: ["Zoom", "Asana", "GitHub", "Airtable"].map((name) => ({
+        ...oauthProvider,
+        service: name.toLowerCase(),
+        displayName: name,
+      })),
+      connections: [],
+      oauthConfigs: [
+        { service: "github", configured: true, clientId: "local-client" },
+        {
+          service: "zoom",
+          configured: false,
+          clientId: null,
+          oauthSource: { mode: "saas", managedProjectId: "managed", projectId: "project", providerConfigId: "config" },
+        },
+        { service: "asana", configured: false, clientId: null },
+      ],
+      runtimeTokens: [],
+      runs: [],
+    };
+    const markup = renderToStaticMarkup(
+      createElement(
+        I18nProvider,
+        { i18n: createAppI18n("en") },
+        createElement(OAuthAppsPage, { data, onRefresh: vi.fn() }),
+      ),
+    );
+
+    expect([...markup.matchAll(/<strong>(.*?)<\/strong>/g)].map((match) => match[1])).toEqual([
+      "GitHub",
+      "Zoom",
+      "Airtable",
+      "Asana",
+    ]);
+    expect(data.providers.map((provider) => provider.displayName)).toEqual(["Zoom", "Asana", "GitHub", "Airtable"]);
+  });
+
   it("lists OAuth providers with their default app status", () => {
     const data: AppData = {
       providers: [oauthProvider, apiKeyProvider],
