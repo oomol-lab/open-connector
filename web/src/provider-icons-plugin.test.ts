@@ -22,7 +22,7 @@ describe("optional provider icon catalog", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
-        Response.json({ items: [{ service: "github", iconUrl: "https://static.example.com/github.svg" }] }),
+        Response.json({ data: [{ service: "github", iconUrl: "https://static.example.com/github.svg" }] }),
       ),
     );
     const plugin = providerIconsPlugin();
