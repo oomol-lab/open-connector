@@ -44,8 +44,13 @@ connection form from it and submit through the endpoints below.
 
 ## Start and track OAuth
 
-Configure your provider's OAuth client through the console or `/api/oauth/configs/:service`
-first. The registered callback URL remains `/oauth/callback` on this runtime.
+For local OAuth, configure your provider's OAuth client through the console or
+`/api/oauth/configs/:service` first. Register `/oauth/callback` on this runtime as the callback URL.
+
+For SaaS OAuth, configure the cloud project and select the provider configuration instead.
+The provider's OAuth callback is hosted by SaaS; after authorization, SaaS returns to a
+Connect-generated `/oauth/saas/complete` URL. The final `returnUri` stays in Connect and is
+used after synchronization, rather than being passed to SaaS.
 
 ```sh
 curl -sS -X POST http://localhost:3000/v1/connections/github/connect \
@@ -104,12 +109,12 @@ OAuth inputs can include:
 
 - `returnUri`: optional `http:`, `https:`, or `oomol:` URL. The callback adds `status` and `service`,
   and safe `code` and `message` fields on failure.
-- `authorizationOptionIds`: provider-declared option IDs. GitHub and Slack expose selectable
+- `authorizationOptionIds` (local OAuth only): provider-declared option IDs. GitHub and Slack expose selectable
   provider-native scopes in their OAuth definitions. Required options are always included.
   Omission preserves the configured scopes; unknown options or options on unsupported providers
   return `invalid_input`. `requires` describes selection dependencies for clients; the server
   preserves the explicitly selected options and required options.
-- `extra` and `secretExtra`: provider-declared OAuth configuration fields, merged for this
+- `extra` and `secretExtra` (local OAuth only): provider-declared OAuth configuration fields, merged for this
   authorization attempt without changing the saved client configuration.
 
 ## Inspect and reconnect

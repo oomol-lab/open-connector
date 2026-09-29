@@ -201,6 +201,23 @@ describe("ConnectServer", () => {
     });
   });
 
+  it("starts configured Console OAuth without an admin token when runtime authentication is enabled", async () => {
+    const app = createTestServer([oauthProvider], { auth: { runtimeToken: "runtime-secret" } }).createApp();
+    const configured = await app.request("/api/oauth/configs/oauth_example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ clientId: "client", clientSecret: "secret" }),
+    });
+    expect(configured.status).toBe(200);
+    const response = await app.request("/api/oauth/authorizations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ service: "oauth_example", connectionName: "work" }),
+    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ authorizationUrl: expect.stringContaining("client_id=client") });
+  });
+
   it("starts console OAuth with a connection-scoped client", async () => {
     const app = createTestServer([oauthProvider], {
       allowedCustomOAuth: ["oauth_example"],

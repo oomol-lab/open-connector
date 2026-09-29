@@ -3,7 +3,7 @@ import type { ConnectionRecord, OAuthConfig } from "./model";
 import { ApiError, apiGet, apiPost } from "./api";
 
 export interface OAuthRequestState {
-  status: "initiated" | "connected" | "failed";
+  status: "initiated" | "connected" | "failed" | "expired";
   errorMessage?: string;
 }
 

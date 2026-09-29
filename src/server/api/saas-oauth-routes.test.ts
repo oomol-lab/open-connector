@@ -405,7 +405,7 @@ it("recovers an abandoned creating request as unknown without sending a new link
   expect(env.calls).toHaveLength(0);
 });
 
-it("releases a cancelled sync without committing or permanently failing the request", async () => {
+it("cancels only one waiter while shared synchronization completes for other callers", async () => {
   const env = await setup();
   const { data } = await env.start();
   env.tick(3000);
@@ -418,17 +418,18 @@ it("releases a cancelled sync without committing or permanently failing the requ
   await vi.waitFor(() =>
     expect(env.calls.filter((call) => call.path.includes("/connection-requests/"))).toHaveLength(1),
   );
+  const second = env.call(`/v1/connection-requests/${data.connectionRequestId}`);
   abort.abort();
   await polling;
   expect(await env.database.connectionStore.list()).toHaveLength(0);
   expect(await env.database.connectionRequestStore.get(data.connectionRequestId, "local-admin")).toMatchObject({
     status: "initiated",
   });
+  const third = env.call(`/v1/connection-requests/${data.connectionRequestId}`);
   release();
-  env.behavior.getWait = undefined;
-  env.tick(3000);
-  const result = await env.call(`/v1/connection-requests/${data.connectionRequestId}`);
-  expect((await result.json()).data.status).toBe("connected");
+  const results = await Promise.all([second, third]);
+  for (const result of results) expect((await result.json()).data.status).toBe("connected");
+  expect(env.calls.filter((call) => call.path.includes("/connection-requests/"))).toHaveLength(1);
 });
 
 it("keeps a local reconnect local after changing the new-connection default to SaaS", async () => {

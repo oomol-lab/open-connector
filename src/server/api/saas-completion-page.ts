@@ -84,9 +84,9 @@ async function sync() {
       setTimeout(tryClose, 2000);
       return;
     }
-    if (result.request.status === 'failed') {
+    if (result.request.status === 'failed' || result.request.status === 'expired') {
       terminal = true;
-      status.textContent = t.failed;
+      status.textContent = result.request.status === 'expired' ? t.notFound : t.failed;
       button.hidden = true;
       close.hidden = false;
       if (result.returnUri) location.assign(result.returnUri);

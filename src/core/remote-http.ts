@@ -22,6 +22,8 @@ export interface RemoteHttpOptions {
   init?: RequestInit;
   timeoutMs?: number;
   fetcher?: typeof fetch;
+  requireHttps?: boolean;
+  allowTrustedHosts?: boolean;
 }
 
 export interface RemoteJsonOptions {
@@ -39,8 +41,11 @@ export async function requestRemote<T>(
     fieldName: `${options.label} URL`,
     createError: (message) => new RemoteHttpError("invalid_url", message),
   });
-  if (url.protocol !== "https:" || url.username || url.password || url.hash) {
-    throw new RemoteHttpError("invalid_url", `${options.label} requires HTTPS without URL credentials or fragments.`);
+  if (options.requireHttps !== false && url.protocol !== "https:") {
+    throw new RemoteHttpError("invalid_url", `${options.label} requires HTTPS.`);
+  }
+  if (url.username || url.password || url.hash) {
+    throw new RemoteHttpError("invalid_url", `${options.label} does not allow URL credentials or fragments.`);
   }
   const signals = [
     options.init?.signal,
@@ -50,7 +55,7 @@ export async function requestRemote<T>(
   signal?.throwIfAborted();
   const guardOptions: GuardedFetchOptions = {
     fetch: options.fetcher,
-    allowTrustedHosts: false,
+    allowTrustedHosts: options.allowTrustedHosts ?? false,
     createError: (message) => new RemoteHttpError("invalid_url", message),
     createResolutionError: (message) => new RemoteHttpError("dns", message),
   };

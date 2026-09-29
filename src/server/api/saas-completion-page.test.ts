@@ -90,3 +90,12 @@ it("uses the Console language and keeps an explicit client return URI ahead of a
   expect(result.setTimeout).not.toHaveBeenCalled();
   expect(result.closeWindow).not.toHaveBeenCalled();
 });
+
+it("stops polling expired requests and allows the window to be closed", async () => {
+  const result = await complete("expired");
+  expect(result.statusElement.textContent).toMatch(/expired/i);
+  expect(result.button.hidden).toBe(true);
+  expect(result.elements.close!.hidden).toBe(false);
+  expect(result.setTimeout).not.toHaveBeenCalled();
+  expect(result.postMessage).not.toHaveBeenCalled();
+});

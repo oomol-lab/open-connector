@@ -1825,13 +1825,14 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
         );
       } else {
         const manual = props.oauthClientMode === "manual" && !remote;
-        const result = manual
+        const trackRequest = remote || Boolean(props.connection && props.oauthConfig?.oauthSource?.mode === "saas");
+        const result = !trackRequest
           ? await apiPost<{ authorizationUrl: string; connectionRequestId?: string; expiresAt?: string }>(
               "/api/oauth/authorizations",
               oauthAuthorizationRequestBody(
                 props.provider.service,
                 connectionName,
-                { auth: props.auth, values: manualValues },
+                manual ? { auth: props.auth, values: manualValues } : undefined,
                 selectedAuthorizationOptionIds,
               ),
             )
@@ -1858,7 +1859,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
           );
           stopOAuthRefreshPolling.current?.();
           stopOAuthRefreshPolling.current =
-            result.connectionRequestId && result.expiresAt
+            trackRequest && result.connectionRequestId && result.expiresAt
               ? watchOAuthRequest({
                   id: result.connectionRequestId,
                   remote,
@@ -1871,7 +1872,8 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
                         : (request.errorMessage ?? t("saas.manualResult")),
                     );
                     setAuthorizationUrl(undefined);
-                    if (request.status === "failed") props.onConnectionPendingChange?.(undefined);
+                    if (request.status === "failed" || request.status === "expired")
+                      props.onConnectionPendingChange?.(undefined);
                     props.onRefresh();
                   },
                   onError(error) {

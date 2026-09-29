@@ -132,3 +132,20 @@ it("ignores in-flight results after leaving the connection form", async () => {
   await vi.advanceTimersByTimeAsync(60000);
   expect(onUpdate).not.toHaveBeenCalled();
 });
+
+it("reports an expired cloud request once and stops polling", async () => {
+  vi.useFakeTimers();
+  const fetcher = vi.fn().mockResolvedValue(Response.json({ request: { status: "expired" } }));
+  vi.stubGlobal("fetch", fetcher);
+  const onUpdate = vi.fn();
+  watchOAuthRequest({
+    id: "expired",
+    remote: true,
+    expiresAt: new Date(Date.now() + 60000).toISOString(),
+    onUpdate,
+    onError: vi.fn(),
+  });
+  await vi.advanceTimersByTimeAsync(60000);
+  expect(onUpdate).toHaveBeenCalledExactlyOnceWith({ status: "expired" });
+  expect(fetcher).toHaveBeenCalledTimes(1);
+});

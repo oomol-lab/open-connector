@@ -120,16 +120,28 @@ export class SaasOAuthService {
   }
 
   async sync(id: string, owner: string, signal?: AbortSignal): Promise<ConnectionRequest | undefined> {
+    signal?.throwIfAborted();
     const key = `${owner}\0${id}`;
     let promise = this.syncing.get(key);
     if (!promise) {
-      promise = this.advance(id, owner, signal);
+      promise = this.advance(id, owner).finally(() => {
+        this.syncing.delete(key);
+      });
       this.syncing.set(key, promise);
     }
-    try {
-      await promise;
-    } finally {
-      if (this.syncing.get(key) === promise) this.syncing.delete(key);
+    if (!signal) await promise;
+    else {
+      const onAbort = (): void => rejectAbort(signal.reason);
+      let rejectAbort!: (reason: unknown) => void;
+      const aborted = new Promise<never>((_resolve, reject) => {
+        rejectAbort = reject;
+        signal.addEventListener("abort", onAbort, { once: true });
+      });
+      try {
+        await Promise.race([promise, aborted]);
+      } finally {
+        signal.removeEventListener("abort", onAbort);
+      }
     }
     signal?.throwIfAborted();
     return this.options.requests.get(id, owner);
@@ -151,10 +163,8 @@ export class SaasOAuthService {
     return { request, returnUri };
   }
 
-  private async advance(id: string, owner: string, inputSignal?: AbortSignal): Promise<void> {
-    const signal = inputSignal
-      ? AbortSignal.any([inputSignal, AbortSignal.timeout(30_000)])
-      : AbortSignal.timeout(30_000);
+  private async advance(id: string, owner: string): Promise<void> {
+    const signal = AbortSignal.timeout(30_000);
     signal.throwIfAborted();
     const lease = await this.options.requests.claimSaas(id, owner);
     if (!lease) return;
@@ -244,7 +254,7 @@ export class SaasOAuthService {
       } else {
         await this.options.requests.releaseSaas(lease, this.nextPollAt(lease, error), true);
       }
-      if (signal.aborted && !inputSignal?.aborted)
+      if (signal.aborted)
         throw new SaasError("oauth_source_unavailable", "SaaS authorization synchronization timed out.", 504);
       throw error;
     }
