@@ -1,6 +1,5 @@
-import type { IConnectionStore, StoredConnection } from "../../../connection-service.ts";
 import type { TokenPolicy } from "../../../core/action-policy.ts";
-import type { ResolvedCredential, RuntimeLogger } from "../../../core/types.ts";
+import type { RuntimeLogger } from "../../../core/types.ts";
 import type {
   IMarketplaceStore,
   ProviderPreference,
@@ -9,6 +8,7 @@ import type {
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../../oauth/oauth-client-config-service.ts";
 import type { IOAuthStateStore, OAuthAuthorizationState } from "../../../oauth/oauth-flow-service.ts";
 import type { ISecretCodec } from "../../secrets/secret-codec-core.ts";
+import type { RequestTransaction } from "../connection-request-store.ts";
 import type {
   CompleteIdempotencyInput,
   IdempotencyClaimInput,
@@ -25,6 +25,7 @@ import { DatabaseSync } from "node:sqlite";
 import { parseRuntimeActionHttpResult } from "../../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../../secrets/secret-codec-core.ts";
 import { ConnectionRequestStore } from "../connection-request-store.ts";
+import { SqlConnectionStore } from "../connection-store.ts";
 import { defaultMigrationSource } from "../migration-source.ts";
 import {
   listRunLogs,
@@ -36,6 +37,7 @@ import {
   runtimeTokenColumns,
 } from "../runtime-sql.ts";
 import { DEFAULT_RUN_LIMIT } from "../runtime-store.ts";
+import { SaasProjectStore } from "../saas-project-store.ts";
 
 type SecretJsonTable = "oauth_client_configs";
 
@@ -82,8 +84,9 @@ interface RotatedStateSecret {
  * Shared SQLite connection for local runtime state.
  */
 export class SqliteRuntimeDatabase implements RuntimeDatabase {
+  readonly saasProjectStore: SaasProjectStore;
   readonly connectionRequestStore: ConnectionRequestStore;
-  readonly connectionStore: SqliteConnectionStore;
+  readonly connectionStore: SqlConnectionStore;
   readonly oauthClientConfigStore: SqliteOAuthClientConfigStore;
   readonly oauthStateStore: SqliteOAuthStateStore;
   readonly runtimeTokenStore: SqliteRuntimeTokenStore;
@@ -99,14 +102,13 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
     this.database = new DatabaseSync(filename);
     this.secretCodec = options.secretCodec ?? new PlainTextSecretCodec();
     this.initialize(options.migrations ?? defaultMigrationSource, options.logger);
-    this.connectionRequestStore = new ConnectionRequestStore(
-      async (statements) =>
-        runInTransaction(this.database, () =>
-          statements.map(({ sql, values }) => this.database.prepare(sql).all(...values)),
-        ),
-      this.secretCodec,
-    );
-    this.connectionStore = new SqliteConnectionStore(this.database, this.secretCodec);
+    const transaction: RequestTransaction = async (statements) =>
+      runInTransaction(this.database, () =>
+        statements.map(({ sql, values }) => this.database.prepare(sql).all(...values)),
+      );
+    this.connectionRequestStore = new ConnectionRequestStore(transaction, this.secretCodec);
+    this.connectionStore = new SqlConnectionStore(transaction, this.secretCodec);
+    this.saasProjectStore = new SaasProjectStore(transaction, this.secretCodec);
     this.oauthClientConfigStore = new SqliteOAuthClientConfigStore(this.database, this.secretCodec);
     this.oauthStateStore = new SqliteOAuthStateStore(this.database, this.secretCodec);
     this.runtimeTokenStore = new SqliteRuntimeTokenStore(this.database);
@@ -121,34 +123,70 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
   }
 
   async rotateSecretCodec(nextSecretCodec: ISecretCodec): Promise<void> {
-    const connections = await readRotatedConnectionSecrets(this.database, this.secretCodec, nextSecretCodec);
-    const oauthConfigs = await readRotatedServiceSecrets(
-      this.database,
-      this.secretCodec,
-      nextSecretCodec,
-      "oauth_client_configs",
-    );
-    const requestSecrets = await Promise.all(
-      this.database
-        .prepare("select id, value from connection_requests where value is not null")
-        .all()
-        .map(async (row) => ({
-          id: readString(row, "id"),
-          value: await nextSecretCodec.encode(await this.secretCodec.decode(readString(row, "value"))),
-        })),
-    );
-    const oauthStates = await readRotatedStateSecrets(this.database, this.secretCodec, nextSecretCodec);
-    const idempotencyResponses = await readRotatedIdempotencySecrets(this.database, this.secretCodec, nextSecretCodec);
-    const marketplaceConfig = await this.marketplaceStore.getConfig();
-    const rotatedMarketplaceConfig = marketplaceConfig
-      ? {
-          ...marketplaceConfig,
-          apiKeyEncrypted: await nextSecretCodec.encode(
-            await this.secretCodec.decode(marketplaceConfig.apiKeyEncrypted),
-          ),
-        }
-      : undefined;
-    runInTransaction(this.database, () => {
+    this.database.exec("begin immediate");
+    try {
+      const project = this.database.prepare("select value from managed_project where id = 1").get();
+      if (project && !nextSecretCodec.encrypted)
+        throw new Error("SaaS project configuration requires encrypted storage.");
+      const projectValue = project
+        ? await nextSecretCodec.encode(await this.secretCodec.decode(readString(project, "value")))
+        : undefined;
+      const candidates = await Promise.all(
+        this.database
+          .prepare("select id, candidate_value from connection_requests where candidate_value is not null")
+          .all()
+          .map(async (row) => ({
+            id: readString(row, "id"),
+            value: await nextSecretCodec.encode(await this.secretCodec.decode(readString(row, "candidate_value"))),
+          })),
+      );
+      const returnUris = await Promise.all(
+        this.database
+          .prepare("select id, return_uri from connection_requests where return_uri is not null")
+          .all()
+          .map(async (row) => ({
+            id: readString(row, "id"),
+            value: await nextSecretCodec.encode(await this.secretCodec.decode(readString(row, "return_uri"))),
+          })),
+      );
+      const connections = await readRotatedConnectionSecrets(this.database, this.secretCodec, nextSecretCodec);
+      const oauthConfigs = await readRotatedServiceSecrets(
+        this.database,
+        this.secretCodec,
+        nextSecretCodec,
+        "oauth_client_configs",
+      );
+      const requestSecrets = await Promise.all(
+        this.database
+          .prepare("select id, value from connection_requests where value is not null")
+          .all()
+          .map(async (row) => ({
+            id: readString(row, "id"),
+            value: await nextSecretCodec.encode(await this.secretCodec.decode(readString(row, "value"))),
+          })),
+      );
+      const oauthStates = await readRotatedStateSecrets(this.database, this.secretCodec, nextSecretCodec);
+      const idempotencyResponses = await readRotatedIdempotencySecrets(
+        this.database,
+        this.secretCodec,
+        nextSecretCodec,
+      );
+      const marketplaceConfig = await this.marketplaceStore.getConfig();
+      const rotatedMarketplaceConfig = marketplaceConfig
+        ? {
+            ...marketplaceConfig,
+            apiKeyEncrypted: await nextSecretCodec.encode(
+              await this.secretCodec.decode(marketplaceConfig.apiKeyEncrypted),
+            ),
+          }
+        : undefined;
+      if (projectValue) this.database.prepare("update managed_project set value = ? where id = 1").run(projectValue);
+      for (const candidate of candidates)
+        this.database
+          .prepare("update connection_requests set candidate_value = ? where id = ?")
+          .run(candidate.value, candidate.id);
+      for (const uri of returnUris)
+        this.database.prepare("update connection_requests set return_uri = ? where id = ?").run(uri.value, uri.id);
       writeRotatedConnectionSecrets(this.database, connections);
       writeRotatedServiceSecrets(this.database, "oauth_client_configs", oauthConfigs);
       writeRotatedStateSecrets(this.database, oauthStates);
@@ -162,11 +200,19 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
           .prepare("update marketplace_config set value = ? where id = 1")
           .run(JSON.stringify(rotatedMarketplaceConfig));
       }
-    });
+      this.database.exec("commit");
+    } catch (error) {
+      this.database.exec("rollback");
+      throw error;
+    }
   }
 
   resetRuntimeData(): void {
-    this.database.exec(`
+    runInTransaction(this.database, () =>
+      this.database.exec(`
+      delete from oauth_sources;
+      delete from saas_cleanup;
+      delete from managed_project;
       delete from connections;
       delete from oauth_client_configs;
       delete from oauth_states;
@@ -177,7 +223,8 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
       delete from idempotency_records;
       delete from marketplace_config;
       delete from provider_preferences;
-    `);
+    `),
+    );
   }
 
   private initialize(migrations: MigrationSource, logger?: RuntimeLogger): void {
@@ -228,109 +275,6 @@ export class SqliteMarketplaceStore implements IMarketplaceStore {
         "insert into provider_preferences (service, enabled, created_at, updated_at) values (?, ?, ?, ?) on conflict(service) do update set enabled = excluded.enabled, updated_at = excluded.updated_at",
       )
       .run(preference.service, preference.enabled ? 1 : 0, preference.createdAt, preference.updatedAt);
-  }
-}
-
-export class SqliteConnectionStore implements IConnectionStore {
-  private readonly database: DatabaseSync;
-  private readonly secretCodec: ISecretCodec;
-
-  constructor(database: DatabaseSync, secretCodec: ISecretCodec) {
-    this.database = database;
-    this.secretCodec = secretCodec;
-  }
-
-  async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
-    const row = this.database
-      .prepare("select id, revision, value from connections where service = ? and connection_name = ?")
-      .get(service, connectionName);
-    return row
-      ? {
-          id: readString(row, "id"),
-          revision: readString(row, "revision"),
-          service,
-          connectionName,
-          credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
-        }
-      : undefined;
-  }
-
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
-    const row = this.database
-      .prepare(
-        `
-        insert into connections (id, revision, service, connection_name, value, updated_at)
-        values (?, ?, ?, ?, ?, ?)
-        on conflict(service, connection_name) do update set
-          revision = excluded.revision,
-          value = excluded.value,
-          updated_at = excluded.updated_at
-        returning id, revision
-      `,
-      )
-      .get(
-        crypto.randomUUID(),
-        crypto.randomUUID(),
-        service,
-        connectionName,
-        await this.secretCodec.encode(JSON.stringify(credential)),
-        new Date().toISOString(),
-      );
-    if (!row) {
-      throw new Error("Connection upsert did not return the stored row.");
-    }
-    return {
-      id: readString(row, "id"),
-      revision: readString(row, "revision"),
-      service,
-      connectionName,
-      credential,
-    };
-  }
-
-  async updateCredential(input: StoredConnection): Promise<boolean> {
-    const row = this.database
-      .prepare(
-        `
-        update connections
-        set revision = ?, value = ?, updated_at = ?
-        where service = ? and connection_name = ? and id = ? and revision = ?
-        returning id
-      `,
-      )
-      .get(
-        crypto.randomUUID(),
-        await this.secretCodec.encode(JSON.stringify(input.credential)),
-        new Date().toISOString(),
-        input.service,
-        input.connectionName,
-        input.id,
-        input.revision,
-      );
-    return row !== undefined;
-  }
-
-  async delete(service: string, connectionName: string): Promise<void> {
-    this.database
-      .prepare("delete from connections where service = ? and connection_name = ?")
-      .run(service, connectionName);
-  }
-
-  async list(): Promise<StoredConnection[]> {
-    const rows = this.database
-      .prepare(
-        "select id, revision, service, connection_name, value from connections order by service, connection_name",
-      )
-      .all();
-    return await Promise.all(
-      rows.map(async (row) => ({
-        id: readString(row, "id"),
-        revision: readString(row, "revision"),
-        service: readString(row, "service"),
-        connectionName: readString(row, "connection_name"),
-        credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
-      })),
-    );
   }
 }
 

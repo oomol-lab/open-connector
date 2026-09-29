@@ -10,6 +10,7 @@ export type RunLogCaller = "http" | "mcp" | "web";
  */
 export interface RunLog {
   id: string;
+  remoteExecutionId?: string;
   service: string;
   actionId: string;
   caller: RunLogCaller;

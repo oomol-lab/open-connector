@@ -92,7 +92,7 @@ const proxyFailureStatusCases: ProxyFailureStatusCase[] = [
 ];
 
 describe("ProxyRunner", () => {
-  it("returns proxy_not_supported before resolving credentials when the provider has no proxy executor", async () => {
+  it("returns proxy_not_supported after selecting a local connection without a proxy executor", async () => {
     const connections = createConnections();
     const runner = createRunner({
       connections,
@@ -102,7 +102,7 @@ describe("ProxyRunner", () => {
     await expect(
       runner.run({
         service: "example",
-        input: null,
+        input: { endpoint: "/items", method: "GET" },
         policy: openPolicy,
       }),
     ).resolves.toMatchObject({
@@ -110,7 +110,7 @@ describe("ProxyRunner", () => {
       status: 501,
       errorCode: "proxy_not_supported",
     });
-    expect(connections.getConnectionSummary).not.toHaveBeenCalled();
+    expect(connections.getConnectionSummary).toHaveBeenCalled();
   });
 
   it("rejects proxies blocked by local policy before loading executors", async () => {
@@ -242,7 +242,7 @@ describe("ProxyRunner", () => {
       status: 403,
       errorCode: "connection_not_allowed",
     });
-    expect(loadProxyExecutor).toHaveBeenCalledTimes(2);
+    expect(loadProxyExecutor).not.toHaveBeenCalled();
     expect(connections.getConnectionSummary).toHaveBeenCalledTimes(2);
     expect(proxy).not.toHaveBeenCalled();
   });
@@ -482,7 +482,7 @@ describe("ProxyRunner", () => {
         getCredential: expect.any(Function),
       }),
     );
-    expect(connections.forConnection).toHaveBeenCalledWith("work");
+    expect(connections.resolveForExecution).toHaveBeenCalledWith("example", "work");
   });
 
   it("threads the caller abort signal into the proxy execution context", async () => {
@@ -890,7 +890,9 @@ function createConnections(
   };
   return {
     getConnectionSummary: vi.fn(input.getConnectionSummary ?? (async () => summary)),
-    forConnection: vi.fn(() => ({
+    resolveForExecution: vi.fn(async () => ({
+      kind: "local",
+      summary: input.getConnectionSummary ? await input.getConnectionSummary("example") : summary,
       getCredential: async () => credential,
     })),
   } as unknown as ConnectionService;

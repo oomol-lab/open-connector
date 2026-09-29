@@ -8,8 +8,9 @@ import { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AesGcmSecretCodec } from "../../secrets/secret-codec.ts";
 import { connectionRequestStoreTests } from "../connection-request-store.cases.ts";
-import { createDirectoryMigrationSource } from "../migration-source.ts";
+import { createDirectoryMigrationSource, defaultMigrationSource } from "../migration-source.ts";
 import { RuntimeTokenService } from "../runtime-token-service.ts";
+import { saasProjectStoreTests, saasMaintenanceTests } from "../saas-project-store.cases.ts";
 import { SqliteRunLogStore, SqliteRuntimeDatabase } from "./runtime-store.ts";
 
 const tempDirs: string[] = [];
@@ -54,6 +55,8 @@ describe("SqliteRuntimeDatabase", () => {
       "0011_runtime_token_connection_scope.sql",
       "0012_marketplace.sql",
       "0013_connection_requests.sql",
+      "0014_saas_project.sql",
+      "0015_saas_cleanup_runtime.sql",
     ];
     expect(entries.filter((entry) => entry.message === "sqlite migration started")).toEqual(
       migrations.map((migration) => ({ fields: { migration }, message: "sqlite migration started" })),
@@ -88,6 +91,36 @@ describe("SqliteRuntimeDatabase", () => {
         message: "sqlite migrations ready",
       },
     ]);
+  });
+
+  it("upgrades existing cleanup tasks with request identity and expiry", () => {
+    const db = new DatabaseSync(":memory:");
+    try {
+      const migrations = defaultMigrationSource.readMigrations("sqlite");
+      for (const migration of migrations.filter((entry) => entry.name < "0015_saas_cleanup_runtime.sql")) {
+        db.exec(migration.sql);
+      }
+      db.exec(`
+        insert into managed_project values (1, 'managed', 'project', 'https://example.com', '{}');
+        insert into connection_requests
+          (id, owner, service, state, phase, status, expires_at, created_at, updated_at)
+          values ('request-1', 'owner', 'gmail', 'state', 'pending', 'initiated', '2026-09-30T00:00:00Z', 1, 1);
+        insert into saas_cleanup
+          (id, managed_project_id, provider_config_id, external_user_id, remote_request_id, created_at)
+          values ('request:request-1', 'managed', 'config', 'user', 'remote', 1),
+                 ('request:missing', 'managed', 'config', 'user', 'unknown', 1);
+      `);
+      db.exec(migrations.find((entry) => entry.name === "0015_saas_cleanup_runtime.sql")!.sql);
+      expect(db.prepare("select cleanup_paused from managed_project").get()).toEqual({ cleanup_paused: 0 });
+      expect(
+        db.prepare("select service, request_expires_at from saas_cleanup where id = ?").get("request:request-1"),
+      ).toEqual({ service: "gmail", request_expires_at: "2026-09-30T00:00:00Z" });
+      expect(
+        db.prepare("select service, request_expires_at from saas_cleanup where id = ?").get("request:missing"),
+      ).toEqual({ service: null, request_expires_at: null });
+    } finally {
+      db.close();
+    }
   });
 
   it("persists local runtime state across database instances", async () => {
@@ -991,12 +1024,13 @@ async function expectDatabaseDirectoryNotToContain(databasePath: string, needle:
 describe("SQLite connection requests", () => {
   let database: SqliteRuntimeDatabase;
   beforeEach(() => {
-    database = new SqliteRuntimeDatabase(":memory:");
+    database = new SqliteRuntimeDatabase(":memory:", { secretCodec: new AesGcmSecretCodec("saas-test") });
   });
   afterEach(() => {
     database.close();
   });
   connectionRequestStoreTests(() => database);
+  saasProjectStoreTests(() => database);
 });
 
 it("rolls back credential writes when the request success update fails and recovers after restart", async () => {
@@ -1073,5 +1107,120 @@ it("rotates pending connection-request secrets together with the runtime credent
     expect(await reopened.connectionRequestStore.claim(request.state)).toEqual(request);
   } finally {
     reopened.close();
+  }
+});
+
+describe("SQLite SaaS maintenance", () => {
+  let database: SqliteRuntimeDatabase;
+  let path: string;
+  beforeEach(async () => {
+    path = await createDatabasePath();
+    database = new SqliteRuntimeDatabase(path, { secretCodec: new AesGcmSecretCodec("saas-test") });
+  });
+  afterEach(() => database.close());
+  saasMaintenanceTests(
+    () => database,
+    async (secretCodec) => {
+      database.close();
+      database = new SqliteRuntimeDatabase(path, { secretCodec });
+    },
+  );
+});
+it("upgrades old connections as local and refuses unencrypted SaaS configuration", async () => {
+  const path = await createDatabasePath();
+  const { defaultMigrationSource } = await import("../migration-source.ts");
+  const database = new SqliteRuntimeDatabase(path, {
+    migrations: {
+      readMigrations: (dialect) =>
+        defaultMigrationSource.readMigrations(dialect).filter((migration) => migration.name < "0014"),
+    },
+  });
+  database.close();
+  const raw = new DatabaseSync(path);
+  raw
+    .prepare(
+      "insert into connections (id, revision, service, connection_name, value, updated_at) values (?, ?, ?, ?, ?, ?)",
+    )
+    .run("legacy", "revision", "public", "default", JSON.stringify({ authType: "no_auth" }), new Date().toISOString());
+  const upgraded = new SqliteRuntimeDatabase(path);
+  try {
+    expect(await upgraded.connectionStore.get("public", "default")).toMatchObject({
+      id: "legacy",
+      revision: "revision",
+      credential: { authType: "no_auth" },
+    });
+    expect(raw.prepare("select source from connections").get()?.source).toBe("local");
+    await expect(
+      upgraded.saasProjectStore.saveProject({
+        id: "project",
+        projectId: "project",
+        baseUrl: "https://example.com",
+        apiKey: "secret",
+      }),
+    ).rejects.toThrow("encrypted storage");
+    expect(await upgraded.saasProjectStore.getProject()).toBeUndefined();
+  } finally {
+    raw.close();
+    upgraded.close();
+  }
+});
+
+it("rolls back a SaaS reconnect and its cleanup when the terminal request write fails", async () => {
+  const path = await createDatabasePath();
+  const codec = new AesGcmSecretCodec("test-key");
+  let database = new SqliteRuntimeDatabase(path, { secretCodec: codec });
+  const raw = new DatabaseSync(path);
+  const project = { id: "project", projectId: "project", baseUrl: "https://example.com", apiKey: "project-secret" };
+  try {
+    await database.saasProjectStore.saveProject(project);
+    const pending = {
+      connectionRequestId: "first",
+      connectionId: "connection",
+      owner: "admin",
+      service: "github",
+      connectionName: "default",
+      managedProjectId: project.id,
+      providerConfigId: "config",
+      externalUserId: "user",
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 86_400_000).toISOString(),
+    };
+    const candidate = {
+      connectedAccountId: "old-account",
+      profile: githubProfile,
+      status: "active" as const,
+      comment: null,
+    };
+    const first = await database.connectionRequestStore.createSaas(pending);
+    await database.connectionRequestStore.saveSaasRequest(first, "remote-first");
+    await database.connectionRequestStore.saveSaasCandidate(first, candidate);
+    await database.connectionRequestStore.completeSaas(first);
+    const original = (await database.connectionStore.get("github", "default"))!;
+    const next = await database.connectionRequestStore.createSaas({
+      ...pending,
+      connectionRequestId: "second",
+      target: { id: original.id, revision: original.revision },
+    });
+    await database.connectionRequestStore.saveSaasRequest(next, "remote-second");
+    await database.connectionRequestStore.saveSaasCandidate(next, { ...candidate, connectedAccountId: "new-account" });
+    expect(raw.prepare("select value from managed_project").get()?.value).not.toContain("project-secret");
+    expect(
+      raw.prepare("select candidate_value from connection_requests where id = 'second'").get()?.candidate_value,
+    ).not.toContain("octocat");
+    raw.exec(
+      "create trigger fail_saas_success before update of status on connection_requests when new.status = 'connected' begin select raise(abort, 'injected failure'); end",
+    );
+    await expect(database.connectionRequestStore.completeSaas(next)).rejects.toThrow("injected failure");
+    expect(await database.connectionStore.get("github", "default")).toEqual(original);
+    expect(await database.saasProjectStore.claimCleanup(Date.now())).toBeUndefined();
+    raw.exec("drop trigger fail_saas_success");
+    database.close();
+    database = new SqliteRuntimeDatabase(path, { secretCodec: codec });
+    const recovered = await database.connectionRequestStore.claimSaas("second", "admin", Date.now() + 46_000);
+    expect(await database.connectionRequestStore.completeSaas(recovered!)).toBe("connected");
+    expect((await database.saasProjectStore.claimCleanup(Date.now()))?.connectedAccountId).toBe("old-account");
+  } finally {
+    raw.close();
+    database.close();
   }
 });

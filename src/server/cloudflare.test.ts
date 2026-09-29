@@ -10,6 +10,9 @@ import type { CloudflareEnv } from "./cloudflare/cloudflare-env.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import worker from "./cloudflare.ts";
+import { createWorkerSecretCodec } from "./secrets/worker-secret-codec.ts";
+import { D1RuntimeDatabase } from "./storage/d1/runtime-store.ts";
+import { SqliteD1Database } from "./storage/d1/test-database.ts";
 
 const provider = {
   service: "example",
@@ -66,6 +69,21 @@ describe("cloudflare worker", () => {
     const response = await isolatedWorker.fetch(request(), env, createExecutionContext());
     expect(response.status).toBe(200);
     expect(indexAttempts).toBe(2);
+  });
+
+  it("rejects SaaS configuration when the origin comes only from the request URL", async () => {
+    const env = { ...createEnv(), OOMOL_CONNECT_ENCRYPTION_KEY: "saas-origin-test" };
+    const response = await worker.fetch(
+      new Request("https://untrusted-request.example/api/oauth/managed-project", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ baseUrl: "https://saas.example", projectApiKey: "project-secret" }),
+      }),
+      env,
+      createExecutionContext(),
+    );
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: { code: "oauth_source_configuration_error" } });
   });
 
   it("writes connection logs to console", async () => {
@@ -365,3 +383,57 @@ async function toArrayBuffer(
 
   return await new Response(value).arrayBuffer();
 }
+
+it("processes scheduled cleanup without an HTTP request, public origin or asset bindings", async () => {
+  const binding = new SqliteD1Database();
+  const secretCodec = await createWorkerSecretCodec("scheduled-key");
+  const database = new D1RuntimeDatabase(binding, { secretCodec });
+  const project = { id: "managed", projectId: "project", baseUrl: "https://saas.example", apiKey: "project-key" };
+  await database.saasProjectStore.saveProject(project);
+  const now = new Date().toISOString();
+  const lease = await database.connectionRequestStore.createSaas({
+    connectionRequestId: crypto.randomUUID(),
+    connectionId: crypto.randomUUID(),
+    connectionName: "scheduled",
+    owner: "admin",
+    service: "example",
+    managedProjectId: "managed",
+    providerConfigId: "config",
+    externalUserId: "user",
+    createdAt: now,
+    expiresAt: new Date(Date.now() + 600_000).toISOString(),
+  });
+  await database.connectionRequestStore.saveSaasRequest(lease, "remote");
+  await database.connectionRequestStore.saveSaasCandidate(lease, {
+    connectedAccountId: "account",
+    status: "active",
+    comment: null,
+    profile: { accountId: "user", displayName: "User", grantedScopes: [] },
+  });
+  await database.connectionRequestStore.cancelSaas(lease.pending.connectionRequestId, "admin");
+  const fetcher = vi.fn<typeof fetch>(async () =>
+    Response.json({ success: true, data: { connectedAccountId: "account", deleted: true } }),
+  );
+  vi.stubGlobal("fetch", fetcher);
+  const pending: Promise<unknown>[] = [];
+  try {
+    await worker.scheduled(
+      {},
+      { DB: binding, TRANSIT_FILES: new UnusedR2Bucket(), OOMOL_CONNECT_ENCRYPTION_KEY: "scheduled-key" },
+      {
+        waitUntil(promise) {
+          pending.push(promise);
+        },
+        passThroughOnException() {},
+      },
+    );
+    expect(pending).toHaveLength(1);
+    await Promise.all(pending);
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(fetcher.mock.calls[0][1]?.method).toBe("DELETE");
+    expect(await database.saasProjectStore.getCleanupStats()).toMatchObject({ pending: 0, manual: 0 });
+  } finally {
+    binding.close();
+    vi.unstubAllGlobals();
+  }
+});

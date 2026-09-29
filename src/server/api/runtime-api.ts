@@ -5,10 +5,10 @@ import type { ExecutionResult, ProviderScenario } from "../../core/types.ts";
 import type { OAuthClientConfigSummary } from "../../oauth/oauth-client-config-service.ts";
 import type { Context } from "hono";
 
-import { optionalInteger, optionalRecord, requiredRecord } from "../../core/cast.ts";
+import { optionalInteger, optionalString, optionalRecord, requiredRecord } from "../../core/cast.ts";
 import { describeProviderAuth } from "../../core/provider-setup.ts";
 
-type RuntimeStatus = 400 | 401 | 402 | 403 | 404 | 409 | 413 | 429 | 500 | 501;
+type RuntimeStatus = 400 | 401 | 402 | 403 | 404 | 409 | 413 | 429 | 500 | 501 | 502 | 503 | 504;
 
 export type RuntimeResponseMeta = Record<string, unknown>;
 
@@ -89,6 +89,9 @@ export interface RuntimeFailureInput {
 export interface RuntimeActionResultInput {
   actionId: string;
   executionId: string;
+  remoteExecutionId?: string;
+  failureStatus?: RuntimeStatus;
+  retryAfter?: string;
   auditPersisted: boolean;
   result: ExecutionResult;
 }
@@ -201,7 +204,7 @@ export function serializeRuntimeFailure(input: RuntimeFailureInput): RuntimeActi
 /** Build the persistable HTTP response for a completed action execution. */
 export function serializeRuntimeActionResult(input: RuntimeActionResultInput): RuntimeActionHttpResult {
   const { actionId, executionId, auditPersisted, result } = input;
-  const meta = { executionId, actionId, auditPersisted };
+  const meta = { executionId, actionId, auditPersisted, remoteExecutionId: input.remoteExecutionId };
   if (result.ok) {
     return {
       status: 200,
@@ -215,10 +218,10 @@ export function serializeRuntimeActionResult(input: RuntimeActionResultInput): R
   }
 
   return serializeRuntimeFailure({
-    status: mapExecutionErrorStatus(result.error?.code, result.error?.details),
+    status: input.failureStatus ?? mapExecutionErrorStatus(result.error?.code, result.error?.details),
     errorCode: result.error?.code ?? "provider_error",
     message: result.error?.message ?? "Action execution failed.",
-    data: result.error?.details ?? null,
+    data: input.retryAfter ? { details: { retryAfter: input.retryAfter } } : (result.error?.details ?? null),
     meta,
   });
 }
@@ -253,6 +256,9 @@ export function parseRuntimeActionHttpResult(value: unknown): RuntimeActionHttpR
  * which is what an idempotent replay re-emits the header from.
  */
 export function writeRuntimeActionHttpResult(context: Context, result: RuntimeActionHttpResult): Response {
+  const retryAfter = optionalString(optionalRecord(optionalRecord(result.body.data)?.details)?.retryAfter);
+  if (result.status === 429 && retryAfter && (/^\d+$/.test(retryAfter) || Number.isFinite(Date.parse(retryAfter))))
+    context.header("Retry-After", retryAfter);
   const retryAfterSeconds = readRuntimeRetryAfterSeconds(result);
   if (retryAfterSeconds !== undefined) {
     context.header("Retry-After", String(retryAfterSeconds));
@@ -332,6 +338,9 @@ function isRuntimeStatus(value: unknown): value is RuntimeStatus {
     value === 409 ||
     value === 413 ||
     value === 429 ||
+    value === 502 ||
+    value === 503 ||
+    value === 504 ||
     value === 500 ||
     value === 501
   );
@@ -387,7 +396,10 @@ interface RuntimeOAuthClientSetup {
 
 export function serializeRuntimeProviderSetup(
   provider: RuntimeProviderDefinition,
-  oauth?: OAuthClientConfigSummary,
+  oauth?: Pick<
+    OAuthClientConfigSummary,
+    "configured" | "customClientAvailable" | "expectedRedirectUri" | "missingFields"
+  >,
 ): RuntimeProviderSetup {
   return {
     service: provider.service,

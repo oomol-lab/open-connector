@@ -140,7 +140,7 @@ class MemoryConnectionStore implements IConnectionStore {
     return this.stored?.service === service && this.stored.connectionName === connectionName ? this.stored : undefined;
   }
 
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
+  async set(service: string, connectionName: string, credential: ResolvedCredential) {
     this.stored = { id: "synthetic-connection", revision: "1", service, connectionName, credential };
     return this.stored;
   }

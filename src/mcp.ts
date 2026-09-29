@@ -456,6 +456,7 @@ function evaluateConnectionGrant(
 
 interface ToolExecutionMeta {
   executionId: string;
+  remoteExecutionId?: string;
   auditPersisted: boolean;
   connection?: Record<string, unknown>;
 }
@@ -510,6 +511,7 @@ function serializeConnection(connection: ConnectionSummary): Record<string, unkn
 function createExecutionMeta(run: ActionRunResult): ToolExecutionMeta {
   const meta: ToolExecutionMeta = {
     executionId: run.executionId,
+    remoteExecutionId: run.remoteExecutionId,
     auditPersisted: run.auditPersisted,
   };
   if (run.connection) {

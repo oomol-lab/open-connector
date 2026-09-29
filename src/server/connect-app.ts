@@ -13,6 +13,11 @@ import { MarketplaceService } from "../marketplace/marketplace-service.ts";
 import { OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import { OAuthCredentialRefreshService } from "../oauth/oauth-credential-refresh-service.ts";
 import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
+import { SaasCleanupService } from "../saas/saas-cleanup-service.ts";
+import { SaasClient } from "../saas/saas-client.ts";
+import { SaasExecutionService } from "../saas/saas-execution-service.ts";
+import { SaasOAuthService } from "../saas/saas-oauth-service.ts";
+import { SaasProjectService } from "../saas/saas-project-service.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
 import { ConnectServer } from "./connect-server.ts";
 import { RuntimeTokenService } from "./storage/runtime-token-service.ts";
@@ -24,6 +29,7 @@ export interface ConnectAppOptions {
   transitFiles: ITransitFileService;
   uploadTransitFile?: (request: Request) => Promise<TransitFileUpload>;
   publicOrigin: string;
+  configuredOrigin?: string;
   secretCodec: ISecretCodec;
   adminToken?: string;
   runtimeToken?: string;
@@ -38,11 +44,26 @@ export interface ConnectAppOptions {
 }
 
 export interface ConnectApp {
+  saasCleanup: SaasCleanupService;
   app: Hono;
   runtimeAuthConfigured: boolean;
 }
 
 export async function createConnectApp(options: ConnectAppOptions): Promise<ConnectApp> {
+  const saasClient = new SaasClient();
+  const saasProject = new SaasProjectService({
+    catalog: options.catalog,
+    store: options.runtimeDatabase.saasProjectStore,
+    secretCodec: options.secretCodec,
+    configuredOrigin: options.configuredOrigin,
+    client: saasClient,
+  });
+  const saasOAuth = new SaasOAuthService({
+    projects: saasProject,
+    requests: options.runtimeDatabase.connectionRequestStore,
+    client: saasClient,
+  });
+  const saas = new SaasExecutionService({ projects: saasProject, client: saasClient });
   const marketplace = new MarketplaceService({
     catalog: options.catalog,
     store: options.runtimeDatabase.marketplaceStore,
@@ -73,12 +94,19 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
     providerLoader: options.providerLoader,
     connections,
     runs: options.runtimeDatabase.runLogStore,
+    saas,
     transitFiles: options.transitFiles,
     logger: options.logger,
     marketplace,
   });
 
   return {
+    saasCleanup: new SaasCleanupService({
+      store: options.runtimeDatabase.saasProjectStore,
+      requests: options.runtimeDatabase.connectionRequestStore,
+      client: saasClient,
+      logger: options.logger,
+    }),
     app: new ConnectServer({
       catalog: options.catalog,
       publicOrigin: options.publicOrigin,
@@ -93,6 +121,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
         requests: options.runtimeDatabase.connectionRequestStore,
         secretCodec: options.secretCodec,
         isCustomClientConfigAllowed,
+        saasOAuth,
       }),
       actions,
       idempotency: options.runtimeDatabase.idempotencyStore,
@@ -111,6 +140,9 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
       actionPolicy: options.actionPolicy,
       logger: options.logger,
       marketplace,
+      saas,
+      saasProject,
+      saasOAuth,
       compressApiResponses: options.compressApiResponses,
       serveDocumentation: options.serveDocumentation,
     }).createApp(),

@@ -1,6 +1,7 @@
 import type { StoredConnection, ConnectionService } from "../connection-service.ts";
 import type { OAuth2AuthDefinition } from "../core/types.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
+import type { SaasOAuthService } from "../saas/saas-oauth-service.ts";
 import type { ISecretCodec } from "../server/secrets/secret-codec-core.ts";
 import type {
   ConnectionRequestStore,
@@ -67,6 +68,7 @@ export interface OAuthFlowServiceOptions {
   states: IOAuthStateStore;
   requests: ConnectionRequestStore;
   stateMaxAgeMs?: number;
+  saasOAuth?: SaasOAuthService;
   secretCodec?: ISecretCodec;
   isCustomClientConfigAllowed?: (service: string) => boolean;
 }
@@ -91,11 +93,13 @@ export class OAuthFlowService {
   private readonly states: IOAuthStateStore;
   private readonly requests: ConnectionRequestStore;
   private readonly stateMaxAgeMs: number;
+  private readonly saasOAuth?: SaasOAuthService;
   private readonly secretCodec?: ISecretCodec;
   private readonly isCustomClientConfigAllowed: (service: string) => boolean;
 
   constructor(input: OAuthFlowServiceOptions) {
     this.clientConfigs = input.clientConfigs;
+    this.saasOAuth = input.saasOAuth;
     this.connections = input.connections;
     this.providerLoader = input.providerLoader;
     this.states = input.states;
@@ -106,6 +110,7 @@ export class OAuthFlowService {
   }
 
   async startAuthorization(input: OAuthAuthorizationStartInput): Promise<OAuthAuthorizationStart> {
+    await this.saasOAuth?.assertLocalAuthorization(input.service);
     const { pending, authorizationUrl } = await this.prepareAuthorization(input);
     await this.states.deleteCreatedBefore(new Date(Date.now() - this.stateMaxAgeMs).toISOString());
     await this.states.set(pending);
@@ -114,6 +119,8 @@ export class OAuthFlowService {
 
   async startConnectionRequest(input: OAuthConnectionRequestInput): Promise<OAuthConnectionRequestStart> {
     validateReturnUri(input.returnUri);
+    const remote = await this.saasOAuth?.start(input);
+    if (remote) return remote;
     const auth = this.clientConfigs.getOAuthDefinition(input.service);
     let requestedScopes: string[] | undefined;
     if (input.authorizationOptionIds !== undefined) {
@@ -127,7 +134,7 @@ export class OAuthFlowService {
         .filter((option) => option.required || selected.has(option.id))
         .map((option) => option.id);
     }
-    if (input.target && input.target.credential.authType !== "oauth2") {
+    if (input.target && (input.target.source === "saas" || input.target.credential.authType !== "oauth2")) {
       throw new OAuthFlowError("unsupported_auth_type", "This connection does not use OAuth.");
     }
     const configured = await this.clientConfigs.getConfig(input.service);
@@ -139,7 +146,7 @@ export class OAuthFlowService {
       extra: { ...configured.extra, ...input.extra },
       secretExtra: { ...configured.secretExtra, ...input.secretExtra },
     });
-    const connectionName = input.target?.connectionName ?? crypto.randomUUID();
+    const connectionName = input.target?.connectionName ?? input.connectionName ?? crypto.randomUUID();
     const { pending, authorizationUrl } = await this.prepareAuthorization(
       {
         service: input.service,
@@ -491,8 +498,10 @@ export class OAuthFlowError extends Error {
 }
 
 export interface OAuthConnectionRequestInput {
+  connectionName?: string;
   service: string;
   owner: string;
+  signal?: AbortSignal;
   target?: StoredConnection;
   returnUri?: string;
   authorizationOptionIds?: string[];
@@ -508,7 +517,7 @@ export interface OAuthConnectionRequestStart {
   expiresAt: string;
 }
 
-function validateReturnUri(value?: string): void {
+export function validateReturnUri(value?: string): void {
   if (!value) return;
   let url: URL;
   try {
@@ -530,8 +539,8 @@ export class OAuthCallbackError extends OAuthFlowError {
   }
 }
 
-function callbackReturnUri(
-  pending: PendingConnectionRequest,
+export function callbackReturnUri(
+  pending: Pick<PendingConnectionRequest, "returnUri" | "service">,
   status: "success" | "error",
   code?: string,
   message?: string,

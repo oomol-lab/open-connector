@@ -16,7 +16,13 @@ export function getResponseCachePolicy(method: string, path: string, status: num
     };
   }
 
-  if (path.startsWith("/v1/connection-requests/")) return { cacheControl: "private, no-store" };
+  if (
+    path.startsWith("/v1/connection-requests/") ||
+    path === "/api/oauth/connection-requests" ||
+    path.startsWith("/api/oauth/connection-requests/") ||
+    path === "/oauth/saas/complete"
+  )
+    return { cacheControl: "private, no-store" };
 
   if (isRuntimeResponsePath(path)) {
     return { cacheControl: "no-store" };

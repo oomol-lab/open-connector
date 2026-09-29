@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { Pool } from "pg";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { AesGcmSecretCodec } from "../../secrets/secret-codec.ts";
+import { saasProjectStoreTests, saasMaintenanceTests } from "../saas-project-store.cases.ts";
 import { migratePostgresDatabase } from "./migrations.ts";
 import { PostgresRuntimeDatabase } from "./runtime-store.ts";
 
@@ -40,6 +42,40 @@ describe.skipIf(!testPostgresUrl)("PostgreSQL runtime integration", () => {
       await adminPool.query(`drop schema ${schema} cascade`);
     }
     await adminPool.end();
+  });
+
+  describe("SaaS transaction integration", () => {
+    beforeEach(async () => {
+      await first.close();
+      await second.close();
+      first = await PostgresRuntimeDatabase.open(runtimeUrl, {
+        poolMax: 2,
+        secretCodec: new AesGcmSecretCodec("saas-test"),
+      });
+      second = await PostgresRuntimeDatabase.open(runtimeUrl, {
+        poolMax: 2,
+        secretCodec: new AesGcmSecretCodec("saas-test"),
+      });
+    });
+    saasProjectStoreTests(() => first);
+    saasMaintenanceTests(
+      () => first,
+      async (secretCodec) => {
+        await first.close();
+        first = await PostgresRuntimeDatabase.open(runtimeUrl, { secretCodec });
+      },
+    );
+    it("serializes project deletion against source binding on different instances", async () => {
+      const project = { id: "race", projectId: "project", baseUrl: "https://example.com", apiKey: "secret" };
+      await first.saasProjectStore.saveProject(project);
+      const [deleted, bound] = await Promise.all([
+        first.saasProjectStore.deleteProject(project.id),
+        second.saasProjectStore.setSource("example", { managedProjectId: project.id, providerConfigId: "config" }),
+      ]);
+      expect([deleted, bound].filter(Boolean)).toHaveLength(1);
+      expect(!!(await first.saasProjectStore.getProject())).toBe(bound);
+      expect(!!(await second.saasProjectStore.getSource("example"))).toBe(bound);
+    });
   });
 
   it("serializes concurrent migration runners across PostgreSQL sessions", async () => {

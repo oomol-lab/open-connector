@@ -1,6 +1,4 @@
-import type { IConnectionStore, StoredConnection } from "../../../connection-service.ts";
 import type { TokenPolicy } from "../../../core/action-policy.ts";
-import type { ResolvedCredential } from "../../../core/types.ts";
 import type {
   IMarketplaceStore,
   ProviderPreference,
@@ -10,6 +8,7 @@ import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../../oauth/
 import type { IOAuthStateStore, OAuthAuthorizationState } from "../../../oauth/oauth-flow-service.ts";
 import type { D1DatabaseBinding } from "../../cloudflare/cloudflare-bindings.ts";
 import type { ISecretCodec } from "../../secrets/secret-codec-core.ts";
+import type { RequestTransaction } from "../connection-request-store.ts";
 import type {
   CompleteIdempotencyInput,
   IdempotencyClaimInput,
@@ -25,6 +24,7 @@ import type { IRuntimeTokenStore, RuntimeTokenRecord } from "../runtime-token-se
 import { parseRuntimeActionHttpResult } from "../../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../../secrets/secret-codec-core.ts";
 import { ConnectionRequestStore } from "../connection-request-store.ts";
+import { SqlConnectionStore } from "../connection-store.ts";
 import {
   listRunLogs,
   parseJson,
@@ -35,6 +35,7 @@ import {
   runtimeTokenColumns,
 } from "../runtime-sql.ts";
 import { DEFAULT_RUN_LIMIT } from "../runtime-store.ts";
+import { SaasProjectStore } from "../saas-project-store.ts";
 
 type SecretJsonTable = "oauth_client_configs";
 
@@ -44,8 +45,9 @@ export interface D1RuntimeDatabaseOptions {
 }
 
 export class D1RuntimeDatabase implements RuntimeDatabase {
+  readonly saasProjectStore: SaasProjectStore;
   readonly connectionRequestStore: ConnectionRequestStore;
-  readonly connectionStore: D1ConnectionStore;
+  readonly connectionStore: SqlConnectionStore;
   readonly oauthClientConfigStore: D1OAuthClientConfigStore;
   readonly oauthStateStore: D1OAuthStateStore;
   readonly runtimeTokenStore: D1RuntimeTokenStore;
@@ -56,11 +58,13 @@ export class D1RuntimeDatabase implements RuntimeDatabase {
 
   constructor(database: D1DatabaseBinding, options: D1RuntimeDatabaseOptions = {}) {
     const secretCodec = options.secretCodec ?? new PlainTextSecretCodec();
-    this.connectionRequestStore = new ConnectionRequestStore(async (statements) => {
+    const transaction: RequestTransaction = async (statements) => {
       const results = await database.batch(statements.map(({ sql, values }) => database.prepare(sql).bind(...values)));
       return results.map((result) => result.results ?? []);
-    }, secretCodec);
-    this.connectionStore = new D1ConnectionStore(database, secretCodec);
+    };
+    this.connectionRequestStore = new ConnectionRequestStore(transaction, secretCodec);
+    this.connectionStore = new SqlConnectionStore(transaction, secretCodec);
+    this.saasProjectStore = new SaasProjectStore(transaction, secretCodec);
     this.oauthClientConfigStore = new D1OAuthClientConfigStore(database, secretCodec);
     this.oauthStateStore = new D1OAuthStateStore(database, secretCodec);
     this.runtimeTokenStore = new D1RuntimeTokenStore(database);
@@ -115,110 +119,6 @@ class D1MarketplaceStore implements IMarketplaceStore {
       )
       .bind(preference.service, preference.enabled ? 1 : 0, preference.createdAt, preference.updatedAt)
       .run();
-  }
-}
-
-export class D1ConnectionStore implements IConnectionStore {
-  private readonly database: D1DatabaseBinding;
-  private readonly secretCodec: ISecretCodec;
-
-  constructor(database: D1DatabaseBinding, secretCodec: ISecretCodec) {
-    this.database = database;
-    this.secretCodec = secretCodec;
-  }
-
-  async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
-    const row = await this.database
-      .prepare("select id, revision, value from connections where service = ? and connection_name = ?")
-      .bind(service, connectionName)
-      .first<RuntimeRow>();
-    return row
-      ? {
-          id: readString(row, "id"),
-          revision: readString(row, "revision"),
-          service,
-          connectionName,
-          credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
-        }
-      : undefined;
-  }
-
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
-    const row = await this.database
-      .prepare(
-        `
-        insert into connections (id, revision, service, connection_name, value, updated_at)
-        values (?, ?, ?, ?, ?, ?)
-        on conflict(service, connection_name) do update set
-          revision = excluded.revision,
-          value = excluded.value,
-          updated_at = excluded.updated_at
-        returning id, revision
-      `,
-      )
-      .bind(
-        crypto.randomUUID(),
-        crypto.randomUUID(),
-        service,
-        connectionName,
-        await this.secretCodec.encode(JSON.stringify(credential)),
-        new Date().toISOString(),
-      )
-      .first<RuntimeRow>();
-    return {
-      id: readString(row!, "id"),
-      revision: readString(row!, "revision"),
-      service,
-      connectionName,
-      credential,
-    };
-  }
-
-  async updateCredential(input: StoredConnection): Promise<boolean> {
-    const row = await this.database
-      .prepare(
-        `
-        update connections
-        set revision = ?, value = ?, updated_at = ?
-        where service = ? and connection_name = ? and id = ? and revision = ?
-        returning id
-      `,
-      )
-      .bind(
-        crypto.randomUUID(),
-        await this.secretCodec.encode(JSON.stringify(input.credential)),
-        new Date().toISOString(),
-        input.service,
-        input.connectionName,
-        input.id,
-        input.revision,
-      )
-      .first<RuntimeRow>();
-    return row !== null;
-  }
-
-  async delete(service: string, connectionName: string): Promise<void> {
-    await this.database
-      .prepare("delete from connections where service = ? and connection_name = ?")
-      .bind(service, connectionName)
-      .run();
-  }
-
-  async list(): Promise<StoredConnection[]> {
-    const { results } = await this.database
-      .prepare(
-        "select id, revision, service, connection_name, value from connections order by service, connection_name",
-      )
-      .all<RuntimeRow>();
-    return await Promise.all(
-      results.map(async (row) => ({
-        id: readString(row, "id"),
-        revision: readString(row, "revision"),
-        service: readString(row, "service"),
-        connectionName: readString(row, "connection_name"),
-        credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
-      })),
-    );
   }
 }
 

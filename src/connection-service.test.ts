@@ -955,6 +955,7 @@ describe("ConnectionService", () => {
       }),
     );
     const current = await replacementExecution;
+    if (current.kind !== "local") throw new Error("Expected local connection");
     await expect(current.getCredential("example")).resolves.toMatchObject({
       accessToken: "replacement-refreshed-token",
     });
@@ -1059,6 +1060,7 @@ describe("ConnectionService", () => {
 
     expect(updated.id).toBe(original.id);
     expect(resolved.summary?.id).toBe(original.id);
+    if (resolved.kind !== "local") throw new Error("Expected local connection");
     await expect(resolved.getCredential("uptimerobot")).resolves.toMatchObject({
       apiKey: "original-key",
       profile: { accountId: "example-account" },
@@ -1177,7 +1179,7 @@ class MemoryConnectionStore implements IConnectionStore {
     return this.store.get(createConnectionKey(service, connectionName));
   }
 
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
+  async set(service: string, connectionName: string, credential: ResolvedCredential) {
     const key = createConnectionKey(service, connectionName);
     const connection = {
       id: this.store.get(key)?.id ?? crypto.randomUUID(),
@@ -1230,3 +1232,31 @@ class MemoryOAuthClientConfigStore {
     return [...this.configs.values()];
   }
 }
+
+it("keeps SaaS references out of the local credential and refresh paths", async () => {
+  const store = new MemoryConnectionStore();
+  const remote: StoredConnection = {
+    source: "saas",
+    id: "remote",
+    revision: "revision",
+    service: "example",
+    connectionName: "default",
+    reference: {
+      managedProjectId: "project",
+      providerConfigId: "config",
+      externalUserId: "user",
+      connectedAccountId: "account",
+      localRequestId: "request",
+    },
+    profile: testProfile,
+    status: "active",
+    comment: null,
+  };
+  vi.spyOn(store, "get").mockResolvedValue(remote);
+  vi.spyOn(store, "list").mockResolvedValue([remote]);
+  const service = createService([oauthProvider], { store });
+  expect(await service.resolveForExecution("example")).toMatchObject({ kind: "saas", reference: remote.reference });
+  expect(await service.getConnectionSummary("example")).toMatchObject({ profile: testProfile, configured: true });
+  expect(await service.listAuthenticatedServices(["example"])).toContain("example");
+  await expect(service.getCredential("example")).rejects.toMatchObject({ code: "unsupported_auth_type" });
+});

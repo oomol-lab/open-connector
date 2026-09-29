@@ -1,6 +1,6 @@
-import type { IConnectionStore, StoredConnection } from "../../../connection-service.ts";
+import type { IConnectionStore } from "../../../connection-service.ts";
 import type { TokenPolicy } from "../../../core/action-policy.ts";
-import type { ResolvedCredential, RuntimeLogger } from "../../../core/types.ts";
+import type { RuntimeLogger } from "../../../core/types.ts";
 import type {
   IMarketplaceStore,
   ProviderPreference,
@@ -9,6 +9,7 @@ import type {
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../../oauth/oauth-client-config-service.ts";
 import type { IOAuthStateStore, OAuthAuthorizationState } from "../../../oauth/oauth-flow-service.ts";
 import type { ISecretCodec } from "../../secrets/secret-codec-core.ts";
+import type { RequestTransaction } from "../connection-request-store.ts";
 import type {
   CompleteIdempotencyInput,
   IdempotencyClaimInput,
@@ -27,7 +28,7 @@ import { Pool } from "pg";
 import { parseRuntimeActionHttpResult } from "../../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../../secrets/secret-codec-core.ts";
 import { ConnectionRequestStore } from "../connection-request-store.ts";
-import { assertPostgresSchemaReady } from "./migrations.ts";
+import { SqlConnectionStore } from "../connection-store.ts";
 import {
   listRunLogs,
   parseJson,
@@ -38,6 +39,8 @@ import {
   runtimeTokenColumns,
 } from "../runtime-sql.ts";
 import { DEFAULT_RUN_LIMIT } from "../runtime-store.ts";
+import { SaasProjectStore } from "../saas-project-store.ts";
+import { assertPostgresSchemaReady } from "./migrations.ts";
 
 export interface PostgresRuntimeDatabaseOptions {
   logger?: RuntimeLogger;
@@ -49,6 +52,7 @@ export interface PostgresRuntimeDatabaseOptions {
 }
 
 export class PostgresRuntimeDatabase implements RuntimeDatabase {
+  readonly saasProjectStore: SaasProjectStore;
   readonly connectionRequestStore: ConnectionRequestStore;
   readonly connectionStore: IConnectionStore;
   readonly oauthClientConfigStore: IOAuthClientConfigStore;
@@ -65,28 +69,27 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
   private constructor(pool: Pool, options: PostgresRuntimeDatabaseOptions) {
     this.pool = pool;
     this.secretCodec = options.secretCodec ?? new PlainTextSecretCodec();
-    this.connectionRequestStore = new ConnectionRequestStore(
-      (statements) =>
-        runInTransaction(pool, async (client) => {
-          // Serialize request transitions across processes, including first requests with no row to lock.
-          await client.query("select pg_advisory_xact_lock(1326382671, 2)");
-          const results: Record<string, unknown>[][] = [];
-          for (const { sql, values } of statements) {
-            let index = 0;
-            results.push(
-              (
-                await client.query(
-                  sql.replaceAll("?", () => `$${++index}`),
-                  values,
-                )
-              ).rows,
-            );
-          }
-          return results;
-        }),
-      this.secretCodec,
-    );
-    this.connectionStore = new PostgresConnectionStore(pool, this.secretCodec);
+    const transaction: RequestTransaction = (statements) =>
+      runInTransaction(pool, async (client) => {
+        // Serialize request transitions across processes, including first requests with no row to lock.
+        await client.query("select pg_advisory_xact_lock(1326382671, 2)");
+        const results: Record<string, unknown>[][] = [];
+        for (const { sql, values } of statements) {
+          let index = 0;
+          results.push(
+            (
+              await client.query(
+                sql.replaceAll("?", () => `$${++index}`),
+                values,
+              )
+            ).rows,
+          );
+        }
+        return results;
+      });
+    this.connectionRequestStore = new ConnectionRequestStore(transaction, this.secretCodec);
+    this.connectionStore = new SqlConnectionStore(transaction, this.secretCodec);
+    this.saasProjectStore = new SaasProjectStore(transaction, this.secretCodec);
     this.oauthClientConfigStore = new PostgresOAuthClientConfigStore(pool, this.secretCodec);
     this.oauthStateStore = new PostgresOAuthStateStore(pool, this.secretCodec);
     this.runtimeTokenStore = new PostgresRuntimeTokenStore(pool);
@@ -125,7 +128,11 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
 
   async resetRuntimeData(): Promise<void> {
     await runInTransaction(this.pool, async (client) => {
+      await client.query("select pg_advisory_xact_lock(1326382671, 2)");
       await client.query(`
+        delete from oauth_sources;
+        delete from saas_cleanup;
+        delete from managed_project;
         delete from connections;
         delete from oauth_client_configs;
         delete from oauth_states;
@@ -142,10 +149,38 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
 
   async rotateSecretCodec(nextSecretCodec: ISecretCodec): Promise<void> {
     await runInTransaction(this.pool, async (client) => {
+      await client.query("select pg_advisory_xact_lock(1326382671, 2)");
       await client.query(
-        "lock table connections, oauth_client_configs, oauth_states, connection_requests, idempotency_records in access exclusive mode",
+        "lock table connections, oauth_client_configs, oauth_states, connection_requests, idempotency_records, managed_project, oauth_sources, saas_cleanup, instance_identity in access exclusive mode",
       );
 
+      const project = await client.query<RuntimeRow>("select value from managed_project where id = 1");
+      if (project.rows.length && !nextSecretCodec.encrypted)
+        throw new Error("SaaS project configuration requires encrypted storage.");
+      for (const row of project.rows) {
+        const value = await nextSecretCodec.encode(await this.secretCodec.decode(readString(row, "value")));
+        await client.query("update managed_project set value = $1 where id = 1", [value]);
+      }
+      const candidates = await client.query<RuntimeRow>(
+        "select id, candidate_value from connection_requests where candidate_value is not null",
+      );
+      for (const row of candidates.rows) {
+        const value = await nextSecretCodec.encode(await this.secretCodec.decode(readString(row, "candidate_value")));
+        await client.query("update connection_requests set candidate_value = $1 where id = $2", [
+          value,
+          readString(row, "id"),
+        ]);
+      }
+      const returnUris = await client.query<RuntimeRow>(
+        "select id, return_uri from connection_requests where return_uri is not null",
+      );
+      for (const row of returnUris.rows) {
+        const value = await nextSecretCodec.encode(await this.secretCodec.decode(readString(row, "return_uri")));
+        await client.query("update connection_requests set return_uri = $1 where id = $2", [
+          value,
+          readString(row, "id"),
+        ]);
+      }
       const connectionRows = await client.query<RuntimeRow>("select service, connection_name, value from connections");
       const connections = await Promise.all(
         connectionRows.rows.map(async (row) => ({
@@ -261,106 +296,6 @@ class PostgresMarketplaceStore implements IMarketplaceStore {
     await this.pool.query(
       "insert into provider_preferences (service, enabled, created_at, updated_at) values ($1, $2, $3, $4) on conflict(service) do update set enabled = excluded.enabled, updated_at = excluded.updated_at",
       [preference.service, preference.enabled, preference.createdAt, preference.updatedAt],
-    );
-  }
-}
-
-class PostgresConnectionStore implements IConnectionStore {
-  private readonly pool: Pool;
-  private readonly secretCodec: ISecretCodec;
-
-  constructor(pool: Pool, secretCodec: ISecretCodec) {
-    this.pool = pool;
-    this.secretCodec = secretCodec;
-  }
-
-  async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
-    const result = await this.pool.query<RuntimeRow>(
-      "select id, revision, value from connections where service = $1 and connection_name = $2",
-      [service, connectionName],
-    );
-    const row = result.rows[0];
-    return row
-      ? {
-          id: readString(row, "id"),
-          revision: readString(row, "revision"),
-          service,
-          connectionName,
-          credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
-        }
-      : undefined;
-  }
-
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
-    const result = await this.pool.query<RuntimeRow>(
-      `
-        insert into connections (id, revision, service, connection_name, value, updated_at)
-        values ($1, $2, $3, $4, $5, $6)
-        on conflict(service, connection_name) do update set
-          revision = excluded.revision,
-          value = excluded.value,
-          updated_at = excluded.updated_at
-        returning id, revision
-      `,
-      [
-        crypto.randomUUID(),
-        crypto.randomUUID(),
-        service,
-        connectionName,
-        await this.secretCodec.encode(JSON.stringify(credential)),
-        new Date().toISOString(),
-      ],
-    );
-    const row = result.rows[0]!;
-    return {
-      id: readString(row, "id"),
-      revision: readString(row, "revision"),
-      service,
-      connectionName,
-      credential,
-    };
-  }
-
-  async updateCredential(input: StoredConnection): Promise<boolean> {
-    const result = await this.pool.query(
-      `
-        update connections
-        set revision = $1, value = $2, updated_at = $3
-        where service = $4 and connection_name = $5 and id = $6 and revision = $7
-        returning id
-      `,
-      [
-        crypto.randomUUID(),
-        await this.secretCodec.encode(JSON.stringify(input.credential)),
-        new Date().toISOString(),
-        input.service,
-        input.connectionName,
-        input.id,
-        input.revision,
-      ],
-    );
-    return (result.rowCount ?? 0) > 0;
-  }
-
-  async delete(service: string, connectionName: string): Promise<void> {
-    await this.pool.query("delete from connections where service = $1 and connection_name = $2", [
-      service,
-      connectionName,
-    ]);
-  }
-
-  async list(): Promise<StoredConnection[]> {
-    const result = await this.pool.query<RuntimeRow>(
-      "select id, revision, service, connection_name, value from connections order by service, connection_name",
-    );
-    return await Promise.all(
-      result.rows.map(async (row) => ({
-        id: readString(row, "id"),
-        revision: readString(row, "revision"),
-        service: readString(row, "service"),
-        connectionName: readString(row, "connection_name"),
-        credential: parseJson<ResolvedCredential>(await this.secretCodec.decode(readString(row, "value"))),
-      })),
     );
   }
 }

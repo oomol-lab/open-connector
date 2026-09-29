@@ -68,6 +68,8 @@ export interface ConnectorRuntimeOptions {
   dataDir: string;
   /** External HTTP(S) URL, optionally including a mount path such as /connector. */
   publicOrigin: string;
+  /** False when the host supplied a development fallback instead of an explicit public origin. */
+  publicOriginConfigured?: boolean;
   /** Encrypts stored credentials, OAuth client configuration, pending OAuth state and replayed action responses. Omit to store them in plain text. */
   encryptionKey?: string;
   /** Bearer token required for management requests such as connections, OAuth clients and policies. Omit to leave them open. */
@@ -204,13 +206,14 @@ async function openRuntime(options: ConnectorRuntimeOptions): Promise<ConnectorR
     const tempDir = join(dataDir, "tmp/transit-files");
     await transitFiles.cleanupExpired();
     await cleanupStagedTransitFiles(tempDir, ttlSeconds * 1000);
-    const { app, runtimeAuthConfigured } = await createConnectApp({
+    const { app, runtimeAuthConfigured, saasCleanup } = await createConnectApp({
       catalog,
       providerLoader: new ProviderLoader(executorModules),
       runtimeDatabase: database,
       transitFiles,
       uploadTransitFile: createNodeTransitFileUpload({ transitFiles, tempDir }),
       publicOrigin,
+      configuredOrigin: options.publicOriginConfigured === false ? undefined : publicOrigin,
       secretCodec,
       adminToken: options.adminToken,
       runtimeToken: options.runtimeToken,
@@ -220,6 +223,7 @@ async function openRuntime(options: ConnectorRuntimeOptions): Promise<ConnectorR
       logger: options.logger,
       serveDocumentation: options.apiReference ?? false,
     });
+    saasCleanup.start();
     const shutdown = new AbortController();
     const pending = new Set<Promise<Response>>();
     let closing: Promise<void> | undefined;
@@ -247,7 +251,7 @@ async function openRuntime(options: ConnectorRuntimeOptions): Promise<ConnectorR
         if (!closing) {
           closing = Promise.resolve().then(async () => {
             shutdown.abort(new Error("Open Connector runtime is closing."));
-            await Promise.allSettled([...pending]);
+            await Promise.allSettled([...pending, saasCleanup.close()]);
             try {
               await database.close();
             } finally {

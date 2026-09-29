@@ -15,6 +15,7 @@ import {
 } from "../core/request.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
 import { executorModules } from "../providers/registry.cloudflare.generated.ts";
+import { SaasCleanupService } from "../saas/saas-cleanup-service.ts";
 import { isConsoleShellPath } from "./api/console-paths.ts";
 import { loadCatalogFromAssets } from "./cloudflare/catalog-assets.ts";
 import { readPositiveInteger, resolvePublicOrigin } from "./cloudflare/cloudflare-env.ts";
@@ -36,6 +37,17 @@ const secretCodecCache = new PromiseCache<ISecretCodec>();
 const appCache = new PromiseCache<ConnectApp>();
 
 export default {
+  async scheduled(_event: unknown, env: CloudflareEnv, ctx: CloudflareExecutionContext): Promise<void> {
+    const database = new D1RuntimeDatabase(env.DB, {
+      secretCodec: await createSecretCodec(env.OOMOL_CONNECT_ENCRYPTION_KEY),
+    });
+    const cleanup = new SaasCleanupService({
+      store: database.saasProjectStore,
+      requests: database.connectionRequestStore,
+      logger: workerLogger,
+    });
+    ctx.waitUntil(cleanup.run());
+  },
   async fetch(request: Request, env: CloudflareEnv, _ctx: CloudflareExecutionContext): Promise<Response> {
     setPrivateNetworkAccessAllowed(parsePrivateNetworkAccessFlag(env.OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK));
     setEgressTrustedHosts(parseEgressTrustedHosts(env.OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS));
@@ -84,6 +96,7 @@ async function createCloudflareApp(env: CloudflareEnv, publicOrigin: string): Pr
           });
     })(),
     publicOrigin,
+    configuredOrigin: env.OOMOL_CONNECT_ORIGIN,
     secretCodec,
     adminToken: env.OOMOL_CONNECT_ADMIN_TOKEN,
     runtimeToken: env.OOMOL_CONNECT_RUNTIME_TOKEN,
@@ -143,6 +156,7 @@ function createSecretCodec(encryptionKey: string | undefined): Promise<ISecretCo
 function createCacheKey(env: CloudflareEnv, publicOrigin: string): string {
   return JSON.stringify({
     publicOrigin,
+    configuredOrigin: env.OOMOL_CONNECT_ORIGIN ?? null,
     adminToken: env.OOMOL_CONNECT_ADMIN_TOKEN ?? "",
     runtimeToken: env.OOMOL_CONNECT_RUNTIME_TOKEN ?? "",
     encryptionKey: env.OOMOL_CONNECT_ENCRYPTION_KEY ?? "",

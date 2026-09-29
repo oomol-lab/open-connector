@@ -1,13 +1,12 @@
 import type { RuntimeActionHttpResult } from "../../api/runtime-api.ts";
-import type { D1DatabaseBinding, D1PreparedStatementBinding } from "../../cloudflare/cloudflare-bindings.ts";
 
-import { DatabaseSync } from "node:sqlite";
 import { beforeEach, describe, expect, it } from "vitest";
 import { AesGcmSecretCodec } from "../../secrets/secret-codec.ts";
 import { connectionRequestStoreTests } from "../connection-request-store.cases.ts";
-import { D1RuntimeDatabase } from "./runtime-store.ts";
-import { defaultMigrationSource } from "../migration-source.ts";
 import { RuntimeTokenService } from "../runtime-token-service.ts";
+import { saasProjectStoreTests } from "../saas-project-store.cases.ts";
+import { D1RuntimeDatabase } from "./runtime-store.ts";
+import { SqliteD1Database } from "./test-database.ts";
 
 const githubProfile = {
   accountId: "github:octocat",
@@ -66,7 +65,7 @@ describe("D1RuntimeDatabase", () => {
   });
 
   it("preserves connection identity and rejects stale credential revisions", async () => {
-    const database = new D1RuntimeDatabase(new SqliteD1Database());
+    const database = new D1RuntimeDatabase(new SqliteD1Database(), { secretCodec: new AesGcmSecretCodec("saas-test") });
     const credential = {
       authType: "api_key" as const,
       apiKey: "github-token",
@@ -121,7 +120,7 @@ describe("D1RuntimeDatabase", () => {
   });
 
   it("takes OAuth state once", async () => {
-    const database = new D1RuntimeDatabase(new SqliteD1Database());
+    const database = new D1RuntimeDatabase(new SqliteD1Database(), { secretCodec: new AesGcmSecretCodec("saas-test") });
 
     await database.oauthStateStore.set({
       service: "gmail",
@@ -137,7 +136,7 @@ describe("D1RuntimeDatabase", () => {
   });
 
   it("deletes OAuth states created before a cutoff", async () => {
-    const database = new D1RuntimeDatabase(new SqliteD1Database());
+    const database = new D1RuntimeDatabase(new SqliteD1Database(), { secretCodec: new AesGcmSecretCodec("saas-test") });
     await database.oauthStateStore.set({
       service: "gmail",
       state: "expired",
@@ -180,7 +179,7 @@ describe("D1RuntimeDatabase", () => {
   });
 
   it("stores runtime token hashes and supports verification and revocation", async () => {
-    const database = new D1RuntimeDatabase(new SqliteD1Database());
+    const database = new D1RuntimeDatabase(new SqliteD1Database(), { secretCodec: new AesGcmSecretCodec("saas-test") });
     const tokens = new RuntimeTokenService(database.runtimeTokenStore);
 
     const created = await tokens.createToken("Claude Desktop", {
@@ -233,7 +232,7 @@ describe("D1RuntimeDatabase", () => {
   });
 
   it("defaults omitted allowedConnections to an unrestricted empty list", async () => {
-    const database = new D1RuntimeDatabase(new SqliteD1Database());
+    const database = new D1RuntimeDatabase(new SqliteD1Database(), { secretCodec: new AesGcmSecretCodec("saas-test") });
     const tokens = new RuntimeTokenService(database.runtimeTokenStore);
     const created = await tokens.createToken("Open token");
     expect(created.record.allowedConnections).toEqual([]);
@@ -259,7 +258,7 @@ describe("D1RuntimeDatabase", () => {
   });
 
   it("persists the singleton runtime policy", async () => {
-    const database = new D1RuntimeDatabase(new SqliteD1Database());
+    const database = new D1RuntimeDatabase(new SqliteD1Database(), { secretCodec: new AesGcmSecretCodec("saas-test") });
     const record = {
       rules: {
         allowedActions: ["github.*"],
@@ -276,7 +275,7 @@ describe("D1RuntimeDatabase", () => {
   });
 
   it("atomically claims idempotency keys", async () => {
-    const database = new D1RuntimeDatabase(new SqliteD1Database());
+    const database = new D1RuntimeDatabase(new SqliteD1Database(), { secretCodec: new AesGcmSecretCodec("saas-test") });
 
     const results = await Promise.all([
       database.idempotencyStore.claim({
@@ -299,7 +298,7 @@ describe("D1RuntimeDatabase", () => {
   });
 
   it("detects idempotency conflicts and replays completed responses", async () => {
-    const database = new D1RuntimeDatabase(new SqliteD1Database());
+    const database = new D1RuntimeDatabase(new SqliteD1Database(), { secretCodec: new AesGcmSecretCodec("saas-test") });
     const claim = {
       keyHash: "key-1",
       requestHash: "request-1",
@@ -358,7 +357,7 @@ describe("D1RuntimeDatabase", () => {
   });
 
   it("expires claims without allowing stale executions to complete their replacements", async () => {
-    const database = new D1RuntimeDatabase(new SqliteD1Database());
+    const database = new D1RuntimeDatabase(new SqliteD1Database(), { secretCodec: new AesGcmSecretCodec("saas-test") });
     const oldClaim = {
       keyHash: "key-1",
       requestHash: "request-1",
@@ -507,7 +506,7 @@ describe("D1RuntimeDatabase", () => {
   });
 
   it("upserts the marketplace config and provider preferences", async () => {
-    const database = new D1RuntimeDatabase(new SqliteD1Database());
+    const database = new D1RuntimeDatabase(new SqliteD1Database(), { secretCodec: new AesGcmSecretCodec("saas-test") });
 
     await expect(database.marketplaceStore.getConfig()).resolves.toBeUndefined();
 
@@ -602,92 +601,11 @@ function successResponse(data: unknown): RuntimeActionHttpResult {
   };
 }
 
-class SqliteD1Database implements D1DatabaseBinding {
-  private readonly database = new DatabaseSync(":memory:");
-
-  constructor() {
-    for (const migration of defaultMigrationSource.readMigrations("sqlite")) {
-      this.database.exec(migration.sql);
-    }
-  }
-
-  async batch(statements: D1PreparedStatementBinding[]): Promise<{ results: Record<string, unknown>[] | null }[]> {
-    this.database.exec("begin immediate");
-    try {
-      const results = statements.map((statement) => {
-        const rows = (statement as SqliteD1PreparedStatement).readRows();
-        return { results: rows.length ? rows : null };
-      });
-      this.database.exec("commit");
-      return results;
-    } catch (error) {
-      this.database.exec("rollback");
-      throw error;
-    }
-  }
-
-  prepare(query: string): D1PreparedStatementBinding {
-    return new SqliteD1PreparedStatement(this.database, query);
-  }
-
-  exec(sql: string): void {
-    this.database.exec(sql);
-  }
-
-  value(
-    table: "connections" | "oauth_client_configs" | "oauth_states" | "idempotency_records",
-    keyColumn: "service" | "state" | "key_hash",
-    key: string,
-    valueColumn: "value" | "response_value" = "value",
-  ): string {
-    const row = this.database.prepare(`select ${valueColumn} from ${table} where ${keyColumn} = ?`).get(key) as
-      | Record<string, string>
-      | undefined;
-    return row?.[valueColumn] ?? "";
-  }
-}
-
-class SqliteD1PreparedStatement implements D1PreparedStatementBinding {
-  private readonly database: DatabaseSync;
-  private readonly query: string;
-  private readonly values: unknown[];
-
-  constructor(database: DatabaseSync, query: string, values: unknown[] = []) {
-    this.database = database;
-    this.query = query;
-    this.values = values;
-  }
-
-  bind(...values: unknown[]): D1PreparedStatementBinding {
-    return new SqliteD1PreparedStatement(this.database, this.query, values);
-  }
-
-  async first<T = Record<string, unknown>>(): Promise<T | null> {
-    return (this.database.prepare(this.query).get(...toSqlValues(this.values)) as T | undefined) ?? null;
-  }
-
-  readRows(): Record<string, unknown>[] {
-    return this.database.prepare(this.query).all(...toSqlValues(this.values));
-  }
-
-  async all<T = Record<string, unknown>>(): Promise<{ results: T[] }> {
-    return { results: this.readRows() as T[] };
-  }
-
-  async run(): Promise<{ success: boolean; meta: { changes?: number } }> {
-    const result = this.database.prepare(this.query).run(...toSqlValues(this.values));
-    return { success: true, meta: { changes: Number(result.changes) } };
-  }
-}
-
-function toSqlValues(values: unknown[]): Array<string | number | bigint | null | Uint8Array> {
-  return values.map((value) => (value === undefined ? null : (value as string | number | bigint | null | Uint8Array)));
-}
-
 describe("D1 connection requests", () => {
   let database: D1RuntimeDatabase;
   beforeEach(() => {
-    database = new D1RuntimeDatabase(new SqliteD1Database());
+    database = new D1RuntimeDatabase(new SqliteD1Database(), { secretCodec: new AesGcmSecretCodec("saas-test") });
   });
   connectionRequestStoreTests(() => database);
+  saasProjectStoreTests(() => database);
 });

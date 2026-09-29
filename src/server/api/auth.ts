@@ -31,6 +31,12 @@ export interface LocalAuthSession {
 
 type AuthScope = "admin" | "runtime";
 
+const adminBearerRequests = new WeakSet<Request>();
+
+export function hasAdminBearer(context: Context): boolean {
+  return adminBearerRequests.has(context.req.raw);
+}
+
 const runtimeGrants = new WeakMap<Request, RuntimeGrant>();
 
 export function readRuntimeGrant(context: Context): RuntimeGrant | undefined {
@@ -72,6 +78,7 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
         message: "Configure an admin token to manage connections.",
       });
     }
+    if (adminToken && matchesConfiguredToken(context, adminToken)) adminBearerRequests.add(context.req.raw);
     if (await hasValidToken(context, options, scope)) {
       if (scope === "admin") {
         await installAdminCookieForBearer(context, options);
@@ -122,6 +129,7 @@ async function installLocalAuthCookie(context: Context, options: LocalAuthOption
 function isPublicPath(path: string, method: string): boolean {
   return (
     path === "/health" ||
+    (method === "GET" && path === "/oauth/saas/complete") ||
     path === "/oauth/callback" ||
     path.startsWith("/oauth/callback/") ||
     (method === "GET" && path === "/api/auth/session") ||
@@ -187,7 +195,8 @@ async function hasValidToken(context: Context, options: LocalAuthOptions, scope:
 }
 
 async function hasRequestToken(context: Context, token: string): Promise<boolean> {
-  return matchesConfiguredToken(context, token) || (await hasValidAuthCookie(context, token));
+  if (context.req.header("authorization") !== undefined) return matchesConfiguredToken(context, token);
+  return await hasValidAuthCookie(context, token);
 }
 
 async function hasValidAuthCookie(context: Context, token: string): Promise<boolean> {
@@ -310,6 +319,8 @@ function isConnectionManagementPath(path: string): boolean {
     /^\/v1\/providers\/[^/]+\/setup$/.test(path) ||
     path === "/v1/connections" ||
     path.startsWith("/v1/connections/") ||
-    path.startsWith("/v1/connection-requests/")
+    path.startsWith("/v1/connection-requests/") ||
+    path === "/api/oauth/connection-requests" ||
+    path.startsWith("/api/oauth/connection-requests/")
   );
 }

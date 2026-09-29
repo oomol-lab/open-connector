@@ -9,9 +9,10 @@ import { AesGcmSecretCodec } from "../../secrets/secret-codec.ts";
 import { connectionRequestStoreTests } from "../connection-request-store.cases.ts";
 import { defaultMigrationSource } from "../migration-source.ts";
 import { createNodeRuntimeDatabase, migratePostgresRuntimeDatabase } from "../node-runtime-database.ts";
+import { RuntimeTokenService } from "../runtime-token-service.ts";
+import { saasProjectStoreTests, saasMaintenanceTests } from "../saas-project-store.cases.ts";
 import { assertPostgresSchemaReady, migratePostgresDatabase } from "./migrations.ts";
 import { PostgresRuntimeDatabase } from "./runtime-store.ts";
-import { RuntimeTokenService } from "../runtime-token-service.ts";
 
 const githubProfile = {
   accountId: "github:octocat",
@@ -53,6 +54,8 @@ describe("PostgreSQL migrations with PGlite", () => {
           { name: "0011_runtime_token_connection_scope.sql" },
           { name: "0012_marketplace.sql" },
           { name: "0013_connection_requests.sql" },
+          { name: "0014_saas_project.sql" },
+          { name: "0015_saas_cleanup_runtime.sql" },
         ],
       });
 
@@ -112,6 +115,8 @@ describe("PostgreSQL migrations with a custom migration source", () => {
           { name: "0011_runtime_token_connection_scope.sql" },
           { name: "0012_marketplace.sql" },
           { name: "0013_connection_requests.sql" },
+          { name: "0014_saas_project.sql" },
+          { name: "0015_saas_cleanup_runtime.sql" },
           { name: "9998_custom.sql" },
         ],
       });
@@ -525,3 +530,34 @@ function successResponse(data: unknown): RuntimeActionHttpResult {
     },
   };
 }
+
+describe("PostgreSQL SaaS storage with PGlite", () => {
+  let testServer: PGliteTestServer;
+  let database: PostgresRuntimeDatabase;
+  beforeEach(async () => {
+    testServer = await startPGliteTestServer();
+    const pool = new Pool({ connectionString: testServer.url, max: 1 });
+    try {
+      await migratePostgresDatabase({ pool });
+    } finally {
+      await pool.end();
+    }
+    database = await PostgresRuntimeDatabase.open(testServer.url, {
+      secretCodec: new AesGcmSecretCodec("saas-test"),
+      poolMax: 1,
+    });
+  });
+  afterEach(async () => {
+    await database.close();
+    await testServer.server.stop();
+    await testServer.database.close();
+  });
+  saasProjectStoreTests(() => database);
+  saasMaintenanceTests(
+    () => database,
+    async (secretCodec) => {
+      await database.close();
+      database = await PostgresRuntimeDatabase.open(testServer.url, { secretCodec, poolMax: 1 });
+    },
+  );
+});

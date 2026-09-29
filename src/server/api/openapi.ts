@@ -60,7 +60,10 @@ const errorResponseSchema = jsonSchema.object(
 
 const actionResultMetaSchema = jsonSchema.object(
   {
-    executionId: jsonSchema.string({ description: "Action execution identifier." }),
+    executionId: jsonSchema.string({ description: "Local action execution identifier." }),
+    remoteExecutionId: jsonSchema.string({
+      description: "SaaS execution identifier when available; distinct from the local executionId.",
+    }),
     actionId: jsonSchema.string({ description: "Executed action identifier." }),
     auditPersisted: jsonSchema.boolean({ description: "Whether the run audit record was stored." }),
   },
@@ -73,6 +76,9 @@ const actionResultMetaSchema = jsonSchema.object(
 const actionFailureMetaSchema = jsonSchema.object(
   {
     executionId: jsonSchema.string({ description: "Execution identifier when action execution began." }),
+    remoteExecutionId: jsonSchema.string({
+      description: "SaaS execution identifier when the remote failure supplies one.",
+    }),
     actionId: jsonSchema.string({ description: "Requested action identifier." }),
     auditPersisted: jsonSchema.boolean({ description: "Whether the run audit record was stored." }),
   },
@@ -112,6 +118,9 @@ const oauthClientConfigRequestSchema = jsonSchema.object(
     description: "User-provided OAuth app client configuration.",
   },
 );
+
+const saasExecutionDescription =
+  "SaaS connections execute remotely after local policy and input validation, using the selected account without local credentials or fallback. SaaS execution POSTs have a 300-second budget and a 64 MiB decoded JSON envelope limit. Responses retain the local executionId and add remoteExecutionId when available. Cancellation or a failed response does not guarantee that remote side effects were undone. ";
 
 const actionIdempotencyDescription =
   `Requests with the same Idempotency-Key, action, input, effective connection, and stored runtime token identity replay the original HTTP status and body of completed successes and failures during the ${idempotencyRetentionHours}-hour replay window. ` +
@@ -380,7 +389,7 @@ export function createOpenApiDocument(
       { name: "Access", description: "Runtime execution policy and bearer tokens for /v1 and MCP clients." },
       { name: "Files", description: "Local temporary file transit for provider actions." },
       { name: "Runs", description: "Local action execution and recent run history." },
-      { name: "Proxy", description: "Provider API proxy requests through local credentials." },
+      { name: "Proxy", description: "Provider API proxy requests using the selected local or SaaS connection." },
       { name: "MCP", description: "Stateless MCP POST endpoint and tool metadata." },
     ],
     paths,
@@ -1157,6 +1166,7 @@ function createRunPath(): Record<string, unknown> {
       summary: "Execute a runtime action.",
       description:
         "Use the action catalog to discover provider-specific input and output schemas. For a compact strongly typed OpenAPI document for one action, request /openapi.json?actionId=<actionId>. " +
+        saasExecutionDescription +
         actionIdempotencyDescription,
       parameters: [actionIdParameter, idempotencyKeyParameter, ...namedConnectionParameters],
       requestBody: actionRunBody(
@@ -1174,7 +1184,7 @@ function createProxyPath(): Record<string, unknown> {
       tags: ["Proxy"],
       summary: "Proxy one provider API request.",
       description:
-        "For providers with a local proxy executor, forwards a provider-relative HTTP request and applies stored provider credentials locally.",
+        "Executes through the selected connection. Local connections use the local provider proxy; SaaS connections use the project proxy without loading local credentials. SaaS accepts GET/POST/PUT/PATCH/DELETE, primitive query values, string non-authentication headers and JSON/text bodies only; accessGrant and unknown fields are rejected. SaaS execution has a 300-second POST budget and a 64 MiB decoded JSON envelope limit, preserves the upstream status inside data.status, and supplies distinct local executionId and remoteExecutionId in meta. Failed or cancelled calls are never automatically replayed; remote side effects may have completed.",
       parameters: [
         {
           name: "service",
@@ -1192,7 +1202,7 @@ function createProxyPath(): Record<string, unknown> {
               {
                 endpoint: jsonSchema.string({ description: "Provider-relative path beginning with /." }),
                 method: jsonSchema.string({
-                  description: "HTTP method: DELETE, GET, HEAD, PATCH, POST, or PUT.",
+                  description: "HTTP method: DELETE, GET, HEAD, PATCH, POST, or PUT. SaaS connections reject HEAD.",
                 }),
                 query: {
                   type: "object",
@@ -1227,7 +1237,8 @@ function createProxyPath(): Record<string, unknown> {
                   description: "Provider response headers.",
                 },
                 bodyEncoding: jsonSchema.string({
-                  description: "Present as base64 when the provider response is binary.",
+                  description:
+                    "Present as base64 when a local provider response is binary. SaaS proxy supports JSON/text responses and omits this field.",
                 }),
                 data: jsonSchema.unknown("Provider response payload."),
               },
@@ -1247,6 +1258,9 @@ function createProxyPath(): Record<string, unknown> {
         429: jsonResponse(runtimeFailureSchema()),
         500: jsonResponse(runtimeFailureSchema()),
         501: jsonResponse(runtimeFailureSchema()),
+        502: jsonResponse(runtimeFailureSchema()),
+        503: jsonResponse(runtimeFailureSchema()),
+        504: jsonResponse(runtimeFailureSchema()),
       },
     },
   };
@@ -1430,7 +1444,7 @@ interface RuntimeGetOperationOptions {
   data: JsonSchema;
   description?: string;
   parameters?: unknown[];
-  errorStatuses?: Array<400 | 401 | 403 | 404>;
+  errorStatuses?: Array<400 | 401 | 403 | 404 | 409 | 429 | 502 | 503 | 504>;
 }
 
 function runtimeGetOperation(
@@ -1494,6 +1508,10 @@ function actionRunResponses(output: JsonSchema): Record<string, unknown> {
     413: jsonResponse(failure, "The provider response exceeded the runtime size limit, or the upstream answered 413."),
     429: jsonResponse(failure),
     500: jsonResponse(failure),
+    501: jsonResponse(failure),
+    502: jsonResponse(failure, "SaaS upstream, protocol or response size failure; execution may have completed."),
+    503: jsonResponse(failure, "SaaS project credentials or execution are unavailable."),
+    504: jsonResponse(failure, "SaaS execution timed out; execution may have completed."),
   };
 }
 
@@ -1523,7 +1541,7 @@ function createConcreteRunOperation(action: ActionDefinition): Record<string, un
   return {
     tags: ["Runs"],
     summary: `Execute ${action.id}.`,
-    description: `${action.description} ${actionIdempotencyDescription}`,
+    description: `${action.description} ${saasExecutionDescription}${actionIdempotencyDescription}`,
     parameters: [actionIdParameter, idempotencyKeyParameter, ...namedConnectionParameters],
     requestBody: actionRunBody(
       action.inputSchema,
@@ -1655,13 +1673,17 @@ function connectionManagementPaths(): Record<string, unknown> {
       }),
     ),
     oauthClient: jsonSchema.optional(
-      jsonSchema.object("OAuth client configuration state; present when the provider supports OAuth.", {
+      jsonSchema.object("Default OAuth source configuration; present when the provider supports OAuth.", {
         configured: jsonSchema.boolean(),
-        customClientAvailable: jsonSchema.boolean("Whether connections may carry their own OAuth client."),
-        expectedRedirectUri: jsonSchema.string(
-          "Callback URL to register with the provider: the configured override, else the runtime callback.",
+        customClientAvailable: jsonSchema.boolean(
+          "Whether connections may carry their own OAuth client; false for a SaaS default source.",
         ),
-        missingFields: jsonSchema.stringArray("Required client inputs absent from the stored configuration."),
+        expectedRedirectUri: jsonSchema.string(
+          "Callback URL: the SaaS provider config callback for a SaaS source; otherwise the local override or runtime callback.",
+        ),
+        missingFields: jsonSchema.stringArray(
+          "Required local client inputs absent from storage; empty for a SaaS source.",
+        ),
       }),
     ),
   });
@@ -1700,9 +1722,9 @@ function connectionManagementPaths(): Record<string, unknown> {
       {
         data: request,
         parameters: [parameter("connectionRequestId")],
-        errorStatuses: [401, 403, 404],
+        errorStatuses: [401, 403, 404, 409, 429, 502, 503, 504],
         description:
-          "Requires the initiating management principal. A consumed callback does not remove the result. Responses use Cache-Control: private, no-store.",
+          "Requires the initiating management principal. An explicit valid administrator Bearer token advances SaaS authorization; cookie-only and unauthenticated local GET requests only read stored results. Console uses same-origin POST /api/oauth/connection-requests/{id}/sync with X-OpenConnector-Request: sync. A consumed callback does not remove the result. Responses use Cache-Control: private, no-store.",
       },
     ),
   };
@@ -1731,6 +1753,10 @@ function connectionManagementPaths(): Record<string, unknown> {
             403: jsonResponse(runtimeFailureSchema()),
             404: jsonResponse(runtimeFailureSchema()),
             409: jsonResponse(runtimeFailureSchema()),
+            429: jsonResponse(runtimeFailureSchema()),
+            502: jsonResponse(runtimeFailureSchema()),
+            503: jsonResponse(runtimeFailureSchema()),
+            504: jsonResponse(runtimeFailureSchema()),
           },
         },
       };

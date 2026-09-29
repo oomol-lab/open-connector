@@ -24,6 +24,15 @@ const safeErrorMessages: Record<string, string> = {
   oauth_token_expired: "The OAuth credential has expired.",
   provider_error: "The provider request failed.",
   rate_limited: "The provider rate limit was reached.",
+  execution_cancelled: "Action execution was cancelled; remote side effects may have completed.",
+  scope_missing: "The SaaS account is missing required scopes.",
+  credential_expired: "The SaaS account requires reauthorization.",
+  insufficient_credit: "Execution has insufficient credit.",
+  oauth_source_unavailable: "SaaS execution is unavailable.",
+  oauth_source_unauthorized: "The SaaS project key was rejected.",
+  oauth_source_protocol_error: "SaaS returned an incompatible response.",
+  oauth_source_unsupported: "The SaaS connection does not support this action.",
+  oauth_source_response_too_large: "The SaaS execution response exceeded the size limit.",
 };
 
 interface SummaryState {

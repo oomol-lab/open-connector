@@ -66,6 +66,7 @@ async function main(): Promise<void> {
   const runtime = await createConnectorRuntime({
     dataDir,
     publicOrigin,
+    publicOriginConfigured: Boolean(process.env.OOMOL_CONNECT_ORIGIN),
     assets,
     encryptionKey: process.env.OOMOL_CONNECT_ENCRYPTION_KEY,
     adminToken: optionalEnv("OOMOL_CONNECT_ADMIN_TOKEN"),

@@ -82,10 +82,16 @@ describe("defaultMigrationSource", () => {
     const sqlite = defaultMigrationSource.readMigrations("sqlite");
     expect(sqlite[0]).toMatchObject({ name: "0001_runtime.sql" });
     expect(sqlite[0]?.sql).toContain("create table");
+    expect(sqlite.map((migration) => migration.name)).toEqual(
+      expect.arrayContaining(["0014_saas_project.sql", "0015_saas_cleanup_runtime.sql"]),
+    );
     expect(sqlite.every((migration) => migration.name.endsWith(".sql"))).toBe(true);
 
     const postgresql = defaultMigrationSource.readMigrations("postgresql");
     expect(postgresql[0]).toMatchObject({ name: "0010_runtime.sql" });
+    expect(postgresql.map((migration) => migration.name)).toEqual(
+      expect.arrayContaining(["0014_saas_project.sql", "0015_saas_cleanup_runtime.sql"]),
+    );
     expect(postgresql.map((migration) => migration.name)).not.toContain("0001_runtime.sql");
   });
 });

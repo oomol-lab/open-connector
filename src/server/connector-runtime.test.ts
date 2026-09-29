@@ -5,6 +5,8 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createConnectorRuntime } from "./connector-runtime.ts";
+import { AesGcmSecretCodec } from "./secrets/secret-codec.ts";
+import { SqliteRuntimeDatabase } from "./storage/sqlite/runtime-store.ts";
 
 let runtime: ConnectorRuntime | undefined;
 const directories: string[] = [];
@@ -229,6 +231,53 @@ describe("headless runtime", () => {
     runtime = await createConnectorRuntime(options);
     expect((await request("/v1/health", undefined, "runtime-token")).status).toBe(200);
   });
+});
+
+it("starts persisted cleanup without HTTP traffic and waits for its abort on close", async () => {
+  const options = await fixture();
+  await mkdir(options.dataDir, { recursive: true });
+  const codec = new AesGcmSecretCodec(options.encryptionKey!);
+  let database = new SqliteRuntimeDatabase(join(options.dataDir, "connect.sqlite"), { secretCodec: codec });
+  await database.saasProjectStore.saveProject({
+    id: "managed",
+    projectId: "project",
+    baseUrl: "https://saas.example",
+    apiKey: "project-key",
+  });
+  const lease = await database.connectionRequestStore.createSaas({
+    connectionRequestId: crypto.randomUUID(),
+    connectionId: crypto.randomUUID(),
+    connectionName: "cleanup",
+    owner: "admin",
+    service: "github",
+    managedProjectId: "managed",
+    providerConfigId: "config",
+    externalUserId: "user",
+    createdAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 600_000).toISOString(),
+  });
+  await database.connectionRequestStore.saveSaasRequest(lease, "remote");
+  await database.connectionRequestStore.saveSaasCandidate(lease, {
+    connectedAccountId: "account",
+    status: "active",
+    comment: null,
+    profile: { accountId: "user", displayName: "User", grantedScopes: [] },
+  });
+  await database.connectionRequestStore.cancelSaas(lease.pending.connectionRequestId, "admin");
+  database.close();
+  const fetcher = vi.fn<typeof fetch>(() => new Promise(() => {}));
+  vi.stubGlobal("fetch", fetcher);
+  runtime = await createConnectorRuntime(options);
+  await vi.waitFor(() => expect(fetcher).toHaveBeenCalledOnce());
+  expect(fetcher.mock.calls[0][1]?.method).toBe("DELETE");
+  await runtime.close();
+  expect(fetcher.mock.calls[0][1]?.signal?.aborted).toBe(true);
+  database = new SqliteRuntimeDatabase(join(options.dataDir, "connect.sqlite"), { secretCodec: codec });
+  try {
+    expect((await database.saasProjectStore.getCleanupStats()).pending).toBe(1);
+  } finally {
+    database.close();
+  }
 });
 
 async function fixture(): Promise<ConnectorRuntimeOptions> {

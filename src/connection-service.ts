@@ -37,6 +37,7 @@ export interface ConnectionSummary {
   /** Completed OAuth consent state; absent for legacy and non-OAuth connections. */
   oauthAuthorizationId?: string;
   marketplace?: { id: string; pricing: MarketplacePricing };
+  saas?: StoredSaasConnection["reference"];
 }
 
 export interface ManagedConnectionSummary extends ConnectionSummary {
@@ -66,7 +67,31 @@ export interface ConnectionServiceOptions {
   marketplace?: MarketplaceService;
 }
 
-export interface StoredConnection {
+export interface SaasConnectionReference {
+  managedProjectId: string;
+  providerConfigId: string;
+  externalUserId: string;
+  connectedAccountId: string;
+  localRequestId: string;
+}
+
+export interface StoredSaasConnection {
+  source: "saas";
+  credential?: never;
+  id: string;
+  revision: string;
+  service: string;
+  connectionName: string;
+  reference: SaasConnectionReference;
+  profile: CredentialProfile;
+  status: "active" | "reauth_required";
+  comment: string | null;
+}
+
+export type StoredConnection = StoredLocalConnection | StoredSaasConnection;
+
+export interface StoredLocalConnection {
+  source?: "local";
   id: string;
   revision: string;
   service: string;
@@ -80,10 +105,23 @@ export interface DisconnectedConnectionSummary {
   configured: false;
 }
 
-export interface ExecutionConnection {
+export type ExecutionConnection = LocalExecutionConnection | MarketplaceExecutionConnection | SaasExecutionConnection;
+
+interface LocalExecutionConnection {
+  kind: "local";
   summary?: ConnectionSummary;
-  marketplace?: boolean;
   getCredential(service: string): Promise<ResolvedCredential | undefined>;
+}
+
+interface MarketplaceExecutionConnection {
+  kind: "marketplace";
+  summary: ConnectionSummary;
+}
+
+interface SaasExecutionConnection {
+  kind: "saas";
+  summary: ManagedConnectionSummary;
+  reference: SaasConnectionReference;
 }
 
 /**
@@ -91,16 +129,10 @@ export interface ExecutionConnection {
  */
 export interface IConnectionStore {
   get(service: string, connectionName: string): Promise<StoredConnection | undefined>;
-  set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection>;
-  updateCredential(input: StoredConnection): Promise<boolean>;
+  set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredLocalConnection>;
+  updateCredential(input: StoredLocalConnection): Promise<boolean>;
   delete(service: string, connectionName: string): Promise<void>;
   list(): Promise<StoredConnection[]>;
-}
-
-interface ServiceConnection {
-  id: string;
-  connectionName: string;
-  credential: ResolvedCredential;
 }
 
 interface ApiKeyCredentialValidationInput {
@@ -151,14 +183,10 @@ export class ConnectionService {
 
   async listConnections(): Promise<ConnectionSummary[]> {
     const configured = await this.store.list();
-    const configuredByService = new Map<string, ServiceConnection[]>();
+    const configuredByService = new Map<string, StoredConnection[]>();
     for (const connection of configured) {
       const serviceConnections = configuredByService.get(connection.service) ?? [];
-      serviceConnections.push({
-        id: connection.id,
-        connectionName: connection.connectionName,
-        credential: connection.credential,
-      });
+      serviceConnections.push(connection);
       configuredByService.set(connection.service, serviceConnections);
     }
 
@@ -181,17 +209,19 @@ export class ConnectionService {
    */
   private summarizeProviderConnections(
     provider: RuntimeProviderDefinition,
-    connections: readonly ServiceConnection[],
+    connections: readonly StoredConnection[],
     preferences: ReadonlyMap<string, boolean>,
   ): ConnectionSummary[] {
     if (connections.length > 0) {
       const stored = connections.map((connection) =>
-        this.createConfiguredConnectionSummary(
-          provider,
-          connection.id,
-          connection.connectionName,
-          connection.credential,
-        ),
+        connection.source === "saas"
+          ? this.createManagedConnectionSummary(connection)
+          : this.createConfiguredConnectionSummary(
+              provider,
+              connection.id,
+              connection.connectionName,
+              connection.credential,
+            ),
       );
       const marketplace = this.createMarketplaceConnectionSummary(provider, preferences);
       return marketplace ? [...stored, marketplace] : stored;
@@ -217,7 +247,7 @@ export class ConnectionService {
     const configured = await this.store.list();
     const authenticated = new Set(
       configured
-        .filter((connection) => connection.credential.authType !== "no_auth")
+        .filter((connection) => connection.source === "saas" || connection.credential.authType !== "no_auth")
         .map((connection) => connection.service),
     );
     const preferences = await this.loadProviderPreferences();
@@ -237,6 +267,7 @@ export class ConnectionService {
       throw new ConnectionError("connection_not_found", `${service} connection not found: ${name}.`);
     }
 
+    if (stored?.source === "saas") return this.createManagedConnectionSummary(stored);
     return stored
       ? this.createConfiguredConnectionSummary(provider, stored.id, name, stored.credential)
       : this.supportsAuth(provider, "no_auth")
@@ -249,11 +280,13 @@ export class ConnectionService {
     const name = normalizeConnectionName(connectionName);
     const stored = await this.store.get(service, name);
     const marketplace = await this.resolveMarketplaceSummary(provider, connectionName, Boolean(stored));
-    if (marketplace) return { summary: marketplace, marketplace: true, getCredential: async () => undefined };
+    if (marketplace) return { kind: "marketplace", summary: marketplace };
     if (!stored && connectionName && !this.supportsAuth(provider, "no_auth")) {
       throw new ConnectionError("connection_not_found", `${service} connection not found: ${name}.`);
     }
 
+    if (stored?.source === "saas")
+      return { kind: "saas", summary: this.createManagedConnectionSummary(stored), reference: stored.reference };
     let credential: ResolvedCredential | undefined = stored?.credential;
     if (stored?.credential.authType === "oauth2") {
       credential = await this.resolveOAuthCredential(stored, stored.credential);
@@ -266,6 +299,7 @@ export class ConnectionService {
         : undefined;
 
     return {
+      kind: "local",
       summary,
       getCredential: async (requestedService) => (requestedService === service ? credential : undefined),
     };
@@ -275,6 +309,8 @@ export class ConnectionService {
     const provider = this.getProvider(service);
     const name = normalizeConnectionName(connectionName);
     const stored = await this.store.get(service, name);
+    if (stored?.source === "saas")
+      throw new ConnectionError("unsupported_auth_type", "SaaS credentials are not available locally.");
     if (stored) {
       return stored.credential.authType === "oauth2"
         ? await this.resolveOAuthCredential(stored, stored.credential)
@@ -425,6 +461,20 @@ export class ConnectionService {
   }
 
   private createManagedConnectionSummary(stored: StoredConnection): ManagedConnectionSummary {
+    if (stored.source === "saas")
+      return {
+        id: stored.id,
+        service: stored.service,
+        connectionName: stored.connectionName,
+        authType: "oauth2",
+        configured: true,
+        virtual: false,
+        default: stored.connectionName === defaultConnectionName,
+        profile: stored.profile,
+        status: stored.status,
+        comment: stored.comment,
+        saas: stored.reference,
+      };
     const credential = stored.credential;
     return {
       status:
@@ -450,6 +500,11 @@ export class ConnectionService {
     input: ConnectWithCredentialInput,
   ): Promise<ConnectionSummary> {
     const expected = input.expectedConnection;
+    if (expected?.source === "saas")
+      throw new ConnectionError(
+        "unsupported_auth_type",
+        "Use the original source when reconnecting a SaaS connection.",
+      );
     const previousComment =
       expected?.credential.authType !== "no_auth" ? expected?.credential.metadata.connectionComment : undefined;
     if (input.comment !== undefined || previousComment !== undefined) {
@@ -463,7 +518,7 @@ export class ConnectionService {
   }
 
   private async replaceCredential(
-    expected: StoredConnection,
+    expected: StoredLocalConnection,
     credential: ResolvedCredential,
   ): Promise<StoredConnection> {
     if (!(await this.store.updateCredential({ ...expected, credential }))) {

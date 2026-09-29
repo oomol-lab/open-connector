@@ -7,8 +7,10 @@ import type { IIdempotencyStore } from "./idempotency-store.ts";
 import type { IRuntimePolicyStore } from "./runtime-policy-store.ts";
 import type { IRunLogStore } from "./runtime-store.ts";
 import type { IRuntimeTokenStore } from "./runtime-token-service.ts";
+import type { SaasProjectStore } from "./saas-project-store.ts";
 
 export interface RuntimeDatabase {
+  saasProjectStore: SaasProjectStore;
   connectionRequestStore: ConnectionRequestStore;
   connectionStore: IConnectionStore;
   oauthClientConfigStore: IOAuthClientConfigStore;

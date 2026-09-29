@@ -6,6 +6,9 @@ import type { RuntimeLogger, TransitFileUpload } from "../core/types.ts";
 import type { MarketplaceConfigInput, MarketplaceService } from "../marketplace/marketplace-service.ts";
 import type { OAuthClientConfigInput } from "../oauth/oauth-client-config-service.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
+import type { SaasExecutionService } from "../saas/saas-execution-service.ts";
+import type { SaasOAuthService } from "../saas/saas-oauth-service.ts";
+import type { SaasProjectService } from "../saas/saas-project-service.ts";
 import type { LocalAuthOptions } from "./api/auth.ts";
 import type { RuntimeActionHttpResult } from "./api/runtime-api.ts";
 import type { ITransitFileService } from "./files/transit-file-store.ts";
@@ -31,6 +34,7 @@ import { PromiseCache } from "../core/promise-cache.ts";
 import { MarketplaceError } from "../marketplace/marketplace-service.ts";
 import { OAuthClientConfigError, OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import { OAuthCallbackError, OAuthFlowError, OAuthFlowService } from "../oauth/oauth-flow-service.ts";
+import { SaasError } from "../saas/saas-client.ts";
 import {
   ActionInputDepthError,
   createIdempotencyExpiry,
@@ -61,6 +65,7 @@ import {
   writeRuntimeFailure,
   writeRuntimeSuccess,
 } from "./api/runtime-api.ts";
+import { renderSaasCompletionPage } from "./api/saas-completion-page.ts";
 import { TransitFileError } from "./files/transit-file-store.ts";
 import { ProxyRunner } from "./proxy/proxy-runner.ts";
 import { decodeRunLogCursor } from "./storage/runtime-store.ts";
@@ -135,6 +140,9 @@ export interface IConnectServerOptions {
   compressApiResponses?: boolean;
   serveDocumentation?: boolean;
   marketplace?: MarketplaceService;
+  saasProject?: SaasProjectService;
+  saas?: SaasExecutionService;
+  saasOAuth?: SaasOAuthService;
 }
 
 /**
@@ -157,6 +165,7 @@ export class ConnectServer {
       providerLoader: options.providerLoader,
       connections: options.connections,
       logger: options.logger,
+      saas: options.saas,
     });
   }
 
@@ -264,11 +273,100 @@ export class ConnectServer {
     app.delete("/api/runtime-tokens/:id", (context) => this.revokeRuntimeToken(context, context.req.param("id")));
     app.get("/api/runtime-policy", (context) => this.getRuntimePolicy(context));
     app.put("/api/runtime-policy", (context) => this.updateRuntimePolicy(context));
+    const saas = this.options.saasProject;
+    if (saas) {
+      app.get("/api/oauth/managed-project", async (context) =>
+        context.json(await saas.getState(context.req.raw.signal)),
+      );
+      app.put("/api/oauth/managed-project", async (context) =>
+        context.json(await saas.configure(await readJsonBody(context, 16_384), context.req.raw.signal)),
+      );
+      app.delete("/api/oauth/managed-project", async (context) => {
+        await saas.remove();
+        return context.json(await saas.getState(context.req.raw.signal));
+      });
+      app.get("/api/oauth/managed-project/provider-configs", async (context) =>
+        context.json(await saas.listProviderConfigs(context.req.raw.signal)),
+      );
+      app.get("/api/oauth/sources/:service", async (context) =>
+        context.json(await saas.getSource(context.req.param("service"))),
+      );
+      app.put("/api/oauth/sources/:service", async (context) =>
+        context.json(
+          await saas.setSource(
+            context.req.param("service"),
+            await readJsonBody(context, 16_384),
+            context.req.raw.signal,
+          ),
+        ),
+      );
+    }
+    if (saas && this.options.saasOAuth) {
+      app.get("/oauth/saas/complete", (context) => {
+        context.header(
+          "Content-Security-Policy",
+          "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'",
+        );
+        context.header("Referrer-Policy", "no-referrer");
+        return context.html(renderSaasCompletionPage());
+      });
+      app.post("/api/oauth/connection-requests/:id/sync", async (context) => {
+        if (
+          context.req.header("origin") !== saas.requireOrigin() ||
+          context.req.header("x-openconnector-request") !== "sync" ||
+          context.req.header("content-type")?.split(";")[0].trim().toLowerCase() !== "application/json"
+        )
+          return context.json(
+            { error: { code: "forbidden", message: "OAuth synchronization requires a same-origin JSON request." } },
+            403,
+          );
+        const result = await this.options.saasOAuth!.syncForBrowser(
+          context.req.param("id"),
+          "local-admin",
+          context.req.raw.signal,
+        );
+        if (!result) return jsonError(context, 404, "connection_request_not_found", "Connection request not found.");
+        context.header("Cache-Control", "private, no-store");
+        return context.json(result);
+      });
+    }
     app.get("/api/oauth/configs", (context) => this.listOAuthConfigs(context));
     app.put("/api/oauth/configs/:service", (context) => this.upsertOAuthConfig(context, context.req.param("service")));
     app.delete("/api/oauth/configs/:service", (context) =>
       this.deleteOAuthConfig(context, context.req.param("service")),
     );
+    app.post("/api/oauth/connection-requests", async (context) => {
+      try {
+        const { consoleOAuthConnectionInput } = await import("./api/connection-input.ts");
+        const parsed = consoleOAuthConnectionInput.safeParse(await readJsonBody(context));
+        if (!parsed.success) return jsonError(context, 400, "invalid_input", "Invalid OAuth connection request.");
+        const { appId, ...input } = parsed.data;
+        const target = appId ? await this.options.connections.getStoredConnection(appId) : undefined;
+        if (target && (target.service !== input.service || target.connectionName !== input.connectionName))
+          return jsonError(context, 400, "invalid_input", "The selected connection no longer matches.");
+        return context.json(
+          await this.options.oauthFlow.startConnectionRequest({
+            ...input,
+            target,
+            owner: "local-admin",
+            signal: context.req.raw.signal,
+          }),
+        );
+      } catch (error) {
+        if (
+          error instanceof OAuthClientConfigError ||
+          error instanceof OAuthFlowError ||
+          error instanceof ConnectionError
+        )
+          return jsonError(
+            context,
+            error.code === "unknown_service" || error.code === "app_not_found" ? 404 : 400,
+            error.code,
+            error.message,
+          );
+        throw error;
+      }
+    });
     app.post("/api/oauth/authorizations", (context) => this.createOAuthAuthorization(context));
     app.get("/oauth/callback", (context) => this.completeOAuth(context));
     app.post("/mcp", (context) => this.handleMcp(context));
@@ -280,6 +378,12 @@ export class ConnectServer {
     if (this.options.registerStaticRoutes) this.options.registerStaticRoutes(app);
     else app.notFound(notFound);
     app.onError((error, context) => {
+      if (error instanceof SaasError) {
+        if (error.retryAfter) context.header("Retry-After", error.retryAfter);
+        if (context.req.path.startsWith("/v1/"))
+          return writeRuntimeFailure(context, { status: error.status, errorCode: error.code, message: error.message });
+        return context.json({ error: { code: error.code, message: error.message } }, error.status);
+      }
       if (error instanceof HttpRequestError) {
         if (context.req.path.startsWith("/v1/")) {
           return writeRuntimeFailure(context, {
@@ -364,9 +468,25 @@ export class ConnectServer {
   private async getRuntimeProviderSetup(context: Context, service: string): Promise<Response> {
     const provider = this.options.catalog.providers.find((provider) => provider.service === service);
     if (!provider) return writeRuntimeFailure(context, unknownServiceFailure(service));
-    const oauth = provider.auth.some((auth) => auth.type === "oauth2")
+    let oauth = provider.auth.some((auth) => auth.type === "oauth2")
       ? await this.options.oauthClientConfigs.getSummary(service)
       : undefined;
+    const source = oauth ? await this.options.saasProject?.getSource(service) : undefined;
+    if (oauth && source?.mode === "saas") {
+      const { config } = await this.options.saasProject!.resolveConfig(
+        service,
+        source.providerConfigId,
+        source.managedProjectId,
+        context.req.raw.signal,
+      );
+      oauth = {
+        ...oauth,
+        configured: true,
+        customClientAvailable: false,
+        expectedRedirectUri: config.callbackUrl,
+        missingFields: [],
+      };
+    }
     return writeRuntimeSuccess(context, serializeRuntimeProviderSetup(provider, oauth));
   }
 
@@ -712,6 +832,9 @@ export class ConnectServer {
       return serializeRuntimeActionResult({
         actionId,
         executionId: run.executionId,
+        remoteExecutionId: run.remoteExecutionId,
+        failureStatus: run.failureStatus,
+        retryAfter: run.retryAfter,
         auditPersisted: run.auditPersisted,
         result: run.result,
       });
@@ -765,7 +888,7 @@ export class ConnectServer {
       signal: context.req.raw.signal,
     });
     if (result.ok) {
-      return writeRuntimeSuccess(context, result.response);
+      return writeRuntimeSuccess(context, result.response, result.meta);
     }
 
     return writeRuntimeFailure(context, {
@@ -1083,7 +1206,15 @@ export class ConnectServer {
   }
 
   private async listOAuthConfigs(context: Context): Promise<Response> {
-    return context.json(await this.options.oauthClientConfigs.listConfigs());
+    const configs = await this.options.oauthClientConfigs.listConfigs();
+    const sources = await this.options.saasProject?.listSources();
+    return context.json(
+      configs.map((config) => ({
+        ...config,
+        oauthSource: sources?.get(config.service) ?? { mode: "local" },
+        customClientAvailable: sources?.has(config.service) ? false : config.customClientAvailable,
+      })),
+    );
   }
 
   private async upsertOAuthConfig(context: Context, service: string): Promise<Response> {

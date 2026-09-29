@@ -828,7 +828,7 @@ class MemoryConnectionStore implements IConnectionStore {
     return this.connections.get(this.key(service, connectionName));
   }
 
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredConnection> {
+  async set(service: string, connectionName: string, credential: ResolvedCredential) {
     const key = this.key(service, connectionName);
     const connection = {
       id: this.connections.get(key)?.id ?? crypto.randomUUID(),
