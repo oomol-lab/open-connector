@@ -23,6 +23,7 @@ export default defineConfig(({ mode }) => {
         "/docs": apiTarget,
         "/mcp": apiTarget,
         "/openapi.json": apiTarget,
+        "/oauth": apiTarget,
         "/v1": apiTarget,
       },
     },

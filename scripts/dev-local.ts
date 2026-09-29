@@ -12,6 +12,7 @@ const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
 runChecked(process.execPath, ["scripts/ensure-generated.ts"]);
 
 const apiPort = process.env.PORT ?? "3000";
+process.env.OOMOL_CONNECT_ORIGIN ??= "http://localhost:5173";
 
 const processes: DevProcess[] = [
   startProcess("api", process.execPath, ["--watch", "--watch-preserve-output", "src/server/index.ts"]),

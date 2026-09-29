@@ -15,7 +15,10 @@ matching configuration screen and credential for each.
    exact public HTTP(S) origin used to open Console, including the port when applicable.
    Workers require this explicit setting; request-host inference is not used. Behind a reverse
    proxy, use the external origin and preserve the browser's Origin header. A different Console
-   hostname will fail the protected synchronization check.
+   hostname will fail the protected synchronization check. `localhost` and `127.0.0.1` are
+   different origins and do not share login cookies. `npm run dev` defaults the origin to
+   `http://localhost:5173` unless explicitly overridden; its Vite server forwards `/oauth`
+   completion and callback routes to the API.
 2. Open **OAuth Apps → OOMOL cloud authorization**. Enter the project API key. New configurations
    use the official SaaS at https://connector.oomol.com; updating a key keeps the saved address.
    Connect checks discovery and project identity before saving. The key is never returned;
