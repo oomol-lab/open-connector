@@ -138,6 +138,53 @@ describe("SaasProjectService", () => {
     });
   });
 
+  it("retries a failed health check once and reports recovery", async () => {
+    const { service, fetcher } = setup();
+    await service.configure(input);
+    fetcher.mockClear();
+    fetcher.mockRejectedValueOnce(new TypeError("fetch failed"));
+
+    expect(await service.getState()).toMatchObject({ configured: true, status: "available" });
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("stops after two failed health checks without removing the project", async () => {
+    const { service, fetcher, database } = setup();
+    await service.configure(input);
+    fetcher.mockClear();
+    fetcher.mockImplementation(async () => new Response("Unavailable", { status: 503 }));
+
+    expect(await service.getState()).toMatchObject({ configured: true, status: "unavailable" });
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(await database.saasProjectStore.getProject()).not.toBeNull();
+  });
+
+  it.each([401, 403, 404, 429])("does not retry a definitive health check failure: %s", async (status) => {
+    const { service, fetcher } = setup();
+    await service.configure(input);
+    fetcher.mockClear();
+    fetcher.mockImplementation(async () => new Response("Rejected", { status }));
+
+    expect(await service.getState()).toMatchObject({
+      status: status === 401 || status === 403 ? "auth_error" : "unavailable",
+    });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not retry a cancelled health check", async () => {
+    const { service, fetcher } = setup();
+    await service.configure(input);
+    fetcher.mockClear();
+    const controller = new AbortController();
+    fetcher.mockImplementationOnce(async () => {
+      controller.abort();
+      throw controller.signal.reason;
+    });
+
+    await expect(service.getState(controller.signal)).rejects.toMatchObject({ name: "AbortError" });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
   it.each([{ effectiveScopes: [] }, { service: "other" }, { actionIds: [], proxyAvailable: false }])(
     "rejects incompatible remote configuration %j",
     async (changes) => {

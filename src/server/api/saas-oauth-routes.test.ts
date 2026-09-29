@@ -513,3 +513,24 @@ it("rejects Console input overrides, missing local config and unauthenticated cr
   expect(await missing.json()).toMatchObject({ error: { code: "oauth_client_config_required" } });
   expect(env.calls.some((call) => call.path.endsWith("/link"))).toBe(false);
 });
+
+it("explains Console origin mismatches without contacting SaaS", async () => {
+  const env = await setup();
+  const { data, cookie } = await env.start();
+  const before = env.calls.length;
+  const response = await env.call(`/api/oauth/connection-requests/${data.connectionRequestId}/sync`, {
+    method: "POST",
+    body: {},
+    token: null,
+    cookie,
+    headers: { origin: "http://localhost:5173", "x-openconnector-request": "sync" },
+  });
+  expect(response.status).toBe(403);
+  expect(await response.json()).toMatchObject({
+    error: {
+      code: "oauth_source_origin_mismatch",
+      message: expect.stringContaining("Open Console at https://connect.example"),
+    },
+  });
+  expect(env.calls).toHaveLength(before);
+});

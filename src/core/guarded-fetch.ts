@@ -32,6 +32,8 @@ export interface GuardedFetchOptions {
   allowTrustedHosts?: boolean;
   /** Error factory for guard violations. Defaults to TypeError. */
   createError?: (message: string) => Error;
+  /** Error factory for DNS lookup failures. Defaults to createError. */
+  createResolutionError?: (message: string) => Error;
   /** Maximum redirect hops followed before the request fails. */
   maxRedirects?: number;
   /**
@@ -227,6 +229,7 @@ export function createGuardedFetch(options: GuardedFetchOptions = {}): typeof fe
         allowPrivateNetwork,
         lookup,
         allowTrustedHosts: options.allowTrustedHosts,
+        createResolutionError: options.createResolutionError,
       });
 
     const request = input instanceof Request ? input : undefined;
@@ -434,8 +437,9 @@ async function assertResolvedAddressesAllowed(
       // src/mail/imap-smtp/host-pinning.test.ts asserts.
       throw policy.createError(
         `${fieldName} must not resolve to private or reserved IP addresses ` +
-          `(if this host is reached through a corporate VPN or split DNS, add it to ` +
-          `OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS)`,
+          (policy.allowTrustedHosts
+            ? `(if this host is reached through a corporate VPN or split DNS, add it to OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS)`
+            : `(check proxy Fake-IP and DNS settings; this request requires a public address)`),
       );
     }
   }

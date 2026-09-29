@@ -1,3 +1,4 @@
+import type { RemoteHttpFailure } from "../core/remote-http.ts";
 import type { ProxyRequestInput, ProxyResponse } from "../core/types.ts";
 import type { ManagedProject } from "../server/storage/saas-project-store.ts";
 import type { z } from "zod";
@@ -55,14 +56,16 @@ export class SaasError extends Error {
   readonly code: string;
   readonly status: 400 | 402 | 403 | 404 | 409 | 413 | 429 | 500 | 501 | 502 | 503 | 504;
   readonly retryAfter?: string;
+  readonly reason?: string;
   connectionRequestId?: string;
   remoteExecutionId?: string;
 
-  constructor(code: string, message: string, status: SaasError["status"] = 400, retryAfter?: string) {
+  constructor(code: string, message: string, status: SaasError["status"] = 400, retryAfter?: string, reason?: string) {
     super(message);
     this.code = code;
     this.status = status;
     this.retryAfter = retryAfter;
+    this.reason = reason;
   }
 }
 
@@ -107,6 +110,18 @@ const executionErrors: Record<string, { status: SaasError["status"]; message: st
   rate_limited: { status: 429, message: "SaaS execution was rate limited." },
   insufficient_credit: { status: 402, message: "SaaS execution has insufficient credit." },
   provider_error: { status: 502, message: "The SaaS provider request failed." },
+};
+
+const remoteFailureMessages: Record<RemoteHttpFailure, string> = {
+  invalid_url:
+    "Connect blocked the SaaS address because the URL or its DNS result is not allowed. Check proxy Fake-IP and DNS settings: the SaaS hostname must resolve to a public IP address. Trusted-host overrides are not supported for SaaS requests.",
+  dns: "Connect could not resolve the SaaS hostname. Check DNS and network settings on the machine running Connect.",
+  network:
+    "Connect could not complete the SaaS network request. Check connectivity, proxy settings and TLS certificates on the machine running Connect.",
+  redirect: "SaaS returned an HTTP redirect. Redirects are blocked to protect the project key. Check the SaaS address.",
+  invalid_json:
+    "SaaS returned a response that is not valid UTF-8 JSON. Check the SaaS endpoint and any intervening proxy or login page.",
+  too_large: "SaaS returned a response exceeding the 4 MiB limit for project and account requests.",
 };
 
 /** Reject values that the project proxy protocol cannot represent before any remote request. */
@@ -382,13 +397,21 @@ export class SaasClient {
               const retryAfter = readRetryAfter(response);
               throw new SaasError("oauth_source_rate_limited", "SaaS request was rate limited.", 429, retryAfter);
             }
-            throw new SaasError("oauth_source_unavailable", "SaaS request failed.", 502);
+            throw new SaasError(
+              "oauth_source_unavailable",
+              `SaaS returned HTTP ${response.status}. Check the SaaS service logs.`,
+              502,
+            );
           }
           if (!isSuccessEnvelope(json))
             throw new SaasError("oauth_source_protocol_error", "SaaS returned an invalid response envelope.", 502);
           const result = schema.safeParse(json);
           if (!result.success)
-            throw new SaasError("oauth_source_protocol_error", "SaaS returned an incompatible response.", 502);
+            throw new SaasError(
+              "oauth_source_protocol_error",
+              "SaaS returned fields that do not match the expected API contract. Check that the deployed SaaS version supports this Connect version.",
+              502,
+            );
           return result.data;
         },
       );
@@ -396,7 +419,7 @@ export class SaasClient {
       init.signal?.throwIfAborted();
       if (error instanceof SaasError) throw error;
       if (error instanceof Error && error.name === "TimeoutError")
-        throw new SaasError("oauth_source_unavailable", "SaaS request timed out.", 504);
+        throw new SaasError("oauth_source_unavailable", "SaaS request timed out.", 504, undefined, "timeout");
       if (execution && error instanceof RemoteHttpError && error.kind === "too_large")
         throw new SaasError(
           "oauth_source_response_too_large",
@@ -404,11 +427,7 @@ export class SaasClient {
           502,
         );
       if (error instanceof RemoteHttpError)
-        throw new SaasError(
-          "oauth_source_unavailable",
-          "SaaS could not be reached or returned an invalid response.",
-          502,
-        );
+        throw new SaasError("oauth_source_unavailable", remoteFailureMessages[error.kind], 502, undefined, error.kind);
       throw error;
     }
   }

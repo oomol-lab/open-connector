@@ -5,7 +5,7 @@ import { optionalRecord } from "./cast.ts";
 import { createGuardedFetch } from "./guarded-fetch.ts";
 import { assertPublicHttpUrl, readBoundedResponseBytes } from "./request.ts";
 
-export type RemoteHttpFailure = "invalid_url" | "redirect" | "network" | "invalid_json" | "too_large";
+export type RemoteHttpFailure = "invalid_url" | "dns" | "redirect" | "network" | "invalid_json" | "too_large";
 
 export class RemoteHttpError extends Error {
   readonly kind: RemoteHttpFailure;
@@ -52,6 +52,7 @@ export async function requestRemote<T>(
     fetch: options.fetcher,
     allowTrustedHosts: false,
     createError: (message) => new RemoteHttpError("invalid_url", message),
+    createResolutionError: (message) => new RemoteHttpError("dns", message),
   };
   const run = async (): Promise<T> => {
     let response: Response;

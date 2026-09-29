@@ -53,7 +53,9 @@ async function setup(configuredOrigin?: string) {
     }),
   );
   vi.stubGlobal("fetch", fetcher);
+  const logger = { warn: vi.fn(), error: vi.fn(), info: vi.fn() };
   const { app } = await createConnectApp({
+    logger,
     catalog: createCatalogStore([provider]),
     providerLoader: new ProviderLoader({}),
     runtimeDatabase: database,
@@ -75,7 +77,7 @@ async function setup(configuredOrigin?: string) {
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
-  return { call, fetcher };
+  return { call, fetcher, logger };
 }
 const projectPath = "/api/oauth/managed-project";
 const input = { baseUrl: "https://saas.example", projectApiKey: "project-secret" };
@@ -166,4 +168,25 @@ it("projects SaaS setup inside oauthClient while preserving local configuration 
   expect(fetcher).not.toHaveBeenCalled();
   await call("/api/oauth/sources/example", "PUT", { mode: "local" });
   expect(await (await call("/v1/providers/example/setup")).json()).toEqual(local);
+});
+
+it("logs safe diagnostics for failed SaaS configuration requests", async () => {
+  const { call, fetcher, logger } = await setup("https://connect.example");
+  fetcher.mockRejectedValue(new Error("authorization: project-secret private upstream details"));
+  const response = await call(projectPath, "PUT", input);
+  expect(response.status).toBe(502);
+  const result = await response.json();
+  expect(result.error.message).toContain("Check connectivity, proxy settings and TLS certificates");
+  expect(logger.warn).toHaveBeenCalledWith(
+    {
+      method: "PUT",
+      path: projectPath,
+      code: "oauth_source_unavailable",
+      status: 502,
+      reason: result.error.message,
+    },
+    "SaaS request failed",
+  );
+  expect(JSON.stringify([result, logger.warn.mock.calls])).not.toContain("project-secret");
+  expect(JSON.stringify(logger.warn.mock.calls)).not.toContain("private upstream details");
 });

@@ -60,6 +60,9 @@ export class SaasProjectService {
       throw new SaasError(
         "oauth_source_configuration_error",
         "Set OOMOL_CONNECT_ORIGIN to an explicit HTTP(S) origin before enabling SaaS OAuth.",
+        400,
+        undefined,
+        "origin_required",
       );
     }
   }
@@ -81,12 +84,22 @@ export class SaasProjectService {
         cleanup,
       };
     let status: SaasProjectState["status"] = "available";
-    try {
-      await this.discover(project, signal);
-    } catch (error) {
-      signal?.throwIfAborted();
-      if (!(error instanceof SaasError)) throw error;
-      status = error.code === "oauth_source_unauthorized" ? "auth_error" : "unavailable";
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        await this.discover(project, signal);
+        break;
+      } catch (error) {
+        signal?.throwIfAborted();
+        if (!(error instanceof SaasError)) throw error;
+        if (
+          attempt === 0 &&
+          error.code === "oauth_source_unavailable" &&
+          (error.reason === undefined || ["network", "dns", "timeout"].includes(error.reason))
+        )
+          continue;
+        status = error.code === "oauth_source_unauthorized" ? "auth_error" : "unavailable";
+        break;
+      }
     }
     return {
       configured: true,
@@ -111,7 +124,13 @@ export class SaasProjectService {
     const parsed = projectInput.safeParse(input);
     if (!parsed.success) throw new SaasError("invalid_input", "Provide baseUrl and projectApiKey only.");
     if (!this.options.secretCodec.encrypted)
-      throw new SaasError("oauth_source_configuration_error", "Configure encryption before saving a SaaS project key.");
+      throw new SaasError(
+        "oauth_source_configuration_error",
+        "Configure encryption before saving a SaaS project key.",
+        400,
+        undefined,
+        "encryption_required",
+      );
     this.requireOrigin();
     const baseUrl = normalizeSaasBaseUrl(parsed.data.baseUrl);
     const current = await this.options.store.getProject();

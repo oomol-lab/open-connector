@@ -311,8 +311,14 @@ export class ConnectServer {
         return context.html(renderSaasCompletionPage());
       });
       app.post("/api/oauth/connection-requests/:id/sync", async (context) => {
+        const expectedOrigin = saas.requireOrigin();
+        if (context.req.header("origin") !== expectedOrigin)
+          throw new SaasError(
+            "oauth_source_origin_mismatch",
+            `Open Console at ${expectedOrigin}, or set OOMOL_CONNECT_ORIGIN to the exact Console address in your browser and restart Connect. localhost and 127.0.0.1 are different origins.`,
+            403,
+          );
         if (
-          context.req.header("origin") !== saas.requireOrigin() ||
           context.req.header("x-openconnector-request") !== "sync" ||
           context.req.header("content-type")?.split(";")[0].trim().toLowerCase() !== "application/json"
         )
@@ -379,10 +385,23 @@ export class ConnectServer {
     else app.notFound(notFound);
     app.onError((error, context) => {
       if (error instanceof SaasError) {
+        this.options.logger?.warn(
+          {
+            method: context.req.method,
+            path: context.req.path,
+            code: error.code,
+            status: error.status,
+            reason: error.message,
+          },
+          "SaaS request failed",
+        );
         if (error.retryAfter) context.header("Retry-After", error.retryAfter);
         if (context.req.path.startsWith("/v1/"))
           return writeRuntimeFailure(context, { status: error.status, errorCode: error.code, message: error.message });
-        return context.json({ error: { code: error.code, message: error.message } }, error.status);
+        return context.json(
+          { error: { code: error.code, message: error.message, reason: error.reason } },
+          error.status,
+        );
       }
       if (error instanceof HttpRequestError) {
         if (context.req.path.startsWith("/v1/")) {

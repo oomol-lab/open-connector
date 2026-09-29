@@ -1,5 +1,8 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { setDefaultGuardedFetchDnsLookup } from "../core/guarded-fetch.ts";
 import { normalizeSaasBaseUrl, SaasClient } from "./saas-client.ts";
+
+afterEach(() => setDefaultGuardedFetchDnsLookup(null));
 
 const project = { id: "managed", projectId: "project", baseUrl: "https://saas.example", apiKey: "project-secret" };
 const selector = { providerConfigId: "config", externalUserId: "user", connectedAccountId: "account" };
@@ -321,4 +324,32 @@ describe("SaaS execution protocol", () => {
     expect(fetcher).toHaveBeenCalledOnce();
     timeout.mockRestore();
   });
+});
+
+it("explains Fake-IP rejection before sending the project key", async () => {
+  setDefaultGuardedFetchDnsLookup(async () => [{ address: "198.18.0.81", family: 4 }]);
+  const fetcher = vi.fn<typeof fetch>();
+  await expect(new SaasClient(fetcher).discover(project)).rejects.toThrow("Check proxy Fake-IP and DNS settings");
+  expect(fetcher).not.toHaveBeenCalled();
+});
+
+it("distinguishes DNS resolution failures from blocked addresses", async () => {
+  setDefaultGuardedFetchDnsLookup(async () => {
+    throw new Error("private DNS diagnostic");
+  });
+  const fetcher = vi.fn<typeof fetch>();
+  await expect(new SaasClient(fetcher).discover(project)).rejects.toThrow("could not resolve the SaaS hostname");
+  expect(fetcher).not.toHaveBeenCalled();
+});
+
+it.each([
+  {
+    response: () => new Response(null, { status: 302, headers: { location: "https://other.example" } }),
+    message: "HTTP redirect",
+  },
+  { response: () => new Response("<html>secret login</html>"), message: "not valid UTF-8 JSON" },
+  { response: () => Response.json({ success: true, data: {} }), message: "expected API contract" },
+  { response: () => new Response("secret diagnostic", { status: 503 }), message: "HTTP 503" },
+])("explains upstream failures: $message", async ({ response, message }) => {
+  await expect(new SaasClient(async () => response()).discover(project)).rejects.toThrow(message);
 });
