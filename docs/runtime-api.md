@@ -69,6 +69,56 @@ limitations.
 Admin endpoints under `/api/*`, `/docs`, and the Web Console use `OOMOL_CONNECT_ADMIN_TOKEN` when it
 is configured.
 
+## Provider Triggers
+
+Provider Triggers run through registered server operations:
+
+- `GET /v1/providers/:service/trigger-permissions` returns provider-native permission guidance.
+- `POST /v1/providers/:service/triggers/:triggerId/execute` runs `options`, `read`, `reconcile`, `receive`, or `resource`, as supported by the Trigger.
+
+Select a connection with `x-oo-connector-app-id: <stable-connection-id>`. Actions and public proxy also accept this header. If an alias is supplied as well, both selectors must identify the same connection. An unknown ID never falls back to the default account.
+
+Trigger policy is independent of Action and public proxy policy. Deployment and Runtime `allowedTriggers` / `blockedTriggers` accept exact Trigger IDs, `<service>.*`, and `*`. Each nonempty allowlist must match, and any block rule wins. A persistent runtime token additionally needs an explicit `allowedTriggers` grant. Its default is `[]`, including for existing tokens after migration.
+
+A token that can only run one Trigger can be created with:
+
+```bash
+curl -s -X POST http://localhost:3001/api/runtime-tokens \
+  -H "authorization: Bearer $OOMOL_CONNECT_ADMIN_TOKEN" \
+  -H 'content-type: application/json' \
+  -d '{"name":"repository-trigger","allowedActions":[],"blockedActions":["*"],"allowedProxies":[],"allowedTriggers":["github.on_repo_event"],"allowedConnections":["<connection-id>"]}'
+```
+
+Trigger-only tokens can perform the provider API calls required by their registered operations without a public proxy grant. Those calls still use the provider's authenticated, SSRF-guarded transport. `allowedConnections` narrows the selected account as it does for Actions.
+
+For Poll Triggers, send `{ "operation": "read", "config": {}, "checkpoint": null }` initially, then pass the returned business checkpoint on later reads. Use `{ "operation": "options", "config": {}, "field": "teamId" }` to read Linear configuration options. Unknown fields, caller-supplied access grants, oversized checkpoints and malformed operations are rejected.
+
+Webhook reconciliation uses:
+
+```json
+{
+  "operation": "reconcile",
+  "config": { "owner": "octocat", "repo": "repository", "events": ["issues"] },
+  "requestKey": "flow-binding-1",
+  "endpointUrl": "https://flow.example/events/callback",
+  "active": true
+}
+```
+
+The response contains an opaque `subscription.id`; remote hook IDs, callback secrets and provider state stay on the server. A request key belongs to one runtime token, connection, provider account and Trigger. Its active configuration and HTTPS callback are immutable. Pass that ID with the same request key, configuration and callback for later reconciliation; `active: false` cancels it. After cancellation the same key can be rebuilt with a fresh callback nonce and secret. An abandoned key requires a new binding key.
+
+`receive` requires `subscriptionId`, HTTP `method`, string `headers` and `query`, base64 `rawBody`, and boolean `admit` / `current`. Header names are normalized. The callback's `connector_subscription` nonce must match, and the provider implementation verifies its own signature or secret. Raw bodies are limited to 64 KiB; the enclosing JSON request is limited to 160 KiB. Open Flow owns public ingress, event scheduling, business checkpoints and deduplication. Feishu shared event ingress stays in Open Flow; its Connector `resource` operation only manages native resource subscriptions and reference counts.
+
+Stateful `reconcile`, `receive`, and `resource` operations require a persistent runtime token. Bootstrap environment tokens, JWT verification and unauthenticated development mode can use policy-permitted `options` / `read`; they do not provide a durable subscription owner. Triggers currently require native local connections. SaaS and Marketplace connections return `trigger_source_not_supported` without attempting a local fallback.
+
+Administrators can inspect `/api/trigger-subscriptions`, cancel with `POST /api/trigger-subscriptions/:id/cancel`, or explicitly stop automatic cleanup with `POST /api/trigger-subscriptions/:id/abandon`. Subscription IDs must be URL-encoded. Abandonment retains the original ownership and uncleaned remote-resource record; it does not claim the provider resource was deleted. Clean the remote resource manually if automatic deletion cannot recover.
+
+Node maintenance runs in the runtime and stops on `close()`. Workers invoke bounded maintenance batches from the configured scheduled handler. Maintenance checks current token, deployment and Runtime grants, and retries deletion after revocation; normal active subscription reconciliation remains the Open Flow scheduler's responsibility. SQLite, PostgreSQL and D1 share encrypted subscription state and SQL leases. A stale lease cannot commit state. Apply PostgreSQL migrations before starting the runtime.
+
+Disconnecting or replacing a connection with active or deleting subscriptions is rejected. Verified same-provider-account reauthorization can restore credentials for cleanup; changing to a different or unverified account cannot take over the old resources. OAuth refresh continues through the existing refresh path. After cleanup or explicit abandonment, the connection can be disconnected.
+
+For token rotation, first disable and publish affected Open Flow Triggers while the old token is still valid, wait for subscription and Feishu resource cleanup, and inspect subscription status. Then switch the token and explicitly rebuild bindings while preserving business checkpoints. Old subscription IDs belong to the old token. Clear Feishu resource readiness through its normal demand release and cleanup before switching. Event delivery may have a gap during rotation.
+
 ## MCP
 
 Point MCP-capable clients at:

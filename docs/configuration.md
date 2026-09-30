@@ -25,6 +25,8 @@ OpenConnector is configured with environment variables.
 | `OOMOL_CONNECT_BLOCKED_ACTIONS`             | unset                     | Comma-separated executable action denylist. Supports `service.*` and `*`.                                                                                                   |
 | `OOMOL_CONNECT_ALLOWED_PROXIES`             | unset                     | Comma-separated provider proxy allowlist. Supports service names and `*`.                                                                                                   |
 | `OOMOL_CONNECT_BLOCKED_PROXIES`             | unset                     | Comma-separated provider proxy denylist. Supports service names and `*`.                                                                                                    |
+| `OOMOL_CONNECT_ALLOWED_TRIGGERS`            | unset                     | Comma-separated Trigger allowlist; exact IDs, `<service>.*`, or `*`.                                                                                                        |
+| `OOMOL_CONNECT_BLOCKED_TRIGGERS`            | unset                     | Comma-separated Trigger block rules; block rules override grants.                                                                                                           |
 | `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK`       | `false`                   | Allow self-hosted provider connections to target private networks. See below.                                                                                               |
 | `OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS`        | unset                     | Trusted hosts routed through a corporate VPN. See below.                                                                                                                    |
 | `OOMOL_CONNECT_LOG_LEVEL`                   | `info`                    | Pino log level for the local Node server.                                                                                                                                   |
@@ -295,3 +297,5 @@ Set secrets with Wrangler instead of committing them to config:
 npx wrangler secret put OOMOL_CONNECT_ADMIN_TOKEN --config wrangler.local.jsonc
 npx wrangler secret put OOMOL_CONNECT_ENCRYPTION_KEY --config wrangler.local.jsonc
 ```
+
+Persistent runtime tokens need explicit `allowedTriggers` grants for Provider Triggers; old and new tokens default to no Trigger access. Trigger grants do not require `allowedProxies`. Stateful subscriptions require a persistent runtime token; environment tokens and verified JWTs support only permitted `options` and `read`. See [Provider Triggers](runtime-api.md#provider-triggers) for lifecycle, cleanup, account recovery and token rotation. Workers must have scheduled maintenance enabled and catalog assets available when Trigger cleanup is pending.

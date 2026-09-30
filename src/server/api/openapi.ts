@@ -2,6 +2,7 @@ import type { ActionDefinition, JsonSchema, ProviderDefinition } from "../../cor
 
 import { z } from "zod";
 import { jsonSchema } from "../../core/json-schema.ts";
+import { triggerOperationSchema } from "../../triggers/request.ts";
 import {
   actionInputMaxDepth,
   idempotencyKeyMaxBytes,
@@ -139,6 +140,14 @@ const namedConnectionDescription =
 
 const namedConnectionParameters = [
   {
+    name: "x-oo-connector-app-id",
+    in: "header",
+    required: false,
+    schema: jsonSchema.string(),
+    description:
+      "Stable connection ID. If an alias is also supplied it must identify the same connection. Unknown IDs never select the default account.",
+  },
+  {
     name: "x-oo-connector-alias",
     in: "header",
     required: false,
@@ -179,6 +188,9 @@ const idempotencyConflictDescription =
 
 const runtimeConnectionProperties: Record<string, JsonSchema> = {
   id: jsonSchema.string({ description: "Stable local connection identifier." }),
+  providerAccountId: jsonSchema.string({
+    description: "Provider account identity from the stored credential profile.",
+  }),
   service: jsonSchema.string({ description: "Provider service identifier." }),
   status: { type: "string", enum: ["active", "disconnected"] },
   alias: jsonSchema.string({ description: namedConnectionDescription }),
@@ -363,6 +375,70 @@ export function createOpenApiDocument(
     "/api/files/{fileId}": createTransitFilePath(),
     "/v1/actions/{actionId}": runPath,
     "/v1/proxy/{service}": createProxyPath(),
+    "/v1/providers/{service}/trigger-permissions": runtimeGetOperation(
+      "Triggers",
+      "Read provider-native Trigger permission guidance.",
+      {
+        data: { type: "array", items: { type: "object", additionalProperties: true } },
+        parameters: [{ name: "service", in: "path", required: true, schema: jsonSchema.string() }],
+        errorStatuses: [401, 404],
+      },
+    ),
+    "/v1/providers/{service}/triggers/{triggerId}/execute": {
+      post: {
+        tags: ["Triggers"],
+        summary: "Execute a registered Provider Trigger operation.",
+        description:
+          "Requires independent Trigger grants. Stateful operations require a persistent runtime token and native local connection; remote state and credentials stay server-owned.",
+        parameters: [
+          { name: "service", in: "path", required: true, schema: jsonSchema.string() },
+          { name: "triggerId", in: "path", required: true, schema: jsonSchema.string() },
+          ...namedConnectionParameters,
+        ],
+        requestBody: { required: true, content: { "application/json": { schema: triggerOperationSchema() } } },
+        responses: {
+          200: jsonResponse(runtimeSuccessSchema({})),
+          400: jsonResponse(runtimeFailureSchema()),
+          401: jsonResponse(runtimeFailureSchema()),
+          403: jsonResponse(runtimeFailureSchema()),
+          404: jsonResponse(runtimeFailureSchema()),
+          409: jsonResponse(runtimeFailureSchema()),
+          413: jsonResponse(runtimeFailureSchema()),
+          501: jsonResponse(runtimeFailureSchema()),
+          503: jsonResponse(runtimeFailureSchema()),
+        },
+      },
+    },
+    "/api/trigger-subscriptions": getOperation(
+      "Triggers",
+      "List owned subscriptions and cleanup status without secrets.",
+      { type: "array", items: { type: "object", additionalProperties: true } },
+    ),
+    "/api/trigger-subscriptions/{id}/cancel": {
+      post: {
+        tags: ["Triggers"],
+        summary: "Cancel a subscription with retained original credentials.",
+        parameters: [{ name: "id", in: "path", required: true, schema: jsonSchema.string() }],
+        responses: {
+          200: jsonResponse(jsonSchema.object({ ok: jsonSchema.boolean() })),
+          404: jsonResponse(errorResponseSchema),
+          409: jsonResponse(errorResponseSchema),
+          503: jsonResponse(errorResponseSchema),
+        },
+      },
+    },
+    "/api/trigger-subscriptions/{id}/abandon": {
+      post: {
+        tags: ["Triggers"],
+        summary: "Explicitly abandon automatic cleanup; retain the uncleaned remote-resource record.",
+        parameters: [{ name: "id", in: "path", required: true, schema: jsonSchema.string() }],
+        responses: {
+          200: jsonResponse(jsonSchema.object({ ok: jsonSchema.boolean() })),
+          404: jsonResponse(errorResponseSchema),
+          409: jsonResponse(errorResponseSchema),
+        },
+      },
+    },
     "/api/runs": createRunsPath(),
     "/api/runs/{id}": createRunDetailPath(),
     "/mcp": createMcpPath(),
@@ -389,6 +465,10 @@ export function createOpenApiDocument(
       { name: "Access", description: "Runtime execution policy and bearer tokens for /v1 and MCP clients." },
       { name: "Files", description: "Local temporary file transit for provider actions." },
       { name: "Runs", description: "Local action execution and recent run history." },
+      {
+        name: "Triggers",
+        description: "Registered provider Trigger operations and owned remote subscription cleanup.",
+      },
       { name: "Proxy", description: "Provider API proxy requests using the selected local or SaaS connection." },
       { name: "MCP", description: "Stateless MCP POST endpoint and tool metadata." },
     ],
@@ -550,6 +630,9 @@ export function createOpenApiDocument(
         ConnectionSummary: jsonSchema.object(
           {
             id: jsonSchema.string({ description: "Stable local connection identifier." }),
+            providerAccountId: jsonSchema.string({
+              description: "Provider account identity from the stored credential profile.",
+            }),
             service: jsonSchema.string({ description: "Provider service identifier." }),
             authType: jsonSchema.string({ description: "Connection authentication type." }),
             configured: jsonSchema.boolean({ description: "Whether the provider is connected." }),
@@ -640,6 +723,9 @@ export function createOpenApiDocument(
             allowedProxies: policyRuleArraySchema(
               "Provider proxies explicitly granted to this token. An empty list grants no proxy access.",
             ),
+            allowedTriggers: policyRuleArraySchema(
+              "Trigger IDs explicitly granted to this token. Omit or leave empty to deny all Trigger operations.",
+            ),
             allowedConnections: connectionIdArraySchema(
               "Stable connection IDs granted to this stored runtime token. An empty list is unrestricted connection access. IDs are opaque values returned by the connection APIs. Virtual no_auth connections do not require grants.",
             ),
@@ -654,6 +740,7 @@ export function createOpenApiDocument(
               "blockedActions",
               "allowedProxies",
               "allowedConnections",
+              "allowedTriggers",
               "createdAt",
             ],
             description: "Runtime API token summary. Plaintext tokens and token hashes are not returned.",
@@ -666,6 +753,9 @@ export function createOpenApiDocument(
             blockedActions: policyRuleArraySchema("Optional action block rules for the new token."),
             allowedProxies: policyRuleArraySchema(
               "Optional provider proxy grants for the new token. Omit or leave empty to deny proxy access.",
+            ),
+            allowedTriggers: policyRuleArraySchema(
+              "Trigger IDs explicitly granted to this token. Omit or leave empty to deny all Trigger operations.",
             ),
             allowedConnections: connectionIdArraySchema(
               "Optional stable connection IDs granted to the new token. Omit or leave empty for unrestricted connection access. A non-empty list matches exact opaque IDs returned by the connection APIs. Virtual no_auth connections do not require grants.",
@@ -683,6 +773,9 @@ export function createOpenApiDocument(
             allowedProxies: policyRuleArraySchema(
               "Provider proxies explicitly granted to this token. An empty list grants no proxy access.",
             ),
+            allowedTriggers: policyRuleArraySchema(
+              "Trigger IDs explicitly granted to this token. Omit or leave empty to deny all Trigger operations.",
+            ),
             allowedConnections: connectionIdArraySchema(
               "Stable connection IDs granted to this stored token. An empty list is unrestricted connection access. A non-empty list matches exact opaque IDs returned by the connection APIs. Virtual no_auth connections do not require grants.",
             ),
@@ -690,7 +783,7 @@ export function createOpenApiDocument(
           {
             required: ["allowedActions", "blockedActions", "allowedProxies", "allowedConnections"],
             description:
-              "Complete replacement of one stored runtime token's action, proxy, and connection permissions.",
+              "Complete replacement of one stored runtime token's Action, Trigger, proxy, and connection permissions.",
           },
         ),
         PolicyRules: policyRulesSchema(),
@@ -991,7 +1084,7 @@ function createRuntimePolicyPath(): Record<string, unknown> {
     },
     put: {
       tags: ["Access"],
-      summary: "Replace the persisted Runtime action and proxy policy.",
+      summary: "Replace the persisted Runtime Action, Trigger, and proxy policy.",
       description: `Deployment policy remains read-only. Block rules take precedence and non-empty allowlists intersect. Policy request bodies must not exceed ${policyRequestMaxBytes} bytes.`,
       requestBody: {
         required: true,
@@ -1017,6 +1110,10 @@ function policyRulesSchema(): JsonSchema {
       allowedActions: policyRuleArraySchema("Action allow rules."),
       blockedActions: policyRuleArraySchema("Action block rules."),
       allowedProxies: policyRuleArraySchema("Proxy service allow rules."),
+      allowedTriggers: policyRuleArraySchema(
+        "Trigger allow rules. Non-empty allowlists intersect across policy layers.",
+      ),
+      blockedTriggers: policyRuleArraySchema("Trigger block rules override all grants."),
       blockedProxies: policyRuleArraySchema("Proxy service block rules."),
     },
     {

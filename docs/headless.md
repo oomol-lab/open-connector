@@ -87,6 +87,10 @@ original request URL when you forward.
 `/oauth/callback`, and admin `/api/*`. `connector.close()` aborts in-flight
 work and closes owned storage. It is safe to call more than once.
 
+## Provider Triggers
+
+Provider Triggers use the same headless runtime and selected provider registry as Actions. Grant explicit `allowedTriggers` on a persistent runtime token to manage remote subscriptions; public proxy grants are independent. Runtime shutdown cancels and waits for maintenance. Include the generated catalog and migrations supplied by `getConnectorBuildOptions`; selected-provider builds include only those providers' Trigger executors. See the [Trigger runtime reference](https://github.com/oomol-lab/open-connector/blob/main/docs/runtime-api.md#provider-triggers) for request shapes and cleanup.
+
 ## Connector SDK
 
 [`@oomol-lab/connector`](https://www.npmjs.com/package/@oomol-lab/connector) is

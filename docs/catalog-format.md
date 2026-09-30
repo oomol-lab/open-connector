@@ -29,3 +29,15 @@ with the current connection profile, so agents can see both the capability they 
 and the account it will run as.
 
 For the full contribution workflow, see `.codex/skills/add-provider/SKILL.md`.
+
+## Trigger metadata
+
+Providers with native Trigger implementations publish `triggers` snapshots and `triggerPermissions` in their generated catalog entries. Snapshots keep configuration ports, outputs, identity and definition version; permission guidance uses provider-native scopes. Execution modules export registered Trigger definitions and load through the existing lazy executor registry.
+
+To update an Open Flow checkout without a private repository, install this repository's dependencies and run:
+
+```bash
+node scripts/export-flow-trigger-catalog.ts /path/to/open-flow/packages/open-flow/src/trigger/providers/catalog.generated.json
+```
+
+The export includes configuration-option support, listener intervals and event-source ownership, and checks that runtime snapshots match the public provider definitions. Open Flow's checked-in snapshot supports independent builds; regeneration requires only a public OpenConnector checkout.
