@@ -4,6 +4,7 @@ import type { JsonValue } from "../../triggers/common/types.ts";
 
 import {
   eventsPollOutputs,
+  maximumPollEventsPerPage,
   PermanentPollError,
   PollConnectionError,
   TransientPollError,
@@ -131,21 +132,13 @@ async function seed(context: PollContext, config: Config): Promise<Checkpoint> {
 }
 
 async function changed(context: PollContext, config: Config, checkpoint: Checkpoint): Promise<ListRun> {
-  const records: RecordValue[] = [];
-  let offset = checkpoint.offset;
-  const budget = Math.min(Math.ceil(config.maxRecordsPerPoll / 100), 10);
-  for (let page = 0; page < budget; page += 1) {
-    const result = await list(context, config, pollBody(config, checkpoint, offset));
-    if (offset != null && result.status == 422 && errorType(result.data) == staleIterator) {
-      return { offsetWentStale: true, records };
-    }
-    success(result, "record list");
-    const parsed = listPage(result.data);
-    records.push(...parsed.records);
-    if (!parsed.offset) return { offsetWentStale: false, records };
-    offset = parsed.offset;
+  const result = await list(context, config, pollBody(config, checkpoint, checkpoint.offset));
+  if (checkpoint.offset != null && result.status == 422 && errorType(result.data) == staleIterator) {
+    return { offsetWentStale: true, records: [] };
   }
-  return { offset, offsetWentStale: false, records };
+  success(result, "record list");
+  const parsed = listPage(result.data);
+  return { offset: parsed.offset, offsetWentStale: false, records: parsed.records };
 }
 
 function nextCheckpoint(
@@ -238,7 +231,7 @@ function pollBody(config: Config, checkpoint: Checkpoint, offset: string | undef
       cursor,
       ...(config.formula.length == 0 ? [] : [config.formula]),
     ]),
-    pageSize: 100,
+    pageSize: Math.min(config.maxRecordsPerPoll, maximumPollEventsPerPage),
     sort: [{ direction: "asc", field: config.triggerField }],
     ...(config.fields.length == 0 ? {} : { fields }),
     ...(config.view.length == 0 ? {} : { view: config.view }),

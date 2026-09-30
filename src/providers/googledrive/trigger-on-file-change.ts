@@ -4,6 +4,7 @@ import type { JsonValue } from "../../triggers/common/types.ts";
 
 import {
   eventsPollOutputs,
+  maximumPollEventsPerPage,
   PermanentPollError,
   PollConnectionError,
   TransientPollError,
@@ -112,7 +113,7 @@ function readCheckpoint(value: JsonValue): Checkpoint {
 }
 
 async function seed(context: PollContext, config: Config): Promise<PollResult> {
-  const result = await get(context, `/files/${encodeURIComponent(config.folderId)}`, {
+  const result = await get(context, `/drive/v3/files/${encodeURIComponent(config.folderId)}`, {
     fields: "id,name,mimeType,driveId,trashed",
     supportsAllDrives: "true",
   });
@@ -137,12 +138,12 @@ async function pollFolder(context: PollContext, config: Config, checkpoint: Chec
   const query = filesQuery(config, checkpoint.since, checkpoint.floor);
   const fingerprint = `${config.driveId}|${query}`;
   const pageToken = checkpoint.pageQuery == fingerprint ? checkpoint.pageToken : undefined;
-  const result = await get(context, "/files", {
+  const result = await get(context, "/drive/v3/files", {
     corpora: config.driveId.length == 0 ? "allDrives" : "drive",
     driveId: config.driveId.length == 0 ? undefined : config.driveId,
     fields: listFields,
     includeItemsFromAllDrives: "true",
-    pageSize: config.maxFilesPerPoll,
+    pageSize: Math.min(config.maxFilesPerPoll, maximumPollEventsPerPage),
     pageToken,
     q: query,
     spaces: "drive",

@@ -231,7 +231,7 @@ async function watch(context: IntegrationReconcileContext, channels: Channel[]) 
         token: await channelToken(context.callbackSecret, channel.id),
         type: "web_hook",
       },
-      endpoint: "/changes/watch",
+      endpoint: "/drive/v3/changes/watch",
       method: "POST",
       query: {
         ...(config.driveId == null ? {} : { driveId: config.driveId }),
@@ -311,7 +311,7 @@ export async function googleDriveStartPageToken(context: ReadContext): Promise<s
   const result = await request(
     context,
     {
-      endpoint: "/changes/startPageToken",
+      endpoint: "/drive/v3/changes/startPageToken",
       method: "GET",
       query: {
         ...(config.driveId == null ? {} : { driveId: config.driveId }),
@@ -331,7 +331,7 @@ async function readGoogleDriveChanges(context: ReadContext, cursor: JsonValue) {
   const result = await request<Record<string, JsonValue>>(
     context,
     {
-      endpoint: "/changes",
+      endpoint: "/drive/v3/changes",
       method: "GET",
       query: {
         ...(config.driveId == null ? {} : { driveId: config.driveId }),
@@ -372,7 +372,7 @@ async function readGoogleDriveChanges(context: ReadContext, cursor: JsonValue) {
 async function stopChannel(context: IntegrationReconcileContext, channel: Channel): Promise<void> {
   const result = await execute(context, {
     body: { id: channel.id, resourceId: channel.resourceId! },
-    endpoint: "/channels/stop",
+    endpoint: "/drive/v3/channels/stop",
     method: "POST",
   });
   if ((result.status >= 200 && result.status < 300) || result.status == 404) return;

@@ -4,6 +4,7 @@ import type { JsonValue } from "../../triggers/common/types.ts";
 
 import {
   eventsPollOutputs,
+  maximumPollEventsPerPage,
   PermanentPollError,
   PollConnectionError,
   TransientPollError,
@@ -146,47 +147,43 @@ async function incremental(
 ): Promise<PollResult> {
   const events: PollEvent[] = [];
   let filtered = 0;
-  let pageToken = checkpoint.pageToken;
-  for (let page = 0; page < 5; page += 1) {
-    const result = await list(context, config.calendarId, {
-      maxResults: config.maxEventsPerPoll,
-      pageToken,
-      showDeleted: "true",
-      singleEvents: "false",
-      syncToken: checkpoint.syncToken,
-    });
-    if (pageToken != null && stalePage(result)) {
-      return {
-        checkpoint: { calendarId: config.calendarId, syncToken: checkpoint.syncToken },
-        events,
-        filtered,
-      };
-    }
-    success(context, result, "incremental sync");
-    const parsed = (record(result.data) ?? {}) as Page;
-    for (const item of parsed.items ?? []) {
-      if (item.id == null || item.id.length == 0) continue;
-      const change = classify(item);
-      if (!config.changes.has(change) || !matches(item, config.matchTerm)) {
-        filtered += 1;
-        continue;
-      }
-      events.push(event(item, item.id, change, config.calendarId));
-    }
-    if (parsed.nextSyncToken) {
-      return {
-        checkpoint: { calendarId: config.calendarId, syncToken: parsed.nextSyncToken },
-        events,
-        filtered,
-      };
-    }
-    if (!parsed.nextPageToken) throw new TransientPollError("Google Calendar sync response has no continuation token.");
-    pageToken = parsed.nextPageToken;
+  const result = await list(context, config.calendarId, {
+    maxResults: Math.min(config.maxEventsPerPoll, maximumPollEventsPerPage),
+    pageToken: checkpoint.pageToken,
+    showDeleted: "true",
+    singleEvents: "false",
+    syncToken: checkpoint.syncToken,
+  });
+  if (checkpoint.pageToken != null && stalePage(result)) {
+    return {
+      checkpoint: { calendarId: config.calendarId, syncToken: checkpoint.syncToken },
+      events,
+      filtered,
+    };
   }
+  success(context, result, "incremental sync");
+  const parsed = (record(result.data) ?? {}) as Page;
+  for (const item of parsed.items ?? []) {
+    if (item.id == null || item.id.length == 0) continue;
+    const change = classify(item);
+    if (!config.changes.has(change) || !matches(item, config.matchTerm)) {
+      filtered += 1;
+      continue;
+    }
+    events.push(event(item, item.id, change, config.calendarId));
+  }
+  if (parsed.nextSyncToken) {
+    return {
+      checkpoint: { calendarId: config.calendarId, syncToken: parsed.nextSyncToken },
+      events,
+      filtered,
+    };
+  }
+  if (!parsed.nextPageToken) throw new TransientPollError("Google Calendar sync response has no continuation token.");
   return {
     checkpoint: {
       calendarId: config.calendarId,
-      ...(pageToken == null ? {} : { pageToken }),
+      pageToken: parsed.nextPageToken,
       syncToken: checkpoint.syncToken,
     },
     events,

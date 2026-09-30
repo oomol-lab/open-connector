@@ -93,6 +93,8 @@ Trigger-only tokens can perform the provider API calls required by their registe
 
 For Poll Triggers, send `{ "operation": "read", "config": {}, "checkpoint": null }` initially, then pass the returned business checkpoint on later reads. Use `{ "operation": "options", "config": {}, "field": "teamId" }` to read Linear configuration options. Unknown fields, caller-supplied access grants, oversized checkpoints and malformed operations are rejected.
 
+Poll pages contain at most 100 events. Provider page sizes are capped at this limit even when a configured maximum is larger. When `hasMore` is true, continue with the returned checkpoint to drain the next page; sync tokens and high-water marks advance only after the remaining pages are consumed.
+
 Webhook reconciliation uses:
 
 ```json

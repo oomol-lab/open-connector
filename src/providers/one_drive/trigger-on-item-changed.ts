@@ -5,6 +5,7 @@ import type { JsonValue } from "../../triggers/common/types.ts";
 import { canonicalJsonBytes, digestBytes } from "../../triggers/common/encoding.ts";
 import {
   eventsPollOutputs,
+  maximumPollEventsPerPage,
   PermanentPollError,
   PollConnectionError,
   TransientPollError,
@@ -137,34 +138,33 @@ async function changedItems(
   readonly next: { readonly checkpoint: Checkpoint; readonly hasMore: boolean };
 }> {
   const items = new Map<string, Item>();
-  let token = checkpoint.pageToken ?? checkpoint.deltaToken;
-  for (let page = 0; page < 5; page += 1) {
-    const result = await get(context, "/me/drive/root/delta", { $top: pageSize, token });
-    deltaSuccess(result);
-    const parsed = (record(result.data) ?? {}) as Page;
-    for (const item of parsed.value ?? []) if (item.id != null && item.id.length > 0) items.set(item.id, item);
-    if (parsed["@odata.deltaLink"]) {
-      return {
-        items,
-        next: {
-          checkpoint: {
-            deltaToken: requireToken(parsed["@odata.deltaLink"]),
-            lastPolledAt: context.now.toISOString(),
-          },
-          hasMore: false,
+  const result = await get(context, "/me/drive/root/delta", {
+    $top: Math.min(pageSize, maximumPollEventsPerPage),
+    token: checkpoint.pageToken ?? checkpoint.deltaToken,
+  });
+  deltaSuccess(result);
+  const parsed = (record(result.data) ?? {}) as Page;
+  for (const item of parsed.value ?? []) if (item.id != null && item.id.length > 0) items.set(item.id, item);
+  if (parsed["@odata.deltaLink"]) {
+    return {
+      items,
+      next: {
+        checkpoint: {
+          deltaToken: requireToken(parsed["@odata.deltaLink"]),
+          lastPolledAt: context.now.toISOString(),
         },
-      };
-    }
-    if (!parsed["@odata.nextLink"]) throw new TransientPollError("OneDrive delta response has no continuation link.");
-    token = requireToken(parsed["@odata.nextLink"]);
+        hasMore: false,
+      },
+    };
   }
+  if (!parsed["@odata.nextLink"]) throw new TransientPollError("OneDrive delta response has no continuation link.");
   return {
     items,
     next: {
       checkpoint: {
         deltaToken: checkpoint.deltaToken,
         lastPolledAt: checkpoint.lastPolledAt,
-        pageToken: token,
+        pageToken: requireToken(parsed["@odata.nextLink"]),
       },
       hasMore: true,
     },
