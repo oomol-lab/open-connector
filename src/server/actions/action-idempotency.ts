@@ -26,6 +26,7 @@ export type IdempotencyKeyResult = { ok: true; key: string | undefined } | { ok:
 export interface ActionRequestFingerprintInput {
   actionId: string;
   connectionName: string;
+  connectionId?: string;
   input: unknown;
   runtimeTokenId?: string;
 }
@@ -64,6 +65,7 @@ export function hashActionRequest(input: ActionRequestFingerprintInput): string 
     JSON.stringify({
       actionId: input.actionId,
       connectionName: input.connectionName,
+      connectionId: input.connectionId,
       input: canonicalize(input.input, 1),
       runtimeTokenId: input.runtimeTokenId,
     }),

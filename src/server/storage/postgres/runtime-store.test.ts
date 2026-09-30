@@ -11,6 +11,7 @@ import { defaultMigrationSource } from "../migration-source.ts";
 import { createNodeRuntimeDatabase, migratePostgresRuntimeDatabase } from "../node-runtime-database.ts";
 import { RuntimeTokenService } from "../runtime-token-service.ts";
 import { saasProjectStoreTests, saasMaintenanceTests } from "../saas-project-store.cases.ts";
+import { triggerStoreTests } from "../trigger-store.cases.ts";
 import { assertPostgresSchemaReady, migratePostgresDatabase } from "./migrations.ts";
 import { PostgresRuntimeDatabase } from "./runtime-store.ts";
 
@@ -56,6 +57,8 @@ describe("PostgreSQL migrations with PGlite", () => {
           { name: "0013_connection_requests.sql" },
           { name: "0014_saas_project.sql" },
           { name: "0015_saas_cleanup_runtime.sql" },
+          { name: "0016_trigger_policy.sql" },
+          { name: "0017_trigger_subscriptions.sql" },
         ],
       });
 
@@ -117,6 +120,8 @@ describe("PostgreSQL migrations with a custom migration source", () => {
           { name: "0013_connection_requests.sql" },
           { name: "0014_saas_project.sql" },
           { name: "0015_saas_cleanup_runtime.sql" },
+          { name: "0016_trigger_policy.sql" },
+          { name: "0017_trigger_subscriptions.sql" },
           { name: "9998_custom.sql" },
         ],
       });
@@ -203,6 +208,7 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
   });
 
   connectionRequestStoreTests(() => database);
+  triggerStoreTests(() => database);
 
   it("persists connections and OAuth data across database instances", async () => {
     const connection = await database.connectionStore.set("github", "default", githubCredential("github-token"));
@@ -420,7 +426,29 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
     database = await PostgresRuntimeDatabase.open(testServer.url, {
       secretCodec: new AesGcmSecretCodec("old-key"),
     });
-    await database.connectionStore.set("github", "default", githubCredential("github-token"));
+    const connection = await database.connectionStore.set("github", "default", githubCredential("github-token"));
+    const token = await new RuntimeTokenService(database.runtimeTokenStore).createToken("trigger-owner");
+    const triggerRecord = {
+      id: "rotation-trigger",
+      mode: "webhook" as const,
+      tokenId: token.record.id,
+      service: "github",
+      connectionId: connection.id,
+      connectionRevision: connection.revision,
+      providerAccountId: githubProfile.accountId,
+      triggerId: "github.on_repo_event",
+      requestKey: "binding",
+      config: { owner: "octocat", repo: "repository" },
+      endpointUrl: "https://callback.example/hook",
+      callbackNonce: "rotation-nonce",
+      callbackSecret: "private-trigger-secret",
+      checkpoint: null,
+      subscription: { hookId: "private-hook" },
+      reconcileAt: 1_000,
+      status: "active" as const,
+    };
+    await database.triggerStore.insertFlowTrigger(triggerRecord);
+
     await database.oauthClientConfigStore.set({
       service: "gmail",
       clientId: "client-id",
@@ -449,6 +477,7 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
       secretCodec: new AesGcmSecretCodec("old-key"),
     });
     await expect(withOldKey.connectionStore.get("github", "default")).rejects.toThrow();
+    await expect(withOldKey.triggerStore.getFlowTrigger(triggerRecord.id)).rejects.toThrow();
     await withOldKey.close();
 
     database = await PostgresRuntimeDatabase.open(testServer.url, {
@@ -457,6 +486,7 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
     await expect(database.connectionStore.get("github", "default")).resolves.toMatchObject({
       credential: { apiKey: "github-token" },
     });
+    await expect(database.triggerStore.getFlowTrigger(triggerRecord.id)).resolves.toEqual(triggerRecord);
     await expect(database.oauthClientConfigStore.get("gmail")).resolves.toMatchObject({
       clientSecret: "client-secret",
     });
@@ -470,6 +500,7 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
 
     await database.resetRuntimeData();
     await expect(database.connectionStore.list()).resolves.toEqual([]);
+    await expect(database.triggerStore.list()).resolves.toEqual([]);
     const pool = new Pool({ connectionString: testServer.url, max: 1 });
     try {
       await expect(assertPostgresSchemaReady(pool)).resolves.toBeUndefined();

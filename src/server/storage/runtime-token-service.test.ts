@@ -43,6 +43,7 @@ describe("RuntimeTokenService", () => {
     };
 
     await expect(new RuntimeTokenService(store).resolveToken(token)).resolves.toEqual({
+      allowedTriggers: [],
       tokenId: "token-1",
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
@@ -79,6 +80,7 @@ describe("RuntimeTokenService", () => {
     const logger = { error: vi.fn(), info: vi.fn(), warn: vi.fn() };
 
     await expect(new RuntimeTokenService(store, logger).resolveToken(token)).resolves.toEqual({
+      allowedTriggers: [],
       tokenId: "token-1",
       allowedActions: [],
       blockedActions: [],

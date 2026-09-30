@@ -5,6 +5,7 @@ import { AesGcmSecretCodec } from "../../secrets/secret-codec.ts";
 import { connectionRequestStoreTests } from "../connection-request-store.cases.ts";
 import { RuntimeTokenService } from "../runtime-token-service.ts";
 import { saasProjectStoreTests } from "../saas-project-store.cases.ts";
+import { triggerStoreTests } from "../trigger-store.cases.ts";
 import { D1RuntimeDatabase } from "./runtime-store.ts";
 import { SqliteD1Database } from "./test-database.ts";
 
@@ -607,5 +608,6 @@ describe("D1 connection requests", () => {
     database = new D1RuntimeDatabase(new SqliteD1Database(), { secretCodec: new AesGcmSecretCodec("saas-test") });
   });
   connectionRequestStoreTests(() => database);
+  triggerStoreTests(() => database);
   saasProjectStoreTests(() => database);
 });

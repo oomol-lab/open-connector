@@ -15,10 +15,15 @@ export function readRuntimePolicyRules(body: JsonRequestBody): PolicyRules {
     blockedActions: readRules(body.blockedActions, "blockedActions", "action"),
     allowedProxies: readRules(body.allowedProxies, "allowedProxies", "proxy"),
     blockedProxies: readRules(body.blockedProxies, "blockedProxies", "proxy"),
+    allowedTriggers: readRules(body.allowedTriggers, "allowedTriggers", "action", true),
+    blockedTriggers: readRules(body.blockedTriggers, "blockedTriggers", "action", true),
   };
 }
 
 export function readTokenPolicy(body: JsonRequestBody, allowOmitted = false): TokenPolicy {
+  if (body.blockedTriggers !== undefined) {
+    throw invalidInput("Token policy does not support Trigger block rules.");
+  }
   if (body.blockedProxies !== undefined) {
     throw invalidInput("Token policy does not support proxy block rules.");
   }
@@ -26,6 +31,7 @@ export function readTokenPolicy(body: JsonRequestBody, allowOmitted = false): To
     allowedActions: readRules(body.allowedActions, "allowedActions", "action", allowOmitted),
     blockedActions: readRules(body.blockedActions, "blockedActions", "action", allowOmitted),
     allowedProxies: readRules(body.allowedProxies, "allowedProxies", "proxy", allowOmitted),
+    allowedTriggers: readRules(body.allowedTriggers, "allowedTriggers", "action", true),
     allowedConnections: readConnectionIds(body.allowedConnections, "allowedConnections", allowOmitted),
   };
 }

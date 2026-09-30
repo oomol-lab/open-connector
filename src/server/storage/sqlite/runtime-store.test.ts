@@ -11,6 +11,7 @@ import { connectionRequestStoreTests } from "../connection-request-store.cases.t
 import { createDirectoryMigrationSource, defaultMigrationSource } from "../migration-source.ts";
 import { RuntimeTokenService } from "../runtime-token-service.ts";
 import { saasProjectStoreTests, saasMaintenanceTests } from "../saas-project-store.cases.ts";
+import { triggerStoreTests } from "../trigger-store.cases.ts";
 import { SqliteRunLogStore, SqliteRuntimeDatabase } from "./runtime-store.ts";
 
 const tempDirs: string[] = [];
@@ -57,6 +58,8 @@ describe("SqliteRuntimeDatabase", () => {
       "0013_connection_requests.sql",
       "0014_saas_project.sql",
       "0015_saas_cleanup_runtime.sql",
+      "0016_trigger_policy.sql",
+      "0017_trigger_subscriptions.sql",
     ];
     expect(entries.filter((entry) => entry.message === "sqlite migration started")).toEqual(
       migrations.map((migration) => ({ fields: { migration }, message: "sqlite migration started" })),
@@ -873,7 +876,7 @@ describe("SqliteRuntimeDatabase", () => {
           allowedConnections: ["example:work"],
         };
         await second.runtimeTokenStore.updatePolicy(tokenId, policy);
-        await expect(tokens.resolveToken(token)).resolves.toEqual({ tokenId, ...policy });
+        await expect(tokens.resolveToken(token)).resolves.toEqual({ tokenId, ...policy, allowedTriggers: [] });
       } finally {
         second.close();
       }
@@ -985,13 +988,33 @@ describe("SqliteRuntimeDatabase", () => {
     });
     const tokens = new RuntimeTokenService(database.runtimeTokenStore);
     const token = await tokens.createToken("Claude Desktop");
-    await database.connectionStore.set("github", "default", {
+    const connection = await database.connectionStore.set("github", "default", {
       authType: "api_key",
       apiKey: "github-token",
       values: { apiKey: "github-token" },
       profile: githubProfile,
       metadata: {},
     });
+    const triggerRecord = {
+      id: "rotation-trigger",
+      mode: "webhook" as const,
+      tokenId: token.record.id,
+      service: "github",
+      connectionId: connection.id,
+      connectionRevision: connection.revision,
+      providerAccountId: githubProfile.accountId,
+      triggerId: "github.on_repo_event",
+      requestKey: "binding",
+      config: { owner: "octocat", repo: "repository" },
+      endpointUrl: "https://callback.example/hook",
+      callbackNonce: "rotation-nonce",
+      callbackSecret: "private-trigger-secret",
+      checkpoint: null,
+      subscription: { hookId: "private-hook" },
+      reconcileAt: 1_000,
+      status: "active" as const,
+    };
+    await database.triggerStore.insertFlowTrigger(triggerRecord);
     await database.oauthClientConfigStore.set({
       service: "gmail",
       clientId: "client-id",
@@ -1034,6 +1057,7 @@ describe("SqliteRuntimeDatabase", () => {
       secretCodec: new AesGcmSecretCodec("old-key"),
     });
     await expect(withOldKey.connectionStore.get("github", "default")).rejects.toThrow();
+    await expect(withOldKey.triggerStore.getFlowTrigger(triggerRecord.id)).rejects.toThrow();
     await expect(withOldKey.idempotencyStore.claim({ ...claim, claimId: "claim-2" })).rejects.toThrow();
     withOldKey.close();
 
@@ -1046,6 +1070,7 @@ describe("SqliteRuntimeDatabase", () => {
         apiKey: "github-token",
       },
     });
+    await expect(withNewKey.triggerStore.getFlowTrigger(triggerRecord.id)).resolves.toEqual(triggerRecord);
     await expect(withNewKey.oauthClientConfigStore.get("gmail")).resolves.toMatchObject({
       clientSecret: "client-secret",
     });
@@ -1111,6 +1136,7 @@ describe("SQLite connection requests", () => {
     database.close();
   });
   connectionRequestStoreTests(() => database);
+  triggerStoreTests(() => database);
   saasProjectStoreTests(() => database);
 });
 

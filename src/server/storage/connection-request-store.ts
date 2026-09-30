@@ -154,6 +154,10 @@ export class ConnectionRequestStore {
     const id = pending.target?.id ?? crypto.randomUUID();
     const revision = crypto.randomUUID();
     const value = await this.secretCodec.encode(JSON.stringify(credential));
+    const accountId =
+      credential.authType !== "no_auth" && credential.metadata.providerAccountVerified === true
+        ? credential.profile.accountId
+        : null;
     signal?.throwIfAborted();
     const now = new Date();
     const active =
@@ -161,12 +165,23 @@ export class ConnectionRequestStore {
     const write: RequestStatement = pending.target
       ? {
           sql: `update connections set value = ?, revision = ?, updated_at = ?, source = 'local',
-            managed_project_id = null, provider_config_id = null, external_user_id = null, remote_account_id = null, local_request_id = null where id = ? and revision = ? and ${active} returning id`,
-          values: [value, revision, now.toISOString(), id, pending.target.revision, pending.connectionRequestId],
+            managed_project_id = null, provider_config_id = null, external_user_id = null, remote_account_id = null, local_request_id = null, provider_account_id = ? where id = ? and revision = ? and ${active}
+            and (not exists (select 1 from trigger_subscriptions where connection_id = connections.id and mode <> 'resource-set' and status in ('active', 'deleting'))
+              or (provider_account_id is not null and provider_account_id = ?)) returning id`,
+          values: [
+            value,
+            revision,
+            now.toISOString(),
+            accountId,
+            id,
+            pending.target.revision,
+            pending.connectionRequestId,
+            accountId,
+          ],
         }
       : {
-          sql: `insert into connections (id, revision, service, connection_name, value, updated_at)
-        select ?, ?, ?, ?, ?, ? where ${active} returning id`,
+          sql: `insert into connections (id, revision, service, connection_name, value, updated_at, provider_account_id)
+        select ?, ?, ?, ?, ?, ?, ? where ${active} returning id`,
           values: [
             id,
             revision,
@@ -174,10 +189,12 @@ export class ConnectionRequestStore {
             pending.connectionName,
             value,
             now.toISOString(),
+            accountId,
             pending.connectionRequestId,
           ],
         };
     const results = await this.transaction([
+      { sql: "update connections set revision = revision where id = ?", values: [id] },
       queueSaasConnections(`id = ? and revision = ? and ${active}`, [
         id,
         pending.target?.revision ?? "",
@@ -190,7 +207,7 @@ export class ConnectionRequestStore {
         values: [id, now.getTime(), pending.connectionRequestId, id, revision],
       },
     ]);
-    return results[1].length ? id : undefined;
+    return results[2].length ? id : undefined;
   }
 
   private retireRequests(owner: string, service: string, now: number): RequestStatement[] {
@@ -383,10 +400,11 @@ export class ConnectionRequestStore {
       and lease_id = ? and lease_until > ? and expires_at > ?`;
     const activeValues = [pending.connectionRequestId, lease.leaseId, now, new Date(now - 86_400_000).toISOString()];
     const target = pending.target
-      ? "exists (select 1 from connections where id = ? and revision = ?)"
+      ? "exists (select 1 from connections where id = ? and revision = ? and not exists (select 1 from trigger_subscriptions where connection_id = connections.id and mode <> 'resource-set' and status in ('active', 'deleting')))"
       : "not exists (select 1 from connections where service = ? and connection_name = ?)";
     const targetValues = pending.target ? [id, pending.target.revision] : [pending.service, pending.connectionName];
     const results = await this.transaction([
+      { sql: "update connections set revision = revision where id = ?", values: [id] },
       queueSaasConnections(
         `id = ? and revision = ? and exists (select 1 from connection_requests where ${active} and remote_account_id <> connections.remote_account_id)`,
         [id, pending.target?.revision ?? "", ...activeValues],
@@ -414,6 +432,6 @@ export class ConnectionRequestStore {
         values: [now, ...activeValues],
       },
     ]);
-    return results[2].length ? "connected" : results[4].length ? "conflict" : "lease_lost";
+    return results[3].length ? "connected" : results[5].length ? "conflict" : "lease_lost";
   }
 }

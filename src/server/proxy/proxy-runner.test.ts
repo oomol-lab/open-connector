@@ -482,7 +482,7 @@ describe("ProxyRunner", () => {
         getCredential: expect.any(Function),
       }),
     );
-    expect(connections.resolveForExecution).toHaveBeenCalledWith("example", "work");
+    expect(connections.resolveForExecution).toHaveBeenCalledWith("example", "work", undefined);
   });
 
   it("threads the caller abort signal into the proxy execution context", async () => {

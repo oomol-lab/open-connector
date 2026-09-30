@@ -132,6 +132,7 @@ describe("AccessPage", () => {
         { mode: "unrestricted", ids: [githubWorkId] },
       ),
     ).toEqual({
+      allowedTriggers: [],
       allowedActions: ["github.*"],
       blockedActions: [],
       allowedProxies: [],
@@ -150,9 +151,23 @@ describe("AccessPage", () => {
         { mode: "restricted", ids: [githubWorkId] },
       ),
     ).toEqual({
+      allowedTriggers: [],
       allowedActions: [],
       blockedActions: [],
       allowedProxies: ["github"],
+      allowedConnections: [githubWorkId],
+    });
+  });
+
+  it("preserves existing Trigger grants when editing token connection access", () => {
+    const rules = {
+      allowedActions: [],
+      blockedActions: ["*"],
+      allowedProxies: [],
+      allowedTriggers: ["github.on_repo_event"],
+    };
+    expect(runtimeTokenPolicyBody(rules, { mode: "restricted", ids: [githubWorkId] })).toMatchObject({
+      allowedTriggers: ["github.on_repo_event"],
       allowedConnections: [githubWorkId],
     });
   });

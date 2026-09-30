@@ -11,6 +11,7 @@ export interface RuntimeTokenRecord {
   blockedActions: string[];
   allowedProxies: string[];
   allowedConnections: string[];
+  allowedTriggers?: string[];
   createdAt: string;
   lastUsedAt?: string;
 }
@@ -22,6 +23,7 @@ export interface RuntimeTokenSummary {
   blockedActions: string[];
   allowedProxies: string[];
   allowedConnections: string[];
+  allowedTriggers?: string[];
   createdAt: string;
   lastUsedAt?: string;
 }
@@ -74,6 +76,7 @@ export class RuntimeTokenService {
       blockedActions: policy.blockedActions,
       allowedProxies: policy.allowedProxies,
       allowedConnections: policy.allowedConnections ?? [],
+      allowedTriggers: policy.allowedTriggers ?? [],
       createdAt: now,
     };
     await this.store.add(record);
@@ -110,6 +113,7 @@ export class RuntimeTokenService {
       blockedActions: matched.blockedActions,
       allowedProxies: matched.allowedProxies,
       allowedConnections: matched.allowedConnections ?? [],
+      allowedTriggers: matched.allowedTriggers ?? [],
     };
   }
 
@@ -142,6 +146,7 @@ export function summarizeRuntimeToken(record: RuntimeTokenRecord): RuntimeTokenS
     blockedActions: record.blockedActions,
     allowedProxies: record.allowedProxies,
     allowedConnections: record.allowedConnections,
+    allowedTriggers: record.allowedTriggers ?? [],
     createdAt: record.createdAt,
     lastUsedAt: record.lastUsedAt,
   };

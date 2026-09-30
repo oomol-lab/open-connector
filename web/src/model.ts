@@ -171,6 +171,7 @@ export interface RuntimeTokenSummary {
   allowedActions: string[];
   blockedActions: string[];
   allowedProxies: string[];
+  allowedTriggers?: string[];
   allowedConnections: string[];
   createdAt: string;
   lastUsedAt?: string;
@@ -180,7 +181,9 @@ export interface PolicyRules {
   allowedActions: string[];
   blockedActions: string[];
   allowedProxies: string[];
+  allowedTriggers?: string[];
   blockedProxies: string[];
+  blockedTriggers?: string[];
 }
 
 export interface RuntimePolicyState {

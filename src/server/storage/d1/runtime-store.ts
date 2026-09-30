@@ -36,6 +36,7 @@ import {
 } from "../runtime-sql.ts";
 import { DEFAULT_RUN_LIMIT } from "../runtime-store.ts";
 import { SaasProjectStore } from "../saas-project-store.ts";
+import { SqlTriggerStore } from "../trigger-store.ts";
 
 type SecretJsonTable = "oauth_client_configs";
 
@@ -48,6 +49,7 @@ export class D1RuntimeDatabase implements RuntimeDatabase {
   readonly saasProjectStore: SaasProjectStore;
   readonly connectionRequestStore: ConnectionRequestStore;
   readonly connectionStore: SqlConnectionStore;
+  readonly triggerStore: SqlTriggerStore;
   readonly oauthClientConfigStore: D1OAuthClientConfigStore;
   readonly oauthStateStore: D1OAuthStateStore;
   readonly runtimeTokenStore: D1RuntimeTokenStore;
@@ -64,6 +66,7 @@ export class D1RuntimeDatabase implements RuntimeDatabase {
     };
     this.connectionRequestStore = new ConnectionRequestStore(transaction, secretCodec);
     this.connectionStore = new SqlConnectionStore(transaction, secretCodec);
+    this.triggerStore = new SqlTriggerStore(transaction, secretCodec);
     this.saasProjectStore = new SaasProjectStore(transaction, secretCodec);
     this.oauthClientConfigStore = new D1OAuthClientConfigStore(database, secretCodec);
     this.oauthStateStore = new D1OAuthStateStore(database, secretCodec);
@@ -213,7 +216,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
         insert into runtime_tokens (
           ${runtimeTokenColumns}
         )
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .bind(
@@ -224,6 +227,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
         JSON.stringify(record.blockedActions),
         JSON.stringify(record.allowedProxies),
         JSON.stringify(record.allowedConnections ?? []),
+        JSON.stringify(record.allowedTriggers ?? []),
         record.createdAt,
         record.lastUsedAt ?? null,
       )
@@ -262,7 +266,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
       .prepare(
         `
         update runtime_tokens
-        set allowed_actions = ?, blocked_actions = ?, allowed_proxies = ?, allowed_connections = ?
+        set allowed_actions = ?, blocked_actions = ?, allowed_proxies = ?, allowed_connections = ?, allowed_triggers = ?
         where id = ?
         returning ${runtimeTokenColumns}
       `,
@@ -272,6 +276,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
         JSON.stringify(policy.blockedActions),
         JSON.stringify(policy.allowedProxies),
         JSON.stringify(policy.allowedConnections ?? []),
+        JSON.stringify(policy.allowedTriggers ?? []),
         id,
       )
       .first<RuntimeRow>();

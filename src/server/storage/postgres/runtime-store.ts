@@ -40,6 +40,7 @@ import {
 } from "../runtime-sql.ts";
 import { DEFAULT_RUN_LIMIT } from "../runtime-store.ts";
 import { SaasProjectStore } from "../saas-project-store.ts";
+import { SqlTriggerStore } from "../trigger-store.ts";
 import { assertPostgresSchemaReady } from "./migrations.ts";
 
 export interface PostgresRuntimeDatabaseOptions {
@@ -55,6 +56,7 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
   readonly saasProjectStore: SaasProjectStore;
   readonly connectionRequestStore: ConnectionRequestStore;
   readonly connectionStore: IConnectionStore;
+  readonly triggerStore: SqlTriggerStore;
   readonly oauthClientConfigStore: IOAuthClientConfigStore;
   readonly oauthStateStore: IOAuthStateStore;
   readonly runtimeTokenStore: IRuntimeTokenStore;
@@ -89,6 +91,7 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
       });
     this.connectionRequestStore = new ConnectionRequestStore(transaction, this.secretCodec);
     this.connectionStore = new SqlConnectionStore(transaction, this.secretCodec);
+    this.triggerStore = new SqlTriggerStore(transaction, this.secretCodec);
     this.saasProjectStore = new SaasProjectStore(transaction, this.secretCodec);
     this.oauthClientConfigStore = new PostgresOAuthClientConfigStore(pool, this.secretCodec);
     this.oauthStateStore = new PostgresOAuthStateStore(pool, this.secretCodec);
@@ -133,7 +136,8 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
         delete from oauth_sources;
         delete from saas_cleanup;
         delete from managed_project;
-        delete from connections;
+        delete from trigger_subscriptions;
+      delete from connections;
         delete from oauth_client_configs;
         delete from oauth_states;
         delete from connection_requests;
@@ -151,7 +155,7 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
     await runInTransaction(this.pool, async (client) => {
       await client.query("select pg_advisory_xact_lock(1326382671, 2)");
       await client.query(
-        "lock table connections, oauth_client_configs, oauth_states, connection_requests, idempotency_records, managed_project, oauth_sources, saas_cleanup, instance_identity in access exclusive mode",
+        "lock table connections, oauth_client_configs, oauth_states, connection_requests, idempotency_records, managed_project, oauth_sources, saas_cleanup, instance_identity, trigger_subscriptions in access exclusive mode",
       );
 
       const project = await client.query<RuntimeRow>("select value from managed_project where id = 1");
@@ -181,6 +185,12 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
           readString(row, "id"),
         ]);
       }
+      const triggerRows = await client.query<RuntimeRow>("select id, value from trigger_subscriptions");
+      for (const row of triggerRows.rows)
+        await client.query("update trigger_subscriptions set value = $1 where id = $2", [
+          await nextSecretCodec.encode(await this.secretCodec.decode(readString(row, "value"))),
+          readString(row, "id"),
+        ]);
       const connectionRows = await client.query<RuntimeRow>("select service, connection_name, value from connections");
       const connections = await Promise.all(
         connectionRows.rows.map(async (row) => ({
@@ -390,7 +400,7 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
         insert into runtime_tokens (
           ${runtimeTokenColumns}
         )
-        values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       `,
       [
         record.id,
@@ -400,6 +410,7 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
         JSON.stringify(record.blockedActions),
         JSON.stringify(record.allowedProxies),
         JSON.stringify(record.allowedConnections ?? []),
+        JSON.stringify(record.allowedTriggers ?? []),
         record.createdAt,
         record.lastUsedAt ?? null,
       ],
@@ -432,8 +443,8 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
     const result = await this.pool.query<RuntimeRow>(
       `
         update runtime_tokens
-        set allowed_actions = $1, blocked_actions = $2, allowed_proxies = $3, allowed_connections = $4
-        where id = $5
+        set allowed_actions = $1, blocked_actions = $2, allowed_proxies = $3, allowed_connections = $4, allowed_triggers = $5
+        where id = $6
         returning ${runtimeTokenColumns}
       `,
       [
@@ -441,6 +452,7 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
         JSON.stringify(policy.blockedActions),
         JSON.stringify(policy.allowedProxies),
         JSON.stringify(policy.allowedConnections ?? []),
+        JSON.stringify(policy.allowedTriggers ?? []),
         id,
       ],
     );

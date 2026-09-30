@@ -28,6 +28,7 @@ export interface RunActionInput {
   input: unknown;
   caller: RunLogCaller;
   connectionName?: string;
+  connectionId?: string;
   policy: ActionPolicySnapshot;
   runtimeTokenId?: string;
   signal?: AbortSignal;
@@ -89,7 +90,11 @@ export class ActionRunner {
       result = cancelledExecutionResult();
     } else {
       try {
-        const summary = await this.options.connections.getConnectionSummary(action.service, input.connectionName);
+        const summary = await this.options.connections.getConnectionSummary(
+          action.service,
+          input.connectionName,
+          input.connectionId,
+        );
         input.signal?.throwIfAborted();
         const connectionPolicy =
           summary?.authType === "no_auth" ? undefined : input.policy.evaluateConnection(summary?.id);
@@ -105,7 +110,11 @@ export class ActionRunner {
             },
           };
         } else {
-          connection = await this.options.connections.resolveForExecution(action.service, input.connectionName);
+          connection = await this.options.connections.resolveForExecution(
+            action.service,
+            input.connectionName,
+            input.connectionId,
+          );
           input.signal?.throwIfAborted();
           const targetPolicy =
             connection.summary?.authType === "no_auth"

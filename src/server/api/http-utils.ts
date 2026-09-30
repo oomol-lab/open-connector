@@ -1,3 +1,4 @@
+import type { RuntimeStatus } from "./runtime-api.ts";
 import type { Context } from "hono";
 
 /**
@@ -75,12 +76,7 @@ export async function readJsonBody(context: Context, maxBytes?: number): Promise
 /**
  * Write the standard JSON error envelope used by local HTTP routes.
  */
-export function jsonError(
-  context: Context,
-  status: 400 | 401 | 403 | 404 | 413 | 500 | 502 | 504,
-  code: string,
-  message: string,
-): Response {
+export function jsonError(context: Context, status: RuntimeStatus, code: string, message: string): Response {
   return context.json(
     {
       error: {
@@ -108,9 +104,9 @@ export function internalError(context: Context, _error: unknown): Response {
 
 export class HttpRequestError extends Error {
   readonly code: string;
-  readonly status: 400 | 413;
+  readonly status: RuntimeStatus;
 
-  constructor(code: string, message: string, status: 400 | 413 = 400) {
+  constructor(code: string, message: string, status: RuntimeStatus = 400) {
     super(message);
     this.code = code;
     this.status = status;

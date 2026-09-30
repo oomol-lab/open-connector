@@ -1,3 +1,5 @@
+import type { TriggerKeySnapshot } from "../triggers/common/types.ts";
+import type { TriggerPermission } from "../triggers/metadata.ts";
 /**
  * JSON Schema object used for action input and output contracts.
  *
@@ -273,6 +275,8 @@ export type ProviderDefinition = {
   iconUrl?: string;
   /** Public action catalog for this provider. */
   actions: readonly ActionDefinition[];
+  triggers?: readonly TriggerKeySnapshot[];
+  triggerPermissions?: readonly TriggerPermission[];
 };
 
 /**

@@ -3,12 +3,13 @@ import type { ConnectionError, ConnectionSummary, ManagedConnectionSummary } fro
 import type { ProviderAuthSetup } from "../../core/provider-setup.ts";
 import type { ExecutionResult, ProviderScenario } from "../../core/types.ts";
 import type { OAuthClientConfigSummary } from "../../oauth/oauth-client-config-service.ts";
+import type { TriggerPermission } from "../../triggers/metadata.ts";
 import type { Context } from "hono";
 
 import { optionalInteger, optionalString, optionalRecord, requiredRecord } from "../../core/cast.ts";
 import { describeProviderAuth } from "../../core/provider-setup.ts";
 
-type RuntimeStatus = 400 | 401 | 402 | 403 | 404 | 409 | 413 | 429 | 500 | 501 | 502 | 503 | 504;
+export type RuntimeStatus = 400 | 401 | 402 | 403 | 404 | 409 | 413 | 429 | 500 | 501 | 502 | 503 | 504;
 
 export type RuntimeResponseMeta = Record<string, unknown>;
 
@@ -67,6 +68,7 @@ export interface RuntimeActionMetadata {
 
 export interface RuntimeConnectedApp {
   id: string;
+  providerAccountId: string;
   service: string;
   status: "active" | "disconnected";
   alias: string;
@@ -142,6 +144,7 @@ export function serializeRuntimeAction(action: RuntimeActionDefinition): Runtime
 export function serializeRuntimeConnectedApp(connection: ConnectionSummary): RuntimeConnectedApp {
   return {
     id: connection.id,
+    providerAccountId: connection.profile.accountId,
     service: connection.service,
     status: connection.configured ? "active" : "disconnected",
     alias: connection.connectionName,
@@ -413,4 +416,13 @@ export function serializeRuntimeProviderSetup(
         }
       : undefined,
   };
+}
+
+export function serializeRuntimeTriggerPermissions(
+  provider: RuntimeProviderDefinition,
+): (TriggerPermission & { requiredScopes: readonly string[] })[] {
+  return (provider.triggerPermissions ?? []).map((permission) => ({
+    ...permission,
+    requiredScopes: permission.providerPermissions,
+  }));
 }

@@ -39,6 +39,7 @@ import {
 } from "../runtime-sql.ts";
 import { DEFAULT_RUN_LIMIT } from "../runtime-store.ts";
 import { SaasProjectStore } from "../saas-project-store.ts";
+import { SqlTriggerStore } from "../trigger-store.ts";
 
 type SecretJsonTable = "oauth_client_configs";
 
@@ -88,6 +89,7 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
   readonly saasProjectStore: SaasProjectStore;
   readonly connectionRequestStore: ConnectionRequestStore;
   readonly connectionStore: SqlConnectionStore;
+  readonly triggerStore: SqlTriggerStore;
   readonly oauthClientConfigStore: SqliteOAuthClientConfigStore;
   readonly oauthStateStore: SqliteOAuthStateStore;
   readonly runtimeTokenStore: SqliteRuntimeTokenStore;
@@ -109,6 +111,7 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
       );
     this.connectionRequestStore = new ConnectionRequestStore(transaction, this.secretCodec);
     this.connectionStore = new SqlConnectionStore(transaction, this.secretCodec);
+    this.triggerStore = new SqlTriggerStore(transaction, this.secretCodec);
     this.saasProjectStore = new SaasProjectStore(transaction, this.secretCodec);
     this.oauthClientConfigStore = new SqliteOAuthClientConfigStore(this.database, this.secretCodec);
     this.oauthStateStore = new SqliteOAuthStateStore(this.database, this.secretCodec);
@@ -150,6 +153,15 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
             value: await nextSecretCodec.encode(await this.secretCodec.decode(readString(row, "return_uri"))),
           })),
       );
+      const triggerSecrets = await Promise.all(
+        this.database
+          .prepare("select id, value from trigger_subscriptions")
+          .all()
+          .map(async (row) => ({
+            id: readString(row, "id"),
+            value: await nextSecretCodec.encode(await this.secretCodec.decode(readString(row, "value"))),
+          })),
+      );
       const connections = await readRotatedConnectionSecrets(this.database, this.secretCodec, nextSecretCodec);
       const oauthConfigs = await readRotatedServiceSecrets(
         this.database,
@@ -188,6 +200,8 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
           .run(candidate.value, candidate.id);
       for (const uri of returnUris)
         this.database.prepare("update connection_requests set return_uri = ? where id = ?").run(uri.value, uri.id);
+      for (const record of triggerSecrets)
+        this.database.prepare("update trigger_subscriptions set value = ? where id = ?").run(record.value, record.id);
       writeRotatedConnectionSecrets(this.database, connections);
       writeRotatedServiceSecrets(this.database, "oauth_client_configs", oauthConfigs);
       writeRotatedStateSecrets(this.database, oauthStates);
@@ -214,6 +228,7 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
       delete from oauth_sources;
       delete from saas_cleanup;
       delete from managed_project;
+      delete from trigger_subscriptions;
       delete from connections;
       delete from oauth_client_configs;
       delete from oauth_states;
@@ -369,7 +384,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
         insert into runtime_tokens (
           ${runtimeTokenColumns}
         )
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
@@ -380,6 +395,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
         JSON.stringify(record.blockedActions),
         JSON.stringify(record.allowedProxies),
         JSON.stringify(record.allowedConnections ?? []),
+        JSON.stringify(record.allowedTriggers ?? []),
         record.createdAt,
         record.lastUsedAt ?? null,
       );
@@ -414,7 +430,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
       .prepare(
         `
         update runtime_tokens
-        set allowed_actions = ?, blocked_actions = ?, allowed_proxies = ?, allowed_connections = ?
+        set allowed_actions = ?, blocked_actions = ?, allowed_proxies = ?, allowed_connections = ?, allowed_triggers = ?
         where id = ?
         returning ${runtimeTokenColumns}
       `,
@@ -424,6 +440,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
         JSON.stringify(policy.blockedActions),
         JSON.stringify(policy.allowedProxies),
         JSON.stringify(policy.allowedConnections ?? []),
+        JSON.stringify(policy.allowedTriggers ?? []),
         id,
       );
     return row ? readRuntimeTokenRow(row) : undefined;

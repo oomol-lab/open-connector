@@ -52,6 +52,8 @@ export function policyRulesFromEditorDraft(draft: PolicyEditorDraft): PolicyRule
     blockedActions: [...draft.rules.blockedActions],
     allowedProxies: draft.proxyAllowMode === "restricted" ? [...draft.rules.allowedProxies] : [],
     blockedProxies: [...draft.rules.blockedProxies],
+    allowedTriggers: [...(draft.rules.allowedTriggers ?? [])],
+    blockedTriggers: [...(draft.rules.blockedTriggers ?? [])],
   };
 }
 
@@ -84,10 +86,10 @@ export function validatePolicyEditorDraft(draft: PolicyEditorDraft, includeProxi
       : []),
   ];
   for (const [field, resource] of fields) {
-    if (rules[field].length > 128) {
+    if ((rules[field] ?? []).length > 128) {
       issues.push({ field, code: "too_many" });
     }
-    for (const rule of rules[field]) {
+    for (const rule of rules[field] ?? []) {
       const code = policyRuleIssue(rule, resource);
       if (code) {
         issues.push({ field, code, rule });
@@ -264,12 +266,15 @@ function clonePolicyRules(rules: PolicyRules): PolicyRules {
     blockedActions: [...rules.blockedActions],
     allowedProxies: [...rules.allowedProxies],
     blockedProxies: [...rules.blockedProxies],
+    allowedTriggers: [...(rules.allowedTriggers ?? [])],
+    blockedTriggers: [...(rules.blockedTriggers ?? [])],
   };
 }
 
 function policyRulesEqual(left: PolicyRules, right: PolicyRules): boolean {
   return (Object.keys(left) as Array<keyof PolicyRules>).every(
     (field) =>
-      left[field].length === right[field].length && left[field].every((rule, index) => rule === right[field][index]),
+      (left[field] ?? []).length === (right[field] ?? []).length &&
+      (left[field] ?? []).every((rule, index) => rule === (right[field] ?? [])[index]),
   );
 }

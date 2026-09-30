@@ -258,6 +258,8 @@ export function AccessPage(props: AccessPageProps): ReactNode {
         blockedActions: token.blockedActions,
         allowedProxies: token.allowedProxies,
         blockedProxies: [],
+        allowedTriggers: token.allowedTriggers ?? [],
+        blockedTriggers: [],
       }),
     );
     setEditConnections(createConnectionGrantDraft(token.allowedConnections ?? []));
@@ -745,12 +747,12 @@ function RuntimePolicyEditor(props: RuntimePolicyDialogProps): ReactNode {
 
 function PolicyRuleReadout(props: { rules: PolicyRules }): ReactNode {
   const t = useTranslate();
-  const fields: Array<[keyof PolicyRules, string]> = [
+  const fields = [
     ["allowedActions", t("access.policy.allowedActions")],
     ["blockedActions", t("access.policy.blockedActions")],
     ["allowedProxies", t("access.policy.allowedProxies")],
     ["blockedProxies", t("access.policy.blockedProxies")],
-  ];
+  ] as const;
   return (
     <div className="policy-rule-readout">
       {fields.map(([field, label]) => (
@@ -1032,19 +1034,21 @@ export function allowedConnectionsFromDraft(draft: ConnectionGrantDraft): string
 }
 
 export function runtimeTokenPolicyBody(
-  rules: Pick<PolicyRules, "allowedActions" | "blockedActions" | "allowedProxies">,
+  rules: Pick<PolicyRules, "allowedActions" | "blockedActions" | "allowedProxies" | "allowedTriggers">,
   connections: ConnectionGrantDraft,
 ): {
   allowedActions: string[];
   blockedActions: string[];
   allowedProxies: string[];
   allowedConnections: string[];
+  allowedTriggers: string[];
 } {
   return {
     allowedActions: rules.allowedActions,
     blockedActions: rules.blockedActions,
     allowedProxies: rules.allowedProxies,
     allowedConnections: allowedConnectionsFromDraft(connections),
+    allowedTriggers: rules.allowedTriggers ?? [],
   };
 }
 

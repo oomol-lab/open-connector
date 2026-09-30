@@ -24,6 +24,7 @@ export interface RunProxyInput {
   service: string;
   input: unknown;
   connectionName?: string;
+  connectionId?: string;
   policy: ActionPolicySnapshot;
   /** Cancellation signal from the HTTP request, handed to the provider proxy executor. */
   signal?: AbortSignal;
@@ -95,7 +96,11 @@ export class ProxyRunner {
     const startedAtMs = Date.now();
     let executionId: string | undefined;
     try {
-      const connection = await this.options.connections.getConnectionSummary(provider.service, input.connectionName);
+      const connection = await this.options.connections.getConnectionSummary(
+        provider.service,
+        input.connectionName,
+        input.connectionId,
+      );
       const connectionDecision =
         connection?.authType === "no_auth" ? undefined : input.policy.evaluateConnection(connection?.id);
       if (connectionDecision && !connectionDecision.allowed) {
@@ -107,7 +112,11 @@ export class ProxyRunner {
           meta: { service: provider.service },
         };
       }
-      const target = await this.options.connections.resolveForExecution(provider.service, input.connectionName);
+      const target = await this.options.connections.resolveForExecution(
+        provider.service,
+        input.connectionName,
+        input.connectionId,
+      );
       const targetDecision =
         target.summary?.authType === "no_auth" ? undefined : input.policy.evaluateConnection(target.summary?.id);
       if (targetDecision && !targetDecision.allowed)

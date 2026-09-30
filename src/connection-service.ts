@@ -130,7 +130,7 @@ interface SaasExecutionConnection {
 export interface IConnectionStore {
   get(service: string, connectionName: string): Promise<StoredConnection | undefined>;
   set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredLocalConnection>;
-  updateCredential(input: StoredLocalConnection): Promise<boolean>;
+  updateCredential(input: StoredLocalConnection, refresh?: boolean): Promise<boolean>;
   delete(service: string, connectionName: string): Promise<void>;
   list(): Promise<StoredConnection[]>;
 }
@@ -257,11 +257,17 @@ export class ConnectionService {
     return services.filter((service) => authenticated.has(service));
   }
 
-  async getConnectionSummary(service: string, connectionName?: string): Promise<ConnectionSummary | undefined> {
+  async getConnectionSummary(
+    service: string,
+    connectionName?: string,
+    connectionId?: string,
+  ): Promise<ConnectionSummary | undefined> {
     const provider = this.getProvider(service);
-    const name = normalizeConnectionName(connectionName);
-    const stored = await this.store.get(service, name);
-    const marketplace = await this.resolveMarketplaceSummary(provider, connectionName, Boolean(stored));
+    const stored = await this.selectStoredConnection(service, connectionName, connectionId);
+    const name = stored?.connectionName ?? normalizeConnectionName(connectionName);
+    const marketplace = connectionId
+      ? undefined
+      : await this.resolveMarketplaceSummary(provider, connectionName, Boolean(stored));
     if (marketplace) return marketplace;
     if (!stored && connectionName && !this.supportsAuth(provider, "no_auth")) {
       throw new ConnectionError("connection_not_found", `${service} connection not found: ${name}.`);
@@ -275,11 +281,17 @@ export class ConnectionService {
         : undefined;
   }
 
-  async resolveForExecution(service: string, connectionName?: string): Promise<ExecutionConnection> {
+  async resolveForExecution(
+    service: string,
+    connectionName?: string,
+    connectionId?: string,
+  ): Promise<ExecutionConnection> {
     const provider = this.getProvider(service);
-    const name = normalizeConnectionName(connectionName);
-    const stored = await this.store.get(service, name);
-    const marketplace = await this.resolveMarketplaceSummary(provider, connectionName, Boolean(stored));
+    const stored = await this.selectStoredConnection(service, connectionName, connectionId);
+    const name = stored?.connectionName ?? normalizeConnectionName(connectionName);
+    const marketplace = connectionId
+      ? undefined
+      : await this.resolveMarketplaceSummary(provider, connectionName, Boolean(stored));
     if (marketplace) return { kind: "marketplace", summary: marketplace };
     if (!stored && connectionName && !this.supportsAuth(provider, "no_auth")) {
       throw new ConnectionError("connection_not_found", `${service} connection not found: ${name}.`);
@@ -444,6 +456,24 @@ export class ConnectionService {
       ...credential,
       ...this.mergeCredentialRuntimeData(provider, "oauth2", credential, validation),
     };
+  }
+
+  private async selectStoredConnection(
+    service: string,
+    name: string | undefined,
+    id: string | undefined,
+  ): Promise<StoredConnection | undefined> {
+    if (!id) return this.store.get(service, normalizeConnectionName(name));
+    const connection = await this.getStoredConnection(id);
+    if (
+      connection.service !== service ||
+      (name !== undefined && connection.connectionName !== normalizeConnectionName(name))
+    )
+      throw new ConnectionError(
+        "connection_not_found",
+        "The selected connection does not match this provider or alias.",
+      );
+    return connection;
   }
 
   async getStoredConnection(id: string): Promise<StoredConnection> {
@@ -774,13 +804,16 @@ export class ConnectionService {
   ): Promise<OAuthCredential> {
     const { id, revision, service, connectionName } = connection;
     const nextCredential = await refresher.refresh(service, credential);
-    const updated = await this.store.updateCredential({
-      id,
-      revision,
-      service,
-      connectionName,
-      credential: nextCredential,
-    });
+    const updated = await this.store.updateCredential(
+      {
+        id,
+        revision,
+        service,
+        connectionName,
+        credential: nextCredential,
+      },
+      true,
+    );
     if (!updated) {
       throw new ConnectionError(
         "connection_not_found",
@@ -826,7 +859,14 @@ export class ConnectionService {
   ): CredentialRuntimeData {
     return {
       profile: this.createCredentialProfile(provider, authType, credentialFields, credentialValues, validation),
-      metadata: validation.metadata ?? {},
+      metadata: {
+        ...validation.metadata,
+        providerAccountVerified: Boolean(
+          validation.profile?.accountId ??
+          readLegacyString(validation.metadata, "providerAccountId") ??
+          readLegacyString(validation.metadata, "accountId"),
+        ),
+      },
     };
   }
 
@@ -846,6 +886,12 @@ export class ConnectionService {
         ...(validation.metadata ?? {}),
         // Provider validation cannot replace or invent completed consent provenance.
         oauthAuthorizationId: credential.metadata.oauthAuthorizationId,
+        providerAccountVerified:
+          Boolean(
+            validation.profile?.accountId ??
+            readLegacyString(validation.metadata, "providerAccountId") ??
+            readLegacyString(validation.metadata, "accountId"),
+          ) || credential.metadata.providerAccountVerified === true,
       },
     };
   }

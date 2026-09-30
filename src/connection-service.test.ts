@@ -682,7 +682,10 @@ describe("ConnectionService", () => {
     await expect(
       service.setOAuthCredential("example", { ...credential, accessToken: "replacement-token" }, "work"),
     ).rejects.toMatchObject({ code: "credential_verification_failed" });
-    await expect(service.getCredential("example", "work")).resolves.toEqual(credential);
+    await expect(service.getCredential("example", "work")).resolves.toEqual({
+      ...credential,
+      metadata: { providerAccountVerified: true, oauthAuthorizationId: undefined },
+    });
     await expect(service.listConnections()).resolves.toEqual([original]);
   });
 
