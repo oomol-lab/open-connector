@@ -3,8 +3,9 @@ import type { MigrationSource } from "../migration-source.ts";
 
 import { PGlite } from "@electric-sql/pglite";
 import { PGLiteSocketServer } from "@electric-sql/pglite-socket";
-import { Pool } from "pg";
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { setTimeout } from "node:timers/promises";
+import { Client, Pool } from "pg";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { AesGcmSecretCodec } from "../../secrets/secret-codec.ts";
 import { connectionRequestStoreTests } from "../connection-request-store.cases.ts";
 import { defaultMigrationSource } from "../migration-source.ts";
@@ -26,6 +27,50 @@ interface PGliteTestServer {
   server: PGLiteSocketServer;
   url: string;
 }
+
+describe("PGlite PostgreSQL protocol fixture", () => {
+  let testServer: PGliteTestServer;
+
+  beforeAll(async () => {
+    testServer = await startPGliteTestServer();
+  });
+
+  afterAll(async () => {
+    await testServer.server.stop();
+    await testServer.database.close();
+  });
+
+  it.each([
+    { phase: "Parse", sql: "select * from missing_table where id = $1", code: "42P01" },
+    { phase: "Execute", sql: "select 1 / $1::integer", code: "22012" },
+  ])("recovers on the same connection after a $phase error and delayed Sync", async ({ sql, code }) => {
+    const execute = testServer.database.execProtocolRawStream.bind(testServer.database);
+    const delayedSync = vi
+      .spyOn(testServer.database, "execProtocolRawStream")
+      .mockImplementation(async (message, options) => {
+        if (message[0] === "S".charCodeAt(0)) await setTimeout(20);
+        await execute(message, options);
+      });
+    const client = new Client({ connectionString: testServer.url });
+    const connectionErrors: Error[] = [];
+    client.on("error", (error) => connectionErrors.push(error));
+    try {
+      await client.connect();
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        await client.query("begin");
+        await expect(client.query(sql, [0])).rejects.toMatchObject({ code });
+        await client.query("rollback");
+        await expect(client.query("select $1::integer as value", [attempt])).resolves.toMatchObject({
+          rows: [{ value: attempt }],
+        });
+      }
+      expect(connectionErrors).toEqual([]);
+    } finally {
+      delayedSync.mockRestore();
+      await client.end();
+    }
+  });
+});
 
 describe("PostgreSQL migrations with PGlite", () => {
   let testServer: PGliteTestServer;
@@ -512,6 +557,19 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
 
 async function startPGliteTestServer(): Promise<PGliteTestServer> {
   const database = await PGlite.create();
+  // PGlite sends ReadyForQuery before Sync after extended-query errors: https://github.com/electric-sql/pglite/issues/958
+  database.execProtocolRawStream = async (message, { syncToFs, onRawData }) => {
+    const response = Buffer.from(await database.execProtocolRaw(message, { syncToFs }));
+    if (message[0] === 0 || message[0] === "Q".charCodeAt(0) || message[0] === "S".charCodeAt(0)) {
+      onRawData(response);
+      return;
+    }
+    for (let offset = 0; offset < response.length; ) {
+      const end = offset + response.readUInt32BE(offset + 1) + 1;
+      if (response[offset] !== "Z".charCodeAt(0)) onRawData(response.subarray(offset, end));
+      offset = end;
+    }
+  };
   const server = new PGLiteSocketServer({
     db: database,
     host: "127.0.0.1",
