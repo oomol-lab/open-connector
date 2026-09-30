@@ -2,6 +2,8 @@ import type { ProviderDefinition } from "../../core/types.ts";
 
 import { notionActions } from "./actions.ts";
 import { notionInsertCommentScopes, notionReadCommentScopes, notionReadScopes, notionWriteScopes } from "./scopes.ts";
+import { snapshot as triggerSnapshot0_0 } from "./trigger-on-database-page-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "notion";
 
@@ -38,4 +40,6 @@ export const provider: ProviderDefinition = {
   ],
   homepageUrl: "https://www.notion.so",
   actions: notionActions,
+  triggers: [triggerSnapshot0_0],
+  triggerPermissions,
 };

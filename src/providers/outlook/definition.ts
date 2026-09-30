@@ -2,6 +2,8 @@ import type { ProviderDefinition } from "../../core/types.ts";
 
 import { outlookActions } from "./actions.ts";
 import { outlookOAuthScopes } from "./scopes.ts";
+import { snapshot as triggerSnapshot0_0 } from "./trigger-on-message-received.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "outlook";
 
@@ -43,4 +45,6 @@ export const provider: ProviderDefinition = {
   ],
   homepageUrl: "https://www.microsoft.com/microsoft-365/outlook/email-and-calendar-software-microsoft-outlook",
   actions: outlookActions,
+  triggers: [triggerSnapshot0_0],
+  triggerPermissions,
 };

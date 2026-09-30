@@ -80,7 +80,7 @@ export interface ConnectorRuntimeOptions {
   jwt?: RuntimeJwtConfig;
   postgres?: ConnectorPostgresOptions;
   network?: ConnectorNetworkOptions;
-  /** Allow or block actions and proxies by name. */
+  /** Allow or block actions, proxies and Triggers by name. */
   actionPolicy?: ActionPolicyConfig;
   /** Services, or `*`, whose connections may carry their own OAuth client instead of the configured one. */
   allowedCustomOAuth?: string[];
@@ -206,7 +206,7 @@ async function openRuntime(options: ConnectorRuntimeOptions): Promise<ConnectorR
     const tempDir = join(dataDir, "tmp/transit-files");
     await transitFiles.cleanupExpired();
     await cleanupStagedTransitFiles(tempDir, ttlSeconds * 1000);
-    const { app, runtimeAuthConfigured, saasCleanup } = await createConnectApp({
+    const { app, runtimeAuthConfigured, saasCleanup, triggerMaintenance } = await createConnectApp({
       catalog,
       providerLoader: new ProviderLoader(executorModules),
       runtimeDatabase: database,
@@ -224,6 +224,7 @@ async function openRuntime(options: ConnectorRuntimeOptions): Promise<ConnectorR
       serveDocumentation: options.apiReference ?? false,
     });
     saasCleanup.start();
+    triggerMaintenance.start();
     const shutdown = new AbortController();
     const pending = new Set<Promise<Response>>();
     let closing: Promise<void> | undefined;
@@ -251,7 +252,7 @@ async function openRuntime(options: ConnectorRuntimeOptions): Promise<ConnectorR
         if (!closing) {
           closing = Promise.resolve().then(async () => {
             shutdown.abort(new Error("Open Connector runtime is closing."));
-            await Promise.allSettled([...pending, saasCleanup.close()]);
+            await Promise.allSettled([...pending, saasCleanup.close(), triggerMaintenance.close()]);
             try {
               await database.close();
             } finally {

@@ -1,4 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+import type { PollDefinition } from "../../triggers/common/poll.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
@@ -11,6 +13,7 @@ import {
   ProviderRequestError,
   readTransitFileInput,
 } from "../provider-runtime.ts";
+import { oneDriveItemChanged } from "./trigger-on-item-changed.ts";
 
 const graphBaseUrl = "https://graph.microsoft.com/v1.0";
 const graphOrigin = new URL(graphBaseUrl).origin;
@@ -1576,3 +1579,5 @@ function toArrayBuffer(bytes: Uint8Array) {
 
   return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
 }
+
+export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [oneDriveItemChanged];

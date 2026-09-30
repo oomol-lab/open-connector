@@ -85,6 +85,8 @@ async function main(): Promise<void> {
       blockedActions: parseActionPolicyList(process.env.OOMOL_CONNECT_BLOCKED_ACTIONS),
       allowedProxies: parseActionPolicyList(process.env.OOMOL_CONNECT_ALLOWED_PROXIES),
       blockedProxies: parseActionPolicyList(process.env.OOMOL_CONNECT_BLOCKED_PROXIES),
+      allowedTriggers: parseActionPolicyList(process.env.OOMOL_CONNECT_ALLOWED_TRIGGERS),
+      blockedTriggers: parseActionPolicyList(process.env.OOMOL_CONNECT_BLOCKED_TRIGGERS),
     },
     allowedCustomOAuth: parseActionPolicyList(process.env.OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH),
     postgres: databaseUrl

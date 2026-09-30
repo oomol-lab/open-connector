@@ -5,6 +5,8 @@ import type {
   ProviderProxyExecutor,
   ResolvedCredential,
 } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+import type { PollDefinition } from "../../triggers/common/poll.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject } from "../../core/cast.ts";
@@ -22,6 +24,7 @@ import {
   toProviderProxyError,
   withRetryAfterSeconds,
 } from "../provider-runtime.ts";
+import { notionDatabasePageEvent } from "./trigger-on-database-page-event.ts";
 
 const service = "notion";
 const notionApiBaseUrl = "https://api.notion.com/v1";
@@ -1087,3 +1090,5 @@ function asNumber(value: unknown) {
 function asNonEmptyString(value: unknown) {
   return typeof value === "string" && value.length > 0 ? value : undefined;
 }
+
+export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [notionDatabasePageEvent];

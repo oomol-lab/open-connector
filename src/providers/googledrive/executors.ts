@@ -1,4 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+import type { PollDefinition } from "../../triggers/common/poll.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
@@ -58,6 +60,8 @@ import {
   resolveSupportsAllDrives,
 } from "./runtime-shared.ts";
 import { googledriveOAuthScopes } from "./scopes.ts";
+import { googleDriveChanges, googleDriveChangeListener } from "./trigger-changes.ts";
+import { googleDriveFileChange } from "./trigger-on-file-change.ts";
 
 const service = "googledrive";
 
@@ -1065,3 +1069,9 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   auth: googleBearerProxyAuth(googledriveOAuthScopes),
   allowedEndpoint: providerProxyEndpointPrefixes("/drive/v3", "/upload/drive/v3"),
 });
+
+export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [
+  googleDriveChanges,
+  googleDriveChangeListener,
+  googleDriveFileChange,
+];

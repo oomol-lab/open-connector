@@ -9,6 +9,9 @@ import {
   githubWorkflowScope,
   githubDeleteRepoScope,
 } from "./scopes.ts";
+import { snapshot as triggerSnapshot0_0 } from "./trigger-on-repo-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
+import { snapshot as triggerSnapshot1_0 } from "./trigger-watch-pull-request.definition.ts";
 
 const service = "github";
 
@@ -84,4 +87,6 @@ export const provider: ProviderDefinition = {
   ],
   homepageUrl: "https://github.com",
   actions: githubActions,
+  triggers: [triggerSnapshot0_0, triggerSnapshot1_0],
+  triggerPermissions,
 };

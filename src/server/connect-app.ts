@@ -9,6 +9,7 @@ import type { RuntimeDatabase } from "./storage/runtime-database.ts";
 import type { Hono } from "hono";
 
 import { ConnectionService } from "../connection-service.ts";
+import { ActionPolicyService as ExecutionPolicyService } from "../core/action-policy.ts";
 import { MarketplaceService } from "../marketplace/marketplace-service.ts";
 import { OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import { OAuthCredentialRefreshService } from "../oauth/oauth-credential-refresh-service.ts";
@@ -18,6 +19,8 @@ import { SaasClient } from "../saas/saas-client.ts";
 import { SaasExecutionService } from "../saas/saas-execution-service.ts";
 import { SaasOAuthService } from "../saas/saas-oauth-service.ts";
 import { SaasProjectService } from "../saas/saas-project-service.ts";
+import { TriggerMaintenance } from "../triggers/maintenance.ts";
+import { TriggerRunner } from "../triggers/trigger-runner.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
 import { ConnectServer } from "./connect-server.ts";
 import { RuntimeTokenService } from "./storage/runtime-token-service.ts";
@@ -45,6 +48,7 @@ export interface ConnectAppOptions {
 
 export interface ConnectApp {
   saasCleanup: SaasCleanupService;
+  triggerMaintenance: TriggerMaintenance;
   app: Hono;
   runtimeAuthConfigured: boolean;
 }
@@ -100,7 +104,22 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
     marketplace,
   });
 
+  const triggers = new TriggerRunner({
+    catalog: options.catalog,
+    providerLoader: options.providerLoader,
+    connections,
+    store: options.runtimeDatabase.triggerStore,
+  });
+  const triggerMaintenance = new TriggerMaintenance({
+    store: options.runtimeDatabase.triggerStore,
+    runner: triggers,
+    tokens: options.runtimeDatabase.runtimeTokenStore,
+    runtimePolicy: options.runtimeDatabase.runtimePolicyStore,
+    deploymentPolicy: options.actionPolicy ?? new ExecutionPolicyService(),
+    logger: options.logger,
+  });
   return {
+    triggerMaintenance,
     saasCleanup: new SaasCleanupService({
       store: options.runtimeDatabase.saasProjectStore,
       requests: options.runtimeDatabase.connectionRequestStore,
@@ -124,6 +143,8 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
         saasOAuth,
       }),
       actions,
+      triggers,
+      triggerMaintenance,
       idempotency: options.runtimeDatabase.idempotencyStore,
       transitFiles: options.transitFiles,
       uploadTransitFile: options.uploadTransitFile,

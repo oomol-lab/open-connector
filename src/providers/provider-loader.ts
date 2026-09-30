@@ -1,9 +1,12 @@
 import type { ActionExecutor, CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../core/types.ts";
 import type { ProviderOAuthRuntime } from "../oauth/oauth-token.ts";
+import type { IntegrationDefinition } from "../triggers/common/integration.ts";
+import type { PollDefinition } from "../triggers/common/poll.ts";
 
 import { withProviderFallbackMessage } from "./provider-runtime.ts";
 
 export interface ExecutorModule {
+  triggers?: readonly (IntegrationDefinition | PollDefinition)[];
   credentialValidators?: CredentialValidators;
   executors: ProviderExecutors;
   oauth?: ProviderOAuthRuntime;
@@ -41,6 +44,8 @@ export interface IProviderLoader {
    * Load a provider credential validator only when a connection is created.
    */
   loadCredentialValidators(service: string): Promise<CredentialValidators | undefined>;
+
+  loadTriggerDefinitions?(service: string): Promise<readonly (IntegrationDefinition | PollDefinition)[]>;
 
   /** Load provider-specific OAuth operations when the provider defines them. */
   loadProviderOAuthRuntime?(service: string): Promise<ProviderOAuthRuntime | undefined>;
@@ -98,6 +103,11 @@ export class ProviderLoader implements IProviderLoader {
     }
 
     return (await loadRuntime()).oauth;
+  }
+
+  async loadTriggerDefinitions(service: string): Promise<readonly (IntegrationDefinition | PollDefinition)[]> {
+    const load = this.executorModules[service];
+    return load ? ((await load()).triggers ?? []) : [];
   }
 
   private _findActionExecutor(

@@ -1,4 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+import type { PollDefinition } from "../../triggers/common/poll.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { OAuthProviderContext } from "../provider-runtime.ts";
 
@@ -10,6 +12,7 @@ import {
   ProviderRequestError,
 } from "../provider-runtime.ts";
 import { microsoftGraphJson, microsoftGraphRequest } from "./microsoft-graph.ts";
+import { outlookMessageReceived } from "./trigger-on-message-received.ts";
 
 const outlookGraphBaseUrl = "https://graph.microsoft.com/v1.0";
 
@@ -546,3 +549,5 @@ function requiredString(value: unknown, field: string) {
 function asObject(value: unknown): Record<string, unknown> {
   return requiredRecord(value, "object input", (message) => new ProviderRequestError(400, message));
 }
+
+export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [outlookMessageReceived];

@@ -6,6 +6,8 @@ import type {
   ProviderProxyExecutor,
   ResolvedCredential,
 } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+import type { PollDefinition } from "../../triggers/common/poll.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
@@ -25,6 +27,7 @@ import {
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
+import { gitlabProjectEvent } from "./trigger-on-project-event.ts";
 
 const defaultGitlabApiBaseUrl = "https://gitlab.com/api/v4";
 const service = "gitlab";
@@ -681,3 +684,5 @@ function asOptionalPositiveInteger(value: unknown, fieldName: string): number | 
   }
   return parsed;
 }
+
+export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [gitlabProjectEvent];

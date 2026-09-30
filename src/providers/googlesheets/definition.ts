@@ -2,6 +2,8 @@ import type { ProviderDefinition } from "../../core/types.ts";
 
 import { googlesheetsActions } from "./actions.ts";
 import { googlesheetsOAuthScopes } from "./scopes.ts";
+import { snapshot as triggerSnapshot0_0 } from "./trigger-on-row-added.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "googlesheets";
 
@@ -58,4 +60,6 @@ export const provider: ProviderDefinition = {
   ],
   homepageUrl: "https://workspace.google.com/products/sheets/",
   actions: googlesheetsActions,
+  triggers: [triggerSnapshot0_0],
+  triggerPermissions,
 };

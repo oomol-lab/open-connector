@@ -1,6 +1,8 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { feishuAppBotActions } from "./actions.ts";
+import { additionalSnapshot0 as triggerSnapshot0_0 } from "./trigger-on-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "feishu_app_bot";
 
@@ -39,4 +41,6 @@ export const provider: ProviderDefinition = {
   ],
   homepageUrl: "https://open.feishu.cn",
   actions: feishuAppBotActions,
+  triggers: [triggerSnapshot0_0],
+  triggerPermissions,
 };

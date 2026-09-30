@@ -4,6 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+import type { PollDefinition } from "../../triggers/common/poll.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean } from "../../core/cast.ts";
@@ -19,6 +21,7 @@ import {
   toProviderProxyError,
   withRetryAfterSeconds,
 } from "../provider-runtime.ts";
+import { linearIssueChanged } from "./trigger-on-issue-changed.ts";
 
 const linearApiBaseUrl = "https://api.linear.app";
 const linearGraphqlUrl = "https://api.linear.app/graphql";
@@ -2486,3 +2489,5 @@ function asOptionalObject(value: unknown) {
 
   return value as Record<string, unknown>;
 }
+
+export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [linearIssueChanged];

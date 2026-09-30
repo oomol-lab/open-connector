@@ -38,6 +38,8 @@ const appCache = new PromiseCache<ConnectApp>();
 
 export default {
   async scheduled(_event: unknown, env: CloudflareEnv, ctx: CloudflareExecutionContext): Promise<void> {
+    setPrivateNetworkAccessAllowed(parsePrivateNetworkAccessFlag(env.OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK));
+    setEgressTrustedHosts(parseEgressTrustedHosts(env.OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS));
     const database = new D1RuntimeDatabase(env.DB, {
       secretCodec: await createSecretCodec(env.OOMOL_CONNECT_ENCRYPTION_KEY),
     });
@@ -46,7 +48,15 @@ export default {
       requests: database.connectionRequestStore,
       logger: workerLogger,
     });
-    ctx.waitUntil(cleanup.run());
+    const triggerCleanup = async () => {
+      if (!(await database.triggerStore.listFlowTriggersForMaintenance(Date.now(), 1)).length) return;
+      const origin = env.OOMOL_CONNECT_ORIGIN ?? "https://connector.invalid";
+      const { triggerMaintenance } = await appCache.get(createCacheKey(env, origin), () =>
+        createCloudflareApp(env, origin),
+      );
+      await triggerMaintenance.run();
+    };
+    ctx.waitUntil(Promise.all([cleanup.run(), triggerCleanup()]).then(() => undefined));
   },
   async fetch(request: Request, env: CloudflareEnv, _ctx: CloudflareExecutionContext): Promise<Response> {
     setPrivateNetworkAccessAllowed(parsePrivateNetworkAccessFlag(env.OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK));
@@ -105,6 +115,8 @@ async function createCloudflareApp(env: CloudflareEnv, publicOrigin: string): Pr
       blockedActions: parseActionPolicyList(env.OOMOL_CONNECT_BLOCKED_ACTIONS),
       allowedProxies: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_PROXIES),
       blockedProxies: parseActionPolicyList(env.OOMOL_CONNECT_BLOCKED_PROXIES),
+      allowedTriggers: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_TRIGGERS),
+      blockedTriggers: parseActionPolicyList(env.OOMOL_CONNECT_BLOCKED_TRIGGERS),
     }),
     allowedCustomOAuth: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH),
     logger: workerLogger,
@@ -163,6 +175,8 @@ function createCacheKey(env: CloudflareEnv, publicOrigin: string): string {
     allowedActions: env.OOMOL_CONNECT_ALLOWED_ACTIONS ?? "",
     blockedActions: env.OOMOL_CONNECT_BLOCKED_ACTIONS ?? "",
     allowedProxies: env.OOMOL_CONNECT_ALLOWED_PROXIES ?? "",
+    allowedTriggers: env.OOMOL_CONNECT_ALLOWED_TRIGGERS ?? "",
+    blockedTriggers: env.OOMOL_CONNECT_BLOCKED_TRIGGERS ?? "",
     blockedProxies: env.OOMOL_CONNECT_BLOCKED_PROXIES ?? "",
     allowedCustomOAuth: env.OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH ?? "",
     transitFileTtlSeconds: env.OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS ?? "",

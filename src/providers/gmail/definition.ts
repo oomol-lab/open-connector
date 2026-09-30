@@ -2,6 +2,8 @@ import type { ProviderDefinition } from "../../core/types.ts";
 
 import { gmailActions } from "./actions.ts";
 import { gmailAuthorizableScopes } from "./scopes.ts";
+import { snapshot as triggerSnapshot0_0 } from "./trigger-on-message-received.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "gmail";
 
@@ -56,4 +58,6 @@ export const provider: ProviderDefinition = {
   ],
   homepageUrl: "https://mail.google.com",
   actions: gmailActions,
+  triggers: [triggerSnapshot0_0],
+  triggerPermissions,
 };

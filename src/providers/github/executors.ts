@@ -1,4 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+import type { PollDefinition } from "../../triggers/common/poll.ts";
 import type { GitHubActionContext, GitHubActionHandler } from "./runtime-shared.ts";
 
 import {
@@ -14,6 +16,8 @@ import { releaseActionHandlers } from "./runtime-release.ts";
 import { repositoryActionHandlers } from "./runtime-repository.ts";
 import { searchActionHandlers } from "./runtime-search.ts";
 import { githubApiBaseUrl, githubApiVersion, githubDefaultAcceptHeader, githubRequestJson } from "./runtime-shared.ts";
+import { githubRepoEvent } from "./trigger-on-repo-event.ts";
+import { githubPullRequestListener } from "./trigger-watch-pull-request.ts";
 
 const service = "github";
 
@@ -80,3 +84,8 @@ async function validateGitHubToken(accessToken: string, fetcher: typeof fetch) {
     },
   };
 }
+
+export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [
+  githubRepoEvent,
+  githubPullRequestListener,
+];

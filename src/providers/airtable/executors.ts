@@ -4,6 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+import type { PollDefinition } from "../../triggers/common/poll.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
@@ -24,6 +26,7 @@ import {
   providerUserAgent,
   requiredResponseRecord,
 } from "../provider-runtime.ts";
+import { airtableRecordChanged } from "./trigger-on-record-changed.ts";
 
 type AirtableRequestMode = "validate" | "execute";
 type AirtableActionInput = Record<string, unknown>;
@@ -788,3 +791,5 @@ function requireString(value: unknown, fieldName: string): string {
   }
   return text;
 }
+
+export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [airtableRecordChanged];

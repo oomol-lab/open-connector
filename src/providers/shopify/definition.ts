@@ -2,6 +2,8 @@ import type { ProviderDefinition } from "../../core/types.ts";
 
 import { shopifyActions } from "./actions.ts";
 import { shopifyOAuthScopes } from "./scopes.ts";
+import { snapshot as triggerSnapshot0_0 } from "./trigger-on-shop-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "shopify";
 const shopifyAuthorizationUrl = "https://{shopSubdomain}.myshopify.com/admin/oauth/authorize";
@@ -54,4 +56,6 @@ export const provider: ProviderDefinition = {
   ],
   homepageUrl: "https://www.shopify.com",
   actions: shopifyActions,
+  triggers: [triggerSnapshot0_0],
+  triggerPermissions,
 };

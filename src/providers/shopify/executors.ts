@@ -5,6 +5,8 @@ import type {
   ProviderProxyExecutor,
   ResolvedCredential,
 } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+import type { PollDefinition } from "../../triggers/common/poll.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
@@ -15,6 +17,7 @@ import {
   validateShopifyCredential,
 } from "./runtime.ts";
 import { shopifyReadContentScope } from "./scopes.ts";
+import { shopifyShopEvent } from "./trigger-on-shop-event.ts";
 
 const service = "shopify";
 
@@ -97,3 +100,5 @@ function parseShopifyScopes(value: unknown): string[] {
     .map((scope) => scope.trim())
     .filter(Boolean);
 }
+
+export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [shopifyShopEvent];

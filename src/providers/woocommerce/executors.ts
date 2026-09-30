@@ -4,6 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+import type { PollDefinition } from "../../triggers/common/poll.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
@@ -24,6 +26,7 @@ import {
   validateWooCommerceCredential,
   woocommerceActionHandlers,
 } from "./runtime.ts";
+import { wooCommerceStoreEvent } from "./trigger-on-store-event.ts";
 
 const service = "woocommerce";
 
@@ -89,3 +92,5 @@ export const credentialValidators: CredentialValidators = {
     return validateWooCommerceCredential(input.values, guardedFetcher, signal);
   },
 };
+
+export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [wooCommerceStoreEvent];

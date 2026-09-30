@@ -1,6 +1,8 @@
 import type { OAuthAuthorizationOption, ProviderDefinition } from "../../core/types.ts";
 
 import { slackActions } from "./actions.ts";
+import { snapshot as triggerSnapshot0_0 } from "./trigger-on-message-posted.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "slack";
 const slackAuthorizationOptions: OAuthAuthorizationOption[] = [
@@ -185,4 +187,6 @@ export const provider: ProviderDefinition = {
   ],
   homepageUrl: "https://slack.com",
   actions: slackActions,
+  triggers: [triggerSnapshot0_0],
+  triggerPermissions,
 };

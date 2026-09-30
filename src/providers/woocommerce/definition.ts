@@ -1,6 +1,8 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { woocommerceActions } from "./actions.ts";
+import { snapshot as triggerSnapshot0_0 } from "./trigger-on-store-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "woocommerce";
 
@@ -72,4 +74,6 @@ export const provider: ProviderDefinition = {
   ],
   homepageUrl: "https://woocommerce.com",
   actions: woocommerceActions,
+  triggers: [triggerSnapshot0_0],
+  triggerPermissions,
 };

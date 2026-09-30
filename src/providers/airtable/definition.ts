@@ -2,6 +2,8 @@ import type { ProviderDefinition } from "../../core/types.ts";
 
 import { airtableActions } from "./actions.ts";
 import { airtableOAuthScopes } from "./scopes.ts";
+import { snapshot as triggerSnapshot0_0 } from "./trigger-on-record-changed.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "airtable";
 
@@ -35,4 +37,6 @@ export const provider: ProviderDefinition = {
   ],
   homepageUrl: "https://airtable.com",
   actions: airtableActions,
+  triggers: [triggerSnapshot0_0],
+  triggerPermissions,
 };

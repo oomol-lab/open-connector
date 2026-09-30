@@ -1,6 +1,8 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { telegramActions } from "./actions.ts";
+import { snapshot as triggerSnapshot0_0 } from "./trigger-on-update.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 export const provider: ProviderDefinition = {
   service: "telegram",
@@ -18,4 +20,6 @@ export const provider: ProviderDefinition = {
   ],
   homepageUrl: "https://core.telegram.org/bots",
   actions: telegramActions,
+  triggers: [triggerSnapshot0_0],
+  triggerPermissions,
 };

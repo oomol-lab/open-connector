@@ -1,6 +1,8 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { stripeActions } from "./actions.ts";
+import { snapshot as triggerSnapshot0_0 } from "./trigger-on-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "stripe";
 
@@ -24,4 +26,6 @@ export const provider: ProviderDefinition = {
   ],
   homepageUrl: "https://stripe.com",
   actions: stripeActions,
+  triggers: [triggerSnapshot0_0],
+  triggerPermissions,
 };

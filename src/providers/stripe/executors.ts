@@ -1,4 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+import type { PollDefinition } from "../../triggers/common/poll.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
@@ -10,6 +12,7 @@ import {
   providerUserAgent,
   requiredResponseRecord,
 } from "../provider-runtime.ts";
+import { stripeEvent } from "./trigger-on-event.ts";
 
 type StripeActionContext = ApiKeyProviderContext;
 
@@ -389,3 +392,5 @@ function mapStripeError(status: number, message: string): ProviderRequestError {
 
   return new ProviderRequestError(502, message, status);
 }
+
+export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [stripeEvent];

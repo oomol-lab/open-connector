@@ -2,6 +2,8 @@ import type { ProviderDefinition } from "../../core/types.ts";
 
 import { gitlabActions } from "./actions.ts";
 import { gitlabOAuthScopes } from "./scopes.ts";
+import { snapshot as triggerSnapshot0_0 } from "./trigger-on-project-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "gitlab";
 const defaultGitlabInstanceUrl = "https://gitlab.com";
@@ -59,4 +61,6 @@ export const provider: ProviderDefinition = {
   ],
   homepageUrl: "https://gitlab.com",
   actions: gitlabActions,
+  triggers: [triggerSnapshot0_0],
+  triggerPermissions,
 };

@@ -9,6 +9,8 @@ import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { SaasExecutionService } from "../saas/saas-execution-service.ts";
 import type { SaasOAuthService } from "../saas/saas-oauth-service.ts";
 import type { SaasProjectService } from "../saas/saas-project-service.ts";
+import type { TriggerMaintenance } from "../triggers/maintenance.ts";
+import type { TriggerRunner } from "../triggers/trigger-runner.ts";
 import type { LocalAuthOptions } from "./api/auth.ts";
 import type { RuntimeActionHttpResult } from "./api/runtime-api.ts";
 import type { ITransitFileService } from "./files/transit-file-store.ts";
@@ -50,6 +52,7 @@ import { createConnectionRoutes } from "./api/connection-routes.ts";
 import { HttpRequestError, internalError, jsonError, notFound, readJsonBody } from "./api/http-utils.ts";
 import { renderOAuthCompletionPage } from "./api/oauth-completion-page.ts";
 import { policyRequestMaxBytes, readRuntimePolicyRules, readTokenPolicy } from "./api/policy-input.ts";
+import { serializeRuntimeTriggerPermissions } from "./api/runtime-api.ts";
 import {
   mapConnectionErrorStatus,
   serializeRuntimeAction,
@@ -128,6 +131,8 @@ export interface IConnectServerOptions {
   oauthFlow: OAuthFlowService;
   runtimeTokens: RuntimeTokenService;
   actions: ActionRunner;
+  triggers?: TriggerRunner;
+  triggerMaintenance?: TriggerMaintenance;
   idempotency: IIdempotencyStore;
   transitFiles: ITransitFileService;
   uploadTransitFile?: (request: Request) => Promise<TransitFileUpload>;
@@ -211,6 +216,25 @@ export class ConnectServer {
     app.get("/v1/providers/:service/setup", (context) =>
       this.getRuntimeProviderSetup(context, context.req.param("service")),
     );
+    app.get("/v1/providers/:service/trigger-permissions", (context) =>
+      this.getRuntimeTriggerPermissions(context, context.req.param("service")),
+    );
+    app.post("/v1/providers/:service/triggers/:triggerId/execute", (context) => this.executeRuntimeTrigger(context));
+    app.get("/api/trigger-subscriptions", async (context) =>
+      context.json((await this.options.triggerMaintenance?.list()) ?? []),
+    );
+    app.post("/api/trigger-subscriptions/:id/cancel", async (context) => {
+      if (!this.options.triggerMaintenance)
+        throw new HttpRequestError("trigger_not_supported", "Trigger subscriptions are unavailable.", 501);
+      await this.options.triggerMaintenance.cancel(context.req.param("id"), context.req.raw.signal);
+      return context.json({ ok: true });
+    });
+    app.post("/api/trigger-subscriptions/:id/abandon", async (context) => {
+      if (!this.options.triggerMaintenance)
+        throw new HttpRequestError("trigger_not_supported", "Trigger subscriptions are unavailable.", 501);
+      await this.options.triggerMaintenance.abandon(context.req.param("id"), context.req.raw.signal);
+      return context.json({ ok: true });
+    });
     app.get("/v1/providers", (context) => this.listRuntimeProviders(context));
     app.get("/v1/actions", (context) => this.listRuntimeActions(context));
     app.get("/v1/actions/search", (context) => this.searchRuntimeActions(context));
@@ -622,11 +646,6 @@ export class ConnectServer {
     } catch (error) {
       if (error instanceof ConnectionError) {
         const status = mapConnectionErrorStatus(error);
-        // agent.md uses the admin JSON error envelope; mapConnectionErrorStatus may
-        // return 409 for OAuth refresh failures, which jsonError does not accept.
-        if (status === 409) {
-          return context.json({ error: { code: error.code, message: error.message } }, 409);
-        }
         return jsonError(context, status, error.code, error.message);
       }
       throw error;
@@ -710,6 +729,31 @@ export class ConnectServer {
     return writeRuntimeSuccess(context, serializeRuntimeAction(action));
   }
 
+  private async getRuntimeTriggerPermissions(context: Context, service: string): Promise<Response> {
+    const provider = this.options.catalog.providers.find((item) => item.service === service);
+    if (!provider) throw new HttpRequestError("provider_not_found", "Provider not found.", 404);
+    return writeRuntimeSuccess(context, serializeRuntimeTriggerPermissions(provider));
+  }
+
+  private async executeRuntimeTrigger(context: Context): Promise<Response> {
+    if (!this.options.triggers)
+      throw new HttpRequestError("trigger_not_supported", "Trigger execution is unavailable.", 501);
+    const { readTriggerRequest } = await import("../triggers/request.ts");
+    const request = readTriggerRequest(await readJsonBody(context, 160 * 1024));
+    const signal = AbortSignal.any([context.req.raw.signal, AbortSignal.timeout(45_000)]);
+    const result = await this.options.triggers.run({
+      service: context.req.param("service")!,
+      triggerId: context.req.param("triggerId")!,
+      request,
+      connectionName: readConnectionName(context),
+      connectionId: optionalString(context.req.header("x-oo-connector-app-id")),
+      policy: await this.getPolicySnapshot(context),
+      grant: readRuntimeGrant(context),
+      signal,
+    });
+    return writeRuntimeSuccess(context, result);
+  }
+
   private async createRuntimeActionRun(context: Context, actionId: string): Promise<Response> {
     const action = this.options.catalog.actionsById.get(actionId);
     if (!action) {
@@ -719,6 +763,7 @@ export class ConnectServer {
     const body = await readJsonBody(context);
     const input = body.input ?? {};
     const connectionName = readConnectionName(context, body);
+    const connectionId = optionalString(context.req.header("x-oo-connector-app-id"));
     const runtimeGrant = readRuntimeGrant(context);
     let policy: ActionPolicySnapshot;
     try {
@@ -734,7 +779,15 @@ export class ConnectServer {
     if (!policy.evaluate(action).allowed) {
       return writeRuntimeActionHttpResult(
         context,
-        await this.executeRuntimeAction(actionId, input, connectionName, policy, runtimeGrant, context.req.raw.signal),
+        await this.executeRuntimeAction(
+          actionId,
+          input,
+          connectionName,
+          policy,
+          runtimeGrant,
+          context.req.raw.signal,
+          connectionId,
+        ),
       );
     }
     const idempotencyKey = readIdempotencyKey(context.req.header("idempotency-key"));
@@ -750,7 +803,15 @@ export class ConnectServer {
     if (!idempotencyKey.key) {
       return writeRuntimeActionHttpResult(
         context,
-        await this.executeRuntimeAction(actionId, input, connectionName, policy, runtimeGrant, context.req.raw.signal),
+        await this.executeRuntimeAction(
+          actionId,
+          input,
+          connectionName,
+          policy,
+          runtimeGrant,
+          context.req.raw.signal,
+          connectionId,
+        ),
       );
     }
 
@@ -761,6 +822,7 @@ export class ConnectServer {
       requestHash = hashActionRequest({
         actionId,
         connectionName: connectionName ?? defaultConnectionName,
+        connectionId,
         input,
         runtimeTokenId: runtimeGrant?.tokenId,
       });
@@ -811,6 +873,7 @@ export class ConnectServer {
       policy,
       runtimeGrant,
       context.req.raw.signal,
+      connectionId,
     );
     const completed = await this.options.idempotency.complete({
       keyHash,
@@ -833,6 +896,7 @@ export class ConnectServer {
     policy: ActionPolicySnapshot,
     runtimeGrant: RuntimeGrant | undefined,
     signal: AbortSignal | undefined,
+    connectionId?: string,
   ): Promise<RuntimeActionHttpResult> {
     try {
       const run = await this.options.actions.run({
@@ -840,6 +904,7 @@ export class ConnectServer {
         input,
         caller: "http",
         connectionName,
+        connectionId,
         policy,
         runtimeTokenId: runtimeGrant?.tokenId,
         signal,
@@ -903,6 +968,7 @@ export class ConnectServer {
       service,
       input: body,
       connectionName: readConnectionName(context, body),
+      connectionId: optionalString(context.req.header("x-oo-connector-app-id")),
       policy,
       signal: context.req.raw.signal,
     });

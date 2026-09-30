@@ -2,6 +2,8 @@ import type { ProviderDefinition } from "../../core/types.ts";
 
 import { zendeskActions } from "./actions.ts";
 import { zendeskOAuthScopes } from "./scopes.ts";
+import { snapshot as triggerSnapshot0_0 } from "./trigger-on-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "zendesk";
 
@@ -61,4 +63,6 @@ export const provider: ProviderDefinition = {
   ],
   homepageUrl: "https://www.zendesk.com",
   actions: zendeskActions,
+  triggers: [triggerSnapshot0_0],
+  triggerPermissions,
 };

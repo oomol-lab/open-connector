@@ -4,6 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+import type { PollDefinition } from "../../triggers/common/poll.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { GmailDraftResource, GmailMessageResource, GmailThreadResource } from "./message.ts";
 
@@ -39,6 +41,7 @@ import {
   summarizeGmailMessage,
 } from "./message.ts";
 import { gmailOAuthScopes } from "./scopes.ts";
+import { gmailMessageReceived } from "./trigger-on-message-received.ts";
 
 const service = "gmail";
 const gmailApiBaseUrl = "https://gmail.googleapis.com/gmail/v1";
@@ -1194,3 +1197,5 @@ async function readGmailError(response: Response): Promise<ProviderRequestError>
     rateLimited ? "rate_limited" : undefined,
   );
 }
+
+export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [gmailMessageReceived];

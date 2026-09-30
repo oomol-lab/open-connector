@@ -4,6 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+import type { PollDefinition } from "../../triggers/common/poll.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
@@ -16,6 +18,7 @@ import {
   ProviderRequestError,
   requireApiKeyCredential,
 } from "../provider-runtime.ts";
+import { telegramUpdate } from "./trigger-on-update.ts";
 
 const service = "telegram";
 const telegramApiBaseUrl = "https://api.telegram.org";
@@ -1370,3 +1373,5 @@ function assertValidTelegramBotToken(botToken: string): void {
     throw new ProviderRequestError(400, "telegram bot token is malformed");
   }
 }
+
+export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [telegramUpdate];

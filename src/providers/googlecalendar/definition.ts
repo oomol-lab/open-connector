@@ -2,6 +2,8 @@ import type { ProviderDefinition } from "../../core/types.ts";
 
 import { googlecalendarActions } from "./actions.ts";
 import { googlecalendarOAuthScopes } from "./scopes.ts";
+import { snapshot as triggerSnapshot0_0 } from "./trigger-on-event-changed.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "googlecalendar";
 
@@ -56,4 +58,6 @@ export const provider: ProviderDefinition = {
   ],
   homepageUrl: "https://workspace.google.com/products/calendar/",
   actions: googlecalendarActions,
+  triggers: [triggerSnapshot0_0],
+  triggerPermissions,
 };

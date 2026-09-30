@@ -5,6 +5,8 @@ import type {
   ProviderProxyExecutor,
   TransitFileWriter,
 } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+import type { PollDefinition } from "../../triggers/common/poll.ts";
 import type { FeishuActionRuntimeContext } from "../feishu/shared/client.ts";
 import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
 
@@ -51,6 +53,7 @@ import {
   toProviderProxyError,
 } from "../provider-runtime.ts";
 import { feishuAppBotActions, feishuAppBotProviderScopes } from "./actions.ts";
+import { feishuEvents } from "./trigger-on-event.ts";
 
 const service = "feishu_app_bot";
 const feishuOpenBaseUrl = "https://open.feishu.cn/open-apis";
@@ -1419,3 +1422,5 @@ function createFeishuRequestSignal(parent?: AbortSignal): FeishuRequestSignal {
 function isAbortError(error: unknown): boolean {
   return error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError");
 }
+
+export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [...feishuEvents];

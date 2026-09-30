@@ -2,6 +2,8 @@ import type { ProviderDefinition } from "../../core/types.ts";
 
 import { oneDriveActions } from "./actions.ts";
 import { oneDriveOAuthScopes } from "./scopes.ts";
+import { snapshot as triggerSnapshot0_0 } from "./trigger-on-item-changed.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "one_drive";
 
@@ -43,4 +45,6 @@ export const provider: ProviderDefinition = {
   ],
   homepageUrl: "https://www.microsoft.com/microsoft-365/onedrive/online-cloud-storage",
   actions: oneDriveActions,
+  triggers: [triggerSnapshot0_0],
+  triggerPermissions,
 };

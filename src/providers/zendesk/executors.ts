@@ -4,6 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+import type { PollDefinition } from "../../triggers/common/poll.ts";
 
 import {
   basicAuthorizationHeader,
@@ -20,6 +22,7 @@ import {
   toProviderProxyError,
 } from "../provider-runtime.ts";
 import { validateZendeskCredential, zendeskActionHandlers } from "./runtime.ts";
+import { zendeskEvent } from "./trigger-on-event.ts";
 
 const service = "zendesk";
 
@@ -166,3 +169,5 @@ function normalizeZendeskSubdomain(raw: string): string {
   }
   return subdomain;
 }
+
+export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [zendeskEvent];
