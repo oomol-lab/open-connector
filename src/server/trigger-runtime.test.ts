@@ -383,4 +383,110 @@ describe("Trigger runtime HTTP boundary", () => {
       "cli_verified",
     );
   });
+
+  it.each(["release", "abandon"])("shares Feishu demand across aliases and tokens through $0", async (mode) => {
+    const first = await database.connectionStore.set("feishu_app_bot", "first", credential("first-key", "cli_shared"));
+    const second = await database.connectionStore.set(
+      "feishu_app_bot",
+      "second",
+      credential("second-key", "cli_shared"),
+    );
+    const other = await new RuntimeTokenService(database.runtimeTokenStore).createToken("Second owner", {
+      allowedActions: [],
+      blockedActions: ["*"],
+      allowedProxies: [],
+      allowedTriggers: ["feishu_app_bot.on_event"],
+      allowedConnections: [second.id],
+    });
+    const body = {
+      operation: "resource",
+      config: {
+        sourceId: `source_${"a".repeat(32)}`,
+        eventTypes: ["drive.file.edit_v1"],
+        resource: { kind: "document", id: "shared-document", documentType: "docx" },
+      },
+      active: true,
+      requestKey: "same-binding-key",
+    };
+    const execute = (id: string, bearer: string, active: boolean) =>
+      request({ ...body, active }, bearer, id, "feishu_app_bot", "feishu_app_bot.on_event");
+    expect((await execute(first.id, other.token, true)).status).toBe(403);
+    expect((await execute(first.id, token, true)).status).toBe(200);
+    expect((await execute(second.id, other.token, true)).status).toBe(200);
+    expect(calls.filter((call) => call.service === "feishu_app_bot")).toHaveLength(1);
+    const consumers = (await database.triggerStore.list()).filter((record) => record.mode === "resource");
+    expect(consumers).toHaveLength(2);
+    expect(new Set(consumers.map((record) => record.tokenId))).toEqual(new Set([tokenId, other.record.id]));
+    if (mode === "abandon") {
+      await connector.triggerMaintenance.abandon(
+        consumers.find((record) => record.connectionId === first.id)!.id,
+        new AbortController().signal,
+      );
+    } else expect((await execute(first.id, token, false)).status).toBe(200);
+    expect(calls.filter((call) => call.request.method === "DELETE")).toHaveLength(0);
+    await database.connectionStore.delete("feishu_app_bot", "first");
+    expect((await execute(second.id, other.token, false)).status).toBe(200);
+    expect(calls.filter((call) => call.request.method === "DELETE")).toMatchObject([{ key: "second-key" }]);
+  });
+
+  it("keeps the same Feishu resource separate for different provider accounts", async () => {
+    const first = await database.connectionStore.set("feishu_app_bot", "first", credential("first-key", "cli_first"));
+    const second = await database.connectionStore.set(
+      "feishu_app_bot",
+      "second",
+      credential("second-key", "cli_second"),
+    );
+    const body = {
+      operation: "resource",
+      config: {
+        sourceId: `source_${"a".repeat(32)}`,
+        eventTypes: ["drive.file.edit_v1"],
+        resource: { kind: "document", id: "same-document", documentType: "docx" },
+      },
+      active: true,
+      requestKey: "binding-key",
+    };
+    for (const connection of [first, second]) {
+      expect((await request(body, token, connection.id, "feishu_app_bot", "feishu_app_bot.on_event")).status).toBe(200);
+    }
+    expect(calls.filter((call) => call.service === "feishu_app_bot")).toHaveLength(2);
+    expect(
+      (await request({ ...body, active: false }, token, first.id, "feishu_app_bot", "feishu_app_bot.on_event")).status,
+    ).toBe(200);
+    expect(calls.filter((call) => call.request.method === "DELETE")).toMatchObject([{ key: "first-key" }]);
+  });
+
+  it("rebuilds a released Feishu binding after same-account reauthorization with the current revision", async () => {
+    const first = await database.connectionStore.set("feishu_app_bot", "work", credential("old-key", "cli_verified"));
+    const body = {
+      operation: "resource",
+      config: {
+        sourceId: `source_${"a".repeat(32)}`,
+        eventTypes: ["drive.file.edit_v1"],
+        resource: { kind: "document", id: "first-document", documentType: "docx" },
+      },
+      active: true,
+      requestKey: "binding-key",
+    };
+    const execute = (input: unknown) => request(input, token, first.id, "feishu_app_bot", "feishu_app_bot.on_event");
+    expect((await execute(body)).status).toBe(200);
+    expect((await execute({ ...body, active: false })).status).toBe(200);
+    const renewed = await database.connectionStore.set("feishu_app_bot", "work", credential("new-key", "cli_verified"));
+    expect(renewed.id).toBe(first.id);
+    expect(renewed.revision).not.toBe(first.revision);
+    const rebuilt = {
+      ...body,
+      config: { ...body.config, resource: { ...body.config.resource, id: "second-document" } },
+    };
+    expect((await execute(rebuilt)).status).toBe(200);
+    expect((await execute(rebuilt)).status).toBe(200);
+    expect(calls.filter((call) => call.key === "new-key")).toMatchObject([
+      { request: { endpoint: "/drive/v1/files/second-document/subscribe" } },
+    ]);
+    expect((await execute({ ...rebuilt, active: false })).status).toBe(200);
+    expect(calls.at(-1)).toMatchObject({
+      key: "new-key",
+      request: { method: "DELETE", endpoint: "/drive/v1/files/second-document/delete_subscribe" },
+    });
+  });
 });

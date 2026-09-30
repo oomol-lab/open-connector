@@ -6,7 +6,13 @@ import type { SubscriptionOwner } from "./subscriptions.ts";
 
 import { isDeepStrictEqual } from "node:util";
 import { HttpRequestError } from "../server/api/http-utils.ts";
+import { canonicalJsonBytes, digestBytes } from "./common/encoding.ts";
 import { subscriptionId, withSubscription } from "./subscriptions.ts";
+
+async function resourceSubscriptionId(owner: SubscriptionOwner, key: string): Promise<string> {
+  return digestBytes(canonicalJsonBytes(["resource-set", owner.service, owner.providerAccountId, key]));
+}
+
 export async function executeResourceSubscription(
   store: TriggerStore,
   definition: ResourceDefinition,
@@ -31,6 +37,7 @@ export async function executeResourceSubscription(
     status: "active",
   });
   return withSubscription<IntegrationReconcileResult>(store, member, signal, async (consumer, saveConsumer) => {
+    consumer.connectionRevision = owner.connectionRevision;
     return executeResourceSubscriptionOperation(store, definition, consumer, saveConsumer, input, proxy, signal);
   });
 }
@@ -70,7 +77,7 @@ export async function executeResourceSubscriptionOperation(
   }
   for (const resource of definition.subscriptions(input.config)) {
     const shared = { ...owner, tokenId: "shared-resource" };
-    const id = await subscriptionId(shared, resource.key);
+    const id = await resourceSubscriptionId(owner, resource.key);
     await store.insertFlowTrigger({
       mode: "resource-set",
       id,
@@ -126,7 +133,7 @@ export async function abandonResourceSubscription(
   signal: AbortSignal,
 ): Promise<void> {
   for (const resource of definition.subscriptions(consumer.config)) {
-    const id = await subscriptionId({ ...consumer, tokenId: "shared-resource" }, resource.key);
+    const id = await resourceSubscriptionId(consumer, resource.key);
     if (!(await store.getFlowTrigger(id))) continue;
     await withSubscription(store, id, signal, async (record, save) => {
       const members = (record.subscription.members as readonly string[]).filter((member) => member !== consumer.id);
