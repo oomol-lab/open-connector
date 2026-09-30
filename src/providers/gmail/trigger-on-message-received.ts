@@ -4,6 +4,7 @@ import type { JsonValue } from "../../triggers/common/types.ts";
 
 import {
   eventsPollOutputs,
+  maximumPollEventsPerPage,
   PermanentPollError,
   PollConnectionError,
   TransientPollError,
@@ -23,6 +24,7 @@ interface Config {
 interface Checkpoint {
   readonly historyId: string;
   readonly pageToken?: string;
+  readonly messageOffset?: number;
 }
 
 interface HistoryPage {
@@ -49,8 +51,6 @@ interface Header {
   readonly value: string;
 }
 
-const maxPages = 5;
-
 export const gmailMessageReceived: PollDefinition = {
   buildOutputs: eventsPollOutputs,
   snapshot,
@@ -59,11 +59,21 @@ export const gmailMessageReceived: PollDefinition = {
     if (context.checkpoint === null) return { checkpoint: { historyId: await profileHistoryId(context) }, events: [] };
     const checkpoint = readCheckpoint(context.checkpoint);
     const labels = await labelIds(context, config.labelNamesOrIds);
-    const { candidates, lastPage } = await listMessages(context, checkpoint, labels, config.maxMessagesPerPoll);
-    const next = nextCheckpoint(checkpoint.historyId, lastPage);
+    const budget = Math.min(config.maxMessagesPerPoll, maximumPollEventsPerPage);
+    const { candidates, lastPage } = await listMessages(context, checkpoint, labels, budget);
+    const offset = checkpoint.messageOffset ?? 0;
+    const end = Math.min(offset + budget, candidates.length);
+    // History pages count records, so consume all messages before advancing the page token.
+    const next =
+      end < candidates.length
+        ? {
+            checkpoint: { historyId: checkpoint.historyId, pageToken: checkpoint.pageToken, messageOffset: end },
+            hasMore: true,
+          }
+        : nextCheckpoint(checkpoint.historyId, lastPage);
     const events: PollEvent[] = [];
     let filtered = 0;
-    for (const candidate of candidates) {
+    for (const candidate of candidates.slice(offset, end)) {
       const message = await messageMetadata(context, candidate.id);
       if (message == null) continue;
       if (!(await matches(context, message, config, labels))) {
@@ -107,9 +117,16 @@ function readCheckpoint(value: JsonValue): Checkpoint {
   if (typeof checkpoint?.historyId != "string" || checkpoint.historyId.length == 0) {
     throw new PermanentPollError("Gmail checkpoint historyId is missing; recreate the Trigger.");
   }
+  if (
+    checkpoint.messageOffset !== undefined &&
+    (!Number.isInteger(checkpoint.messageOffset) || (checkpoint.messageOffset as number) < 0)
+  ) {
+    throw new PermanentPollError("Gmail checkpoint messageOffset is invalid; recreate the Trigger.");
+  }
   return {
     historyId: checkpoint.historyId,
     ...(typeof checkpoint.pageToken == "string" ? { pageToken: checkpoint.pageToken } : {}),
+    messageOffset: checkpoint.messageOffset as number | undefined,
   };
 }
 
@@ -149,28 +166,21 @@ async function listMessages(
   readonly lastPage: HistoryPage;
 }> {
   const candidates = new Map<string, { readonly id: string }>();
-  let pageToken = checkpoint.pageToken;
-  let lastPage: HistoryPage = {};
-  for (let page = 0; page < maxPages; page += 1) {
-    const result = await get(context, "/users/me/history", {
-      historyTypes: "messageAdded",
-      labelId: labels[0],
-      maxResults: maxMessages,
-      pageToken,
-      startHistoryId: checkpoint.historyId,
-    });
-    if (result.status == 404) throw new PermanentPollError("Gmail history checkpoint expired; recreate the Trigger.");
-    success(result, "history list");
-    lastPage = (record(result.data) ?? {}) as HistoryPage;
-    for (const history of lastPage.history ?? []) {
-      for (const added of history.messagesAdded ?? []) {
-        const id = added.message?.id;
-        if (id != null && id.length > 0 && !candidates.has(id)) candidates.set(id, { id });
-      }
+  const result = await get(context, "/users/me/history", {
+    historyTypes: "messageAdded",
+    labelId: labels[0],
+    maxResults: maxMessages,
+    pageToken: checkpoint.pageToken,
+    startHistoryId: checkpoint.historyId,
+  });
+  if (result.status == 404) throw new PermanentPollError("Gmail history checkpoint expired; recreate the Trigger.");
+  success(result, "history list");
+  const lastPage = (record(result.data) ?? {}) as HistoryPage;
+  for (const history of lastPage.history ?? []) {
+    for (const added of history.messagesAdded ?? []) {
+      const id = added.message?.id;
+      if (id != null && id.length > 0 && !candidates.has(id)) candidates.set(id, { id });
     }
-    if (!lastPage.nextPageToken) break;
-    pageToken = lastPage.nextPageToken;
-    if (candidates.size >= maxMessages) break;
   }
   return { candidates: [...candidates.values()], lastPage };
 }

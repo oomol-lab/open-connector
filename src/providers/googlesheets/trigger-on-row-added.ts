@@ -4,6 +4,7 @@ import type { JsonValue } from "../../triggers/common/types.ts";
 
 import {
   eventsPollOutputs,
+  maximumPollEventsPerPage,
   PermanentPollError,
   PollConnectionError,
   TransientPollError,
@@ -69,8 +70,8 @@ export const googleSheetsRowAdded: PollDefinition = {
       return { checkpoint: await anchor(context, config, sheet), events: [] };
 
     const headers = await header(context, config, sheet);
-    const start = Math.min(Math.max(config.firstDataRow, checkpoint.lastRowNumber), sheet.rowCount);
-    const end = Math.min(start + config.maxRowsPerPoll, sheet.rowCount);
+    const start = Math.min(Math.max(config.firstDataRow, checkpoint.lastRowNumber + 1), sheet.rowCount);
+    const end = Math.min(start + Math.min(config.maxRowsPerPoll, maximumPollEventsPerPage) - 1, sheet.rowCount);
     const rows = await values(context, config, sheet, start, end, "row window fetch");
     let last = start + rows.length - 1;
     if (rows.length < end - start + 1) {

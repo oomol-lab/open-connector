@@ -5,13 +5,18 @@ import type { ConnectorProxy } from "../triggers/common/proxy.ts";
 import type { JsonValue } from "../triggers/common/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { optionalInteger, optionalRecord } from "../core/cast.ts";
 import { proxy as airtableProxy } from "../providers/airtable/executors.ts";
 import { airtableRecordChanged } from "../providers/airtable/trigger-on-record-changed.ts";
+import { proxy as gmailProxy } from "../providers/gmail/executors.ts";
+import { gmailMessageReceived } from "../providers/gmail/trigger-on-message-received.ts";
 import { proxy as calendarProxy } from "../providers/googlecalendar/executors.ts";
 import { googleCalendarEventChanged } from "../providers/googlecalendar/trigger-on-event-changed.ts";
 import { proxy as driveProxy } from "../providers/googledrive/executors.ts";
 import { googleDriveChangeListener, googleDriveChanges } from "../providers/googledrive/trigger-changes.ts";
 import { googleDriveFileChange } from "../providers/googledrive/trigger-on-file-change.ts";
+import { proxy as sheetsProxy } from "../providers/googlesheets/executors.ts";
+import { googleSheetsRowAdded } from "../providers/googlesheets/trigger-on-row-added.ts";
 import { proxy as oneDriveProxy } from "../providers/one_drive/executors.ts";
 import { oneDriveItemChanged } from "../providers/one_drive/trigger-on-item-changed.ts";
 import { resolveTriggerConfig } from "../triggers/common/config.ts";
@@ -34,8 +39,11 @@ function transport(proxy: ProviderProxyExecutor): ConnectorProxy {
   return {
     async execute(request, signal) {
       const result = await proxy(request, { getCredential: async () => credential, signal });
-      if (!result.ok) throw new Error(result.error.message);
-      return result.response;
+      if (result.ok) return result.response;
+      return {
+        status: optionalInteger(optionalRecord(result.error.details)?.status) ?? 502,
+        data: { error: result.error.message },
+      };
     },
   };
 }
@@ -46,7 +54,8 @@ function respond(handler: (url: URL, init?: RequestInit) => unknown): URL[] {
     const url = new URL(input instanceof Request ? input.url : String(input));
     calls.push(url);
     expect(new Headers(init?.headers).get("authorization")).toBe("Bearer provider-token");
-    return Response.json(handler(url, init));
+    const response = handler(url, init);
+    return response instanceof Response ? response : Response.json(response);
   });
   return calls;
 }
@@ -69,12 +78,163 @@ async function drain(
     pages.push(page);
     if (!page.hasMore) return { pages, events: pages.flatMap((entry) => entry.events.map((event) => event.payload)) };
     expect(page.checkpoint).not.toEqual(checkpoint);
-    checkpoint = page.checkpoint;
+    checkpoint = JSON.parse(JSON.stringify(page.checkpoint)) as JsonValue;
   }
   throw new Error("Provider pagination did not finish.");
 }
 
 describe("Native Trigger provider transport and pagination contracts", () => {
+  it.each([100, 37, 500])(
+    "drains Google Sheets rows after an empty or populated seed with budget %i",
+    async (budget) => {
+      for (const initialRows of [0, 3]) {
+        let rowCount = initialRows;
+        respond((url) => {
+          if (url.pathname === "/v4/spreadsheets/sheet-id") {
+            return { sheets: [{ properties: { sheetId: 1, title: "Rows", gridProperties: { rowCount: 1000 } } }] };
+          }
+          const range = decodeURIComponent(url.pathname).match(/!A(\d+):A(\d+)$/);
+          expect(range).not.toBeNull();
+          const start = Number(range![1]);
+          const end = Math.min(Number(range![2]), rowCount + 1);
+          return {
+            values: Array.from({ length: Math.max(0, end - start + 1) }, (_, index) => [
+              start + index === 1 ? "Value" : `row-${start + index}`,
+            ]),
+          };
+        });
+        const input = { spreadsheetId: "sheet-id", sheet: "Rows", columnRange: "A:A", maxRowsPerPoll: budget };
+        const connector = transport(sheetsProxy);
+        const seeded = await googleSheetsRowAdded.poll({
+          checkpoint: null,
+          config: resolveTriggerConfig(googleSheetsRowAdded.snapshot.configInputs, input),
+          connector,
+          now,
+        });
+        expect(seeded).toMatchObject({ checkpoint: { lastRowNumber: initialRows + 1 }, events: [] });
+        rowCount += total;
+        const { pages, events } = await drain(googleSheetsRowAdded, connector, input, seeded.checkpoint);
+        expect(pages.every((page) => page.events.length <= Math.min(budget, maximumPollEventsPerPage))).toBe(true);
+        expect(events.map((event) => event.rowNumber)).toEqual(
+          Array.from({ length: total }, (_, index) => initialRows + index + 2),
+        );
+        expect(pages.at(-1)?.checkpoint).toMatchObject({ lastRowNumber: rowCount + 1 });
+      }
+    },
+  );
+
+  it.each([25, 37, 100])("drains Gmail history records containing many messages with budget %i", async (budget) => {
+    const metadata: string[] = [];
+    const calls = respond((url) => {
+      if (url.pathname === "/gmail/v1/users/me/history") {
+        expect(url.searchParams.get("startHistoryId")).toBe("initial-history");
+        const secondPage = url.searchParams.get("pageToken") === "second-page";
+        const ids = Array.from(
+          { length: secondPage ? 12 : total - 12 },
+          (_, index) => `message-${(secondPage ? total - 12 : 0) + index}`,
+        );
+        return {
+          history: [{ messagesAdded: [...ids, ids[0]].map((id) => ({ message: { id } })) }],
+          historyId: "final-history",
+          nextPageToken: secondPage ? undefined : "second-page",
+        };
+      }
+      const id = url.pathname.split("/").at(-1)!;
+      expect(url.pathname).toBe(`/gmail/v1/users/me/messages/${id}`);
+      metadata.push(id);
+      return { id, labelIds: ["INBOX"] };
+    });
+    const { pages, events } = await drain(
+      gmailMessageReceived,
+      transport(gmailProxy),
+      { maxMessagesPerPoll: budget },
+      { historyId: "initial-history" },
+    );
+    expect(pages.every((page) => page.events.length <= budget)).toBe(true);
+    const ids = Array.from({ length: total }, (_, index) => `message-${index}`);
+    expect(events.map((event) => event.messageId)).toEqual(ids);
+    expect(metadata).toEqual(ids);
+    expect(
+      pages
+        .slice(0, -1)
+        .every((page) => (page.checkpoint as Record<string, JsonValue>).historyId === "initial-history"),
+    ).toBe(true);
+    expect(pages.at(-1)?.checkpoint).toEqual({ historyId: "final-history" });
+    expect(calls.filter((url) => url.pathname.endsWith("/history") && url.searchParams.has("pageToken"))).toHaveLength(
+      1,
+    );
+  });
+
+  it("retains Gmail page progress across filtered, deleted and failed message reads", async () => {
+    let fail = true;
+    respond((url) => {
+      if (url.pathname === "/gmail/v1/users/me/history")
+        return {
+          history: [
+            { messagesAdded: Array.from({ length: 105 }, (_, index) => ({ message: { id: `message-${index}` } })) },
+          ],
+          historyId: "final-history",
+        };
+      const id = url.pathname.split("/").at(-1)!;
+      if (id === "message-0") return Response.json({}, { status: 404 });
+      if (id === "message-30" && fail) return Response.json({}, { status: 503 });
+      return { id, labelIds: id === "message-1" ? ["SPAM"] : ["INBOX"] };
+    });
+    const config = resolveTriggerConfig(gmailMessageReceived.snapshot.configInputs, {});
+    const connector = transport(gmailProxy);
+    const first = await gmailMessageReceived.poll({
+      checkpoint: { historyId: "initial-history" },
+      config,
+      connector,
+      now,
+    });
+    expect(first.events).toHaveLength(23);
+    expect(first.filtered).toBe(1);
+    expect(first.checkpoint).toMatchObject({ historyId: "initial-history" });
+    await expect(gmailMessageReceived.poll({ checkpoint: first.checkpoint, config, connector, now })).rejects.toThrow(
+      "status 503",
+    );
+    fail = false;
+    const remaining = await drain(gmailMessageReceived, connector, {}, first.checkpoint);
+    expect([
+      ...first.events.map((event) => event.payload.messageId),
+      ...remaining.events.map((event) => event.messageId),
+    ]).toEqual(Array.from({ length: 103 }, (_, index) => `message-${index + 2}`));
+    expect(remaining.pages.at(-1)?.checkpoint).toEqual({ historyId: "final-history" });
+  });
+
+  it("advances an empty Gmail history page before reading the next page", async () => {
+    respond((url) => {
+      expect(url.pathname).toBe("/gmail/v1/users/me/history");
+      return url.searchParams.has("pageToken")
+        ? { history: [], historyId: "final-history" }
+        : { history: [], nextPageToken: "second-page" };
+    });
+    const { pages, events } = await drain(
+      gmailMessageReceived,
+      transport(gmailProxy),
+      {},
+      { historyId: "initial-history" },
+    );
+    expect(pages).toHaveLength(2);
+    expect(pages[0]?.checkpoint).toEqual({ historyId: "initial-history", pageToken: "second-page" });
+    expect(pages[1]?.checkpoint).toEqual({ historyId: "final-history" });
+    expect(events).toEqual([]);
+  });
+
+  it.each([-1, 0.5, "25"])("rejects an invalid Gmail message continuation %j", async (messageOffset) => {
+    const execute = vi.fn();
+    await expect(
+      gmailMessageReceived.poll({
+        checkpoint: { historyId: "initial-history", messageOffset },
+        config: resolveTriggerConfig(gmailMessageReceived.snapshot.configInputs, {}),
+        connector: { execute },
+        now,
+      }),
+    ).rejects.toThrow("messageOffset is invalid");
+    expect(execute).not.toHaveBeenCalled();
+  });
+
   it("creates, reads and deletes both Google Drive channel Triggers through the registered proxy", async () => {
     const calls = respond((url, init) => {
       expect(url.origin).toBe("https://www.googleapis.com");
