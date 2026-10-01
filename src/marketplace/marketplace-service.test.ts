@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "../catalog-store.ts";
 import { setDefaultGuardedFetchDnsLookup } from "../core/guarded-fetch.ts";
 import { setEgressTrustedHosts } from "../core/request.ts";
+import { defaultMarketplaceDiscoveryUrl } from "./default-marketplace.ts";
 import { MarketplaceService } from "./marketplace-service.ts";
 
 const provider: ProviderDefinition = {
@@ -69,6 +70,42 @@ describe("MarketplaceService", () => {
       }
     },
   );
+
+  it("loads the default discovery summary through the runtime fetcher", async () => {
+    setDefaultGuardedFetchDnsLookup(null);
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse({
+        version: 1,
+        id: "oomol",
+        name: "Default",
+        pricing: "metered",
+        validate: "/validate",
+        endpoint: "/actions",
+        actions: ["example.run"],
+      }),
+    );
+    const service = new MarketplaceService({
+      catalog: createCatalogStore([provider]),
+      store: new MemoryMarketplaceStore(),
+      secretCodec: reversibleCodec,
+      fetcher,
+    });
+    try {
+      await expect(service.getDefaultDiscovery()).resolves.toEqual({
+        version: 1,
+        name: "Default",
+        actions: ["example.run"],
+      });
+      expect(fetcher).toHaveBeenCalledOnce();
+      expect(String(fetcher.mock.calls[0]?.[0])).toBe(defaultMarketplaceDiscoveryUrl);
+      expect(fetcher.mock.calls[0]?.[1]).toMatchObject({
+        headers: { accept: "application/json" },
+        redirect: "manual",
+      });
+    } finally {
+      setDefaultGuardedFetchDnsLookup(null);
+    }
+  });
 
   it.each([
     { failure: new TypeError("terminated"), status: 502, message: "Marketplace discovery could not be read." },

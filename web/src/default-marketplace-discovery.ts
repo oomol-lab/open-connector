@@ -3,13 +3,10 @@ export interface DefaultMarketplaceDiscovery {
   actions: string[];
 }
 
-/** Reads the public browsing catalog without sending credentials or activating a connection. */
-export async function loadDefaultMarketplaceCatalog(
-  url: string,
-  signal: AbortSignal,
-): Promise<DefaultMarketplaceDiscovery> {
-  const response = await fetch(url, {
-    credentials: "omit",
+/** Reads the public browsing catalog through the runtime so browser CORS policy cannot block it. */
+export async function loadDefaultMarketplaceCatalog(signal: AbortSignal): Promise<DefaultMarketplaceDiscovery> {
+  const response = await fetch("/api/marketplace/discovery", {
+    credentials: "same-origin",
     redirect: "error",
     signal: AbortSignal.any([signal, AbortSignal.timeout(15_000)]),
     headers: { accept: "application/json" },

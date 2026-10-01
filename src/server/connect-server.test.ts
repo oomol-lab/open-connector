@@ -165,6 +165,31 @@ describe("ConnectServer", () => {
     });
   });
 
+  it("serves default Marketplace discovery through the same-origin API", async () => {
+    const database = new SqliteRuntimeDatabase(":memory:");
+    requestDatabases.push(database);
+    const marketplace = new MarketplaceService({
+      catalog: createCatalogStore([apiKeyProvider]),
+      store: database.marketplaceStore,
+      secretCodec: new PlainTextSecretCodec(),
+    });
+    vi.spyOn(marketplace, "getDefaultDiscovery").mockResolvedValue({
+      version: 1,
+      name: "Default",
+      actions: ["example.echo"],
+    });
+    const app = createTestServer([apiKeyProvider], { marketplace }).createApp();
+
+    const response = await app.request("/api/marketplace/discovery");
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      version: 1,
+      name: "Default",
+      actions: ["example.echo"],
+    });
+  });
+
   it("rejects connections for providers unavailable in the current runtime", async () => {
     const app = createTestServer([catalogOnlyProvider]).createApp();
 

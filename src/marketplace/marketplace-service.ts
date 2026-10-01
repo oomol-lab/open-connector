@@ -63,6 +63,12 @@ export interface MarketplaceSnapshot {
   actionsByService: ReadonlyMap<string, ReadonlySet<string>>;
 }
 
+export interface MarketplaceDiscoverySummary {
+  version: 1;
+  name: string;
+  actions: string[];
+}
+
 export interface MarketplaceState {
   configured: boolean;
   enabled: boolean;
@@ -142,6 +148,11 @@ export class MarketplaceService {
 
   getSnapshot(): MarketplaceSnapshot | undefined {
     return this.snapshot;
+  }
+
+  async getDefaultDiscovery(signal?: AbortSignal): Promise<MarketplaceDiscoverySummary> {
+    const discovery = await this.discover(defaultMarketplaceDiscoveryUrl, signal);
+    return { version: 1, name: discovery.name, actions: discovery.actions };
   }
 
   supportsAction(actionId: string): boolean {
@@ -288,7 +299,7 @@ export class MarketplaceService {
     };
   }
 
-  private async discover(discoveryUrl: string): Promise<MarketplaceDiscovery> {
+  private async discover(discoveryUrl: string, signal?: AbortSignal): Promise<MarketplaceDiscovery> {
     try {
       return await requestRemote(
         {
@@ -298,7 +309,7 @@ export class MarketplaceService {
           requireHttps: false,
           allowTrustedHosts: true,
           timeoutMs: 15_000,
-          init: { headers: { accept: "application/json" } },
+          init: { headers: { accept: "application/json" }, signal },
         },
         async (response, signal) => {
           if (!response.ok)

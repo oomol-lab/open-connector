@@ -13,7 +13,6 @@ import { Badge, EmptyState, ProviderIcon } from "./shared-ui";
 
 interface DefaultMarketplaceCatalogProps {
   providers: ProviderDefinition[];
-  discoveryUrl: string;
   connected?: boolean;
   embedded?: boolean;
 }
@@ -28,7 +27,6 @@ const promotedServices = Object.keys(promotedModels);
 
 export function DefaultMarketplaceCatalog({
   providers,
-  discoveryUrl,
   connected,
   embedded,
 }: DefaultMarketplaceCatalogProps): ReactNode {
@@ -42,7 +40,7 @@ export function DefaultMarketplaceCatalog({
     let active = true;
     setFailure(undefined);
     const controller = new AbortController();
-    void loadDefaultMarketplaceCatalog(discoveryUrl, controller.signal).then(
+    void loadDefaultMarketplaceCatalog(controller.signal).then(
       (value) => {
         if (active) setCatalog(value);
       },
@@ -56,7 +54,7 @@ export function DefaultMarketplaceCatalog({
       active = false;
       controller.abort();
     };
-  }, [attempt, discoveryUrl]);
+  }, [attempt]);
 
   const available = new Set(catalog?.actions);
   const rows = providers
