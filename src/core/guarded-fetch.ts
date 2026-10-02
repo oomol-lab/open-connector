@@ -1,4 +1,4 @@
-import type { GuardedHttpDispatcher, ProviderResponseObservation } from "./provider-http-dispatch.ts";
+import type { GuardedHttpDispatcher } from "./provider-http-dispatch.ts";
 
 import { assertPublicHttpUrl, classifyIpAddress, isEgressTrustedHost, isIpAddress, isIpv4Address } from "./request.ts";
 
@@ -20,8 +20,6 @@ export type GuardedFetchDnsLookup = (hostname: string) => Promise<ResolvedAddres
 export interface GuardedFetchOptions {
   /** Optional dispatcher at the screened raw-transport seam; every redirect hop passes through it. */
   dispatchAttempt?: GuardedHttpDispatcher;
-  /** Transport-owned response representation; SDK metadata is never real body EOF. */
-  responseObservation?: ProviderResponseObservation;
   /**
    * Base transport issuing the actual requests. Defaults to the global fetch,
    * resolved per call so test stubs installed later still apply.
@@ -146,7 +144,6 @@ const bodyHeaders = ["content-encoding", "content-language", "content-length", "
 const guardedFetchBases = new WeakMap<typeof fetch, typeof fetch | undefined>();
 /** Retain admission when a caller replaces the egress policy without stacking guards. */
 const guardedFetchDispatchers = new WeakMap<typeof fetch, GuardedHttpDispatcher | undefined>();
-const guardedFetchResponseObservations = new WeakMap<typeof fetch, ProviderResponseObservation>();
 
 let defaultLookupOverridden = false;
 let defaultLookupOverride: GuardedFetchDnsLookup | null = null;
@@ -209,10 +206,6 @@ export function unwrapGuardedFetch(fetcher: typeof fetch | undefined): typeof fe
 export function createGuardedFetch(options: GuardedFetchOptions = {}): typeof fetch {
   const baseFetch = unwrapGuardedFetch(options.fetch);
   const dispatchAttempt = options.dispatchAttempt ?? (options.fetch && guardedFetchDispatchers.get(options.fetch));
-  // Re-guarding must never turn an SDK metadata-only response into EOF proof.
-  const inheritedObservation = options.fetch && guardedFetchResponseObservations.get(options.fetch);
-  const responseObservation =
-    inheritedObservation === "metadata_only" ? "metadata_only" : (options.responseObservation ?? "body");
   const createError = options.createError ?? ((message: string) => new TypeError(message));
   const maxRedirects = options.maxRedirects ?? defaultMaxRedirects;
   const guardedFetch = (async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
@@ -238,7 +231,6 @@ export function createGuardedFetch(options: GuardedFetchOptions = {}): typeof fe
               redirectHop,
               origin: url.origin,
               method: (transportInit?.method ?? transportRequest?.method ?? "GET").toUpperCase(),
-              responseObservation,
             }),
             transportInit?.signal ?? transportRequest?.signal ?? undefined,
             send,
@@ -346,7 +338,6 @@ export function createGuardedFetch(options: GuardedFetchOptions = {}): typeof fe
 
   guardedFetchBases.set(guardedFetch, baseFetch);
   guardedFetchDispatchers.set(guardedFetch, dispatchAttempt);
-  guardedFetchResponseObservations.set(guardedFetch, responseObservation);
   return guardedFetch;
 }
 

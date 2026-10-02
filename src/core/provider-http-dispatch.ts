@@ -1,5 +1,4 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { observeProviderResponseBody } from "./provider-response-body.ts";
 
 /** Runtime-owned identity. Never populate these fields from action input or HTTP headers. */
 export interface ProviderDispatchContext {
@@ -10,7 +9,6 @@ export interface ProviderDispatchContext {
   readonly connectionId?: string;
   /** Alias from the resolved stored connection, not the caller's requested alias. */
   readonly connectionName?: string;
-  readonly connectionRevision?: string;
 }
 
 /** Opaque authority supplied by the embedding host, independently of provider credentials. */
@@ -37,26 +35,12 @@ export type ProviderHttpAttemptResult =
   | { readonly kind: "transport_error" }
   | { readonly kind: "not_dispatched"; readonly reason: "cancelled" | "dispatch_failed" };
 
-/** Separate body/operation evidence. Headers and local cancellation are not EOF. */
-export interface ProviderHttpBodyEnd {
-  readonly kind: "eof" | "unknown";
-}
-
-/** Set by the transport adapter, never by a provider request header or action input. */
-export type ProviderResponseObservation = "body" | "metadata_only";
-
 export interface ProviderHttpPermit {
   readonly allow: true;
   /** Awaited immediately before transport. Persist dispatch commitment here; failures deny egress. */
   readonly onDispatch?: () => void | Promise<void>;
-  /** Exactly once after a permit is returned, including cancellation before dispatch. */
+  /** Started exactly once after a permit is returned; never awaited before returning the transport outcome. */
   readonly onResult?: (result: ProviderHttpAttemptResult) => void | Promise<void>;
-  /**
-   * Optional once-only EOF/unknown observer. An unread body does not complete.
-   * Feedback runs independently of native body close/error/cancel; the host
-   * retains conservative attempt state until its durable bookkeeping settles.
-   */
-  readonly onBodyEnd?: (event: ProviderHttpBodyEnd) => void | Promise<void>;
 }
 
 export interface ProviderHttpDenial {
@@ -90,7 +74,6 @@ export interface GuardedHttpAttempt {
   readonly redirectHop: number;
   readonly method: string;
   readonly origin: string;
-  readonly responseObservation?: ProviderResponseObservation;
 }
 
 export type GuardedHttpDispatcher = (
@@ -132,7 +115,6 @@ export function withProviderHttpDispatch<T>(
     executionId: context.executionId,
     connectionId: context.connectionId,
     connectionName: context.connectionName,
-    connectionRevision: context.connectionRevision,
   });
   return scopes.run(
     { options: configured, context: snapshot, receipt: parent?.options === configured ? parent.receipt : {} },
@@ -174,11 +156,6 @@ function deny(scope: DispatchScope, retryAfterSeconds?: number): ProviderHttpDis
   return (scope.receipt.denial ??= Object.freeze(new ProviderHttpDispatchError(retryAfterSeconds)));
 }
 
-/** Whether an SDK transport needs to use the opt-in provider HTTP dispatch bridge. */
-export function isProviderHttpDispatchConfigured(): boolean {
-  return scopes.getStore() !== undefined;
-}
-
 /** Called only at the screened raw-transport seam, once for every HTTP attempt and redirect hop. */
 export const dispatchProviderHttpAttempt: GuardedHttpDispatcher = async (target, signal, transport, revalidate) => {
   const scope = scopes.getStore();
@@ -206,14 +183,10 @@ export const dispatchProviderHttpAttempt: GuardedHttpDispatcher = async (target,
         workClass: authority?.workClass,
       }),
     });
-    permit = await waitForSignal(
-      Promise.resolve(scope.options.beforeAttempt(attempt, signal)),
-      signal,
-      async (late) => {
-        if (late?.allow)
-          await reportFeedback(scope.options, attempt, late, { kind: "not_dispatched", reason: "cancelled" });
-      },
-    );
+    permit = await waitForSignal(Promise.resolve(scope.options.beforeAttempt(attempt, signal)), signal, (late) => {
+      if (late?.allow)
+        void reportFeedback(scope.options, attempt, late, { kind: "not_dispatched", reason: "cancelled" });
+    });
     if (!permit || typeof permit.allow !== "boolean") throw new ProviderHttpDispatchError();
   } catch {
     signal?.throwIfAborted();
@@ -236,41 +209,25 @@ export const dispatchProviderHttpAttempt: GuardedHttpDispatcher = async (target,
     signal?.throwIfAborted();
     if (scope.receipt.denial) throw scope.receipt.denial;
   } catch {
-    await feedback({ kind: "not_dispatched", reason: signal?.aborted ? "cancelled" : "dispatch_failed" });
+    const denial = signal?.aborted ? undefined : deny(scope);
+    void feedback({ kind: "not_dispatched", reason: signal?.aborted ? "cancelled" : "dispatch_failed" });
     signal?.throwIfAborted();
-    throw deny(scope);
+    throw denial;
   }
   let response: Response;
   try {
     response = await transport();
   } catch (error) {
-    await feedback({ kind: "transport_error" });
+    void feedback({ kind: "transport_error" });
     throw error;
   }
   // Report every HTTP status, including redirect responses. No response body is read or exposed.
-  await feedback({
+  void feedback({
     kind: "response",
     status: response.status,
     retryAfter: response.headers.get("retry-after") ?? undefined,
   });
-  // Keep the exact Response and legacy body behavior when no observer is set.
-  if (!admitted.onBodyEnd) return response;
-  return observeProviderResponseBody(response, {
-    method: target.method,
-    observation: target.responseObservation ?? "body",
-    signal,
-    onBodyEnd: async (event) => {
-      try {
-        await admitted.onBodyEnd?.(event);
-      } catch {
-        try {
-          await scope.options.onFeedbackError?.(attempt);
-        } catch {
-          // Completion feedback cannot cause an already-issued request replay.
-        }
-      }
-    },
-  });
+  return response;
 };
 
 async function reportFeedback(
@@ -290,29 +247,30 @@ async function reportFeedback(
   }
 }
 
-async function waitForSignal<T>(
+function waitForSignal<T>(
   pending: Promise<T>,
   signal: AbortSignal | undefined,
-  onLate?: (value: T) => Promise<void>,
+  onLate?: (value: T) => void,
 ): Promise<T> {
   if (!signal) return pending;
-  let cancelled = false;
-  const completed = pending.then(async (value) => {
-    if (cancelled) await onLate?.(value);
-    return value;
-  });
-  let abort = (): void => {};
-  const aborted = new Promise<never>((_resolve, reject) => {
-    abort = () => {
+  return new Promise<T>((resolve, reject) => {
+    let cancelled = false;
+    const abort = (): void => {
       cancelled = true;
       reject(signal.reason);
     };
     if (signal.aborted) abort();
     else signal.addEventListener("abort", abort, { once: true });
+    void pending.then(
+      (value) => {
+        signal.removeEventListener("abort", abort);
+        if (cancelled) onLate?.(value);
+        else resolve(value);
+      },
+      (error: unknown) => {
+        signal.removeEventListener("abort", abort);
+        reject(error);
+      },
+    );
   });
-  try {
-    return await Promise.race([completed, aborted]);
-  } finally {
-    signal.removeEventListener("abort", abort);
-  }
 }

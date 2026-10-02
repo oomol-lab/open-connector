@@ -84,43 +84,33 @@ export class SqlConnectionStore implements IConnectionStore {
   }
 
   async updateCredential(input: StoredLocalConnection, refresh = false): Promise<boolean> {
-    return (await this.updateCredentialSnapshot(input, refresh)) !== undefined;
-  }
-
-  async updateCredentialSnapshot(
-    input: StoredLocalConnection,
-    refresh = false,
-  ): Promise<StoredLocalConnection | undefined> {
-    // Capture the same credential bytes and identifiers before awaiting encryption or the transaction.
-    const credentialValue = JSON.stringify(input.credential);
-    const snapshot = { ...input, credential: JSON.parse(credentialValue) as ResolvedCredential };
-    const value = await this.codec.encode(credentialValue);
+    const value = await this.codec.encode(JSON.stringify(input.credential));
     const [, [row]] = await this.transaction([
-      { sql: "update connections set revision = revision where id = ?", values: [snapshot.id] },
+      { sql: "update connections set revision = revision where id = ?", values: [input.id] },
       {
         sql: `update connections set revision = ?, value = ?, updated_at = ?, provider_account_id = ?
         where service = ? and connection_name = ? and id = ? and revision = ? and source = 'local'
         and (? = 1 or not exists (select 1 from trigger_subscriptions where connection_id = connections.id and mode <> 'resource-set' and status in ('active', 'deleting'))
-        or (provider_account_id is not null and provider_account_id = ?)) returning id, revision`,
+        or (provider_account_id is not null and provider_account_id = ?)) returning id`,
         values: [
           crypto.randomUUID(),
           value,
           new Date().toISOString(),
-          snapshot.credential.authType !== "no_auth" && snapshot.credential.metadata.providerAccountVerified === true
-            ? snapshot.credential.profile.accountId
+          input.credential.authType !== "no_auth" && input.credential.metadata.providerAccountVerified === true
+            ? input.credential.profile.accountId
             : null,
-          snapshot.service,
-          snapshot.connectionName,
-          snapshot.id,
-          snapshot.revision,
+          input.service,
+          input.connectionName,
+          input.id,
+          input.revision,
           refresh ? 1 : 0,
-          snapshot.credential.authType !== "no_auth" && snapshot.credential.metadata.providerAccountVerified === true
-            ? snapshot.credential.profile.accountId
+          input.credential.authType !== "no_auth" && input.credential.metadata.providerAccountVerified === true
+            ? input.credential.profile.accountId
             : null,
         ],
       },
     ]);
-    return row ? { ...snapshot, id: row.id as string, revision: row.revision as string } : undefined;
+    return row !== undefined;
   }
 
   async delete(service: string, connectionName: string): Promise<void> {

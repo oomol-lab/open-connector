@@ -1,4 +1,4 @@
-import type { IConnectionStore, StoredConnection, StoredLocalConnection } from "./connection-service.ts";
+import type { IConnectionStore, StoredConnection } from "./connection-service.ts";
 import type { ProviderHttpAttempt, ProviderHttpDispatchOptions } from "./core/provider-http-dispatch.ts";
 import type { ActionExecutor, CredentialValidators, ProviderDefinition, ResolvedCredential } from "./core/types.ts";
 import type { MarketplaceService } from "./marketplace/marketplace-service.ts";
@@ -826,7 +826,7 @@ describe("ConnectionService", () => {
     expect(fetcher).toHaveBeenCalledOnce();
   });
 
-  it("binds OAuth refresh to the stored alias and the credential revision being refreshed", async () => {
+  it("binds OAuth refresh to the resolved stored connection identity", async () => {
     const store = new MemoryConnectionStore();
     const oauthClientConfigs = createOAuthClientConfigs([oauthProvider]);
     const attempts: ProviderHttpAttempt[] = [];
@@ -865,61 +865,13 @@ describe("ConnectionService", () => {
       service: "example",
       connectionId: original.id,
       connectionName: "binding-fixture",
-      connectionRevision: original.revision,
     });
     if (target.kind !== "local") throw new Error("Expected local connection");
-    expect(target.connectionRevision).not.toBe(original.revision);
+    await expect(target.getCredential("example")).resolves.toMatchObject({ accessToken: "fresh-token" });
     expect(JSON.stringify(attempts)).not.toMatch(/expired-token|refresh-token|client-secret/);
   });
 
-  it("pairs shared refreshed bytes with their atomic revision despite subsequent same-account reauthorization", async () => {
-    const store = new MemoryConnectionStore();
-    const expired = {
-      authType: "oauth2" as const,
-      accessToken: "expired-token",
-      tokenType: "Bearer",
-      refreshToken: "refresh-token",
-      expiresAt: "2026-01-01T00:00:00.000Z",
-      profile: testProfile,
-      metadata: {},
-    };
-    const original = await store.set("example", "default", expired);
-    const fresh = { ...expired, accessToken: "refreshed-token", expiresAt: "2099-01-01T00:00:00.000Z" };
-    let complete!: (credential: typeof fresh) => void;
-    const refresh = vi.fn(() => new Promise<typeof fresh>((resolve) => (complete = resolve)));
-    const service = createService([oauthProvider], {
-      store,
-      oauthCredentials: { refresh },
-      providerHttpDispatch: { beforeAttempt: () => ({ allow: true }) },
-    });
-    const update = store.updateCredentialSnapshot.bind(store);
-    let written: StoredLocalConnection | undefined;
-    const write = vi.spyOn(store, "updateCredentialSnapshot").mockImplementation(async (input) => {
-      written = await update(input);
-      await store.set("example", "default", { ...fresh, accessToken: "reauthorized-token" });
-      return written;
-    });
-    const first = service.resolveForExecution("example");
-    const second = service.resolveForExecution("example");
-    await vi.waitFor(() => expect(refresh).toHaveBeenCalledOnce());
-    complete(fresh);
-    const targets = await Promise.all([first, second]);
-    const current = await store.get("example", "default");
-    expect(write).toHaveBeenCalledOnce();
-    expect(written?.revision).not.toBe(original.revision);
-    expect(current?.revision).not.toBe(written?.revision);
-    for (const target of targets) {
-      if (target.kind !== "local") throw new Error("Expected local connection");
-      expect(target.connectionRevision).toBe(written?.revision);
-      const credential = await target.getCredential("example");
-      expect(credential).toMatchObject({ accessToken: "refreshed-token" });
-      expect(Object.isFrozen(credential)).toBe(true);
-      expect(credential?.authType !== "no_auth" && Object.isFrozen(credential?.profile)).toBe(true);
-    }
-    expect(current).toMatchObject({ credential: { accessToken: "reauthorized-token" } });
-  });
-
-  it("keeps boolean-only adapter refresh working unset but fails closed before refresh when admission is configured", async () => {
+  it("keeps boolean-only adapter OAuth refresh working with admission configured", async () => {
     const memory = new MemoryConnectionStore();
     const store: IConnectionStore = {
       get: memory.get.bind(memory),
@@ -949,8 +901,10 @@ describe("ConnectionService", () => {
       oauthCredentials: { refresh },
       providerHttpDispatch: { beforeAttempt: () => ({ allow: true }) },
     });
-    await expect(guarded.resolveForExecution("example")).rejects.toMatchObject({ status: 429, code: "rate_limited" });
-    expect(refresh).toHaveBeenCalledOnce();
+    const target = await guarded.resolveForExecution("example");
+    if (target.kind !== "local") throw new Error("Expected local connection");
+    await expect(target.getCredential("example")).resolves.toMatchObject({ accessToken: "fresh-token" });
+    expect(refresh).toHaveBeenCalledTimes(2);
   });
 
   it("does not overwrite a connection recreated during OAuth refresh", async () => {
@@ -1199,49 +1153,24 @@ describe("ConnectionService", () => {
     });
   });
 
-  it("retains unset mutable credentials but detaches and freezes configured execution authority", async () => {
+  it("preserves mutable execution credentials when admission is configured", async () => {
     const store = new MemoryConnectionStore();
     const credential = {
       authType: "api_key" as const,
       apiKey: "original-key",
       values: { apiKey: "original-key" },
-      profile: { ...testProfile },
+      profile: testProfile,
       metadata: {},
     };
     await store.set("uptimerobot", "default", credential);
-    const legacy = await createService([apiKeyProvider], { store }).resolveForExecution("uptimerobot");
-    if (legacy.kind !== "local") throw new Error("Expected local connection");
-    expect(await legacy.getCredential("uptimerobot")).toBe(credential);
-    expect(Object.isFrozen(legacy)).toBe(false);
-    expect(Object.isFrozen(credential)).toBe(false);
-    const guarded = await createService([apiKeyProvider], {
+    const target = await createService([apiKeyProvider], {
       store,
       providerHttpDispatch: { beforeAttempt: () => ({ allow: true }) },
     }).resolveForExecution("uptimerobot");
-    if (guarded.kind !== "local") throw new Error("Expected local connection");
-    const frozen = await guarded.getCredential("uptimerobot");
-    expect(Object.isFrozen(guarded)).toBe(true);
-    expect(Object.isFrozen(frozen)).toBe(true);
-    credential.apiKey = "mutated-key";
-    expect(frozen).toMatchObject({ apiKey: "original-key" });
-    await expect(legacy.getCredential("uptimerobot")).resolves.toMatchObject({ apiKey: "mutated-key" });
-
-    const oauth = {
-      authType: "oauth2" as const,
-      accessToken: "valid-token",
-      tokenType: "Bearer",
-      profile: testProfile,
-      metadata: { formatter: () => "custom-store metadata" },
-    };
-    await store.set("example", "default", oauth);
-    await expect(createService([oauthProvider], { store }).getCredential("example")).resolves.toBe(oauth);
-    expect(Object.isFrozen(oauth)).toBe(false);
-    await expect(
-      createService([oauthProvider], {
-        store,
-        providerHttpDispatch: { beforeAttempt: () => ({ allow: true }) },
-      }).getCredential("example"),
-    ).rejects.toMatchObject({ status: 429, code: "rate_limited" });
+    if (target.kind !== "local") throw new Error("Expected local connection");
+    expect(await target.getCredential("uptimerobot")).toBe(credential);
+    credential.apiKey = "updated-key";
+    await expect(target.getCredential("uptimerobot")).resolves.toMatchObject({ apiKey: "updated-key" });
   });
 
   it("resolves each service credential once per forConnection scope", async () => {
@@ -1372,17 +1301,11 @@ class MemoryConnectionStore implements IConnectionStore {
   }
 
   async updateCredential(input: StoredConnection): Promise<boolean> {
-    if (input.source === "saas") return false;
-    return (await this.updateCredentialSnapshot(input)) !== undefined;
-  }
-
-  async updateCredentialSnapshot(input: StoredLocalConnection): Promise<StoredLocalConnection | undefined> {
     const key = createConnectionKey(input.service, input.connectionName);
     const current = this.store.get(key);
-    if (current?.id !== input.id || current.revision !== input.revision) return undefined;
-    const updated = { ...input, revision: crypto.randomUUID() };
-    this.store.set(key, updated);
-    return updated;
+    if (current?.id !== input.id || current.revision !== input.revision) return false;
+    this.store.set(key, { ...input, revision: crypto.randomUUID() });
+    return true;
   }
 
   async delete(service: string, connectionName: string): Promise<void> {

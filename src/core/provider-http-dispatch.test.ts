@@ -1,5 +1,7 @@
 import type { ProviderHttpAttempt, ProviderHttpPermit } from "./provider-http-dispatch.ts";
 
+import { once } from "node:events";
+import { createServer } from "node:http";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { lacunaActionHandlers, skipRetryDelay } from "../providers/lacuna/runtime.ts";
 import {
@@ -30,128 +32,188 @@ const context = {
 } as const;
 
 describe("provider HTTP dispatch", () => {
-  it("keeps headers distinct from EOF and retains exact response identity without an observer", async () => {
+  it("returns the exact response without reading or wrapping its body", async () => {
     const original = Response.json({ fixture: true });
     const transport = vi.fn<typeof fetch>().mockResolvedValue(original);
     const onResult = vi.fn();
-    const untouched = await withProviderHttpDispatch(
-      context,
-      () => createProviderFetch({ fetch: transport })("https://example.com"),
-      {
-        beforeAttempt: () => ({ allow: true, onResult }),
-      },
-    );
-    expect(untouched).toBe(original);
-    expect(original.bodyUsed).toBe(false);
-    expect(onResult).toHaveBeenCalledExactlyOnceWith({ kind: "response", status: 200, retryAfter: undefined });
-
-    const onBodyEnd = vi.fn();
-    const onFeedbackError = vi.fn();
-    const observed = await withProviderHttpDispatch(
-      context,
-      () => createProviderFetch({ fetch: transport })("https://example.com"),
-      {
-        beforeAttempt: () => ({ allow: true, onBodyEnd }),
-        onFeedbackError,
-      },
-    );
-    expect(onBodyEnd).not.toHaveBeenCalled();
-    expect(await observed.json()).toEqual({ fixture: true });
-    expect(onBodyEnd).toHaveBeenCalledExactlyOnceWith({ kind: "eof" });
-    expect(onFeedbackError).not.toHaveBeenCalled();
-    expect(transport).toHaveBeenCalledTimes(2);
-  });
-
-  it("reports body observer failure safely without changing the provider result or replaying transport", async () => {
-    const transport = vi.fn<typeof fetch>().mockResolvedValue(Response.json({ fixture: true }));
-    const onFeedbackError = vi.fn();
     const response = await withProviderHttpDispatch(
       context,
       () => createProviderFetch({ fetch: transport })("https://example.com"),
+      { beforeAttempt: () => ({ allow: true, onResult }) },
+    );
+    expect(response).toBe(original);
+    expect(response.bodyUsed).toBe(false);
+    expect(onResult).toHaveBeenCalledExactlyOnceWith({ kind: "response", status: 200, retryAfter: undefined });
+    expect(await response.json()).toEqual({ fixture: true });
+  });
+
+  it("delivers a native response body before pending feedback can consume its deadline", async () => {
+    const server = createServer((_request, response) => response.end("completed provider result"));
+    server.listen(0, "127.0.0.1");
+    await once(server, "listening");
+    const controller = new AbortController();
+    const feedback = deferred<void>();
+    let deadline: ReturnType<typeof setTimeout> | undefined;
+    let completeFeedback: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const address = server.address();
+      if (!address || typeof address === "string") throw new Error("Missing test listener");
+      const fetcher = createProviderFetch({
+        fetch: async (_url, init) => fetch(`http://127.0.0.1:${address.port}`, init),
+      });
+      const response = await withProviderHttpDispatch(
+        context,
+        () => fetcher("https://example.com", { method: "POST", signal: controller.signal }),
+        {
+          beforeAttempt: () => ({
+            allow: true,
+            onResult: () => {
+              deadline = setTimeout(() => controller.abort(), 500);
+              completeFeedback = setTimeout(() => feedback.resolve(), 600);
+              return feedback.promise;
+            },
+          }),
+        },
+      );
+      expect(await response.text()).toBe("completed provider result");
+    } finally {
+      clearTimeout(deadline);
+      clearTimeout(completeFeedback);
+      feedback.resolve();
+      controller.abort();
+      server.close();
+      server.closeAllConnections();
+    }
+  });
+
+  it("accounts for a permit when admission resolution and cancellation share a microtask turn", async () => {
+    const controller = new AbortController();
+    const ready = deferred<void>();
+    const gate = deferred<ProviderHttpPermit>();
+    const transport = vi.fn(async () => new Response("ok"));
+    const onResult = vi.fn();
+    const target = { requestId: "queued", redirectHop: 0, method: "POST", origin: "https://example.com" };
+    const pending = withProviderHttpDispatch(
+      context,
+      () => dispatchProviderHttpAttempt(target, controller.signal, transport, async () => {}),
+      {
+        beforeAttempt: () => {
+          ready.resolve();
+          return gate.promise;
+        },
+      },
+    );
+    await ready.promise;
+    gate.resolve({ allow: true, onResult });
+    queueMicrotask(() => controller.abort());
+    await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+    expect(transport).not.toHaveBeenCalled();
+    expect(onResult).toHaveBeenCalledExactlyOnceWith({ kind: "not_dispatched", reason: "cancelled" });
+  });
+
+  it.each(["dispatch", "revalidation"])("makes a %s failure terminal before its feedback settles", async (phase) => {
+    const enteredFeedback = deferred<void>();
+    const feedback = deferred<void>();
+    const transport = vi.fn(async () => new Response("side effect completed"));
+    const target = { requestId: "failed", redirectHop: 0, method: "POST", origin: "https://example.com" };
+    const fail = (): never => {
+      throw new Error("Commit or guard failure");
+    };
+    let admissions = 0;
+    const pending = withProviderHttpDispatchResult(
+      context,
+      async () => {
+        const first = dispatchProviderHttpAttempt(target, undefined, transport, async () => {
+          if (phase === "revalidation") fail();
+        }).catch(() => undefined);
+        await enteredFeedback.promise;
+        await dispatchProviderHttpAttempt(
+          { ...target, requestId: "sibling" },
+          undefined,
+          transport,
+          async () => {},
+        ).catch(() => undefined);
+        feedback.resolve();
+        await first;
+      },
+      {
+        beforeAttempt: () => {
+          admissions++;
+          return {
+            allow: true,
+            onDispatch: admissions === 1 && phase === "dispatch" ? fail : undefined,
+            onResult: () => {
+              enteredFeedback.resolve();
+              return feedback.promise;
+            },
+          };
+        },
+      },
+    );
+    await expect(pending).rejects.toMatchObject({ status: 429, code: "rate_limited" });
+    expect(admissions).toBe(1);
+    expect(transport).not.toHaveBeenCalled();
+  });
+
+  it("does not wait for transport-error feedback or its failure observer", async () => {
+    const original = new Error("Original transport failure");
+    const feedback = deferred<void>();
+    const observer = deferred<void>();
+    const onFeedbackError = vi.fn(() => observer.promise);
+    const pending = withProviderHttpDispatch(
+      context,
+      () =>
+        createProviderFetch({
+          fetch: async () => {
+            throw original;
+          },
+        })("https://example.com"),
       {
         beforeAttempt: () => ({
           allow: true,
-          onBodyEnd: () => {
-            throw new Error("host-secret failure");
+          onResult: async () => {
+            await feedback.promise;
+            throw new Error("Bookkeeping failure");
           },
         }),
         onFeedbackError,
       },
     );
-    expect(await response.json()).toEqual({ fixture: true });
-    expect(onFeedbackError).toHaveBeenCalledOnce();
-    expect(transport).toHaveBeenCalledOnce();
+    await expect(pending).rejects.toBe(original);
+    expect(onFeedbackError).not.toHaveBeenCalled();
+    feedback.resolve();
+    await vi.waitFor(() => expect(onFeedbackError).toHaveBeenCalledOnce());
+    observer.resolve();
   });
 
-  it("keeps a status-zero HEAD response unchanged without an observer and unknown when observed", async () => {
-    const original = Response.error();
-    const transport = vi.fn<typeof fetch>().mockResolvedValue(original);
-    expect(
-      await withProviderHttpDispatch(
-        context,
-        () => createProviderFetch({ fetch: transport })("https://example.com", { method: "HEAD" }),
-        { beforeAttempt: () => ({ allow: true }) },
-      ),
-    ).toBe(original);
-    const onBodyEnd = vi.fn();
-    expect(
-      await withProviderHttpDispatch(
-        context,
-        () => createProviderFetch({ fetch: transport })("https://example.com", { method: "HEAD" }),
-        { beforeAttempt: () => ({ allow: true, onBodyEnd }) },
-      ),
-    ).toBe(original);
-    expect(onBodyEnd).toHaveBeenCalledExactlyOnceWith({ kind: "unknown" });
-    expect(transport).toHaveBeenCalledTimes(2);
-  });
-
-  it("treats redirect-body cancellation as unknown and observes the next hop independently", async () => {
-    const transport = vi
-      .fn<typeof fetch>()
-      .mockResolvedValueOnce(
-        new Response("redirect body", { status: 302, headers: { location: "https://other.example" } }),
-      )
-      .mockResolvedValueOnce(new Response("final body"));
-    const events: { hop: number; kind: string }[] = [];
-    const headers: number[] = [];
-    const response = await withProviderHttpDispatch(
+  it("returns cancellation before feedback for an admitted request has settled", async () => {
+    const controller = new AbortController();
+    const commit = deferred<void>();
+    const enteredCommit = deferred<void>();
+    const feedback = deferred<void>();
+    const onResult = vi.fn(() => feedback.promise);
+    const transport = vi.fn<typeof fetch>();
+    const pending = withProviderHttpDispatch(
       context,
-      () => createProviderFetch({ fetch: transport })("https://example.com"),
+      () => createProviderFetch({ fetch: transport })("https://example.com", { signal: controller.signal }),
       {
-        beforeAttempt: (attempt) => ({
+        beforeAttempt: () => ({
           allow: true,
-          onResult: () => {
-            headers.push(attempt.redirectHop);
+          onDispatch: () => {
+            enteredCommit.resolve();
+            return commit.promise;
           },
-          onBodyEnd: (event) => {
-            events.push({ hop: attempt.redirectHop, kind: event.kind });
-          },
+          onResult,
         }),
       },
     );
-    expect(headers).toEqual([0, 1]);
-    expect(events).toEqual([{ hop: 0, kind: "unknown" }]);
-    expect(await response.text()).toBe("final body");
-    expect(events).toEqual([
-      { hop: 0, kind: "unknown" },
-      { hop: 1, kind: "eof" },
-    ]);
-    expect(transport).toHaveBeenCalledTimes(2);
-  });
-
-  it("preserves metadata-only observation through re-guarded cached fetchers", async () => {
-    const onBodyEnd = vi.fn();
-    const metadata = createProviderFetch({
-      responseObservation: "metadata_only",
-      fetch: async () => new Response(null),
-    });
-    const wrapped = createProviderFetch({ fetch: metadata });
-    const custom = createGuardedFetch({ fetch: wrapped, responseObservation: "body" });
-    const response = await withProviderHttpDispatch(context, () => custom("https://example.com", { method: "HEAD" }), {
-      beforeAttempt: () => ({ allow: true, onBodyEnd }),
-    });
-    expect(response.body).toBe(null);
-    expect(onBodyEnd).toHaveBeenCalledExactlyOnceWith({ kind: "unknown" });
+    await enteredCommit.promise;
+    controller.abort();
+    await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+    expect(onResult).toHaveBeenCalledExactlyOnceWith({ kind: "not_dispatched", reason: "cancelled" });
+    expect(transport).not.toHaveBeenCalled();
+    feedback.resolve();
+    commit.resolve();
   });
 
   it("retains sanitized denial when provider code returns a remapped result", async () => {

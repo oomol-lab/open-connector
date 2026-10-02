@@ -160,7 +160,6 @@ export class ActionRunner {
               executionId,
               connectionId: connection.summary?.id,
               connectionName: connection.summary?.connectionName,
-              connectionRevision: connection.kind === "local" ? connection.connectionRevision : undefined,
             },
             () =>
               executeProviderAction(

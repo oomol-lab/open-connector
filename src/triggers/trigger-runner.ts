@@ -12,8 +12,8 @@ import type { TriggerSubscription, TriggerStore } from "./store.ts";
 
 import { ConnectionError } from "../connection-service.ts";
 import { optionalInteger, optionalRecord } from "../core/cast.ts";
-import { isProviderHttpDispatchConfigured, withProviderHttpDispatch } from "../core/provider-http-dispatch.ts";
-import { ProviderDispatchRequestError, withProviderHttpDispatchResult } from "../providers/provider-runtime.ts";
+import { withProviderHttpDispatch } from "../core/provider-http-dispatch.ts";
+import { withProviderHttpDispatchResult } from "../providers/provider-runtime.ts";
 import { HttpRequestError } from "../server/api/http-utils.ts";
 import { mapConnectionErrorStatus } from "../server/api/runtime-api.ts";
 import { resolveTriggerConfig } from "./common/config.ts";
@@ -230,13 +230,10 @@ export class TriggerRunner {
       const credential = await target.getCredential(service);
       if (!credential || credential.authType === "no_auth" || !target.summary)
         throw new HttpRequestError("connection_not_found", "Trigger connection not found.", 404);
-      if (!target.connectionRevision && (this.options.providerHttpDispatch || isProviderHttpDispatchConfigured()))
-        throw new ProviderDispatchRequestError();
       const stored = await this.options.connections.getStoredConnection(target.summary.id);
       if (
         !stored ||
         stored.source === "saas" ||
-        (target.connectionRevision !== undefined && stored.revision !== target.connectionRevision) ||
         stored.credential.authType === "no_auth" ||
         stored.credential.profile.accountId !== credential.profile.accountId
       )
@@ -256,7 +253,6 @@ export class TriggerRunner {
               service,
               connectionId: stored.id,
               connectionName: stored.connectionName,
-              connectionRevision: target.connectionRevision,
             },
             () =>
               executor(request, {
@@ -275,8 +271,7 @@ export class TriggerRunner {
         owner: {
           service,
           connectionId: stored.id,
-          // Boolean-only adapters retain their legacy unhooked owner lookup, never hook authority.
-          connectionRevision: target.connectionRevision ?? stored.revision,
+          connectionRevision: stored.revision,
           providerAccountId: credential.profile.accountId,
         },
       };

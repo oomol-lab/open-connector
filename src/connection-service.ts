@@ -17,7 +17,6 @@ import type { IOAuthCredentialRefresher } from "./oauth/oauth-credential-refresh
 import type { IProviderLoader } from "./providers/provider-loader.ts";
 
 import { normalizeCredentialValues } from "./core/credential-fields.ts";
-import { isProviderHttpDispatchConfigured } from "./core/provider-http-dispatch.ts";
 import { apiKeyCredentialFields } from "./core/provider-setup.ts";
 import {
   providerFetch,
@@ -117,7 +116,6 @@ export type ExecutionConnection = LocalExecutionConnection | MarketplaceExecutio
 interface LocalExecutionConnection {
   kind: "local";
   summary?: ConnectionSummary;
-  connectionRevision?: string;
   getCredential(service: string): Promise<ResolvedCredential | undefined>;
 }
 
@@ -139,11 +137,6 @@ export interface IConnectionStore {
   get(service: string, connectionName: string): Promise<StoredConnection | undefined>;
   set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredLocalConnection>;
   updateCredential(input: StoredLocalConnection, refresh?: boolean): Promise<boolean>;
-  /** Atomic compare-and-swap result. Return the written credential and its revision, never a later reread. */
-  updateCredentialSnapshot?(
-    input: StoredLocalConnection,
-    refresh?: boolean,
-  ): Promise<StoredLocalConnection | undefined>;
   delete(service: string, connectionName: string): Promise<void>;
   list(): Promise<StoredConnection[]>;
 }
@@ -169,11 +162,6 @@ interface PreviousCredentialRuntimeData {
 
 type CredentialValidatorCall = () => Promise<CredentialValidationResult | void> | undefined;
 type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
-interface OAuthCredentialSnapshot {
-  readonly credential: OAuthCredential;
-  /** Legacy adapters cannot report the revision written by their boolean-only update. */
-  readonly revision?: string;
-}
 
 /**
  * Coordinates local provider connection state.
@@ -184,7 +172,7 @@ interface OAuthCredentialSnapshot {
 export class ConnectionService {
   private readonly providerHttpDispatch?: ProviderHttpDispatchOptions;
   private readonly catalog: CatalogStore;
-  private readonly oauthCredentialRefreshes = new Map<string, Promise<OAuthCredentialSnapshot>>();
+  private readonly oauthCredentialRefreshes = new Map<string, Promise<OAuthCredential>>();
   private readonly oauthCredentials?: IOAuthCredentialRefresher;
   private readonly providerLoader: IProviderLoader;
   private readonly store: IConnectionStore;
@@ -307,12 +295,7 @@ export class ConnectionService {
     connectionId?: string,
   ): Promise<ExecutionConnection> {
     const provider = this.getProvider(service);
-    const selected = await this.selectStoredConnection(service, connectionName, connectionId);
-    const dispatchConfigured = Boolean(this.providerHttpDispatch || isProviderHttpDispatchConfigured());
-    const stored =
-      selected && selected.source !== "saas" && dispatchConfigured
-        ? Object.freeze({ ...selected, credential: freezeCredentialSnapshot(selected.credential) })
-        : selected;
+    const stored = await this.selectStoredConnection(service, connectionName, connectionId);
     const name = stored?.connectionName ?? normalizeConnectionName(connectionName);
     const marketplace = connectionId
       ? undefined
@@ -325,27 +308,21 @@ export class ConnectionService {
     if (stored?.source === "saas")
       return { kind: "saas", summary: this.createManagedConnectionSummary(stored), reference: stored.reference };
     let credential: ResolvedCredential | undefined = stored?.credential;
-    let connectionRevision = stored?.revision;
     if (stored?.credential.authType === "oauth2") {
-      const snapshot = await this.resolveOAuthCredential(stored, stored.credential);
-      credential = snapshot.credential;
-      connectionRevision = snapshot.revision;
+      credential = await this.resolveOAuthCredential(stored, stored.credential);
     }
     credential ??= this.supportsAuth(provider, "no_auth") ? { authType: "no_auth" } : undefined;
-    if (credential && dispatchConfigured) credential = freezeCredentialSnapshot(credential);
     const summary = stored
       ? this.createConfiguredConnectionSummary(provider, stored.id, name, credential!)
       : credential
         ? this.createNoAuthConnectionSummary(provider, name)
         : undefined;
 
-    const target: LocalExecutionConnection = {
+    return {
       kind: "local",
       summary,
-      connectionRevision,
       getCredential: async (requestedService) => (requestedService === service ? credential : undefined),
     };
-    return dispatchConfigured ? Object.freeze(target) : target;
   }
 
   async getCredential(service: string, connectionName?: string): Promise<ResolvedCredential | undefined> {
@@ -356,7 +333,7 @@ export class ConnectionService {
       throw new ConnectionError("unsupported_auth_type", "SaaS credentials are not available locally.");
     if (stored) {
       return stored.credential.authType === "oauth2"
-        ? (await this.resolveOAuthCredential(stored, stored.credential)).credential
+        ? await this.resolveOAuthCredential(stored, stored.credential)
         : stored.credential;
     }
 
@@ -789,12 +766,12 @@ export class ConnectionService {
   }
 
   private async resolveOAuthCredential(
-    connection: StoredLocalConnection,
+    connection: StoredConnection,
     credential: OAuthCredential,
-  ): Promise<OAuthCredentialSnapshot> {
+  ): Promise<OAuthCredential> {
     const service = connection.service;
     if (!isOAuthCredentialExpired(credential)) {
-      return { credential: this.snapshotCredential(credential), revision: connection.revision };
+      return credential;
     }
 
     if (!credential.refreshToken) {
@@ -829,56 +806,33 @@ export class ConnectionService {
   }
 
   private async refreshOAuthCredential(
-    connection: StoredLocalConnection,
+    connection: StoredConnection,
     credential: OAuthCredential,
     refresher: IOAuthCredentialRefresher,
-  ): Promise<OAuthCredentialSnapshot> {
+  ): Promise<OAuthCredential> {
     const { id, revision, service, connectionName } = connection;
-    // Boolean-only adapters cannot pair refreshed bytes with the revision that was actually written.
-    // Keep their unhooked credential API working, but never dispatch under a guessed authority revision.
-    if (!this.store.updateCredentialSnapshot && (this.providerHttpDispatch || isProviderHttpDispatchConfigured()))
-      throw new ProviderDispatchRequestError();
     const nextCredential = await withProviderHttpDispatchResult(
-      { operation: "oauth", service, connectionId: id, connectionName, connectionRevision: revision },
+      { operation: "oauth", service, connectionId: id, connectionName },
       () => refresher.refresh(service, credential),
       this.providerHttpDispatch,
     );
-    const input = { id, revision, service, connectionName, credential: this.snapshotCredential(nextCredential) };
-    const updated = this.store.updateCredentialSnapshot
-      ? await this.store.updateCredentialSnapshot(input, true)
-      : (await this.store.updateCredential(input, true))
-        ? { ...input, revision: undefined }
-        : undefined;
+    const updated = await this.store.updateCredential(
+      {
+        id,
+        revision,
+        service,
+        connectionName,
+        credential: nextCredential,
+      },
+      true,
+    );
     if (!updated) {
       throw new ConnectionError(
         "connection_not_found",
         `${service} connection changed while its OAuth credential was refreshing. Retry the action.`,
       );
     }
-    if (updated.credential.authType !== "oauth2") throw new ProviderDispatchRequestError();
-    if (
-      (this.providerHttpDispatch || isProviderHttpDispatchConfigured()) &&
-      (updated.id !== id ||
-        updated.service !== service ||
-        updated.connectionName !== connectionName ||
-        typeof updated.revision !== "string" ||
-        !updated.revision ||
-        updated.revision === revision)
-    )
-      throw new ProviderDispatchRequestError();
-    return {
-      credential:
-        this.providerHttpDispatch || isProviderHttpDispatchConfigured()
-          ? freezeCredentialSnapshot(updated.credential)
-          : nextCredential,
-      revision: updated.revision,
-    };
-  }
-
-  private snapshotCredential<T extends ResolvedCredential>(credential: T): T {
-    return this.providerHttpDispatch || isProviderHttpDispatchConfigured()
-      ? freezeCredentialSnapshot(credential)
-      : credential;
+    return nextCredential;
   }
 
   private async runCredentialValidator(
@@ -1020,22 +974,6 @@ export class ConnectionService {
 
   private createDefaultDisplayName(provider: ProviderDefinition, authType: Exclude<AuthType, "no_auth">): string {
     return `${provider.displayName} ${authType === "api_key" ? "API Key" : "Credential"}`;
-  }
-}
-
-/** Detach provider-visible bytes from mutable store objects and retain the whole identity snapshot. */
-function freezeCredentialSnapshot<T extends ResolvedCredential>(credential: T): T {
-  try {
-    const snapshot = structuredClone(credential);
-    const freeze = (value: unknown): void => {
-      if (!value || typeof value !== "object" || Object.isFrozen(value)) return;
-      Object.freeze(value);
-      for (const child of Object.values(value)) freeze(child);
-    };
-    freeze(snapshot);
-    return snapshot;
-  } catch {
-    throw new ProviderDispatchRequestError();
   }
 }
 

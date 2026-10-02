@@ -299,7 +299,6 @@ export class OAuthFlowService {
           operation: "oauth",
           service: pending.service,
           connectionId: request?.target?.id,
-          connectionRevision: request?.target?.revision,
         },
         async () => {
           if (providerOAuth?.exchangeCode) {

@@ -47,23 +47,6 @@ export function triggerStoreTests(getDatabase: () => RuntimeDatabase): void {
     return { database, connection, token, record };
   }
 
-  it("returns only an atomic credential-write snapshot and never a revision for a failed compare-and-swap", async () => {
-    const { database, connection } = await fixture();
-    const update = database.connectionStore.updateCredentialSnapshot?.bind(database.connectionStore);
-    if (!update) throw new Error("SQL connection stores must return atomic credential snapshots");
-    const written = await update({ ...connection, credential: credential("original") }, true);
-    expect(written?.id).toBe(connection.id);
-    expect(written?.revision).not.toBe(connection.revision);
-    expect(written?.credential).toEqual(credential("original"));
-    expect(await update({ ...connection, credential: credential("stale") }, true)).toBeUndefined();
-    const reauthorized = await database.connectionStore.set("github", "trigger-account", credential("original"));
-    expect(reauthorized.revision).not.toBe(written?.revision);
-    expect(await database.connectionStore.get("github", "trigger-account")).toMatchObject({
-      revision: reauthorized.revision,
-    });
-    expect(written?.revision).not.toBe(reauthorized.revision);
-  });
-
   it("persists ownership and enforces lease expiry and stale saves", async () => {
     const { database, record } = await fixture();
     const store = database.triggerStore;

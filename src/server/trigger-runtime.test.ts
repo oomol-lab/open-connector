@@ -205,7 +205,7 @@ async function subscription() {
 }
 
 describe("Trigger runtime HTTP boundary", () => {
-  it("retains unhooked Trigger OAuth refresh with a boolean-only custom connection store", async () => {
+  it("retains Trigger OAuth refresh with a boolean-only custom connection store and admission configured", async () => {
     const sql = database.connectionStore;
     const store: IConnectionStore = {
       get: sql.get.bind(sql),
@@ -225,7 +225,9 @@ describe("Trigger runtime HTTP boundary", () => {
     };
     await store.set("github", "work", oauth);
     const catalog = createCatalogStore([github]);
+    const providerHttpDispatch = { beforeAttempt: () => ({ allow: true as const }) };
     const connections = new ConnectionService({
+      providerHttpDispatch,
       catalog,
       store,
       providerLoader: fixtureProviderLoader,
@@ -234,6 +236,7 @@ describe("Trigger runtime HTTP boundary", () => {
       },
     });
     const runner = new TriggerRunner({
+      providerHttpDispatch,
       catalog,
       connections,
       providerLoader: fixtureProviderLoader,
@@ -276,23 +279,6 @@ describe("Trigger runtime HTTP boundary", () => {
       connectionId,
       connectionName: "work",
     });
-  });
-
-  it("rejects same-account reauthorization between credential resolution and Trigger target binding", async () => {
-    const resolve = ConnectionService.prototype.resolveForExecution;
-    vi.spyOn(ConnectionService.prototype, "resolveForExecution").mockImplementation(async function (
-      this: ConnectionService,
-      ...args
-    ) {
-      const target = await resolve.apply(this, args);
-      await database.connectionStore.set("github", "work", credential("new-key", "work-account"));
-      return target;
-    });
-    const response = await request(reconcile());
-    expect(response.status).toBe(409);
-    expect(await response.json()).toMatchObject({ errorCode: "trigger_connection_error" });
-    expect(calls).toHaveLength(0);
-    expect(hooks).toHaveLength(0);
   });
 
   it("runs Trigger-only grants against the stable non-default connection and denies Action and public proxy", async () => {
