@@ -27,6 +27,7 @@ import { ConnectionError, defaultConnectionName } from "../connection-service.ts
 import { ActionPolicyService, emptyPolicyRules } from "../core/action-policy.ts";
 import { DEFAULT_ACTION_SEARCH_LIMIT, createActionSearchIndexProvider, searchActions } from "../core/action-search.ts";
 import {
+  optionalBoolean,
   optionalRecord,
   optionalString,
   requiredRawString,
@@ -211,6 +212,7 @@ export class ConnectServer {
     app.use("*", createLocalAuthMiddleware(auth));
     if (this.options.marketplace) {
       app.get("/api/marketplace", (context) => context.json(this.options.marketplace!.getState()));
+      app.get("/api/marketplace/discovery", (context) => this.getMarketplaceDiscovery(context));
       app.put("/api/marketplace", (context) => this.configureMarketplace(context));
       app.patch("/api/marketplace", (context) => this.configureMarketplace(context));
       app.delete("/api/marketplace", (context) => this.deleteMarketplace(context));
@@ -494,17 +496,28 @@ export class ConnectServer {
     try {
       return context.json(await this.options.marketplace!.configure(input));
     } catch (error) {
-      if (error instanceof MarketplaceError) {
-        const status = error.status;
-        return jsonError(
-          context,
-          status === 401 || status === 403 || status === 404 || status === 502 || status === 504 ? status : 400,
-          error.code,
-          error.message,
-        );
-      }
+      if (error instanceof MarketplaceError) return this.writeMarketplaceError(context, error);
       throw error;
     }
+  }
+
+  private async getMarketplaceDiscovery(context: Context): Promise<Response> {
+    try {
+      return context.json(await this.options.marketplace!.getDefaultDiscovery(context.req.raw.signal));
+    } catch (error) {
+      if (error instanceof MarketplaceError) return this.writeMarketplaceError(context, error);
+      throw error;
+    }
+  }
+
+  private writeMarketplaceError(context: Context, error: MarketplaceError): Response {
+    const status = error.status;
+    return jsonError(
+      context,
+      status === 401 || status === 403 || status === 404 || status === 502 || status === 504 ? status : 400,
+      error.code,
+      error.message,
+    );
   }
 
   private async deleteMarketplace(context: Context): Promise<Response> {
@@ -1196,7 +1209,7 @@ export class ConnectServer {
     this.options.logger?.info(logContext, "connection disconnect started");
     return this.writeConnectionResult(
       context,
-      this.options.connections.disconnect(service, connectionName),
+      this.options.connections.disconnect(service, connectionName, { revoke: optionalBoolean(body.revoke) }),
       logContext,
     );
   }

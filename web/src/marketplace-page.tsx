@@ -276,7 +276,7 @@ export function MarketplacePage(props: MarketplacePageProps): ReactNode {
 
       {props.embedded && !marketplace?.configured ? null : !marketplace?.configured ? (
         isDefaultMarketplace(marketplace?.discoveryUrl ?? defaultMarketplaceDiscoveryUrl) ? (
-          <DefaultMarketplaceCatalog providers={props.data.providers} discoveryUrl={defaultMarketplaceDiscoveryUrl} />
+          <DefaultMarketplaceCatalog providers={props.data.providers} />
         ) : null
       ) : (
         <section className="marketplace-panel">

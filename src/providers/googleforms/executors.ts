@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { OAuthProviderContext } from "../provider-runtime.ts";
+import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -9,6 +8,8 @@ import {
   optionalInteger,
   optionalRecord,
   optionalString,
+  requiredRawString,
+  requiredString,
 } from "../../core/cast.ts";
 import {
   defineGoogleProviderExecutors,
@@ -16,7 +17,13 @@ import {
   googleServiceAccountValidator,
 } from "../googledrive/runtime-auth.ts";
 import { googleJsonRequest } from "../googledrive/runtime-request.ts";
-import { defineProviderProxy, providerInputError, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineProviderProxy,
+  providerInputError,
+  ProviderRequestError,
+  providerResponseError,
+  requiredResponseRecord,
+} from "../provider-runtime.ts";
 import { googleFormsOAuthScopes } from "./scopes.ts";
 
 export const googleFormsApiBaseUrl = "https://forms.googleapis.com/v1/forms";
@@ -337,12 +344,12 @@ function normalizeFormSummary(
     description?: string;
   },
 ): Record<string, unknown> {
-  const info = optionalRecord(payload.info);
+  const info = requiredResponseRecord(payload.info, "googleforms form info");
   const publishSettings = normalizePublishSettings(payload.publishSettings);
 
   return compactObject({
-    formId: requireString(payload.formId, "missing googleforms formId"),
-    title: requireString(info?.title, "missing googleforms form title"),
+    formId: requiredString(payload.formId, "googleforms formId", providerResponseError),
+    title: requiredRawString(info.title ?? "", "googleforms form title", providerResponseError),
     description: overrides?.description ?? optionalString(info?.description),
     documentTitle: optionalString(info?.documentTitle),
     revisionId: optionalString(payload.revisionId),
@@ -354,12 +361,12 @@ function normalizeFormSummary(
 }
 
 function normalizeFormDetail(payload: FormPayload): Record<string, unknown> {
-  const info = optionalRecord(payload.info);
+  const info = requiredResponseRecord(payload.info, "googleforms form info");
   const settings = normalizeSettings(payload.settings);
   const publishSettings = normalizePublishSettings(payload.publishSettings);
   return compactObject({
-    formId: requireString(payload.formId, "missing googleforms formId"),
-    title: requireString(info?.title, "missing googleforms form title"),
+    formId: requiredString(payload.formId, "googleforms formId", providerResponseError),
+    title: requiredRawString(info.title ?? "", "googleforms form title", providerResponseError),
     description: optionalString(info?.description),
     documentTitle: optionalString(info?.documentTitle),
     revisionId: optionalString(payload.revisionId),

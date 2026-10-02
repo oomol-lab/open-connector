@@ -987,7 +987,6 @@
       "src/providers/tinypng/actions.ts": 1,
       "src/providers/triggercmd/actions.ts": 1,
       "src/providers/twitter/actions.ts": 1,
-      "src/providers/vercel/actions.ts": 1,
       "src/providers/vida/actions.ts": 1,
       "src/providers/wp_maps/actions.ts": 1,
       "src/providers/youtube/actions.ts": 1,

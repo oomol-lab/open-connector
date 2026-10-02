@@ -5,8 +5,8 @@ import { compactObject, optionalInteger, optionalRecord, optionalString } from "
 import { encodePathSegment, queryParams } from "../../core/request.ts";
 import {
   parseProviderJsonBodyText,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
   readProviderErrorTextBody,
   readProviderTextBody,
   requiredInputString,
@@ -87,7 +87,6 @@ export async function validateIndexedCredential(
   const tier = optionalString(usage?.tier);
   return {
     profile: {
-      accountId: "indexed",
       displayName: tier ? `Indexed API Key (${tier} plan)` : "Indexed API Key",
     },
     grantedScopes: [],
@@ -163,5 +162,5 @@ export async function readIndexedError(
   ) {
     return new ProviderRequestError(400, message, details);
   }
-  return new ProviderRequestError(status, message, details);
+  return new ProviderRequestError(status, message, details, status === 429 ? "rate_limited" : "provider_error");
 }

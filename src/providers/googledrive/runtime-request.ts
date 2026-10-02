@@ -1,6 +1,6 @@
 import type { ProviderFetch } from "../provider-runtime.ts";
 
-import { optionalRecord, optionalString } from "../../core/cast.ts";
+import { looseArray, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -106,11 +106,14 @@ async function assertGoogleResponse(response: Response, service: string): Promis
     return;
   }
 
-  const { message, details } = await extractGoogleError(response, service);
-  throw new ProviderRequestError(response.status, message, details);
+  const { message, details, code } = await extractGoogleError(response, service);
+  throw new ProviderRequestError(response.status, message, details, code);
 }
 
-async function extractGoogleError(response: Response, service: string): Promise<{ message: string; details: unknown }> {
+async function extractGoogleError(
+  response: Response,
+  service: string,
+): Promise<{ message: string; details: unknown; code?: string }> {
   const rawText = await response.text().catch(() => "");
   if (!rawText) {
     return {
@@ -126,6 +129,7 @@ async function extractGoogleError(response: Response, service: string): Promise<
     return {
       message,
       details: parsed,
+      code: response.status === 403 ? driveRateLimitCode(error) : undefined,
     };
   } catch {
     return {
@@ -133,4 +137,49 @@ async function extractGoogleError(response: Response, service: string): Promise<
       details: rawText,
     };
   }
+}
+
+/**
+ * Google answers both a genuine permission failure and a rate limit with HTTP 403 --
+ * the body's `reason` is the only way to tell them apart. The classic Discovery-API
+ * shape carries it in `error.errors[].reason` (the same place Gmail's runtime reads
+ * it); some callers instead see the newer gRPC-transcoded shape, where `error.status`
+ * is `RESOURCE_EXHAUSTED` outright, or `PERMISSION_DENIED` with a quota reason inside
+ * `error.details[]`. Either shape maps to `rate_limited` so OC answers 429 the way
+ * every other provider's rate limit does; anything else is left undefined so the
+ * caller falls back to the default `authorization_failed` for a 403.
+ */
+const driveQuotaReasons = new Set([
+  "ratelimitexceeded",
+  "userratelimitexceeded",
+  "dailylimitexceeded",
+  "quotaexceeded",
+]);
+
+function isDriveQuotaReason(reason: string | undefined): boolean {
+  return driveQuotaReasons.has((reason ?? "").toLowerCase().replace(/[^a-z]/g, ""));
+}
+
+function driveRateLimitCode(error: Record<string, unknown> | undefined): string | undefined {
+  if (!error) {
+    return undefined;
+  }
+
+  const classicReasons = looseArray(error.errors).map((entry) => optionalString(optionalRecord(entry)?.reason));
+  if (classicReasons.some(isDriveQuotaReason)) {
+    return "rate_limited";
+  }
+
+  const status = optionalString(error.status);
+  if (status === "RESOURCE_EXHAUSTED") {
+    return "rate_limited";
+  }
+  if (status === "PERMISSION_DENIED") {
+    const detailReasons = looseArray(error.details).map((entry) => optionalString(optionalRecord(entry)?.reason));
+    if (detailReasons.some(isDriveQuotaReason)) {
+      return "rate_limited";
+    }
+  }
+
+  return undefined;
 }

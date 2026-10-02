@@ -1,9 +1,8 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
 
 export const mem0ApiBaseUrl = "https://api.mem0.ai";
 
@@ -94,8 +93,7 @@ function addMem0Memories(input: Record<string, unknown>, context: Mem0ActionCont
     method: "POST",
     path: "/v1/memories/",
     body: compactObject({
-      memory: optionalString(input.memory),
-      messages: input.messages,
+      messages: input.messages ?? [{ role: "user", content: input.memory }],
       user_id: optionalString(input.user_id),
       agent_id: optionalString(input.agent_id),
       app_id: optionalString(input.app_id),
@@ -105,7 +103,7 @@ function addMem0Memories(input: Record<string, unknown>, context: Mem0ActionCont
       metadata: optionalRecord(input.metadata),
       custom_categories: optionalRecord(input.custom_categories),
       enable_graph: optionalBoolean(input.enable_graph),
-      infer: optionalBoolean(input.infer),
+      infer: optionalBoolean(input.infer) ?? (input.memory === undefined ? undefined : false),
       async_mode: optionalBoolean(input.async_mode),
       output_format: optionalString(input.output_format),
       version: optionalString(input.version),

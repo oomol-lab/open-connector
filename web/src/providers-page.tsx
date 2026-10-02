@@ -300,7 +300,7 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
   useEffect(() => {
     if (!officialMarketplace || (oneKeyHidden && !props.data.marketplace?.configured && !showSupportedFeatures)) return;
     const controller = new AbortController();
-    void loadDefaultMarketplaceCatalog(defaultMarketplaceDiscoveryUrl, controller.signal).then(
+    void loadDefaultMarketplaceCatalog(controller.signal).then(
       (catalog) => {
         const actions = new Set(catalog.actions);
         setOneKeyServices(
@@ -502,7 +502,6 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
             <DefaultMarketplaceCatalog
               embedded
               providers={props.data.providers}
-              discoveryUrl={defaultMarketplaceDiscoveryUrl}
               connected={props.data.marketplace?.status === "available"}
             />
           ) : null}

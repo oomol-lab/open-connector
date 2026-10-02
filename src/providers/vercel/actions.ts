@@ -1,38 +1,14 @@
 import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
+import { looseArray, optionalRecord } from "../../core/cast.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { deploymentActions } from "./deployment-actions.ts";
 
 const service = "vercel";
 
-export type VercelActionName =
-  | "get_auth_user"
-  | "list_teams"
-  | "get_team"
-  | "list_projects"
-  | "get_project"
-  | "create_project"
-  | "update_project"
-  | "list_deployments"
-  | "get_deployment"
-  | "get_deployment_events"
-  | "get_runtime_logs"
-  | "list_project_envs"
-  | "create_project_env"
-  | "update_project_env"
-  | "delete_project_env"
-  | "list_project_domains"
-  | "get_project_domain"
-  | "add_project_domain"
-  | "verify_project_domain"
-  | "get_domain_config"
-  | "list_webhooks"
-  | "get_webhook"
-  | "create_webhook"
-  | "delete_webhook";
-
 interface VercelActionSource {
-  name: VercelActionName;
+  name: string;
   operationType: ActionDefinition["operationType"];
   description: string;
   inputSchema: JsonSchema;
@@ -44,7 +20,7 @@ const pageSize = s.integer({ minimum: 1, maximum: 100, description: "Maximum num
 const since = s.integer({ description: "Pagination cursor for results created after this timestamp." });
 const until = s.integer({ description: "Pagination cursor for results created before this timestamp." });
 const projectIdOrName = s.string({ minLength: 1, description: "Vercel project ID or project name." });
-const deploymentIdOrUrl = s.string({ minLength: 1, description: "Vercel deployment ID or deployment URL." });
+
 const gitBranch = s.string({ minLength: 1, description: "Git branch name." });
 const customEnvironmentId = s.string({ minLength: 1, description: "Vercel custom environment ID." });
 const pagination = s.looseObject(
@@ -112,15 +88,6 @@ const project = s.object(
     latestDeployments: s.array(deployment, { description: "Most recent deployments attached to the project." }),
   },
   { required: ["id", "name"], description: "Vercel project." },
-);
-
-const deploymentEvent = s.object(
-  {
-    created: s.number({ description: "Deployment event timestamp in milliseconds." }),
-    type: s.string({ description: "Deployment event type." }),
-    payload: looseObject,
-  },
-  { required: ["created", "type", "payload"], description: "Vercel deployment event." },
 );
 
 const runtimeLog = s.object(
@@ -302,59 +269,6 @@ const actionSources: readonly VercelActionSource[] = [
     outputSchema: s.object({ project }, { required: ["project"] }),
   },
   {
-    name: "list_deployments",
-    operationType: "read",
-    description: "List Vercel deployments.",
-    inputSchema: input({
-      projectId: s.nonEmptyString("Vercel project ID."),
-      limit: pageSize,
-      since,
-      until,
-      target: s.nonEmptyString("Deployment target such as production or preview."),
-      state: s.nonEmptyString("Deployment state to filter by."),
-    }),
-    outputSchema: s.object({
-      deployments: s.array(deployment, { description: "Vercel deployments." }),
-      pagination,
-    }),
-  },
-  {
-    name: "get_deployment",
-    operationType: "read",
-    description: "Get a Vercel deployment.",
-    inputSchema: input(
-      {
-        idOrUrl: deploymentIdOrUrl,
-        withGitRepoInfo: s.boolean({
-          description: "When true, include Git repository metadata in the deployment response.",
-        }),
-      },
-      ["idOrUrl"],
-    ),
-    outputSchema: s.object({ deployment }, { required: ["deployment"] }),
-  },
-  {
-    name: "get_deployment_events",
-    operationType: "read",
-    description: "Get Vercel deployment events.",
-    inputSchema: input(
-      {
-        idOrUrl: deploymentIdOrUrl,
-        limit: pageSize,
-        since,
-        until,
-        direction: s.stringEnum(["forward", "backward"], {
-          description: "Order in which to return deployment events.",
-        }),
-        builds: s.boolean({ description: "When true, include build events in the response." }),
-      },
-      ["idOrUrl"],
-    ),
-    outputSchema: s.object({
-      events: s.array(deploymentEvent, { description: "Deployment events returned by Vercel." }),
-    }),
-  },
-  {
     name: "get_runtime_logs",
     operationType: "read",
     description: "Get runtime logs for a Vercel deployment.",
@@ -507,10 +421,20 @@ const actionSources: readonly VercelActionSource[] = [
   },
 ];
 
-export const vercelActions: ActionDefinition[] = actionSources.map((action) =>
-  defineProviderAction(service, {
+export const vercelActions: ActionDefinition[] = [
+  ...actionSources.map((action) =>
+    defineProviderAction(service, {
+      ...action,
+      requiredScopes: [],
+      providerPermissions: [],
+    }),
+  ),
+  ...deploymentActions.map((action) => ({
     ...action,
-    requiredScopes: [],
-    providerPermissions: [],
-  }),
-);
+    inputSchema: {
+      ...action.inputSchema,
+      properties: { ...teamScopeFields, ...optionalRecord(action.inputSchema.properties) },
+      allOf: [...looseArray(action.inputSchema.allOf), { not: { required: ["teamId", "slug"] } }],
+    },
+  })),
+];

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { providerUserAgent } from "../providers/provider-runtime.ts";
-import { requestAuthorizationCodeToken, requestRefreshToken } from "./oauth-token.ts";
+import { requestAuthorizationCodeToken, requestRefreshToken, requestTokenRevocation } from "./oauth-token.ts";
 
 const authorizationCodeRequest = {
   clientId: "client-id",
@@ -324,5 +324,190 @@ describe("OAuth token requests", () => {
       accessToken: "access-token",
       expiresAt: undefined,
     });
+  });
+});
+
+const revocationRequest = {
+  clientId: "client-id",
+  clientSecret: "client-secret",
+  createError: (message: string) => new Error(message),
+  revocationUrl: "https://provider.example.com/oauth/revoke",
+  token: "refresh-token",
+  tokenTypeHint: "refresh_token" as const,
+  tokenEndpointAuthMethod: "client_secret_post" as const,
+};
+
+type FetchMock = ReturnType<typeof stubRevocationResponse>;
+
+/** Stub fetch with a typed two-argument mock so the recorded init can be read back. */
+function stubRevocationResponse(respond: () => Response | Promise<Response>) {
+  const fetcher = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => respond());
+  vi.stubGlobal("fetch", fetcher);
+  return fetcher;
+}
+
+function revocationInit(fetcher: FetchMock): RequestInit {
+  const init = fetcher.mock.calls[0]?.[1];
+  if (!init) {
+    throw new Error("Expected one revocation request");
+  }
+  return init;
+}
+
+function revocationBody(fetcher: FetchMock): URLSearchParams {
+  const body = revocationInit(fetcher).body;
+  if (!(body instanceof URLSearchParams)) {
+    throw new Error("Expected the revocation request body to use URLSearchParams");
+  }
+  return body;
+}
+
+describe("OAuth token revocation", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("rejects HTTP revocation endpoints before sending credentials", async () => {
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+
+    await expect(
+      requestTokenRevocation({
+        ...revocationRequest,
+        revocationUrl: "http://provider.example.com/revoke",
+      }),
+    ).rejects.toThrow("OAuth revocation URL must use https.");
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("cancels an unread successful response body", async () => {
+    const cancel = vi.fn();
+    stubRevocationResponse(() => new Response(new ReadableStream({ cancel }), { status: 200 }));
+
+    await requestTokenRevocation({ ...revocationRequest });
+
+    expect(cancel).toHaveBeenCalledOnce();
+  });
+
+  it("stops reading an incomplete error response at the deadline", async () => {
+    vi.useFakeTimers();
+    try {
+      const cancel = vi.fn();
+      stubRevocationResponse(() => new Response(new ReadableStream({ cancel }), { status: 400 }));
+      const outcome = readRejectionMessage(requestTokenRevocation({ ...revocationRequest }));
+
+      await vi.advanceTimersByTimeAsync(5_000);
+
+      await expect(outcome).resolves.toBe("OAuth token revocation failed (HTTP 400).");
+      expect(cancel).toHaveBeenCalledOnce();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("revokes with an RFC 7009 form POST authenticated like the token endpoint", async () => {
+    const fetcher = stubRevocationResponse(() => new Response(null, { status: 200 }));
+
+    await expect(requestTokenRevocation({ ...revocationRequest })).resolves.toBeUndefined();
+
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(fetcher.mock.calls[0]?.[0]).toBe("https://provider.example.com/oauth/revoke");
+    expect(revocationInit(fetcher)).toMatchObject({
+      method: "POST",
+      redirect: "manual",
+      headers: { "content-type": "application/x-www-form-urlencoded", "user-agent": providerUserAgent },
+    });
+    const body = revocationBody(fetcher);
+    expect(body.get("token")).toBe("refresh-token");
+    expect(body.get("token_type_hint")).toBe("refresh_token");
+    expect(body.get("client_id")).toBe("client-id");
+    expect(body.get("client_secret")).toBe("client-secret");
+  });
+
+  it("sends basic client authentication as a header and never in the body", async () => {
+    const fetcher = stubRevocationResponse(() => new Response(null, { status: 200 }));
+
+    await requestTokenRevocation({ ...revocationRequest, tokenEndpointAuthMethod: "client_secret_basic" });
+
+    const headers = revocationInit(fetcher).headers as Record<string, string>;
+    expect(headers.authorization).toBe(`Basic ${Buffer.from("client-id:client-secret").toString("base64")}`);
+    const body = revocationBody(fetcher);
+    expect(body.has("client_id")).toBe(false);
+    expect(body.has("client_secret")).toBe(false);
+    expect([...body.keys()].sort()).toEqual(["token", "token_type_hint"]);
+  });
+
+  it("sends only the client id for a public client", async () => {
+    const fetcher = stubRevocationResponse(() => new Response(null, { status: 200 }));
+
+    await requestTokenRevocation({ ...revocationRequest, clientSecret: undefined, tokenEndpointAuthMethod: "none" });
+
+    const body = revocationBody(fetcher);
+    expect(body.get("client_id")).toBe("client-id");
+    expect(body.has("client_secret")).toBe(false);
+    expect(revocationInit(fetcher).headers).not.toHaveProperty("authorization");
+  });
+
+  it("reports a refusal by status and error code only", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({ error: "invalid_token", error_description: "Token expired or revoked." }, { status: 400 }),
+      ),
+    );
+
+    const message = await readRejectionMessage(requestTokenRevocation({ ...revocationRequest }));
+    expect(message).toBe("OAuth token revocation failed (HTTP 400, invalid_token).");
+    expect(message).not.toContain("expired");
+  });
+
+  it("reports a non-JSON refusal by status alone", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("<html>nginx</html>", { status: 502, headers: { "content-type": "text/html" } })),
+    );
+
+    await expect(requestTokenRevocation({ ...revocationRequest })).rejects.toThrow(
+      "OAuth token revocation failed (HTTP 502).",
+    );
+  });
+
+  it("names the platform cause when the transport returns no HTTP response", async () => {
+    const refused = new TypeError("fetch failed");
+    (refused as { cause?: unknown }).cause = { code: "ECONNREFUSED" };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Promise.reject(refused)),
+    );
+
+    await expect(requestTokenRevocation({ ...revocationRequest })).rejects.toThrow(
+      "OAuth token revocation failed without an HTTP response: provider network request failed (ECONNREFUSED)",
+    );
+  });
+
+  it("gives up after its own short deadline", async () => {
+    vi.useFakeTimers();
+    try {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(
+          (_input: RequestInfo | URL, init?: RequestInit) =>
+            new Promise<Response>((_resolve, reject) => {
+              init?.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")));
+            }),
+        ),
+      );
+
+      const pending = requestTokenRevocation({ ...revocationRequest });
+      const outcome = pending.then(
+        () => "resolved",
+        (error: Error) => error.message,
+      );
+      await vi.advanceTimersByTimeAsync(5_000);
+      await expect(outcome).resolves.toBe("OAuth token revocation timed out.");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

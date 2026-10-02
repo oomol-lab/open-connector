@@ -20,6 +20,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<VercelAction
     return {
       apiKey: credential.apiKey,
       fetcher,
+      signal: context.signal,
       ...readVercelTeamScope(credential.values),
     };
   },

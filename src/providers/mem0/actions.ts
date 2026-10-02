@@ -11,10 +11,14 @@ const stringMapSchema = s.record(
   s.string("A category description."),
 );
 const nullableStringSchema = s.nullableString("A string value returned by Mem0, or null.");
-const messageSchema = s.object("A single message used to create or update memory.", {
-  role: s.nonEmptyString("The message role, such as user or assistant."),
-  content: s.nonEmptyString("The text content of the message."),
-});
+const messageSchema = s.object(
+  "A single message used to create or update memory.",
+  {
+    role: s.nonEmptyString("The message role, such as user or assistant."),
+    content: s.nonEmptyString("The text content of the message."),
+  },
+  { required: ["role", "content"] },
+);
 const memorySchema = s.looseObject("A Mem0 memory object.", {
   id: s.string("The unique identifier of the memory."),
   memory: s.string("The memory text content."),
@@ -119,56 +123,63 @@ const userListSchema = s.object(
   { optional: ["entity_type", "next", "previous"] },
 );
 
-const addMemoriesInputSchema = s.object(
-  "The input payload for adding memories to Mem0.",
-  {
-    memory: s.nonEmptyString("A single memory string to write directly."),
-    messages: s.array("The list of messages used to generate memory.", messageSchema, { minItems: 1 }),
-    user_id: s.nonEmptyString("The associated user identifier."),
-    agent_id: s.nonEmptyString("The associated agent identifier."),
-    app_id: s.nonEmptyString("The associated application identifier."),
-    run_id: s.nonEmptyString("The associated run identifier."),
-    org_id: s.nonEmptyString("An optional organization identifier."),
-    project_id: s.nonEmptyString("An optional project identifier."),
-    metadata: looseObjectSchema,
-    custom_categories: stringMapSchema,
-    enable_graph: s.boolean("Whether graph memory extraction should be enabled for this request."),
-    infer: s.boolean("Whether Mem0 should infer structured memory from the messages."),
-    async_mode: s.boolean("Whether the write should be processed asynchronously."),
-    output_format: s.stringEnum("The response wrapper format version.", ["v1.0", "v1.1"]),
-    version: s.stringEnum("The memory extraction engine version.", ["v1", "v2"]),
-    custom_instructions: s.nonEmptyString("Additional instructions used to guide memory extraction."),
-    immutable: s.boolean("Whether the created memory should be treated as immutable."),
-    timestamp: s.integer("The Unix timestamp associated with the memory input."),
-    expiration_date: s.nonEmptyString("The expiration date to attach to the created memory."),
-    includes: s.nonEmptyString("A string list of keywords that should be prioritized."),
-    excludes: s.nonEmptyString("A string list of keywords that should be excluded."),
-  },
-  {
-    optional: [
-      "memory",
-      "messages",
-      "user_id",
-      "agent_id",
-      "app_id",
-      "run_id",
-      "org_id",
-      "project_id",
-      "metadata",
-      "custom_categories",
-      "enable_graph",
-      "infer",
-      "async_mode",
-      "output_format",
-      "version",
-      "custom_instructions",
-      "immutable",
-      "timestamp",
-      "expiration_date",
-      "includes",
-      "excludes",
-    ],
-  },
+const addMemoriesInputSchema = s.requireExactlyOneProperty(
+  s.object(
+    "The input payload for adding memories to Mem0.",
+    {
+      memory: s.nonEmptyString(
+        "A single memory string, sent as a user message with infer defaulting to false. Provide either memory or messages.",
+      ),
+      messages: s.array("The list of messages used to generate memory.", messageSchema, { minItems: 1 }),
+      user_id: s.nonEmptyString("The associated user identifier."),
+      agent_id: s.nonEmptyString("The associated agent identifier."),
+      app_id: s.nonEmptyString("The associated application identifier."),
+      run_id: s.nonEmptyString("The associated run identifier."),
+      org_id: s.nonEmptyString("An optional organization identifier."),
+      project_id: s.nonEmptyString("An optional project identifier."),
+      metadata: looseObjectSchema,
+      custom_categories: stringMapSchema,
+      enable_graph: s.boolean("Whether graph memory extraction should be enabled for this request."),
+      infer: s.boolean(
+        "Whether Mem0 should infer structured memory. Defaults to false for memory; messages uses the upstream default. Explicit values are preserved.",
+      ),
+      async_mode: s.boolean("Whether the write should be processed asynchronously."),
+      output_format: s.stringEnum("The response wrapper format version.", ["v1.0", "v1.1"]),
+      version: s.stringEnum("The memory extraction engine version.", ["v1", "v2"]),
+      custom_instructions: s.nonEmptyString("Additional instructions used to guide memory extraction."),
+      immutable: s.boolean("Whether the created memory should be treated as immutable."),
+      timestamp: s.integer("The Unix timestamp associated with the memory input."),
+      expiration_date: s.nonEmptyString("The expiration date to attach to the created memory."),
+      includes: s.nonEmptyString("A string list of keywords that should be prioritized."),
+      excludes: s.nonEmptyString("A string list of keywords that should be excluded."),
+    },
+    {
+      optional: [
+        "memory",
+        "messages",
+        "user_id",
+        "agent_id",
+        "app_id",
+        "run_id",
+        "org_id",
+        "project_id",
+        "metadata",
+        "custom_categories",
+        "enable_graph",
+        "infer",
+        "async_mode",
+        "output_format",
+        "version",
+        "custom_instructions",
+        "immutable",
+        "timestamp",
+        "expiration_date",
+        "includes",
+        "excludes",
+      ],
+    },
+  ),
+  ["memory", "messages"],
 );
 
 const getMemoriesInputSchema = s.object(
@@ -187,7 +198,7 @@ const searchMemoriesInputSchema = s.object(
   "The input payload for searching memories in Mem0.",
   {
     query: s.nonEmptyString("The natural-language query used for semantic search."),
-    filters: s.looseObject("An optional advanced filter object."),
+    filters: { ...s.looseObject("Required non-empty advanced filters, such as a user_id filter."), minProperties: 1 },
     top_k: s.integer("The maximum number of results to return.", { minimum: 1, maximum: 100 }),
     rerank: s.boolean("Whether Mem0 should rerank the initial search results."),
     threshold: s.number("The semantic similarity threshold."),
@@ -198,17 +209,7 @@ const searchMemoriesInputSchema = s.object(
     project_id: s.nonEmptyString("An optional project identifier."),
   },
   {
-    optional: [
-      "filters",
-      "top_k",
-      "rerank",
-      "threshold",
-      "fields",
-      "keyword_search",
-      "filter_memories",
-      "org_id",
-      "project_id",
-    ],
+    optional: ["top_k", "rerank", "threshold", "fields", "keyword_search", "filter_memories", "org_id", "project_id"],
   },
 );
 
@@ -281,7 +282,7 @@ export const mem0Actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_memories",
     operationType: "read",
-    description: "Search memories in Mem0 with semantic query and optional filters.",
+    description: "Search memories in Mem0 with a semantic query and required non-empty filters.",
     inputSchema: searchMemoriesInputSchema,
     outputSchema: s.array("The list of memories returned by semantic search.", memorySchema),
   }),

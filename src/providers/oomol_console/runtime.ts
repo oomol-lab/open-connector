@@ -1,13 +1,18 @@
 import type { RuntimeLogger } from "../../core/types.ts";
 import type { ProviderActionName } from "../provider-runtime.ts";
 import type { OomolConsoleMemberDirectory } from "./member-directory.ts";
-import type { ConnectionActionPermission, ConnectionPermissionGroupsState } from "./permission-groups.ts";
+import type {
+  ConnectionActionPermission,
+  ConnectionPermissionGroupsState,
+  ConnectionTriggerPermission,
+} from "./permission-groups.ts";
 import type { OomolConsoleEndpoints } from "./request.ts";
 
 import { optionalNumber, optionalRawString } from "../../core/cast.ts";
 import { randomUUIDv7 } from "../../core/uuid-v7.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import {
+  effectiveTriggerPermission,
   parseConnectionPermissionGroups,
   replacePermissionGroupMembers,
   serializeConnectionPermissionGroups,
@@ -180,7 +185,6 @@ export async function executeOomolConsoleAction(
     }
     case "list_team_connections": {
       const teamId = requireTeamId(context);
-      await requireTeamManager(teamId, apiKey, fetcher, deps.endpoints);
       return {
         connections: await listTeamConnections(teamId, apiKey, fetcher, deps.endpoints),
       };
@@ -257,7 +261,7 @@ async function listTeamConnections(
     await requestOomolConsole({
       endpoints,
       endpoint: "connector",
-      path: "/v1/connections",
+      path: "/v1/apps",
       apiKey,
       fetcher,
       teamId,
@@ -433,7 +437,6 @@ async function mutateConnectionPermissionGroups(
       "The Connection permission-group revision is stale; list the permission groups again",
     );
   }
-
   let state = structuredClone(loaded.state);
   let createdGroupId: string | undefined;
   let updatedSourceGroupId: string | undefined;
@@ -441,6 +444,15 @@ async function mutateConnectionPermissionGroups(
   let affectedMemberIds: string[] | undefined;
   switch (actionName) {
     case "update_connection_default_permission_group":
+      state.defaultGroup.triggerPermission ??= effectiveTriggerPermission(state.defaultGroup);
+      if (input.triggerPermission !== undefined)
+        state.defaultGroup.triggerPermission = await parseTriggerPermissionInput(
+          input.triggerPermission,
+          loaded.connection.service,
+          apiKey,
+          fetcher,
+          endpoints,
+        );
       state.defaultGroup.actionPermission = parseActionPermissionInput(input.actionPermission, loaded.availableActions);
       break;
     case "create_connection_permission_group": {
@@ -449,6 +461,16 @@ async function mutateConnectionPermissionGroups(
       const memberIds = parseMemberIdsInput(input.memberIds, loaded.members);
       state.groups.push({
         groupId,
+        triggerPermission:
+          input.triggerPermission === undefined
+            ? { mode: "none" }
+            : await parseTriggerPermissionInput(
+                input.triggerPermission,
+                loaded.connection.service,
+                apiKey,
+                fetcher,
+                endpoints,
+              ),
         name: requireString(input.name, "name"),
         memberIds,
         actionPermission: parseActionPermissionInput(input.actionPermission, loaded.availableActions),
@@ -465,6 +487,15 @@ async function mutateConnectionPermissionGroups(
       updatedSourceGroupId = groupId;
       const memberIds = parseMemberIdsInput(input.memberIds, loaded.members);
       group.name = requireString(input.name, "name");
+      if (input.triggerPermission !== undefined)
+        group.triggerPermission = await parseTriggerPermissionInput(
+          input.triggerPermission,
+          loaded.connection.service,
+          apiKey,
+          fetcher,
+          endpoints,
+        );
+      group.triggerPermission ??= effectiveTriggerPermission(group);
       group.actionPermission = parseActionPermissionInput(input.actionPermission, loaded.availableActions);
       state = replacePermissionGroupMembers(state, groupId, memberIds);
       break;
@@ -481,7 +512,6 @@ async function mutateConnectionPermissionGroups(
       break;
     }
   }
-
   const serialized = serializeConnectionPermissionGroups(
     loaded.policy,
     { appId, service: loaded.connection.service },
@@ -989,4 +1019,31 @@ function compact<T extends Record<string, unknown>>(value: T) {
 
 function invalidResponse(message: string) {
   return new ProviderRequestError(502, `OOMOL Console response is invalid: ${message}`);
+}
+
+async function parseTriggerPermissionInput(
+  value: unknown,
+  service: string,
+  apiKey: string,
+  fetcher: typeof fetch,
+  endpoints: OomolConsoleEndpoints,
+): Promise<ConnectionTriggerPermission> {
+  const permission = asRecord(value, "triggerPermission");
+  if (permission.mode === "all" || permission.mode === "none") return { mode: permission.mode };
+  if (permission.mode !== "selected" || !Array.isArray(permission.triggerIds) || permission.triggerIds.length === 0)
+    throw new ProviderRequestError(400, "triggerPermission is invalid", undefined, "invalid_input");
+  const available = asArray(
+    await requestOomolConsole({
+      endpoints,
+      endpoint: "connector",
+      path: `/v1/providers/${encodeURIComponent(service)}/trigger-permissions`,
+      apiKey,
+      fetcher,
+    }),
+    "Trigger permissions",
+  ).map((item) => asRecord(item, "Trigger permission").id);
+  const triggerIds = permission.triggerIds.map((id) => requireString(id, "triggerId"));
+  if (new Set(triggerIds).size !== triggerIds.length || triggerIds.some((id) => !available.includes(id)))
+    throw new ProviderRequestError(400, "Trigger cannot be selected for this Connection", undefined, "invalid_input");
+  return { mode: "selected", triggerIds: triggerIds.toSorted() };
 }

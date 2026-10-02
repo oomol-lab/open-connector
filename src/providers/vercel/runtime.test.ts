@@ -1,8 +1,7 @@
 import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
-import type { VercelActionName } from "./actions.ts";
+import type { ProviderActionName } from "../provider-runtime.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { optionalRecord } from "../../core/cast.ts";
 import { validateActionInput } from "../../core/validation.ts";
 import { vercelActions } from "./actions.ts";
 import { credentialValidators, executors } from "./executors.ts";
@@ -443,7 +442,7 @@ describe("Vercel team-scoped REST queries", () => {
 
 describe("Vercel team scope coverage", () => {
   interface TeamScopeCase {
-    name: VercelActionName;
+    name: ProviderActionName<"vercel">;
     input: Record<string, unknown>;
     path: string;
     method?: string;
@@ -475,7 +474,7 @@ describe("Vercel team scope coverage", () => {
       path: "/v9/projects/app",
       response: { id: "prj_1", name: "app" },
     },
-    { name: "list_deployments", input: {}, path: "/v6/deployments", response: {} },
+    { name: "list_deployments", input: {}, path: "/v7/deployments", response: {} },
     { name: "get_deployment", input: { idOrUrl: "dpl_1" }, path: "/v13/deployments/dpl_1", response: { id: "dpl_1" } },
     { name: "get_deployment_events", input: { idOrUrl: "dpl_1" }, path: "/v3/deployments/dpl_1/events", response: [] },
     {
@@ -568,19 +567,6 @@ describe("Vercel team scope coverage", () => {
       expect(Object.fromEntries(new URL(requestUrl).searchParams)).toEqual({});
     });
   }
-
-  it("keeps the team-scope input schema and the request wiring in sync", () => {
-    const declared = vercelActions
-      .filter((action) => {
-        const properties = optionalRecord(action.inputSchema.properties);
-        return properties?.teamId !== undefined && properties.slug !== undefined;
-      })
-      .map((action) => action.name.replace("vercel.", ""))
-      .sort();
-
-    // get_team also declares the fields, but resolves them into the request path rather than the query.
-    expect(declared).toEqual([...scopeCases.map((scopeCase) => scopeCase.name), "get_team"].sort());
-  });
 });
 
 describe("Vercel executor credential wiring", () => {

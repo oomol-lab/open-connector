@@ -15,6 +15,7 @@ export const provider: ProviderDefinition = {
       type: "oauth2",
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
+      revocationUrl: "https://oauth2.googleapis.com/revoke",
       scopes: googleSlidesOAuthScopes,
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationParams: {

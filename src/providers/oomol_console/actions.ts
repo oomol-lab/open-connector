@@ -145,12 +145,47 @@ const actionPermissionSchema = s.oneOf(
   { description: "The action permission assigned by a permission group." },
 );
 
+const triggerPermissionSchema = s.oneOf(
+  [
+    s.object(
+      "Allow every Trigger of this provider.",
+      {
+        mode: s.literal("all", { description: "Allow every Trigger." }),
+      },
+      { optional: [] },
+    ),
+    s.object(
+      "Deny every Trigger of this provider.",
+      {
+        mode: s.literal("none", { description: "Deny every Trigger." }),
+      },
+      { optional: [] },
+    ),
+    s.object(
+      "Allow only selected Trigger IDs.",
+      {
+        mode: s.literal("selected", { description: "Allow selected Triggers." }),
+        triggerIds: {
+          ...s.stringArray("The full Trigger IDs allowed by this group.", {
+            minItems: 1,
+            itemDescription: "A Trigger ID returned by the provider trigger-permissions endpoint.",
+          }),
+          uniqueItems: true,
+        },
+      },
+      { optional: [] },
+    ),
+  ],
+  { description: "The independent Trigger permission for this group." },
+);
+
 const defaultPermissionGroupSchema = s.object("The non-deletable default permission group.", {
   kind: s.literal("default", { description: "The permission group kind." }),
   name: s.literal("Default permission group", { description: "The stable default permission group name." }),
   memberScope: s.literal("all", { description: "The members covered by the default permission group." }),
   deletable: s.literal(false, { description: "Whether the default permission group can be deleted." }),
   actionPermission: actionPermissionSchema,
+  triggerPermission: s.optional(triggerPermissionSchema),
 });
 
 const customPermissionGroupSchema = s.object("A custom Connection permission group.", {
@@ -162,6 +197,7 @@ const customPermissionGroupSchema = s.object("A custom Connection permission gro
     s.nonWhitespaceString("An assigned OOMOL team member identifier."),
   ),
   actionPermission: actionPermissionSchema,
+  triggerPermission: s.optional(triggerPermissionSchema),
 });
 
 const configurableActionSchema = s.object("A provider action that can be considered for permission-group access.", {
@@ -358,6 +394,7 @@ export const oomolConsoleActions: readonly ProviderActionDefinition[] = [
     inputSchema: s.object("The new default permission-group configuration.", {
       ...permissionMutationBaseInputSchema,
       actionPermission: actionPermissionSchema,
+      triggerPermission: s.optional(triggerPermissionSchema),
     }),
     outputSchema: permissionGroupsSnapshotSchema,
   }),
@@ -371,6 +408,7 @@ export const oomolConsoleActions: readonly ProviderActionDefinition[] = [
       name: s.nonWhitespaceString("The permission group display name."),
       memberIds: memberIdsInputSchema,
       actionPermission: actionPermissionSchema,
+      triggerPermission: s.optional(triggerPermissionSchema),
     }),
     outputSchema: extendObjectSchema(
       "The updated permission groups and the created group identifier.",
@@ -391,6 +429,7 @@ export const oomolConsoleActions: readonly ProviderActionDefinition[] = [
       name: s.nonWhitespaceString("The new permission group display name."),
       memberIds: memberIdsInputSchema,
       actionPermission: actionPermissionSchema,
+      triggerPermission: s.optional(triggerPermissionSchema),
     }),
     outputSchema: extendObjectSchema(
       "The updated permission groups and canonical updated group identifier.",

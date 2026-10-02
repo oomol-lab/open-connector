@@ -1,28 +1,36 @@
+import type { QueryValue } from "../../core/request.ts";
 import type {
   CredentialValidationResult,
   CredentialValidators,
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
   compactObject,
   nullableInteger,
   nullableString,
+  objectArray,
   optionalBoolean,
   optionalInteger,
   optionalRecord,
   optionalString,
+  requiredBoolean,
+  requiredNumber,
   requiredString,
 } from "../../core/cast.ts";
+import { queryParams } from "../../core/request.ts";
 import {
   defineApiKeyProviderExecutors,
   defineProviderProxy,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   requiredInputString,
+  requiredResponseRecord,
+  runProviderRequest,
+  setSearchParams,
 } from "../provider-runtime.ts";
 
 const service = "retell_ai";
@@ -31,14 +39,14 @@ const validationPath = "/list-voices";
 
 type RetellAiActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export const retellAiActionHandlers: ProviderActionHandlers<"retell_ai", RetellAiActionHandler> = {
+const retellAiActionHandlers: ProviderActionHandlers<"retell_ai", RetellAiActionHandler> = {
   async list_voices(_input, context) {
     const payload = await requestRetellAiJson({
       path: validationPath,
       context,
       phase: "execute",
     });
-    const voices = readArrayPayload(payload, "Retell AI voices response");
+    const voices = objectArray(payload, "Retell AI voices response", providerResponseError);
     return {
       voices: voices.map(normalizeVoice),
       raw: voices,
@@ -54,29 +62,26 @@ export const retellAiActionHandlers: ProviderActionHandlers<"retell_ai", RetellA
   },
   async list_voice_agents(input, context) {
     const payload = await requestRetellAiJson({
-      path: "/list-agents",
+      path: "/v2/list-agents",
+      method: "POST",
       context,
-      query: compactObject({
+      query: {
         limit: optionalInteger(input.limit),
         pagination_key: optionalString(input.paginationKey),
-        pagination_key_version: optionalInteger(input.paginationKeyVersion),
-        is_latest: optionalBoolean(input.isLatest),
-      }),
+        sort_order: optionalString(input.sortOrder),
+      },
+      body: { filter_criteria: { channel: { type: "string", op: "eq", value: "voice" } } },
       phase: "execute",
     });
-    const agents = readArrayPayload(payload, "Retell AI voice agents response");
-    return {
-      agents: agents.map(normalizeAgent),
-      raw: agents,
-    };
+    return normalizePaginatedAgents(payload);
   },
   async get_voice_agent(input, context) {
     const payload = await requestRetellAiJson({
       path: `/get-agent/${encodeURIComponent(requiredInputString(input.agentId, "agentId"))}`,
       context,
-      query: compactObject({
+      query: {
         version: optionalString(input.version) ?? optionalInteger(input.version),
-      }),
+      },
       phase: "execute",
     });
     return { agent: normalizeAgent(payload) };
@@ -85,11 +90,11 @@ export const retellAiActionHandlers: ProviderActionHandlers<"retell_ai", RetellA
     const payload = await requestRetellAiJson({
       path: "/v2/list-phone-numbers",
       context,
-      query: compactObject({
+      query: {
         limit: optionalInteger(input.limit),
         sort_order: optionalString(input.sortOrder),
         pagination_key: optionalString(input.paginationKey),
-      }),
+      },
       phase: "execute",
     });
     return normalizePaginatedPhoneNumbers(payload);
@@ -163,18 +168,18 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-async function requestRetellAiJson(input: {
+interface RetellAiRequest {
   path: string;
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
   phase: "validate" | "execute";
   method?: "GET" | "POST";
-  query?: Record<string, unknown>;
+  query?: Record<string, QueryValue>;
   body?: Record<string, unknown>;
-}): Promise<unknown> {
+}
+
+async function requestRetellAiJson(input: RetellAiRequest): Promise<unknown> {
   const url = new URL(input.path, retellAiApiBaseUrl);
-  for (const [key, value] of Object.entries(input.query ?? {})) {
-    appendQueryValue(url, key, value);
-  }
+  setSearchParams(url, queryParams(input.query ?? {}));
 
   const method = input.method ?? "GET";
   const headers: Record<string, string> = {
@@ -192,25 +197,14 @@ async function requestRetellAiJson(input: {
     init.body = JSON.stringify(input.body);
   }
 
-  let response: Response;
-  let payload: unknown;
-  try {
-    response = await input.context.fetcher(url.toString(), init);
-    payload = await readRetellAiPayload(response);
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
+  return runProviderRequest({ signal: input.context.signal, label: "Retell AI" }, async (signal) => {
+    const response = await input.context.fetcher(url.toString(), { ...init, signal });
+    const payload = await readRetellAiPayload(response);
+    if (!response.ok) {
+      throw createRetellAiError(response, payload, input.phase);
     }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Retell AI request failed: ${error.message}` : "Retell AI request failed",
-    );
-  }
-
-  if (!response.ok) {
-    throw createRetellAiError(response, payload, input.phase);
-  }
-  return payload;
+    return payload;
+  });
 }
 
 async function readRetellAiPayload(response: Response): Promise<unknown> {
@@ -237,7 +231,7 @@ function createRetellAiError(
   if (phase === "validate" && response.status >= 400 && response.status < 500) {
     return new ProviderRequestError(400, message, payload);
   }
-  return new ProviderRequestError(response.status || 502, message, payload);
+  return new ProviderRequestError(response.status || 502, message, payload, "provider_error");
 }
 
 function extractRetellAiErrorMessage(payload: unknown): string | undefined {
@@ -245,34 +239,13 @@ function extractRetellAiErrorMessage(payload: unknown): string | undefined {
   return record ? (optionalString(record.message) ?? optionalString(record.error)) : undefined;
 }
 
-function appendQueryValue(url: URL, key: string, value: unknown): void {
-  if (value !== undefined && value !== null && value !== "") {
-    url.searchParams.set(key, String(value));
-  }
-}
-
-function readArrayPayload(payload: unknown, label: string): Array<Record<string, unknown>> {
-  if (!Array.isArray(payload)) {
-    throw new ProviderRequestError(502, `${label} was not an array`);
-  }
-  return payload.map((item) => ensureRecord(item, label));
-}
-
-function ensureRecord(value: unknown, label: string): Record<string, unknown> {
-  const record = optionalRecord(value);
-  if (!record) {
-    throw new ProviderRequestError(502, `${label} included a non-object item`);
-  }
-  return record;
-}
-
 function normalizeVoice(value: unknown): Record<string, unknown> {
-  const record = ensureRecord(value, "Retell AI voice response");
+  const record = requiredResponseRecord(value, "Retell AI voice response");
   return {
-    voiceId: requireProviderString(record.voice_id, "voice_id"),
-    voiceName: requireProviderString(record.voice_name, "voice_name"),
-    provider: requireProviderString(record.provider, "provider"),
-    gender: requireProviderString(record.gender, "gender"),
+    voiceId: requiredString(record.voice_id, "voice_id", providerResponseError),
+    voiceName: requiredString(record.voice_name, "voice_name", providerResponseError),
+    provider: requiredString(record.provider, "provider", providerResponseError),
+    gender: requiredString(record.gender, "gender", providerResponseError),
     accent: nullableString(record.accent) ?? null,
     age: nullableString(record.age) ?? null,
     previewAudioUrl: nullableString(record.preview_audio_url) ?? null,
@@ -281,9 +254,9 @@ function normalizeVoice(value: unknown): Record<string, unknown> {
 }
 
 function normalizeAgent(value: unknown): Record<string, unknown> {
-  const record = ensureRecord(value, "Retell AI voice agent response");
+  const record = requiredResponseRecord(value, "Retell AI voice agent response");
   return {
-    agentId: requireProviderString(record.agent_id, "agent_id"),
+    agentId: requiredString(record.agent_id, "agent_id", providerResponseError),
     version: nullableInteger(record.version) ?? null,
     agentName: nullableString(record.agent_name) ?? null,
     voiceId: nullableString(record.voice_id) ?? null,
@@ -294,9 +267,9 @@ function normalizeAgent(value: unknown): Record<string, unknown> {
 }
 
 function normalizePhoneNumber(value: unknown): Record<string, unknown> {
-  const record = ensureRecord(value, "Retell AI phone number response");
+  const record = requiredResponseRecord(value, "Retell AI phone number response");
   return {
-    phoneNumber: requireProviderString(record.phone_number, "phone_number"),
+    phoneNumber: requiredString(record.phone_number, "phone_number", providerResponseError),
     phoneNumberType: nullableString(record.phone_number_type) ?? null,
     phoneNumberPretty: nullableString(record.phone_number_pretty) ?? null,
     nickname: nullableString(record.nickname) ?? null,
@@ -307,9 +280,9 @@ function normalizePhoneNumber(value: unknown): Record<string, unknown> {
 }
 
 function normalizeCall(value: unknown): Record<string, unknown> {
-  const record = ensureRecord(value, "Retell AI call response");
+  const record = requiredResponseRecord(value, "Retell AI call response");
   return {
-    callId: requireProviderString(record.call_id, "call_id"),
+    callId: requiredString(record.call_id, "call_id", providerResponseError),
     callType: nullableString(record.call_type) ?? null,
     agentId: nullableString(record.agent_id) ?? null,
     agentName: nullableString(record.agent_name) ?? null,
@@ -324,23 +297,46 @@ function normalizeCall(value: unknown): Record<string, unknown> {
   };
 }
 
-function normalizePaginatedPhoneNumbers(payload: unknown): Record<string, unknown> {
-  const record = ensureRecord(payload, "Retell AI phone numbers response");
+function normalizePaginatedAgents(payload: unknown): Record<string, unknown> {
+  const record = requiredResponseRecord(payload, "Retell AI voice agents response");
   return {
     paginationKey: nullableString(record.pagination_key) ?? null,
-    hasMore: requireProviderBoolean(record.has_more, "has_more"),
-    phoneNumbers: readPaginatedItems(record.items, "Retell AI phone numbers response.items").map(normalizePhoneNumber),
+    hasMore: requiredBoolean(record.has_more, "has_more", providerResponseError),
+    agents: objectArray(record.items, "Retell AI voice agents response.items", providerResponseError).map((agent) => ({
+      agentId: requiredString(agent.agent_id, "agent_id", providerResponseError),
+      agentName: nullableString(agent.agent_name) ?? null,
+      channel: requiredString(agent.channel, "channel", providerResponseError),
+      userModifiedTimestamp: requiredNumber(
+        agent.user_modified_timestamp,
+        "user_modified_timestamp",
+        providerResponseError,
+      ),
+      tags: requiredResponseRecord(agent.tags, "tags"),
+      raw: agent,
+    })),
+    raw: record,
+  };
+}
+
+function normalizePaginatedPhoneNumbers(payload: unknown): Record<string, unknown> {
+  const record = requiredResponseRecord(payload, "Retell AI phone numbers response");
+  return {
+    paginationKey: nullableString(record.pagination_key) ?? null,
+    hasMore: requiredBoolean(record.has_more, "has_more", providerResponseError),
+    phoneNumbers: objectArray(record.items, "Retell AI phone numbers response.items", providerResponseError).map(
+      normalizePhoneNumber,
+    ),
     raw: record,
   };
 }
 
 function normalizePaginatedCalls(payload: unknown): Record<string, unknown> {
-  const record = ensureRecord(payload, "Retell AI calls response");
+  const record = requiredResponseRecord(payload, "Retell AI calls response");
   return {
     paginationKey: nullableString(record.pagination_key) ?? null,
-    hasMore: requireProviderBoolean(record.has_more, "has_more"),
+    hasMore: requiredBoolean(record.has_more, "has_more", providerResponseError),
     total: nullableInteger(record.total) ?? null,
-    calls: readPaginatedItems(record.items, "Retell AI calls response.items").map(normalizeCall),
+    calls: objectArray(record.items, "Retell AI calls response.items", providerResponseError).map(normalizeCall),
     raw: record,
   };
 }
@@ -363,31 +359,9 @@ function buildAgentFilter(value: unknown): Array<Record<string, string>> | undef
 function buildEnumFilter(value: unknown): Record<string, unknown> | undefined {
   return Array.isArray(value) && value.length > 0
     ? {
-        operator: "in",
+        type: "enum",
+        op: "in",
         value: value.map(String),
       }
     : undefined;
-}
-
-function requireProviderString(value: unknown, fieldName: string): string {
-  const parsed = optionalString(value);
-  if (!parsed) {
-    throw new ProviderRequestError(502, `Retell AI response did not include ${fieldName}`);
-  }
-  return parsed;
-}
-
-function requireProviderBoolean(value: unknown, fieldName: string): boolean {
-  const parsed = optionalBoolean(value);
-  if (parsed === undefined) {
-    throw new ProviderRequestError(502, `Retell AI response did not include boolean ${fieldName}`);
-  }
-  return parsed;
-}
-
-function readPaginatedItems(value: unknown, fieldName: string): unknown[] {
-  if (!Array.isArray(value)) {
-    throw new ProviderRequestError(502, `${fieldName} was not an array`);
-  }
-  return value;
 }

@@ -278,3 +278,87 @@ describe("OAuthCredentialRefreshService", () => {
     expect(String(fetcher.mock.calls[0]?.[1]?.body)).toContain("employer=employer-id");
   });
 });
+
+describe("OAuthCredentialRefreshService revoke", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  function revokingConfigs(revocationUrl: string | undefined, config: unknown): OAuthClientConfigService {
+    return {
+      getOAuthDefinition: () => ({
+        type: "oauth2",
+        tokenUrl: "https://provider.example.com/oauth/token",
+        revocationUrl,
+        tokenEndpointAuthMethod: "none",
+        scopes: [],
+      }),
+      getConfig: async () => config,
+      resolveEndpointUrl: (_service: string, endpointUrl: string, resolved: { extra: Record<string, string> }) =>
+        endpointUrl.replace("{tenant}", resolved.extra.tenant ?? ""),
+    } as unknown as OAuthClientConfigService;
+  }
+
+  it("answers unsupported, without a request, when the definition names no revocation endpoint", async () => {
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    const service = new OAuthCredentialRefreshService(revokingConfigs(undefined, undefined));
+
+    await expect(service.revoke("example", expiredCredential({}))).resolves.toBe("unsupported");
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("resolves a templated endpoint through the client configuration the credential was minted under", async () => {
+    const fetcher = vi.fn(
+      async (_input: RequestInfo | URL, _init?: RequestInit) => new Response(null, { status: 200 }),
+    );
+    vi.stubGlobal("fetch", fetcher);
+    const service = new OAuthCredentialRefreshService(
+      revokingConfigs("https://login.example.com/{tenant}/oauth2/revoke", {
+        clientId: "global-client",
+        clientSecret: "",
+        extra: { tenant: "common" },
+      }),
+    );
+
+    await expect(
+      service.revoke(
+        "example",
+        expiredCredential({ oauthClientConfig: { clientId: "connection-client", extra: { tenant: "contoso" } } }),
+      ),
+    ).resolves.toBe("done");
+
+    const [url, init] = fetcher.mock.calls[0] ?? [];
+    expect(url).toBe("https://login.example.com/contoso/oauth2/revoke");
+    const body = init?.body;
+    if (!(body instanceof URLSearchParams)) {
+      throw new Error("Expected the revocation request body to use URLSearchParams");
+    }
+    expect(body.get("client_id")).toBe("connection-client");
+  });
+
+  it("rejects HTTP endpoints even when no client configuration is stored", async () => {
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    const service = new OAuthCredentialRefreshService(revokingConfigs("http://provider.example.com/revoke", undefined));
+
+    await expect(service.revoke("example", expiredCredential({}))).rejects.toThrow(
+      "OAuth revocation URL must use https.",
+    );
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("refuses a templated endpoint it cannot fill in, so the caller records a failure", async () => {
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    const service = new OAuthCredentialRefreshService(
+      revokingConfigs("https://login.example.com/{tenant}/oauth2/revoke", undefined),
+    );
+
+    await expect(service.revoke("example", expiredCredential({}))).rejects.toThrow(
+      "Configure an OAuth client for example before revoking its token.",
+    );
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+});

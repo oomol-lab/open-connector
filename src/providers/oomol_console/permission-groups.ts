@@ -10,7 +10,13 @@ export type ConnectionActionPermission =
   | { mode: "none" }
   | { mode: "selected"; actionNames: string[] };
 
+export type ConnectionTriggerPermission =
+  | { mode: "all" }
+  | { mode: "none" }
+  | { mode: "selected"; triggerIds: string[] };
+
 interface PermissionGrant {
+  triggerPermission?: ConnectionTriggerPermission;
   actionPermission: ConnectionActionPermission;
   appAccessConfig?: JsonObject;
 }
@@ -161,6 +167,7 @@ export function toPermissionGroupsView(state: ConnectionPermissionGroupsState): 
     memberScope: "all";
     deletable: false;
     actionPermission: ConnectionActionPermission;
+    triggerPermission: ConnectionTriggerPermission;
   };
   groups: Array<{
     kind: "custom";
@@ -168,6 +175,7 @@ export function toPermissionGroupsView(state: ConnectionPermissionGroupsState): 
     name: string;
     memberIds: string[];
     actionPermission: ConnectionActionPermission;
+    triggerPermission: ConnectionTriggerPermission;
   }>;
 } {
   return {
@@ -177,6 +185,7 @@ export function toPermissionGroupsView(state: ConnectionPermissionGroupsState): 
       memberScope: "all" as const,
       deletable: false as const,
       actionPermission: state.defaultGroup.actionPermission,
+      triggerPermission: effectiveTriggerPermission(state.defaultGroup),
     },
     groups: state.groups.map((group) => ({
       kind: "custom" as const,
@@ -184,6 +193,7 @@ export function toPermissionGroupsView(state: ConnectionPermissionGroupsState): 
       name: group.name,
       memberIds: group.memberIds,
       actionPermission: group.actionPermission,
+      triggerPermission: effectiveTriggerPermission(group),
     })),
   };
 }
@@ -212,7 +222,7 @@ function parseMultiPermissionGroups(
   for (const value of rule.permissionRules.rules) {
     if (
       !isPlainObject(value) ||
-      !hasOnlyKeys(value, ["id", "name", "actions", "appAccessConfig"]) ||
+      !hasOnlyKeys(value, ["id", "name", "actions", "triggers", "appAccessConfig"]) ||
       !isNonWhitespaceString(value.id) ||
       !isNonWhitespaceString(value.name)
     ) {
@@ -295,7 +305,7 @@ function parsePermissionGrant(
   allowedExtraKeys: readonly string[] = [],
 ): ParseResult<PermissionGrant> {
   if (!isPlainObject(value)) return invalidParseResult;
-  if (strict && !hasOnlyKeys(value, [...allowedExtraKeys, "actions", "appAccessConfig"])) {
+  if (strict && !hasOnlyKeys(value, [...allowedExtraKeys, "actions", "triggers", "appAccessConfig"])) {
     return invalidParseResult;
   }
 
@@ -324,6 +334,19 @@ function parsePermissionGrant(
     appAccessConfig = parsed.value;
   }
   const grant: PermissionGrant = { actionPermission };
+  if (Object.hasOwn(value, "triggers")) {
+    if (value.triggers === "*") grant.triggerPermission = { mode: "all" };
+    else if (
+      Array.isArray(value.triggers) &&
+      value.triggers.every(
+        (id) => isNonWhitespaceString(id) && id.startsWith(`${service}.`) && id !== `${service}.*`,
+      ) &&
+      new Set(value.triggers).size === value.triggers.length
+    ) {
+      grant.triggerPermission =
+        value.triggers.length === 0 ? { mode: "none" } : { mode: "selected", triggerIds: value.triggers.toSorted() };
+    } else return invalidParseResult;
+  }
   if (appAccessConfig !== undefined) grant.appAccessConfig = appAccessConfig;
   return { ok: true, value: grant };
 }
@@ -386,10 +409,17 @@ function normalizeLegacyLingxingUid(value: unknown) {
 
 function buildPermissionGrant(grant: PermissionGrant) {
   const result: JsonObject = {};
+  if (grant.triggerPermission) {
+    const permission = grant.triggerPermission;
+    result.triggers =
+      permission.mode === "all" ? "*" : permission.mode === "none" ? [] : uniqueSorted(permission.triggerIds);
+  }
   if (grant.actionPermission.mode !== "all") {
     result.actions = grant.actionPermission.mode === "none" ? [] : uniqueSorted(grant.actionPermission.actionNames);
   }
-  if (grant.appAccessConfig !== undefined) result.appAccessConfig = structuredClone(grant.appAccessConfig);
+  if (grant.appAccessConfig !== undefined) {
+    result.appAccessConfig = structuredClone(grant.appAccessConfig);
+  }
   return result;
 }
 
@@ -456,4 +486,12 @@ function isJsonValue(value: unknown): value is JsonValue {
   }
   if (Array.isArray(value)) return value.every(isJsonValue);
   return isPlainObject(value) && isJsonObject(value);
+}
+
+export function effectiveTriggerPermission(grant: PermissionGrant): ConnectionTriggerPermission {
+  return (
+    grant.triggerPermission ?? {
+      mode: grant.actionPermission.mode === "all" && grant.appAccessConfig === undefined ? "all" : "none",
+    }
+  );
 }

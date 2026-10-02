@@ -28,6 +28,16 @@ async function messageOf(run: Promise<unknown>): Promise<string> {
   throw new Error("expected the request to reject");
 }
 
+async function errorOf(run: Promise<unknown>): Promise<ProviderRequestError> {
+  try {
+    await run;
+  } catch (error) {
+    expect(error).toBeInstanceOf(ProviderRequestError);
+    return error as ProviderRequestError;
+  }
+  throw new Error("expected the request to reject");
+}
+
 describe("googleRequest fallback error messages", () => {
   it("names the calling service when the error response has no body", async () => {
     const message = await messageOf(
@@ -72,5 +82,90 @@ describe("googleRequest fallback error messages", () => {
     );
 
     expect(message).toBe("Insufficient permission");
+  });
+});
+
+describe("googleRequest rate limit classification", () => {
+  it.each(["rateLimitExceeded", "userRateLimitExceeded", "dailyLimitExceeded", "quotaExceeded"])(
+    "maps the classic 403 reason %s to rate_limited",
+    async (reason) => {
+      const body = JSON.stringify({
+        error: { code: 403, message: "Rate limit exceeded", errors: [{ domain: "usageLimits", reason }] },
+      });
+      const error = await errorOf(googleRequest(url, { accessToken, fetcher: respondWith(403, body) }));
+
+      expect(error.status).toBe(403);
+      expect(error.code).toBe("rate_limited");
+    },
+  );
+
+  it("maps error.status RESOURCE_EXHAUSTED to rate_limited", async () => {
+    const body = JSON.stringify({
+      error: { code: 403, message: "Quota exceeded", status: "RESOURCE_EXHAUSTED" },
+    });
+    const error = await errorOf(googleRequest(url, { accessToken, fetcher: respondWith(403, body) }));
+
+    expect(error.code).toBe("rate_limited");
+  });
+
+  it("maps error.status PERMISSION_DENIED with a quota detail reason to rate_limited", async () => {
+    const body = JSON.stringify({
+      error: {
+        code: 403,
+        message: "Quota exceeded",
+        status: "PERMISSION_DENIED",
+        details: [{ "@type": "type.googleapis.com/google.rpc.ErrorInfo", reason: "RATE_LIMIT_EXCEEDED" }],
+      },
+    });
+    const error = await errorOf(googleRequest(url, { accessToken, fetcher: respondWith(403, body) }));
+
+    expect(error.code).toBe("rate_limited");
+  });
+
+  it("leaves a genuine permission 403 as authorization_failed", async () => {
+    const body = JSON.stringify({
+      error: {
+        code: 403,
+        message: "The user does not have sufficient permissions for this file.",
+        errors: [{ domain: "global", reason: "insufficientPermissions" }],
+      },
+    });
+    const error = await errorOf(googleRequest(url, { accessToken, fetcher: respondWith(403, body) }));
+
+    expect(error.status).toBe(403);
+    expect(error.code).toBeUndefined();
+  });
+
+  it("leaves error.status PERMISSION_DENIED without a quota reason as authorization_failed", async () => {
+    const body = JSON.stringify({
+      error: {
+        code: 403,
+        message: "App not authorized to file.",
+        status: "PERMISSION_DENIED",
+        details: [{ "@type": "type.googleapis.com/google.rpc.ErrorInfo", reason: "appNotAuthorizedToFile" }],
+      },
+    });
+    const error = await errorOf(googleRequest(url, { accessToken, fetcher: respondWith(403, body) }));
+
+    expect(error.code).toBeUndefined();
+  });
+
+  it("does not infer a rate limit from an unparseable body", async () => {
+    const error = await errorOf(
+      googleRequest(url, { accessToken, fetcher: respondWith(403, "not json"), service: "googlechat" }),
+    );
+
+    expect(error.message).toBe("not json");
+    expect(error.code).toBeUndefined();
+  });
+
+  it("does not infer a rate limit from a quota reason outside HTTP 403", async () => {
+    const body = JSON.stringify({
+      error: { code: 429, message: "Too many requests", errors: [{ reason: "rateLimitExceeded" }] },
+    });
+    const error = await errorOf(googleRequest(url, { accessToken, fetcher: respondWith(429, body) }));
+
+    expect(error.status).toBe(429);
+    expect(error.code).toBeUndefined();
   });
 });

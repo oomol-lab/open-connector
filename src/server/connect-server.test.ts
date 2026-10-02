@@ -165,6 +165,31 @@ describe("ConnectServer", () => {
     });
   });
 
+  it("serves default Marketplace discovery through the same-origin API", async () => {
+    const database = new SqliteRuntimeDatabase(":memory:");
+    requestDatabases.push(database);
+    const marketplace = new MarketplaceService({
+      catalog: createCatalogStore([apiKeyProvider]),
+      store: database.marketplaceStore,
+      secretCodec: new PlainTextSecretCodec(),
+    });
+    vi.spyOn(marketplace, "getDefaultDiscovery").mockResolvedValue({
+      version: 1,
+      name: "Default",
+      actions: ["example.echo"],
+    });
+    const app = createTestServer([apiKeyProvider], { marketplace }).createApp();
+
+    const response = await app.request("/api/marketplace/discovery");
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      version: 1,
+      name: "Default",
+      actions: ["example.echo"],
+    });
+  });
+
   it("rejects connections for providers unavailable in the current runtime", async () => {
     const app = createTestServer([catalogOnlyProvider]).createApp();
 
@@ -679,9 +704,29 @@ describe("ConnectServer", () => {
     });
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({ connectionName: "work", configured: false });
+    // Without `revoke: true` the delete leaves the provider's grant alone, as it always has.
+    await expect(response.json()).resolves.toMatchObject({
+      connectionName: "work",
+      configured: false,
+      revoked: "skipped",
+    });
     const connections = (await (await app.request("/api/connections")).json()) as Array<{ connectionName: string }>;
     expect(connections.map((connection) => connection.connectionName)).toEqual(["default"]);
+
+    // `revoke: true` asks for the grant to end; a provider that declares no revocation endpoint
+    // cannot, and says so, while the delete still happens.
+    const asked = await app.request("/api/connections/example", {
+      method: "DELETE",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ connectionName: "default", revoke: true }),
+    });
+    expect(asked.status).toBe(200);
+    await expect(asked.json()).resolves.toMatchObject({
+      connectionName: "default",
+      configured: false,
+      revoked: "unsupported",
+    });
+    expect(await (await app.request("/api/connections")).json()).toEqual([]);
   });
 
   it("rejects JSON request bodies that are not objects", async () => {

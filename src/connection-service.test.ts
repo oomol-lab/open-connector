@@ -1223,6 +1223,240 @@ describe("ConnectionService", () => {
   });
 });
 
+describe("ConnectionService disconnect revocation", () => {
+  const revocableProvider: ProviderDefinition = {
+    ...oauthProvider,
+    service: "revocable",
+    auth: [
+      {
+        type: "oauth2",
+        authorizationUrl: "https://example.com/oauth/authorize",
+        tokenUrl: "https://example.com/oauth/token",
+        revocationUrl: "https://example.com/oauth/revoke",
+        scopes: ["read"],
+        tokenEndpointAuthMethod: "client_secret_post",
+      },
+    ],
+  };
+  const publicRevocableProvider: ProviderDefinition = {
+    ...revocableProvider,
+    service: "public_revocable",
+    auth: [{ ...revocableProvider.auth[0], tokenEndpointAuthMethod: "none" } as ProviderDefinition["auth"][number]],
+  };
+
+  async function connectRevocable(
+    provider: ProviderDefinition,
+    logger = createTestLogger(),
+    credential: Partial<Extract<ResolvedCredential, { authType: "oauth2" }>> = {},
+  ) {
+    const store = new MemoryConnectionStore();
+    const oauthClientConfigs = createOAuthClientConfigs([provider]);
+    await oauthClientConfigs.upsertConfig({
+      service: provider.service,
+      clientId: "client-id",
+      clientSecret: "client-secret",
+    });
+    const service = createService([provider], {
+      logger,
+      oauthCredentials: new OAuthCredentialRefreshService(oauthClientConfigs),
+      store,
+    });
+    await store.set(provider.service, "default", {
+      authType: "oauth2",
+      accessToken: "access-token",
+      tokenType: "Bearer",
+      refreshToken: "refresh-token",
+      profile: testProfile,
+      metadata: {},
+      ...credential,
+    });
+    return { service, store, logger };
+  }
+
+  /** Stub fetch with a typed two-argument mock so the recorded init can be read back. */
+  function stubRevocationResponse(respond: () => Response | Promise<Response>) {
+    const fetcher = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => respond());
+    vi.stubGlobal("fetch", fetcher);
+    return fetcher;
+  }
+
+  function revokeInit(fetcher: ReturnType<typeof stubRevocationResponse>): RequestInit {
+    const init = fetcher.mock.calls[0]?.[1];
+    if (!init) {
+      throw new Error("Expected one revocation request");
+    }
+    return init;
+  }
+
+  function revokeBody(fetcher: ReturnType<typeof stubRevocationResponse>): URLSearchParams {
+    const body = revokeInit(fetcher).body;
+    if (!(body instanceof URLSearchParams)) {
+      throw new Error("Expected the revocation request body to use URLSearchParams");
+    }
+    return body;
+  }
+
+  it("deletes the connection before posting the refresh token once", async () => {
+    const { service, store, logger } = await connectRevocable(revocableProvider);
+    const fetcher = stubRevocationResponse(async () => {
+      await expect(store.get("revocable", "default")).resolves.toBeUndefined();
+      return new Response(null, { status: 200 });
+    });
+
+    await expect(service.disconnect("revocable", undefined, { revoke: true })).resolves.toEqual({
+      service: "revocable",
+      connectionName: "default",
+      configured: false,
+      revoked: "done",
+    });
+
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(fetcher.mock.calls[0]?.[0]).toBe("https://example.com/oauth/revoke");
+    expect(revokeInit(fetcher)).toMatchObject({
+      method: "POST",
+      redirect: "manual",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+    });
+    const body = revokeBody(fetcher);
+    expect(body.get("token")).toBe("refresh-token");
+    expect(body.get("token_type_hint")).toBe("refresh_token");
+    // The token endpoint's client authentication (client_secret_post) applies.
+    expect(body.get("client_id")).toBe("client-id");
+    expect(body.get("client_secret")).toBe("client-secret");
+    await expect(store.get("revocable", "default")).resolves.toBeUndefined();
+    expect(logger.info).toHaveBeenCalledWith(
+      { service: "revocable", connectionName: "default", revoked: "done" },
+      "oauth token revocation completed",
+    );
+  });
+
+  it("still deletes the connection when the endpoint refuses the token, and reports failed", async () => {
+    const { service, store, logger } = await connectRevocable(revocableProvider);
+    const fetcher = stubRevocationResponse(() => Response.json({ error: "invalid_token" }, { status: 400 }));
+
+    await expect(service.disconnect("revocable", undefined, { revoke: true })).resolves.toMatchObject({
+      configured: false,
+      revoked: "failed",
+    });
+
+    expect(fetcher).toHaveBeenCalledOnce();
+    await expect(store.get("revocable", "default")).resolves.toBeUndefined();
+    expect(logger.warn).toHaveBeenCalledWith(
+      {
+        service: "revocable",
+        connectionName: "default",
+        errorCode: "oauth_token_revocation_failed",
+        error: "OAuth token revocation failed (HTTP 400, invalid_token).",
+      },
+      "oauth token revocation failed",
+    );
+  });
+
+  it("still deletes the connection when the endpoint cannot be reached", async () => {
+    const { service, store } = await connectRevocable(revocableProvider);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new TypeError("fetch failed");
+      }),
+    );
+
+    await expect(service.disconnect("revocable", undefined, { revoke: true })).resolves.toMatchObject({
+      configured: false,
+      revoked: "failed",
+    });
+    await expect(store.get("revocable", "default")).resolves.toBeUndefined();
+  });
+
+  it("posts the access token when the connection holds no refresh token", async () => {
+    const { service } = await connectRevocable(revocableProvider, createTestLogger(), { refreshToken: undefined });
+    const fetcher = stubRevocationResponse(() => new Response(null, { status: 200 }));
+
+    await expect(service.disconnect("revocable", undefined, { revoke: true })).resolves.toMatchObject({
+      revoked: "done",
+    });
+
+    const body = revokeBody(fetcher);
+    expect(body.get("token")).toBe("access-token");
+    expect(body.get("token_type_hint")).toBe("access_token");
+  });
+
+  it("sends no secret for a public client", async () => {
+    const { service } = await connectRevocable(publicRevocableProvider);
+    const fetcher = stubRevocationResponse(() => new Response(null, { status: 200 }));
+
+    await expect(service.disconnect("public_revocable", undefined, { revoke: true })).resolves.toMatchObject({
+      revoked: "done",
+    });
+
+    const body = revokeBody(fetcher);
+    expect(body.get("client_id")).toBe("client-id");
+    expect(body.has("client_secret")).toBe(false);
+    expect(revokeInit(fetcher).headers).not.toHaveProperty("authorization");
+  });
+
+  it("keeps the grant, and says so, unless the caller asks for a revocation", async () => {
+    const { service, store } = await connectRevocable(revocableProvider);
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+
+    await expect(service.disconnect("revocable")).resolves.toEqual({
+      service: "revocable",
+      connectionName: "default",
+      configured: false,
+      revoked: "skipped",
+    });
+
+    expect(fetcher).not.toHaveBeenCalled();
+    await expect(store.get("revocable", "default")).resolves.toBeUndefined();
+  });
+
+  it("reports unsupported, without any request, for a provider that declares no revocation endpoint", async () => {
+    const { service, store } = await connectRevocable(oauthProvider);
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+
+    await expect(service.disconnect("example", undefined, { revoke: true })).resolves.toEqual({
+      service: "example",
+      connectionName: "default",
+      configured: false,
+      revoked: "unsupported",
+    });
+
+    expect(fetcher).not.toHaveBeenCalled();
+    await expect(store.get("example", "default")).resolves.toBeUndefined();
+  });
+
+  it("reports unsupported for a connection that is not OAuth, and for one that is not held", async () => {
+    const service = createService([apiKeyProvider, revocableProvider]);
+    await service.connectWithApiKey("uptimerobot", { values: { apiKey: "key", accountId: "acct" } });
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+
+    await expect(service.disconnect("uptimerobot", undefined, { revoke: true })).resolves.toMatchObject({
+      configured: false,
+      revoked: "unsupported",
+    });
+    await expect(service.disconnect("revocable", undefined, { revoke: true })).resolves.toMatchObject({
+      configured: false,
+      revoked: "unsupported",
+    });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("revokes nothing when the store refuses the delete", async () => {
+    const { service, store } = await connectRevocable(revocableProvider);
+    const fetcher = stubRevocationResponse(() => new Response(null, { status: 200 }));
+    const refused = new Error("Cancel or abandon remote Trigger subscriptions before disconnecting this connection.");
+    vi.spyOn(store, "delete").mockRejectedValueOnce(refused);
+
+    await expect(service.disconnect("revocable", undefined, { revoke: true })).rejects.toBe(refused);
+
+    expect(fetcher).not.toHaveBeenCalled();
+    await expect(store.get("revocable", "default")).resolves.toMatchObject({ credential: { authType: "oauth2" } });
+  });
+});
+
 interface CreateServiceOptions {
   providerHttpDispatch?: ProviderHttpDispatchOptions;
   logger?: ReturnType<typeof createTestLogger>;

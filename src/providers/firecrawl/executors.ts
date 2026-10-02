@@ -1,17 +1,25 @@
-import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type {
+  CredentialValidators,
+  ExecutionContext,
+  ProviderExecutors,
+  ProviderProxyExecutor,
+} from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, pickOptionalBoolean } from "../../core/cast.ts";
+import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
-  defineApiKeyProviderExecutors,
+  createProviderFetch,
+  defineProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   providerUserAgent,
   ProviderRequestError,
+  requireApiKeyCredential,
 } from "../provider-runtime.ts";
 
 const service = "firecrawl";
-const firecrawlApiBaseUrl = "https://api.firecrawl.dev";
+const defaultFirecrawlApiBaseUrl = "https://api.firecrawl.dev";
 const firecrawlScrapeOptionAliasKeys = [
   "scrapeOptions_actions",
   "scrapeOptions_formats",
@@ -44,7 +52,14 @@ interface FirecrawlRequestInput {
 }
 
 type FirecrawlRequestPhase = "validate" | "execute";
-type FirecrawlActionContext = ApiKeyProviderContext;
+
+interface FirecrawlActionContext {
+  apiKey: string;
+  apiBaseUrl: string;
+  fetcher: typeof fetch;
+  signal?: AbortSignal;
+}
+
 type FirecrawlActionHandler = (input: Record<string, unknown>, context: FirecrawlActionContext) => Promise<unknown>;
 
 export const firecrawlActionHandlers: ProviderActionHandlers<"firecrawl", FirecrawlActionHandler> = {
@@ -80,21 +95,42 @@ export const firecrawlActionHandlers: ProviderActionHandlers<"firecrawl", Firecr
   token_usage_get_historical: firecrawlGetAction(() => "/v2/team/token-usage/historical", buildHistoricalUsageQuery),
 };
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, firecrawlActionHandlers);
+export const executors: ProviderExecutors = defineProviderExecutors<FirecrawlActionContext>({
+  service,
+  handlers: firecrawlActionHandlers,
+  async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<FirecrawlActionContext> {
+    const credential = await requireApiKeyCredential(context, service);
+    return {
+      apiKey: credential.apiKey,
+      apiBaseUrl: normalizeFirecrawlApiBaseUrl(credential.values.baseUrl),
+      fetcher,
+      signal: context.signal,
+    };
+  },
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
+});
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
-  baseUrl: firecrawlApiBaseUrl,
+  baseUrl: async (context) => {
+    const credential = await requireApiKeyCredential(context, service);
+    return normalizeFirecrawlApiBaseUrl(credential.values.baseUrl);
+  },
   auth: { type: "api_key_authorization", prefix: "Bearer " },
-  skipDnsValidation: true,
+  allowPrivateNetwork: isPrivateNetworkAccessAllowed,
 });
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
+    const apiBaseUrl = normalizeFirecrawlApiBaseUrl(input.values.baseUrl);
     const payload = optionalRecord(
       await firecrawlRequest({
         apiKey: input.apiKey,
-        fetcher,
+        apiBaseUrl,
+        // Re-guard the shared validator fetcher with the private-network
+        // opt-in so a self-hosted instance on a private network validates
+        // when the deployment allows it.
+        fetcher: createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed }),
         signal,
         path: "/v2/team/credit-usage",
         phase: "validate",
@@ -108,7 +144,7 @@ export const credentialValidators: CredentialValidators = {
       },
       grantedScopes: [],
       metadata: compactObject({
-        apiBaseUrl: firecrawlApiBaseUrl,
+        apiBaseUrl,
         validationEndpoint: "/v2/team/credit-usage",
         teamCreditUsage: optionalRecord(payload?.data),
         success: typeof payload?.success === "boolean" ? payload.success : undefined,
@@ -124,6 +160,7 @@ function firecrawlPostAction(
   return (input, context) =>
     firecrawlRequest({
       apiKey: context.apiKey,
+      apiBaseUrl: context.apiBaseUrl,
       fetcher: context.fetcher,
       signal: context.signal,
       method: "POST",
@@ -142,6 +179,7 @@ function firecrawlGetAction(
   return (input, context) =>
     firecrawlRequest({
       apiKey: context.apiKey,
+      apiBaseUrl: context.apiBaseUrl,
       fetcher: context.fetcher,
       signal: context.signal,
       path: buildPath(input),
@@ -154,6 +192,7 @@ function firecrawlDeleteAction(buildPath: (input: Record<string, unknown>) => st
   return (input, context) =>
     firecrawlRequest({
       apiKey: context.apiKey,
+      apiBaseUrl: context.apiBaseUrl,
       fetcher: context.fetcher,
       signal: context.signal,
       method: "DELETE",
@@ -216,14 +255,42 @@ function buildScrapeOptionsFromInput(input: Record<string, unknown>): Record<str
   return Object.keys(flattened).length > 0 ? flattened : undefined;
 }
 
+/**
+ * Resolves the Firecrawl API base URL for a connection. Empty input targets
+ * the Firecrawl cloud API; otherwise the self-hosted instance URL is
+ * validated, embedded credentials are rejected, and query, hash, and trailing
+ * slashes are removed while any reverse-proxy path prefix is kept.
+ * Private/overlay targets are only accepted when the deployment opts in
+ * through `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK`.
+ */
+function normalizeFirecrawlApiBaseUrl(value: unknown): string {
+  const instanceUrl = optionalString(value);
+  if (!instanceUrl) {
+    return defaultFirecrawlApiBaseUrl;
+  }
+  const url = assertPublicHttpUrl(instanceUrl, {
+    fieldName: "baseUrl",
+    createError: providerInputError,
+    allowPrivateNetwork: isPrivateNetworkAccessAllowed(),
+  });
+  if (url.username || url.password) {
+    throw providerInputError("baseUrl must not include credentials");
+  }
+  url.hash = "";
+  url.search = "";
+  url.pathname = url.pathname.replace(/\/+$/u, "");
+  return url.toString().replace(/\/$/u, "");
+}
+
 async function firecrawlRequest(
   input: FirecrawlRequestInput & {
     apiKey: string;
+    apiBaseUrl: string;
     fetcher: typeof fetch;
     signal?: AbortSignal;
   },
 ): Promise<unknown> {
-  const url = new URL(input.path, firecrawlApiBaseUrl);
+  const url = new URL(`${input.apiBaseUrl}${input.path}`);
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value == null) {
       continue;
@@ -293,7 +360,12 @@ function createFirecrawlError(status: number, payload: unknown, phase: Firecrawl
     return new ProviderRequestError(status, message, payload);
   }
   if (status === 401 || status === 403) {
-    return new ProviderRequestError(phase === "validate" ? 400 : 401, message, payload);
+    return new ProviderRequestError(
+      phase === "validate" ? 400 : status,
+      message,
+      payload,
+      phase === "validate" ? "invalid_input" : "provider_error",
+    );
   }
   if (status === 429) {
     return new ProviderRequestError(429, message, payload);

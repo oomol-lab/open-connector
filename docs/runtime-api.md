@@ -457,7 +457,15 @@ These endpoints power the Web Console, examples, and setup scripts:
 - `DELETE /api/files/:fileId`
 - `GET /api/connections`
 - `PUT /api/connections/:service`
-- `DELETE /api/connections/:service`
+- `DELETE /api/connections/:service` — deletes the stored credential and, by default, leaves the grant
+  standing at the provider. With `revoke: true` in the JSON body, an OAuth connection of a provider that
+  declares a `revocationUrl` has its token posted there (RFC 7009) once the delete has gone through, best
+  effort; the answer's `revoked` says `done`, `failed` (the provider refused or could not be reached; the
+  credential is deleted all the same), `unsupported` (no `revocationUrl` declared, no OAuth token held, or a
+  SaaS connection) or `skipped` (the body did not ask).
+  Revocation may also invalidate related connections. For Google, it removes the user's granted scopes
+  for the project and invalidates tokens for all OAuth clients registered under that project; it is not
+  limited to the selected connection or client. See [Google's token revocation documentation](https://developers.google.com/identity/protocols/oauth2/web-server#tokenrevoke).
 - `GET /api/oauth/configs`
 - `PUT /api/oauth/configs/:service`
 - `DELETE /api/oauth/configs/:service`

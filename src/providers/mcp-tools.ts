@@ -16,8 +16,8 @@ import {
   createProviderTimeout,
   isAbortLikeError,
   providerFetch,
-  providerUserAgent,
   ProviderRequestError,
+  providerUserAgent,
 } from "./provider-runtime.ts";
 const defaultMcpToolListMaxBytes = 16 * 1024 * 1024;
 const defaultMcpToolListMaxPages = 100;
@@ -29,6 +29,7 @@ export interface McpToolSummary {
   description?: string;
   annotations?: ToolAnnotations;
   inputSchema: Record<string, unknown>;
+  outputSchema?: Record<string, unknown>;
 }
 export interface McpToolOptions {
   endpoint: string;
@@ -72,6 +73,7 @@ function createLimitedMcpFetch(
   return async (url, init) => limitMcpResponse(await fetcher(url, init), service, maxResponseBytes);
 }
 interface ListMcpToolsOptions {
+  includeOutputSchema?: boolean;
   includeAnnotations?: boolean;
 }
 
@@ -86,6 +88,7 @@ export async function listMcpTools(
       description: tool.description,
       annotations: options.includeAnnotations ? tool.annotations : undefined,
       inputSchema: tool.inputSchema,
+      outputSchema: options.includeOutputSchema ? tool.outputSchema : undefined,
     }));
   });
 }

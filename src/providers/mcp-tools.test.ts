@@ -100,3 +100,15 @@ it("maps MCP invalid-params tool results to invalid_input", async () => {
     message: "Example MCP tool query rejected the input: MCP error -32602: missing query",
   });
 });
+
+it("returns declared output schemas only when requested", async () => {
+  const tool = {
+    name: "read",
+    inputSchema: { type: "object" },
+    outputSchema: { type: "object", properties: { value: { type: "string" } } },
+  };
+  client.request.mockResolvedValue({ tools: [tool] });
+  const options = { endpoint: "https://example.com/mcp", service: "Example" };
+  expect((await listMcpTools(options))[0]?.outputSchema).toBeUndefined();
+  expect((await listMcpTools(options, { includeOutputSchema: true }))[0]?.outputSchema).toEqual(tool.outputSchema);
+});

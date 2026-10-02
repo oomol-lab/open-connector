@@ -24,7 +24,7 @@ export function OneKeyProviderOption({ marketplace, provider, connected }: OneKe
   useEffect(() => {
     if (!officialMarketplace || connected || (isOneKeyPromotionHidden() && !marketplace?.configured)) return;
     const controller = new AbortController();
-    void loadDefaultMarketplaceCatalog(defaultMarketplaceDiscoveryUrl, controller.signal).then(
+    void loadDefaultMarketplaceCatalog(controller.signal).then(
       (catalog) => setSupported(provider.actions.some((action) => catalog.actions.includes(action.id))),
       () => setSupported(false),
     );

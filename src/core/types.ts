@@ -134,6 +134,13 @@ export type OAuth2AuthDefinition = {
   tokenUrl: string;
   /** Provider token endpoint used to refresh an access token. Defaults to tokenUrl. */
   refreshTokenUrl?: string;
+  /**
+   * Provider token revocation endpoint (RFC 7009). When set, a disconnect that
+   * asks for it (`revoke: true`) posts the connection's refresh token (else its
+   * access token) there once the credential is deleted, so the grant ends at
+   * the provider as well as here. Inert otherwise.
+   */
+  revocationUrl?: string;
   /** OAuth scopes joined with spaces into the authorization URL `scope` parameter. */
   scopes: string[];
   /** Selectable provider-native OAuth scopes for programmatic connections. */
