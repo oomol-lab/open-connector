@@ -149,6 +149,17 @@ export type OAuth2AuthDefinition = {
   scopeSeparator?: " " | ",";
   /** How the runtime sends client credentials to the token endpoint. */
   tokenEndpointAuthMethod: "client_secret_basic" | "client_secret_post" | "none";
+  /**
+   * Let the client secret be left blank. The provider registers both
+   * confidential and public clients, and which one a deployment is follows
+   * from its stored client configuration: with a secret, every token, refresh
+   * and revocation request is exactly what `tokenEndpointAuthMethod` says;
+   * without one, those requests carry the client id alone (`none`) and the
+   * code exchange relies on PKCE, so declare `pkce` with it. Off by default:
+   * the secret stays required and nothing changes for an existing
+   * configuration.
+   */
+  clientSecretOptional?: boolean;
   /** Token request body encoding. Defaults to OAuth form encoding. */
   tokenRequestFormat?: "form" | "json";
   /** Provider-specific OAuth token request field names. */

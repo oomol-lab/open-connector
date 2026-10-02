@@ -362,3 +362,82 @@ describe("OAuthCredentialRefreshService revoke", () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 });
+
+describe("OAuthCredentialRefreshService with an optional client secret", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  function optionalSecretConfigs(clientSecret: string): OAuthClientConfigService {
+    return {
+      getOAuthDefinition: () => ({
+        type: "oauth2",
+        tokenUrl: "https://provider.example.com/oauth/token",
+        revocationUrl: "https://provider.example.com/oauth/revoke",
+        tokenEndpointAuthMethod: "client_secret_post",
+        clientSecretOptional: true,
+        pkce: { method: "S256" },
+        scopes: [],
+      }),
+      getConfig: async () => ({ clientId: "client-id", clientSecret, extra: {} }),
+      resolveEndpointUrl: (_service: string, endpointUrl: string) => endpointUrl,
+    } as unknown as OAuthClientConfigService;
+  }
+
+  function stubTypedRefreshResponse(): ReturnType<
+    typeof vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>
+  > {
+    const fetcher = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
+      Response.json({ access_token: "new-access-token", expires_in: 3600 }),
+    );
+    vi.stubGlobal("fetch", fetcher);
+    return fetcher;
+  }
+
+  it("refreshes and revokes with the secret when one is configured", async () => {
+    const refresher = stubTypedRefreshResponse();
+    await new OAuthCredentialRefreshService(optionalSecretConfigs("client-secret")).refresh(
+      "example",
+      expiredCredential({ expires_in: 3600 }),
+    );
+    const refreshBody = new URLSearchParams(String(refresher.mock.calls[0]?.[1]?.body));
+    expect(refreshBody.get("client_id")).toBe("client-id");
+    expect(refreshBody.get("client_secret")).toBe("client-secret");
+
+    const revoker = vi.fn(
+      async (_input: RequestInfo | URL, _init?: RequestInit) => new Response(null, { status: 200 }),
+    );
+    vi.stubGlobal("fetch", revoker);
+    await expect(
+      new OAuthCredentialRefreshService(optionalSecretConfigs("client-secret")).revoke(
+        "example",
+        expiredCredential({}),
+      ),
+    ).resolves.toBe("done");
+    const revokeBody = new URLSearchParams(String(revoker.mock.calls[0]?.[1]?.body));
+    expect(revokeBody.get("client_secret")).toBe("client-secret");
+  });
+
+  it("refreshes and revokes as a public client when no secret is configured", async () => {
+    const refresher = stubTypedRefreshResponse();
+    await new OAuthCredentialRefreshService(optionalSecretConfigs("")).refresh(
+      "example",
+      expiredCredential({ expires_in: 3600 }),
+    );
+    const refreshBody = new URLSearchParams(String(refresher.mock.calls[0]?.[1]?.body));
+    expect(refreshBody.get("client_id")).toBe("client-id");
+    expect(refreshBody.has("client_secret")).toBe(false);
+
+    const revoker = vi.fn(
+      async (_input: RequestInfo | URL, _init?: RequestInit) => new Response(null, { status: 200 }),
+    );
+    vi.stubGlobal("fetch", revoker);
+    await expect(
+      new OAuthCredentialRefreshService(optionalSecretConfigs("")).revoke("example", expiredCredential({})),
+    ).resolves.toBe("done");
+    const revokeBody = new URLSearchParams(String(revoker.mock.calls[0]?.[1]?.body));
+    expect(revokeBody.get("client_id")).toBe("client-id");
+    expect(revokeBody.has("client_secret")).toBe(false);
+  });
+});

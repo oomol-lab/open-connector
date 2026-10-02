@@ -100,6 +100,23 @@ interface TokenRequest extends OAuthTokenRequestOptions {
 
 export type OAuthTokenErrorFactory = (message: string) => Error;
 
+/**
+ * The client authentication a token, refresh or revocation request uses: the
+ * definition's `tokenEndpointAuthMethod`, unless the definition lets the
+ * secret be left blank (`clientSecretOptional`) and the configuration holds
+ * none — then the client is a public one and sends its id alone (`none`). A
+ * configuration with a secret is never affected by the flag.
+ */
+export function resolveTokenEndpointAuthMethod(
+  auth: Pick<OAuth2AuthDefinition, "tokenEndpointAuthMethod" | "clientSecretOptional">,
+  clientSecret: string | undefined,
+): OAuth2AuthDefinition["tokenEndpointAuthMethod"] {
+  if (auth.clientSecretOptional && !clientSecret) {
+    return "none";
+  }
+  return auth.tokenEndpointAuthMethod;
+}
+
 interface TokenRevocationRequest {
   revocationUrl: string;
   token: string;
