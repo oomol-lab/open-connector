@@ -349,3 +349,98 @@ class MemoryOAuthClientConfigStore implements IOAuthClientConfigStore {
     return [...this.configs.values()];
   }
 }
+
+describe("OAuthClientConfigService with an optional client secret", () => {
+  function optionalSecretProvider(service: string): ProviderDefinition {
+    const provider = oauthProvider(service);
+    const auth = provider.auth[0]!;
+    if (auth.type !== "oauth2") throw new Error("Expected OAuth fixture");
+    auth.clientSecretOptional = true;
+    auth.pkce = { method: "S256" };
+    return provider;
+  }
+
+  it("accepts a blank secret, reports it as not required, and still rejects a blank client id", async () => {
+    const service = new OAuthClientConfigService({
+      catalog: createCatalogStore([optionalSecretProvider("example")]),
+      origin: "http://localhost:3000",
+      store: new MemoryOAuthClientConfigStore(),
+    });
+    expect((await service.getSummary("example")).missingFields).toEqual(["clientId"]);
+    const saved = await service.upsertConfig({ service: "example", clientId: "public-client", clientSecret: "" });
+    expect(saved.missingFields).toEqual([]);
+    expect(saved.auth.clientSecretOptional).toBe(true);
+    await expect((await service.getConfig("example"))?.clientSecret).toBe("");
+    await expect(service.upsertConfig({ service: "example", clientId: " ", clientSecret: "" })).rejects.toThrow(
+      "clientId is required",
+    );
+  });
+
+  it("keeps a stored secret on a blank re-save of the same client, and drops it under another client id", async () => {
+    const store = new MemoryOAuthClientConfigStore();
+    const service = new OAuthClientConfigService({
+      catalog: createCatalogStore([optionalSecretProvider("example")]),
+      origin: "http://localhost:3000",
+      store,
+    });
+    await service.upsertConfig({ service: "example", clientId: "client-id", clientSecret: "client-secret" });
+    const resaved = await service.upsertConfig({
+      service: "example",
+      clientId: "client-id",
+      clientSecret: "",
+      requestedScopes: ["read"],
+    });
+    expect(resaved.requestedScopes).toEqual(["read"]);
+    expect((await service.getConfig("example"))?.clientSecret).toBe("client-secret");
+    expect(JSON.stringify(resaved)).not.toContain("client-secret");
+
+    await service.upsertConfig({ service: "example", clientId: "other-client", clientSecret: "" });
+    expect((await service.getConfig("example"))?.clientSecret).toBe("");
+  });
+
+  it("still requires the secret where the definition does not let it be left blank", async () => {
+    const store = new MemoryOAuthClientConfigStore();
+    const service = new OAuthClientConfigService({
+      catalog: createCatalogStore([oauthProvider("example")]),
+      origin: "http://localhost:3000",
+      store,
+    });
+    await service.upsertConfig({ service: "example", clientId: "client-id", clientSecret: "client-secret" });
+    await expect(service.upsertConfig({ service: "example", clientId: "client-id", clientSecret: "" })).rejects.toThrow(
+      "clientSecret is required",
+    );
+    expect((await service.getConfig("example"))?.clientSecret).toBe("client-secret");
+  });
+});
+
+describe("OAuthClientConfigService serializes a service's writes", () => {
+  it("never writes a secret an earlier save had rotated away", async () => {
+    const provider = oauthProvider("example");
+    const auth = provider.auth[0]!;
+    if (auth.type !== "oauth2") throw new Error("Expected OAuth fixture");
+    auth.clientSecretOptional = true;
+    const service = new OAuthClientConfigService({
+      catalog: createCatalogStore([provider]),
+      origin: "http://localhost:3000",
+      store: new MemoryOAuthClientConfigStore(),
+    });
+    await service.upsertConfig({ service: "example", clientId: "client-id", clientSecret: "old-secret" });
+    // A rotation and a blank re-save arrive together: the blank save runs
+    // after the rotation and keeps the rotated secret, never the old one.
+    await Promise.all([
+      service.upsertConfig({ service: "example", clientId: "client-id", clientSecret: "rotated-secret" }),
+      service.upsertConfig({ service: "example", clientId: "client-id", clientSecret: "" }),
+    ]);
+    expect((await service.getConfig("example"))?.clientSecret).toBe("rotated-secret");
+    // A delete queued behind a save lands after it.
+    await Promise.all([
+      service.upsertConfig({ service: "example", clientId: "client-id", clientSecret: "" }),
+      service.deleteConfig("example"),
+    ]);
+    await expect(service.getConfig("example")).resolves.toBeUndefined();
+    // A refused write does not block the next one.
+    await expect(service.upsertConfig({ service: "example", clientId: " ", clientSecret: "" })).rejects.toThrow();
+    await service.upsertConfig({ service: "example", clientId: "client-id", clientSecret: "" });
+    expect((await service.getConfig("example"))?.clientId).toBe("client-id");
+  });
+});

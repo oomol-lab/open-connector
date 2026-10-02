@@ -22,7 +22,7 @@ import {
   ProviderDispatchRequestError,
   withProviderHttpDispatchResult,
 } from "../providers/provider-runtime.ts";
-import { requestAuthorizationCodeToken } from "./oauth-token.ts";
+import { requestAuthorizationCodeToken, resolveTokenEndpointAuthMethod } from "./oauth-token.ts";
 
 /**
  * Started OAuth authorization flow returned to the local console.
@@ -321,7 +321,7 @@ export class OAuthFlowService {
               redirectUri,
               responseEnvelope: auth.tokenResponseEnvelope,
               tokenRequestFields: auth.tokenRequestFields,
-              tokenEndpointAuthMethod: auth.tokenEndpointAuthMethod,
+              tokenEndpointAuthMethod: resolveTokenEndpointAuthMethod(auth, config.clientSecret),
               tokenRequestFormat: auth.tokenRequestFormat,
               tokenUrl,
               extraFields: createTokenExtraFields(

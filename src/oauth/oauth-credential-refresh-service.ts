@@ -7,7 +7,12 @@ import { ConnectionError } from "../connection-service.ts";
 import { optionalRecord, stringRecord } from "../core/cast.ts";
 import { providerFetch } from "../providers/provider-runtime.ts";
 import { readOAuthClientConfigMetadata } from "./oauth-client-config-service.ts";
-import { expiresAtFromLifetime, requestRefreshToken, requestTokenRevocation } from "./oauth-token.ts";
+import {
+  expiresAtFromLifetime,
+  requestRefreshToken,
+  requestTokenRevocation,
+  resolveTokenEndpointAuthMethod,
+} from "./oauth-token.ts";
 
 type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
 
@@ -75,7 +80,7 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
         refreshToken,
         extraFields: readOAuthRefreshParameters(credential.providerSecret),
         tokenRequestFields: auth.tokenRequestFields,
-        tokenEndpointAuthMethod: auth.tokenEndpointAuthMethod,
+        tokenEndpointAuthMethod: resolveTokenEndpointAuthMethod(auth, config.clientSecret),
         tokenRequestFormat: auth.tokenRequestFormat,
         tokenUrl: this.clientConfigs.resolveEndpointUrl(service, auth.refreshTokenUrl ?? auth.tokenUrl, config),
         createError,
@@ -148,7 +153,7 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
       clientId: config?.clientId,
       clientSecret: config?.clientSecret,
       tokenRequestFields: auth.tokenRequestFields,
-      tokenEndpointAuthMethod: auth.tokenEndpointAuthMethod,
+      tokenEndpointAuthMethod: resolveTokenEndpointAuthMethod(auth, config?.clientSecret),
       createError,
     });
     return "done";

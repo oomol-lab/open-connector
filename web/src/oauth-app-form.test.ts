@@ -61,3 +61,33 @@ describe("OAuthAppForm", () => {
     expect(markup).toContain("Client ID");
   });
 });
+
+describe("OAuthAppForm client secret", () => {
+  const secretField = { key: "clientSecret", label: "Client secret", inputType: "password" as const, secret: true };
+
+  it("requires the secret for a confidential client", () => {
+    const markup = markupFor({ ...bareAuth, clientFields: [{ ...secretField, required: true }] });
+
+    expect(markup).toContain("Client Secret");
+    expect(markup).not.toContain("Client Secret (optional)");
+    expect(markup).toMatch(/type="password"[^>]*required=""/);
+  });
+
+  it("offers an optional secret, and says a blank save keeps the stored one, where the provider allows a public client", () => {
+    const markup = markupFor({
+      ...bareAuth,
+      clientSecretOptional: true,
+      clientFields: [{ ...secretField, required: false }],
+    });
+
+    expect(markup).toContain("Client Secret (optional)");
+    expect(markup).toContain("Leave blank to keep the stored secret");
+    expect(markup).not.toMatch(/type="password"[^>]*required=""/);
+  });
+
+  it("shows no secret field for a provider that never takes one", () => {
+    const markup = markupFor({ ...bareAuth, clientFields: [{ ...secretField, required: false }] });
+
+    expect(markup).not.toContain("Client Secret");
+  });
+});
