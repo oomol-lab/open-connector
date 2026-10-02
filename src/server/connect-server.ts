@@ -420,12 +420,16 @@ export class ConnectServer {
     else app.notFound(notFound);
     app.onError((error, context) => {
       if (error instanceof ProviderDispatchRequestError) {
-        return writeRuntimeFailure(context, {
-          status: 429,
-          errorCode: "rate_limited",
-          message: error.message,
-          data: toProviderExecutionError(error, error.message).error?.details,
-        });
+        if (context.req.path.startsWith("/v1/"))
+          return writeRuntimeFailure(context, {
+            status: 429,
+            errorCode: "rate_limited",
+            message: error.message,
+            data: toProviderExecutionError(error, error.message).error?.details,
+          });
+        const seconds = optionalRecord(error.details)?.retryAfterSeconds;
+        if (typeof seconds === "number") context.header("Retry-After", String(seconds));
+        return jsonError(context, 429, "rate_limited", error.message);
       }
       if (error instanceof SaasError) {
         this.options.logger?.warn(

@@ -396,8 +396,14 @@ export class OAuthFlowService {
       };
     } catch (error) {
       if (error instanceof ProviderDispatchRequestError) {
-        if (request) await this.requests.fail(request.connectionRequestId, "rate_limited", error.message);
-        throw error;
+        if (!request) throw error;
+        await this.requests.fail(request.connectionRequestId, "rate_limited", error.message);
+        throw new OAuthCallbackError(
+          "rate_limited",
+          error.message,
+          callbackReturnUri(request, "error", "rate_limited", error.message),
+          error,
+        );
       }
       if (request) {
         const code =
