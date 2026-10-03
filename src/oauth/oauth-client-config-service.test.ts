@@ -166,6 +166,63 @@ describe("OAuthClientConfigService", () => {
     ).toThrow("requestedScopes must contain at least one scope.");
   });
 
+  it("accepts the provider's optional scopes by name and leaves them out of the default", async () => {
+    const provider = oauthProvider("example");
+    const auth = provider.auth[0]!;
+    if (auth.type !== "oauth2") throw new Error("Expected OAuth fixture");
+    auth.optionalScopes = ["admin"];
+    const service = new OAuthClientConfigService({
+      catalog: createCatalogStore([provider]),
+      origin: "http://localhost:3000",
+      store: new MemoryOAuthClientConfigStore(),
+    });
+
+    const named = service.normalizeConfig("example", {
+      clientId: "client-id",
+      clientSecret: "client-secret",
+      requestedScopes: ["read", "admin"],
+    });
+    expect(named.requestedScopes).toEqual(["read", "admin"]);
+    expect(service.getEffectiveScopes("example", named)).toEqual(["read", "admin"]);
+
+    const unnamed = service.normalizeConfig("example", { clientId: "client-id", clientSecret: "client-secret" });
+    expect(service.getEffectiveScopes("example", unnamed)).toEqual(["read", "write"]);
+    await expect(service.getSummary("example")).resolves.toMatchObject({ effectiveScopes: ["read", "write"] });
+
+    expect(() =>
+      service.normalizeConfig("example", {
+        clientId: "client-id",
+        clientSecret: "client-secret",
+        requestedScopes: ["root"],
+      }),
+    ).toThrow("requestedScopes contains a scope not declared by example: root.");
+  });
+
+  it("keeps a stored optional scope on reads", async () => {
+    const provider = oauthProvider("example");
+    const auth = provider.auth[0]!;
+    if (auth.type !== "oauth2") throw new Error("Expected OAuth fixture");
+    auth.optionalScopes = ["admin"];
+    const store = new MemoryOAuthClientConfigStore();
+    await store.set({
+      service: "example",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+      requestedScopes: ["admin"],
+      extra: {},
+      secretExtra: {},
+    });
+    const service = new OAuthClientConfigService({
+      catalog: createCatalogStore([provider]),
+      origin: "http://localhost:3000",
+      store,
+    });
+
+    await expect(service.listConfigs()).resolves.toMatchObject([
+      { service: "example", requestedScopes: ["admin"], effectiveScopes: ["admin"] },
+    ]);
+  });
+
   // A provider whose OAuth app is registered with a native app's custom URL
   // scheme (RFC 8252 §7.1) carries that redirect per provider.
   // `expectedRedirectUri` mirrors `effectiveScopes` (the value the flow sends),

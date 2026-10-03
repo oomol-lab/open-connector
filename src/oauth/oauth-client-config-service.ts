@@ -142,7 +142,7 @@ export class OAuthClientConfigService {
       service,
       clientId,
       clientSecret,
-      requestedScopes: normalizeRequestedScopes(service, input.requestedScopes, auth.scopes),
+      requestedScopes: normalizeRequestedScopes(service, input.requestedScopes, requestableScopes(auth)),
       redirectUri: normalizeRedirectUri(input.redirectUri),
       extra: normalizeCredentialValues({
         fields: filterClientConfigFields(auth.clientConfigFields, "extra"),
@@ -207,7 +207,7 @@ export class OAuthClientConfigService {
   /** Resolve the scopes an authorization request should send. */
   getEffectiveScopes(service: string, config: OAuthClientConfig): string[] {
     const auth = this.getOAuthDefinition(service);
-    return filterDeclaredScopes(config.requestedScopes, auth.scopes) ?? [...auth.scopes];
+    return filterDeclaredScopes(config.requestedScopes, requestableScopes(auth)) ?? [...auth.scopes];
   }
 
   private listOAuthProviders(): Array<{ service: string; auth: OAuth2AuthDefinition }> {
@@ -242,7 +242,7 @@ export class OAuthClientConfigService {
         .map((field) => field.key),
       auth,
       requestedScopes: config?.requestedScopes ?? null,
-      effectiveScopes: filterDeclaredScopes(config?.requestedScopes, auth.scopes) ?? [...auth.scopes],
+      effectiveScopes: filterDeclaredScopes(config?.requestedScopes, requestableScopes(auth)) ?? [...auth.scopes],
       extra: config?.extra ?? {},
     };
   }
@@ -425,6 +425,15 @@ function filterDeclaredScopes(requestedScopes: string[] | undefined, providerSco
     declaredScopes.has(scope),
   );
   return filtered.length > 0 ? filtered : undefined;
+}
+
+/**
+ * The scopes a client config may request: the provider's declared scopes and
+ * its optional ones. A config that names none is answered with the declared
+ * scopes alone, so an optional scope joins a request only by name.
+ */
+function requestableScopes(auth: OAuth2AuthDefinition): string[] {
+  return auth.optionalScopes?.length ? [...auth.scopes, ...auth.optionalScopes] : auth.scopes;
 }
 
 function readStringRecord(value: unknown): Record<string, string> {

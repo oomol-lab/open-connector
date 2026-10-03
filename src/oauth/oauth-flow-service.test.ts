@@ -74,6 +74,24 @@ const selectableOAuthProvider: ProviderDefinition = {
   ],
 };
 
+// The "feature" option names an optional scope: off the default consent, requested by selection or
+// by a client config that names it.
+const optionalScopeOAuthProvider: ProviderDefinition = {
+  ...oauthProvider,
+  service: "optional",
+  auth: [
+    {
+      type: "oauth2",
+      authorizationUrl: "https://example.com/oauth/authorize",
+      tokenUrl: "https://example.com/oauth/token",
+      scopes: ["core"],
+      optionalScopes: ["feature"],
+      tokenEndpointAuthMethod: "client_secret_post",
+      authorizationOptions: [authorizationOption("core", true), authorizationOption("feature")],
+    },
+  ],
+};
+
 function authorizationOption(id: string, required = false, requires?: string[]): OAuthAuthorizationOption {
   return {
     id,
@@ -423,6 +441,33 @@ describe("OAuthFlowService", () => {
     await expect(services.connections.getCredential("selectable")).resolves.toMatchObject({
       profile: { grantedScopes: ["core", "base", "middle", "feature"] },
     });
+  });
+
+  it("requests an optional scope only when an authorization option or the client config names it", async () => {
+    const services = createServices([optionalScopeOAuthProvider]);
+    await services.clientConfigs.upsertConfig({
+      service: "optional",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+    });
+
+    const unnamed = await services.flow.startAuthorization({ service: "optional" });
+    expect(new URL(unnamed.authorizationUrl).searchParams.get("scope")).toBe("core");
+
+    const selected = await services.flow.startAuthorization({
+      service: "optional",
+      authorizationOptionIds: ["feature"],
+    });
+    expect(new URL(selected.authorizationUrl).searchParams.get("scope")).toBe("core feature");
+
+    await services.clientConfigs.upsertConfig({
+      service: "optional",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+      requestedScopes: ["core", "feature"],
+    });
+    const configured = await services.flow.startAuthorization({ service: "optional" });
+    expect(new URL(configured.authorizationUrl).searchParams.get("scope")).toBe("core feature");
   });
 
   it("requires OAuth client config before authorization", async () => {

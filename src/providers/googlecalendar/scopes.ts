@@ -27,3 +27,24 @@ export const googlecalendarOAuthScopes: string[] = [
   googleCalendarAclsReadonlyScope,
   ...googleIdentityScopes,
 ];
+
+const googleCalendarScope = "https://www.googleapis.com/auth/calendar";
+const googleCalendarCalendarListReadonlyScope = "https://www.googleapis.com/auth/calendar.calendarlist.readonly";
+const googleCalendarEventsFreeBusyScope = "https://www.googleapis.com/auth/calendar.events.freebusy";
+
+/**
+ * Scopes a client config may request beyond {@link googlecalendarOAuthScopes}; none joins a consent
+ * unless named. `calendar.calendarlist.readonly` and `calendar.events.freebusy` are Google's
+ * non-sensitive scopes for `calendarList.list`/`calendarList.get` and `freeBusy.query`, so a host
+ * that writes events and lists calendars can leave the sensitive `calendar.readonly` out of its
+ * consent. The full `calendar` scope is accepted by every Calendar API method, so a host that shares
+ * and deletes calendars can request it alone instead of the union of the narrower scopes — one line
+ * on Google's consent screen, and the smallest set its verification asks for. The service-account
+ * mint list stays {@link googlecalendarOAuthScopes}: a domain-wide-delegation grant names those
+ * exact scopes.
+ */
+export const googlecalendarOptionalScopes: string[] = [
+  googleCalendarCalendarListReadonlyScope,
+  googleCalendarEventsFreeBusyScope,
+  googleCalendarScope,
+];

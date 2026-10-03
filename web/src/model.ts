@@ -8,6 +8,7 @@ export type AuthDefinition =
   | {
       type: "oauth2";
       scopes: string[];
+      optionalScopes?: string[];
       authorizationOptions?: OAuthAuthorizationOption[];
       clientFields?: CredentialField[];
       clientSetup?: OAuthClientSetup;

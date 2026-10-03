@@ -38,8 +38,9 @@ hidden from execution discovery. It excludes virtual no-auth and Marketplace ent
 
 `GET /v1/providers/:service/setup` describes what a provider needs before it can be connected:
 the credential fields of each supported credential type, the OAuth client inputs, the scopes the
-connector requests, the provider's registration steps, the callback URL to register, and which
-OAuth client inputs are still missing. It never returns saved values, so a host can build its own
+connector requests and the optional scopes a client config may add to them by naming them in
+`requestedScopes` (`optionalScopes`; never requested otherwise), the provider's registration steps,
+the callback URL to register, and which OAuth client inputs are still missing. It never returns saved values, so a host can build its own
 connection form from it and submit through the endpoints below.
 
 ## Start and track OAuth

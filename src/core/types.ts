@@ -143,6 +143,12 @@ export type OAuth2AuthDefinition = {
   revocationUrl?: string;
   /** OAuth scopes joined with spaces into the authorization URL `scope` parameter. */
   scopes: string[];
+  /**
+   * Scopes a client config may name in `requestedScopes` beyond `scopes`. They never join an
+   * authorization request unless named, so a deployment without `requestedScopes` keeps asking
+   * for `scopes` alone.
+   */
+  optionalScopes?: string[];
   /** Selectable provider-native OAuth scopes for programmatic connections. */
   authorizationOptions?: OAuthAuthorizationOption[];
   /** Separator used when joining OAuth scopes. Defaults to a space. */

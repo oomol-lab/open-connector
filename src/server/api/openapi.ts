@@ -97,7 +97,8 @@ const oauthClientConfigRequestSchema = jsonSchema.object(
     }),
     requestedScopes: jsonSchema.array(jsonSchema.string(), {
       minItems: 1,
-      description: "Non-empty provider-declared scope subset to request. Omit to use every provider default.",
+      description:
+        "Non-empty subset of the provider's declared and optional scopes to request. Omit to request every declared scope and no optional one.",
     }),
     redirectUri: jsonSchema.string({
       description:
@@ -1452,7 +1453,7 @@ function createOAuthAuthorizationPath(): Record<string, unknown> {
                 }),
                 requestedScopes: jsonSchema.array(jsonSchema.string(), {
                   minItems: 1,
-                  description: "Optional non-empty provider-declared scope subset to request.",
+                  description: "Optional non-empty subset of the provider's declared and optional scopes to request.",
                 }),
                 redirectUri: jsonSchema.string({
                   description:
@@ -1507,7 +1508,7 @@ function createOAuthConfigPath(): Record<string, unknown> {
       tags: ["OAuth"],
       summary: "Upsert local OAuth client configuration.",
       description:
-        "Open-source users provide their own OAuth app. requestedScopes may narrow the provider-declared defaults but cannot add scopes. Additional extra fields are declared by provider catalog auth metadata.",
+        "Open-source users provide their own OAuth app. requestedScopes may narrow the provider-declared defaults or add the provider's optional scopes; a scope the provider declares in neither is refused. Additional extra fields are declared by provider catalog auth metadata.",
       requestBody: {
         required: true,
         content: {
@@ -1786,6 +1787,11 @@ function connectionManagementPaths(): Record<string, unknown> {
           }),
         ),
         scopes: jsonSchema.optional(jsonSchema.stringArray("Provider scopes the connector requests.")),
+        optionalScopes: jsonSchema.optional(
+          jsonSchema.stringArray(
+            "Provider scopes a client config may request beyond scopes; never requested unless named.",
+          ),
+        ),
         authorizationOptions: jsonSchema.optional(jsonSchema.array(authorizationOption)),
       }),
     ),
