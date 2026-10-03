@@ -7,6 +7,7 @@ export const oauthConnectionInput: z.ZodType<
 > = z.strictObject({
   returnUri: z.string().optional(),
   authorizationOptionIds: z.array(z.string().trim().min(1)).optional(),
+  alsoConnect: z.array(z.string().trim().min(1)).optional(),
   extra: z.record(z.string(), z.unknown()).optional(),
   secretExtra: z.record(z.string(), z.string().trim().min(1)).optional(),
 });

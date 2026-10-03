@@ -104,6 +104,7 @@ describe("PostgreSQL migrations with PGlite", () => {
           { name: "0015_saas_cleanup_runtime.sql" },
           { name: "0016_trigger_policy.sql" },
           { name: "0017_trigger_subscriptions.sql" },
+          { name: "0018_connection_request_connections.sql" },
         ],
       });
 
@@ -167,6 +168,7 @@ describe("PostgreSQL migrations with a custom migration source", () => {
           { name: "0015_saas_cleanup_runtime.sql" },
           { name: "0016_trigger_policy.sql" },
           { name: "0017_trigger_subscriptions.sql" },
+          { name: "0018_connection_request_connections.sql" },
           { name: "9998_custom.sql" },
         ],
       });

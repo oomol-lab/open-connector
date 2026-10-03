@@ -1,5 +1,5 @@
 import type { StoredConnection, ConnectionService } from "../connection-service.ts";
-import type { OAuth2AuthDefinition } from "../core/types.ts";
+import type { OAuth2AuthDefinition, ResolvedCredential } from "../core/types.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { SaasOAuthService } from "../saas/saas-oauth-service.ts";
 import type { ISecretCodec } from "../server/secrets/secret-codec-core.ts";
@@ -7,6 +7,7 @@ import type {
   ConnectionRequestStore,
   PendingConnectionRequest,
   ConnectionRequest,
+  SharedGrantCredential,
 } from "../server/storage/connection-request-store.ts";
 import type {
   OAuthClientConfig,
@@ -150,6 +151,7 @@ export class OAuthFlowService {
       extra: { ...configured.extra, ...input.extra },
       secretExtra: { ...configured.secretExtra, ...input.secretExtra },
     });
+    const siblings = await this.resolveSharedGrant(input.service, config, input.alsoConnect);
     const connectionName = input.target?.connectionName ?? input.connectionName ?? crypto.randomUUID();
     const { pending, authorizationUrl } = await this.prepareAuthorization(
       {
@@ -157,6 +159,7 @@ export class OAuthFlowService {
         connectionName,
       },
       config,
+      siblings.flatMap((sibling) => sibling.scopes),
     );
     const request: PendingConnectionRequest = {
       ...pending,
@@ -167,6 +170,7 @@ export class OAuthFlowService {
       expiresAt: new Date(Date.parse(pending.createdAt) + 10 * 60_000).toISOString(),
       returnUri: input.returnUri,
       target: input.target ? { id: input.target.id, revision: input.target.revision } : undefined,
+      alsoConnect: siblings.length > 0 ? siblings.map((sibling) => sibling.service) : undefined,
     };
     await this.requests.create(request);
     return {
@@ -175,6 +179,7 @@ export class OAuthFlowService {
       connectionRequestId: request.connectionRequestId,
       status: "initiated",
       expiresAt: request.expiresAt,
+      alsoConnect: siblings.map((sibling) => sibling.service),
     };
   }
 
@@ -198,9 +203,70 @@ export class OAuthFlowService {
     );
   }
 
+  /**
+   * Resolve the providers a connection request names in `alsoConnect`. Each one rides the primary
+   * provider's consent and is stored as its own connection from the same token, so it must share
+   * the primary's authorization and token endpoints and be configured with the same OAuth client;
+   * the scopes it adds to the consent are its own configured subset of its own declared scopes.
+   */
+  private async resolveSharedGrant(
+    service: string,
+    config: OAuthClientConfig,
+    alsoConnect: string[] | undefined,
+  ): Promise<SharedGrantSibling[]> {
+    const siblings: SharedGrantSibling[] = [];
+    if (!alsoConnect?.length) return siblings;
+    for (const sibling of new Set(alsoConnect)) {
+      const resolved = await this.resolveSharedGrantSibling(service, config, sibling, "invalid_input");
+      siblings.push({ service: sibling, scopes: this.clientConfigs.getEffectiveScopes(sibling, resolved.config) });
+    }
+    return siblings;
+  }
+
+  /**
+   * The checks one `alsoConnect` sibling must pass: a known, available oauth2 provider whose OAuth
+   * client is configured, resolves to the primary's authorization and token endpoints and is the
+   * same client id. Run at the start of a request and again at its callback, with the code each
+   * road answers: the sibling's client config may have changed in between, and a token minted for
+   * the primary's client must not be stored under another.
+   */
+  private async resolveSharedGrantSibling(
+    service: string,
+    config: OAuthClientConfig,
+    sibling: string,
+    code: "invalid_input" | "request_key_conflict",
+  ): Promise<{ auth: OAuth2AuthDefinition; config: OAuthClientConfig }> {
+    const endpoints = (target: string, auth: OAuth2AuthDefinition, targetConfig: OAuthClientConfig): string[] => [
+      this.clientConfigs.resolveEndpointUrl(target, auth.authorizationUrl, targetConfig),
+      this.clientConfigs.resolveEndpointUrl(target, auth.tokenUrl, targetConfig),
+    ];
+    if (sibling === service)
+      throw new OAuthFlowError(code, `alsoConnect must not name the connecting provider: ${sibling}.`);
+    let siblingAuth: OAuth2AuthDefinition;
+    try {
+      siblingAuth = this.clientConfigs.getOAuthDefinition(sibling);
+      this.connections.assertProviderAvailable(sibling);
+    } catch {
+      throw new OAuthFlowError(code, `alsoConnect names a provider without OAuth: ${sibling}.`);
+    }
+    const siblingConfig = await this.clientConfigs.getConfig(sibling);
+    if (!siblingConfig) throw new OAuthFlowError(code, `alsoConnect: configure an OAuth client for ${sibling} first.`);
+    const primaryEndpoints = endpoints(service, this.clientConfigs.getOAuthDefinition(service), config);
+    const siblingEndpoints = endpoints(sibling, siblingAuth, siblingConfig);
+    if (siblingEndpoints.some((endpoint, index) => endpoint !== primaryEndpoints[index]))
+      throw new OAuthFlowError(code, `alsoConnect: ${sibling} does not share the OAuth endpoints of ${service}.`);
+    if (siblingConfig.clientId !== config.clientId)
+      throw new OAuthFlowError(
+        code,
+        `alsoConnect: ${sibling} is configured with another OAuth client than ${service}.`,
+      );
+    return { auth: siblingAuth, config: siblingConfig };
+  }
+
   private async prepareAuthorization(
     input: OAuthAuthorizationStartInput,
     requestConfig?: OAuthClientConfig,
+    sharedScopes: readonly string[] = [],
   ): Promise<{ pending: OAuthAuthorizationState; authorizationUrl: string }> {
     const { service, connectionName } = input;
     this.connections.assertProviderAvailable(service);
@@ -217,11 +283,16 @@ export class OAuthFlowService {
     const now = new Date();
     const state = crypto.randomUUID();
     const pkceCodeVerifier = auth.pkce ? createPkceCodeVerifier() : undefined;
-    const authorizationScopes = resolveAuthorizationScopes(
-      auth,
-      input.authorizationOptionIds,
-      this.clientConfigs.getEffectiveScopes(service, config),
-    );
+    const authorizationScopes = [
+      ...new Set([
+        ...resolveAuthorizationScopes(
+          auth,
+          input.authorizationOptionIds,
+          this.clientConfigs.getEffectiveScopes(service, config),
+        ),
+        ...sharedScopes,
+      ]),
+    ];
     const redirectUri = this.clientConfigs.expectedRedirectUri(service, config);
     const pending: OAuthAuthorizationState = {
       service,
@@ -363,12 +434,40 @@ export class OAuthFlowService {
           oauthCredential,
           input.signal,
         );
-        const granted = new Set(credential.profile.grantedScopes);
-        const missing = auth.authorizationOptions?.filter((option) => option.required && !granted.has(option.id)) ?? [];
-        if (missing.length)
-          throw new OAuthFlowError("scope_missing", "The provider did not grant required OAuth scopes.");
+        assertRequiredScopesGranted(auth, credential);
+        // Each alsoConnect sibling validates the shared token through its own validator and is
+        // stored as its own connection; one sibling failing fails the whole request, nothing stored.
+        const siblings: SharedGrantCredential[] = [];
+        for (const service of request.alsoConnect ?? []) {
+          try {
+            // Checked again here: the sibling's client config may have changed since the start,
+            // and the token was minted for the primary's client.
+            const sibling = await this.resolveSharedGrantSibling(
+              pending.service,
+              config,
+              service,
+              "request_key_conflict",
+            );
+            const siblingCredential = await this.connections.prepareOAuthCredential(
+              service,
+              {
+                ...oauthCredential,
+                metadata: {
+                  ...oauthCredential.metadata,
+                  oauthClientExtra: sibling.config.extra,
+                  oauthClientSecretExtra: sibling.config.secretExtra,
+                },
+              },
+              input.signal,
+            );
+            assertRequiredScopesGranted(sibling.auth, siblingCredential);
+            siblings.push({ service, credential: siblingCredential });
+          } catch (error) {
+            throw new SharedGrantError(service, error);
+          }
+        }
         input.signal?.throwIfAborted();
-        const appId = await this.requests.complete(request, credential, input.signal);
+        const appId = await this.requests.complete(request, credential, input.signal, siblings);
         if (!appId) {
           if (request.target) {
             try {
@@ -406,12 +505,16 @@ export class OAuthFlowService {
         );
       }
       if (request) {
+        const cause = error instanceof SharedGrantError ? error.cause : error;
         const code =
-          error instanceof OAuthFlowError &&
-          ["app_not_found", "request_key_conflict", "scope_missing"].includes(error.code)
-            ? error.code
+          cause instanceof OAuthFlowError &&
+          ["app_not_found", "request_key_conflict", "scope_missing"].includes(cause.code)
+            ? cause.code
             : "provider_error";
-        const message = "OAuth connection failed.";
+        const message =
+          error instanceof SharedGrantError
+            ? `OAuth connection failed for ${error.service}.`
+            : "OAuth connection failed.";
         await this.requests.fail(request.connectionRequestId, code, message);
         throw new OAuthCallbackError(code, message, callbackReturnUri(request, "error", code, message), error);
       }
@@ -433,6 +536,31 @@ export class OAuthFlowService {
       );
     }
     return this.clientConfigs.normalizeConfig(service, input);
+  }
+}
+
+function assertRequiredScopesGranted(
+  auth: OAuth2AuthDefinition,
+  credential: Extract<ResolvedCredential, { authType: "oauth2" }>,
+): void {
+  const granted = new Set(credential.profile.grantedScopes);
+  const missing = auth.authorizationOptions?.filter((option) => option.required && !granted.has(option.id)) ?? [];
+  if (missing.length) throw new OAuthFlowError("scope_missing", "The provider did not grant required OAuth scopes.");
+}
+
+/** A provider named in `alsoConnect`, resolved at the start of a connection request. */
+interface SharedGrantSibling {
+  service: string;
+  scopes: string[];
+}
+
+/** The failure of one `alsoConnect` sibling, kept apart so the request names it. */
+class SharedGrantError extends Error {
+  readonly service: string;
+  constructor(service: string, cause: unknown) {
+    super(`OAuth connection failed for ${service}.`);
+    this.service = service;
+    this.cause = cause;
   }
 }
 
@@ -534,6 +662,12 @@ export interface OAuthConnectionRequestInput {
   target?: StoredConnection;
   returnUri?: string;
   authorizationOptionIds?: string[];
+  /**
+   * Providers connected on the same consent: each must share the service's authorization and
+   * token endpoints and its OAuth client, adds its own configured scopes to the consent, and is
+   * stored as its own connection under the same connection name from the same token.
+   */
+  alsoConnect?: string[];
   extra?: Record<string, unknown>;
   secretExtra?: Record<string, string>;
 }
@@ -544,6 +678,8 @@ export interface OAuthConnectionRequestStart {
   connectionRequestId: string;
   status: "initiated";
   expiresAt: string;
+  /** The `alsoConnect` providers this request carries; empty when it carries none. */
+  alsoConnect: string[];
 }
 
 export function validateReturnUri(value?: string): void {

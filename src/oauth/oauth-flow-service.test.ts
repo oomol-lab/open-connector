@@ -1188,8 +1188,257 @@ describe("OAuthFlowService", () => {
   });
 });
 
+describe("OAuthFlowService shared grant (alsoConnect)", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const endpoints = {
+    authorizationUrl: "https://accounts.example.com/o/oauth2/v2/auth",
+    tokenUrl: "https://oauth2.example.com/token",
+  };
+  const sharedProvider = (service: string, scopes: string[], tokenUrl = endpoints.tokenUrl): ProviderDefinition => ({
+    service,
+    displayName: service,
+    categories: ["Developer Tools"],
+    authTypes: ["oauth2"],
+    auth: [{ type: "oauth2", ...endpoints, tokenUrl, scopes, tokenEndpointAuthMethod: "client_secret_post" }],
+    actions: [],
+  });
+  const mail = sharedProvider("mail", ["mail.readonly", "mail.modify", "email"]);
+  const calendar = sharedProvider("calendar", ["openid", "email", "calendar.readonly", "calendar.events"]);
+  const elsewhere = sharedProvider("elsewhere", ["read"], "https://elsewhere.example.com/token");
+
+  async function configure(
+    services: ReturnType<typeof createServices>,
+    configs: Record<string, { clientId?: string; requestedScopes?: string[] }>,
+  ): Promise<void> {
+    for (const [service, config] of Object.entries(configs)) {
+      await services.clientConfigs.upsertConfig({
+        service,
+        clientId: config.clientId ?? "google-client",
+        clientSecret: "google-secret",
+        requestedScopes: config.requestedScopes,
+      });
+    }
+  }
+  const googlePair = {
+    mail: { requestedScopes: ["mail.readonly", "email"] },
+    calendar: { requestedScopes: ["openid", "email", "calendar.readonly"] },
+  };
+  const profile = (accountId: string, displayName = accountId) => ({ profile: { accountId, displayName } });
+
+  it("unions the siblings' configured scopes into one consent and records them on the request", async () => {
+    const services = createServices([mail, calendar]);
+    await configure(services, googlePair);
+
+    const started = await services.flow.startConnectionRequest({
+      service: "mail",
+      owner: "test-owner",
+      alsoConnect: ["calendar", "calendar"],
+    });
+    const url = new URL(started.authorizationUrl);
+
+    expect(url.searchParams.get("scope")).toBe("mail.readonly email openid calendar.readonly");
+    expect(url.searchParams.get("client_id")).toBe("google-client");
+    expect(started.alsoConnect).toEqual(["calendar"]);
+    await expect(services.flow.getConnectionRequest(started.connectionRequestId, "test-owner")).resolves.toMatchObject({
+      status: "initiated",
+      appId: null,
+      connections: [],
+    });
+  });
+
+  it.each([
+    ["unknown", ["nope"], {}, "nope"],
+    ["the connecting provider itself", ["mail"], {}, "mail"],
+    ["unconfigured", ["calendar"], { calendar: undefined }, "calendar"],
+    ["on other endpoints", ["elsewhere"], { elsewhere: {} }, "elsewhere"],
+    ["configured with another client", ["calendar"], { calendar: { clientId: "other-client" } }, "calendar"],
+  ] as const)("refuses a sibling that is %s, naming it", async (_case, alsoConnect, overrides, named) => {
+    const services = createServices([mail, calendar, elsewhere]);
+    const configs: Record<string, { clientId?: string; requestedScopes?: string[] }> = { ...googlePair };
+    for (const [service, config] of Object.entries(overrides)) {
+      if (config === undefined) delete configs[service];
+      else configs[service] = config;
+    }
+    await configure(services, configs);
+
+    await expect(
+      services.flow.startConnectionRequest({ service: "mail", owner: "test-owner", alsoConnect: [...alsoConnect] }),
+    ).rejects.toMatchObject({ code: "invalid_input", message: expect.stringContaining(named) });
+  });
+
+  it("completes the primary and each sibling as its own connection from one token, under one connection name", async () => {
+    const seen: Record<string, string> = {};
+    const services = createServices([mail, calendar], {
+      validatorsByService: {
+        mail: {
+          async oauth2(input) {
+            seen.mail = input.accessToken;
+            return profile("me@example.com");
+          },
+        },
+        calendar: {
+          async oauth2(input) {
+            seen.calendar = input.accessToken;
+            return profile("me@example.com", "Me (calendar)");
+          },
+        },
+      },
+    });
+    await configure(services, googlePair);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({ access_token: "shared-access", refresh_token: "shared-refresh", token_type: "Bearer" }),
+      ),
+    );
+
+    const started = await services.flow.startConnectionRequest({
+      service: "mail",
+      owner: "test-owner",
+      alsoConnect: ["calendar"],
+    });
+    await expect(services.flow.completeAuthorization({ state: started.stateHandle, code: "code" })).resolves.toEqual({
+      service: "mail",
+      connected: true,
+    });
+
+    expect(seen).toEqual({ mail: "shared-access", calendar: "shared-access" });
+    // The store lists by service; the request lists the requested service first.
+    const connections = await services.requestDatabase.connectionStore.list();
+    expect(connections.map((connection) => connection.service)).toEqual(["calendar", "mail"]);
+    const [calendarConnection, mailConnection] = connections;
+    const alias = mailConnection!.connectionName;
+    expect(alias).toEqual(expect.any(String));
+    expect(calendarConnection!.connectionName).toBe(alias);
+    for (const [service, displayName] of [
+      ["mail", "me@example.com"],
+      ["calendar", "Me (calendar)"],
+    ] as const) {
+      expect((await services.requestDatabase.connectionStore.get(service, alias))?.credential).toMatchObject({
+        authType: "oauth2",
+        accessToken: "shared-access",
+        refreshToken: "shared-refresh",
+        profile: { accountId: "me@example.com", displayName },
+        metadata: { oauthClientId: "google-client", oauthAuthorizationId: started.stateHandle },
+      });
+    }
+    const request = await services.flow.getConnectionRequest(started.connectionRequestId, "test-owner");
+    expect(request).toMatchObject({ status: "connected", appId: mailConnection!.id });
+    expect(request?.connections).toEqual([
+      { service: "mail", appId: mailConnection!.id, alias },
+      { service: "calendar", appId: calendarConnection!.id, alias },
+    ]);
+  });
+
+  it("fails the whole request, storing nothing, when a sibling's validator refuses the shared token", async () => {
+    const services = createServices([mail, calendar], {
+      validatorsByService: {
+        mail: { oauth2: async () => profile("me@example.com") },
+        calendar: {
+          async oauth2() {
+            throw new Error("calendar refused the token");
+          },
+        },
+      },
+    });
+    await configure(services, googlePair);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ access_token: "shared-access", token_type: "Bearer" })),
+    );
+
+    const started = await services.flow.startConnectionRequest({
+      service: "mail",
+      owner: "test-owner",
+      alsoConnect: ["calendar"],
+    });
+    await expect(
+      services.flow.completeAuthorization({ state: started.stateHandle, code: "code" }),
+    ).rejects.toMatchObject({
+      code: "provider_error",
+      message: "OAuth connection failed for calendar.",
+    });
+
+    await expect(services.requestDatabase.connectionStore.list()).resolves.toEqual([]);
+    await expect(services.flow.getConnectionRequest(started.connectionRequestId, "test-owner")).resolves.toMatchObject({
+      status: "failed",
+      errorCode: "provider_error",
+      errorMessage: "OAuth connection failed for calendar.",
+      appId: null,
+      connections: [],
+    });
+  });
+
+  it("fails the request, storing nothing, when a sibling's OAuth client changes during the consent", async () => {
+    const services = createServices([mail, calendar], {
+      validators: { oauth2: async () => profile("me@example.com") },
+    });
+    await configure(services, googlePair);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ access_token: "shared-access", token_type: "Bearer" })),
+    );
+
+    const started = await services.flow.startConnectionRequest({
+      service: "mail",
+      owner: "test-owner",
+      alsoConnect: ["calendar"],
+    });
+    // Another OAuth client for the sibling, saved while the consent is open: the token the
+    // callback brings was minted for the primary's client and must not be stored under this one.
+    await services.clientConfigs.upsertConfig({
+      service: "calendar",
+      clientId: "another-client-id",
+      clientSecret: "another-client-secret",
+    });
+    await expect(
+      services.flow.completeAuthorization({ state: started.stateHandle, code: "code" }),
+    ).rejects.toMatchObject({
+      code: "request_key_conflict",
+      message: "OAuth connection failed for calendar.",
+    });
+
+    await expect(services.requestDatabase.connectionStore.list()).resolves.toEqual([]);
+    await expect(services.flow.getConnectionRequest(started.connectionRequestId, "test-owner")).resolves.toMatchObject({
+      status: "failed",
+      errorCode: "request_key_conflict",
+      appId: null,
+      connections: [],
+    });
+  });
+
+  it("leaves a request without alsoConnect as it was: its own scopes, one connection, listed alone", async () => {
+    const services = createServices([mail, calendar], {
+      validators: { oauth2: async () => profile("me@example.com") },
+    });
+    await configure(services, googlePair);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ access_token: "access-token", token_type: "Bearer" })),
+    );
+
+    const started = await services.flow.startConnectionRequest({ service: "mail", owner: "test-owner" });
+    expect(new URL(started.authorizationUrl).searchParams.get("scope")).toBe("mail.readonly email");
+    expect(started.alsoConnect).toEqual([]);
+    await services.flow.completeAuthorization({ state: started.stateHandle, code: "code" });
+
+    const connections = await services.requestDatabase.connectionStore.list();
+    expect(connections.map((connection) => connection.service)).toEqual(["mail"]);
+    await expect(services.flow.getConnectionRequest(started.connectionRequestId, "test-owner")).resolves.toMatchObject({
+      status: "connected",
+      appId: connections[0]!.id,
+      connections: [{ service: "mail", appId: connections[0]!.id, alias: connections[0]!.connectionName }],
+    });
+  });
+});
+
 interface CreateServicesOptions {
   validators?: CredentialValidators;
+  /** Validators per service; a service absent here falls back to `validators`. */
+  validatorsByService?: Record<string, CredentialValidators>;
   stateMaxAgeMs?: number;
   allowedCustomOAuth?: string[];
   secretCodec?: ISecretCodec;
@@ -1204,11 +1453,13 @@ function createServices(
   connections: ConnectionService;
   flow: OAuthFlowService;
   states: MemoryOAuthStateStore;
+  /** The store connection requests complete into (the ConnectionService above holds a memory store). */
+  requestDatabase: SqliteRuntimeDatabase;
 } {
   const requestDatabase = new SqliteRuntimeDatabase(":memory:");
   requestDatabases.push(requestDatabase);
   const catalog = createCatalogStore(providers);
-  const providerLoader = new EmptyProviderLoader(options.oauthRuntime, options.validators);
+  const providerLoader = new EmptyProviderLoader(options.oauthRuntime, options.validators, options.validatorsByService);
   const connections = new ConnectionService({
     catalog,
     providerLoader,
@@ -1236,16 +1487,23 @@ function createServices(
         options.allowedCustomOAuth?.includes("*") || options.allowedCustomOAuth?.includes(service) || false,
     }),
     states,
+    requestDatabase,
   };
 }
 
 class EmptyProviderLoader implements IProviderLoader {
   private readonly oauthRuntime?: ProviderOAuthRuntime;
   private readonly validators?: CredentialValidators;
+  private readonly validatorsByService?: Record<string, CredentialValidators>;
 
-  constructor(oauthRuntime?: ProviderOAuthRuntime, validators?: CredentialValidators) {
+  constructor(
+    oauthRuntime?: ProviderOAuthRuntime,
+    validators?: CredentialValidators,
+    validatorsByService?: Record<string, CredentialValidators>,
+  ) {
     this.oauthRuntime = oauthRuntime;
     this.validators = validators;
+    this.validatorsByService = validatorsByService;
   }
 
   async loadActionExecutor(_service: string, _actionId: string): Promise<ActionExecutor | undefined> {
@@ -1256,8 +1514,8 @@ class EmptyProviderLoader implements IProviderLoader {
     return undefined;
   }
 
-  async loadCredentialValidators(_service: string): Promise<CredentialValidators | undefined> {
-    return this.validators;
+  async loadCredentialValidators(service: string): Promise<CredentialValidators | undefined> {
+    return this.validatorsByService?.[service] ?? this.validators;
   }
 
   async loadProviderOAuthRuntime(_service: string): Promise<ProviderOAuthRuntime | undefined> {

@@ -1726,6 +1726,9 @@ function connectionManagementPaths(): Record<string, unknown> {
     connectionRequestId: jsonSchema.string(),
     status: jsonSchema.literal("initiated"),
     expiresAt: jsonSchema.string(),
+    alsoConnect: jsonSchema.array(jsonSchema.string(), {
+      description: "The alsoConnect providers this attempt connects on the same consent; empty when none.",
+    }),
   });
   const request = jsonSchema.object(
     "One authorization attempt; results remain available until expiresAt plus 24 hours.",
@@ -1739,6 +1742,14 @@ function connectionManagementPaths(): Record<string, unknown> {
       expiresAt: jsonSchema.string(),
       createdAt: jsonSchema.number(),
       updatedAt: jsonSchema.number(),
+      connections: jsonSchema.array(
+        jsonSchema.object("One connection a connected attempt created; the requested service first.", {
+          service: jsonSchema.string(),
+          appId: jsonSchema.string(),
+          alias: jsonSchema.string("The connection name every connection of the attempt shares."),
+        }),
+        { description: "Every connection the attempt created, including alsoConnect siblings; empty until connected." },
+      ),
     },
   );
   const field = jsonSchema.object("One input a connection or OAuth client form asks for.", {

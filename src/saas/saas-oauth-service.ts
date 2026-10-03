@@ -41,10 +41,15 @@ export class SaasOAuthService {
         : { mode: "local" as const }
       : await this.options.projects.getSource(input.service);
     if (source.mode === "local") return undefined;
-    if (input.authorizationOptionIds !== undefined || input.extra !== undefined || input.secretExtra !== undefined)
+    if (
+      input.authorizationOptionIds !== undefined ||
+      input.extra !== undefined ||
+      input.secretExtra !== undefined ||
+      input.alsoConnect?.length
+    )
       throw new SaasError(
         "invalid_input",
-        "Configure SaaS OAuth scopes and credentials on the SaaS provider config; per-request overrides are not supported.",
+        "Configure SaaS OAuth scopes and credentials on the SaaS provider config; per-request overrides and alsoConnect are not supported.",
       );
     validateReturnUri(input.returnUri);
     const signal = input.signal
@@ -102,6 +107,7 @@ export class SaasOAuthService {
         status: "initiated",
         expiresAt: remote.expiresAt,
         authorizationUrl: remote.authorizationUrl,
+        alsoConnect: [],
       };
     } catch {
       await this.options.requests.failSaas(

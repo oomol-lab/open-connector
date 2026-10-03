@@ -3,6 +3,7 @@ import type { PendingConnectionRequest } from "./connection-request-store.ts";
 import type { RuntimeDatabase } from "./runtime-database.ts";
 
 import { describe, expect, it } from "vitest";
+import { RuntimeTokenService } from "./runtime-token-service.ts";
 
 const credential: Extract<ResolvedCredential, { authType: "api_key" }> = {
   authType: "api_key",
@@ -103,6 +104,137 @@ export function connectionRequestStoreTests(getDatabase: () => RuntimeDatabase):
       await database.connectionRequestStore.fail(request.connectionRequestId, "provider_error", "Failed");
       expect(await database.connectionRequestStore.complete(request, credential)).toBeUndefined();
       expect(await database.connectionStore.get(request.service, request.connectionName!)).toBeUndefined();
+    });
+
+    it("completes alsoConnect siblings in the request's transaction under its connection name and lists them", async () => {
+      const database = getDatabase();
+      const request = { ...pending(), alsoConnect: ["sibling"] };
+      await database.connectionRequestStore.create(request);
+      await database.connectionRequestStore.claim(request.state);
+      const siblingCredential: ResolvedCredential = { ...credential, apiKey: "sibling-secret" };
+      const id = await database.connectionRequestStore.complete(request, credential, undefined, [
+        { service: "sibling", credential: siblingCredential },
+      ]);
+      expect(id).toEqual(expect.any(String));
+      const sibling = await database.connectionStore.get("sibling", request.connectionName);
+      expect(sibling).toMatchObject({ connectionName: request.connectionName, credential: siblingCredential });
+      expect(sibling!.id).not.toBe(id);
+      expect(await database.connectionRequestStore.get(request.connectionRequestId, request.owner)).toMatchObject({
+        status: "connected",
+        appId: id,
+        connections: [
+          { service: "example", appId: id, alias: request.connectionName },
+          { service: "sibling", appId: sibling!.id, alias: request.connectionName },
+        ],
+      });
+    });
+
+    it("keeps a sibling already connected under the name, replacing its credential, and writes none once the request is no longer processing", async () => {
+      const database = getDatabase();
+      const request = { ...pending(), alsoConnect: ["sibling"] };
+      const existing = await database.connectionStore.set("sibling", request.connectionName, credential);
+      await database.connectionRequestStore.create(request);
+      await database.connectionRequestStore.claim(request.state);
+      const siblingCredential: ResolvedCredential = { ...credential, apiKey: "replacement" };
+      const id = await database.connectionRequestStore.complete(request, credential, undefined, [
+        { service: "sibling", credential: siblingCredential },
+      ]);
+      const sibling = await database.connectionStore.get("sibling", request.connectionName);
+      expect(sibling).toMatchObject({ id: existing.id, credential: siblingCredential });
+      expect(sibling!.revision).not.toBe(existing.revision);
+      expect(await database.connectionRequestStore.get(request.connectionRequestId, request.owner)).toMatchObject({
+        connections: [
+          { service: "example", appId: id, alias: request.connectionName },
+          { service: "sibling", appId: existing.id, alias: request.connectionName },
+        ],
+      });
+
+      const failed = { ...pending(), alsoConnect: ["other"] };
+      await database.connectionRequestStore.create(failed);
+      await database.connectionRequestStore.claim(failed.state);
+      await database.connectionRequestStore.fail(failed.connectionRequestId, "provider_error", "Failed");
+      expect(
+        await database.connectionRequestStore.complete(failed, credential, undefined, [
+          { service: "other", credential: siblingCredential },
+        ]),
+      ).toBeUndefined();
+      expect(await database.connectionStore.get("other", failed.connectionName)).toBeUndefined();
+      expect(await database.connectionRequestStore.get(failed.connectionRequestId, failed.owner)).toMatchObject({
+        status: "failed",
+        connections: [],
+      });
+    });
+
+    it("writes no sibling when the primary's revision moved during the consent", async () => {
+      const database = getDatabase();
+      const target = await database.connectionStore.set("example", "work", credential);
+      const request: PendingConnectionRequest = {
+        ...pending(),
+        connectionName: "work",
+        target: { id: target.id, revision: crypto.randomUUID() },
+        alsoConnect: ["sibling"],
+      };
+      await database.connectionRequestStore.create(request);
+      await database.connectionRequestStore.claim(request.state);
+      expect(
+        await database.connectionRequestStore.complete(request, { ...credential, apiKey: "new" }, undefined, [
+          { service: "sibling", credential: { ...credential, apiKey: "sibling-secret" } },
+        ]),
+      ).toBeUndefined();
+      expect(await database.connectionStore.get("example", "work")).toMatchObject({
+        revision: target.revision,
+        credential,
+      });
+      expect(await database.connectionStore.get("sibling", "work")).toBeUndefined();
+    });
+
+    it("writes nothing when a sibling row is bound to Trigger subscriptions for another account", async () => {
+      const database = getDatabase();
+      const request = { ...pending(), alsoConnect: ["sibling"] };
+      // The name already holds a sibling connection of another provider account, and a live
+      // subscription binds that row: SqlConnectionStore.set would refuse to replace it, and the
+      // landing shares one token across its rows, so the whole landing is refused.
+      const held = await database.connectionStore.set("sibling", request.connectionName, {
+        ...credential,
+        profile: { ...credential.profile, accountId: "someone-else" },
+        metadata: { providerAccountVerified: true },
+      });
+      const token = await new RuntimeTokenService(database.runtimeTokenStore).createToken("holder");
+      await database.triggerStore.insertFlowTrigger({
+        id: "held-trigger",
+        mode: "webhook",
+        tokenId: token.record.id,
+        service: "sibling",
+        connectionId: held.id,
+        connectionRevision: held.revision,
+        providerAccountId: "someone-else",
+        triggerId: "sibling.on_event",
+        requestKey: "binding",
+        config: {},
+        endpointUrl: "https://callback.example/hook",
+        callbackNonce: "nonce",
+        callbackSecret: "secret",
+        checkpoint: null,
+        subscription: {},
+        reconcileAt: 1_000,
+        status: "active",
+      });
+      await database.connectionRequestStore.create(request);
+      await database.connectionRequestStore.claim(request.state);
+      expect(
+        await database.connectionRequestStore.complete(request, credential, undefined, [
+          { service: "sibling", credential: { ...credential, apiKey: "sibling-secret" } },
+        ]),
+      ).toBeUndefined();
+      expect(await database.connectionStore.get("example", request.connectionName)).toBeUndefined();
+      expect(await database.connectionStore.get("sibling", request.connectionName)).toMatchObject({
+        id: held.id,
+        revision: held.revision,
+      });
+      expect(await database.connectionRequestStore.get(request.connectionRequestId, request.owner)).toMatchObject({
+        status: "initiated",
+        connections: [],
+      });
     });
   });
 }

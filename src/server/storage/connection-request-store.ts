@@ -16,6 +16,15 @@ export interface ConnectionRequest {
   expiresAt: string;
   createdAt: number;
   updatedAt: number;
+  /** Every connection a connected request created, the requested service first; empty otherwise. */
+  connections: ConnectionRequestConnection[];
+}
+
+export interface ConnectionRequestConnection {
+  service: string;
+  appId: string;
+  /** The connection name every connection of one request shares. */
+  alias: string;
 }
 
 export interface PendingConnectionRequest extends OAuthAuthorizationState {
@@ -25,6 +34,21 @@ export interface PendingConnectionRequest extends OAuthAuthorizationState {
   expiresAt: string;
   returnUri?: string;
   target?: Pick<StoredConnection, "id" | "revision">;
+  /** Providers that receive their own connection from this request's token (a shared grant). */
+  alsoConnect?: string[];
+}
+
+/** A sibling connection completed from the same token as the request's own. */
+export interface SharedGrantCredential {
+  service: string;
+  credential: ResolvedCredential;
+}
+
+/** The request row's record of what it created; sibling ids are read back from the connections table. */
+interface StoredRequestConnection {
+  service: string;
+  alias: string;
+  appId?: string;
 }
 
 export interface RequestStatement {
@@ -103,11 +127,12 @@ export class ConnectionRequestStore {
     const now = Date.now();
     const [[row]] = await this.transaction([
       {
-        sql: "select id, service, status, app_id, error_code, error_message, expires_at, created_at, updated_at from connection_requests where id = ? and owner = ? and expires_at > ?",
+        sql: "select id, service, status, app_id, error_code, error_message, connections, expires_at, created_at, updated_at from connection_requests where id = ? and owner = ? and expires_at > ?",
         values: [id, owner, new Date(now - 86_400_000).toISOString()],
       },
     ]);
     if (!row) return undefined;
+    const connections = await this.readConnections(row.connections);
     return {
       connectionRequestId: row.id as string,
       service: row.service as string,
@@ -121,7 +146,32 @@ export class ConnectionRequestStore {
       expiresAt: row.expires_at as string,
       createdAt: Number(row.created_at),
       updatedAt: Number(row.updated_at),
+      connections,
     };
+  }
+
+  /**
+   * The connections a completed request created. A sibling written on conflict keeps the id of
+   * the row it replaced, which the completing transaction cannot name, so sibling ids are read
+   * from the connections table by the shared connection name; a connection deleted since is absent.
+   */
+  private async readConnections(raw: unknown): Promise<ConnectionRequestConnection[]> {
+    if (typeof raw !== "string" || !raw) return [];
+    const stored = JSON.parse(raw) as StoredRequestConnection[];
+    const unresolved = stored.some((connection) => !connection.appId);
+    const [rows] = unresolved
+      ? await this.transaction([
+          {
+            sql: "select id, service from connections where connection_name = ?",
+            values: [stored[0]!.alias],
+          },
+        ])
+      : [[]];
+    const ids = new Map(rows.map((row) => [row.service as string, row.id as string]));
+    return stored.flatMap((connection) => {
+      const appId = connection.appId ?? ids.get(connection.service);
+      return appId ? [{ service: connection.service, appId, alias: connection.alias }] : [];
+    });
   }
 
   async claim(state: string): Promise<PendingConnectionRequest | undefined> {
@@ -150,24 +200,97 @@ export class ConnectionRequestStore {
     pending: PendingConnectionRequest,
     credential: ResolvedCredential,
     signal?: AbortSignal,
+    siblings: readonly SharedGrantCredential[] = [],
   ): Promise<string | undefined> {
     const id = pending.target?.id ?? crypto.randomUUID();
     const revision = crypto.randomUUID();
     const value = await this.secretCodec.encode(JSON.stringify(credential));
-    const accountId =
-      credential.authType !== "no_auth" && credential.metadata.providerAccountVerified === true
-        ? credential.profile.accountId
-        : null;
+    const accountId = verifiedAccountId(credential);
+    const siblingValues = await Promise.all(
+      siblings.map(async (sibling) => ({
+        service: sibling.service,
+        value: await this.secretCodec.encode(JSON.stringify(sibling.credential)),
+        accountId: verifiedAccountId(sibling.credential),
+      })),
+    );
     signal?.throwIfAborted();
     const now = new Date();
     const active =
       "exists (select 1 from connection_requests where kind = 'local' and id = ? and phase = 'processing')";
+    const connections: StoredRequestConnection[] = [
+      { service: pending.service, alias: pending.connectionName, appId: id },
+      ...siblingValues.map((sibling) => ({ service: sibling.service, alias: pending.connectionName })),
+    ];
+    // The siblings share one token with the primary, so the landing is all or nothing. A
+    // sibling is its own connection under the request's connection name; a row already there
+    // (the same grant made again) keeps its id and takes the new credential the way
+    // SqlConnectionStore.set replaces one: its remote references are queued for cleanup first
+    // and it becomes a local row. A row that active Trigger subscriptions bind to another
+    // provider account cannot be replaced (set()'s guard), and here that blocks EVERY write of
+    // the landing — the primary's included — so nothing is stored and complete() answers
+    // undefined, never a request marked connected over a sibling that kept its old account.
+    const blocked = siblingValues.length
+      ? `exists (select 1 from connections c where c.connection_name = ? and (${siblingValues
+          .map(
+            () =>
+              "(c.service = ? and (c.provider_account_id is null or cast(? as text) is null or c.provider_account_id <> cast(? as text)))",
+          )
+          .join(
+            " or ",
+          )}) and exists (select 1 from trigger_subscriptions where connection_id = c.id and mode <> 'resource-set' and status in ('active', 'deleting')))`
+      : "1 = 0";
+    const blockedValues = siblingValues.length
+      ? [
+          pending.connectionName,
+          ...siblingValues.flatMap((sibling) => [sibling.service, sibling.accountId, sibling.accountId]),
+        ]
+      : [];
+    // A sibling is written only once the primary's row carries this landing's revision, so a
+    // primary the request could not replace (its revision moved during the consent, or its
+    // own Trigger guard) leaves no sibling behind either.
+    const landed = "exists (select 1 from connections where id = ? and revision = ?)";
+    const siblingWrites: RequestStatement[] = siblingValues.flatMap((sibling) => [
+      {
+        sql: "update connections set revision = revision where service = ? and connection_name = ?",
+        values: [sibling.service, pending.connectionName],
+      },
+      queueSaasConnections(`service = ? and connection_name = ? and ${active} and ${landed}`, [
+        sibling.service,
+        pending.connectionName,
+        pending.connectionRequestId,
+        id,
+        revision,
+      ]),
+      {
+        sql: `insert into connections (id, revision, service, connection_name, value, updated_at, provider_account_id)
+          select ?, ?, ?, ?, ?, ?, ? where ${active} and ${landed} and not ${blocked}
+          on conflict (service, connection_name) do update set
+          revision = excluded.revision, value = excluded.value, updated_at = excluded.updated_at,
+          source = 'local', managed_project_id = null, provider_config_id = null, external_user_id = null,
+          remote_account_id = null, local_request_id = null, provider_account_id = excluded.provider_account_id
+          where not exists (select 1 from trigger_subscriptions where connection_id = connections.id and mode <> 'resource-set' and status in ('active', 'deleting'))
+          or (connections.provider_account_id is not null and connections.provider_account_id = excluded.provider_account_id) returning id`,
+        values: [
+          crypto.randomUUID(),
+          revision,
+          sibling.service,
+          pending.connectionName,
+          sibling.value,
+          now.toISOString(),
+          sibling.accountId,
+          pending.connectionRequestId,
+          id,
+          revision,
+          ...blockedValues,
+        ],
+      },
+    ]);
     const write: RequestStatement = pending.target
       ? {
           sql: `update connections set value = ?, revision = ?, updated_at = ?, source = 'local',
             managed_project_id = null, provider_config_id = null, external_user_id = null, remote_account_id = null, local_request_id = null, provider_account_id = ? where id = ? and revision = ? and ${active}
             and (not exists (select 1 from trigger_subscriptions where connection_id = connections.id and mode <> 'resource-set' and status in ('active', 'deleting'))
-              or (provider_account_id is not null and provider_account_id = ?)) returning id`,
+              or (provider_account_id is not null and provider_account_id = ?)) and not ${blocked} returning id`,
           values: [
             value,
             revision,
@@ -177,11 +300,12 @@ export class ConnectionRequestStore {
             pending.target.revision,
             pending.connectionRequestId,
             accountId,
+            ...blockedValues,
           ],
         }
       : {
           sql: `insert into connections (id, revision, service, connection_name, value, updated_at, provider_account_id)
-        select ?, ?, ?, ?, ?, ?, ? where ${active} returning id`,
+        select ?, ?, ?, ?, ?, ?, ? where ${active} and not ${blocked} returning id`,
           values: [
             id,
             revision,
@@ -191,6 +315,7 @@ export class ConnectionRequestStore {
             now.toISOString(),
             accountId,
             pending.connectionRequestId,
+            ...blockedValues,
           ],
         };
     const results = await this.transaction([
@@ -201,10 +326,11 @@ export class ConnectionRequestStore {
         pending.connectionRequestId,
       ]),
       write,
+      ...siblingWrites,
       {
-        sql: `update connection_requests set phase = 'completed', status = 'connected', app_id = ?, value = null, updated_at = ?
+        sql: `update connection_requests set phase = 'completed', status = 'connected', app_id = ?, connections = ?, value = null, updated_at = ?
           where kind = 'local' and id = ? and phase = 'processing' and exists (select 1 from connections where id = ? and revision = ?)`,
-        values: [id, now.getTime(), pending.connectionRequestId, id, revision],
+        values: [id, JSON.stringify(connections), now.getTime(), pending.connectionRequestId, id, revision],
       },
     ]);
     return results[2].length ? id : undefined;
@@ -434,4 +560,11 @@ export class ConnectionRequestStore {
     ]);
     return results[3].length ? "connected" : results[5].length ? "conflict" : "lease_lost";
   }
+}
+
+/** The provider account a connection row is keyed by once its validator proved it; null otherwise. */
+function verifiedAccountId(credential: ResolvedCredential): string | null {
+  return credential.authType !== "no_auth" && credential.metadata.providerAccountVerified === true
+    ? credential.profile.accountId
+    : null;
 }

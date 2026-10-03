@@ -442,3 +442,134 @@ it("connects Slack using granted scopes from the nested user token response", as
   expect(connection.scopes).toEqual(["channels:read", "users:read"]);
   expect(fetcher).toHaveBeenCalledTimes(2);
 });
+
+describe("shared grant on the personal connection API (alsoConnect)", () => {
+  const sibling: ProviderDefinition = {
+    ...provider,
+    service: "example_calendar",
+    authTypes: ["oauth2"],
+    auth: [
+      {
+        type: "oauth2",
+        authorizationUrl: "https://example.com/authorize",
+        tokenUrl: "https://example.com/token",
+        scopes: ["calendar"],
+        tokenEndpointAuthMethod: "client_secret_post",
+      },
+    ],
+  };
+
+  async function setupShared(calendarValidator?: CredentialValidators["oauth2"]) {
+    const database = new SqliteRuntimeDatabase(":memory:");
+    databases.push(database);
+    for (const service of ["example", "example_calendar"]) {
+      await database.oauthClientConfigStore.set({
+        service,
+        clientId: "client",
+        clientSecret: "secret",
+        extra: {},
+        secretExtra: {},
+      });
+    }
+    const { app } = await createConnectApp({
+      catalog: createCatalogStore([provider, sibling]),
+      runtimeDatabase: database,
+      providerLoader: new ProviderLoader({
+        example: async () => ({
+          executors: {},
+          credentialValidators: { oauth2: async () => ({ profile: { accountId: "me@example.com" } }) },
+          oauth: {
+            exchangeCode: async () => ({
+              accessToken: "access-secret",
+              tokenType: "Bearer",
+              metadata: { scope: "read calendar" },
+            }),
+          },
+        }),
+        example_calendar: async () => ({
+          executors: {},
+          credentialValidators: {
+            oauth2:
+              calendarValidator ?? (async () => ({ profile: { accountId: "me@example.com", displayName: "Me" } })),
+          },
+        }),
+      }),
+      transitFiles: new TransitFileService({
+        rootDir: ".tmp/connection-tests",
+        publicOrigin: "http://localhost",
+        ttlSeconds: 60,
+        maxBytes: 1024,
+      }),
+      publicOrigin: "http://localhost",
+      secretCodec: new PlainTextSecretCodec(),
+    });
+    const call = async (path: string, body?: unknown) =>
+      app.request(path, {
+        method: body === undefined ? "GET" : "POST",
+        headers: { "content-type": "application/json" },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+    return { call, database };
+  }
+
+  it("connects the sibling on the same consent and lists both connections on the request", async () => {
+    const { call, database } = await setupShared();
+    const response = await call("/v1/connections/example/connect", { alsoConnect: ["example_calendar"] });
+    expect(response.status).toBe(200);
+    const request = (await response.json()).data;
+    expect(request).toMatchObject({ status: "initiated", alsoConnect: ["example_calendar"] });
+    expect(new URL(request.authorizationUrl).searchParams.get("scope")).toBe("read calendar");
+
+    expect((await call(`/oauth/callback?state=${request.stateHandle}&code=code`)).status).toBe(200);
+    const result = (await (await call(`/v1/connection-requests/${request.connectionRequestId}`)).json()).data;
+    const stored = await database.connectionStore.list();
+    expect(stored.map((connection) => connection.service).sort()).toEqual(["example", "example_calendar"]);
+    expect(new Set(stored.map((connection) => connection.connectionName)).size).toBe(1);
+    const byService = new Map(stored.map((connection) => [connection.service, connection]));
+    expect(result).toMatchObject({ status: "connected", appId: byService.get("example")!.id });
+    expect(result.connections).toEqual([
+      { service: "example", appId: byService.get("example")!.id, alias: stored[0]!.connectionName },
+      { service: "example_calendar", appId: byService.get("example_calendar")!.id, alias: stored[0]!.connectionName },
+    ]);
+    const listed = (await (await call("/v1/connections")).json()).data;
+    expect(
+      listed.map((connection: { service: string; alias: string }) => [connection.service, connection.alias]),
+    ).toEqual([
+      ["example", stored[0]!.connectionName],
+      ["example_calendar", stored[0]!.connectionName],
+    ]);
+    expect(JSON.stringify(listed)).not.toContain("access-secret");
+  });
+
+  it("fails the request and stores nothing when the sibling's validator refuses, naming the sibling", async () => {
+    const { call, database } = await setupShared(async () => {
+      throw new Error("secret-detail");
+    });
+    const request = (
+      await (await call("/v1/connections/example/connect", { alsoConnect: ["example_calendar"] })).json()
+    ).data;
+    expect((await call(`/oauth/callback?state=${request.stateHandle}&code=code`)).status).toBe(400);
+    const result = (await (await call(`/v1/connection-requests/${request.connectionRequestId}`)).json()).data;
+    expect(result).toMatchObject({
+      status: "failed",
+      errorCode: "provider_error",
+      errorMessage: "OAuth connection failed for example_calendar.",
+      appId: null,
+      connections: [],
+    });
+    expect(JSON.stringify(result)).not.toContain("secret-detail");
+    expect(await database.connectionStore.list()).toEqual([]);
+  });
+
+  it("refuses an alsoConnect sibling the runtime cannot share with, naming it, and a malformed list", async () => {
+    const { call } = await setupShared();
+    const unknown = await call("/v1/connections/example/connect", { alsoConnect: ["nope"] });
+    expect(unknown.status).toBe(400);
+    await expect(unknown.json()).resolves.toMatchObject({
+      errorCode: "invalid_input",
+      message: expect.stringContaining("nope"),
+    });
+    expect((await call("/v1/connections/example/connect", { alsoConnect: "example_calendar" })).status).toBe(400);
+    expect((await call("/v1/connections/example/connect", { alsoConnect: [""] })).status).toBe(400);
+  });
+});

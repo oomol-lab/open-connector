@@ -116,6 +116,12 @@ OAuth inputs can include:
   preserves the explicitly selected options and required options.
 - `extra` and `secretExtra` (local OAuth only): provider-declared OAuth configuration fields, merged for this
   authorization attempt without changing the saved client configuration.
+- `alsoConnect`: other OAuth providers connected on the same consent (Gmail and Google Calendar
+  behind one Google sign-in). Each must share the service's authorization and token endpoints and
+  be configured with the same OAuth client, else `invalid_input` names it; its configured scopes
+  join the consent, its validator runs on the shared token, and it becomes its own connection under
+  the same alias. The request's `connections` lists every connection created; one sibling failing
+  fails the whole request.
 
 ## Inspect and reconnect
 
