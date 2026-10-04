@@ -2,7 +2,7 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const getyoutubetranscriptApiBaseUrl = "https://getyoutubetranscript.com/api/v1";
 
@@ -93,6 +93,8 @@ async function apiGet(
 
   let response: Response;
   let payload: unknown;
+  // Bounds the fetch and the body read so a stalled upstream can't leave the action pending.
+  const timeout = createProviderTimeout(context.signal);
   try {
     response = await context.fetcher(url, {
       method: "GET",
@@ -101,16 +103,21 @@ async function apiGet(
         authorization: `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
       },
-      signal: context.signal,
+      signal: timeout.signal,
     });
     payload = await readPayload(response);
   } catch (error) {
+    if (timeout.didTimeout()) {
+      throw new ProviderRequestError(504, "GetYouTubeTranscript request timed out");
+    }
     throw new ProviderRequestError(
       502,
       error instanceof Error
         ? `GetYouTubeTranscript request failed: ${error.message}`
         : "GetYouTubeTranscript request failed",
     );
+  } finally {
+    timeout.cleanup();
   }
 
   const envelope = optionalRecord(payload);
