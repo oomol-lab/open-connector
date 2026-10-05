@@ -139,7 +139,8 @@ export async function readFxmacrodataError(
   const upstreamMessage =
     optionalString(body?.detail) ?? optionalString(body?.message) ?? `FXMacroData request failed with HTTP ${status}`;
   const message = apiKey ? upstreamMessage.replaceAll(apiKey, "[REDACTED]") : upstreamMessage;
-  const details = withRetryAfterSeconds(response, apiKey && JSON.stringify(payload).includes(apiKey) ? {} : payload);
+  const containsApiKey = apiKey && JSON.stringify(payload).includes(JSON.stringify(apiKey).slice(1, -1));
+  const details = withRetryAfterSeconds(response, containsApiKey ? {} : payload);
   if (
     (status === 401 || status === 403) &&
     (phase === "validate" || optionalString(body?.code) === "api_key_required")
@@ -181,6 +182,7 @@ function dateWindow(input: Record<string, unknown>): Record<string, string | num
     start_date: optionalString(input.startDate),
     end_date: optionalString(input.endDate),
     limit: optionalInteger(input.limit),
+    offset: optionalInteger(input.offset),
   };
 }
 

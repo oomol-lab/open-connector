@@ -122,18 +122,23 @@ describe("FXMacroData runtime", () => {
     expect(requests).toEqual([]);
   });
 
-  it("removes the key from an upstream error message", async () => {
-    const { fetcher } = recordingFetcher(() =>
-      Response.json({ detail: "Key test-key-123 is not active.", key: "test-key-123" }, { status: 403 }),
-    );
+  it.each(["test-key-123", 'test-"quoted-key', "test-\\backslash-key"])(
+    "removes key %j from an upstream error",
+    async (apiKey) => {
+      const { fetcher } = recordingFetcher(() =>
+        Response.json({ detail: `Key ${apiKey} is not active.`, key: apiKey }, { status: 403 }),
+      );
 
-    const error = await fxmacrodataActionHandlers
-      .get_cot({ currency: "eur" }, { apiKey: "test-key-123", fetcher })
-      .catch((caught: unknown) => caught);
+      const error = await fxmacrodataActionHandlers
+        .get_cot({ currency: "eur" }, { apiKey, fetcher })
+        .catch((caught: unknown) => caught);
 
-    expect(error).toMatchObject({ status: 403, message: "Key [REDACTED] is not active." });
-    expect(JSON.stringify((error as { details?: unknown }).details)).not.toContain("test-key-123");
-  });
+      expect(error).toMatchObject({ status: 403, message: "Key [REDACTED] is not active." });
+      expect(JSON.stringify((error as { details?: unknown }).details)).not.toContain(
+        JSON.stringify(apiKey).slice(1, -1),
+      );
+    },
+  );
 
   it.each([
     ["another origin", "https://elsewhere.example/v1/forex/eur/usd"],
