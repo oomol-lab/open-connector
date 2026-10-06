@@ -28,8 +28,12 @@ const campaign = s.object(
     status: s.string("The campaign status."),
     advertisingChannelType: s.string("The high-level advertising channel type."),
     advertisingChannelSubType: s.string("The advertising channel subtype."),
-    startDate: s.string("The campaign start date in YYYY-MM-DD format."),
-    endDate: s.string("The campaign end date in YYYY-MM-DD format."),
+    startDateTime: s.string(
+      "The campaign start date and time in YYYY-MM-DD HH:mm:ss format in the customer's time zone. Use 00:00:00 for daily granularity.",
+    ),
+    endDateTime: s.string(
+      "The campaign end date and time in YYYY-MM-DD HH:mm:ss format in the customer's time zone. Use 23:59:59 for daily granularity.",
+    ),
   },
   {
     required: ["resourceName", "id", "name"],
@@ -108,8 +112,12 @@ const campaignCreateInput = s.object(
     campaignBudget: s.nonEmptyString("The campaign budget resource name to attach."),
     advertisingChannelType: s.nonEmptyString("The advertising channel type."),
     status: s.nonEmptyString("The campaign status."),
-    startDate: s.nonEmptyString("The campaign start date."),
-    endDate: s.nonEmptyString("The campaign end date."),
+    startDateTime: s.nonEmptyString(
+      "The campaign start date and time in YYYY-MM-DD HH:mm:ss format in the customer's time zone. Use 00:00:00 for daily granularity.",
+    ),
+    endDateTime: s.nonEmptyString(
+      "The campaign end date and time in YYYY-MM-DD HH:mm:ss format in the customer's time zone. Use 23:59:59 for daily granularity.",
+    ),
     manualCpc: looseObject,
     finalUrlSuffix: s.nonEmptyString("The final URL suffix."),
     networkSettings: campaignNetworkSettings,
@@ -127,8 +135,12 @@ const campaignUpdateInput = s.object(
     resourceName: s.nonEmptyString("The resource name of the campaign to update."),
     name: s.nonEmptyString("The updated campaign name."),
     status: s.nonEmptyString("The updated campaign status."),
-    startDate: s.nonEmptyString("The updated campaign start date."),
-    endDate: s.nonEmptyString("The updated campaign end date."),
+    startDateTime: s.nonEmptyString(
+      "The campaign start date and time in YYYY-MM-DD HH:mm:ss format in the customer's time zone. Use 00:00:00 for daily granularity.",
+    ),
+    endDateTime: s.nonEmptyString(
+      "The campaign end date and time in YYYY-MM-DD HH:mm:ss format in the customer's time zone. Use 23:59:59 for daily granularity.",
+    ),
     manualCpc: looseObject,
     campaignBudget: s.nonEmptyString("The updated campaign budget resource name."),
     finalUrlSuffix: s.nonEmptyString("The updated final URL suffix."),

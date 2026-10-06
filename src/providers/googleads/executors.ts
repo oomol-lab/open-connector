@@ -532,8 +532,8 @@ function normalizeCampaign(row: SearchRow): Record<string, unknown> {
     status: optionalString(campaign.status),
     advertisingChannelType: optionalString(campaign.advertisingChannelType),
     advertisingChannelSubType: optionalString(campaign.advertisingChannelSubType),
-    startDate: optionalString(campaign.startDateTime)?.slice(0, 10),
-    endDate: optionalString(campaign.endDateTime)?.slice(0, 10),
+    startDateTime: optionalString(campaign.startDateTime),
+    endDateTime: optionalString(campaign.endDateTime),
   });
 }
 
@@ -630,8 +630,8 @@ function normalizeCampaignMutationData(
       : {}),
     name: mode === "create" ? requireNonEmptyString(value.name, "create.name") : optionalString(value.name),
     status: normalizeOptionalEnumValue(value.status, "status", campaignStatusAliases),
-    startDateTime: campaignDateTime(value.startDate, "00:00:00"),
-    endDateTime: campaignDateTime(value.endDate, "23:59:59"),
+    startDateTime: optionalString(value.startDateTime),
+    endDateTime: optionalString(value.endDateTime),
     manualCpc: optionalRecord(value.manualCpc),
     campaignBudget:
       mode === "create"
@@ -661,12 +661,6 @@ function normalizeCampaignMutationData(
       euPoliticalAdvertisingAliases,
     ),
   });
-}
-
-// Preserve the date-only action contract in the customer's time zone.
-function campaignDateTime(value: unknown, time: string): string | undefined {
-  const date = optionalString(value);
-  return date ? `${date} ${time}` : undefined;
 }
 
 function normalizeCampaignNetworkSettings(value: unknown): Record<string, unknown> | undefined {
