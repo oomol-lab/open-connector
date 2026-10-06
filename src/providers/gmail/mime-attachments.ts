@@ -5,7 +5,7 @@ import { Buffer } from "node:buffer";
 import { base64Bytes, objectArray, optionalString, requiredRawString } from "../../core/cast.ts";
 import { providerInputError, ProviderRequestError, readTransitFileInput } from "../provider-runtime.ts";
 import { gmailMaxAttachmentBytes, gmailMaxAttachmentCount } from "./limits.ts";
-import { assertMimeHeaderValue } from "./mime.ts";
+import { assertMimeAttachmentMetadata } from "./mime.ts";
 
 interface AttachmentContext {
   transitFiles?: ExecutionContext["transitFiles"];
@@ -47,16 +47,9 @@ export async function readGmailAttachments(
     if (disposition !== "inline" && disposition !== "attachment")
       throw providerInputError(`${field}.disposition must be inline or attachment`);
     if (contentId !== undefined) {
-      assertMimeHeaderValue(contentId, `${field}.contentId`);
-      if (!/^[\x21-\x7e]+$/.test(contentId) || /[<>:]/.test(contentId))
-        throw providerInputError(`${field}.contentId must be a bare ASCII ID without cid: or angle brackets`);
       if (contentIds.has(contentId)) throw providerInputError(`Duplicate attachment contentId: ${contentId}`);
       contentIds.add(contentId);
     }
-    if (disposition === "inline" && !contentId)
-      throw providerInputError(`${field} inline attachments require contentId`);
-    if (filename !== undefined) assertMimeHeaderValue(filename, `${field}.filename`);
-    if (mimeType !== undefined) assertMimeHeaderValue(mimeType, `${field}.mimeType`);
     let contentBase64: string;
     if (hasBase64) {
       const encoded = requiredRawString(input.contentBase64, `${field}.contentBase64`, providerInputError);
@@ -75,13 +68,15 @@ export async function readGmailAttachments(
       filename ??= source.name;
       mimeType ??= optionalString(source.mimeType);
     }
-    attachments.push({
+    const attachment: GmailMimeAttachment = {
       filename,
       mimeType: mimeType ?? "application/octet-stream",
       contentBase64,
       contentId,
       disposition,
-    });
+    };
+    assertMimeAttachmentMetadata(attachment);
+    attachments.push(attachment);
   }
   return attachments;
 }

@@ -168,7 +168,8 @@ await open.execute("gmail.update_draft", { draftId, subject: "Updated report" })
 - 省略 `attachments` 保留已有附件和内嵌图片；传入列表替换全部附件和内嵌图片；传入 `[]` 清空。
   删除或替换 CID 图片时，应同步修改 HTML 引用。
 - 同时省略 `body` 和 `messageBody` 保留已有纯文本与 HTML 双正文；传入正文则替换成一份正文，
-  HTML 请指定 `isHtml: true`。空字符串清空正文。指定 `isHtml` 时必须提供替换正文。
+  省略 `isHtml` 会继承原正文类型（存在 HTML alternative 时使用 HTML）。纯文本请显式指定
+  `isHtml: false`，HTML 请指定 `isHtml: true`。空字符串清空正文。指定 `isHtml` 时必须提供替换正文。
 - 未传入的可编辑邮件头保持不变；空主题或空收件人字段用于清除对应值。对于无法安全处理或有歧义的
   MIME 结构，内容更新会报错，不会静默丢弃内容。
 

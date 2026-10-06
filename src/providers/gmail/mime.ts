@@ -115,7 +115,7 @@ export function updateMimeMessage(original: string, patch: MimeMessagePatch): st
 }
 
 /** Reject header delimiters before encoding can conceal them in an encoded word. */
-export function assertMimeHeaderValue(value: string, field: string): void {
+function assertMimeHeaderValue(value: string, field: string): void {
   for (const char of value) {
     const code = char.charCodeAt(0);
     if (code <= 0x1f || code === 0x7f) throw providerInputError(`${field} must not contain control characters`);
@@ -170,29 +170,35 @@ function encodeBody(body: string, isHtml: boolean): string {
   return `Content-Type: ${isHtml ? "text/html" : "text/plain"}; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n${foldBase64(Buffer.from(body, "utf8").toString("base64"))}`;
 }
 
-function encodeAttachment(attachment: GmailMimeAttachment): { raw: string; inline: boolean } {
+/** Validate attachment header metadata for both input resolution and MIME encoding. */
+export function assertMimeAttachmentMetadata(attachment: GmailMimeAttachment): void {
   assertMimeHeaderValue(attachment.mimeType, "attachment.mimeType");
   if (!/^[a-z0-9!#$&^_.+-]+\/[a-z0-9!#$&^_.+-]+$/i.test(attachment.mimeType)) {
     throw providerInputError("attachment.mimeType must be a type/subtype without parameters");
   }
-  const headers = [`Content-Type: ${attachment.mimeType}`, "Content-Transfer-Encoding: base64"];
-  let disposition = `Content-Disposition: ${attachment.disposition}`;
   if (attachment.filename !== undefined) {
     assertMimeHeaderValue(attachment.filename, "attachment.filename");
     if (attachment.filename.length === 0) throw providerInputError("attachment.filename must not be empty");
-    disposition += filenameParameters(attachment.filename);
+    if (!attachment.filename.isWellFormed()) throw providerInputError("attachment.filename must contain valid Unicode");
   }
-  headers.push(disposition);
   if (attachment.contentId !== undefined) {
     assertMimeHeaderValue(attachment.contentId, "attachment.contentId");
     if (!/^[\x21-\x7e]+$/.test(attachment.contentId) || /[<>:]/.test(attachment.contentId)) {
       throw providerInputError("attachment.contentId must be a bare ASCII ID without cid: or angle brackets");
     }
-    headers.push(`Content-ID: <${attachment.contentId}>`);
   }
   if (attachment.disposition === "inline" && !attachment.contentId) {
     throw providerInputError("inline attachments require contentId");
   }
+}
+
+function encodeAttachment(attachment: GmailMimeAttachment): { raw: string; inline: boolean } {
+  assertMimeAttachmentMetadata(attachment);
+  const headers = [`Content-Type: ${attachment.mimeType}`, "Content-Transfer-Encoding: base64"];
+  let disposition = `Content-Disposition: ${attachment.disposition}`;
+  if (attachment.filename !== undefined) disposition += filenameParameters(attachment.filename);
+  headers.push(disposition);
+  if (attachment.contentId !== undefined) headers.push(`Content-ID: <${attachment.contentId}>`);
   if (headers.some((header) => header.split("\r\n").some((line) => Buffer.byteLength(line, "utf8") > 998))) {
     throw providerInputError("attachment headers exceed the MIME line length limit");
   }
@@ -203,7 +209,6 @@ function encodeAttachment(attachment: GmailMimeAttachment): { raw: string; inlin
 }
 
 function filenameParameters(filename: string): string {
-  if (!filename.isWellFormed()) throw providerInputError("attachment.filename must contain valid Unicode");
   // Keep an ASCII fallback for older clients and RFC 2231 UTF-8 continuations for the actual name.
   const fallback = filename
     .replace(/[^\x20-\x7e]/g, "_")
@@ -268,15 +273,17 @@ function decomposeContent(entity: MimeEntity, replaceBody: boolean, depth = 0, i
     if (alternatives.length === 0) throw unsupportedMime("empty multipart/alternative");
     const hasHtml = alternatives.some((part) => part.isHtml);
     return {
-      body: renderEntity(
-        entity.headers,
-        renderOriginalMultipart(
-          entity,
-          multipart,
-          alternatives.map((part) => part.body),
-        ),
-        entity.newline,
-      ),
+      body: replaceBody
+        ? ""
+        : renderEntity(
+            entity.headers,
+            renderOriginalMultipart(
+              entity,
+              multipart,
+              alternatives.map((part) => part.body),
+            ),
+            entity.newline,
+          ),
       isHtml: hasHtml,
       inline: alternatives.flatMap((part) => part.inline),
       attachments: alternatives.flatMap((part) => part.attachments),

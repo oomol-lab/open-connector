@@ -173,6 +173,15 @@ describe("Gmail raw MIME draft edits", () => {
       expect(decoded(edited).toString()).toContain(frame);
   });
 
+  it("allows a plain-text replacement to override inherited HTML mode", async () => {
+    const body = "First line\nSecond line\n";
+    const edited = updateMimeMessage(originalDraft(), { body, isHtml: false });
+    const mail = await simpleParser(decoded(edited), { skipTextToHtml: true });
+    expect(mail.text).toBe(body);
+    expect(mail.html).toBe(false);
+    expect(mail.attachments).toHaveLength(2);
+  });
+
   it("clears or replaces all file parts while preserving untouched body alternatives", async () => {
     const clearedRaw = updateMimeMessage(originalDraft(), { attachments: [] });
     const cleared = await simpleParser(decoded(clearedRaw), {
@@ -279,6 +288,16 @@ describe("Gmail supplied attachment input", () => {
         disposition: "attachment",
       },
     ]);
+  });
+
+  it.each([
+    { ...file, filename: "bad\r\nname" },
+    { ...file, mimeType: "text/plain; charset=utf-8" },
+    { ...logo, contentId: "cid:logo" },
+    { ...logo, contentId: undefined },
+  ])("rejects invalid metadata through input resolution and direct MIME composition %#", async (attachment) => {
+    await expect(readGmailAttachments([attachment], {})).rejects.toMatchObject({ status: 400 });
+    expect(() => encodeMimeMessage({ to: [], attachments: [attachment] })).toThrow();
   });
 
   it("accepts zero-byte content and rejects invalid sources, CID collisions, Base64 and limits", async () => {

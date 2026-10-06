@@ -488,7 +488,10 @@ export const gmailActions: ActionDefinition[] = [
         description:
           "Alias for the replacement body. Omit both body fields to preserve existing MIME body alternatives.",
       }),
-      isHtml: s.boolean({ description: "Whether the replacement body is HTML. Requires body or messageBody." }),
+      isHtml: s.boolean({
+        description:
+          "Whether the replacement body is HTML. Omit to inherit the existing body type (HTML when an HTML alternative exists). Set false for plain text or true for HTML. Requires body or messageBody.",
+      }),
       attachments: s.describe(
         attachments,
         "Omit to preserve all attachments and CID inline images. A supplied list replaces all of them; [] clears all attachments and inline images.",

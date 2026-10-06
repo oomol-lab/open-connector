@@ -182,8 +182,9 @@ For `update_draft`:
 - Omit `attachments` to preserve existing files and inline images. A supplied list replaces all of
   them; `attachments: []` removes them. Update HTML references when removing or replacing CID images.
 - Omit both `body` and `messageBody` to preserve existing plain-text and HTML alternatives. A supplied
-  body replaces those alternatives with one body; use `isHtml: true` for HTML. An empty body clears it.
-  `isHtml` requires a replacement body.
+  body replaces those alternatives with one body. Omitting `isHtml` inherits the existing body type
+  (HTML when an HTML alternative exists). Pass `isHtml: false` for plain text or `isHtml: true` for HTML.
+  An empty body clears it. `isHtml` requires a replacement body.
 - Omitted editable headers remain unchanged. An empty subject or empty recipient field clears that
   field. Content edits to unsupported or ambiguous MIME structures fail rather than discard content.
 
