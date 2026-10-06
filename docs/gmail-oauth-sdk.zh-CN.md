@@ -122,6 +122,59 @@ npm install -D @oomol-lab/connector-types
 import "@oomol-lab/connector-types/gmail";
 ```
 
+## 6. 添加附件和内嵌图片
+
+Gmail 的发送、创建草稿和回复接口均接受 `attachments`。内嵌图片通过 `contentId` 与 HTML 中的
+`cid:` 引用对应。Markdown 渲染、业务素材读取以及图片地址转 CID 由调用方完成，再把处理好的 HTML
+和文件内容传给 connector。
+
+沿用上一节的 `open`，并准备本地 `logo.png` 和 `report.pdf`：
+
+```ts
+import { readFile } from "node:fs/promises";
+
+const { draftId } = await open.execute("gmail.create_email_draft", {
+  to: "recipient@example.com",
+  subject: "Report",
+  body: '<p>Please see the attached report.</p><img src="cid:logo" alt="Logo">',
+  isHtml: true,
+  attachments: [
+    {
+      filename: "logo.png",
+      mimeType: "image/png",
+      contentBase64: (await readFile("./logo.png")).toString("base64"),
+      contentId: "logo",
+      disposition: "inline",
+    },
+    {
+      filename: "report.pdf",
+      mimeType: "application/pdf",
+      contentBase64: (await readFile("./report.pdf")).toString("base64"),
+    },
+  ],
+});
+
+await open.execute("gmail.update_draft", { draftId, subject: "Updated report" });
+```
+
+仅修改主题会保留原 MIME 正文、附件、内嵌图片和回复关系头。`gmail.send_draft` 原样发送已保存的草稿。
+
+每个附件必须且只能指定一种内容来源：`contentBase64`，或引用 `POST /api/files` 上传结果的
+`file: { fileId }`。`filename` 和 `mimeType` 可以覆盖中转文件的元数据。`contentId` 不带 `cid:`
+前缀或尖括号；指定它时 disposition 默认是 `inline`，否则默认是 `attachment`。
+
+`update_draft` 的更新规则：
+
+- 省略 `attachments` 保留已有附件和内嵌图片；传入列表替换全部附件和内嵌图片；传入 `[]` 清空。
+  删除或替换 CID 图片时，应同步修改 HTML 引用。
+- 同时省略 `body` 和 `messageBody` 保留已有纯文本与 HTML 双正文；传入正文则替换成一份正文，
+  HTML 请指定 `isHtml: true`。空字符串清空正文。指定 `isHtml` 时必须提供替换正文。
+- 未传入的可编辑邮件头保持不变；空主题或空收件人字段用于清除对应值。对于无法安全处理或有歧义的
+  MIME 结构，内容更新会报错，不会静默丢弃内容。
+
+connector 最多接受 100 个附件，附件解码后合计不超过 25,000,000 字节，包含编码开销的完整 MIME
+邮件不超过 35,000,000 字节。Gmail 仍可能施加账号或内容限制。
+
 ## 常见问题
 
 - `redirect_uri_mismatch`：确认 Gmail OAuth app 允许当前 runtime origin 加 `/oauth/callback`。

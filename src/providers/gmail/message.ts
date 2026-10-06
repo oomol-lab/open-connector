@@ -1,9 +1,12 @@
+import { parseMimeHeader } from "./mime.ts";
+
 export interface GmailMessageHeader {
   name: string;
   value: string;
 }
 
 export interface GmailMessagePart {
+  partId?: string;
   mimeType?: string;
   filename?: string;
   headers?: GmailMessageHeader[];
@@ -44,6 +47,9 @@ export interface GmailAttachmentSummary {
   filename: string;
   mimeType: string;
   size: number;
+  partId: string | null;
+  contentId: string | null;
+  disposition: "inline" | "attachment" | null;
 }
 
 export interface NormalizedGmailMessage extends GmailMessageSummary {
@@ -69,18 +75,6 @@ export interface GmailMessageSummary {
   internalDate?: string;
   sizeEstimate?: number;
   snippet?: string;
-}
-
-export interface MimeMessageInput {
-  to: string[];
-  cc?: string[];
-  bcc?: string[];
-  subject?: string;
-  body?: string;
-  isHtml?: boolean;
-  from?: string;
-  inReplyTo?: string;
-  references?: string;
 }
 
 export function summarizeGmailMessage(resource: GmailMessageResource): GmailMessageSummary {
@@ -113,8 +107,8 @@ export function normalizeGmailMessage(resource: GmailMessageResource): Normalize
     },
     payload,
     messageText,
-    attachmentList: collectAttachments(payload),
-    ...(resource.raw ? { raw: resource.raw } : {}),
+    attachmentList: collectAttachments(payload, true),
+    raw: resource.raw,
   };
 }
 
@@ -137,26 +131,7 @@ export function resolveReplyHeaders(resource: GmailMessageResource): {
   };
 }
 
-export function encodeMimeMessage(input: MimeMessageInput): string {
-  const headers = [
-    headerLine("From", joinAddresses(input.from ? [input.from] : [])),
-    headerLine("To", joinAddresses(input.to)),
-    headerLine("Cc", joinAddresses(input.cc ?? [])),
-    headerLine("Bcc", joinAddresses(input.bcc ?? [])),
-    headerLine("Subject", encodeSubject(input.subject ?? "")),
-    headerLine("In-Reply-To", input.inReplyTo),
-    headerLine("References", input.references),
-    "MIME-Version: 1.0",
-    `Content-Type: ${input.isHtml ? "text/html" : "text/plain"}; charset=UTF-8`,
-    "Content-Transfer-Encoding: base64",
-  ].filter(Boolean);
-
-  const body = Buffer.from(input.body ?? "", "utf8").toString("base64");
-  const raw = `${headers.join("\r\n")}\r\n\r\n${body}`;
-  return Buffer.from(raw, "utf8").toString("base64url");
-}
-
-export function parseAddressList(value: string): string[] {
+function parseAddressList(value: string): string[] {
   const addresses: string[] = [];
   let current = "";
   let inQuotes = false;
@@ -210,43 +185,54 @@ export function parseAddressList(value: string): string[] {
   return addresses;
 }
 
-export function firstAddress(value: string): string {
+function firstAddress(value: string): string {
   return parseAddressList(value)[0] ?? "";
 }
 
-export function extractBodyContent(payload: GmailMessagePart | null): {
+interface GmailBodyContent {
   body: string;
   isHtml: boolean;
-} {
-  if (!payload) {
+}
+
+export function extractBodyContent(payload: GmailMessagePart | null): GmailBodyContent {
+  return extractPartBody(payload, true);
+}
+
+function extractPartBody(payload: GmailMessagePart | null, isBodyRoot: boolean): GmailBodyContent {
+  if (!payload || isAttachmentPart(payload, isBodyRoot)) {
     return { body: "", isHtml: false };
   }
 
-  if (payload.mimeType === "text/plain" && payload.body?.data) {
+  const mimeType = payload.mimeType?.toLowerCase();
+  if (mimeType === "multipart/related") {
+    return extractPartBody(bodyRootPart(payload) ?? null, true);
+  }
+  if ((mimeType === "text/plain" || mimeType === "text/html") && payload.body?.data !== undefined) {
     return {
       body: decodeBase64Url(payload.body.data),
-      isHtml: false,
+      isHtml: mimeType === "text/html",
     };
   }
 
-  if (payload.mimeType === "text/html" && payload.body?.data) {
-    return {
-      body: decodeBase64Url(payload.body.data),
-      isHtml: true,
-    };
-  }
-
+  let fallback = { body: "", isHtml: false };
+  const bodyRoot = bodyRootPart(payload);
   for (const part of payload.parts ?? []) {
-    const content = extractBodyContent(part);
-    if (content.body) {
+    const content = extractPartBody(part, mimeType === "multipart/alternative" || part === bodyRoot);
+    if (content.isHtml) {
       return content;
     }
+    if (!fallback.body && content.body) {
+      fallback = content;
+    }
+  }
+  if (fallback.body) {
+    return fallback;
   }
 
-  if (payload.body?.data && (!payload.mimeType || payload.mimeType.startsWith("text/"))) {
+  if (payload.body?.data !== undefined && (!mimeType || mimeType.startsWith("text/"))) {
     return {
       body: decodeBase64Url(payload.body.data),
-      isHtml: payload.mimeType === "text/html",
+      isHtml: mimeType === "text/html",
     };
   }
 
@@ -290,26 +276,79 @@ export function buildRecipients(input: RecipientsInput): Recipients {
   };
 }
 
-function collectAttachments(payload: GmailMessagePart | null): GmailAttachmentSummary[] {
+function collectAttachments(payload: GmailMessagePart | null, isBodyRoot: boolean): GmailAttachmentSummary[] {
   if (!payload) {
     return [];
   }
 
   const attachments: GmailAttachmentSummary[] = [];
-  if (payload.filename) {
+  if (isAttachmentPart(payload, isBodyRoot)) {
     attachments.push({
       attachmentId: payload.body?.attachmentId ?? null,
-      filename: payload.filename,
+      filename: payload.filename ?? "",
       mimeType: payload.mimeType ?? "application/octet-stream",
       size: payload.body?.size ?? 0,
+      partId: payload.partId ?? null,
+      contentId: readPartContentId(payload),
+      disposition: readPartDisposition(payload),
     });
   }
 
+  const bodyRoot = bodyRootPart(payload);
+  const isAlternative = payload.mimeType?.toLowerCase() === "multipart/alternative";
   for (const part of payload.parts ?? []) {
-    attachments.push(...collectAttachments(part));
+    attachments.push(...collectAttachments(part, isAlternative || part === bodyRoot));
   }
 
   return attachments;
+}
+
+function readPartContentId(part: GmailMessagePart): string | null {
+  return normalizeContentId(readHeader(part.headers ?? [], "Content-ID"));
+}
+
+function normalizeContentId(input: string): string | null {
+  const value = input.trim();
+  const contentId = value.startsWith("<") && value.endsWith(">") ? value.slice(1, -1).trim() : value;
+  return contentId || null;
+}
+
+function bodyRootPart(part: GmailMessagePart): GmailMessagePart | undefined {
+  const mimeType = part.mimeType?.toLowerCase();
+  if (mimeType === "multipart/mixed") {
+    const first = part.parts?.[0];
+    const firstMimeType = first?.mimeType?.toLowerCase() ?? "";
+    return firstMimeType === "text/plain" || firstMimeType === "text/html" || firstMimeType.startsWith("multipart/")
+      ? first
+      : undefined;
+  }
+  if (mimeType !== "multipart/related") return undefined;
+  const type = parseMimeHeader(readHeader(part.headers ?? [], "Content-Type").replace(/\r?\n[ \t]+/g, " "));
+  const start = type.parameters.get("start");
+  if (start === undefined) return part.parts?.[0];
+  const startId = normalizeContentId(start);
+  return startId ? part.parts?.find((child) => readPartContentId(child) === startId) : undefined;
+}
+
+function readPartDisposition(part: GmailMessagePart): "inline" | "attachment" | null {
+  const value = readHeader(part.headers ?? [], "Content-Disposition")
+    .split(";", 1)[0]
+    ?.trim()
+    .toLowerCase();
+  return value === "inline" || value === "attachment" ? value : null;
+}
+
+function isAttachmentPart(part: GmailMessagePart, isBodyRoot: boolean): boolean {
+  const disposition = readPartDisposition(part);
+  const mimeType = part.mimeType?.toLowerCase() ?? "";
+  const isBodyRepresentation =
+    isBodyRoot && (!mimeType || mimeType.startsWith("text/") || mimeType.startsWith("multipart/"));
+  return Boolean(
+    part.filename ||
+    (!isBodyRepresentation && readPartContentId(part)) ||
+    disposition === "attachment" ||
+    (disposition === "inline" && !mimeType.startsWith("text/") && !mimeType.startsWith("multipart/")),
+  );
 }
 
 function decodeBase64Url(value: string) {
@@ -343,20 +382,6 @@ function normalizeReplySubject(subject: string) {
   }
 
   return /^re:/i.test(subject) ? subject : `Re: ${subject}`;
-}
-
-function encodeSubject(subject: string) {
-  return subject.split("").every((char) => char.charCodeAt(0) <= 0x7f)
-    ? subject
-    : `=?UTF-8?B?${Buffer.from(subject, "utf8").toString("base64")}?=`;
-}
-
-function joinAddresses(addresses: string[]) {
-  return addresses.filter(Boolean).join(", ");
-}
-
-function headerLine(name: string, value?: string) {
-  return value ? `${name}: ${value}` : "";
 }
 
 function optionalAddressList(value: unknown): string[] {

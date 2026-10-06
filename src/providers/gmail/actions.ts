@@ -2,6 +2,7 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { gmailMaxAttachmentBytes, gmailMaxAttachmentCount, gmailMaxMimeBytes } from "./limits.ts";
 import {
   gmailComposeScopes,
   gmailLabelScopes,
@@ -36,6 +37,64 @@ const success = s.object(
   { required: ["success"], description: "Operation result." },
 );
 
+const attachmentInput = s.requireExactlyOneProperty(
+  s.object(
+    {
+      filename: s.string({
+        description: "Attachment filename. Omit for an unnamed Base64 attachment; defaults to the transit file name.",
+      }),
+      mimeType: s.string({
+        description:
+          "Attachment MIME type as type/subtype without parameters. Defaults to the transit file MIME type or application/octet-stream.",
+      }),
+      contentBase64: s.string({
+        description:
+          "Standard Base64 file content. An empty string represents a zero-byte file. Supply exactly one of contentBase64 or file.",
+      }),
+      file: s.transitFile("An uploaded transit file. Supply exactly one of file or contentBase64."),
+      contentId: s.string({
+        minLength: 1,
+        description: "Bare Content-ID without cid: or angle brackets. Reference it in HTML as cid:<contentId>.",
+      }),
+      disposition: s.stringEnum(["inline", "attachment"], {
+        description:
+          "Defaults to inline when contentId is present, otherwise attachment. Inline attachments require contentId.",
+      }),
+    },
+    { description: "An email attachment or CID inline image." },
+  ),
+  ["contentBase64", "file"],
+);
+attachmentInput.allOf = [
+  {
+    if: { properties: { disposition: { const: "inline" } }, required: ["disposition"] },
+    then: { required: ["contentId"] },
+  },
+];
+const attachments = s.array(attachmentInput, {
+  maxItems: gmailMaxAttachmentCount,
+  description: `Email attachments and CID inline images, up to ${gmailMaxAttachmentBytes} decoded bytes in total and ${gmailMaxMimeBytes} bytes for the complete MIME message. Provide file bytes or a transit file reference; HTML image conversion is performed by the caller.`,
+});
+const attachmentSummary = s.object(
+  {
+    attachmentId: s.nullable(
+      s.string({ description: "Gmail attachment ID, or null when bytes are stored directly in the message part." }),
+    ),
+    filename: s.string({ description: "Attachment filename; empty for unnamed parts." }),
+    mimeType: s.string({ description: "Attachment MIME type." }),
+    size: s.integer({ minimum: 0, description: "Attachment size in bytes." }),
+    partId: s.nullable(s.string({ description: "Gmail MIME part ID when supplied." })),
+    contentId: s.nullable(s.string({ description: "Bare Content-ID without angle brackets, when supplied." })),
+    disposition: s.nullable(
+      s.stringEnum(["inline", "attachment"], { description: "Content-Disposition when supplied and recognized." }),
+    ),
+  },
+  {
+    required: ["attachmentId", "filename", "mimeType", "size", "partId", "contentId", "disposition"],
+    description: "Attachment or inline resource metadata from a Gmail MIME part.",
+  },
+);
+
 const messageSummaryProperties = {
   messageId,
   threadId,
@@ -61,8 +120,12 @@ const message = s.object(
     ...messageSummaryProperties,
     preview: gmailObject,
     payload: s.nullable(gmailObject),
-    messageText: s.string({ description: "Extracted message body text." }),
-    attachmentList: s.array(gmailObject, { description: "Message attachments." }),
+    messageText: s.string({
+      description: "Extracted message body; HTML is preferred when both HTML and plain-text alternatives are present.",
+    }),
+    attachmentList: s.array(attachmentSummary, {
+      description: "Message attachments and inline resources, including unnamed CID parts.",
+    }),
     raw: s.string({ description: "Raw RFC 2822 message when requested." }),
   },
   {
@@ -181,6 +244,7 @@ const recipientFields = (): Record<string, JsonSchema> => ({
   body: s.string({ description: "Email body content." }),
   messageBody: s.string({ description: "Reply or draft body content." }),
   isHtml: s.boolean({ description: "Whether the body is HTML." }),
+  attachments,
   fromEmail: s.string({ description: "Verified Gmail send-as alias." }),
 });
 
@@ -331,7 +395,7 @@ export const gmailActions: ActionDefinition[] = [
   action({
     name: "send_email",
     operationType: "write",
-    description: "Send an email from the connected Gmail account.",
+    description: "Send an email with optional attachments and CID inline images from the connected Gmail account.",
     requiredScopes: gmailSendScopes,
     properties: recipientFields(),
     outputSchema: s.object({ messageId }, { required: ["messageId"], description: "Sent message result." }),
@@ -341,7 +405,13 @@ export const gmailActions: ActionDefinition[] = [
     operationType: "write",
     description: "Reply to an existing Gmail thread using the original message's reply headers.",
     requiredScopes: gmailSendScopes,
-    properties: { threadId, messageId, body: s.string({ description: "Reply body." }) },
+    properties: {
+      threadId,
+      messageId,
+      body: s.string({ description: "Reply body." }),
+      isHtml: s.boolean({ description: "Whether the reply body is HTML." }),
+      attachments,
+    },
     required: ["threadId", "messageId", "body"],
     outputSchema: s.object({ messageId }, { required: ["messageId"], description: "Reply result." }),
   }),
@@ -357,13 +427,16 @@ export const gmailActions: ActionDefinition[] = [
   action({
     name: "create_draft",
     operationType: "write",
-    description: "Create a Gmail draft with a simplified input and output shape.",
+    description:
+      "Create a Gmail draft with optional attachments and CID inline images using a simplified input and output shape.",
     requiredScopes: gmailComposeScopes,
     properties: {
       to: s.string(),
       subject: s.string(),
       body: s.string(),
       cc: s.union([s.string(), s.array(s.string())]),
+      isHtml: s.boolean({ description: "Whether the draft body is HTML." }),
+      attachments,
     },
     required: ["to", "subject", "body"],
     outputSchema: s.object({ draftId }, { required: ["draftId"], description: "Created draft result." }),
@@ -371,7 +444,8 @@ export const gmailActions: ActionDefinition[] = [
   action({
     name: "create_email_draft",
     operationType: "write",
-    description: "Create a Gmail draft with recipients, subject, body, and optional threading.",
+    description:
+      "Create a Gmail draft with recipients, subject, body, optional attachments or CID inline images, and optional threading.",
     requiredScopes: gmailComposeScopes,
     properties: { ...recipientFields(), threadId },
     outputSchema: s.object({ draftId, messageId, threadId }, { required: ["draftId"], description: "Created draft." }),
@@ -399,9 +473,27 @@ export const gmailActions: ActionDefinition[] = [
   action({
     name: "update_draft",
     operationType: "write",
-    description: "Update an existing Gmail draft in place.",
+    description:
+      "Update a Gmail draft while preserving omitted fields, attachments, CID inline images, and reply headers. Omit body to preserve existing MIME body alternatives; supply body to replace them with one text or HTML body. Omit attachments to preserve them, supply a list to replace all attachments and inline images, or [] to remove them.",
     requiredScopes: gmailComposeScopes,
-    properties: { draftId, ...recipientFields(), threadId },
+    properties: {
+      draftId,
+      ...recipientFields(),
+      threadId,
+      body: s.string({
+        description:
+          "Replacement body. Omit to preserve all existing text and HTML alternatives; an empty string clears the body.",
+      }),
+      messageBody: s.string({
+        description:
+          "Alias for the replacement body. Omit both body fields to preserve existing MIME body alternatives.",
+      }),
+      isHtml: s.boolean({ description: "Whether the replacement body is HTML. Requires body or messageBody." }),
+      attachments: s.describe(
+        attachments,
+        "Omit to preserve all attachments and CID inline images. A supplied list replaces all of them; [] clears all attachments and inline images.",
+      ),
+    },
     required: ["draftId"],
     outputSchema: s.object({ draftId, messageId, threadId }, { required: ["draftId"], description: "Updated draft." }),
   }),

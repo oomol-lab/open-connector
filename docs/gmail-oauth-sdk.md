@@ -134,6 +134,63 @@ npm install -D @oomol-lab/connector-types
 import "@oomol-lab/connector-types/gmail";
 ```
 
+## 6. Attach Files And Inline Images
+
+Gmail send, draft creation, and reply actions accept `attachments`. For a CID image, provide a
+`contentId` and reference the same value from your HTML. Render Markdown, resolve application assets,
+and convert image URLs to CID references in your application before calling the connector.
+
+With `open` from the previous section and local `logo.png` and `report.pdf` files:
+
+```ts
+import { readFile } from "node:fs/promises";
+
+const { draftId } = await open.execute("gmail.create_email_draft", {
+  to: "recipient@example.com",
+  subject: "Report",
+  body: '<p>Please see the attached report.</p><img src="cid:logo" alt="Logo">',
+  isHtml: true,
+  attachments: [
+    {
+      filename: "logo.png",
+      mimeType: "image/png",
+      contentBase64: (await readFile("./logo.png")).toString("base64"),
+      contentId: "logo",
+      disposition: "inline",
+    },
+    {
+      filename: "report.pdf",
+      mimeType: "application/pdf",
+      contentBase64: (await readFile("./report.pdf")).toString("base64"),
+    },
+  ],
+});
+
+await open.execute("gmail.update_draft", { draftId, subject: "Updated report" });
+```
+
+The subject-only update preserves the existing MIME body, attachments, inline images, and reply
+headers. `gmail.send_draft` sends the saved draft as-is.
+
+Each attachment accepts exactly one content source: `contentBase64` or `file: { fileId }` for a
+file uploaded through `POST /api/files`. `filename` and `mimeType` can override transit file metadata.
+Use a bare `contentId`, without `cid:` or angle brackets. Its presence defaults the disposition to
+`inline`; otherwise the default is `attachment`.
+
+For `update_draft`:
+
+- Omit `attachments` to preserve existing files and inline images. A supplied list replaces all of
+  them; `attachments: []` removes them. Update HTML references when removing or replacing CID images.
+- Omit both `body` and `messageBody` to preserve existing plain-text and HTML alternatives. A supplied
+  body replaces those alternatives with one body; use `isHtml: true` for HTML. An empty body clears it.
+  `isHtml` requires a replacement body.
+- Omitted editable headers remain unchanged. An empty subject or empty recipient field clears that
+  field. Content edits to unsupported or ambiguous MIME structures fail rather than discard content.
+
+The connector accepts at most 100 attachments, 25,000,000 decoded attachment bytes in total, and
+35,000,000 bytes for the complete MIME message, including encoding overhead. Gmail can impose
+additional account or content restrictions.
+
 ## Common Issues
 
 - `redirect_uri_mismatch`: make sure the OAuth app allows the current runtime origin plus
