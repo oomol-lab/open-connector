@@ -386,9 +386,8 @@ function normalizeReplySubject(subject: string) {
 
 function optionalAddressList(value: unknown): string[] {
   if (Array.isArray(value)) {
-    return value.map((item) => String(item).trim()).filter(Boolean);
+    return value.flatMap((item) => parseAddressList(String(item)));
   }
 
-  const stringValue = String(value ?? "").trim();
-  return stringValue ? [stringValue] : [];
+  return parseAddressList(String(value ?? ""));
 }

@@ -56,6 +56,26 @@ function fixture(initialRaw?: string) {
 }
 
 describe("Gmail attachment workflows", () => {
+  it.each(["string", "array"])("preserves Unicode recipients in %s address lists when sending", async (format) => {
+    const addresses = '"张三, 研发" <first@example.com>, 李四 <second@example.com>';
+    const recipients = format === "array" ? [addresses] : addresses;
+    const test = fixture();
+    await gmailActionHandlers.send_email(
+      { to: addresses, cc: recipients, bcc: recipients, body: "hello" },
+      test.context,
+    );
+    const parsed = await simpleParser(Buffer.from(test.sent[0]!, "base64url"));
+    const expected = {
+      value: [
+        { name: "张三, 研发", address: "first@example.com" },
+        { name: "李四", address: "second@example.com" },
+      ],
+    };
+    expect(parsed.to).toMatchObject(expected);
+    expect(parsed.cc).toMatchObject(expected);
+    expect(parsed.bcc).toMatchObject(expected);
+  });
+
   it.each([
     { name: "send_email", handler: gmailActionHandlers.send_email, sends: true, reply: false },
     { name: "create_draft", handler: gmailActionHandlers.create_draft, sends: false, reply: false },
