@@ -157,7 +157,7 @@ const { draftId } = await open.execute("gmail.create_email_draft", {
 await open.execute("gmail.update_draft", { draftId, subject: "Updated report" });
 ```
 
-仅修改主题会保留原 MIME 正文、附件、内嵌图片和回复关系头。`gmail.send_draft` 原样发送已保存的草稿。
+上面创建的是新邮件草稿，仅修改主题会保留原 MIME 正文、附件和内嵌图片。`gmail.send_draft` 原样发送已保存的草稿。
 
 每个附件必须且只能指定一种内容来源：`contentBase64`，或引用 `POST /api/files` 上传结果的
 `file: { fileId }`。`filename` 和 `mimeType` 可以覆盖中转文件的元数据。`contentId` 不带 `cid:`
@@ -170,11 +170,67 @@ await open.execute("gmail.update_draft", { draftId, subject: "Updated report" })
 - 同时省略 `body` 和 `messageBody` 保留已有纯文本与 HTML 双正文；传入正文则替换成一份正文，
   省略 `isHtml` 会继承原正文类型（存在 HTML alternative 时使用 HTML）。纯文本请显式指定
   `isHtml: false`，HTML 请指定 `isHtml: true`。空字符串清空正文。指定 `isHtml` 时必须提供替换正文。
-- 未传入的可编辑邮件头保持不变；空主题或空收件人字段用于清除对应值。对于无法安全处理或有歧义的
+- 未传入的可编辑邮件头保持不变；新邮件草稿的空主题或空收件人字段用于清除对应值。回复草稿的主题必须与关联会话匹配。对于无法安全处理或有歧义的
   MIME 结构，内容更新会报错，不会静默丢弃内容。
 
 connector 最多接受 100 个附件，附件解码后合计不超过 25,000,000 字节，包含编码开销的完整 MIME
 邮件不超过 35,000,000 字节。Gmail 仍可能施加账号或内容限制。
+
+## 7. 创建并发送回复草稿
+
+将原邮件的 Gmail 资源 ID 传给 `replyToMessageId`。connector 会读取原邮件头，补齐省略的回复收件人和主题，
+并构建 `In-Reply-To` 和 `References`。同时提供 `threadId` 时，它必须与原邮件所属线程一致。
+仅提供 `threadId` 时，选择会话中最近的非草稿邮件。目标邮件缺少可用的 RFC `Message-ID` 邮件头时，
+创建或发送回复前会报错。
+
+```ts
+const draft = await open.execute("gmail.create_email_draft", {
+  replyToMessageId: originalMessageId,
+  body: "Thanks for the report. I will review it today.",
+});
+
+const updated = await open.execute("gmail.update_draft", {
+  draftId: draft.draftId,
+  body: "Thanks for the report. I will send feedback tomorrow.",
+});
+
+// This call sends an email and removes the saved draft.
+const sent = await open.execute("gmail.send_draft", { draftId: updated.draftId });
+console.log(sent.messageId, sent.threadId);
+```
+
+普通编辑保留回复关系和已有附件。提供主题时，忽略开头的 `Re:` 前缀后必须与会话主题匹配。
+要切换回复对象，在 `update_draft` 中传入 `replyToMessageId` 或不同的 `threadId`；connector 会重建回复头，
+未提供主题时使用新目标邮件的回复主题。更新时省略收件人会保留已有值，因此切换到不同会话时应明确传入收件人。
+
+各 ID 的含义不同：
+
+- `draftId` 标识保存的草稿，更新时保持不变。
+- `messageId` 标识草稿内部当前的 Gmail 邮件，内容替换后会变化。发送后 Gmail 删除草稿，返回新的已发送邮件 ID。
+- `threadId` 标识 Gmail 会话，保存执行结果时使用返回值。
+- RFC `Message-ID` 是用于回复关联的邮件头，与 Gmail `messageId` 不同。
+
+`send_email`、两个回复接口和 `send_draft` 返回 Gmail 提供的已发送邮件及线程 ID。
+两个草稿创建接口和 `update_draft` 返回草稿 ID 及当前邮件、线程 ID。缺失的可选 ID 会省略；
+`send_draft` 保留缺失时返回 `threadId: null` 的行为。`list_drafts` 默认返回邮件 ID，
+设置 `verbose: true` 时返回完整邮件详情。
+
+OAuth 的 `gmail.modify` 可以覆盖上述流程。使用窄权限时：
+
+| 操作                       | Scopes                              |
+| -------------------------- | ----------------------------------- |
+| 发送新邮件                 | `gmail.send`                        |
+| 回复已有邮件或线程         | `gmail.readonly` 和 `gmail.send`    |
+| 创建、编辑或发送普通草稿   | `gmail.compose`                     |
+| 创建回复草稿或切换回复对象 | `gmail.readonly` 和 `gmail.compose` |
+
+完整 scope 名称以 `https://www.googleapis.com/auth/` 开头。草稿接口只有解析回复目标时才额外需要读取权限；
+普通草稿的创建和编辑无需读取草稿以外的邮件。仅有 `gmail.send` 不能调用 Gmail 的 `drafts.send`。
+授权前配置 OAuth client 的 `requestedScopes`；已有账号的授权不足时需要重新连接。
+
+以上是操作所需的权限。OpenConnector 验证连接时还会调用 Gmail 的 `users.getProfile`，
+该接口接受 `gmail.compose` 和 `gmail.readonly`，但不接受仅有 `gmail.send` 的授权。
+用于发送新邮件的连接应同时请求 `gmail.readonly` 和 `gmail.send`，或使用 `gmail.compose`、`gmail.modify`。
 
 ## 常见问题
 

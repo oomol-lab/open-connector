@@ -1,7 +1,11 @@
+import type { GmailMessageResource } from "./message.ts";
+
+import { Validator } from "@cfworker/json-schema";
 import { simpleParser } from "mailparser";
 import { Buffer } from "node:buffer";
 import { describe, expect, it } from "vitest";
 import { defaultProviderJsonMaxResponseBytes } from "../provider-runtime.ts";
+import { gmailActions } from "./actions.ts";
 import { gmailActionHandlers } from "./executors.ts";
 import { encodeMimeMessage } from "./mime.ts";
 
@@ -13,11 +17,15 @@ const html = '  <p>hello<img src="cid:logo"></p>\n ';
 
 function fixture(initialRaw?: string) {
   let raw = initialRaw ?? "";
+  let revision = 0;
+  let storedThreadId = "thread-1";
   const requests: Array<{ url: URL; init: RequestInit }> = [];
   const sent: string[] = [];
-  const target = {
+  const responseIds = { messageId: true, threadId: true };
+  const target: GmailMessageResource = {
     id: "original",
     threadId: "thread-1",
+    internalDate: "1000",
     payload: {
       headers: [
         { name: "Subject", value: "Topic" },
@@ -27,32 +35,86 @@ function fixture(initialRaw?: string) {
       ],
     },
   };
+  const messages = [target];
   const fetcher: typeof fetch = async (input, init = {}) => {
     const url = new URL(String(input));
     requests.push({ url, init });
-    if (url.pathname.endsWith("/threads/thread-1")) return Response.json({ id: "thread-1", messages: [target] });
-    if (url.pathname.endsWith("/messages/original")) return Response.json(target);
+    const threadMatch = url.pathname.match(/\/threads\/([^/]+)$/);
+    if (threadMatch && !init.method) {
+      return Response.json({
+        id: threadMatch[1],
+        messages: messages.filter((message) => message.threadId === threadMatch[1]),
+      });
+    }
+    const messageMatch = url.pathname.match(/\/messages\/([^/]+)$/);
+    if (messageMatch && !init.method) {
+      const message = messages.find((message) => message.id === messageMatch[1]);
+      if (!message) return Response.json({ error: { message: "Message not found" } }, { status: 404 });
+      return Response.json(message);
+    }
+    if (url.pathname.endsWith("/drafts") && !init.method) {
+      return Response.json({
+        drafts: [
+          {
+            id: "draft-1",
+            message: {
+              id: responseIds.messageId ? `message-${revision}` : undefined,
+              threadId: responseIds.threadId ? storedThreadId : undefined,
+            },
+          },
+        ],
+        nextPageToken: "next-page",
+      });
+    }
     if (url.pathname.endsWith("/drafts/draft-1") && !init.method) {
-      expect(url.searchParams.get("format")).toBe("raw");
-      return Response.json({ id: "draft-1", message: { id: "message-1", threadId: "thread-1", raw } });
+      const format = url.searchParams.get("format");
+      expect(["raw", "full"]).toContain(format);
+      return Response.json({
+        id: "draft-1",
+        message: {
+          id: responseIds.messageId ? `message-${revision}` : undefined,
+          threadId: responseIds.threadId ? storedThreadId : undefined,
+          raw: format === "raw" ? raw : undefined,
+          payload: format === "full" ? target.payload : undefined,
+        },
+      });
     }
     const body = JSON.parse(String(init.body));
     if (url.pathname.endsWith("/messages/send")) {
       sent.push(body.raw);
-      return Response.json({ id: "sent-1", threadId: "thread-1" });
+      return Response.json({
+        id: "sent-1",
+        threadId: responseIds.threadId ? (body.threadId ?? storedThreadId) : undefined,
+      });
     }
     if (url.pathname.endsWith("/drafts/send")) {
       expect(body).toEqual({ id: "draft-1" });
       sent.push(raw);
-      return Response.json({ id: "sent-1", threadId: "thread-1" });
+      return Response.json({ id: "sent-1", threadId: responseIds.threadId ? storedThreadId : undefined });
+    }
+    if (!url.pathname.endsWith("/drafts") && !url.pathname.endsWith("/drafts/draft-1")) {
+      throw new Error(`Unexpected Gmail request: ${init.method ?? "GET"} ${url.pathname}`);
     }
     raw = body.message.raw;
+    revision += 1;
+    storedThreadId = body.message.threadId ?? storedThreadId;
     return Response.json({
       id: "draft-1",
-      message: { id: "message-1", threadId: body.message.threadId ?? "thread-1" },
+      message: {
+        id: responseIds.messageId ? `message-${revision}` : undefined,
+        threadId: responseIds.threadId ? storedThreadId : undefined,
+      },
     });
   };
-  return { context: { userId: "me", accessToken: "gmail-token", fetcher }, requests, sent, raw: () => raw };
+  return {
+    context: { userId: "me", accessToken: "gmail-token", fetcher },
+    requests,
+    sent,
+    messages,
+    target,
+    responseIds,
+    raw: () => raw,
+  };
 }
 
 describe("Gmail attachment workflows", () => {
@@ -108,31 +170,43 @@ describe("Gmail attachment workflows", () => {
 
   it("creates, updates and sends the original draft without losing attachments or reply headers", async () => {
     const test = fixture();
-    await gmailActionHandlers.create_email_draft(
-      { to: "reader@example.com", body: html, isHtml: true, attachments: suppliedAttachments },
+    const created = await gmailActionHandlers.create_email_draft(
+      {
+        replyToMessageId: "original",
+        to: "reader@example.com",
+        body: html,
+        isHtml: true,
+        attachments: suppliedAttachments,
+      },
       test.context,
     );
+    expect(created).toEqual({ draftId: "draft-1", messageId: "message-1", threadId: "thread-1" });
     const originalBody = Buffer.from(test.raw(), "base64url").toString().split("\r\n\r\n").slice(1).join("\r\n\r\n");
-    await gmailActionHandlers.update_draft({ draftId: "draft-1", subject: "updated", cc: [], bcc: "" }, test.context);
+    const edited = await gmailActionHandlers.update_draft(
+      { draftId: "draft-1", subject: "Re: Topic", cc: [], bcc: "" },
+      test.context,
+    );
+    expect(edited).toEqual({ draftId: "draft-1", messageId: "message-2", threadId: "thread-1" });
     const updated = Buffer.from(test.raw(), "base64url").toString();
     expect(updated.split("\r\n\r\n").slice(1).join("\r\n\r\n")).toBe(originalBody);
     const updateRequest = test.requests.find((request) => request.init.method === "PUT")!;
     expect(JSON.parse(String(updateRequest.init.body)).message.threadId).toBe("thread-1");
-    await gmailActionHandlers.send_draft({ draftId: "draft-1" }, test.context);
+    const output = await gmailActionHandlers.send_draft({ draftId: "draft-1" }, test.context);
+    expect(output).toEqual({ messageId: "sent-1", threadId: "thread-1" });
     const sent = await simpleParser(Buffer.from(test.sent[0]!, "base64url"), { skipImageLinks: true });
-    expect(sent.subject).toBe("updated");
+    expect(sent.subject).toBe("Re: Topic");
+    expect(sent.inReplyTo).toBe("<original@example.com>");
+    expect(sent.references).toEqual(["<root@example.com>", "<original@example.com>"]);
     expect(sent.html).toBe(html);
     expect(sent.attachments).toHaveLength(2);
   });
 
-  it("preserves threading headers and accepts an empty body and subject when explicitly supplied", async () => {
+  it("accepts an empty body and subject when editing an ordinary draft", async () => {
     const original = encodeMimeMessage({
       to: ["reader@example.com"],
       subject: "original",
       body: html,
       isHtml: true,
-      inReplyTo: "<parent@example.com>",
-      references: "<root@example.com> <parent@example.com>",
     });
     const test = fixture(original);
     await gmailActionHandlers.update_draft(
@@ -142,8 +216,8 @@ describe("Gmail attachment workflows", () => {
     const parsed = await simpleParser(Buffer.from(test.raw(), "base64url"));
     expect(parsed.subject ?? "").toBe("");
     expect(parsed.html || "").toBe("");
-    expect(parsed.inReplyTo).toBe("<parent@example.com>");
-    expect(parsed.references).toEqual(["<root@example.com>", "<parent@example.com>"]);
+    expect(parsed.inReplyTo).toBeUndefined();
+    expect(parsed.references).toBeUndefined();
   });
 
   it("allows attachment-sized raw responses above the default JSON cap", async () => {
@@ -164,7 +238,8 @@ describe("Gmail attachment workflows", () => {
     expect((await simpleParser(Buffer.from(test.raw(), "base64url"))).attachments[0]?.content.byteLength).toBe(
       fileBytes,
     );
-  }, 15_000);
+    // Encoding and parsing this 12 MiB attachment needs extra time in the full concurrent suite.
+  }, 30_000);
 
   it("refuses unavailable raw MIME and unsupported edits before updating the stored draft", async () => {
     const test = fixture();
@@ -179,5 +254,476 @@ describe("Gmail attachment workflows", () => {
       gmailActionHandlers.update_draft({ draftId: "draft-1", attachments: [] }, signed.context),
     ).rejects.toMatchObject({ status: 400 });
     expect(signed.requests.some((request) => request.init.method === "PUT")).toBe(false);
+  });
+});
+
+describe("Gmail reply and draft threading", () => {
+  it.each([
+    { name: "a message", input: { replyToMessageId: "original" } },
+    { name: "a thread", input: { threadId: "thread-1" } },
+  ])("creates a reply draft from $name with matching headers, subject and recipient", async ({ input }) => {
+    const test = fixture();
+    await gmailActionHandlers.create_email_draft({ ...input, body: "Reply body" }, test.context);
+    const parsed = await simpleParser(Buffer.from(test.raw(), "base64url"));
+    expect(parsed.subject).toBe("Re: Topic");
+    expect(parsed.to).toMatchObject({ value: [{ address: "sender@example.com" }] });
+    expect(parsed.inReplyTo).toBe("<original@example.com>");
+    expect(parsed.references).toEqual(["<root@example.com>", "<original@example.com>"]);
+    const write = test.requests.find((request) => request.init.method === "POST")!;
+    expect(JSON.parse(String(write.init.body)).message.threadId).toBe("thread-1");
+  });
+
+  it.each(["", []])("keeps an explicitly empty To recipient list when creating a reply draft: %j", async (to) => {
+    const test = fixture();
+    await gmailActionHandlers.create_email_draft(
+      { replyToMessageId: "original", to, cc: "copy@example.com", body: "Reply body" },
+      test.context,
+    );
+    const parsed = await simpleParser(Buffer.from(test.raw(), "base64url"));
+    expect(parsed.to).toBeUndefined();
+    expect(parsed.cc).toMatchObject({ value: [{ address: "copy@example.com" }] });
+    expect(parsed.inReplyTo).toBe("<original@example.com>");
+  });
+
+  it.each([
+    { name: "reply_to_thread", handler: gmailActionHandlers.reply_to_thread },
+    { name: "create_email_draft", handler: gmailActionHandlers.create_email_draft },
+  ])("selects the latest dated non-draft message despite undated entries through $name", async ({ handler }) => {
+    const test = fixture();
+    test.messages.unshift({
+      id: "latest",
+      threadId: "thread-1",
+      internalDate: "3000",
+      labelIds: ["INBOX"],
+      payload: {
+        headers: [
+          { name: "Subject", value: "Re: Topic" },
+          { name: "From", value: "latest@example.com" },
+          { name: "Message-ID", value: "<latest@example.com>" },
+          { name: "References", value: "<root@example.com> <original@example.com>" },
+        ],
+      },
+    });
+    test.messages.splice(1, 0, {
+      id: "undated",
+      threadId: "thread-1",
+      labelIds: ["INBOX"],
+      payload: {
+        headers: [
+          { name: "Subject", value: "Re: Topic" },
+          { name: "From", value: "undated@example.com" },
+          { name: "Message-ID", value: "<undated@example.com>" },
+        ],
+      },
+    });
+    test.messages.push({
+      id: "draft-message",
+      threadId: "thread-1",
+      internalDate: "5000",
+      labelIds: ["DRAFT"],
+      payload: {
+        headers: [
+          { name: "Subject", value: "Re: Topic" },
+          { name: "From", value: "draft@example.com" },
+          { name: "Message-ID", value: "<draft@example.com>" },
+        ],
+      },
+    });
+    await handler({ threadId: "thread-1", body: "Reply body" }, test.context);
+    const parsed = await simpleParser(Buffer.from(test.sent[0] ?? test.raw(), "base64url"));
+    expect(parsed.inReplyTo).toBe("<latest@example.com>");
+    expect(parsed.to).toMatchObject({ value: [{ address: "latest@example.com" }] });
+    expect(parsed.references).toEqual(["<root@example.com>", "<original@example.com>", "<latest@example.com>"]);
+  });
+
+  it.each([
+    {
+      name: "reply_email",
+      handler: gmailActionHandlers.reply_email,
+      input: { messageId: "original", threadId: "different-thread", body: "Reply" },
+    },
+    {
+      name: "create_email_draft",
+      handler: gmailActionHandlers.create_email_draft,
+      input: { replyToMessageId: "original", threadId: "different-thread", body: "Reply" },
+    },
+  ])("refuses mismatched message and thread IDs before writing through $name", async ({ handler, input }) => {
+    const test = fixture();
+    await expect(handler(input, test.context)).rejects.toMatchObject({ status: 400 });
+    expect(test.requests.every((request) => !request.init.method)).toBe(true);
+  });
+
+  it.each([
+    {
+      name: "reply_email",
+      handler: gmailActionHandlers.reply_email,
+      input: { messageId: "original", threadId: "thread-1", body: "Reply" },
+    },
+    {
+      name: "reply_to_thread",
+      handler: gmailActionHandlers.reply_to_thread,
+      input: { threadId: "thread-1", body: "Reply" },
+    },
+    {
+      name: "create_email_draft",
+      handler: gmailActionHandlers.create_email_draft,
+      input: { replyToMessageId: "original", body: "Reply" },
+    },
+  ])("refuses a reply target without an RFC Message-ID before writing through $name", async ({ handler, input }) => {
+    const test = fixture();
+    test.target.payload!.headers = test.target.payload!.headers!.filter((header) => header.name !== "Message-ID");
+    await expect(handler(input, test.context)).rejects.toMatchObject({ status: 400 });
+    expect(test.requests.every((request) => !request.init.method)).toBe(true);
+  });
+
+  it("refuses a thread containing only drafts", async () => {
+    const test = fixture();
+    test.target.labelIds = ["DRAFT"];
+    await expect(
+      gmailActionHandlers.create_email_draft({ threadId: "thread-1", body: "Reply" }, test.context),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(test.requests.every((request) => !request.init.method)).toBe(true);
+  });
+
+  it("rejects a mismatched subject before creating a reply draft", async () => {
+    const test = fixture();
+    await expect(
+      gmailActionHandlers.create_email_draft(
+        { replyToMessageId: "original", subject: "Another topic", body: "Reply" },
+        test.context,
+      ),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(test.requests.every((request) => !request.init.method)).toBe(true);
+  });
+
+  it.each(["Another topic", ""])("rejects a conflicting subject on an existing reply draft: %s", async (subject) => {
+    const test = fixture(
+      encodeMimeMessage({
+        to: ["reader@example.com"],
+        subject: "Re: Topic",
+        body: "Reply body",
+        inReplyTo: "<original@example.com>",
+        references: "<root@example.com> <original@example.com>",
+      }),
+    );
+    const original = test.raw();
+    await expect(gmailActionHandlers.update_draft({ draftId: "draft-1", subject }, test.context)).rejects.toMatchObject(
+      { status: 400 },
+    );
+    expect(test.raw()).toBe(original);
+    expect(test.requests.some((request) => request.init.method === "PUT")).toBe(false);
+  });
+
+  it("preserves the original reply target when explicitly retaining the current thread", async () => {
+    const test = fixture(
+      encodeMimeMessage({
+        to: ["reader@example.com"],
+        subject: "Re: Topic",
+        body: "Reply body",
+        inReplyTo: "<original@example.com>",
+        references: "<root@example.com> <original@example.com>",
+      }),
+    );
+    test.messages.push({
+      ...test.target,
+      id: "later",
+      internalDate: "3000",
+      payload: {
+        headers: [
+          { name: "Subject", value: "Topic" },
+          { name: "From", value: "later@example.com" },
+          { name: "Message-ID", value: "<later@example.com>" },
+        ],
+      },
+    });
+    await gmailActionHandlers.update_draft({ draftId: "draft-1", threadId: "thread-1", body: "" }, test.context);
+    const parsed = await simpleParser(Buffer.from(test.raw(), "base64url"));
+    expect(parsed.inReplyTo).toBe("<original@example.com>");
+    expect(parsed.references).toEqual(["<root@example.com>", "<original@example.com>"]);
+    expect(parsed.text ?? "").toBe("");
+  });
+
+  it.each([
+    { name: "thread", input: { threadId: "thread-2" } },
+    { name: "message", input: { replyToMessageId: "other-original" } },
+  ])("rebuilds reply headers and subject when switching the draft to another $name", async ({ input }) => {
+    const test = fixture(
+      encodeMimeMessage({
+        to: ["reader@example.com"],
+        subject: "Re: Topic",
+        body: html,
+        isHtml: true,
+        inReplyTo: "<original@example.com>",
+        references: "<root@example.com> <original@example.com>",
+        attachments: [
+          {
+            filename: "report.txt",
+            mimeType: "text/plain",
+            contentBase64: Buffer.from("report bytes").toString("base64"),
+            disposition: "attachment",
+          },
+          {
+            mimeType: "image/png",
+            contentId: "logo",
+            contentBase64: Buffer.from([0, 137, 255]).toString("base64"),
+            disposition: "inline",
+          },
+        ],
+      }),
+    );
+    test.messages.push({
+      id: "other-original",
+      threadId: "thread-2",
+      internalDate: "2000",
+      payload: {
+        headers: [
+          { name: "Subject", value: "Other topic" },
+          { name: "From", value: "other@example.com" },
+          { name: "Message-ID", value: "<other@example.com>" },
+          { name: "References", value: "<other-root@example.com>" },
+        ],
+      },
+    });
+    const originalBody = Buffer.from(test.raw(), "base64url").toString().split("\r\n\r\n").slice(1).join("\r\n\r\n");
+    const output = await gmailActionHandlers.update_draft({ draftId: "draft-1", ...input }, test.context);
+    expect(output).toMatchObject({ draftId: "draft-1", messageId: "message-1", threadId: "thread-2" });
+    const updated = Buffer.from(test.raw(), "base64url").toString();
+    expect(updated.split("\r\n\r\n").slice(1).join("\r\n\r\n")).toBe(originalBody);
+    const parsed = await simpleParser(Buffer.from(test.raw(), "base64url"), { skipImageLinks: true });
+    expect(parsed.subject).toBe("Re: Other topic");
+    expect(parsed.inReplyTo).toBe("<other@example.com>");
+    expect(parsed.references).toEqual(["<other-root@example.com>", "<other@example.com>"]);
+    expect(parsed.html).toBe(html);
+    expect(parsed.attachments).toHaveLength(2);
+    const write = test.requests.find((request) => request.init.method === "PUT")!;
+    expect(JSON.parse(String(write.init.body)).message.threadId).toBe("thread-2");
+  });
+
+  it.each([
+    {
+      name: "mismatched message and thread IDs",
+      input: { replyToMessageId: "original", threadId: "thread-2" },
+      missingMessageId: false,
+    },
+    { name: "a conflicting subject", input: { threadId: "thread-2", subject: "Topic" }, missingMessageId: false },
+    {
+      name: "a target without an RFC Message-ID",
+      input: { replyToMessageId: "other-original" },
+      missingMessageId: true,
+    },
+  ])("refuses to update a reply association with $name", async ({ input, missingMessageId }) => {
+    const test = fixture(
+      encodeMimeMessage({
+        to: ["reader@example.com"],
+        subject: "Re: Topic",
+        body: "Reply body",
+        inReplyTo: "<original@example.com>",
+        references: "<root@example.com> <original@example.com>",
+      }),
+    );
+    const other: GmailMessageResource = {
+      id: "other-original",
+      threadId: "thread-2",
+      payload: {
+        headers: [
+          { name: "Subject", value: "Other topic" },
+          { name: "From", value: "other@example.com" },
+        ],
+      },
+    };
+    if (!missingMessageId) other.payload!.headers!.push({ name: "Message-ID", value: "<other@example.com>" });
+    test.messages.push(other);
+    const original = test.raw();
+    await expect(
+      gmailActionHandlers.update_draft({ draftId: "draft-1", ...input }, test.context),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(test.raw()).toBe(original);
+    expect(test.requests.some((request) => request.init.method === "PUT")).toBe(false);
+  });
+
+  it("compares decoded Unicode reply subjects when editing a draft", async () => {
+    const test = fixture(
+      encodeMimeMessage({
+        to: ["reader@example.com"],
+        subject: "Re: 项目进度",
+        body: "Reply body",
+        inReplyTo: "<original@example.com>",
+        references: "<original@example.com>",
+      }),
+    );
+    await gmailActionHandlers.update_draft({ draftId: "draft-1", subject: "Re: Re: 项目进度" }, test.context);
+    expect((await simpleParser(Buffer.from(test.raw(), "base64url"))).subject).toBe("Re: Re: 项目进度");
+  });
+
+  it("rejects a subject that decodes a literal encoded-word from the reply target", async () => {
+    const test = fixture();
+    const subject = "说明 =?UTF-8?B?VG9waWM=?=";
+    test.target.payload!.headers!.find((header) => header.name === "Subject")!.value =
+      `=?UTF-8?B?${Buffer.from(subject).toString("base64")}?=`;
+    await expect(
+      gmailActionHandlers.create_email_draft(
+        { replyToMessageId: "original", subject: "Re: 说明 Topic", body: "Reply" },
+        test.context,
+      ),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(test.requests.every((request) => !request.init.method)).toBe(true);
+  });
+
+  it.each(["=?UTF-8?B?VG9waWM=?=", "=?unknown?B?VG9waWM=?="])(
+    "preserves literal encoded-word syntax through reply draft creation and updates: %s",
+    async (marker) => {
+      const test = fixture();
+      const subject = `说明 ${marker}`;
+      test.target.payload!.headers!.find((header) => header.name === "Subject")!.value =
+        `=?UTF-8?B?${Buffer.from(subject).toString("base64")}?=`;
+      await gmailActionHandlers.create_email_draft({ replyToMessageId: "original", body: "Reply" }, test.context);
+      expect((await simpleParser(Buffer.from(test.raw(), "base64url"))).subject).toBe(`Re: ${subject}`);
+      await gmailActionHandlers.update_draft({ draftId: "draft-1", subject: `Re: Re: ${subject}` }, test.context);
+      expect((await simpleParser(Buffer.from(test.raw(), "base64url"))).subject).toBe(`Re: Re: ${subject}`);
+      const original = test.raw();
+      const writeCount = test.requests.filter((request) => request.init.method === "PUT").length;
+      await expect(
+        gmailActionHandlers.update_draft({ draftId: "draft-1", subject: "Re: 说明 Topic" }, test.context),
+      ).rejects.toMatchObject({ status: 400 });
+      expect(test.raw()).toBe(original);
+      expect(test.requests.filter((request) => request.init.method === "PUT")).toHaveLength(writeCount);
+    },
+  );
+
+  it.each([
+    { name: "Cc", input: { cc: "copy@example.com" }, subject: "=?ISO-2022-KR?B?VG9waWM=?=", body: "Original body" },
+    { name: "body", input: { body: "Changed body" }, subject: "=?ISO-2022-KR?B?VG9waWM=?=", body: "Changed body" },
+    {
+      name: "subject",
+      input: { subject: "Replacement subject" },
+      subject: "Replacement subject",
+      body: "Original body",
+    },
+    { name: "reply target", input: { replyToMessageId: "original" }, subject: "Re: Topic", body: "Original body" },
+  ])(
+    "updates an ordinary draft's $name without decoding its unsupported old subject charset",
+    async ({ input, subject, body }) => {
+      const original =
+        "To: reader@example.com\r\nSubject: =?ISO-2022-KR?B?VG9waWM=?=\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: 7bit\r\n\r\nOriginal body";
+      const test = fixture(Buffer.from(original).toString("base64url"));
+      await gmailActionHandlers.update_draft({ draftId: "draft-1", ...input }, test.context);
+      const updated = Buffer.from(test.raw(), "base64url").toString();
+      expect(updated).toContain(`Subject: ${subject}\r\n`);
+      expect((await simpleParser(Buffer.from(test.raw(), "base64url"))).text?.trim()).toBe(body);
+      if (!Object.hasOwn(input, "body")) {
+        expect(updated.split("\r\n\r\n").slice(1).join("\r\n\r\n")).toBe("Original body");
+      }
+    },
+  );
+});
+
+describe("Gmail action ID contracts", () => {
+  it.each([
+    {
+      name: "send_email",
+      handler: gmailActionHandlers.send_email,
+      input: { to: "reader@example.com", body: "New email" },
+      expected: { messageId: "sent-1", threadId: "thread-1" },
+    },
+    {
+      name: "reply_email",
+      handler: gmailActionHandlers.reply_email,
+      input: { messageId: "original", threadId: "thread-1", body: "Reply" },
+      expected: { messageId: "sent-1", threadId: "thread-1" },
+    },
+    {
+      name: "reply_to_thread",
+      handler: gmailActionHandlers.reply_to_thread,
+      input: { threadId: "thread-1", body: "Reply" },
+      expected: { messageId: "sent-1", threadId: "thread-1" },
+    },
+    {
+      name: "create_draft",
+      handler: gmailActionHandlers.create_draft,
+      input: { to: "reader@example.com", subject: "Draft topic", body: "Draft" },
+      expected: { draftId: "draft-1", messageId: "message-1", threadId: "thread-1" },
+    },
+  ])(
+    "returns actual Gmail IDs from $name and matches its output schema",
+    async ({ name, handler, input, expected }) => {
+      const test = fixture();
+      const output = await handler(input, test.context);
+      expect(output).toEqual(expected);
+      const action = gmailActions.find((action) => action.name === name)!;
+      expect(new Validator(action.outputSchema).validate(output)).toMatchObject({ valid: true });
+    },
+  );
+
+  it.each([
+    {
+      name: "send_email",
+      handler: gmailActionHandlers.send_email,
+      input: { to: "reader@example.com", body: "New email" },
+    },
+    {
+      name: "reply_email",
+      handler: gmailActionHandlers.reply_email,
+      input: { messageId: "original", threadId: "thread-1", body: "Reply" },
+    },
+    {
+      name: "reply_to_thread",
+      handler: gmailActionHandlers.reply_to_thread,
+      input: { threadId: "thread-1", body: "Reply" },
+    },
+  ])("omits an unavailable thread ID instead of guessing it through $name", async ({ name, handler, input }) => {
+    const test = fixture();
+    test.responseIds.threadId = false;
+    const output = JSON.parse(JSON.stringify(await handler(input, test.context)));
+    expect(output).toEqual({ messageId: "sent-1" });
+    const action = gmailActions.find((action) => action.name === name)!;
+    expect(new Validator(action.outputSchema).validate(output)).toMatchObject({ valid: true });
+  });
+
+  it("keeps the nullable thread ID contract when Gmail omits it from send_draft", async () => {
+    const test = fixture();
+    test.responseIds.threadId = false;
+    const output = await gmailActionHandlers.send_draft({ draftId: "draft-1" }, test.context);
+    expect(output).toEqual({ messageId: "sent-1", threadId: null });
+    const action = gmailActions.find((action) => action.name === "send_draft")!;
+    expect(new Validator(action.outputSchema).validate(output)).toMatchObject({ valid: true });
+  });
+
+  it.each([
+    {
+      name: "create_draft",
+      handler: gmailActionHandlers.create_draft,
+      input: { to: "reader@example.com", subject: "Draft topic", body: "Draft" },
+    },
+    { name: "create_email_draft", handler: gmailActionHandlers.create_email_draft, input: { body: "Draft" } },
+    {
+      name: "update_draft",
+      handler: gmailActionHandlers.update_draft,
+      input: { draftId: "draft-1", subject: "Edited" },
+    },
+  ])("omits absent message and thread IDs through $name", async ({ name, handler, input }) => {
+    const test = fixture(encodeMimeMessage({ to: ["reader@example.com"], subject: "Topic", body: "Draft body" }));
+    test.responseIds.messageId = false;
+    test.responseIds.threadId = false;
+    const output = JSON.parse(JSON.stringify(await handler(input, test.context)));
+    expect(output).toEqual({ draftId: "draft-1" });
+    const action = gmailActions.find((action) => action.name === name)!;
+    expect(new Validator(action.outputSchema).validate(output)).toMatchObject({ valid: true });
+  });
+
+  it.each([false, true])("validates list_drafts output with verbose=%s", async (verbose) => {
+    const test = fixture();
+    const output = JSON.parse(JSON.stringify(await gmailActionHandlers.list_drafts({ verbose }, test.context)));
+    expect(output).toMatchObject({
+      drafts: [{ id: "draft-1", message: { messageId: "message-0", threadId: "thread-1" } }],
+      nextPageToken: "next-page",
+    });
+    const action = gmailActions.find((action) => action.name === "list_drafts")!;
+    expect(new Validator(action.outputSchema).validate(output)).toMatchObject({ valid: true });
+    if (verbose) {
+      expect(output.drafts[0].message.subject).toBe("Topic");
+    } else {
+      expect(output.drafts[0].message).toEqual({ messageId: "message-0", threadId: "thread-1" });
+      expect(test.requests).toHaveLength(1);
+    }
   });
 });

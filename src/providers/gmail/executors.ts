@@ -7,9 +7,16 @@ import type {
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { PollDefinition } from "../../triggers/common/poll.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { GmailDraftResource, GmailMessageResource, GmailThreadResource } from "./message.ts";
+import type { GmailDraftResource, GmailMessageResource, GmailReplyHeaders, GmailThreadResource } from "./message.ts";
 
-import { looseArray, optionalBoolean, optionalRawString, optionalRecord, optionalString } from "../../core/cast.ts";
+import {
+  looseArray,
+  optionalBoolean,
+  optionalNumberLike,
+  optionalRawString,
+  optionalRecord,
+  optionalString,
+} from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import {
   googleBearerProxyAuth,
@@ -19,6 +26,7 @@ import {
 import {
   defineProviderExecutors,
   defineProviderProxy,
+  providerInputError,
   ProviderRequestError,
   providerResponseError,
   readProviderErrorTextBody,
@@ -31,6 +39,7 @@ import {
 import { decodeGmailAttachment } from "./attachment-stream.ts";
 import { gmailMaxMimeBytes } from "./limits.ts";
 import {
+  assertMatchingReplySubject,
   buildRecipients,
   normalizeGmailMessage,
   normalizeMessageId,
@@ -40,7 +49,7 @@ import {
   summarizeGmailMessage,
 } from "./message.ts";
 import { readGmailAttachments } from "./mime-attachments.ts";
-import { encodeMimeMessage, updateMimeMessage } from "./mime.ts";
+import { decodeMimeSubject, encodeMimeMessage, readMimeReplyHeaders, updateMimeMessage } from "./mime.ts";
 import { gmailOAuthScopes } from "./scopes.ts";
 import { gmailMessageReceived } from "./trigger-on-message-received.ts";
 
@@ -58,6 +67,16 @@ interface ActionContext {
   fetcher: typeof fetch;
   transitFiles?: ExecutionContext["transitFiles"];
   signal?: AbortSignal;
+}
+
+interface DraftReplyTarget {
+  threadId: string;
+  headers: GmailReplyHeaders;
+}
+
+interface DraftReplyInput {
+  threadId?: string;
+  replyToMessageId?: string;
 }
 
 type ActionHandler = (input: Record<string, unknown>, context: ActionContext) => Promise<unknown>;
@@ -130,16 +149,14 @@ export const gmailActionHandlers: ProviderActionHandlers<typeof service, ActionH
   send_email(input, context) {
     return sendEmail(input, context);
   },
-  async reply_email(input, context) {
-    const output = await replyToMessage(input, context);
-    return { messageId: output.messageId };
+  reply_email(input, context) {
+    return replyToMessage(input, context);
   },
   reply_to_thread(input, context) {
     return replyToThread(input, context);
   },
-  async create_draft(input, context) {
-    const output = await createEmailDraft(input, context);
-    return { draftId: output.draftId };
+  create_draft(input, context) {
+    return createEmailDraft(input, context);
   },
   create_email_draft(input, context) {
     return createEmailDraft(input, context);
@@ -440,17 +457,14 @@ async function sendEmail(input: Record<string, unknown>, context: ActionContext)
     },
   );
 
-  return { messageId: response.id };
+  return { messageId: response.id, threadId: optionalString(response.threadId) };
 }
 
 async function replyToThread(input: Record<string, unknown>, context: ActionContext) {
   const { userId, accessToken, fetcher } = context;
   const attachments = await readGmailAttachments(input.attachments, context);
   const thread = await getThreadResource(userId, normalizeThreadId(input.threadId), accessToken, fetcher, "full");
-  const target = thread.messages?.at(-1);
-  if (!target) {
-    throw new ProviderRequestError(400, "thread has no messages");
-  }
+  const target = latestReplyMessage(thread);
 
   const recipients = buildRecipients(input);
   const replyHeaders = resolveReplyHeaders(target);
@@ -472,15 +486,20 @@ async function replyToThread(input: Record<string, unknown>, context: ActionCont
     }),
   );
 
-  return { messageId: response.id, threadId: response.threadId ?? thread.id };
+  return { messageId: response.id, threadId: optionalString(response.threadId) };
 }
 
 async function replyToMessage(input: Record<string, unknown>, context: ActionContext) {
   const { userId, accessToken, fetcher } = context;
   const attachments = await readGmailAttachments(input.attachments, context);
   const message = await getMessageResource(userId, normalizeMessageId(input.messageId), accessToken, fetcher, "full");
+  const threadId = optionalString(message.threadId);
+  if (!threadId) throw providerResponseError("Gmail reply target is missing its threadId");
+  const requestedThreadId = optionalString(input.threadId);
+  if (requestedThreadId && normalizeThreadId(requestedThreadId) !== threadId) {
+    throw providerInputError("threadId must match the reply target message's threadId");
+  }
   const replyHeaders = resolveReplyHeaders(message);
-  const threadId = normalizeThreadId(message.threadId || input.threadId);
   const response = await sendThreadMessage(
     userId,
     accessToken,
@@ -499,7 +518,7 @@ async function replyToMessage(input: Record<string, unknown>, context: ActionCon
 
   return {
     messageId: response.id,
-    threadId: response.threadId ?? normalizeThreadId(input.threadId),
+    threadId: optionalString(response.threadId),
   };
 }
 
@@ -507,30 +526,76 @@ async function createEmailDraft(input: Record<string, unknown>, context: ActionC
   const { userId, accessToken, fetcher } = context;
   const attachments = await readGmailAttachments(input.attachments, context);
   const recipients = buildRecipients(input);
+  const replyTarget = await resolveDraftReplyTarget(
+    {
+      threadId: optionalString(input.threadId),
+      replyToMessageId: optionalString(input.replyToMessageId),
+    },
+    context,
+  );
+  const subject = optionalRawString(input.subject) ?? replyTarget?.headers.subject;
+  if (replyTarget && subject !== undefined) {
+    assertMatchingReplySubject(subject, replyTarget.headers.subject);
+  }
+  const hasRecipients = ["to", "recipientEmail", "extraRecipients"].some((name) => Object.hasOwn(input, name));
   const payload = await fetchJson<GmailDraftResource>(gmailUserUrl(userId, "drafts"), accessToken, fetcher, {
     method: "POST",
     body: JSON.stringify({
       message: {
         raw: encodeMimeMessage({
-          to: recipients.to,
+          to: hasRecipients ? recipients.to : replyTarget ? [replyTarget.headers.to] : [],
           cc: recipients.cc,
           bcc: recipients.bcc,
-          subject: optionalRawString(input.subject),
+          subject,
           body: optionalRawString(input.body) ?? optionalRawString(input.messageBody),
           isHtml: input.isHtml === true,
           from: optionalRawString(input.fromEmail),
+          inReplyTo: replyTarget?.headers.inReplyTo,
+          references: replyTarget?.headers.references,
           attachments,
         }),
-        threadId: trimmedString(input.threadId) ? normalizeThreadId(input.threadId) : undefined,
+        threadId: replyTarget?.threadId,
       },
     }),
   });
 
   return {
     draftId: payload.id,
-    messageId: payload.message?.id ?? "",
-    threadId: payload.message?.threadId ?? "",
+    messageId: optionalString(payload.message?.id),
+    threadId: optionalString(payload.message?.threadId),
   };
+}
+
+async function resolveDraftReplyTarget(
+  input: DraftReplyInput,
+  context: ActionContext,
+): Promise<DraftReplyTarget | undefined> {
+  const threadId = input.threadId ? normalizeThreadId(input.threadId) : undefined;
+  if (!threadId && !input.replyToMessageId) return undefined;
+  const { userId, accessToken, fetcher } = context;
+  const message = input.replyToMessageId
+    ? await getMessageResource(userId, input.replyToMessageId, accessToken, fetcher, "full")
+    : latestReplyMessage(await getThreadResource(userId, threadId!, accessToken, fetcher, "full"));
+  const resolvedThreadId = optionalString(message.threadId);
+  if (!resolvedThreadId) throw providerResponseError("Gmail reply target is missing its threadId");
+  if (threadId && threadId !== resolvedThreadId) {
+    throw providerInputError("threadId must match the reply target message's threadId");
+  }
+  return { threadId: resolvedThreadId, headers: resolveReplyHeaders(message) };
+}
+
+function latestReplyMessage(thread: GmailThreadResource): GmailMessageResource {
+  let latest: GmailMessageResource | undefined;
+  let latestTimestamp: number | undefined;
+  for (const message of thread.messages ?? []) {
+    if (message.labelIds?.includes("DRAFT")) continue;
+    const timestamp = optionalNumberLike(message.internalDate);
+    if (latestTimestamp !== undefined && (timestamp === undefined || timestamp < latestTimestamp)) continue;
+    latest = message;
+    latestTimestamp = timestamp;
+  }
+  if (!latest) throw providerInputError("thread has no non-draft messages to reply to");
+  return latest;
 }
 
 async function listDrafts(input: Record<string, unknown>, userId: string, accessToken: string, fetcher: typeof fetch) {
@@ -565,8 +630,8 @@ async function listDrafts(input: Record<string, unknown>, userId: string, access
     drafts: drafts.map((draft) => ({
       id: draft.id,
       message: {
-        messageId: draft.message?.id ?? "",
-        threadId: draft.message?.threadId ?? "",
+        messageId: optionalString(draft.message?.id),
+        threadId: optionalString(draft.message?.threadId),
       },
     })),
     nextPageToken: payload.nextPageToken ?? null,
@@ -600,17 +665,38 @@ async function updateDraft(input: Record<string, unknown>, context: ActionContex
   const originalRaw = optionalRawString(existingMessage.raw);
   if (!originalRaw) throw providerResponseError("Gmail draft response is missing its raw MIME message");
   const recipients = buildRecipients(input);
-  const threadId = optionalString(input.threadId) ?? optionalString(existingMessage.threadId);
+  const currentHeaders = readMimeReplyHeaders(originalRaw);
+  const existingThreadId = optionalString(existingMessage.threadId);
+  const requestedThreadId = optionalString(input.threadId);
+  const normalizedThreadId = requestedThreadId ? normalizeThreadId(requestedThreadId) : undefined;
+  const replyToMessageId = optionalString(input.replyToMessageId);
+  const isReply = Boolean(currentHeaders.inReplyTo || currentHeaders.references);
+  const rebuildReply = Boolean(
+    replyToMessageId || (normalizedThreadId && (normalizedThreadId !== existingThreadId || !isReply)),
+  );
+  const replyTarget = rebuildReply
+    ? await resolveDraftReplyTarget({ threadId: normalizedThreadId, replyToMessageId }, context)
+    : undefined;
+  const subject = optionalRawString(input.subject) ?? replyTarget?.headers.subject;
+  if (subject !== undefined && (replyTarget || isReply)) {
+    assertMatchingReplySubject(
+      subject,
+      replyTarget?.headers.subject ?? decodeMimeSubject(currentHeaders.encodedSubject),
+    );
+  }
+  const threadId = replyTarget?.threadId ?? existingThreadId;
   const raw = updateMimeMessage(originalRaw, {
     to: ["to", "recipientEmail", "extraRecipients"].some((name) => Object.hasOwn(input, name))
       ? recipients.to
       : undefined,
     cc: Object.hasOwn(input, "cc") ? recipients.cc : undefined,
     bcc: Object.hasOwn(input, "bcc") ? recipients.bcc : undefined,
-    subject: optionalRawString(input.subject),
+    subject,
     body: optionalRawString(input.body) ?? optionalRawString(input.messageBody),
     isHtml: optionalBoolean(input.isHtml),
     from: optionalRawString(input.fromEmail),
+    inReplyTo: replyTarget?.headers.inReplyTo,
+    references: replyTarget?.headers.references,
     attachments,
   });
 
@@ -627,8 +713,8 @@ async function updateDraft(input: Record<string, unknown>, context: ActionContex
 
   return {
     draftId: payload.id,
-    messageId: payload.message?.id ?? "",
-    threadId: payload.message?.threadId ?? "",
+    messageId: optionalString(payload.message?.id),
+    threadId: optionalString(payload.message?.threadId),
   };
 }
 
@@ -647,7 +733,7 @@ async function sendDraft(input: Record<string, unknown>, userId: string, accessT
 
   return {
     messageId: payload.id,
-    threadId: payload.threadId ?? null,
+    threadId: optionalString(payload.threadId) ?? null,
   };
 }
 

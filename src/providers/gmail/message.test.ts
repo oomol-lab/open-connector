@@ -1,13 +1,152 @@
-import type { GmailMessagePart } from "./message.ts";
+import type { GmailMessagePart, GmailMessageResource } from "./message.ts";
 
 import { describe, expect, it } from "vitest";
-import { extractBodyContent, normalizeGmailMessage, summarizeGmailMessage } from "./message.ts";
+import { extractBodyContent, normalizeGmailMessage, resolveReplyHeaders, summarizeGmailMessage } from "./message.ts";
 
 const headers = [
   { name: "Subject", value: "Hello" },
   { name: "From", value: "alice@example.com" },
   { name: "To", value: "bob@example.com" },
 ];
+
+describe("Gmail reply headers", () => {
+  const parent: GmailMessageResource = {
+    id: "gmail-resource-id",
+    threadId: "thread",
+    payload: {
+      headers: [
+        { name: "Subject", value: "Topic" },
+        { name: "From", value: "sender@example.com" },
+        { name: "Message-ID", value: "<parent@example.com>" },
+      ],
+    },
+  };
+
+  it("appends the parent's RFC Message-ID to the complete References chain", () => {
+    const reply = resolveReplyHeaders({
+      ...parent,
+      payload: {
+        headers: [
+          ...parent.payload!.headers!,
+          { name: "References", value: "<root@example.com> <previous@example.com>" },
+        ],
+      },
+    });
+    expect(reply).toEqual({
+      subject: "Re: Topic",
+      to: "sender@example.com",
+      inReplyTo: "<parent@example.com>",
+      references: "<root@example.com> <previous@example.com> <parent@example.com>",
+    });
+  });
+
+  it("uses a single parent In-Reply-To as the References fallback", () => {
+    const reply = resolveReplyHeaders({
+      ...parent,
+      payload: {
+        headers: [...parent.payload!.headers!, { name: "In-Reply-To", value: "<previous@example.com>" }],
+      },
+    });
+    expect(reply.references).toBe("<previous@example.com> <parent@example.com>");
+    expect(reply.inReplyTo).toBe("<parent@example.com>");
+  });
+
+  it("does not use multiple parent In-Reply-To identifiers as a References fallback", () => {
+    const reply = resolveReplyHeaders({
+      ...parent,
+      payload: {
+        headers: [
+          ...parent.payload!.headers!,
+          { name: "In-Reply-To", value: "<first@example.com> <second@example.com>" },
+        ],
+      },
+    });
+    expect(reply.references).toBe("<parent@example.com>");
+  });
+
+  it.each([
+    { name: "trailing", value: "<parent@example.com> (note <ignored@example.com>)", expected: "<parent@example.com>" },
+    {
+      name: "nested",
+      value: "(outer (nested <ignored@example.com>) tail) <parent@example.com>",
+      expected: "<parent@example.com>",
+    },
+    {
+      name: "escaped",
+      value: "<parent@example.com> (escaped \\) still comment <ignored@example.com>)",
+      expected: "<parent@example.com>",
+    },
+    {
+      name: "quoted local part",
+      value: '<"parent(comment)"@example.com> (note <ignored@example.com>)',
+      expected: '<"parent(comment)"@example.com>',
+    },
+    {
+      name: "quoted angle character",
+      value: '<"a>b(c)"@example.com> (note <ignored@example.com>)',
+      expected: '<"a>b(c)"@example.com>',
+    },
+    {
+      name: "domain literal",
+      value: "<parent@[a>b(c)]> (note <ignored@example.com>)",
+      expected: "<parent@[a>b(c)]>",
+    },
+  ])("ignores identifiers inside $name Message-ID comments", ({ value, expected }) => {
+    const reply = resolveReplyHeaders({
+      ...parent,
+      payload: {
+        headers: [
+          ...parent.payload!.headers!.filter((header) => header.name !== "Message-ID"),
+          { name: "Message-ID", value },
+          { name: "References", value: "<root@example.com> (note <ignored@example.com>)" },
+        ],
+      },
+    });
+    expect(reply.inReplyTo).toBe(expected);
+    expect(reply.references).toBe(`<root@example.com> ${expected}`);
+  });
+
+  it("ignores comment-contained identifiers when falling back to a single In-Reply-To", () => {
+    const reply = resolveReplyHeaders({
+      ...parent,
+      payload: {
+        headers: [
+          ...parent.payload!.headers!,
+          { name: "References", value: "(note <ignored@example.com>)" },
+          { name: "In-Reply-To", value: "<previous@example.com> (note <ignored@example.com>)" },
+        ],
+      },
+    });
+    expect(reply.references).toBe("<previous@example.com> <parent@example.com>");
+  });
+
+  it("prefers Reply-To while preserving a Unicode display name containing a comma", () => {
+    const reply = resolveReplyHeaders({
+      ...parent,
+      payload: {
+        headers: [
+          ...parent.payload!.headers!,
+          { name: "Reply-To", value: '"张三, 研发" <reply@example.com>, second@example.com' },
+        ],
+      },
+    });
+    expect(reply.to).toBe('"张三, 研发" <reply@example.com>');
+  });
+
+  it.each([undefined, "gmail-resource-id", "<first@example.com> <second@example.com>", "(note <ignored@example.com>)"])(
+    "refuses a missing or unusable Message-ID instead of substituting a Gmail resource ID: %s",
+    (value) => {
+      const resource: GmailMessageResource = {
+        ...parent,
+        payload: {
+          headers: parent.payload!.headers!.filter((header) => header.name !== "Message-ID"),
+        },
+      };
+      if (value !== undefined) resource.payload!.headers!.push({ name: "Message-ID", value });
+      expect(() => resolveReplyHeaders(resource)).toThrow();
+    },
+  );
+});
 
 describe("summarizeGmailMessage", () => {
   it("keeps historyId, internalDate, sizeEstimate and snippet when Gmail sends them", () => {

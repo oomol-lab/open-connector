@@ -25,6 +25,11 @@ const maxResults = s.integer({
 const messageId = s.string({ minLength: 1, description: "Gmail message ID." });
 const threadId = s.string({ minLength: 1, description: "Gmail thread ID." });
 const draftId = s.string({ minLength: 1, description: "Gmail draft ID." });
+const replyToMessageId = s.string({
+  minLength: 1,
+  description:
+    "Gmail message ID to reply to. Requires mailbox read access. If threadId is also supplied, it must match this message's thread.",
+});
 const labelId = s.string({ minLength: 1, description: "Gmail label ID." });
 const filterId = s.string({ minLength: 1, description: "Gmail filter ID." });
 const labelIds = s.array(s.string({ minLength: 1 }), { description: "Gmail label IDs." });
@@ -159,6 +164,17 @@ const draft = s.object(
     additionalProperties: true,
     description: "Gmail draft.",
   },
+);
+
+const listedDraft = s.object(
+  {
+    id: draftId,
+    message: s.union([
+      message,
+      s.object({ messageId, threadId }, { description: "Draft message IDs returned when verbose is false." }),
+    ]),
+  },
+  { required: ["id", "message"], description: "Draft with message IDs or hydrated message details." },
 );
 
 const labelColor = s.object(
@@ -398,13 +414,13 @@ export const gmailActions: ActionDefinition[] = [
     description: "Send an email with optional attachments and CID inline images from the connected Gmail account.",
     requiredScopes: gmailSendScopes,
     properties: recipientFields(),
-    outputSchema: s.object({ messageId }, { required: ["messageId"], description: "Sent message result." }),
+    outputSchema: s.object({ messageId, threadId }, { required: ["messageId"], description: "Sent message result." }),
   }),
   action({
     name: "reply_email",
     operationType: "write",
     description: "Reply to an existing Gmail thread using the original message's reply headers.",
-    requiredScopes: gmailSendScopes,
+    requiredScopes: [...gmailReadScopes, ...gmailSendScopes],
     properties: {
       threadId,
       messageId,
@@ -413,13 +429,14 @@ export const gmailActions: ActionDefinition[] = [
       attachments,
     },
     required: ["threadId", "messageId", "body"],
-    outputSchema: s.object({ messageId }, { required: ["messageId"], description: "Reply result." }),
+    outputSchema: s.object({ messageId, threadId }, { required: ["messageId"], description: "Reply result." }),
   }),
   action({
     name: "reply_to_thread",
     operationType: "write",
-    description: "Reply to an existing Gmail thread while preserving Gmail threading.",
-    requiredScopes: gmailSendScopes,
+    description:
+      "Reply to the most recent non-draft message in an existing Gmail thread while preserving Gmail threading.",
+    requiredScopes: [...gmailReadScopes, ...gmailSendScopes],
     properties: { threadId, ...recipientFields() },
     required: ["threadId"],
     outputSchema: s.object({ messageId, threadId }, { required: ["messageId"], description: "Thread reply result." }),
@@ -428,7 +445,7 @@ export const gmailActions: ActionDefinition[] = [
     name: "create_draft",
     operationType: "write",
     description:
-      "Create a Gmail draft with optional attachments and CID inline images using a simplified input and output shape.",
+      "Create a Gmail draft with optional attachments and CID inline images using simplified input fields. Returns the stable draft ID and current message and thread IDs.",
     requiredScopes: gmailComposeScopes,
     properties: {
       to: s.string(),
@@ -439,15 +456,18 @@ export const gmailActions: ActionDefinition[] = [
       attachments,
     },
     required: ["to", "subject", "body"],
-    outputSchema: s.object({ draftId }, { required: ["draftId"], description: "Created draft result." }),
+    outputSchema: s.object(
+      { draftId, messageId, threadId },
+      { required: ["draftId"], description: "Created draft result." },
+    ),
   }),
   action({
     name: "create_email_draft",
     operationType: "write",
     description:
-      "Create a Gmail draft with recipients, subject, body, optional attachments or CID inline images, and optional threading.",
+      "Create a Gmail draft with optional attachments or CID inline images. Supply replyToMessageId to reply to a message, or threadId to reply to its most recent non-draft message. Threaded creation additionally requires mailbox read access. Omit subject and To recipients to inherit them from the reply target; a supplied subject must match the target, ignoring Re: prefixes.",
     requiredScopes: gmailComposeScopes,
-    properties: { ...recipientFields(), threadId },
+    properties: { ...recipientFields(), threadId, replyToMessageId },
     outputSchema: s.object({ draftId, messageId, threadId }, { required: ["draftId"], description: "Created draft." }),
   }),
   action({
@@ -457,7 +477,7 @@ export const gmailActions: ActionDefinition[] = [
     requiredScopes: gmailComposeScopes,
     properties: pageFields({ verbose: s.boolean({ description: "Hydrate each draft." }) }),
     outputSchema: s.object(
-      { drafts: s.array(draft), nextPageToken: s.nullable(pageToken) },
+      { drafts: s.array(listedDraft), nextPageToken: s.nullable(pageToken) },
       { required: ["drafts"], description: "Draft list result." },
     ),
   }),
@@ -474,12 +494,13 @@ export const gmailActions: ActionDefinition[] = [
     name: "update_draft",
     operationType: "write",
     description:
-      "Update a Gmail draft while preserving omitted fields, attachments, CID inline images, and reply headers. Omit body to preserve existing MIME body alternatives; supply body to replace them with one text or HTML body. Omit attachments to preserve them, supply a list to replace all attachments and inline images, or [] to remove them.",
+      "Update a Gmail draft while preserving omitted fields, attachments, CID inline images, and reply headers. Supply replyToMessageId or a different threadId to rebuild the reply association; this additionally requires mailbox read access. A reply draft's subject must match its reply target, ignoring Re: prefixes. Omit body to preserve existing MIME body alternatives; supply body to replace them with one text or HTML body. Omit attachments to preserve them, supply a list to replace all attachments and inline images, or [] to remove them. The draft ID stays stable, but the message ID changes on replacement.",
     requiredScopes: gmailComposeScopes,
     properties: {
       draftId,
       ...recipientFields(),
       threadId,
+      replyToMessageId,
       body: s.string({
         description:
           "Replacement body. Omit to preserve all existing text and HTML alternatives; an empty string clears the body.",
@@ -503,8 +524,9 @@ export const gmailActions: ActionDefinition[] = [
   action({
     name: "send_draft",
     operationType: "write",
-    description: "Send an existing Gmail draft as-is.",
-    requiredScopes: gmailSendScopes,
+    description:
+      "Send an existing Gmail draft as-is. Gmail deletes the draft and returns the new sent message ID and its thread ID.",
+    requiredScopes: gmailComposeScopes,
     properties: { draftId },
     required: ["draftId"],
     outputSchema: s.object(

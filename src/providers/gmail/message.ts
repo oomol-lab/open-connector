@@ -1,4 +1,5 @@
-import { parseMimeHeader } from "./mime.ts";
+import { providerInputError } from "../provider-runtime.ts";
+import { decodeMimeSubject, parseMimeHeader } from "./mime.ts";
 
 export interface GmailMessageHeader {
   name: string;
@@ -116,19 +117,88 @@ export function readHeader(headers: GmailMessageHeader[], name: string): string 
   return headers.find((header) => header.name.toLowerCase() === name.toLowerCase())?.value ?? "";
 }
 
-export function resolveReplyHeaders(resource: GmailMessageResource): {
+export interface GmailReplyHeaders {
   subject: string;
   to: string;
   references: string;
   inReplyTo: string;
-} {
+}
+
+/** Build reply headers from RFC message identities, never Gmail resource IDs. */
+export function resolveReplyHeaders(resource: GmailMessageResource): GmailReplyHeaders {
   const headers = resource.payload?.headers ?? [];
+  const messageIds = parseMessageIds(readHeader(headers, "Message-ID"));
+  if (messageIds.length !== 1) {
+    throw providerInputError("The reply target must have one usable RFC Message-ID header");
+  }
+  const inReplyTo = messageIds[0]!;
+  const references = parseMessageIds(readHeader(headers, "References"));
+  const parentReplyIds = parseMessageIds(readHeader(headers, "In-Reply-To"));
+  const ancestry = references.length > 0 ? references : parentReplyIds.length === 1 ? parentReplyIds : [];
   return {
-    subject: normalizeReplySubject(readHeader(headers, "Subject")),
+    subject: normalizeReplySubject(decodeMimeSubject(readHeader(headers, "Subject"))),
     to: firstAddress(readHeader(headers, "Reply-To")) || firstAddress(readHeader(headers, "From")),
-    references: readHeader(headers, "References") || readHeader(headers, "Message-ID") || resource.id,
-    inReplyTo: readHeader(headers, "Message-ID") || resource.id,
+    references: [...ancestry, inReplyTo].join(" "),
+    inReplyTo,
   };
+}
+
+/** Gmail requires a reply's subject to match its target after ordinary Re: prefixes. */
+export function assertMatchingReplySubject(subject: string, targetSubject: string): void {
+  const baseSubject = (value: string): string => value.replace(/^(?:\s*re:\s*)+/i, "").trim();
+  if (baseSubject(subject) !== baseSubject(targetSubject)) {
+    throw providerInputError("subject must match the reply target subject");
+  }
+}
+
+function parseMessageIds(value: string): string[] {
+  // RFC 2822 msg-id permits dot atoms, quoted local parts, and domain literals.
+  return (
+    removeMessageIdComments(value).match(
+      /<(?:[a-z0-9!#$%&'*+\-/=?^_`{|}~]+(?:\.[a-z0-9!#$%&'*+\-/=?^_`{|}~]+)*|"(?:[\x21\x23-\x5b\x5d-\x7e]|\\[\x20-\x7e])*")@(?:[a-z0-9!#$%&'*+\-/=?^_`{|}~]+(?:\.[a-z0-9!#$%&'*+\-/=?^_`{|}~]+)*|\[(?:[\x21-\x5a\x5e-\x7e]|\\[\x20-\x7e])*\])>/gi,
+    ) ?? []
+  );
+}
+
+function removeMessageIdComments(value: string): string {
+  let result = "";
+  let commentDepth = 0;
+  let inMessageId = false;
+  let inQuote = false;
+  let inLiteral = false;
+  let escaped = false;
+  for (const char of value) {
+    if (escaped) {
+      if (commentDepth === 0) result += char;
+      escaped = false;
+      continue;
+    }
+    if (char === "\\") {
+      if (commentDepth === 0) result += char;
+      escaped = true;
+      continue;
+    }
+    if (commentDepth > 0) {
+      if (char === "(") commentDepth += 1;
+      if (char === ")") commentDepth -= 1;
+      continue;
+    }
+    if (!inMessageId && char === "(") {
+      commentDepth = 1;
+      result += " ";
+      continue;
+    }
+    result += char;
+    if (!inMessageId && char === "<") {
+      inMessageId = true;
+    } else if (inMessageId) {
+      if (!inLiteral && char === '"') inQuote = !inQuote;
+      if (!inQuote && char === "[") inLiteral = true;
+      if (!inQuote && char === "]") inLiteral = false;
+      if (!inQuote && !inLiteral && char === ">") inMessageId = false;
+    }
+  }
+  return result;
 }
 
 function parseAddressList(value: string): string[] {

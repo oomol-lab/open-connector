@@ -169,8 +169,8 @@ const { draftId } = await open.execute("gmail.create_email_draft", {
 await open.execute("gmail.update_draft", { draftId, subject: "Updated report" });
 ```
 
-The subject-only update preserves the existing MIME body, attachments, inline images, and reply
-headers. `gmail.send_draft` sends the saved draft as-is.
+The subject-only update of this new-message draft preserves the existing MIME body, attachments,
+and inline images. `gmail.send_draft` sends the saved draft as-is.
 
 Each attachment accepts exactly one content source: `contentBase64` or `file: { fileId }` for a
 file uploaded through `POST /api/files`. `filename` and `mimeType` can override transit file metadata.
@@ -185,12 +185,77 @@ For `update_draft`:
   body replaces those alternatives with one body. Omitting `isHtml` inherits the existing body type
   (HTML when an HTML alternative exists). Pass `isHtml: false` for plain text or `isHtml: true` for HTML.
   An empty body clears it. `isHtml` requires a replacement body.
-- Omitted editable headers remain unchanged. An empty subject or empty recipient field clears that
-  field. Content edits to unsupported or ambiguous MIME structures fail rather than discard content.
+- Omitted editable headers remain unchanged. An empty subject on a new-message draft or an empty
+  recipient field clears that field. Reply subjects must still match the associated conversation.
+  Content edits to unsupported or ambiguous MIME structures fail rather than discard content.
 
 The connector accepts at most 100 attachments, 25,000,000 decoded attachment bytes in total, and
 35,000,000 bytes for the complete MIME message, including encoding overhead. Gmail can impose
 additional account or content restrictions.
+
+## 7. Create And Send A Reply Draft
+
+Use the Gmail resource ID of an existing message as `replyToMessageId`. The connector reads its
+mail headers, fills in the reply recipient and subject when omitted, and constructs `In-Reply-To`
+and `References`. If you also supply `threadId`, it must match that message's thread. Supplying only
+`threadId` selects the most recent non-draft message in the conversation. A target without a usable
+RFC `Message-ID` header is rejected before creating or sending a reply.
+
+```ts
+const draft = await open.execute("gmail.create_email_draft", {
+  replyToMessageId: originalMessageId,
+  body: "Thanks for the report. I will review it today.",
+});
+
+const updated = await open.execute("gmail.update_draft", {
+  draftId: draft.draftId,
+  body: "Thanks for the report. I will send feedback tomorrow.",
+});
+
+// This call sends an email and removes the saved draft.
+const sent = await open.execute("gmail.send_draft", { draftId: updated.draftId });
+console.log(sent.messageId, sent.threadId);
+```
+
+Ordinary reply draft edits preserve the reply association and existing files. A supplied subject
+must match the conversation subject, ignoring leading `Re:` prefixes. To change the reply target,
+pass `replyToMessageId` or a different `threadId` to `update_draft`; the connector rebuilds the reply
+headers and inherits the new target's subject when omitted. Omitted recipients remain unchanged
+during updates, so provide the recipients explicitly when switching to a different conversation.
+
+The IDs serve different purposes:
+
+- `draftId` identifies the saved draft and remains stable through updates.
+- `messageId` identifies the current Gmail message inside the draft and changes when its content is
+  replaced. After sending, Gmail deletes the draft and returns a new sent `messageId`.
+- `threadId` identifies the Gmail conversation. Use the returned ID when recording the result.
+- The RFC `Message-ID` is an email header used for reply linkage; it is not the Gmail `messageId`.
+
+`send_email`, both reply actions, and `send_draft` return the sent message and thread IDs when Gmail
+provides them. Both draft creation actions and `update_draft` return the draft ID and current message
+and thread IDs. Missing optional IDs are omitted; `send_draft` retains `threadId: null` when absent.
+`list_drafts` returns message IDs by default and hydrated message details with `verbose: true`.
+
+For OAuth grants, `gmail.modify` covers these workflows. When requesting narrower permissions:
+
+| Operation                                       | Scopes                               |
+| ----------------------------------------------- | ------------------------------------ |
+| Send a new message                              | `gmail.send`                         |
+| Reply to an existing message or thread          | `gmail.readonly` and `gmail.send`    |
+| Create, edit, or send a normal draft            | `gmail.compose`                      |
+| Create a reply draft or change its reply target | `gmail.readonly` and `gmail.compose` |
+
+The fully qualified scope names start with `https://www.googleapis.com/auth/`. Read access is a
+conditional requirement for draft actions that resolve a reply target; ordinary draft creation and
+editing do not require reading messages outside the draft. `gmail.send` alone does not authorize
+Gmail's `drafts.send` endpoint.
+Configure `requestedScopes` on the OAuth client before authorizing, and reconnect existing accounts
+when their granted scopes do not cover the workflow.
+
+These are the action scopes. OpenConnector also calls Gmail's `users.getProfile` when validating a
+connection; that endpoint accepts `gmail.compose` and `gmail.readonly`, but not `gmail.send` alone.
+For a connection used to send new messages, request `gmail.readonly` alongside `gmail.send`, or use
+`gmail.compose` or `gmail.modify`.
 
 ## Common Issues
 
