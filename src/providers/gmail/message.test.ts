@@ -106,6 +106,76 @@ describe("Gmail reply headers", () => {
     expect(reply.references).toBe(`<root@example.com> ${expected}`);
   });
 
+  it.each([
+    { name: "quoted spaces", value: '<"parent name"@example.com>', expected: '<"parent name"@example.com>' },
+    { name: "quoted tabs", value: '<"parent\tname"@example.com>', expected: '<"parent\tname"@example.com>' },
+    {
+      name: "structural whitespace",
+      value: "< \tparent \t. name \t@ example \t. com \t>",
+      expected: "<parent.name@example.com>",
+    },
+    {
+      name: "comments around words and separators",
+      value:
+        "< (one <ignored@example.com>) parent (two) . (three) name (four) @ (five) example (six) . (seven) com (eight) >",
+      expected: "<parent.name@example.com>",
+    },
+    {
+      name: "nested and escaped internal comments",
+      value: "<parent (outer (inner <ignored@example.com>) escaped \\) comment)@example.com>",
+      expected: "<parent@example.com>",
+    },
+    {
+      name: "mixed atom and quoted words",
+      value: '< parent (one) . "quoted part" (two) @ example.com >',
+      expected: '<parent."quoted part"@example.com>',
+    },
+    {
+      name: "folded quoted whitespace",
+      value: '<"parent\r\n \tname"@example.com>',
+      expected: '<"parent \tname"@example.com>',
+    },
+    {
+      name: "folded structural whitespace",
+      value: "<parent\r\n\t@\r\n\texample.com>",
+      expected: "<parent@example.com>",
+    },
+    {
+      name: "literal whitespace",
+      value: "<parent@[ a \t literal ]>",
+      expected: "<parent@[ a \t literal ]>",
+    },
+  ])("accepts obsolete Message-ID $name without changing protected whitespace", ({ value, expected }) => {
+    const reply = resolveReplyHeaders({
+      ...parent,
+      payload: {
+        headers: [
+          ...parent.payload!.headers!.filter((header) => header.name !== "Message-ID"),
+          { name: "Message-ID", value },
+        ],
+      },
+    });
+    expect(reply.inReplyTo).toBe(expected);
+    expect(reply.references).toBe(expected);
+  });
+
+  it("keeps obsolete References ancestors while normalizing only structural CFWS", () => {
+    const reply = resolveReplyHeaders({
+      ...parent,
+      payload: {
+        headers: [
+          ...parent.payload!.headers!,
+          {
+            name: "References",
+            value:
+              '< (note <ignored@example.com>) "first root" \t @ [ root \t literal ] > <previous (note) @ example . com>',
+          },
+        ],
+      },
+    });
+    expect(reply.references).toBe('<"first root"@[ root \t literal ]> <previous@example.com> <parent@example.com>');
+  });
+
   it("ignores comment-contained identifiers when falling back to a single In-Reply-To", () => {
     const reply = resolveReplyHeaders({
       ...parent,
@@ -133,19 +203,29 @@ describe("Gmail reply headers", () => {
     expect(reply.to).toBe('"张三, 研发" <reply@example.com>');
   });
 
-  it.each([undefined, "gmail-resource-id", "<first@example.com> <second@example.com>", "(note <ignored@example.com>)"])(
-    "refuses a missing or unusable Message-ID instead of substituting a Gmail resource ID: %s",
-    (value) => {
-      const resource: GmailMessageResource = {
-        ...parent,
-        payload: {
-          headers: parent.payload!.headers!.filter((header) => header.name !== "Message-ID"),
-        },
-      };
-      if (value !== undefined) resource.payload!.headers!.push({ name: "Message-ID", value });
-      expect(() => resolveReplyHeaders(resource)).toThrow();
-    },
-  );
+  it.each([
+    undefined,
+    "gmail-resource-id",
+    "<first@example.com> <second@example.com>",
+    "(note <ignored@example.com>)",
+    "<parent name@example.com>",
+    "<parent (note) name@example.com>",
+    "<parent..name@example.com>",
+    "<parent.@example.com>",
+    "<.parent@example.com>",
+    '<"unterminated@example.com>',
+    "<parent@>",
+    "<@example.com>",
+  ])("refuses a missing or unusable Message-ID instead of substituting a Gmail resource ID: %s", (value) => {
+    const resource: GmailMessageResource = {
+      ...parent,
+      payload: {
+        headers: parent.payload!.headers!.filter((header) => header.name !== "Message-ID"),
+      },
+    };
+    if (value !== undefined) resource.payload!.headers!.push({ name: "Message-ID", value });
+    expect(() => resolveReplyHeaders(resource)).toThrow();
+  });
 });
 
 describe("summarizeGmailMessage", () => {

@@ -665,24 +665,24 @@ async function updateDraft(input: Record<string, unknown>, context: ActionContex
   const originalRaw = optionalRawString(existingMessage.raw);
   if (!originalRaw) throw providerResponseError("Gmail draft response is missing its raw MIME message");
   const recipients = buildRecipients(input);
-  const currentHeaders = readMimeReplyHeaders(originalRaw);
   const existingThreadId = optionalString(existingMessage.threadId);
   const requestedThreadId = optionalString(input.threadId);
   const normalizedThreadId = requestedThreadId ? normalizeThreadId(requestedThreadId) : undefined;
   const replyToMessageId = optionalString(input.replyToMessageId);
-  const isReply = Boolean(currentHeaders.inReplyTo || currentHeaders.references);
-  const rebuildReply = Boolean(
-    replyToMessageId || (normalizedThreadId && (normalizedThreadId !== existingThreadId || !isReply)),
-  );
+  const rebuildReply = Boolean(replyToMessageId || (normalizedThreadId && normalizedThreadId !== existingThreadId));
   const replyTarget = rebuildReply
     ? await resolveDraftReplyTarget({ threadId: normalizedThreadId, replyToMessageId }, context)
     : undefined;
   const subject = optionalRawString(input.subject) ?? replyTarget?.headers.subject;
-  if (subject !== undefined && (replyTarget || isReply)) {
-    assertMatchingReplySubject(
-      subject,
-      replyTarget?.headers.subject ?? decodeMimeSubject(currentHeaders.encodedSubject),
-    );
+  if (subject !== undefined) {
+    if (replyTarget) {
+      assertMatchingReplySubject(subject, replyTarget.headers.subject);
+    } else {
+      const currentHeaders = readMimeReplyHeaders(originalRaw);
+      if (currentHeaders.inReplyTo || currentHeaders.references) {
+        assertMatchingReplySubject(subject, decodeMimeSubject(currentHeaders.encodedSubject));
+      }
+    }
   }
   const threadId = replyTarget?.threadId ?? existingThreadId;
   const raw = updateMimeMessage(originalRaw, {

@@ -5,7 +5,7 @@ import { Buffer } from "node:buffer";
 import { describe, expect, it } from "vitest";
 import { gmailMaxAttachmentBytes, gmailMaxAttachmentCount, gmailMaxMimeBytes } from "./limits.ts";
 import { readGmailAttachments } from "./mime-attachments.ts";
-import { encodeMimeMessage, updateMimeMessage } from "./mime.ts";
+import { decodeMimeSubject, encodeMimeMessage, updateMimeMessage } from "./mime.ts";
 
 const logoBytes = Buffer.from([0, 255, 137, 80, 78, 71]);
 const logo: GmailMimeAttachment = {
@@ -79,6 +79,19 @@ function originalDraft(): string {
   return Buffer.from(source, "latin1").toString("base64url");
 }
 
+describe("Gmail MIME subject decoding", () => {
+  it.each([
+    { encoded: "=?UTF-8*en?Q?Project_update?=", expected: "Project update" },
+    { encoded: "=?ISO-8859-1*fr?Q?r=E9sum=E9?=", expected: "résumé" },
+    { encoded: "=?UTF-8*zh-CN?B?6aG555uu6L+b5bqm?=", expected: "项目进度" },
+    { encoded: "=?UTF-8*en?B?UHJvamVjdCA=?=\r\n =?UTF-8*en?Q?update?=", expected: "Project update" },
+  ])("decodes RFC 2231 encoded words with language tags: $encoded", async ({ encoded, expected }) => {
+    expect(decodeMimeSubject(encoded)).toBe(expected);
+    const parsed = await simpleParser(Buffer.from(`Subject: ${encoded}\r\n\r\n`));
+    expect(parsed.subject).toBe(expected);
+  });
+});
+
 describe("Gmail MIME composition", () => {
   it("delivers Unicode filenames, CID bytes and exact body whitespace to an independent parser", async () => {
     const body = '  <p>你好<img src="cid:logo@example"></p>\n\n';
@@ -112,6 +125,17 @@ describe("Gmail MIME composition", () => {
     expect(decoded(raw).toString()).toMatch(/^MIME-Version:/);
     const mail = await simpleParser(decoded(raw));
     expect(mail.attachments[0]?.content).toHaveLength(0);
+  });
+
+  it("preserves whitespace inside legacy reply message IDs without allowing header delimiters", () => {
+    const parent = '<"a b\tc"@example.com>';
+    const references = `<root@example.com> ${parent}`;
+    const raw = encodeMimeMessage({ to: [], inReplyTo: parent, references });
+    expect(decoded(raw).toString()).toContain(`In-Reply-To: ${parent}\r\nReferences: ${references}\r\n`);
+    const updated = updateMimeMessage(raw, { inReplyTo: parent, references });
+    expect(decoded(updated).toString()).toContain(`In-Reply-To: ${parent}\r\nReferences: ${references}\r\n`);
+    expect(() => encodeMimeMessage({ to: [], inReplyTo: `${parent}\r\n Bcc: victim@example.com` })).toThrow();
+    expect(() => encodeMimeMessage({ to: [], subject: "Topic\twith a tab" })).toThrow();
   });
 
   it.each([

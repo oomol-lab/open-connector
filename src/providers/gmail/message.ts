@@ -151,12 +151,21 @@ export function assertMatchingReplySubject(subject: string, targetSubject: strin
   }
 }
 
+const messageIdAtom = /[a-z0-9!#$%&'*+\-/=?^_`{|}~]+/i;
+const messageIdQuotedLocal = /"(?:[\t\x20-\x21\x23-\x5b\x5d-\x7e]|\\[\t\x20-\x7e])*"/;
+const messageIdDomainLiteral = /\[(?:[\t\x20-\x5a\x5e-\x7e]|\\[\t\x20-\x7e])*\]/;
+const messageIdWord = `(?:${messageIdAtom.source}|${messageIdQuotedLocal.source})`;
+const messageIdPattern = new RegExp(
+  `<[ \\t]*${messageIdWord}(?:[ \\t]*\\.[ \\t]*${messageIdWord})*[ \\t]*@[ \\t]*(?:${messageIdAtom.source}(?:[ \\t]*\\.[ \\t]*${messageIdAtom.source})*|${messageIdDomainLiteral.source})[ \\t]*>`,
+  "gi",
+);
+const messageIdWhitespace = new RegExp(`${messageIdQuotedLocal.source}|${messageIdDomainLiteral.source}|[ \\t]+`, "g");
+
 function parseMessageIds(value: string): string[] {
-  // RFC 2822 msg-id permits dot atoms, quoted local parts, and domain literals.
-  return (
-    removeMessageIdComments(value).match(
-      /<(?:[a-z0-9!#$%&'*+\-/=?^_`{|}~]+(?:\.[a-z0-9!#$%&'*+\-/=?^_`{|}~]+)*|"(?:[\x21\x23-\x5b\x5d-\x7e]|\\[\x20-\x7e])*")@(?:[a-z0-9!#$%&'*+\-/=?^_`{|}~]+(?:\.[a-z0-9!#$%&'*+\-/=?^_`{|}~]+)*|\[(?:[\x21-\x5a\x5e-\x7e]|\\[\x20-\x7e])*\])>/gi,
-    ) ?? []
+  // RFC 2822 obsolete IDs allow CFWS around words and separators, never inside an atom.
+  const unfolded = value.replace(/\r\n(?=[ \t])/g, "");
+  return (removeMessageIdComments(unfolded).match(messageIdPattern) ?? []).map((id) =>
+    id.replace(messageIdWhitespace, (token) => (token[0] === '"' || token[0] === "[" ? token : "")),
   );
 }
 
@@ -183,7 +192,7 @@ function removeMessageIdComments(value: string): string {
       if (char === ")") commentDepth -= 1;
       continue;
     }
-    if (!inMessageId && char === "(") {
+    if (!inQuote && !inLiteral && char === "(") {
       commentDepth = 1;
       result += " ";
       continue;

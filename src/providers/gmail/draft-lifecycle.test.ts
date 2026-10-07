@@ -220,6 +220,40 @@ describe("Gmail attachment workflows", () => {
     expect(parsed.references).toBeUndefined();
   });
 
+  it.each([
+    { name: "body", input: { body: "Edited body" }, subject: "Original topic", body: "Edited body" },
+    { name: "subject", input: { subject: "Edited topic" }, subject: "Edited topic", body: "Original body" },
+  ])(
+    "edits an ordinary draft's $name with its current thread ID using compose access",
+    async ({ input, subject, body }) => {
+      const test = fixture(
+        encodeMimeMessage({ to: ["reader@example.com"], subject: "Original topic", body: "Original body" }),
+      );
+      let mailboxReads = 0;
+      const fetcher: typeof fetch = async (request, init) => {
+        const url = new URL(String(request));
+        if (/\/(?:threads|messages)\/[^/]+$/.test(url.pathname)) {
+          mailboxReads += 1;
+          return Response.json({ error: { message: "Insufficient permission" } }, { status: 403 });
+        }
+        return test.context.fetcher(request, init);
+      };
+      const result = await gmailActionHandlers.update_draft(
+        { draftId: "draft-1", threadId: "thread-1", ...input },
+        { ...test.context, fetcher },
+      );
+      expect(result).toEqual({ draftId: "draft-1", messageId: "message-1", threadId: "thread-1" });
+      expect(mailboxReads).toBe(0);
+      const parsed = await simpleParser(Buffer.from(test.raw(), "base64url"));
+      expect(parsed.subject).toBe(subject);
+      expect(parsed.text?.trim()).toBe(body);
+      expect(parsed.inReplyTo).toBeUndefined();
+      expect(parsed.references).toBeUndefined();
+      const update = test.requests.find((request) => request.init.method === "PUT")!;
+      expect(JSON.parse(String(update.init.body)).message.threadId).toBe("thread-1");
+    },
+  );
+
   it("allows attachment-sized raw responses above the default JSON cap", async () => {
     const fileBytes = 12 * 1024 * 1024;
     const raw = encodeMimeMessage({
@@ -258,6 +292,27 @@ describe("Gmail attachment workflows", () => {
 });
 
 describe("Gmail reply and draft threading", () => {
+  it("keeps language-tagged subjects and legacy message IDs through reply draft edits", async () => {
+    const test = fixture();
+    test.target.payload!.headers = [
+      { name: "Subject", value: "=?UTF-8*en?Q?Project_update?=" },
+      { name: "From", value: "sender@example.com" },
+      { name: "Message-ID", value: '< (note) "parent \tname" @ example.com >' },
+      { name: "References", value: "<root (note) @ example.com>" },
+    ];
+    await gmailActionHandlers.create_email_draft({ replyToMessageId: "original", body: "Reply" }, test.context);
+    await gmailActionHandlers.update_draft(
+      { draftId: "draft-1", threadId: "thread-1", subject: "Re: Project update", body: "Edited reply" },
+      test.context,
+    );
+    const updated = Buffer.from(test.raw(), "base64url").toString();
+    expect(updated).toContain('In-Reply-To: <"parent \tname"@example.com>\r\n');
+    expect(updated).toContain('References: <root@example.com> <"parent \tname"@example.com>\r\n');
+    const parsed = await simpleParser(Buffer.from(test.raw(), "base64url"));
+    expect(parsed.subject).toBe("Re: Project update");
+    expect(parsed.text?.trim()).toBe("Edited reply");
+  });
+
   it.each([
     { name: "a message", input: { replyToMessageId: "original" } },
     { name: "a thread", input: { threadId: "thread-1" } },
