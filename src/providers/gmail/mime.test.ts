@@ -85,11 +85,20 @@ describe("Gmail MIME subject decoding", () => {
     { encoded: "=?ISO-8859-1*fr?Q?r=E9sum=E9?=", expected: "résumé" },
     { encoded: "=?UTF-8*zh-CN?B?6aG555uu6L+b5bqm?=", expected: "项目进度" },
     { encoded: "=?UTF-8*en?B?UHJvamVjdCA=?=\r\n =?UTF-8*en?Q?update?=", expected: "Project update" },
-  ])("decodes RFC 2231 encoded words with language tags: $encoded", async ({ encoded, expected }) => {
+    { encoded: "=?UTF-7?Q?Project_+IKw-_update?=", expected: "Project € update" },
+    { encoded: "=?UTF-7*en?B?UHJvamVjdCArSUt3LSB1cGRhdGU=?=", expected: "Project € update" },
+  ])("decodes MIME subjects with legacy charsets and language tags: $encoded", async ({ encoded, expected }) => {
     expect(decodeMimeSubject(encoded)).toBe(expected);
     const parsed = await simpleParser(Buffer.from(`Subject: ${encoded}\r\n\r\n`));
     expect(parsed.subject).toBe(expected);
   });
+
+  it.each(["=?UTF-8?B?/w==?=", "=?unknown?Q?Topic?="])(
+    "rejects invalid bytes and unknown charsets without silently replacing text: %s",
+    (encoded) => {
+      expect(() => decodeMimeSubject(encoded)).toThrow(/invalid or unsupported RFC 2047 encoded word/);
+    },
+  );
 });
 
 describe("Gmail MIME composition", () => {
@@ -135,7 +144,17 @@ describe("Gmail MIME composition", () => {
     const updated = updateMimeMessage(raw, { inReplyTo: parent, references });
     expect(decoded(updated).toString()).toContain(`In-Reply-To: ${parent}\r\nReferences: ${references}\r\n`);
     expect(() => encodeMimeMessage({ to: [], inReplyTo: `${parent}\r\n Bcc: victim@example.com` })).toThrow();
-    expect(() => encodeMimeMessage({ to: [], subject: "Topic\twith a tab" })).toThrow();
+    expect(() => encodeMimeMessage({ to: ["reader\t@example.com"] })).toThrow();
+  });
+
+  it("preserves subject tabs as encoded words through composition and edits", async () => {
+    const subject = "Project\tupdate";
+    const raw = encodeMimeMessage({ to: [], subject });
+    const updated = updateMimeMessage(raw, { subject: `Re: ${subject}` });
+    expect((await simpleParser(decoded(raw))).subject).toBe(subject);
+    expect((await simpleParser(decoded(updated))).subject).toBe(`Re: ${subject}`);
+    expect(decoded(raw).toString()).toMatch(/^Subject: =\?UTF-8\?B\?/);
+    expect(decoded(updated).toString()).not.toContain("\t");
   });
 
   it.each([

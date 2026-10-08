@@ -292,6 +292,39 @@ describe("Gmail attachment workflows", () => {
 });
 
 describe("Gmail reply and draft threading", () => {
+  it.each([
+    { name: "encoded tabs", encoded: "=?UTF-8?Q?Project=09update?=", subject: "Project\tupdate" },
+    { name: "UTF-7", encoded: "=?UTF-7?Q?Project_+IKw-_update?=", subject: "Project € update" },
+  ])("preserves $name through replies, reply draft creation and edits", async ({ encoded, subject }) => {
+    const test = fixture();
+    test.target.payload!.headers!.find((header) => header.name === "Subject")!.value = encoded;
+    await gmailActionHandlers.reply_email({ messageId: "original", threadId: "thread-1", body: "Reply" }, test.context);
+    await gmailActionHandlers.reply_to_thread({ threadId: "thread-1", body: "Reply" }, test.context);
+    await gmailActionHandlers.create_email_draft({ replyToMessageId: "original", body: "Reply" }, test.context);
+    const created = test.raw();
+    await gmailActionHandlers.update_draft({ draftId: "draft-1", replyToMessageId: "original" }, test.context);
+    for (const raw of [...test.sent, created, test.raw()]) {
+      const parsed = await simpleParser(Buffer.from(raw, "base64url"));
+      expect(parsed.subject).toBe(`Re: ${subject}`);
+      expect(parsed.inReplyTo).toBe("<original@example.com>");
+      expect(parsed.references).toEqual(["<root@example.com>", "<original@example.com>"]);
+    }
+    await gmailActionHandlers.update_draft({ draftId: "draft-1", subject: `Re: Re: ${subject}` }, test.context);
+    expect((await simpleParser(Buffer.from(test.raw(), "base64url"))).subject).toBe(`Re: Re: ${subject}`);
+  });
+
+  it.each(["=?UTF-8?Q?Topic=0D=0ABcc:_victim@example.com?=", "=?UTF-7?Q?Topic+AA0ACg-Bcc:_victim@example.com?="])(
+    "rejects header delimiters decoded from an inherited reply subject: %s",
+    async (encoded) => {
+      const test = fixture();
+      test.target.payload!.headers!.find((header) => header.name === "Subject")!.value = encoded;
+      await expect(
+        gmailActionHandlers.create_email_draft({ replyToMessageId: "original", body: "Reply" }, test.context),
+      ).rejects.toMatchObject({ status: 400 });
+      expect(test.requests.every((request) => !request.init.method)).toBe(true);
+    },
+  );
+
   it("keeps language-tagged subjects and legacy message IDs through reply draft edits", async () => {
     const test = fixture();
     test.target.payload!.headers = [

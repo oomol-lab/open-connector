@@ -1,3 +1,4 @@
+import iconv from "iconv-lite";
 import { Buffer } from "node:buffer";
 import { providerInputError, providerResponseError, ProviderRequestError } from "../provider-runtime.ts";
 import { gmailMaxMimeBytes } from "./limits.ts";
@@ -96,7 +97,15 @@ export function decodeMimeSubject(value: string): string {
             );
       try {
         // RFC 2231 adds an optional language tag to the charset token.
-        return new TextDecoder(charset.split("*", 1)[0], { fatal: true }).decode(bytes);
+        const charsetName = charset.split("*", 1)[0]!;
+        let decoder: TextDecoder;
+        try {
+          decoder = new TextDecoder(charsetName, { fatal: true });
+        } catch {
+          // Fall back for unsupported charsets, never for invalid bytes in a supported charset.
+          return iconv.decode(bytes, charsetName);
+        }
+        return decoder.decode(bytes);
       } catch {
         throw providerResponseError("Gmail subject has an invalid or unsupported RFC 2047 encoded word");
       }
@@ -158,7 +167,7 @@ export function updateMimeMessage(original: string, patch: MimeMessagePatch): st
 
 /** Reject header delimiters before encoding can conceal them in an encoded word. */
 function assertMimeHeaderValue(value: string, field: string): void {
-  const allowsTab = field === "In-Reply-To" || field === "References";
+  const allowsTab = field === "subject" || field === "In-Reply-To" || field === "References";
   for (const char of value) {
     const code = char.charCodeAt(0);
     if ((code <= 0x1f && !(code === 0x09 && allowsTab)) || code === 0x7f)
