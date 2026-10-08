@@ -9,13 +9,20 @@ import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
 import type { QuickbooksResource, QuickbooksResourceOperation } from "./resources.ts";
 import type { QuickbooksContext } from "./runtime.ts";
 
-import { looseArray, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
+import {
+  base64Bytes,
+  looseArray,
+  optionalBoolean,
+  optionalRecord,
+  optionalString,
+  requiredString,
+} from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
 import {
   ProviderRequestError,
   defineProviderExecutors,
   providerInputError,
-  requiredInputNumber,
+  providerResponseError,
   requiredInputString,
   requiredResponseRecord,
 } from "../provider-runtime.ts";
@@ -264,7 +271,7 @@ const extraHandlers: Record<string, QuickbooksHandler> = {
   async upload_attachment(input, context): Promise<unknown> {
     const fileName = requiredInputString(input.file_name, "file_name");
     const contentType = requiredInputString(input.content_type, "content_type");
-    const content = Buffer.from(requiredInputString(input.content_base64, "content_base64"), "base64");
+    const content = base64Bytes(input.content_base64, "content_base64", providerInputError);
     const metadata = {
       FileName: fileName,
       ContentType: contentType,
@@ -366,11 +373,20 @@ function resourceHandler(resource: QuickbooksResource, operation: QuickbooksReso
         if (resource.remove === "deactivate") {
           // Some entities, such as Department, reject a sparse update that omits their name.
           const fields: Record<string, unknown> = { Active: false };
+          let syncToken = optionalString(input.sync_token);
           if (resource.nameColumn) {
             const current = await readEntity(context, entity, requiredInputString(input.id, "id"));
             fields[resource.nameColumn] = current[resource.nameColumn];
+            syncToken ??= requiredString(
+              current.SyncToken,
+              `QuickBooks ${entity.name} SyncToken`,
+              providerResponseError,
+            );
           }
-          return { deleted: true, [key]: await updateEntity(context, entity, input, fields) };
+          return {
+            deleted: true,
+            [key]: await updateEntity(context, entity, { ...input, sync_token: syncToken }, fields),
+          };
         }
         const result = await operateOnEntity(context, entity, "delete", input);
         return { deleted: result.status === "Deleted", [key]: result };

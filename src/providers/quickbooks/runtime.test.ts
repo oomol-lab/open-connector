@@ -12,6 +12,7 @@ interface RecordedRequest {
   method: string;
   headers: Record<string, string>;
   body?: string;
+  formData?: FormData;
 }
 
 type Responder = (request: RecordedRequest) => Response;
@@ -29,7 +30,8 @@ function createContext(respond: Responder, overrides: Partial<QuickbooksContext>
       headers: Object.fromEntries(
         Object.entries(init?.headers ?? {}).map(([key, value]) => [key.toLowerCase(), String(value)]),
       ),
-      body: init?.body === undefined ? undefined : String(init.body),
+      body: init?.body === undefined || init.body instanceof FormData ? undefined : String(init.body),
+      formData: init?.body instanceof FormData ? init.body : undefined,
     };
     requests.push(request);
     return respond(request);
@@ -155,6 +157,70 @@ describe("QuickBooks writes", () => {
     expect(JSON.parse(requests[0]!.body!)).toMatchObject({ DisplayName: "New", SyncToken: "7", sparse: false });
   });
 
+  it.each(["delete_customer", "delete_record"])(
+    "%s rejects a concurrent rename instead of overwriting it during deactivation",
+    async (actionName) => {
+      let reads = 0;
+      const { context, requests } = createContext((request) => {
+        if (request.method === "GET") {
+          reads++;
+          return jsonResponse({
+            Customer:
+              reads === 1
+                ? { Id: "5", DisplayName: "Before rename", SyncToken: "1" }
+                : { Id: "5", DisplayName: "After concurrent rename", SyncToken: "2" },
+          });
+        }
+        const body = JSON.parse(request.body!);
+        return body.SyncToken === "1"
+          ? jsonResponse({ Fault: { Error: [{ code: "5010", Message: "Stale Object Error" }] } }, { status: 400 })
+          : jsonResponse({ Customer: { ...body, SyncToken: "3" } });
+      });
+
+      const input = actionName === "delete_record" ? { object_name: "Customer", id: "5" } : { id: "5" };
+      await expect(handlers[actionName]!(input, context)).rejects.toMatchObject({ status: 400 });
+      expect(requests.map((request) => request.method)).toEqual(["GET", "POST"]);
+      expect(JSON.parse(requests[1]!.body!)).toMatchObject({
+        Active: false,
+        DisplayName: "Before rename",
+        SyncToken: "1",
+      });
+    },
+  );
+
+  it("preserves the caller SyncToken when deactivation reads the current name", async () => {
+    const { context, requests } = createContext((request) =>
+      request.method === "GET"
+        ? jsonResponse({ Customer: { Id: "5", DisplayName: "Current name", SyncToken: "2" } })
+        : jsonResponse({ Fault: { Error: [{ code: "5010", Message: "Stale Object Error" }] } }, { status: 400 }),
+    );
+
+    await expect(handlers.delete_customer!({ id: "5", sync_token: "0" }, context)).rejects.toMatchObject({
+      status: 400,
+    });
+    expect(requests.map((request) => request.method)).toEqual(["GET", "POST"]);
+    expect(JSON.parse(requests[1]!.body!)).toMatchObject({ DisplayName: "Current name", SyncToken: "0" });
+  });
+
+  it("deactivates a record using the name and SyncToken from one read", async () => {
+    const customer = { Id: "5", DisplayName: "Current name", SyncToken: "2" };
+    const { context, requests } = createContext((request) =>
+      jsonResponse({ Customer: request.method === "GET" ? customer : { ...customer, Active: false, SyncToken: "3" } }),
+    );
+
+    const result = await handlers.delete_customer!({ id: "5" }, context);
+    expect(requests.map((request) => request.method)).toEqual(["GET", "POST"]);
+    expect(JSON.parse(requests[1]!.body!)).toEqual({ ...customer, Active: false, sparse: true });
+    expect(result).toMatchObject({ deleted: true, customer: { Active: false, SyncToken: "3" } });
+  });
+
+  it("rejects a deactivation snapshot without SyncToken before writing", async () => {
+    const { context, requests } = createContext(() => jsonResponse({ Customer: { Id: "5", DisplayName: "Name" } }));
+
+    await expect(handlers.delete_customer!({ id: "5" }, context)).rejects.toMatchObject({ status: 502 });
+    expect(requests.map((request) => request.method)).toEqual(["GET"]);
+  });
+
   it("maps invoice fields to the QuickBooks line shape and merges additional fields last", async () => {
     const { context, requests } = createContext(() => jsonResponse({ Invoice: { Id: "9", SyncToken: "0" } }));
     await handlers.create_invoice!(
@@ -208,6 +274,39 @@ describe("QuickBooks writes", () => {
     expect(requests.map((request) => request.url.searchParams.get("operation"))).toEqual(["void", "delete"]);
     expect(JSON.parse(requests[0]!.body!)).toEqual({ Id: "9", SyncToken: "2" });
     expect(deleted).toMatchObject({ deleted: true });
+  });
+});
+
+describe("QuickBooks attachment uploads", () => {
+  it.each(["!!!!", "aGVsbG8=!", "a"])("rejects invalid base64 %j before sending a request", async (content) => {
+    const { context, requests } = createContext(() =>
+      jsonResponse({ AttachableResponse: [{ Attachable: { Id: "1", SyncToken: "0" } }] }),
+    );
+
+    await expect(
+      handlers.upload_attachment!(
+        { file_name: "test.txt", content_type: "text/plain", content_base64: content },
+        context,
+      ),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(requests).toHaveLength(0);
+  });
+
+  it.each(["aGVsbG8=", "aGVsbG8"])("uploads valid base64 %j without changing the bytes", async (content) => {
+    const attachment = { Id: "1", SyncToken: "0" };
+    const { context, requests } = createContext(() =>
+      jsonResponse({ AttachableResponse: [{ Attachable: attachment }] }),
+    );
+
+    const result = await handlers.upload_attachment!(
+      { file_name: "test.txt", content_type: "text/plain", content_base64: content },
+      context,
+    );
+    const file = requests[0]!.formData!.get("file_content_01") as File;
+    expect(file).toBeInstanceOf(File);
+    expect(file.name).toBe("test.txt");
+    expect(await file.text()).toBe("hello");
+    expect(result).toEqual({ attachment });
   });
 });
 

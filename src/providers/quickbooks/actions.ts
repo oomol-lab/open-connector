@@ -414,7 +414,7 @@ export const extraActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "batch",
-    operationType: "write",
+    operationType: "destructive",
     requiredScopes,
     description:
       "Run up to 30 operations in one request. Each item is either a read-only query or a create, update or delete of one entity. Items do not roll back each other when one fails.",
