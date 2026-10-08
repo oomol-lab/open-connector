@@ -7,7 +7,7 @@ import { isAbortLikeError, providerUserAgent, ProviderRequestError } from "../pr
 export const geminiApiBaseUrl = "https://generativelanguage.googleapis.com/v1beta";
 export const geminiDefaultTextModel = "gemini-2.5-flash";
 export const geminiDefaultEmbeddingModel = "text-embedding-004";
-export const geminiDefaultTokenCountModel = "gemini-2.0-flash";
+export const geminiDefaultTokenCountModel = "gemini-3.6-flash";
 export const geminiDefaultImageModel = "gemini-3-pro-image-preview";
 export const geminiDefaultVideoModel = "veo-3.0-generate-001";
 export const geminiDefaultVideoPollIntervalMs = 10_000;
