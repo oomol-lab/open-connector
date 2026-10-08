@@ -1,5 +1,5 @@
 import * as fs from "node:fs";
-import { mkdtemp, readdir, rm, stat, unlink, utimes, writeFile } from "node:fs/promises";
+import { mkdtemp, opendir, readdir, rm, stat, unlink, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setImmediate } from "node:timers/promises";
@@ -10,6 +10,11 @@ import { TransitFileService } from "./transit-files.ts";
 vi.mock("node:fs", async (importOriginal) => {
   const actual = await importOriginal<typeof fs>();
   return { ...actual, createWriteStream: vi.fn(actual.createWriteStream) };
+});
+
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs/promises")>();
+  return { ...actual, opendir: vi.fn(actual.opendir) };
 });
 
 const roots: string[] = [];
@@ -221,6 +226,59 @@ describe("TransitFileService", () => {
     expect(second).not.toBe(first);
     await Promise.all([first, second, third]);
     await expect(readdir(rootDir)).resolves.toEqual([]);
+  });
+
+  it("recovers concurrent cleanup callers after a failed sweep and follow-up", async () => {
+    const { rootDir, service } = await createService();
+    await writeFile(rootDir, "not a directory");
+    const failed = await Promise.allSettled([service.cleanupExpired(), service.cleanupExpired()]);
+    expect(failed.map((result) => result.status)).toEqual(["rejected", "rejected"]);
+
+    await unlink(rootDir);
+    const recovered = await Promise.allSettled([service.cleanupExpired(), service.cleanupExpired()]);
+    expect(recovered.map((result) => result.status)).toEqual(["fulfilled", "fulfilled"]);
+  });
+
+  it("runs a queued follow-up after the active sweep fails", async () => {
+    const { rootDir, service } = await createService();
+    const failedOpen = Promise.withResolvers<void>();
+    const opened = Promise.withResolvers<void>();
+    const failure = new Error("Directory temporarily unavailable");
+    vi.mocked(opendir).mockImplementationOnce(async () => {
+      opened.resolve();
+      await failedOpen.promise;
+      throw failure;
+    });
+    const first = service.cleanupExpired();
+    const result = first.catch((error: unknown) => error);
+    const queued = service.cleanupExpired();
+    await opened.promise;
+    failedOpen.resolve();
+
+    expect(await result).toBe(failure);
+    await expect(queued).resolves.toBeUndefined();
+    await expect(readdir(rootDir)).resolves.toEqual([]);
+  });
+
+  it("reuses a sweep started by the first caller before its queued follow-up resumes", async () => {
+    const { service } = await createService();
+    const opened = Promise.withResolvers<void>();
+    const releaseOpen = Promise.withResolvers<void>();
+    const { opendir: openDirectory } = await vi.importActual<typeof import("node:fs/promises")>("node:fs/promises");
+    vi.mocked(opendir).mockImplementationOnce(async (path, options) => {
+      const directory = await openDirectory(path, options);
+      opened.resolve();
+      await releaseOpen.promise;
+      return directory;
+    });
+    const first = service.cleanupExpired();
+    const firstCallerAgain = first.then(() => service.cleanupExpired());
+    const queued = service.cleanupExpired();
+    await opened.promise;
+    releaseOpen.resolve();
+    await Promise.all([first, firstCallerAgain, queued]);
+
+    expect(opendir).toHaveBeenCalledTimes(2);
   });
 
   it("sweeps expired files and their side-cars while keeping live uploads", async () => {

@@ -136,16 +136,22 @@ export class TransitFileService implements IStagedTransitFileService {
     if (this.sweeping) {
       // The running sweep may have read the directory before this call:
       // run one more after it, shared by every caller that arrives meanwhile.
-      this.followUp ??= this.sweeping.then(() => {
-        this.followUp = undefined;
-        return this.startSweep();
-      });
+      if (!this.followUp) {
+        const next = (): Promise<void> => {
+          this.followUp = undefined;
+          return this.startSweep();
+        };
+        this.followUp = this.sweeping.then(next, next);
+      }
       return this.followUp;
     }
     return this.startSweep();
   }
 
   private startSweep(): Promise<void> {
+    if (this.sweeping) {
+      return this.sweeping;
+    }
     this.lastSweepAt = Date.now();
     this.sweeping = this.sweep().finally(() => {
       this.sweeping = undefined;
