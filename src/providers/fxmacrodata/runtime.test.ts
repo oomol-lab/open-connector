@@ -80,13 +80,13 @@ describe("FXMacroData runtime", () => {
     ).rejects.toMatchObject({ status: 401, message: "API key not recognised." });
   });
 
-  it("reports a rejected key as a field error during validation", async () => {
+  it("preserves an ambiguous authentication status during validation", async () => {
     const { fetcher, requests } = recordingFetcher(() =>
       Response.json({ detail: "API key not recognised.", code: "invalid_api_key" }, { status: 401 }),
     );
 
     await expect(validateFxmacrodataCredential({ apiKey: "wrong" }, { fetcher })).rejects.toMatchObject({
-      status: 400,
+      status: 401,
     });
     expect(requests).toEqual([{ url: "https://api.fxmacrodata.com/v1/data_catalogue/usd", apiKey: "wrong" }]);
   });

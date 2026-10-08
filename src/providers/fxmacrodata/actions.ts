@@ -57,7 +57,7 @@ function action(
 export const fxmacrodataActions: ActionDefinition[] = [
   action(
     "get_announcements",
-    "Get the official release history of one macroeconomic indicator for a currency, such as US CPI or the ECB deposit rate. Each row carries the reference period, the value and the time the publisher released it. USD works without an API key, with releases from the last 15 minutes held back until a key is connected.",
+    "Get the official release history of one macroeconomic indicator for a currency, such as US CPI or the ECB deposit rate. Each row carries the reference period, the value and the time the publisher released it. USD works without an API key with limited recent history.",
     s.actionInput(
       { currency, indicator, startDate, endDate, limit, offset },
       ["currency", "indicator"],
@@ -83,7 +83,7 @@ export const fxmacrodataActions: ActionDefinition[] = [
   ),
   action(
     "get_release_calendar",
-    "Get scheduled official release times for a currency, such as the next CPI, payrolls or central bank decision. The USD calendar works without an API key.",
+    "Get scheduled official release times for a currency, such as the next CPI, payrolls or central bank decision. Calendars work without an API key.",
     s.actionInput(
       { currency, indicator, startDate, endDate },
       ["currency"],
@@ -131,7 +131,7 @@ export const fxmacrodataActions: ActionDefinition[] = [
   ),
   action(
     "get_cot",
-    "Get weekly CFTC Commitments of Traders positioning for a currency's futures. Requires an API key.",
+    "Get weekly CFTC Commitments of Traders positioning for a currency's futures. USD supports limited keyless history; other currencies require an API key.",
     s.actionInput(
       { currency, startDate, endDate, limit, offset },
       ["currency"],

@@ -18,8 +18,6 @@ import {
 
 export const fxmacrodataApiBaseUrl = "https://api.fxmacrodata.com";
 
-type FxmacrodataPhase = "validate" | "execute";
-
 interface FxmacrodataContext {
   apiKey?: string;
   fetcher: ProviderFetch;
@@ -29,7 +27,6 @@ interface FxmacrodataContext {
 interface FxmacrodataRequest {
   context: FxmacrodataContext;
   path: string;
-  phase?: FxmacrodataPhase;
   query?: Record<string, string | number | undefined>;
 }
 
@@ -108,7 +105,6 @@ export async function validateFxmacrodataCredential(
   await requestFxmacrodata({
     context: { apiKey: input.apiKey, fetcher: options.fetcher, signal: options.signal },
     path: "/v1/data_catalogue/usd",
-    phase: "validate",
   });
   return {
     profile: { displayName: "FXMacroData API Key" },
@@ -121,14 +117,10 @@ export async function validateFxmacrodataCredential(
  * Read an FXMacroData error response and map it onto the runtime's status conventions.
  * The API answers a keyless request for data that needs a key with a 401 and the code
  * api_key_required; that is reported as invalid input, not as a credential to reconnect,
- * for actions and the proxy alike. During key validation a 401 or 403 is a field error on
- * the submitted key. When the caller knows the key, it is removed from the message.
+ * for actions and the proxy alike. Other authorization failures retain the upstream status without guessing that
+ * reconnecting will help. Known keys are removed from diagnostic messages.
  */
-export async function readFxmacrodataError(
-  response: Response,
-  phase: FxmacrodataPhase = "execute",
-  apiKey?: string,
-): Promise<ProviderRequestError> {
+export async function readFxmacrodataError(response: Response, apiKey?: string): Promise<ProviderRequestError> {
   const status = response.status;
   const payload = parseProviderJsonBodyText(await readProviderErrorTextBody(response, "FXMacroData error response"), {
     emptyBody: {},
@@ -141,13 +133,10 @@ export async function readFxmacrodataError(
   const message = apiKey ? upstreamMessage.replaceAll(apiKey, "[REDACTED]") : upstreamMessage;
   const containsApiKey = apiKey && JSON.stringify(payload).includes(JSON.stringify(apiKey).slice(1, -1));
   const details = withRetryAfterSeconds(response, containsApiKey ? {} : payload);
-  if (
-    (status === 401 || status === 403) &&
-    (phase === "validate" || optionalString(body?.code) === "api_key_required")
-  ) {
+  if ((status === 401 || status === 403) && optionalString(body?.code) === "api_key_required") {
     return new ProviderRequestError(400, message, details);
   }
-  return new ProviderRequestError(status, message, details);
+  return new ProviderRequestError(status, message, details, status === 429 ? "rate_limited" : "provider_error");
 }
 
 /**
@@ -198,7 +187,7 @@ async function requestFxmacrodata(input: FxmacrodataRequest): Promise<Record<str
     // context.fetcher follows redirects itself and drops X-API-Key on any change of origin or scheme.
     const response = await context.fetcher(url, { method: "GET", headers, signal });
     if (!response.ok) {
-      throw await readFxmacrodataError(response, input.phase ?? "execute", context.apiKey);
+      throw await readFxmacrodataError(response, context.apiKey);
     }
     const payload = parseProviderJsonBodyText(await readProviderTextBody(response, "FXMacroData response"), {
       emptyBody: {},

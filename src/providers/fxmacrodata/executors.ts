@@ -35,7 +35,7 @@ const keyedProxy: ProviderProxyExecutor = defineProviderProxy({
       request.apiKey = credential.apiKey;
     }
   },
-  readError: (response) => readFxmacrodataError(response, "execute", proxyRequestKey.getStore()?.apiKey),
+  readError: (response) => readFxmacrodataError(response, proxyRequestKey.getStore()?.apiKey),
   skipDnsValidation: true,
 });
 

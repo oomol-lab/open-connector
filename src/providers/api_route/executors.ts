@@ -25,7 +25,6 @@ type RequestContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal
 interface ApiRouteRequest {
   path: "/models" | "/chat/completions";
   body?: Record<string, unknown>;
-  phase?: "validate" | "execute";
 }
 
 const handlers: ProviderActionHandlers<"api_route", ActionHandler> = {
@@ -53,10 +52,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
-    const payload = await requestApiRoute(
-      { path: "/models", phase: "validate" },
-      { apiKey: input.apiKey, fetcher, signal },
-    );
+    const payload = await requestApiRoute({ path: "/models" }, { apiKey: input.apiKey, fetcher, signal });
     return {
       profile: { displayName: "API Route API Key" },
       grantedScopes: [],
@@ -99,9 +95,8 @@ function requestApiRoute(input: ApiRouteRequest, context: RequestContext): Promi
           optionalString(optionalRecord(error?.error)?.message) ??
           optionalString(error?.message) ??
           `API Route request failed with HTTP ${response.status}`;
-        const status =
-          input.phase === "validate" && (response.status === 401 || response.status === 403) ? 400 : response.status;
-        throw new ProviderRequestError(status, message, payload);
+        const status = response.status;
+        throw new ProviderRequestError(status, message, payload, status === 429 ? "rate_limited" : "provider_error");
       }
       const result = requiredResponseRecord(payload, "API Route response");
       if (input.path === "/models" && !Array.isArray(result.data)) {

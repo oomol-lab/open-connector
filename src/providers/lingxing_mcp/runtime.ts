@@ -7,7 +7,7 @@ import { UnauthorizedError } from "@modelcontextprotocol/client";
 import { SdkHttpError } from "@modelcontextprotocol/client";
 import { ProtocolError, SdkError, SdkErrorCode } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
-import { optionalRecord, requiredString } from "../../core/cast.ts";
+import { optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import { withMcpClient } from "../mcp-client.ts";
 import { providerUserAgent, ProviderRequestError, toProviderExecutionError } from "../provider-runtime.ts";
@@ -36,7 +36,6 @@ export interface LingxingMcpRateLimiter {
   run<T>(key: string, task: () => Promise<T>): Promise<T>;
 }
 
-type LingxingRequestPhase = "validate" | "execute";
 type LingxingMcpToolResult = Awaited<ReturnType<Client["callTool"]>>;
 
 class InMemoryLingxingMcpRateLimiter implements LingxingMcpRateLimiter {
@@ -166,7 +165,7 @@ export async function validateLingxingCredential(
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const context = createLingxingContext(values, fetcher, signal);
-  const tools = await runLingxingMcp("validate", () => discoverLingxingTools(context));
+  const tools = await discoverLingxingTools(context);
   if (tools.length === 0) {
     throw new ProviderRequestError(502, "Lingxing MCP did not expose any tools for this account");
   }
@@ -194,7 +193,7 @@ export async function listLingxingTools(context: LingxingContext): Promise<{
   }>;
 }> {
   return {
-    tools: await runLingxingMcp("execute", () => discoverLingxingTools(context)),
+    tools: await discoverLingxingTools(context),
   };
 }
 
@@ -204,21 +203,19 @@ export async function callLingxingTool(
 ): Promise<{ result: unknown }> {
   const toolName = requiredString(input.toolName, "toolName", (message) => new ProviderRequestError(400, message));
   const argumentsValue = readToolArguments(input.arguments);
-  const result = await runLingxingMcp("execute", () =>
-    withLingxingMcpClient(context, async (client) => {
-      const toolResult = await client.callTool(
-        {
-          name: toolName,
-          arguments: argumentsValue,
-        },
-        {
-          timeout: lingxingRequestTimeoutMs,
-          signal: context.signal,
-        },
-      );
-      return normalizeLingxingMcpToolResult(toolName, toolResult);
-    }),
-  );
+  const result = await withLingxingMcpClient(context, async (client) => {
+    const toolResult = await client.callTool(
+      {
+        name: toolName,
+        arguments: argumentsValue,
+      },
+      {
+        timeout: lingxingRequestTimeoutMs,
+        signal: context.signal,
+      },
+    );
+    return normalizeLingxingMcpToolResult(toolName, toolResult);
+  });
   return { result };
 }
 
@@ -300,6 +297,34 @@ function readToolArguments(value: unknown): Record<string, unknown> {
 }
 
 function normalizeLingxingMcpToolResult(toolName: string, result: LingxingMcpToolResult): unknown {
+  if ("content" in result) {
+    const candidates: unknown[] = [result.structuredContent];
+    for (const content of result.content) {
+      if (content.type !== "text") continue;
+      const prefix = "call failed, status: 429, response: ";
+      const text = result.isError && content.text.startsWith(prefix) ? content.text.slice(prefix.length) : content.text;
+      try {
+        candidates.push(JSON.parse(text));
+      } catch {
+        /* Unstructured tool content is passed through. */
+      }
+    }
+    for (const candidate of candidates) {
+      const envelope = optionalRecord(candidate);
+      if (envelope?.success !== false) continue;
+      const code = optionalNumber(envelope.code);
+      const message = optionalString(envelope.msg)?.trim();
+      if (code === undefined || !message) continue;
+      // Code 102 also reports changed tool parameters; only the verified key signal permits recovery.
+      if (code === 102 && message.startsWith("MCP Key无效或已失效，请检查x-mcp-key配置")) {
+        throw new ProviderRequestError(401, message, undefined, "authorization_failed");
+      }
+      if (code === 429 && message === "认证请求过于频繁，请稍后重试") {
+        throw new ProviderRequestError(429, message, undefined, "rate_limited");
+      }
+      throw new ProviderRequestError(502, `Lingxing MCP tool failed (${code}): ${message}`);
+    }
+  }
   if ("content" in result && result.isError) {
     throw new ProviderRequestError(
       502,
@@ -339,20 +364,15 @@ function mapLingxingMcpError(error: unknown): ProviderRequestError {
     return error;
   }
   if (error instanceof UnauthorizedError) {
-    return new ProviderRequestError(401, "Lingxing MCP token is invalid or expired", error);
+    return new ProviderRequestError(401, "Lingxing MCP authentication request failed", error, "provider_error");
   }
   if (error instanceof SdkHttpError) {
     const status = error.status;
     return new ProviderRequestError(
-      status === 401 || status === 403
-        ? 401
-        : status === 429
-          ? 429
-          : status && status >= 400 && status < 500
-            ? 400
-            : 502,
+      status && status >= 400 ? status : 502,
       `Lingxing MCP request failed: ${error.message}`,
       error,
+      status === 429 ? "rate_limited" : "provider_error",
     );
   }
   if (error instanceof SdkError && error.code === SdkErrorCode.RequestTimeout) {
@@ -369,21 +389,6 @@ function mapLingxingMcpError(error: unknown): ProviderRequestError {
     error instanceof Error ? `Lingxing MCP request failed: ${error.message}` : "Lingxing MCP request failed",
     error,
   );
-}
-
-async function runLingxingMcp<T>(phase: LingxingRequestPhase, run: () => Promise<T>): Promise<T> {
-  try {
-    return await run();
-  } catch (error) {
-    if (error instanceof ProviderRequestError && error.status === 401) {
-      throw new ProviderRequestError(
-        phase === "validate" ? 400 : 401,
-        "Lingxing MCP Server URL or X-Mcp-Key is invalid",
-        error,
-      );
-    }
-    throw error;
-  }
 }
 
 function hashLingxingCredential(credential: LingxingCredential): string {

@@ -2,7 +2,13 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  readProviderErrorTextBody,
+  readProviderTextBody,
+  runProviderRequest,
+  providerUserAgent,
+  ProviderRequestError,
+} from "../provider-runtime.ts";
 
 export const getyoutubetranscriptApiBaseUrl = "https://getyoutubetranscript.com/api/v1";
 
@@ -63,7 +69,6 @@ export async function validateGetyoutubetranscriptCredential(
   const plan = optionalString(credits.plan);
   return {
     profile: {
-      accountId: "api_key",
       displayName: plan ? `GetYouTubeTranscript (${plan} plan)` : "GetYouTubeTranscript API Key",
     },
     grantedScopes: [],
@@ -91,34 +96,21 @@ async function apiGet(
     }
   }
 
-  let response: Response;
-  let payload: unknown;
-  // Bounds the fetch and the body read so a stalled upstream can't leave the action pending.
-  const timeout = createProviderTimeout(context.signal);
-  try {
-    response = await context.fetcher(url, {
-      method: "GET",
-      headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
-        "user-agent": providerUserAgent,
-      },
-      signal: timeout.signal,
-    });
-    payload = await readPayload(response);
-  } catch (error) {
-    if (timeout.didTimeout()) {
-      throw new ProviderRequestError(504, "GetYouTubeTranscript request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error
-        ? `GetYouTubeTranscript request failed: ${error.message}`
-        : "GetYouTubeTranscript request failed",
-    );
-  } finally {
-    timeout.cleanup();
-  }
+  const { response, payload } = await runProviderRequest(
+    { signal: context.signal, label: "GetYouTubeTranscript" },
+    async (signal) => {
+      const response = await context.fetcher(url, {
+        method: "GET",
+        headers: {
+          accept: "application/json",
+          authorization: `Bearer ${context.apiKey}`,
+          "user-agent": providerUserAgent,
+        },
+        signal,
+      });
+      return { response, payload: await readPayload(response) };
+    },
+  );
 
   const envelope = optionalRecord(payload);
   if (!response.ok || envelope?.success === false) {
@@ -131,7 +123,9 @@ async function apiGet(
 }
 
 async function readPayload(response: Response): Promise<unknown> {
-  const text = await response.text();
+  const text = response.ok
+    ? await readProviderTextBody(response, "GetYouTubeTranscript response")
+    : await readProviderErrorTextBody(response, "GetYouTubeTranscript error");
   if (!text) {
     return null;
   }
@@ -149,16 +143,21 @@ function createError(response: Response, payload: unknown, phase: RequestPhase):
   if (status === 429) {
     return new ProviderRequestError(429, message || "GetYouTubeTranscript rate limit exceeded", payload);
   }
-  if (status === 401 || status === 403) {
-    // A rejected key during validation is a bad input, not an expired session.
+  if (optionalString(record?.code) === "INVALID_API_KEY") {
     return new ProviderRequestError(
       phase === "validate" ? 400 : 401,
       message || "GetYouTubeTranscript API key is invalid",
-      payload,
+      undefined,
+      phase === "validate" ? "invalid_input" : "authorization_failed",
     );
   }
   if (status === 400 || status === 402 || status === 404) {
     return new ProviderRequestError(status, message || "GetYouTubeTranscript request failed", payload);
   }
-  return new ProviderRequestError(status || 502, message || "GetYouTubeTranscript request failed", payload);
+  return new ProviderRequestError(
+    status || 502,
+    message || "GetYouTubeTranscript request failed",
+    payload,
+    "provider_error",
+  );
 }
