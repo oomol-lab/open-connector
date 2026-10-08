@@ -176,7 +176,7 @@ export async function storeResponseInTransit(
   try {
     return await transitFiles.createFromStream({
       body: response.body,
-      name: options.name,
+      name: options.name.toWellFormed(),
       mimeType: options.mimeType,
       signal: options.signal,
     });

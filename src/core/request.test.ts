@@ -421,6 +421,18 @@ describe("storeResponseInTransit", () => {
     expect(stored.map((s) => [s.via, [...s.bytes]])).toEqual([["file", [4, 5]]]);
   });
 
+  it.each([true, false])(
+    "repairs unpaired filename surrogates without changing emoji (streaming=%s)",
+    async (streaming) => {
+      const { stored, writer } = store({ maxBytes: 1024, streaming });
+      await storeResponseInTransit(new Response("content"), writer, {
+        ...options,
+        name: "report-\ud800-\udc00-\u{1f4ca}.pdf",
+      });
+      expect(stored[0]?.name).toBe("report-\ufffd-\ufffd-\u{1f4ca}.pdf");
+    },
+  );
+
   it("refuses a declared length over the limit before reading the body", async () => {
     const { stored, writer } = store({ maxBytes: 2, streaming: true });
     const response = new Response(new Uint8Array([1, 2, 3]), { headers: { "content-length": "3" } });
