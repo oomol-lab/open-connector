@@ -9,6 +9,7 @@ import type { PollDefinition } from "../../triggers/common/poll.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { GmailDraftResource, GmailMessageResource, GmailReplyHeaders, GmailThreadResource } from "./message.ts";
 
+import { format as schemaFormat } from "@cfworker/json-schema";
 import {
   looseArray,
   optionalBoolean,
@@ -491,6 +492,11 @@ async function replyToThread(input: Record<string, unknown>, context: ActionCont
 
 async function replyToMessage(input: Record<string, unknown>, context: ActionContext) {
   const { userId, accessToken, fetcher } = context;
+  const to = Object.hasOwn(input, "to") ? requiredInputString(input.to, "to") : undefined;
+  if (to !== undefined && !schemaFormat.email!(to)) {
+    throw providerInputError("to must be a valid email address");
+  }
+  const recipients = buildRecipients({ to });
   const attachments = await readGmailAttachments(input.attachments, context);
   const message = await getMessageResource(userId, normalizeMessageId(input.messageId), accessToken, fetcher, "full");
   const threadId = optionalString(message.threadId);
@@ -506,7 +512,7 @@ async function replyToMessage(input: Record<string, unknown>, context: ActionCon
     fetcher,
     threadId,
     encodeMimeMessage({
-      to: [replyHeaders.to],
+      to: to !== undefined ? recipients.to : [replyHeaders.to],
       subject: replyHeaders.subject,
       body: optionalRawString(input.body),
       isHtml: input.isHtml === true,

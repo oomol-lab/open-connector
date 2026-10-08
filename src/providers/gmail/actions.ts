@@ -419,11 +419,15 @@ export const gmailActions: ActionDefinition[] = [
   action({
     name: "reply_email",
     operationType: "write",
-    description: "Reply to an existing Gmail thread using the original message's reply headers.",
+    description:
+      "Reply to an existing Gmail thread using the original message's reply headers. Supply to to follow up with the recipient of your own sent message; omit it to reply to the original Reply-To or From address.",
     requiredScopes: [...gmailReadScopes, ...gmailSendScopes],
     properties: {
       threadId,
       messageId,
+      to: s.email("Optional recipient email address overriding the original Reply-To or From address.", {
+        minLength: 1,
+      }),
       body: s.string({ description: "Reply body." }),
       isHtml: s.boolean({ description: "Whether the reply body is HTML." }),
       attachments,
