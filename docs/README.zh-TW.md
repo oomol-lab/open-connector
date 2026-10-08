@@ -186,17 +186,11 @@ OAuth2 應用程式、具名連線、憑證加密、權杖更新及 Action 原�
 
 標籤、拉取及執行方式，請參閱 [docker-ghcr.md（英文）](docker-ghcr.md)。
 
-## 用 Wanta 建構你的桌面 Agent
+## 開箱即用的 AI Bot：Leina
 
-OpenConnector 與 [Wanta](https://github.com/oomol-lab/wanta) 是 OOMOL 開源生態中面向 AI Agent
-的兩個專案。OpenConnector 負責將 Gmail、Slack、Notion 等外部服務接入 Agent；Wanta 則提供一套以 OpenCode
-執行的完整桌面 Agent 應用程式，並透過 OpenConnector 使用已連接的 SaaS 服務。
+如果想使用開箱即用的 AI Bot，可以試試 [Leina](https://leina.ai/)。Leina 可連接 1500 多款 SaaS 應用程式，讓你自由組合應用程式連接、技能和知識庫，打造適合團隊工作流程的 AI Agent。
 
-- **本機執行：** 使用自己的 OpenAI 相容模型，無須註冊 Wanta 帳號。
-- **二次開發：** Fork Wanta，自訂提示詞、工具、介面、模型與品牌，建構自己的桌面 Agent。
-- **託管服務：** 選用的[託管服務](https://wanta.ai/)提供託管模型、OAuth 連線與團隊工作區。
-
-歡迎透過 Issue 和 Pull Request 參與貢獻。
+它支援 Slack、Microsoft Teams、Discord、Telegram，以及釘釘、企業微信、飛書和個人微信。你可以直接在聊天中，讓它透過你授權的應用程式查找資訊、彙整週報、整理客戶回饋或準備銷售跟進內容。
 
 ## 文件
 

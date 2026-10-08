@@ -204,20 +204,11 @@ Exécutez OpenConnector depuis une image préconstruite sur GitHub Packages (GHC
 
 Consultez [docker-ghcr.md (anglais)](docker-ghcr.md) pour les tags d'image, le pull et l'exécution.
 
-## Construire un Agent desktop avec Wanta
+## Un bot IA prêt à l’emploi avec Leina
 
-OpenConnector et [Wanta](https://github.com/oomol-lab/wanta) sont deux projets open source pour les
-Agents IA dans l'écosystème OOMOL. OpenConnector connecte les Agents à des services externes comme
-Gmail, Slack et Notion. Wanta fournit une application Agent desktop complète propulsée par OpenCode
-et utilise OpenConnector pour accéder aux services SaaS connectés.
+Si vous cherchez un bot IA prêt à l’emploi, essayez [Leina](https://leina.ai/). Leina se connecte à plus de 1 500 applications SaaS et vous permet de personnaliser votre propre agent IA en combinant connexions aux applications, compétences et base de connaissances selon les méthodes de travail de votre équipe.
 
-- **Exécution locale :** utilisez votre propre modèle compatible OpenAI sans créer de compte Wanta.
-- **Développement personnalisé :** forkez Wanta et adaptez prompts, outils, interface, modèles et
-  identité.
-- **Services hébergés :** l'expérience [hébergée](https://wanta.ai/), facultative, fournit modèles
-  gérés, connexions OAuth et espaces d'équipe.
-
-Issues et pull requests sont les bienvenues.
+Utilisez-le dans Slack, Microsoft Teams, Discord ou Telegram pour rechercher des informations, préparer des rapports hebdomadaires, organiser les retours clients et préparer le suivi commercial via les applications que vous autorisez.
 
 ## Documentation
 

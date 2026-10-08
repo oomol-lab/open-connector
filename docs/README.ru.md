@@ -202,20 +202,11 @@ Actions, проверку недавних запусков и доступ к �
 
 О тегах образа, pull и запуске см. [docker-ghcr.md (на английском)](docker-ghcr.md).
 
-## Создайте desktop Agent с Wanta
+## Готовый к работе ИИ-бот Leina
 
-OpenConnector и [Wanta](https://github.com/oomol-lab/wanta) — два open-source проекта для AI Agents
-в экосистеме OOMOL. OpenConnector подключает Agents к внешним сервисам, таким как Gmail, Slack и
-Notion. Wanta предоставляет полноценное desktop Agent приложение на базе OpenCode и использует
-OpenConnector для работы с подключенными SaaS сервисами.
+Если вам нужен ИИ-бот, которым можно пользоваться сразу, попробуйте [Leina](https://leina.ai/). Leina подключается к более чем 1500 SaaS-приложениям и позволяет настроить собственного ИИ-агента, свободно комбинируя подключения к приложениям, навыки и базу знаний под рабочие процессы вашей команды.
 
-- **Локальный запуск:** используйте свою OpenAI-compatible model без учетной записи Wanta.
-- **Собственная разработка:** сделайте fork Wanta и настройте prompts, tools, interface, models и
-  branding.
-- **Hosted-сервисы:** необязательный [hosted-сервис](https://wanta.ai/) предоставляет managed models,
-  OAuth connections и team workspaces.
-
-Issues и pull requests приветствуются.
+Используйте его в Slack, Microsoft Teams, Discord или Telegram, чтобы искать информацию, составлять еженедельные отчёты, упорядочивать отзывы клиентов и готовить сообщения для дальнейшего общения с потенциальными клиентами через приложения, к которым вы предоставили доступ.
 
 ## Документация
 

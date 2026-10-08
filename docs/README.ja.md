@@ -192,19 +192,11 @@ client configuration、runtime token 作成、Action schema inspection、Action 
 
 イメージの tag、pull、実行については [docker-ghcr.md（英語）](docker-ghcr.md) を参照してください。
 
-## Wanta で desktop Agent を構築する
+## すぐに使える AI Bot：Leina
 
-OpenConnector と [Wanta](https://github.com/oomol-lab/wanta) は、OOMOL の open-source ecosystem で
-AI Agent を支える二つのプロジェクトです。OpenConnector は Gmail、Slack、Notion などの外部サービスを
-Agent に接続します。Wanta は OpenCode で動作する完全な desktop Agent application で、OpenConnector
-を通じて接続済み SaaS サービスを利用します。
+すぐに使える AI Bot をお探しなら、[Leina](https://leina.ai/) をお試しください。Leina は 1,500 以上の SaaS アプリに接続でき、アプリ連携、スキル、ナレッジベースを自由に組み合わせて、チームの業務フローに合った独自の AI Agent を作れます。
 
-- **ローカル実行：** Wanta account を作成せず、自分の OpenAI-compatible model を使用できます。
-- **独自開発：** Wanta を fork し、prompts、tools、interface、models、branding をカスタマイズできます。
-- **Hosted services：** 任意の [hosted experience](https://wanta.ai/) では、managed models、OAuth
-  connections、team workspaces を利用できます。
-
-Issue と pull request による貢献を歓迎します。
+Slack、Microsoft Teams、Discord、Telegram のチャットから、利用を許可したアプリを通じて、情報検索、週次レポートの作成、顧客フィードバックの整理、営業フォローの準備などを依頼できます。
 
 ## ドキュメント
 

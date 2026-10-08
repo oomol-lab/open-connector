@@ -200,19 +200,11 @@ version, 최신 `main` build에는 `tip`을 사용하세요.
 
 Image tag, 가져오기, 실행 방법은 [docker-ghcr.md](docker-ghcr.md)를 참조하세요.
 
-## Wanta로 데스크톱 Agent 만들기
+## 바로 사용할 수 있는 AI 봇: Leina
 
-OpenConnector와 [Wanta](https://github.com/oomol-lab/wanta)는 OOMOL 오픈 소스 생태계에서 AI Agent를
-지원하는 두 프로젝트입니다. OpenConnector는 Gmail, Slack, Notion 같은 외부 서비스를 Agent에 연결합니다.
-Wanta는 OpenCode로 실행되는 완전한 데스크톱 Agent 애플리케이션이며, OpenConnector를 통해 연결된 SaaS
-서비스를 사용합니다.
+바로 사용할 수 있는 AI 봇을 찾고 있다면 [Leina](https://leina.ai/)를 사용해 보세요. Leina는 1,500개 이상의 SaaS 앱에 연결할 수 있으며, 앱 연결, 스킬, 지식 베이스를 자유롭게 조합해 팀의 업무 흐름에 맞는 나만의 AI 에이전트를 구성할 수 있습니다.
 
-- **로컬 실행:** Wanta 계정 없이 자신의 OpenAI 호환 모델을 사용할 수 있습니다.
-- **직접 개발:** Wanta를 fork하여 prompt, 도구, 인터페이스, 모델, branding을 맞춤 설정할 수 있습니다.
-- **호스팅 서비스:** 선택 사항인 [호스팅 환경](https://wanta.ai/)은 managed model, OAuth 연결, 팀
-  workspace를 제공합니다.
-
-Issue와 pull request를 통한 기여를 환영합니다.
+Slack, Microsoft Teams, Discord, Telegram의 채팅에서 사용자가 접근을 허용한 앱을 통해 정보 검색, 주간 보고서 작성, 고객 피드백 정리, 영업 후속 연락 준비 등을 요청할 수 있습니다.
 
 ## 문서
 
