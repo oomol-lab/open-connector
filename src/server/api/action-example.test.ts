@@ -23,6 +23,16 @@ describe("buildExampleInput", () => {
     expect(result.valid, `${label}: ${JSON.stringify(example)}`).toBe(true);
   }
 
+  it("preserves defaults that satisfy the schema", () => {
+    expect(
+      buildExampleInput({
+        type: "object",
+        properties: { keyword: { type: "string", default: "search", minLength: 1 } },
+        required: ["keyword"],
+      }),
+    ).toEqual({ keyword: "search" });
+  });
+
   it("seeds requirements declared inside allOf", () => {
     expectValidExample("allOf member requirement", {
       type: "object",

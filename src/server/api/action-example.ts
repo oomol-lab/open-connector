@@ -255,7 +255,7 @@ function exampleValue(schema: JsonSchema | undefined): unknown {
   if (!schema) {
     return "";
   }
-  if (schema.default !== undefined) {
+  if (schema.default !== undefined && new Validator(schema as Schema, "2020-12").validate(schema.default).valid) {
     return schema.default;
   }
   if (schema.const !== undefined) {

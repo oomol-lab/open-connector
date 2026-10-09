@@ -25,21 +25,27 @@ for (const file of await readdir(directory)) {
       const result = validateActionInput(action, input);
       if (!result.valid) {
         failures += 1;
-        console.error(action.id, JSON.stringify({ input, errors: result.errors }));
+        console.error(`FAIL ${action.id}\n  Input: ${JSON.stringify(input)}`);
+        for (const error of result.errors) {
+          console.error(`  ${error.instanceLocation}: ${error.error} (${error.keywordLocation})`);
+        }
       }
     } catch (error) {
       failures += 1;
-      console.error(action.id, error);
+      console.error(`FAIL ${action.id}`, error);
     }
   }
 }
 console.log(
-  JSON.stringify({
-    actions,
-    failures,
-    elapsedMs: Math.round(performance.now() - started),
-    generationMs: Math.round(generationMs),
-    peakRssMiB: Math.round(process.resourceUsage().maxRSS / 1024),
-  }),
+  `Action examples: ${actions - failures}/${actions} passed, ${failures} failed. ` +
+    `${Math.round(performance.now() - started)} ms total, ${Math.round(generationMs)} ms generating, ` +
+    `${Math.round(process.resourceUsage().maxRSS / 1024)} MiB peak RSS.`,
 );
+if (failures > 0) {
+  console.error(
+    "Investigate src/server/api/action-example.ts first: provider schemas are based on official API documentation, " +
+      "so example failures usually indicate a generation bug. Change a schema only when official documentation " +
+      "or other API contract evidence confirms it is incorrect; do not relax constraints just to pass this check.",
+  );
+}
 process.exitCode = failures > 0 ? 1 : 0;
