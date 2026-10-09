@@ -22,6 +22,8 @@ export type ProviderAuthSetup =
       type: "oauth2";
       /** clientId and clientSecret carry no location; every other field names the request object it belongs to. */
       clientFields: OAuthClientConfigFieldDefinition[];
+      /** The provider accepts a public client when the secret is left blank (`OAuth2AuthDefinition.clientSecretOptional`). */
+      clientSecretOptional?: boolean;
       clientSetup?: OAuth2AuthDefinition["clientSetup"];
       scopes: string[];
       /** Additional scopes for explicit selection; requestedScopes replaces the default list. */
@@ -42,6 +44,7 @@ export function describeProviderAuth(auth: ProviderAuthDefinition): ProviderAuth
       return {
         type: "oauth2",
         clientFields: oauthClientFields(auth),
+        ...(auth.clientSecretOptional === true ? { clientSecretOptional: true } : {}),
         clientSetup: auth.clientSetup,
         scopes: auth.scopes,
         optionalScopes: auth.optionalScopes,
@@ -74,11 +77,22 @@ export function oauthClientFields(auth: OAuth2AuthDefinition): OAuthClientConfig
       key: "clientSecret",
       label: "Client secret",
       inputType: "password",
-      required: auth.tokenEndpointAuthMethod !== "none",
+      required: !acceptsPublicClient(auth),
       secret: true,
     },
   ];
   return fields.concat(
     (auth.clientConfigFields ?? []).map((field) => ({ ...field, location: field.location ?? "extra" })),
   );
+}
+
+/**
+ * Whether a client configuration without a secret is accepted: a public-client
+ * provider (`tokenEndpointAuthMethod: "none"`), or one whose secret is
+ * optional (`clientSecretOptional`).
+ */
+export function acceptsPublicClient(
+  auth: Pick<OAuth2AuthDefinition, "tokenEndpointAuthMethod" | "clientSecretOptional">,
+): boolean {
+  return auth.tokenEndpointAuthMethod === "none" || auth.clientSecretOptional === true;
 }
