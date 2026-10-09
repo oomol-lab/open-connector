@@ -26,7 +26,7 @@
     "format": "oxfmt --check .",
     "format:fix": "oxfmt .",
     "fix": "npm run lint:fix && npm run format:fix",
-    "fix-check": "npm run fix && npm run typecheck && npm run generate:catalog && node scripts/check-action-examples.ts",
+    "fix-check": "npm run fix && npm run typecheck",
     "build:runtime": "npm run generate:catalog && node scripts/build-runtime-package.ts"
   },
   "dependencies": {

@@ -93,5 +93,5 @@ The committed numbers are the copies that exist today, frozen as accepted debt; 
 
 - Before finishing code changes, run `npm run fix-check`. It runs lint fixes, formatting fixes, and the typecheck.
 - Run `npm run build` only when you need a separate no-fix typecheck, for example after generated files changed or for CI parity.
-- Run `npm run generate:catalog` when provider definitions or actions change.
+- Run `npm run generate:catalog` when provider definitions or actions change. After generating the catalog, run `node scripts/check-action-examples.ts` to validate the generated action examples.
 - Run provider examples manually when the task changes user-facing example behavior.
