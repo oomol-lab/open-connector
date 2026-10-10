@@ -89,6 +89,7 @@ async function main(): Promise<void> {
       blockedTriggers: parseActionPolicyList(process.env.OOMOL_CONNECT_BLOCKED_TRIGGERS),
     },
     allowedCustomOAuth: parseActionPolicyList(process.env.OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH),
+    allowedUndeclaredScopes: parseActionPolicyList(process.env.OOMOL_CONNECT_ALLOWED_UNDECLARED_SCOPES),
     postgres: databaseUrl
       ? {
           connectionString: databaseUrl,

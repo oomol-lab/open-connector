@@ -135,6 +135,7 @@ Map a config key name to its OOMOL_CONNECT_* env-var name.
 {{- else if eq . "allowedProxies" -}}OOMOL_CONNECT_ALLOWED_PROXIES
 {{- else if eq . "blockedProxies" -}}OOMOL_CONNECT_BLOCKED_PROXIES
 {{- else if eq . "allowedCustomOAuth" -}}OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH
+{{- else if eq . "allowedUndeclaredScopes" -}}OOMOL_CONNECT_ALLOWED_UNDECLARED_SCOPES
 {{- else if eq . "egressTrustedHosts" -}}OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS
 {{- else if eq . "logLevel" -}}OOMOL_CONNECT_LOG_LEVEL
 {{- else if eq . "runLimit" -}}OOMOL_CONNECT_RUN_LIMIT

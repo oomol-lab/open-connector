@@ -13,7 +13,10 @@ export type OAuthClientConfig = {
   service: string;
   clientId: string;
   clientSecret: string;
-  /** Non-empty provider-declared scope subset to request. Omit to use every provider default. */
+  /**
+   * Non-empty scope list to request: provider-declared, unless the host allows
+   * the service to request undeclared scopes. Omit to use every provider default.
+   */
   requestedScopes?: string[];
   /**
    * Absolute redirect URI registered with the provider in place of the runtime's
@@ -28,7 +31,10 @@ export type OAuthClientConfig = {
 export interface OAuthClientConfigInput {
   clientId: string;
   clientSecret: string;
-  /** Non-empty provider-declared scope subset to request. Omit to use every provider default. */
+  /**
+   * Non-empty scope list to request: provider-declared, unless the host allows
+   * the service to request undeclared scopes. Omit to use every provider default.
+   */
   requestedScopes?: string[];
   /** Absolute redirect URI override, any scheme. Omit to use the runtime callback. */
   redirectUri?: string;
@@ -61,6 +67,8 @@ export interface OAuthClientConfigServiceOptions {
   origin: string;
   store: IOAuthClientConfigStore;
   isCustomClientConfigAvailable?: (service: string) => boolean;
+  /** Whether a client config of the service may request scopes its provider does not declare. Defaults to never. */
+  isUndeclaredScopeAllowed?: (service: string) => boolean;
 }
 
 /**
@@ -86,12 +94,14 @@ export class OAuthClientConfigService {
   private readonly origin: string;
   private readonly store: IOAuthClientConfigStore;
   private readonly isCustomClientConfigAvailable: (service: string) => boolean;
+  private readonly isUndeclaredScopeAllowed: (service: string) => boolean;
 
   constructor(input: OAuthClientConfigServiceOptions) {
     this.catalog = input.catalog;
     this.origin = input.origin.replace(/\/$/, "");
     this.store = input.store;
     this.isCustomClientConfigAvailable = input.isCustomClientConfigAvailable ?? (() => false);
+    this.isUndeclaredScopeAllowed = input.isUndeclaredScopeAllowed ?? (() => false);
   }
 
   async listConfigs(): Promise<OAuthClientConfigSummary[]> {
@@ -142,7 +152,7 @@ export class OAuthClientConfigService {
       service,
       clientId,
       clientSecret,
-      requestedScopes: normalizeRequestedScopes(service, input.requestedScopes, requestableScopes(auth)),
+      requestedScopes: normalizeRequestedScopes(service, input.requestedScopes, this.scopeLimit(service, auth)),
       redirectUri: normalizeRedirectUri(input.redirectUri),
       extra: normalizeCredentialValues({
         fields: filterClientConfigFields(auth.clientConfigFields, "extra"),
@@ -207,7 +217,27 @@ export class OAuthClientConfigService {
   /** Resolve the scopes an authorization request should send. */
   getEffectiveScopes(service: string, config: OAuthClientConfig): string[] {
     const auth = this.getOAuthDefinition(service);
-    return filterDeclaredScopes(config.requestedScopes, requestableScopes(auth)) ?? [...auth.scopes];
+    return filterDeclaredScopes(config.requestedScopes, this.scopeLimit(service, auth)) ?? [...auth.scopes];
+  }
+
+  /**
+   * The requested scopes a stored client config still stands by: its list
+   * without the scopes the service may no longer request, or undefined (the
+   * provider defaults) when none survive. A flow that re-normalizes a stored
+   * config reads its scopes here, so a scope that stopped being requestable
+   * after the config was saved is dropped instead of refusing the flow.
+   */
+  getStoredRequestedScopes(service: string, config: OAuthClientConfig): string[] | undefined {
+    return filterDeclaredScopes(config.requestedScopes, this.scopeLimit(service, this.getOAuthDefinition(service)));
+  }
+
+  /**
+   * The scopes a client config of the service is held to: the provider's
+   * declared and optional scopes, or no limit when the host allows the service
+   * to request undeclared scopes.
+   */
+  private scopeLimit(service: string, auth: OAuth2AuthDefinition): string[] | undefined {
+    return this.isUndeclaredScopeAllowed(service) ? undefined : requestableScopes(auth);
   }
 
   private listOAuthProviders(): Array<{ service: string; auth: OAuth2AuthDefinition }> {
@@ -242,7 +272,9 @@ export class OAuthClientConfigService {
         .map((field) => field.key),
       auth,
       requestedScopes: config?.requestedScopes ?? null,
-      effectiveScopes: filterDeclaredScopes(config?.requestedScopes, requestableScopes(auth)) ?? [...auth.scopes],
+      effectiveScopes: filterDeclaredScopes(config?.requestedScopes, this.scopeLimit(service, auth)) ?? [
+        ...auth.scopes,
+      ],
       extra: config?.extra ?? {},
     };
   }
@@ -328,7 +360,7 @@ function normalizeStoredOAuthClientConfig(config: OAuthClientConfig | undefined)
 function normalizeRequestedScopes(
   service: string,
   requestedScopes: string[] | undefined,
-  providerScopes: string[],
+  providerScopes: string[] | undefined,
 ): string[] | undefined {
   if (requestedScopes === undefined) {
     return undefined;
@@ -343,6 +375,9 @@ function normalizeRequestedScopes(
   }
   if (normalized.some((scope) => !scope)) {
     throw new OAuthClientConfigError("invalid_input", "requestedScopes must not contain empty values.");
+  }
+  if (!providerScopes) {
+    return normalized;
   }
 
   const declaredScopes = new Set(providerScopes);
@@ -413,16 +448,21 @@ function normalizeRedirectUri(value: string | undefined): string | undefined {
  * example when the platform restricts who may request it); rejecting the stored
  * value would break the config listing and every re-authorization, so read
  * paths drop undeclared scopes and fall back to the provider defaults when none
- * survive. Writes stay strict via normalizeRequestedScopes.
+ * survive. Writes stay strict via normalizeRequestedScopes. A service the host
+ * allows to request undeclared scopes has no declared limit, so its stored
+ * scopes are kept as written.
  */
-function filterDeclaredScopes(requestedScopes: string[] | undefined, providerScopes: string[]): string[] | undefined {
+function filterDeclaredScopes(
+  requestedScopes: string[] | undefined,
+  providerScopes: string[] | undefined,
+): string[] | undefined {
   if (requestedScopes === undefined) {
     return undefined;
   }
 
-  const declaredScopes = new Set(providerScopes);
+  const declaredScopes = providerScopes ? new Set(providerScopes) : undefined;
   const filtered = [...new Set(requestedScopes.map((scope) => scope.trim()))].filter((scope) =>
-    declaredScopes.has(scope),
+    declaredScopes ? declaredScopes.has(scope) : scope !== "",
   );
   return filtered.length > 0 ? filtered : undefined;
 }

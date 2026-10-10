@@ -182,6 +182,16 @@ unknown scopes instead of silently expanding authorization. Omit `requestedScope
 provider defaults; when present, the array must contain at least one scope. Config summaries expose
 both `requestedScopes` and the resulting `effectiveScopes`.
 
+A deployment whose OAuth app is approved for scopes a provider definition does not declare, for
+example to cover several products of one vendor in a single consent, can opt in per provider. Set
+`OOMOL_CONNECT_ALLOWED_UNDECLARED_SCOPES` to `*` or a comma-separated provider list; a listed
+provider's `requestedScopes` may then name any scope, and the authorization request sends the list
+as written. The runtime cannot check such a scope against the provider definition: the consent
+screen shows it, the stored credential carries it, and every Action and proxy request of that
+connection runs with the wider grant, so enable it only for OAuth apps you operate. Providers that
+are not listed keep rejecting undeclared scopes, and a stored undeclared scope is dropped again if
+its provider leaves the list.
+
 A provider whose OAuth app is registered with a different redirect URI, for example a native app's
 custom scheme, can save it as `redirectUri` with the client configuration:
 

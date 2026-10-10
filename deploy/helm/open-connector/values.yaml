@@ -150,6 +150,7 @@ config:
   allowedProxies: ""
   blockedProxies: ""
   allowedCustomOAuth: ""
+  allowedUndeclaredScopes: ""
   egressTrustedHosts: ""
   allowPrivateNetwork: false
   logLevel: info

@@ -146,7 +146,7 @@ export class OAuthFlowService {
       throw new OAuthFlowError("oauth_client_config_required", `Configure an OAuth client for ${input.service} first.`);
     const config = this.clientConfigs.normalizeConfig(input.service, {
       ...configured,
-      requestedScopes: requestedScopes ?? configured.requestedScopes,
+      requestedScopes: requestedScopes ?? this.clientConfigs.getStoredRequestedScopes(input.service, configured),
       extra: { ...configured.extra, ...input.extra },
       secretExtra: { ...configured.secretExtra, ...input.secretExtra },
     });

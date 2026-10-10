@@ -119,6 +119,7 @@ async function createCloudflareApp(env: CloudflareEnv, publicOrigin: string): Pr
       blockedTriggers: parseActionPolicyList(env.OOMOL_CONNECT_BLOCKED_TRIGGERS),
     }),
     allowedCustomOAuth: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH),
+    allowedUndeclaredScopes: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_UNDECLARED_SCOPES),
     logger: workerLogger,
     computeRuntimeAuthConfigured: false,
     // Cloudflare compresses on egress itself: Response defaults to
@@ -179,6 +180,7 @@ function createCacheKey(env: CloudflareEnv, publicOrigin: string): string {
     blockedTriggers: env.OOMOL_CONNECT_BLOCKED_TRIGGERS ?? "",
     blockedProxies: env.OOMOL_CONNECT_BLOCKED_PROXIES ?? "",
     allowedCustomOAuth: env.OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH ?? "",
+    allowedUndeclaredScopes: env.OOMOL_CONNECT_ALLOWED_UNDECLARED_SCOPES ?? "",
     transitFileTtlSeconds: env.OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS ?? "",
     transitFileMaxBytes: env.OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES ?? "",
     runLimit: env.OOMOL_CONNECT_RUN_LIMIT ?? "",

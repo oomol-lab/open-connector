@@ -124,6 +124,7 @@
         "allowedProxies": { "type": "string" },
         "blockedProxies": { "type": "string" },
         "allowedCustomOAuth": { "type": "string" },
+        "allowedUndeclaredScopes": { "type": "string" },
         "egressTrustedHosts": { "type": "string" },
         "allowPrivateNetwork": { "type": "boolean" },
         "logLevel": { "type": "string", "enum": ["trace", "debug", "info", "warn", "error", "fatal"] },

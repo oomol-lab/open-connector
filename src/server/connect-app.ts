@@ -39,6 +39,7 @@ export interface ConnectAppOptions {
   adminToken?: string;
   runtimeToken?: string;
   allowedCustomOAuth?: string[];
+  allowedUndeclaredScopes?: string[];
   verifyRuntimeJwt?: RuntimeJwtVerifier;
   actionPolicy?: ActionPolicyService;
   registerStaticRoutes?: (app: Hono) => void;
@@ -81,11 +82,13 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
   const allowedCustomOAuth = new Set(options.allowedCustomOAuth);
   const isCustomClientConfigAllowed = (service: string): boolean =>
     allowedCustomOAuth.has("*") || allowedCustomOAuth.has(service);
+  const allowedUndeclaredScopes = new Set(options.allowedUndeclaredScopes);
   const oauthClientConfigs = new OAuthClientConfigService({
     catalog: options.catalog,
     origin: options.publicOrigin,
     store: options.runtimeDatabase.oauthClientConfigStore,
     isCustomClientConfigAvailable: (service) => options.secretCodec.encrypted && isCustomClientConfigAllowed(service),
+    isUndeclaredScopeAllowed: (service) => allowedUndeclaredScopes.has("*") || allowedUndeclaredScopes.has(service),
   });
   const connections = new ConnectionService({
     providerHttpDispatch: options.providerHttpDispatch,

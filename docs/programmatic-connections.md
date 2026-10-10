@@ -50,7 +50,8 @@ For local OAuth, configure your provider's OAuth client through the console or
 
 Omit `requestedScopes` to request every default scope and no optional scopes. When provided,
 `requestedScopes` replaces the default scope list: only the listed scopes are requested, and
-each must appear in the provider's `scopes` or `optionalScopes`. Include any identity scopes
+each must appear in the provider's `scopes` or `optionalScopes`, unless the deployment lists the
+service in `OOMOL_CONNECT_ALLOWED_UNDECLARED_SCOPES`. Include any identity scopes
 needed by the provider's credential validator; defaults are not added automatically.
 
 For example, a Google Calendar OAuth client config for editing events, listing calendars, and

@@ -419,6 +419,40 @@ describe("OAuthFlowService", () => {
     expect(new URL(started.authorizationUrl).searchParams.get("scope")).toBe("read");
   });
 
+  it("starts a connection request without a stored scope the service may no longer request", async () => {
+    const options: CreateServicesOptions = { allowedUndeclaredScopes: ["example"] };
+    const services = createServices([oauthProvider], options);
+    await services.clientConfigs.upsertConfig({
+      service: "example",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+      extra: { tenant: "default" },
+      requestedScopes: ["read", "calendar.events"],
+    });
+    const start = () => services.flow.startConnectionRequest({ service: "example", owner: "test-owner" });
+
+    const allowed = await start();
+    expect(new URL(allowed.authorizationUrl).searchParams.get("scope")).toBe("read calendar.events");
+
+    // The host withdraws the permission; the stored config is unchanged.
+    options.allowedUndeclaredScopes = [];
+    const strict = await start();
+    expect(new URL(strict.authorizationUrl).searchParams.get("scope")).toBe("read");
+
+    // A stored list with no requestable scope left falls back to the provider defaults.
+    options.allowedUndeclaredScopes = ["example"];
+    await services.clientConfigs.upsertConfig({
+      service: "example",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+      extra: { tenant: "default" },
+      requestedScopes: ["calendar.events"],
+    });
+    options.allowedUndeclaredScopes = [];
+    const fallback = await start();
+    expect(new URL(fallback.authorizationUrl).searchParams.get("scope")).toBe("read write");
+  });
+
   it("resolves transitive option requirements and preserves the selected scopes", async () => {
     const services = createServices([selectableOAuthProvider]);
     await services.clientConfigs.upsertConfig({
@@ -1237,6 +1271,7 @@ interface CreateServicesOptions {
   validators?: CredentialValidators;
   stateMaxAgeMs?: number;
   allowedCustomOAuth?: string[];
+  allowedUndeclaredScopes?: string[];
   secretCodec?: ISecretCodec;
   oauthRuntime?: ProviderOAuthRuntime;
 }
@@ -1263,6 +1298,7 @@ function createServices(
     catalog,
     origin: "http://localhost:3000",
     store: new MemoryOAuthClientConfigStore(),
+    isUndeclaredScopeAllowed: (service) => options.allowedUndeclaredScopes?.includes(service) ?? false,
   });
 
   const states = new MemoryOAuthStateStore();

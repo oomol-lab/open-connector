@@ -87,6 +87,8 @@ export interface ConnectorRuntimeOptions {
   actionPolicy?: ActionPolicyConfig;
   /** Services, or `*`, whose connections may carry their own OAuth client instead of the configured one. */
   allowedCustomOAuth?: string[];
+  /** Services, or `*`, whose OAuth client configuration may request scopes the provider does not declare. */
+  allowedUndeclaredScopes?: string[];
   transitFiles?: ConnectorTransitFileOptions;
   /** Maximum number of recent action run records to retain. */
   runLimit?: number;
@@ -224,6 +226,7 @@ async function openRuntime(options: ConnectorRuntimeOptions): Promise<ConnectorR
       verifyRuntimeJwt,
       actionPolicy: new ActionPolicyService(options.actionPolicy),
       allowedCustomOAuth: options.allowedCustomOAuth,
+      allowedUndeclaredScopes: options.allowedUndeclaredScopes,
       logger: options.logger,
       serveDocumentation: options.apiReference ?? false,
     });

@@ -422,6 +422,35 @@ describe("ConnectServer", () => {
     await expect(response.json()).resolves.toMatchObject({ error: { code: "invalid_input" } });
   });
 
+  it("requests a provider-undeclared scope only for a service the deployment allows", async () => {
+    const app = createTestServer([oauthProvider], { allowedUndeclaredScopes: ["oauth_example"] }).createApp();
+    const config = await app.request("/api/oauth/configs/oauth_example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        clientId: "client-id",
+        clientSecret: "client-secret",
+        requestedScopes: ["read", "admin"],
+      }),
+    });
+
+    expect(config.status).toBe(200);
+    await expect(config.json()).resolves.toMatchObject({
+      requestedScopes: ["read", "admin"],
+      effectiveScopes: ["read", "admin"],
+    });
+
+    const authorization = await app.request("/api/oauth/authorizations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ service: "oauth_example" }),
+    });
+    const body = (await authorization.json()) as { authorizationUrl: string };
+
+    expect(authorization.status).toBe(200);
+    expect(new URL(body.authorizationUrl).searchParams.get("scope")).toBe("read admin");
+  });
+
   it("stores a per-provider redirect URI override through the public API and reports it", async () => {
     const app = createTestServer([oauthProvider]).createApp();
     const config = await app.request("/api/oauth/configs/oauth_example", {
@@ -3897,6 +3926,7 @@ interface CreateTestServerOptions {
   uploadTransitFile?: (request: Request) => Promise<TransitFileUpload>;
   secretCodec?: ISecretCodec;
   allowedCustomOAuth?: string[];
+  allowedUndeclaredScopes?: string[];
 }
 
 function createTestServer(providers: ProviderDefinition[], options: CreateTestServerOptions = {}): ConnectServer {
@@ -3923,6 +3953,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     store: new MemoryOAuthClientConfigStore(),
     isCustomClientConfigAvailable: (service) =>
       (options.secretCodec?.encrypted ?? false) && isCustomClientConfigAllowed(service),
+    isUndeclaredScopeAllowed: (service) => options.allowedUndeclaredScopes?.includes(service) ?? false,
   });
   const transitFiles =
     options.transitFiles ??

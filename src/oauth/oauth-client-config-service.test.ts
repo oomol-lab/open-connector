@@ -223,6 +223,83 @@ describe("OAuthClientConfigService", () => {
     ]);
   });
 
+  it("lets an allowed service request scopes its provider does not declare", async () => {
+    const service = new OAuthClientConfigService({
+      catalog: createCatalogStore([oauthProvider("example"), oauthProvider("other")]),
+      origin: "http://localhost:3000",
+      store: new MemoryOAuthClientConfigStore(),
+      isUndeclaredScopeAllowed: (name) => name === "example",
+    });
+
+    const saved = await service.upsertConfig({
+      service: "example",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+      requestedScopes: [" read ", "calendar.events", "read"],
+    });
+    expect(saved).toMatchObject({
+      requestedScopes: ["read", "calendar.events"],
+      effectiveScopes: ["read", "calendar.events"],
+    });
+    const stored = await service.getConfig("example");
+    if (!stored) throw new Error("Expected the saved config");
+    expect(service.getEffectiveScopes("example", stored)).toEqual(["read", "calendar.events"]);
+    await expect(service.getSummary("example")).resolves.toMatchObject({
+      effectiveScopes: ["read", "calendar.events"],
+    });
+
+    // The shape checks stay: an empty list and an empty entry are refused.
+    expect(() =>
+      service.normalizeConfig("example", { clientId: "client-id", clientSecret: "client-secret", requestedScopes: [] }),
+    ).toThrow("requestedScopes must contain at least one scope.");
+    expect(() =>
+      service.normalizeConfig("example", {
+        clientId: "client-id",
+        clientSecret: "client-secret",
+        requestedScopes: ["read", " "],
+      }),
+    ).toThrow("requestedScopes must not contain empty values.");
+
+    // Omitting requestedScopes still asks for the provider defaults.
+    const unnamed = service.normalizeConfig("example", { clientId: "client-id", clientSecret: "client-secret" });
+    expect(service.getEffectiveScopes("example", unnamed)).toEqual(["read", "write"]);
+
+    // A service the host did not list keeps the declared limit.
+    expect(() =>
+      service.normalizeConfig("other", {
+        clientId: "client-id",
+        clientSecret: "client-secret",
+        requestedScopes: ["calendar.events"],
+      }),
+    ).toThrow("requestedScopes contains a scope not declared by other: calendar.events.");
+  });
+
+  it("drops a stored undeclared scope again once its service is no longer allowed", async () => {
+    const store = new MemoryOAuthClientConfigStore();
+    const allowed = new OAuthClientConfigService({
+      catalog: createCatalogStore([oauthProvider("example")]),
+      origin: "http://localhost:3000",
+      store,
+      isUndeclaredScopeAllowed: () => true,
+    });
+    await allowed.upsertConfig({
+      service: "example",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+      requestedScopes: ["read", "calendar.events"],
+    });
+
+    const strict = new OAuthClientConfigService({
+      catalog: createCatalogStore([oauthProvider("example")]),
+      origin: "http://localhost:3000",
+      store,
+    });
+    await expect(strict.getSummary("example")).resolves.toMatchObject({
+      requestedScopes: ["read", "calendar.events"],
+      effectiveScopes: ["read"],
+    });
+  });
+
   // A provider whose OAuth app is registered with a native app's custom URL
   // scheme (RFC 8252 §7.1) carries that redirect per provider.
   // `expectedRedirectUri` mirrors `effectiveScopes` (the value the flow sends),

@@ -98,7 +98,7 @@ const oauthClientConfigRequestSchema = jsonSchema.object(
     requestedScopes: jsonSchema.array(jsonSchema.string(), {
       minItems: 1,
       description:
-        "Complete non-empty scope list replacing the provider defaults. Each scope must be declared in scopes or optionalScopes. Omit to request every default scope and no optional scopes.",
+        "Complete non-empty scope list replacing the provider defaults. Each scope must be declared in scopes or optionalScopes unless the deployment allows undeclared scopes for the service. Omit to request every default scope and no optional scopes.",
     }),
     redirectUri: jsonSchema.string({
       description:
@@ -1454,7 +1454,7 @@ function createOAuthAuthorizationPath(): Record<string, unknown> {
                 requestedScopes: jsonSchema.array(jsonSchema.string(), {
                   minItems: 1,
                   description:
-                    "Optional complete non-empty scope list replacing the provider defaults. Each scope must be declared in scopes or optionalScopes; default scopes are not added automatically.",
+                    "Optional complete non-empty scope list replacing the provider defaults. Each scope must be declared in scopes or optionalScopes unless the deployment allows undeclared scopes for the service; default scopes are not added automatically.",
                 }),
                 redirectUri: jsonSchema.string({
                   description:
@@ -1509,7 +1509,7 @@ function createOAuthConfigPath(): Record<string, unknown> {
       tags: ["OAuth"],
       summary: "Upsert local OAuth client configuration.",
       description:
-        "Open-source users provide their own OAuth app. requestedScopes replaces the default scope list with an explicit selection from the provider's scopes and optionalScopes; default scopes are not added automatically. Omit it to use the defaults without optional scopes. Undeclared scopes are refused. Additional extra fields are declared by provider catalog auth metadata.",
+        "Open-source users provide their own OAuth app. requestedScopes replaces the default scope list with an explicit selection from the provider's scopes and optionalScopes; default scopes are not added automatically. Omit it to use the defaults without optional scopes. Undeclared scopes are refused unless the deployment lists the service in OOMOL_CONNECT_ALLOWED_UNDECLARED_SCOPES. Additional extra fields are declared by provider catalog auth metadata.",
       requestBody: {
         required: true,
         content: {
