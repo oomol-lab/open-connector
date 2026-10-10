@@ -100,6 +100,17 @@ export interface ConnectorRuntimeOptions {
   logger?: RuntimeLogger;
   /** The standalone host opts into API-reference HTML. Authorization completion pages are always available. */
   apiReference?: boolean;
+  /**
+   * Accept a credential in the body of `/v1` action and proxy requests and serve `/v1/credentials/refresh`
+   * and `/v1/credentials/revoke`, for a host that keeps credentials outside the runtime. The runtime
+   * executes with such a credential and stores nothing. Off by default.
+   */
+  externalCredentials?: boolean;
+  /**
+   * Serve `GET /v1/connections/by-id/:appId/export`, which hands a stored credential — without the OAuth
+   * client secrets — to the administrator, so a host can move it out of the runtime. Off by default.
+   */
+  credentialExport?: boolean;
 }
 
 /** Standard web requests are the host boundary; credentials, databases and framework objects stay private. */
@@ -226,6 +237,8 @@ async function openRuntime(options: ConnectorRuntimeOptions): Promise<ConnectorR
       allowedCustomOAuth: options.allowedCustomOAuth,
       logger: options.logger,
       serveDocumentation: options.apiReference ?? false,
+      externalCredentials: options.externalCredentials,
+      credentialExport: options.credentialExport,
     });
     saasCleanup.start();
     triggerMaintenance.start();

@@ -92,6 +92,49 @@ const proxyFailureStatusCases: ProxyFailureStatusCase[] = [
 ];
 
 describe("ProxyRunner", () => {
+  it("proxies with a carried credential without reading a stored connection", async () => {
+    const proxy: ProviderProxyExecutor = vi.fn(
+      async (_input, context): Promise<ProxyExecutionResult> => ({
+        ok: true,
+        response: {
+          status: 200,
+          headers: {},
+          data: { account: (await context.getCredential("example"))?.profile.accountId },
+        },
+      }),
+    );
+    const connections = createConnections();
+    const runner = createRunner({ connections, providerLoader: new TestProviderLoader(proxy) });
+    const carried = { ...credential, profile: { ...credential.profile, accountId: "carried-account" } };
+
+    await expect(
+      runner.run({
+        service: "example",
+        input: { endpoint: "/me", method: "get" },
+        credential: carried,
+        policy: openPolicy,
+      }),
+    ).resolves.toEqual({ ok: true, response: { status: 200, headers: {}, data: { account: "carried-account" } } });
+    expect(connections.getConnectionSummary).not.toHaveBeenCalled();
+    expect(connections.resolveForExecution).not.toHaveBeenCalled();
+
+    const granted = new ActionPolicyService().createSnapshot(undefined, {
+      allowedActions: [],
+      blockedActions: [],
+      allowedProxies: ["example"],
+      allowedConnections: ["some-connection-id"],
+    });
+    await expect(
+      runner.run({
+        service: "example",
+        input: { endpoint: "/me", method: "get" },
+        credential: carried,
+        policy: granted,
+      }),
+    ).resolves.toMatchObject({ ok: false, status: 403, errorCode: "connection_not_allowed" });
+    expect(proxy).toHaveBeenCalledTimes(1);
+  });
+
   it("returns proxy_not_supported after selecting a local connection without a proxy executor", async () => {
     const connections = createConnections();
     const runner = createRunner({
@@ -894,6 +937,11 @@ function createConnections(
       kind: "local",
       summary: input.getConnectionSummary ? await input.getConnectionSummary("example") : summary,
       getCredential: async () => credential,
+    })),
+    resolveExternalCredential: vi.fn((_service: string, carried: ResolvedCredential) => ({
+      kind: "external",
+      summary: { ...summary, id: "external", connectionName: "external" },
+      getCredential: async () => carried,
     })),
   } as unknown as ConnectionService;
 }

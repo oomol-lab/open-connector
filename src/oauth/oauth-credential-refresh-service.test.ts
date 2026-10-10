@@ -415,3 +415,96 @@ describe("OAuthCredentialRefreshService revoke", () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 });
+
+describe("OAuthCredentialRefreshService for a credential held outside the runtime", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  /** Record the token request bodies sent to the stubbed endpoint. */
+  function stubTokenEndpoint(status = 200): string[] {
+    const bodies: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        bodies.push(input instanceof Request ? await input.clone().text() : String(init?.body ?? ""));
+        return status === 200
+          ? Response.json({ access_token: "new-access-token", expires_in: 3600 })
+          : Response.json({ error: "invalid_grant" }, { status });
+      }),
+    );
+    return bodies;
+  }
+
+  it("fills a credential's embedded client with the configured client's secrets when the client ids match", async () => {
+    const bodies = stubTokenEndpoint();
+    const configs = {
+      ...clientConfigs,
+      getConfig: async () => ({
+        clientId: "client-id",
+        clientSecret: "configured-secret",
+        extra: {},
+        secretExtra: { developerToken: "configured-developer-token" },
+      }),
+    } as unknown as OAuthClientConfigService;
+    const service = new OAuthCredentialRefreshService(configs);
+
+    const refreshed = await service.refresh(
+      "example",
+      expiredCredential({ oauthClientConfig: { clientId: "client-id" } }),
+    );
+    expect(bodies[0]).toContain("client_id=client-id");
+    expect(bodies[0]).toContain("client_secret=configured-secret");
+    expect(refreshed.metadata.oauthClientConfig).toEqual({ clientId: "client-id" });
+    expect(JSON.stringify(refreshed)).not.toContain("configured-secret");
+    expect(JSON.stringify(refreshed)).not.toContain("configured-developer-token");
+
+    // Another client's id gets nothing of the configured one — and with no secret of its own, the
+    // provider's client authentication cannot be met: a configuration gap, not a refused refresh.
+    await expect(
+      service.refresh("example", expiredCredential({ oauthClientConfig: { clientId: "another-client" } })),
+    ).rejects.toMatchObject({ code: "oauth_client_config_required" });
+    expect(bodies).toHaveLength(1);
+
+    const publicClient = {
+      ...configs,
+      getOAuthDefinition: () => ({ ...clientConfigs.getOAuthDefinition("example"), tokenEndpointAuthMethod: "none" }),
+    } as unknown as OAuthClientConfigService;
+    await new OAuthCredentialRefreshService(publicClient).refresh(
+      "example",
+      expiredCredential({ oauthClientConfig: { clientId: "another-client" } }),
+    );
+    expect(bodies[1]).toContain("client_id=another-client");
+    expect(bodies[1]).not.toContain("client_secret");
+  });
+
+  it("answers the transient code for a refresh the provider did not answer and the refusal code for one it refused", async () => {
+    const service = new OAuthCredentialRefreshService(clientConfigs);
+    const options = { transientErrorCode: "provider_error" };
+
+    stubTokenEndpoint(503);
+    await expect(service.refresh("example", expiredCredential({}), options)).rejects.toMatchObject({
+      code: "provider_error",
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new TypeError("fetch failed");
+      }),
+    );
+    await expect(service.refresh("example", expiredCredential({}), options)).rejects.toMatchObject({
+      code: "provider_error",
+    });
+    stubTokenEndpoint(400);
+    await expect(service.refresh("example", expiredCredential({}), options)).rejects.toMatchObject({
+      code: "oauth_token_refresh_failed",
+    });
+
+    // Without the option every failure is the refusal code, as before.
+    stubTokenEndpoint(503);
+    await expect(service.refresh("example", expiredCredential({}))).rejects.toMatchObject({
+      code: "oauth_token_refresh_failed",
+    });
+  });
+});

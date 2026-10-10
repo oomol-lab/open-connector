@@ -1,3 +1,5 @@
+import type { ResolvedCredential } from "../../core/types.ts";
+
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
 
@@ -27,6 +29,8 @@ export interface ActionRequestFingerprintInput {
   actionId: string;
   connectionName: string;
   connectionId?: string;
+  /** For a request that carries its credential: {@link credentialFingerprint}. */
+  credentialFingerprint?: string;
   input: unknown;
   runtimeTokenId?: string;
 }
@@ -66,10 +70,33 @@ export function hashActionRequest(input: ActionRequestFingerprintInput): string 
       actionId: input.actionId,
       connectionName: input.connectionName,
       connectionId: input.connectionId,
+      credentialFingerprint: input.credentialFingerprint,
       input: canonicalize(input.input, 1),
       runtimeTokenId: input.runtimeTokenId,
     }),
   );
+}
+
+/**
+ * What stands for the connection when a request carries its credential: the service, the
+ * account the credential names, and a digest of the secret that outlives an access-token
+ * refresh — an OAuth credential's refresh token (its access token when it has none), an API
+ * key, a custom credential's values. A retry with a refreshed access token of the same grant
+ * replays; a credential of another grant conflicts, so a caller that knows only an account id
+ * and a key cannot be served another caller's response. A provider that rotates refresh tokens
+ * makes a retry after a rotation a new request.
+ */
+export function credentialFingerprint(
+  service: string,
+  credential: Exclude<ResolvedCredential, { authType: "no_auth" }>,
+): string {
+  const secret =
+    credential.authType === "oauth2"
+      ? (credential.refreshToken ?? credential.accessToken)
+      : credential.authType === "api_key"
+        ? credential.apiKey
+        : JSON.stringify(canonicalize(credential.values, 1));
+  return `${service}|${credential.authType}|${credential.profile.accountId}|${sha256(secret)}`;
 }
 
 /**

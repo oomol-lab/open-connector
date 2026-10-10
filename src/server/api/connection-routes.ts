@@ -21,10 +21,17 @@ interface ConnectionRoutesOptions {
   connections: ConnectionService;
   oauthFlow: OAuthFlowService;
   saasOAuth?: SaasOAuthService;
+  /** Serve `GET /connections/by-id/:appId/export`, which hands a stored credential to the caller. Off by default. */
+  credentialExport?: boolean;
 }
 
 /** Personal connection management. Authentication runs in the parent app. */
-export function createConnectionRoutes({ connections, oauthFlow, saasOAuth }: ConnectionRoutesOptions): Hono {
+export function createConnectionRoutes({
+  connections,
+  oauthFlow,
+  saasOAuth,
+  credentialExport,
+}: ConnectionRoutesOptions): Hono {
   const app = new Hono();
   // The local runtime has one administrator principal, including its bearer and browser sessions.
   const owner = "local-admin";
@@ -59,6 +66,18 @@ export function createConnectionRoutes({ connections, oauthFlow, saasOAuth }: Co
       serializeManagedConnection(await connections.getManagedConnection(context.req.param("appId"))),
     );
   });
+  if (credentialExport) {
+    // A host that keeps credentials outside the runtime reads one here, then deletes
+    // the stored row with the answered revision once it has stored the credential.
+    app.get("/connections/by-id/:appId/export", async (context) => {
+      const exported = await connections.exportConnection(context.req.param("appId"));
+      return writeRuntimeSuccess(context, {
+        connection: serializeManagedConnection(exported.connection),
+        credential: exported.credential,
+        revision: exported.revision,
+      });
+    });
+  }
   app.get("/connection-requests/:connectionRequestId", async (context) => {
     const id = context.req.param("connectionRequestId");
     const request =
