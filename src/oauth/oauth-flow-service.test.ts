@@ -1390,3 +1390,55 @@ class MemoryOAuthStateStore implements IOAuthStateStore {
     return value;
   }
 }
+
+describe("OAuthFlowService with an optional client secret", () => {
+  const optionalSecretProvider: ProviderDefinition = {
+    ...oauthProvider,
+    service: "optional_secret",
+    auth: [
+      {
+        type: "oauth2",
+        authorizationUrl: "https://optional.example.com/oauth/authorize",
+        tokenUrl: "https://optional.example.com/oauth/token",
+        scopes: ["read"],
+        tokenEndpointAuthMethod: "client_secret_post",
+        clientSecretOptional: true,
+        pkce: { method: "S256" },
+      },
+    ],
+  };
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  async function exchange(clientSecret: string): Promise<URLSearchParams> {
+    const services = createServices([optionalSecretProvider]);
+    await services.clientConfigs.upsertConfig({ service: "optional_secret", clientId: "client-id", clientSecret });
+    const fetcher = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
+      Response.json({ access_token: "access-token", token_type: "Bearer" }),
+    );
+    vi.stubGlobal("fetch", fetcher);
+
+    const started = await services.flow.startAuthorization({ service: "optional_secret" });
+    expect(new URL(started.authorizationUrl).searchParams.get("code_challenge_method")).toBe("S256");
+    await services.flow.completeAuthorization({ state: started.state, code: "code" });
+    return new URLSearchParams(String(fetcher.mock.calls[0]?.[1]?.body));
+  }
+
+  it("sends the secret exactly as the declared method says when one is configured", async () => {
+    const body = await exchange("client-secret");
+
+    expect(body.get("client_id")).toBe("client-id");
+    expect(body.get("client_secret")).toBe("client-secret");
+    expect(body.get("code_verifier")).toBeTruthy();
+  });
+
+  it("exchanges the code as a public client, with PKCE and no secret, when none is configured", async () => {
+    const body = await exchange("");
+
+    expect(body.get("client_id")).toBe("client-id");
+    expect(body.has("client_secret")).toBe(false);
+    expect(body.get("code_verifier")).toBeTruthy();
+  });
+});

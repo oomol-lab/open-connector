@@ -93,7 +93,8 @@ const oauthClientConfigRequestSchema = jsonSchema.object(
   {
     clientId: jsonSchema.string({ description: "OAuth app client id." }),
     clientSecret: jsonSchema.string({
-      description: "OAuth app client secret. Optional only for public-client providers.",
+      description:
+        "OAuth app client secret. Optional only for a public-client provider, or one that accepts a public client (clientSecretOptional): left blank over a stored configuration with the same client id, the stored secret is kept; left blank otherwise, the client is a public one (PKCE).",
     }),
     requestedScopes: jsonSchema.array(jsonSchema.string(), {
       minItems: 1,

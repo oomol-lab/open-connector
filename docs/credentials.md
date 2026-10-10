@@ -168,6 +168,14 @@ curl -s -X PUT http://localhost:3000/api/oauth/configs/github \
   -d '{"clientId":"...","clientSecret":"..."}'
 ```
 
+Some providers register public clients as well as confidential ones (their definition sets
+`clientSecretOptional`; the Microsoft providers and Linear do). For those, `clientSecret` may be left
+blank: the runtime then sends the client id alone to the token, refresh and revocation endpoints and
+relies on PKCE, which is what a desktop host without a secret needs. With a secret saved, every
+request is exactly what the provider's `tokenEndpointAuthMethod` says — nothing changes for an
+existing configuration. Saving a blank secret over a stored configuration with the same client id
+keeps the stored secret (the console never shows it); delete the configuration to drop it.
+
 By default, authorization requests include every scope declared by the provider. A deployment that
 needs a smaller permission surface can save `requestedScopes` with the OAuth client configuration:
 

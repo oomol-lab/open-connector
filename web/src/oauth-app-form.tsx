@@ -131,6 +131,12 @@ export function OAuthAppForm(props: OAuthAppFormProps): ReactNode {
           />
           {configured ? <small>{t("providers.oauthClientSettings.storedSecretHint")}</small> : null}
         </Label>
+      ) : props.auth.clientSecretOptional ? (
+        <Label className="field">
+          <span>{t("providers.oauthClientSettings.clientSecretOptional")}</span>
+          <Input type="password" value={clientSecret} onChange={(event) => setClientSecret(event.target.value)} />
+          <small>{t("providers.oauthClientSettings.optionalSecretHint")}</small>
+        </Label>
       ) : null}
       {clientConfigFields.map((field) => (
         <CredentialInput

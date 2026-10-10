@@ -22,6 +22,7 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
       scopes: outlookOAuthScopes,
       tokenEndpointAuthMethod: "client_secret_post",
+      clientSecretOptional: true,
       pkce: {
         method: "S256",
       },
