@@ -245,8 +245,12 @@ export function createOpenApiDocument(
         {
           ok: jsonSchema.boolean(),
           runtime: jsonSchema.string({ description: "Runtime identifier." }),
+          capabilities: jsonSchema.array(jsonSchema.string(), {
+            description:
+              "Optional abilities of this runtime: external_credential (a credential may ride in the body of action and proxy requests).",
+          }),
         },
-        { required: ["ok", "runtime"], description: "Runtime health payload." },
+        { required: ["ok", "runtime", "capabilities"], description: "Runtime health payload." },
       ),
     }),
     "/api/auth/session": getOperation("System", "Read local admin auth session state.", {
@@ -477,6 +481,65 @@ export function createOpenApiDocument(
     components: {
       schemas: {
         ActionDefinition: jsonSchema.unknownObject("Public action catalog definition with runtime execution status."),
+        CredentialProfile: jsonSchema.object(
+          {
+            accountId: jsonSchema.string({ description: "Stable provider account identity." }),
+            displayName: jsonSchema.string({ description: "Human-readable account label." }),
+            grantedScopes: jsonSchema.array(jsonSchema.string(), { description: "Granted scopes." }),
+          },
+          {
+            required: ["accountId", "displayName", "grantedScopes"],
+            description: "The account a credential belongs to.",
+          },
+        ),
+        ExternalOAuthCredential: jsonSchema.object(
+          {
+            authType: jsonSchema.literal("oauth2"),
+            accessToken: jsonSchema.string(),
+            tokenType: jsonSchema.string({ description: "Token type for the Authorization header, usually Bearer." }),
+            expiresAt: jsonSchema.string({
+              description: "ISO timestamp the access token expires at, if the provider gave one.",
+            }),
+            refreshToken: jsonSchema.string(),
+            providerSecret: jsonSchema.unknownObject("Provider-owned secret state stored with the credential."),
+            profile: { $ref: "#/components/schemas/CredentialProfile" },
+            metadata: jsonSchema.unknownObject(
+              "Runtime-owned metadata, including the OAuth client the credential was minted under without its secrets.",
+            ),
+          },
+          {
+            required: ["authType", "accessToken", "tokenType", "profile", "metadata"],
+            description: "An OAuth credential in the shape the runtime stores it.",
+          },
+        ),
+        ExternalCredential: jsonSchema.anyOf(
+          "A credential the caller holds and hands to the runtime with one request, in the shape the runtime stores it. Accepted only by a runtime created with externalCredentials; the runtime executes with it and stores nothing.",
+          [
+            { $ref: "#/components/schemas/ExternalOAuthCredential" },
+            jsonSchema.object(
+              {
+                authType: jsonSchema.literal("api_key"),
+                apiKey: jsonSchema.string(),
+                values: { type: "object", additionalProperties: { type: "string" } },
+                profile: { $ref: "#/components/schemas/CredentialProfile" },
+                metadata: jsonSchema.unknownObject("Runtime-owned metadata."),
+              },
+              {
+                required: ["authType", "apiKey", "values", "profile", "metadata"],
+                description: "An API key credential.",
+              },
+            ),
+            jsonSchema.object(
+              {
+                authType: jsonSchema.literal("custom_credential"),
+                values: { type: "object", additionalProperties: { type: "string" } },
+                profile: { $ref: "#/components/schemas/CredentialProfile" },
+                metadata: jsonSchema.unknownObject("Runtime-owned metadata."),
+              },
+              { required: ["authType", "values", "profile", "metadata"], description: "A custom credential." },
+            ),
+          ],
+        ),
         LocalAuthSession: jsonSchema.object(
           {
             adminAuthConfigured: jsonSchema.boolean({
@@ -1314,6 +1377,7 @@ function createProxyPath(): Record<string, unknown> {
                 },
                 body: jsonSchema.unknown("Provider request body."),
                 ...namedConnectionProperties,
+                credential: { $ref: "#/components/schemas/ExternalCredential" },
               },
               {
                 required: ["endpoint", "method"],
@@ -1607,6 +1671,7 @@ function actionRunBody(input: JsonSchema, description: string): Record<string, u
           {
             input,
             ...namedConnectionProperties,
+            credential: { $ref: "#/components/schemas/ExternalCredential" },
           },
           { description },
         ),

@@ -68,20 +68,21 @@ original request URL when you forward.
 
 `createConnectorRuntime(options)`:
 
-| Option          | Purpose                                                                                         |
-| --------------- | ----------------------------------------------------------------------------------------------- |
-| `dataDir`       | Writable directory for SQLite, local transit files, and upload staging. Required.               |
-| `publicOrigin`  | External HTTP(S) URL. A path is a mount prefix. Required.                                       |
-| `encryptionKey` | Encrypts stored credentials and OAuth state. Omit to store them in plain text.                  |
-| `adminToken`    | Bearer token for management APIs. Omit to leave them open.                                      |
-| `runtimeToken`  | Static bearer token for `/v1` and `/mcp`. JWT and admin-issued tokens are alternatives.         |
-| `jwt`           | `{ jwksUri, issuer, audience }` to verify `/v1` bearer tokens as JWTs.                          |
-| `postgres`      | `{ connectionString }` to use PostgreSQL instead of SQLite under `dataDir`.                     |
-| `actionPolicy`  | Allow or block actions and proxies by name (`service.*` and `*` are accepted).                  |
-| `transitFiles`  | TTL, size limit, and optional S3 for files exchanged with providers.                            |
-| `network`       | Private-network and trusted-host egress policy. Process-wide.                                   |
-| `apiReference`  | Serve `/docs` API-reference HTML. Off by default. Authorization completion pages are always on. |
-| `logger`        | `{ error, info, warn }`. Omit for silence.                                                      |
+| Option                | Purpose                                                                                                                        |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `dataDir`             | Writable directory for SQLite, local transit files, and upload staging. Required.                                              |
+| `publicOrigin`        | External HTTP(S) URL. A path is a mount prefix. Required.                                                                      |
+| `encryptionKey`       | Encrypts stored credentials and OAuth state. Omit to store them in plain text.                                                 |
+| `adminToken`          | Bearer token for management APIs. Omit to leave them open.                                                                     |
+| `runtimeToken`        | Static bearer token for `/v1` and `/mcp`. JWT and admin-issued tokens are alternatives.                                        |
+| `jwt`                 | `{ jwksUri, issuer, audience }` to verify `/v1` bearer tokens as JWTs.                                                         |
+| `postgres`            | `{ connectionString }` to use PostgreSQL instead of SQLite under `dataDir`.                                                    |
+| `actionPolicy`        | Allow or block actions and proxies by name (`service.*` and `*` are accepted).                                                 |
+| `transitFiles`        | TTL, size limit, and optional S3 for files exchanged with providers.                                                           |
+| `network`             | Private-network and trusted-host egress policy. Process-wide.                                                                  |
+| `apiReference`        | Serve `/docs` API-reference HTML. Off by default. Authorization completion pages are always on.                                |
+| `externalCredentials` | Accept a `credential` in `/v1` action and proxy bodies, for a host that keeps credentials outside the runtime. Off by default. |
+| `logger`              | `{ error, info, warn }`. Omit for silence.                                                                                     |
 
 `connector.fetch(request)` is the HTTP boundary: `/v1/*`, `/mcp`,
 `/oauth/callback`, and admin `/api/*`. `connector.close()` aborts in-flight

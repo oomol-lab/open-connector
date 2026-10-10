@@ -488,6 +488,159 @@ it("starts persisted cleanup without HTTP traffic and waits for its abort on clo
   }
 });
 
+describe("externally managed credentials", () => {
+  const externalCredential = {
+    authType: "oauth2",
+    accessToken: "external-access-token",
+    tokenType: "Bearer",
+    expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
+    refreshToken: "external-refresh-token",
+    profile: { accountId: "external-account", displayName: "External Account", grantedScopes: ["read:user"] },
+    metadata: { oauthClientConfig: { clientId: "github-client-id" } },
+  };
+
+  /** GitHub's user endpoint answers with the bearer it was shown. */
+  function stubGitHub(): void {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input instanceof Request ? input.url : input);
+        const headers = new Headers(input instanceof Request ? input.headers : init?.headers);
+        if (url.startsWith("https://api.github.com/user")) {
+          // Name the token's owner without echoing the token into the action output.
+          const bearer = headers.get("authorization")?.split(" ")[1];
+          const login = bearer === "external-access-token" ? "external-user" : "another-user";
+          return Response.json({ id: 1, login, name: "Fixture Account" });
+        }
+        throw new Error(`unexpected fetch ${url}`);
+      }),
+    );
+  }
+
+  it("refuses a credential in the request unless the runtime was created for it", async () => {
+    runtime = await createConnectorRuntime(await fixture());
+    const health = await (await request("/v1/health", undefined, "runtime-token")).json();
+    expect(health.data.capabilities).toEqual([]);
+    const refused = await runAction({ input: {}, credential: externalCredential });
+    expect(refused.status).toBe(400);
+    expect((await refused.json()).errorCode).toBe("external_credentials_disabled");
+  });
+
+  it("executes with the credential it was handed and stores nothing", async () => {
+    const options = await fixture();
+    stubGitHub();
+    runtime = await createConnectorRuntime({ ...options, externalCredentials: true });
+    const health = await (await request("/v1/health", undefined, "runtime-token")).json();
+    expect(health.data.capabilities).toEqual(["external_credential"]);
+
+    const executed = await runAction({ input: {}, credential: externalCredential });
+    expect(executed.status).toBe(200);
+    expect((await executed.json()).data).toMatchObject({ login: "external-user" });
+    expect((await (await request("/v1/connections")).json()).data).toEqual([]);
+    const runs = JSON.stringify(await (await request("/api/runs")).json());
+    expect(runs).toContain('"connectionId":"external"');
+    expect(runs).toContain('"accountId":"external-account"');
+    expect(runs).not.toContain("external-access-token");
+
+    // A credential beside a named connection is refused rather than guessed at.
+    const both = await runAction({ input: {}, credential: externalCredential, alias: "work" });
+    expect(both.status).toBe(400);
+    expect((await both.json()).errorCode).toBe("invalid_input");
+
+    // An expired token is refused, never refreshed behind the caller's back.
+    const expired = await runAction({
+      input: {},
+      credential: { ...externalCredential, expiresAt: new Date(Date.now() - 1000).toISOString() },
+    });
+    expect(expired.status).toBe(409);
+    expect((await expired.json()).errorCode).toBe("oauth_token_expired");
+
+    // The runtime kept no byte of any token.
+    await runtime.close();
+    const database = await readFile(join(options.dataDir, "connect.sqlite"));
+    for (const secret of ["external-access-token", "external-refresh-token"]) {
+      expect(database.includes(Buffer.from(secret))).toBe(false);
+    }
+  });
+
+  it("keys an idempotent retry on the grant, never completes a key for a refused request, and refuses a token granted particular connections", async () => {
+    stubGitHub();
+    runtime = await createConnectorRuntime({ ...(await fixture()), externalCredentials: true });
+    const key = crypto.randomUUID();
+    const first = await runAction({ input: {}, credential: externalCredential }, { "idempotency-key": key });
+    expect(first.status).toBe(200);
+    const firstBody = await first.json();
+    // A refreshed access token of the same grant is the same request; another account is not,
+    // and neither is a credential of another grant that merely claims the same account id.
+    const replayed = await runAction(
+      { input: {}, credential: { ...externalCredential, accessToken: "rotated-access-token" } },
+      { "idempotency-key": key },
+    );
+    expect(replayed.status).toBe(200);
+    expect(await replayed.json()).toEqual(firstBody);
+    const other = await runAction(
+      {
+        input: {},
+        credential: { ...externalCredential, profile: { ...externalCredential.profile, accountId: "other-account" } },
+      },
+      { "idempotency-key": key },
+    );
+    expect(other.status).toBe(409);
+    expect((await other.json()).errorCode).toBe("idempotency_key_conflict");
+    const claimed = await runAction(
+      { input: {}, credential: { ...externalCredential, refreshToken: "someone-elses-refresh-token" } },
+      { "idempotency-key": key },
+    );
+    expect(claimed.status).toBe(409);
+    expect((await claimed.json()).errorCode).toBe("idempotency_key_conflict");
+    // A credential the runtime refuses never completes the key: the holder refreshes and retries
+    // under the same key, and the retry runs instead of replaying the refusal.
+    const retryKey = crypto.randomUUID();
+    const refused = await runAction(
+      { input: {}, credential: { ...externalCredential, expiresAt: new Date(Date.now() - 1000).toISOString() } },
+      { "idempotency-key": retryKey },
+    );
+    expect(refused.status).toBe(409);
+    expect((await refused.json()).errorCode).toBe("oauth_token_expired");
+    const retried = await runAction({ input: {}, credential: externalCredential }, { "idempotency-key": retryKey });
+    expect(retried.status).toBe(200);
+    // And a cached response is never replayed to a credential that could no longer execute.
+    const soon = { ...externalCredential, expiresAt: new Date(Date.now() + 90_000).toISOString() };
+    const soonKey = crypto.randomUUID();
+    expect((await runAction({ input: {}, credential: soon }, { "idempotency-key": soonKey })).status).toBe(200);
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      vi.setSystemTime(Date.now() + 60_000);
+      const lapsed = await runAction({ input: {}, credential: soon }, { "idempotency-key": soonKey });
+      expect(lapsed.status).toBe(409);
+      expect((await lapsed.json()).errorCode).toBe("oauth_token_expired");
+    } finally {
+      vi.useRealTimers();
+    }
+
+    const created = await request("/api/runtime-tokens", {
+      name: "granted",
+      allowedActions: [],
+      blockedActions: [],
+      allowedProxies: [],
+      allowedConnections: ["some-connection-id"],
+    });
+    expect(created.status).toBe(200);
+    const grantedToken = (await created.json()).token;
+    const granted = await runAction({ input: {}, credential: externalCredential }, {}, grantedToken);
+    expect(granted.status).toBe(403);
+    expect((await granted.json()).errorCode).toBe("connection_not_allowed");
+    // Nor can such a token be served the open token's cached response under its key.
+    const keyed = await runAction(
+      { input: {}, credential: externalCredential },
+      { "idempotency-key": key },
+      grantedToken,
+    );
+    expect(keyed.status).toBe(403);
+    expect((await keyed.json()).errorCode).toBe("connection_not_allowed");
+  });
+});
+
 async function fixture(services = ["github"]): Promise<ConnectorRuntimeOptions> {
   const root = await mkdtemp(join(tmpdir(), "open-connector-runtime-"));
   directories.push(root);
@@ -503,6 +656,17 @@ async function fixture(services = ["github"]): Promise<ConnectorRuntimeOptions> 
     runtimeToken: "runtime-token",
     assets: { catalogDir, migrationDirectory: resolve(import.meta.dirname, "../../migrations") },
   };
+}
+
+/** Run GitHub's current-user action under the runtime bearer with the given body and headers. */
+function runAction(body: unknown, headers: Record<string, string> = {}, token = "runtime-token"): Promise<Response> {
+  return runtime!.fetch(
+    new Request(`${publicOrigin}/v1/actions/github.get_current_user`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json", ...headers },
+      body: JSON.stringify(body),
+    }),
+  );
 }
 
 function request(

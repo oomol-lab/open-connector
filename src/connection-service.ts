@@ -124,13 +124,31 @@ export interface DisconnectedConnectionSummary {
   revoked: OAuthRevocationOutcome;
 }
 
-export type ExecutionConnection = LocalExecutionConnection | MarketplaceExecutionConnection | SaasExecutionConnection;
+export type ExecutionConnection =
+  | LocalExecutionConnection
+  | ExternalExecutionConnection
+  | MarketplaceExecutionConnection
+  | SaasExecutionConnection;
 
 interface LocalExecutionConnection {
   kind: "local";
   summary?: ConnectionSummary;
   getCredential(service: string): Promise<ResolvedCredential | undefined>;
 }
+
+/**
+ * A credential the caller handed in with the request instead of naming a stored
+ * connection. The runtime executes with it and keeps nothing: it is never stored,
+ * refreshed or revoked on the caller's behalf.
+ */
+interface ExternalExecutionConnection {
+  kind: "external";
+  summary: ConnectionSummary;
+  getCredential(service: string): Promise<ResolvedCredential | undefined>;
+}
+
+/** The connection name an externally managed credential executes under; no stored connection can carry it. */
+export const externalConnectionName = "external";
 
 interface MarketplaceExecutionConnection {
   kind: "marketplace";
@@ -334,6 +352,34 @@ export class ConnectionService {
     return {
       kind: "local",
       summary,
+      getCredential: async (requestedService) => (requestedService === service ? credential : undefined),
+    };
+  }
+
+  /**
+   * Execute with a credential the caller holds instead of a stored connection. The
+   * provider must support the credential's auth type, and an OAuth token that is
+   * expired or about to expire is refused with `oauth_token_expired` rather than
+   * refreshed: the caller owns the credential and refreshes it, so the runtime never
+   * holds a token it did not get with the request.
+   */
+  resolveExternalCredential(
+    service: string,
+    credential: Exclude<ResolvedCredential, { authType: "no_auth" }>,
+  ): ExternalExecutionConnection {
+    const provider = this.getProvider(service);
+    if (!this.supportsAuth(provider, credential.authType)) {
+      throw new ConnectionError("unsupported_auth_type", `${service} does not support ${credential.authType}.`);
+    }
+    if (credential.authType === "oauth2" && isOAuthCredentialExpired(credential)) {
+      throw new ConnectionError(
+        "oauth_token_expired",
+        `${service} OAuth access token expired or is about to expire. Refresh the credential and retry.`,
+      );
+    }
+    return {
+      kind: "external",
+      summary: this.createStoredConnectionSummary(provider, externalConnectionName, externalConnectionName, credential),
       getCredential: async (requestedService) => (requestedService === service ? credential : undefined),
     };
   }

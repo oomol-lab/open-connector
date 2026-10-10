@@ -1,8 +1,8 @@
 import type { CatalogStore } from "../../catalog-store.ts";
-import type { ConnectionService } from "../../connection-service.ts";
+import type { ConnectionService, ExecutionConnection } from "../../connection-service.ts";
 import type { ActionPolicySnapshot } from "../../core/action-policy.ts";
 import type { ProviderHttpDispatchOptions } from "../../core/provider-http-dispatch.ts";
-import type { RuntimeLogger, ProxyRequestInput, ProxyResponse } from "../../core/types.ts";
+import type { RuntimeLogger, ProxyRequestInput, ProxyResponse, ResolvedCredential } from "../../core/types.ts";
 import type { IProviderLoader } from "../../providers/provider-loader.ts";
 import type { SaasExecutionService } from "../../saas/saas-execution-service.ts";
 
@@ -33,6 +33,8 @@ export interface RunProxyInput {
   input: unknown;
   connectionName?: string;
   connectionId?: string;
+  /** A credential the caller holds, executed with in place of a stored connection; never stored. */
+  credential?: Exclude<ResolvedCredential, { authType: "no_auth" }>;
   policy: ActionPolicySnapshot;
   /** Cancellation signal from the HTTP request, handed to the provider proxy executor. */
   signal?: AbortSignal;
@@ -113,37 +115,53 @@ export class ProxyRunner {
     const startedAtMs = Date.now();
     let executionId: string | undefined;
     try {
-      const connection = await this.options.connections.getConnectionSummary(
-        provider.service,
-        input.connectionName,
-        input.connectionId,
-      );
-      const connectionDecision =
-        connection?.authType === "no_auth" ? undefined : input.policy.evaluateConnection(connection?.id);
-      if (connectionDecision && !connectionDecision.allowed) {
-        return {
-          ok: false,
-          status: 403,
-          errorCode: connectionDecision.code,
-          message: connectionDecision.message,
-          meta: { service: provider.service },
-        };
+      let target: ExecutionConnection;
+      if (input.credential) {
+        // An externally managed credential names no stored connection, so a token
+        // granted particular connections cannot execute with one.
+        const externalDecision = input.policy.evaluateConnection();
+        if (!externalDecision.allowed)
+          return {
+            ok: false,
+            status: 403,
+            errorCode: externalDecision.code,
+            message: externalDecision.message,
+            meta: { service: provider.service },
+          };
+        target = this.options.connections.resolveExternalCredential(provider.service, input.credential);
+      } else {
+        const connection = await this.options.connections.getConnectionSummary(
+          provider.service,
+          input.connectionName,
+          input.connectionId,
+        );
+        const connectionDecision =
+          connection?.authType === "no_auth" ? undefined : input.policy.evaluateConnection(connection?.id);
+        if (connectionDecision && !connectionDecision.allowed) {
+          return {
+            ok: false,
+            status: 403,
+            errorCode: connectionDecision.code,
+            message: connectionDecision.message,
+            meta: { service: provider.service },
+          };
+        }
+        target = await this.options.connections.resolveForExecution(
+          provider.service,
+          input.connectionName,
+          input.connectionId,
+        );
+        const targetDecision =
+          target.summary?.authType === "no_auth" ? undefined : input.policy.evaluateConnection(target.summary?.id);
+        if (targetDecision && !targetDecision.allowed)
+          return {
+            ok: false,
+            status: 403,
+            errorCode: targetDecision.code,
+            message: targetDecision.message,
+            meta: { service: provider.service },
+          };
       }
-      const target = await this.options.connections.resolveForExecution(
-        provider.service,
-        input.connectionName,
-        input.connectionId,
-      );
-      const targetDecision =
-        target.summary?.authType === "no_auth" ? undefined : input.policy.evaluateConnection(target.summary?.id);
-      if (targetDecision && !targetDecision.allowed)
-        return {
-          ok: false,
-          status: 403,
-          errorCode: targetDecision.code,
-          message: targetDecision.message,
-          meta: { service: provider.service },
-        };
       this.options.logger?.info(logContext, "proxy request started");
       if (target.kind === "saas") {
         executionId = crypto.randomUUID();
