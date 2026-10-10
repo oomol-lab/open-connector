@@ -1,5 +1,10 @@
 import type { RuntimeActionDefinition, RuntimeProviderDefinition } from "../../catalog-store.ts";
-import type { ConnectionError, ConnectionSummary, ManagedConnectionSummary } from "../../connection-service.ts";
+import type {
+  ConnectionError,
+  ConnectionHealth,
+  ConnectionSummary,
+  ManagedConnectionSummary,
+} from "../../connection-service.ts";
 import type { ProviderAuthSetup } from "../../core/provider-setup.ts";
 import type { ExecutionResult, ProviderScenario } from "../../core/types.ts";
 import type { OAuthClientConfigSummary } from "../../oauth/oauth-client-config-service.ts";
@@ -18,6 +23,7 @@ export interface RuntimeSuccessEnvelope<TData> {
   message: "OK";
   data: TData;
   meta: RuntimeResponseMeta;
+  outputSchema?: RuntimeActionDefinition["outputSchema"];
 }
 
 export interface RuntimeFailureEnvelope<TData = unknown> {
@@ -36,6 +42,21 @@ export interface RuntimeProviderMetadata {
   categories: RuntimeProviderCategory[];
   scenario: ProviderScenario;
   authTypes: string[];
+  connectionAuth?: {
+    oauth: boolean;
+    credentials: {
+      authType: "api_key" | "custom_credential";
+      fields: {
+        key: string;
+        label: string;
+        description: string;
+        placeholder?: string;
+        secret: boolean;
+        inputType?: "text" | "password" | "textarea" | "json";
+        required: boolean;
+      }[];
+    }[];
+  };
 }
 
 export interface RuntimeProviderCategory {
@@ -57,6 +78,8 @@ export interface RuntimeActionMetadata {
   name: string;
   description: string;
   operationType: RuntimeActionDefinition["operationType"];
+  /** Compatibility alias for OpenMeld clients, derived from operationType. */
+  effect: RuntimeActionDefinition["operationType"];
   requiredScopes: string[];
   providerPermissions: string[];
   inputSchema: RuntimeActionDefinition["inputSchema"];
@@ -67,6 +90,7 @@ export interface RuntimeActionMetadata {
 }
 
 export interface RuntimeConnectedApp {
+  health?: ConnectionHealth;
   id: string;
   providerAccountId: string;
   service: string;
@@ -95,6 +119,7 @@ export interface RuntimeActionResultInput {
   failureStatus?: RuntimeStatus;
   retryAfter?: string;
   auditPersisted: boolean;
+  outputSchema?: RuntimeActionDefinition["outputSchema"];
   result: ExecutionResult;
 }
 
@@ -103,7 +128,10 @@ export type RuntimeActionHttpResult =
   | { status: 200; body: RuntimeSuccessEnvelope<unknown> }
   | { status: RuntimeStatus; body: RuntimeFailureEnvelope };
 
-export function serializeRuntimeProvider(provider: RuntimeProviderDefinition): RuntimeProviderMetadata {
+export function serializeRuntimeProvider(
+  provider: RuntimeProviderDefinition,
+  oauthReady?: boolean,
+): RuntimeProviderMetadata {
   return {
     service: provider.service,
     displayName: provider.displayName,
@@ -115,6 +143,45 @@ export function serializeRuntimeProvider(provider: RuntimeProviderDefinition): R
     })),
     scenario: provider.scenario,
     authTypes: provider.authTypes,
+    ...(oauthReady === undefined
+      ? {}
+      : {
+          connectionAuth: {
+            oauth: oauthReady,
+            credentials: provider.auth.flatMap((auth) => {
+              if (auth.type !== "api_key" && auth.type !== "custom_credential") return [];
+              const fields =
+                auth.type === "api_key"
+                  ? [
+                      {
+                        key: "apiKey",
+                        label: auth.label ?? "API key",
+                        description: auth.description ?? "",
+                        placeholder: auth.placeholder,
+                        secret: true,
+                        inputType: "password" as const,
+                        required: true,
+                      },
+                      ...(auth.extraFields ?? []),
+                    ]
+                  : auth.fields;
+              return [
+                {
+                  authType: auth.type,
+                  fields: fields.map((field) => ({
+                    key: field.key,
+                    label: field.label,
+                    description: field.description ?? "",
+                    placeholder: field.placeholder,
+                    secret: field.secret,
+                    inputType: field.inputType,
+                    required: field.required,
+                  })),
+                },
+              ];
+            }),
+          },
+        }),
   };
 }
 
@@ -129,6 +196,7 @@ export function serializeRuntimeAction(action: RuntimeActionDefinition): Runtime
     name: action.name,
     description: action.description,
     operationType: action.operationType,
+    effect: action.operationType,
     requiredScopes: action.requiredScopes,
     providerPermissions: action.providerPermissions,
     inputSchema: action.inputSchema,
@@ -143,6 +211,7 @@ export function serializeRuntimeAction(action: RuntimeActionDefinition): Runtime
 
 export function serializeRuntimeConnectedApp(connection: ConnectionSummary): RuntimeConnectedApp {
   return {
+    health: connection.health,
     id: connection.id,
     providerAccountId: connection.profile.accountId,
     service: connection.service,
@@ -206,7 +275,7 @@ export function serializeRuntimeFailure(input: RuntimeFailureInput): RuntimeActi
 
 /** Build the persistable HTTP response for a completed action execution. */
 export function serializeRuntimeActionResult(input: RuntimeActionResultInput): RuntimeActionHttpResult {
-  const { actionId, executionId, auditPersisted, result } = input;
+  const { actionId, executionId, auditPersisted, outputSchema, result } = input;
   const meta = { executionId, actionId, auditPersisted, remoteExecutionId: input.remoteExecutionId };
   if (result.ok) {
     return {
@@ -216,6 +285,7 @@ export function serializeRuntimeActionResult(input: RuntimeActionResultInput): R
         message: "OK",
         data: result.output ?? null,
         meta,
+        outputSchema,
       },
     };
   }

@@ -46,6 +46,8 @@ through runtime options to admit, delay or deny each upstream HTTP attempt.
 | `OOMOL_CONNECT_RUN_LIMIT`                   | `5000`                    | Maximum number of recent action run audit records to retain.                                                                                                                |
 | `OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS`        | `false`                   | Read action JSON schemas from the catalog files on demand instead of keeping them in memory. See below.                                                                     |
 | `OOMOL_CONNECT_CATALOG_SCHEMA_CACHE_FILES`  | `64`                      | Provider files whose action schemas stay cached when lazy schemas are on.                                                                                                   |
+| `OOMOL_CONNECT_GITHUB_APP_ID`               | unset                     | GitHub App ID used for installation credentials.                                                                                                                            |
+| `OOMOL_CONNECT_GITHUB_APP_PRIVATE_KEY`      | unset                     | Unencrypted PKCS8 RSA private key used to mint GitHub installation tokens.                                                                                                  |
 
 Example:
 

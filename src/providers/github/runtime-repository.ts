@@ -17,7 +17,21 @@ import {
 } from "./runtime-shared.ts";
 
 export const repositoryActionHandlers: ProviderActionHandlerSubset<"github", GitHubActionHandler> = {
-  get_current_user(_input, { accessToken, fetcher }) {
+  get_current_user(_input, { accessToken, fetcher, installation }) {
+    if (installation) {
+      return Promise.resolve({
+        id: Number(installation.accountId),
+        login: installation.accountLogin,
+        avatar_url: installation.accountAvatarUrl,
+        html_url: installation.accountHtmlUrl,
+        type: installation.accountType,
+        name: null,
+        email: null,
+        bio: null,
+        company: null,
+        location: null,
+      });
+    }
     return githubRequestJson<Record<string, unknown>>({
       path: "/user",
       accessToken,
@@ -25,7 +39,10 @@ export const repositoryActionHandlers: ProviderActionHandlerSubset<"github", Git
     });
   },
 
-  list_my_repositories(input, { accessToken, fetcher }) {
+  list_my_repositories(input, { accessToken, fetcher, installation }) {
+    if (installation) {
+      return listInstallationRepositories(input, accessToken, fetcher);
+    }
     return listMyRepositories(input, accessToken, fetcher);
   },
 
@@ -350,6 +367,34 @@ async function listMyRepositories(input: Record<string, unknown>, accessToken: s
   });
 
   return { repositories };
+}
+
+async function listInstallationRepositories(
+  input: Record<string, unknown>,
+  accessToken: string,
+  fetcher: typeof fetch,
+) {
+  if (optionalString(input.visibility) || optionalString(input.sort) || optionalString(input.direction)) {
+    throw new ProviderRequestError(
+      400,
+      "GitHub App installation repository listing does not support visibility, sort, or direction filters.",
+    );
+  }
+  const payload = await githubRequestJson<{
+    repositories?: Record<string, unknown>[];
+  }>({
+    path: "/installation/repositories",
+    query: compactObject({
+      per_page: optionalInteger(input.perPage),
+      page: optionalInteger(input.page),
+    }),
+    accessToken,
+    fetcher,
+  });
+  if (!Array.isArray(payload.repositories)) {
+    throw new ProviderRequestError(502, "GitHub returned an invalid installation repositories response.");
+  }
+  return { repositories: payload.repositories };
 }
 
 async function deleteRepository(input: Record<string, unknown>, accessToken: string, fetcher: typeof fetch) {

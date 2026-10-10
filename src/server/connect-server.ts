@@ -3,9 +3,10 @@ import type { ConnectionService, ConnectionSummary } from "../connection-service
 import type { ActionPolicySnapshot } from "../core/action-policy.ts";
 import type { ActionSearchDocument, ActionSearchIndexProvider } from "../core/action-search.ts";
 import type { ProviderHttpDispatchOptions } from "../core/provider-http-dispatch.ts";
-import type { RuntimeLogger, TransitFileUpload } from "../core/types.ts";
+import type { RuntimeConfigReader, RuntimeLogger, TransitFileUpload } from "../core/types.ts";
 import type { MarketplaceConfigInput, MarketplaceService } from "../marketplace/marketplace-service.ts";
 import type { OAuthClientConfigInput } from "../oauth/oauth-client-config-service.ts";
+import type { GitHubAppInstallationService } from "../providers/github/installation-service.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { SaasExecutionService } from "../saas/saas-execution-service.ts";
 import type { SaasOAuthService } from "../saas/saas-oauth-service.ts";
@@ -50,9 +51,16 @@ import {
 } from "./actions/action-idempotency.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
 import { renderActionMarkdown } from "./api/action-markdown.ts";
-import { clearLocalAuthCookie, createLocalAuthMiddleware, readLocalAuthSession, readRuntimeGrant } from "./api/auth.ts";
+import {
+  clearLocalAuthCookie,
+  createLocalAuthMiddleware,
+  hasConfiguredRuntimeBearer,
+  readLocalAuthSession,
+  readRuntimeGrant,
+} from "./api/auth.ts";
 import { getResponseCachePolicy } from "./api/cache-policy.ts";
 import { createConnectionRoutes } from "./api/connection-routes.ts";
+import { handleGitUploadPack } from "./api/git-upload-pack.ts";
 import { HttpRequestError, internalError, jsonError, notFound, readJsonBody } from "./api/http-utils.ts";
 import { renderOAuthCompletionPage } from "./api/oauth-completion-page.ts";
 import { policyRequestMaxBytes, readRuntimePolicyRules, readTokenPolicy } from "./api/policy-input.ts";
@@ -74,6 +82,7 @@ import {
 } from "./api/runtime-api.ts";
 import { renderSaasCompletionPage } from "./api/saas-completion-page.ts";
 import { TransitFileError } from "./files/transit-file-store.ts";
+import { NativeHttpRunner } from "./proxy/native-http.ts";
 import { ProxyRunner } from "./proxy/proxy-runner.ts";
 import { decodeRunLogCursor } from "./storage/runtime-store.ts";
 import { summarizeRuntimeToken } from "./storage/runtime-token-service.ts";
@@ -122,6 +131,10 @@ export async function preloadOptionalServerModules(): Promise<void> {
   await Promise.all([loadMcpModule(), loadDocsHandler()]);
 }
 
+function connectionInputError(message: string): ConnectionError {
+  return new ConnectionError("invalid_input", message);
+}
+
 /**
  * Dependencies required to construct the local connector server.
  */
@@ -132,8 +145,11 @@ export interface IConnectServerOptions {
   publicOrigin: string;
   providerLoader: IProviderLoader;
   connections: ConnectionService;
+  runtimeConfig?: RuntimeConfigReader;
   oauthClientConfigs: OAuthClientConfigService;
   oauthFlow: OAuthFlowService;
+  githubAppInstallations?: Pick<GitHubAppInstallationService, "complete"> &
+    Partial<Pick<GitHubAppInstallationService, "findAccessibleInstallation" | "resolveInstallationToken">>;
   runtimeTokens: RuntimeTokenService;
   actions: ActionRunner;
   triggers?: TriggerRunner;
@@ -171,6 +187,7 @@ export class ConnectServer {
     this.actionSearch = options.actionSearch ?? createActionSearchIndexProvider(options.catalog.actions);
     this.actionPolicy = options.actionPolicy ?? new ActionPolicyService();
     this.proxyRunner = new ProxyRunner({
+      runtimeConfig: options.runtimeConfig,
       providerHttpDispatch: options.providerHttpDispatch,
       catalog: options.catalog,
       providerLoader: options.providerLoader,
@@ -183,6 +200,38 @@ export class ConnectServer {
   createApp(): Hono {
     const app = new Hono();
     const auth = this.options.auth ?? {};
+    const nativeHttp = new NativeHttpRunner(this.options);
+    // Only the trusted host can select a connection. A Computer receives no runtime token.
+    app.all("/v1/openmeld/connections/:service/*", async (context) => {
+      context.header("Cache-Control", "no-store");
+      if (!hasConfiguredRuntimeBearer(context, auth))
+        return jsonError(context, 401, "unauthorized", "Connection runtime authentication is required.");
+      const service = context.req.param("service");
+      const connectionName = context.req.header("x-oo-connector-alias");
+      if (!connectionName)
+        return jsonError(context, 400, "connection_required", "Select an existing Plugin connection.");
+      const policy = await this.getPolicySnapshot(context);
+      if (!policy.evaluateProxy(service).allowed)
+        return jsonError(
+          context,
+          403,
+          "connection_access_denied",
+          "Connection access is disabled by deployment policy.",
+        );
+      const url = new URL(context.req.url);
+      const prefix = `/v1/openmeld/connections/${service}`;
+      if (url.pathname === `${prefix}/describe` && context.req.method === "GET") {
+        return context.json(await nativeHttp.describe(service, connectionName));
+      }
+      if (!url.pathname.startsWith(`${prefix}/request/`))
+        return jsonError(context, 404, "not_found", "Unknown connection operation.");
+      return nativeHttp.run({
+        service,
+        connectionName,
+        endpoint: `${url.pathname.slice(`${prefix}/request`.length)}${url.search}`,
+        request: context.req.raw,
+      });
+    });
 
     app.use("*", async (_context, next) => {
       await withProviderHttpDispatch({ operation: "runtime" }, next, this.options.providerHttpDispatch);
@@ -258,6 +307,52 @@ export class ConnectServer {
       this.listRuntimeAppsByService(context, context.req.param("service")),
     );
     app.post("/v1/proxy/:service", (context) => this.createRuntimeProxyRequest(context, context.req.param("service")));
+    app.get(
+      "/v1/openmeld/git/:owner/:repo/info/refs",
+      async (context) =>
+        await handleGitUploadPack(context, {
+          auth,
+          connections: this.options.connections,
+          getPolicy: () => this.getPolicySnapshot(context),
+          logger: this.options.logger,
+          operation: "advertise",
+          owner: context.req.param("owner") ?? "",
+          repo: context.req.param("repo") ?? "",
+        }),
+    );
+    app.post(
+      "/v1/openmeld/git/:owner/:repo/git-upload-pack",
+      async (context) =>
+        await handleGitUploadPack(context, {
+          auth,
+          connections: this.options.connections,
+          getPolicy: () => this.getPolicySnapshot(context),
+          logger: this.options.logger,
+          operation: "upload",
+          owner: context.req.param("owner"),
+          repo: context.req.param("repo"),
+        }),
+    );
+    // A distinct path prevents an older server from silently selecting a
+    // personal connection when the caller selected an Organization App.
+    for (const operation of ["advertise", "upload"] as const) {
+      const path = `/v1/openmeld/git-connections/:owner/:repo/${operation === "advertise" ? "info/refs" : "git-upload-pack"}`;
+      app.on(operation === "advertise" ? "GET" : "POST", path, (context) =>
+        handleGitUploadPack(context, {
+          auth,
+          connections: this.options.connections,
+          resolveInstallationToken: this.options.githubAppInstallations?.resolveInstallationToken?.bind(
+            this.options.githubAppInstallations,
+          ),
+          getPolicy: () => this.getPolicySnapshot(context),
+          logger: this.options.logger,
+          selectedConnection: true,
+          operation,
+          owner: context.req.param("owner") ?? "",
+          repo: context.req.param("repo") ?? "",
+        }),
+      );
+    }
 
     app.get("/openapi.json", async (context) => {
       const { createOpenApiDocument } = await import("./api/openapi.ts");
@@ -409,6 +504,8 @@ export class ConnectServer {
       }
     });
     app.post("/api/oauth/authorizations", (context) => this.createOAuthAuthorization(context));
+    app.get("/api/providers/github/installations", (context) => this.findGitHubAppInstallation(context));
+    app.post("/api/providers/github/installations", (context) => this.completeGitHubAppInstallation(context));
     app.get("/oauth/callback", (context) => this.completeOAuth(context));
     app.post("/mcp", (context) => this.handleMcp(context));
     app.get("/mcp", (context) => this.rejectMcpMethod(context));
@@ -686,7 +783,7 @@ export class ConnectServer {
     }
   }
 
-  private listRuntimeProviders(context: Context): Response {
+  private async listRuntimeProviders(context: Context): Promise<Response> {
     const services = context.req.queries("service") ?? [];
     const query = optionalString(context.req.query("q"))?.toLowerCase();
     const providers = this.options.catalog.providers.filter((provider) => {
@@ -709,17 +806,44 @@ export class ConnectServer {
         .includes(query);
     });
 
-    return writeRuntimeSuccess(context, providers.map(serializeRuntimeProvider));
+    const includeAuth = context.req.query("includeConnectionAuth") === "true";
+    const ready = includeAuth
+      ? new Set(
+          (await this.options.oauthClientConfigs.listConfigs())
+            .filter((config) => config.configured)
+            .map((config) => config.service),
+        )
+      : undefined;
+    return writeRuntimeSuccess(
+      context,
+      providers.map((provider) => {
+        if (!includeAuth) return serializeRuntimeProvider(provider);
+        try {
+          this.options.connections.assertProviderAvailable(provider.service);
+        } catch (error) {
+          if (!(error instanceof ConnectionError) || error.code !== "provider_unavailable") throw error;
+          return { ...serializeRuntimeProvider(provider), connectionAuth: { oauth: false, credentials: [] } };
+        }
+        return serializeRuntimeProvider(provider, ready?.has(provider.service));
+      }),
+    );
   }
 
-  private listRuntimeActions(context: Context): Response {
+  private async listRuntimeActions(context: Context): Promise<Response> {
+    const policy = await this.getPolicySnapshot(context);
     const service = optionalString(context.req.query("service"));
+    const actionId = optionalString(context.req.query("actionId"));
+    const exactAction = service && actionId ? this.options.catalog.actionsById.get(actionId) : undefined;
+    const candidates = service && actionId ? (exactAction ? [exactAction] : []) : this.options.catalog.actions;
+    const allowedActions = candidates.filter((action) => policy.evaluate(action).allowed);
     if (!service) {
-      const services = [...new Set(this.options.catalog.actions.map((action) => action.service))];
+      const services = [...new Set(allowedActions.map((action) => action.service))];
       return writeRuntimeSuccess(context, services.map(serializeRuntimeActionService));
     }
 
-    const actions = this.options.catalog.actions.filter((action) => action.service === service);
+    const actions = allowedActions.filter(
+      (action) => action.service === service && (!actionId || action.id === actionId),
+    );
     return writeRuntimeSuccess(context, actions.map(serializeRuntimeAction));
   }
 
@@ -738,7 +862,12 @@ export class ConnectServer {
       service: query.service,
       limit: query.limit,
     });
-    return writeRuntimeSuccess(context, await this.serializeSearchResults(results));
+    const policy = await this.getPolicySnapshot(context);
+    const allowedResults = results.filter((result) => {
+      const action = this.options.catalog.actionsById.get(result.id);
+      return action ? policy.evaluate(action).allowed : false;
+    });
+    return writeRuntimeSuccess(context, await this.serializeSearchResults(allowedResults));
   }
 
   private async serializeSearchResults(results: ActionSearchDocument[]): Promise<RuntimeActionSearchResult[]> {
@@ -814,7 +943,7 @@ export class ConnectServer {
       return writeRuntimeActionHttpResult(
         context,
         await this.executeRuntimeAction(
-          actionId,
+          action,
           input,
           connectionName,
           policy,
@@ -838,7 +967,7 @@ export class ConnectServer {
       return writeRuntimeActionHttpResult(
         context,
         await this.executeRuntimeAction(
-          actionId,
+          action,
           input,
           connectionName,
           policy,
@@ -901,7 +1030,7 @@ export class ConnectServer {
     }
 
     const result = await this.executeRuntimeAction(
-      actionId,
+      action,
       input,
       connectionName,
       policy,
@@ -924,7 +1053,7 @@ export class ConnectServer {
   }
 
   private async executeRuntimeAction(
-    actionId: string,
+    action: RuntimeActionDefinition,
     input: unknown,
     connectionName: string | undefined,
     policy: ActionPolicySnapshot,
@@ -934,7 +1063,7 @@ export class ConnectServer {
   ): Promise<RuntimeActionHttpResult> {
     try {
       const run = await this.options.actions.run({
-        actionId,
+        actionId: action.id,
         input,
         caller: "http",
         connectionName,
@@ -944,16 +1073,17 @@ export class ConnectServer {
         signal,
       });
       if (!run) {
-        return serializeRuntimeFailure(unknownActionFailure(actionId));
+        return serializeRuntimeFailure(unknownActionFailure(action.id));
       }
 
       return serializeRuntimeActionResult({
-        actionId,
+        actionId: action.id,
         executionId: run.executionId,
         remoteExecutionId: run.remoteExecutionId,
         failureStatus: run.failureStatus,
         retryAfter: run.retryAfter,
         auditPersisted: run.auditPersisted,
+        outputSchema: action.outputSchema,
         result: run.result,
       });
     } catch (error) {
@@ -962,7 +1092,7 @@ export class ConnectServer {
           status: mapConnectionErrorStatus(error),
           errorCode: error.code,
           message: error.message,
-          meta: { actionId },
+          meta: { actionId: action.id },
         });
       }
 
@@ -1199,6 +1329,63 @@ export class ConnectServer {
       "connection rejected",
     );
     return jsonError(context, 400, "unsupported_auth_type", `${service} does not support ${authType}.`);
+  }
+
+  private async completeGitHubAppInstallation(context: Context): Promise<Response> {
+    if (!this.options.githubAppInstallations) {
+      return jsonError(context, 503, "provider_unavailable", "GitHub App installation support is not configured.");
+    }
+    const body = await readJsonBody(context);
+    try {
+      const result = await this.options.githubAppInstallations.complete({
+        expectedAccountLogin: optionalString(body.expectedAccountLogin),
+        installationId: requiredString(body.installationId, "installationId", connectionInputError),
+        targetConnectionName: requiredString(body.targetConnectionName, "targetConnectionName", connectionInputError),
+        verificationConnectionName: requiredString(
+          body.verificationConnectionName,
+          "verificationConnectionName",
+          connectionInputError,
+        ),
+      });
+      return context.json(result);
+    } catch (error) {
+      if (error instanceof ConnectionError) {
+        return jsonError(
+          context,
+          error.code === "credential_verification_failed" ? 403 : 400,
+          error.code,
+          error.message,
+        );
+      }
+      throw error;
+    }
+  }
+
+  private async findGitHubAppInstallation(context: Context): Promise<Response> {
+    if (!this.options.githubAppInstallations?.findAccessibleInstallation) {
+      return jsonError(context, 503, "provider_unavailable", "GitHub App installation support is not configured.");
+    }
+    try {
+      const installation = await this.options.githubAppInstallations.findAccessibleInstallation({
+        accountLogin: optionalString(context.req.query("accountLogin")),
+        verificationConnectionName: requiredString(
+          context.req.query("verificationConnectionName"),
+          "verificationConnectionName",
+          connectionInputError,
+        ),
+      });
+      return context.json({ accountLogin: installation.accountLogin, installationId: installation.installationId });
+    } catch (error) {
+      if (error instanceof ConnectionError) {
+        return jsonError(
+          context,
+          error.code === "credential_verification_failed" ? 403 : 400,
+          error.code,
+          error.message,
+        );
+      }
+      throw error;
+    }
   }
 
   private async disconnect(context: Context, service: string): Promise<Response> {
@@ -1620,6 +1807,7 @@ interface RuntimeActionSearchResult {
   name: string;
   description: string;
   operationType: RuntimeActionDefinition["operationType"];
+  effect: RuntimeActionDefinition["operationType"];
   authenticated: boolean;
   inputSchema: RuntimeActionDefinition["inputSchema"];
   outputSchema: RuntimeActionDefinition["outputSchema"];
@@ -1636,6 +1824,7 @@ function serializeActionSearchResult(
     name: result.name,
     description: result.description,
     operationType: action.operationType,
+    effect: action.operationType,
     authenticated,
     inputSchema: action.inputSchema,
     outputSchema: action.outputSchema,

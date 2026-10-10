@@ -5,8 +5,9 @@ import { createCatalogStore } from "../../catalog-store.ts";
 import { OAuthClientConfigService } from "../../oauth/oauth-client-config-service.ts";
 import { provider } from "./definition.ts";
 
-const expectedOAuthScopes = [
-  "https://www.googleapis.com/auth/calendar.readonly",
+const expectedOAuthScopes = ["https://www.googleapis.com/auth/calendar.readonly"];
+
+const additionalOAuthScopes = [
   "https://www.googleapis.com/auth/calendar.events",
   "https://www.googleapis.com/auth/calendar.calendars",
   "https://www.googleapis.com/auth/calendar.calendarlist",
@@ -21,7 +22,7 @@ const expectedOAuthScopes = [
 const calendarListReadonly = "https://www.googleapis.com/auth/calendar.calendarlist.readonly";
 const eventsFreeBusy = "https://www.googleapis.com/auth/calendar.events.freebusy";
 const calendar = "https://www.googleapis.com/auth/calendar";
-const expectedOptionalScopes = [calendarListReadonly, eventsFreeBusy, calendar];
+const expectedOptionalScopes = [...additionalOAuthScopes, calendarListReadonly, eventsFreeBusy, calendar];
 
 // A host that writes events and lists calendars without the sensitive calendar.readonly: the
 // identity scopes the userinfo validator reads, the events scope, and Google's two non-sensitive

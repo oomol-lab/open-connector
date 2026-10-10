@@ -18,14 +18,22 @@ const service = "github";
 /**
  * GitHub provider backed by the GitHub REST API.
  *
- * Open-source users can either configure a personal access token or bring
- * their own GitHub OAuth app with localhost callback support.
+ * Open-source users can configure a personal access token, bring their own
+ * GitHub OAuth app, or connect one installation of a host-configured GitHub
+ * App without copying the App private key into each connection.
  */
 export const provider: ProviderDefinition = {
+  nativeHttp: {
+    baseUrl: "https://api.github.com",
+    documentationUrl: "https://docs.github.com/en/rest",
+    auth: { type: "provider" },
+    headers: { "X-GitHub-Api-Version": "2022-11-28" },
+    read: [{ method: "GET", path: "^/(?:repos|orgs|users|user|search)(?:/.*)?$" }],
+  },
   service,
   displayName: "GitHub",
   categories: ["Developer Tools"],
-  authTypes: ["oauth2", "api_key"],
+  authTypes: ["oauth2", "custom_credential", "api_key"],
   auth: [
     {
       type: "oauth2",
@@ -76,6 +84,21 @@ export const provider: ProviderDefinition = {
         },
       ],
       tokenEndpointAuthMethod: "client_secret_post",
+    },
+    {
+      type: "custom_credential",
+      fields: [
+        {
+          key: "installationId",
+          label: "GitHub App installation ID",
+          inputType: "text",
+          required: true,
+          secret: false,
+          placeholder: "12345678",
+          description:
+            "The GitHub App installation to use. The host must configure OOMOL_CONNECT_GITHUB_APP_ID and OOMOL_CONNECT_GITHUB_APP_PRIVATE_KEY.",
+        },
+      ],
     },
     {
       type: "api_key",

@@ -21,6 +21,8 @@ export interface CloudflareEnv {
   OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS?: string;
   OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES?: string;
   OOMOL_CONNECT_RUN_LIMIT?: string;
+  OOMOL_CONNECT_GITHUB_APP_ID?: string;
+  OOMOL_CONNECT_GITHUB_APP_PRIVATE_KEY?: string;
 }
 
 export function resolvePublicOrigin(request: Request, env: CloudflareEnv): string {

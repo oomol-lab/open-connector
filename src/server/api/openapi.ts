@@ -502,6 +502,11 @@ export function createOpenApiDocument(
               enum: ["read", "write", "destructive"],
               description: "Whether the action reads, changes, or destructively changes provider state.",
             },
+            effect: {
+              type: "string",
+              enum: ["read", "write", "destructive"],
+              description: "Compatibility alias derived from operationType.",
+            },
             authenticated: jsonSchema.boolean({
               description: "Whether the provider service has an authenticated local connection.",
             }),
@@ -564,6 +569,11 @@ export function createOpenApiDocument(
               type: "string",
               enum: ["read", "write", "destructive"],
               description: "Whether the action reads, changes, or destructively changes provider state.",
+            },
+            effect: {
+              type: "string",
+              enum: ["read", "write", "destructive"],
+              description: "Compatibility alias derived from operationType.",
             },
             requiredScopes: jsonSchema.array(jsonSchema.string()),
             providerPermissions: jsonSchema.array(jsonSchema.string()),
@@ -1618,7 +1628,7 @@ function actionRunBody(input: JsonSchema, description: string): Record<string, u
 function actionRunResponses(output: JsonSchema): Record<string, unknown> {
   const failure = runtimeFailureSchema(actionFailureMetaSchema);
   return {
-    200: jsonResponse(runtimeSuccessSchema(output, actionResultMetaSchema)),
+    200: jsonResponse(runtimeSuccessSchema(output, actionResultMetaSchema, true)),
     400: jsonResponse(failure, "invalid_input, action_blocked, or action_not_allowed."),
     402: jsonResponse(failure, "insufficient_credit."),
     403: jsonResponse(failure, "authorization_failed."),
@@ -1673,6 +1683,7 @@ function createConcreteRunOperation(action: ActionDefinition): Record<string, un
 function runtimeSuccessSchema(
   data: JsonSchema,
   meta: JsonSchema = { type: "object", additionalProperties: true },
+  actionResult = false,
 ): JsonSchema {
   return jsonSchema.object(
     {
@@ -1680,9 +1691,12 @@ function runtimeSuccessSchema(
       message: { const: "OK", type: "string" },
       data,
       meta,
+      ...(actionResult
+        ? { outputSchema: jsonSchema.unknownObject("Execution output schema, retained during idempotent replay.") }
+        : {}),
     },
     {
-      required: ["success", "message", "data", "meta"],
+      required: ["success", "message", "data", "meta", ...(actionResult ? ["outputSchema"] : [])],
       description: "Runtime success envelope.",
     },
   );

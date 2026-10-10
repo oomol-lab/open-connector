@@ -131,6 +131,7 @@ const testProfile = {
 };
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 
@@ -166,6 +167,7 @@ describe("ConnectionService", () => {
         configured: true,
         virtual: true,
         default: true,
+        health: { state: "ready", observedAt: expect.any(String), expiresAt: null, reason: null },
         profile: {
           accountId: "hackernews:public",
           displayName: "Hacker News Public",
@@ -178,6 +180,9 @@ describe("ConnectionService", () => {
   // The listing puts the Marketplace entry after whatever already answers for the provider, and
   // only that first entry is the default one.
   it("orders Marketplace entries after stored and no_auth connections", async () => {
+    // Both listing paths must observe the same time while comparing their complete summaries.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-08T00:00:00.000Z"));
     const services = ["uptimerobot", "hackernews", "database"];
     const marketplace = {
       getSnapshot: () => ({
@@ -628,6 +633,7 @@ describe("ConnectionService", () => {
       default: false,
       profile: testProfile,
       oauthAuthorizationId: "completed-authorization",
+      health: { state: "unknown", observedAt: expect.any(String), expiresAt: null, reason: null },
     };
 
     // Every way a caller can reach a summary, because they are separate code
@@ -688,7 +694,9 @@ describe("ConnectionService", () => {
       ...credential,
       metadata: { providerAccountVerified: true, oauthAuthorizationId: undefined },
     });
-    await expect(service.listConnections()).resolves.toEqual([original]);
+    await expect(service.listConnections()).resolves.toEqual([
+      { ...original, health: { ...original.health, observedAt: expect.any(String) } },
+    ]);
   });
 
   it("does not store OAuth credentials when validation is cancelled", async () => {
@@ -1121,6 +1129,10 @@ describe("ConnectionService", () => {
 
     await expect(service.getCredential("example")).rejects.toMatchObject({
       code: "oauth_token_expired",
+    });
+    await expect(service.getConnectionSummary("example")).resolves.toMatchObject({
+      configured: true,
+      health: { state: "reconnect_required", reason: "oauth_token_expired" },
     });
   });
 

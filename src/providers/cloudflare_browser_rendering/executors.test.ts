@@ -22,37 +22,50 @@ function executionContext(credential: ResolvedCredential): ExecutionContext {
   return { getCredential: async () => credential };
 }
 
+function apiKeyCredential(): Extract<ResolvedCredential, { authType: "api_key" }> {
+  return {
+    authType: "api_key",
+    apiKey: "api-key-token",
+    values: { accountId: "account-1" },
+    profile: {
+      accountId: "account-1",
+      displayName: "Cloudflare Browser Run",
+      grantedScopes: [],
+    },
+    metadata: { accountId: "account-1" },
+  };
+}
 afterEach(() => {
   setDefaultGuardedFetchDnsLookup(null);
   vi.unstubAllGlobals();
 });
 
 describe("Cloudflare Browser Run OAuth", () => {
-  it("validates OAuth with the current Cloudflare user", async () => {
+  it("validates OAuth by resolving the one accessible Cloudflare account", async () => {
     const fetch = vi.fn(async () =>
       Response.json({
         success: true,
-        result: {
-          id: "user-1",
-          email: "ada@example.com",
-          first_name: "Ada",
-          last_name: "Lovelace",
-          username: "ada",
-        },
+        result: [
+          {
+            id: "membership-1",
+            account: { id: "account-1", name: "Amplift", type: "standard" },
+            status: "accepted",
+          },
+        ],
+        result_info: { page: 1, per_page: 50, count: 1, total_count: 1, total_pages: 1 },
       }),
     );
 
     const result = await credentialValidators.oauth2!(oauthCredential({}), { fetcher: fetch });
 
     expect(fetch).toHaveBeenCalledWith(
-      "https://api.cloudflare.com/client/v4/user",
+      "https://api.cloudflare.com/client/v4/memberships?page=1&per_page=50&status=accepted",
       expect.objectContaining({ headers: expect.objectContaining({ authorization: "Bearer oauth-access-token" }) }),
     );
     expect(result).toMatchObject({
-      profile: { accountId: "user-1", displayName: "Ada Lovelace" },
-      metadata: { userId: "user-1", email: "ada@example.com", validationEndpoint: "/user" },
+      profile: { accountId: "account-1", displayName: "Amplift" },
+      metadata: { accountId: "account-1", accountName: "Amplift", accountType: "standard" },
     });
-    expect(result?.metadata?.accountId).toBeUndefined();
   });
 
   it("lists OAuth accounts through Cloudflare memberships", async () => {
@@ -127,6 +140,22 @@ describe("Cloudflare Browser Run OAuth", () => {
     expect(new Headers(fetch.mock.calls[0]?.[1]?.headers).get("authorization")).toBe("Bearer oauth-access-token");
   });
 
+  it("keeps API token actions working", async () => {
+    const fetch = vi.fn(async () => Response.json({ success: true, result: "# OpenMeld" }));
+    vi.stubGlobal("fetch", fetch);
+    setDefaultGuardedFetchDnsLookup(null);
+
+    const result = await executors["cloudflare_browser_rendering.get_markdown"]!(
+      { url: "https://openmeld.ai" },
+      executionContext(apiKeyCredential()),
+    );
+
+    expect(result).toEqual({ ok: true, output: { markdown: "# OpenMeld" } });
+    expect(fetch).toHaveBeenCalledWith(
+      "https://api.cloudflare.com/client/v4/accounts/account-1/browser-rendering/markdown",
+      expect.objectContaining({ headers: expect.objectContaining({ authorization: "Bearer api-key-token" }) }),
+    );
+  });
   it("requires an explicit accessible account when OAuth can reach more than one", async () => {
     const fetch = vi.fn(async () => Response.json({ success: true, result: "# OpenMeld" }));
     vi.stubGlobal("fetch", fetch);
@@ -149,7 +178,7 @@ describe("Cloudflare Browser Run OAuth", () => {
 
     expect(missingAccount).toMatchObject({
       ok: false,
-      error: { message: expect.stringContaining("list_accounts") },
+      error: { message: expect.stringContaining("accountId is required") },
     });
     expect(selectedAccount).toEqual({ ok: true, output: { markdown: "# OpenMeld" } });
     expect(fetch).toHaveBeenCalledTimes(1);

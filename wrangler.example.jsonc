@@ -22,6 +22,9 @@
       "persist": true,
     },
   },
+  "secrets": {
+    "required": ["OOMOL_CONNECT_GITHUB_APP_PRIVATE_KEY"],
+  },
   "d1_databases": [
     {
       "binding": "DB",

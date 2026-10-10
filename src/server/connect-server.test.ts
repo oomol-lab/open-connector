@@ -12,6 +12,7 @@ import type {
 } from "../core/types.ts";
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "../oauth/oauth-client-config-service.ts";
 import type { IOAuthStateStore, OAuthAuthorizationState } from "../oauth/oauth-flow-service.ts";
+import type { GitHubAppInstallationService } from "../providers/github/installation-service.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { RuntimeActionHttpResult } from "./api/runtime-api.ts";
 import type { RuntimeJwtVerifier } from "./api/runtime-jwt.ts";
@@ -142,6 +143,36 @@ afterEach(() => {
 });
 
 describe("ConnectServer", () => {
+  it("restricts selected-account descriptions to the configured host bearer and current proxy policy", async () => {
+    const app = createTestServer([{ ...apiKeyProvider, authTypes: ["no_auth"], auth: [{ type: "no_auth" }] }], {
+      auth: { adminToken: "admin", runtimeToken: "host" },
+    }).createApp();
+    const path = "/v1/openmeld/connections/example/describe";
+    for (const authorization of ["", "Bearer admin", "Bearer invalid"]) {
+      expect((await app.request(path, { headers: { authorization, "x-oo-connector-alias": "chosen" } })).status).toBe(
+        401,
+      );
+    }
+    expect((await app.request(path, { headers: { authorization: "Bearer host" } })).status).toBe(400);
+    const response = await app.request(path, {
+      headers: { authorization: "Bearer host", "x-oo-connector-alias": "chosen" },
+    });
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(await response.json()).toMatchObject({
+      service: "example",
+      nativeHttp: null,
+      connection: { connectionName: "chosen", health: { state: "ready" } },
+    });
+    const blocked = createTestServer([apiKeyProvider], {
+      auth: { runtimeToken: "host" },
+      actionPolicy: new LocalActionPolicyService({ blockedProxies: ["*"] }),
+    }).createApp();
+    expect(
+      (await blocked.request(path, { headers: { authorization: "Bearer host", "x-oo-connector-alias": "chosen" } }))
+        .status,
+    ).toBe(403);
+  });
   it.each([401, 403, 502, 504])("preserves Marketplace error status %s", async (status) => {
     const database = new SqliteRuntimeDatabase(":memory:");
     requestDatabases.push(database);
@@ -189,7 +220,6 @@ describe("ConnectServer", () => {
       actions: ["example.echo"],
     });
   });
-
   it("rejects connections for providers unavailable in the current runtime", async () => {
     const app = createTestServer([catalogOnlyProvider]).createApp();
 
@@ -200,6 +230,10 @@ describe("ConnectServer", () => {
     });
 
     expect(response.status).toBe(400);
+    const catalog = await app.request("/v1/providers?includeConnectionAuth=true");
+    await expect(catalog.json()).resolves.toMatchObject({
+      data: [{ service: "catalog_only", connectionAuth: { oauth: false, credentials: [] } }],
+    });
     await expect(response.json()).resolves.toEqual({
       error: {
         code: "provider_unavailable",
@@ -1493,6 +1527,21 @@ describe("ConnectServer", () => {
     }
   });
 
+  it("registers the Git stream only behind the configured runtime bearer", async () => {
+    const path = "/v1/openmeld/git/amplifthq/openmeld/info/refs?service=git-upload-pack";
+    const unsecured = createTestServer([apiKeyProvider]).createApp();
+    expect((await unsecured.request(path)).status).toBe(401);
+
+    const secured = createTestServer([apiKeyProvider], {
+      auth: { adminToken: "admin-token", runtimeToken: "local-token" },
+    }).createApp();
+    expect((await secured.request(path)).status).toBe(401);
+    expect((await secured.request(path, { headers: { authorization: "Bearer admin-token" } })).status).toBe(401);
+    const response = await secured.request(path, { headers: { authorization: "Bearer local-token" } });
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({ error: { code: "invalid_git_request" } });
+  });
+
   it.each([
     ["legacy", "legacy"],
     ["auto", "modern"],
@@ -1595,6 +1644,70 @@ describe("ConnectServer", () => {
         configured: true,
       },
     ]);
+  });
+
+  it("completes a verified GitHub App installation through the admin API", async () => {
+    const complete = vi.fn(async () => ({
+      health: { state: "unknown" as const, observedAt: "2026-01-01T00:00:00.000Z", expiresAt: null, reason: null },
+      authType: "custom_credential" as const,
+      configured: true as const,
+      connectionName: "organization:org-1:github",
+      default: false,
+      id: "connection-1",
+      profile: {
+        accountId: "organization:42",
+        displayName: "amplifthq (GitHub App)",
+        grantedScopes: ["metadata:read"],
+      },
+      service: "github",
+      virtual: false,
+    }));
+    const findAccessibleInstallation = vi.fn(async () => ({
+      accountAvatarUrl: "https://github.com/avatar",
+      accountHtmlUrl: "https://github.com/amplifthq",
+      accountId: "42",
+      accountLogin: "amplifthq",
+      accountType: "Organization" as const,
+      installationId: "987",
+      permissions: {},
+      repositorySelection: "all" as const,
+    }));
+    const app = createTestServer([apiKeyProvider], {
+      githubAppInstallations: { complete, findAccessibleInstallation },
+    }).createApp();
+
+    const gitStream = await app.request("/v1/openmeld/git/amplifthq/openmeld/info/refs?service=git-upload-pack");
+    expect(gitStream.status).toBe(401);
+
+    const lookup = await app.request(
+      "/api/providers/github/installations?verificationConnectionName=github_verify_test",
+    );
+    expect(lookup.status).toBe(200);
+    await expect(lookup.json()).resolves.toEqual({ accountLogin: "amplifthq", installationId: "987" });
+    expect(findAccessibleInstallation).toHaveBeenCalledWith({ verificationConnectionName: "github_verify_test" });
+
+    const response = await app.request("/api/providers/github/installations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        installationId: "987",
+        targetConnectionName: "organization:org-1:github",
+        verificationConnectionName: "github-install-verifier:state-1",
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      authType: "custom_credential",
+      configured: true,
+      connectionName: "organization:org-1:github",
+      service: "github",
+    });
+    expect(complete).toHaveBeenCalledWith({
+      installationId: "987",
+      targetConnectionName: "organization:org-1:github",
+      verificationConnectionName: "github-install-verifier:state-1",
+    });
   });
 
   it("keeps the console shell public while protecting admin APIs", async () => {
@@ -2782,7 +2895,8 @@ describe("ConnectServer", () => {
 
     const providers = await app.request("/v1/providers");
     expect(providers.status).toBe(200);
-    expect(providers.headers.get("cache-control")).toBe("public, max-age=0, must-revalidate");
+    expect(providers.headers.get("cache-control")).toBe("no-store");
+    expect(providers.headers.get("cloudflare-cdn-cache-control")).toBeNull();
     await expect(providers.json()).resolves.toMatchObject({
       success: true,
       data: [
@@ -2795,9 +2909,26 @@ describe("ConnectServer", () => {
       ],
     });
 
+    const connectionCatalog = await app.request("/v1/providers?includeConnectionAuth=true");
+    expect(connectionCatalog.headers.get("cache-control")).toBe("no-store");
+    expect(connectionCatalog.headers.get("cloudflare-cdn-cache-control")).toBeNull();
+    const connectionMetadata = await connectionCatalog.json();
+    expect(connectionMetadata).toMatchObject({
+      data: [
+        {
+          service: "example",
+          connectionAuth: {
+            oauth: false,
+            credentials: [{ authType: "api_key", fields: [{ key: "apiKey", secret: true, required: true }] }],
+          },
+        },
+      ],
+    });
+    expect(JSON.stringify(connectionMetadata)).not.toContain("example-key");
     const actionServices = await app.request("/v1/actions");
     expect(actionServices.status).toBe(200);
-    expect(actionServices.headers.get("cache-control")).toBe("public, max-age=0, must-revalidate");
+    expect(actionServices.headers.get("cache-control")).toBe("no-store");
+    expect(actionServices.headers.get("cloudflare-cdn-cache-control")).toBeNull();
     await expect(actionServices.json()).resolves.toMatchObject({
       success: true,
       data: [{ service: "example" }],
@@ -2805,7 +2936,8 @@ describe("ConnectServer", () => {
 
     const actions = await app.request("/v1/actions?service=example");
     expect(actions.status).toBe(200);
-    expect(actions.headers.get("cache-control")).toBe("public, max-age=0, must-revalidate");
+    expect(actions.headers.get("cache-control")).toBe("no-store");
+    expect(actions.headers.get("cloudflare-cdn-cache-control")).toBeNull();
     await expect(actions.json()).resolves.toMatchObject({
       success: true,
       data: [
@@ -2823,6 +2955,11 @@ describe("ConnectServer", () => {
       ],
     });
 
+    const exact = await app.request("/v1/actions?service=example&actionId=example.follow_up");
+    await expect(exact.json()).resolves.toMatchObject({ success: true, data: [{ id: "example.follow_up" }] });
+    const wrongService = await app.request("/v1/actions?service=other&actionId=example.echo");
+    await expect(wrongService.json()).resolves.toMatchObject({ success: true, data: [] });
+
     const apiSearch = await app.request("/api/actions/search?q=echo");
     expect(apiSearch.status).toBe(200);
     expect(apiSearch.headers.get("cache-control")).toBe("no-store");
@@ -2830,6 +2967,7 @@ describe("ConnectServer", () => {
       id: string;
       service: string;
       name: string;
+      effect: string;
       authenticated: boolean;
       inputSchema: Record<string, unknown>;
       outputSchema: Record<string, unknown>;
@@ -2838,6 +2976,7 @@ describe("ConnectServer", () => {
       id: "example.echo",
       service: "example",
       name: "echo",
+      effect: "write",
       authenticated: true,
       inputSchema: { type: "object" },
       outputSchema: { type: "object" },
@@ -2873,7 +3012,8 @@ describe("ConnectServer", () => {
 
     const action = await app.request("/v1/actions/example.echo");
     expect(action.status).toBe(200);
-    expect(action.headers.get("cache-control")).toBe("public, max-age=0, must-revalidate");
+    expect(action.headers.get("cache-control")).toBe("no-store");
+    expect(action.headers.get("cloudflare-cdn-cache-control")).toBeNull();
     await expect(action.json()).resolves.toMatchObject({
       success: true,
       meta: {},
@@ -2944,6 +3084,45 @@ describe("ConnectServer", () => {
     expect(runtimeBody.data.map((result) => result.id)).toEqual(["example.echo"]);
     expect(runtimeBody.data[0]).toMatchObject({ authenticated: false });
     expect(runtimeBody.data[0]?.outputSchema).toEqual({ type: "object" });
+  });
+
+  it("hides policy-blocked actions from runtime discovery", async () => {
+    const app = createTestServer(
+      [
+        {
+          ...apiKeyProvider,
+          actions: [echoAction, followUpAction],
+        },
+      ],
+      {
+        actionPolicy: new LocalActionPolicyService({
+          blockedActions: ["example.follow_up"],
+        }),
+      },
+    ).createApp();
+
+    const services = await app.request("/v1/actions");
+    await expect(services.json()).resolves.toMatchObject({
+      success: true,
+      data: [{ service: "example" }],
+    });
+
+    const actions = await app.request("/v1/actions?service=example");
+    await expect(actions.json()).resolves.toMatchObject({
+      success: true,
+      data: [{ id: "example.echo" }],
+    });
+
+    for (const actionId of ["example.follow_up", "missing.action"]) {
+      const selected = await app.request(`/v1/actions?service=example&actionId=${actionId}`);
+      await expect(selected.json()).resolves.toMatchObject({ success: true, data: [] });
+    }
+
+    const search = await app.request("/v1/actions/search?q=follow");
+    await expect(search.json()).resolves.toMatchObject({
+      success: true,
+      data: [],
+    });
   });
 
   it("serves v1 apps and authenticated service views without leaking credentials", async () => {
@@ -3052,6 +3231,7 @@ describe("ConnectServer", () => {
     expect(first.status).toBe(200);
     expect(replay.status).toBe(200);
     expect(replay.headers.get("cache-control")).toBe("no-store");
+    expect(firstBody).toMatchObject({ outputSchema: echoAction.outputSchema });
     await expect(replay.json()).resolves.toEqual(firstBody);
     expect(executions).toBe(3);
     expect((await runs.list()).items).toHaveLength(3);
@@ -3889,6 +4069,8 @@ interface CreateTestServerOptions {
   providerLoader?: IProviderLoader;
   logger?: Logger;
   idempotency?: IIdempotencyStore;
+  githubAppInstallations?: Pick<GitHubAppInstallationService, "complete"> &
+    Partial<Pick<GitHubAppInstallationService, "findAccessibleInstallation" | "resolveInstallationToken">>;
   runtimeTokens?: RuntimeTokenService;
   runtimePolicyStore?: IRuntimePolicyStore;
   runs?: MemoryRunLogStore;
@@ -3959,6 +4141,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
       secretCodec: options.secretCodec,
       isCustomClientConfigAllowed,
     }),
+    githubAppInstallations: options.githubAppInstallations,
     actions: actionRunner,
     idempotency,
     transitFiles,

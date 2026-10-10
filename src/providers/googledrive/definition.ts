@@ -1,7 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { googledriveActions } from "./actions.ts";
-import { googledriveOAuthScopes } from "./scopes.ts";
+import { googledriveOAuthScopes, googledriveOptionalScopes } from "./scopes.ts";
 import {
   snapshot as triggerSnapshot0_0,
   additionalSnapshot0 as triggerSnapshot0_1,
@@ -28,6 +28,7 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://oauth2.googleapis.com/token",
       revocationUrl: "https://oauth2.googleapis.com/revoke",
       scopes: googledriveOAuthScopes,
+      optionalScopes: googledriveOptionalScopes,
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationParams: {
         access_type: "offline",

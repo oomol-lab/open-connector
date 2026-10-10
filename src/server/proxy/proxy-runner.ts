@@ -2,7 +2,7 @@ import type { CatalogStore } from "../../catalog-store.ts";
 import type { ConnectionService } from "../../connection-service.ts";
 import type { ActionPolicySnapshot } from "../../core/action-policy.ts";
 import type { ProviderHttpDispatchOptions } from "../../core/provider-http-dispatch.ts";
-import type { RuntimeLogger, ProxyRequestInput, ProxyResponse } from "../../core/types.ts";
+import type { RuntimeConfigReader, RuntimeLogger, ProxyRequestInput, ProxyResponse } from "../../core/types.ts";
 import type { IProviderLoader } from "../../providers/provider-loader.ts";
 import type { SaasExecutionService } from "../../saas/saas-execution-service.ts";
 
@@ -20,6 +20,7 @@ import { mapConnectionErrorStatus } from "../api/runtime-api.ts";
 export type ProxyFailureStatus = 400 | 402 | 403 | 404 | 409 | 413 | 429 | 500 | 501 | 502 | 503 | 504;
 
 export interface ProxyRunnerOptions {
+  runtimeConfig?: RuntimeConfigReader;
   providerHttpDispatch?: ProviderHttpDispatchOptions;
   catalog: CatalogStore;
   providerLoader: IProviderLoader;
@@ -201,6 +202,7 @@ export class ProxyRunner {
         () =>
           executor(request.input, {
             getCredential: target.getCredential,
+            runtimeConfig: this.options.runtimeConfig,
             signal: input.signal,
           }),
         this.options.providerHttpDispatch,

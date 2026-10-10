@@ -28,6 +28,10 @@ authorization rule. Definitions also declare provider-native `requiredScopes` an
 with the current connection profile, so agents can see both the capability they are about to use
 and the account it will run as.
 
+Actions may also declare a structured `effect` of `read`, `write`, or `destructive`. Clients use
+that owner-authored field for safety policy; they must not infer an effect from an action id, name,
+or description. An omitted effect means unknown, not read-only.
+
 For the full contribution workflow, see `.codex/skills/add-provider/SKILL.md`.
 
 ## Trigger metadata

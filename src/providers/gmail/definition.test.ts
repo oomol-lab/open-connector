@@ -10,8 +10,6 @@ const gmailComposeScope = "https://www.googleapis.com/auth/gmail.compose";
 const gmailSendScope = "https://www.googleapis.com/auth/gmail.send";
 const gmailSettingsSharingScope = "https://www.googleapis.com/auth/gmail.settings.sharing";
 const gmailSettingsBasicScope = "https://www.googleapis.com/auth/gmail.settings.basic";
-const gmailLabelsScope = "https://www.googleapis.com/auth/gmail.labels";
-const gmailModifyScope = "https://www.googleapis.com/auth/gmail.modify";
 const gmailReadonlyScope = "https://www.googleapis.com/auth/gmail.readonly";
 
 describe("Gmail provider definition", () => {
@@ -24,7 +22,7 @@ describe("Gmail provider definition", () => {
   it("keeps the default user OAuth scopes unchanged", () => {
     const oauth = provider.auth.find((auth) => auth.type === "oauth2");
 
-    expect(oauth?.scopes).toEqual([gmailReadonlyScope, gmailModifyScope, gmailLabelsScope, gmailSettingsBasicScope]);
+    expect(oauth?.scopes).toEqual([gmailReadonlyScope]);
   });
 
   it.each([{ requestedScopes: [gmailReadonlyScope, gmailComposeScope] }, { requestedScopes: [gmailSendScope] }])(
@@ -46,12 +44,7 @@ describe("Gmail provider definition", () => {
     const service = configService();
     const config = service.normalizeConfig("gmail", { clientId: "client-id", clientSecret: "client-secret" });
 
-    expect(service.getEffectiveScopes("gmail", config)).toEqual([
-      gmailReadonlyScope,
-      gmailModifyScope,
-      gmailLabelsScope,
-      gmailSettingsBasicScope,
-    ]);
+    expect(service.getEffectiveScopes("gmail", config)).toEqual([gmailReadonlyScope]);
   });
 
   it("still rejects undeclared administrator-only scopes", () => {
@@ -83,7 +76,7 @@ describe("Gmail provider definition", () => {
     // admin console, and a token request naming an unauthorized scope fails. So
     // the service-account list must stay as it was even though the OAuth menu
     // grew.
-    expect(gmailOAuthScopes).toEqual([gmailModifyScope, gmailLabelsScope, gmailSettingsBasicScope]);
+    expect(gmailOAuthScopes).toEqual([gmailReadonlyScope]);
   });
 
   it("uses a user-authorizable scope for forwarding read actions", () => {

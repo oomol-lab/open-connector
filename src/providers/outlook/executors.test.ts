@@ -6,6 +6,13 @@ import { setDefaultGuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";
 import { provider } from "./definition.ts";
 import { executors, outlookJsonRequest } from "./executors.ts";
 
+beforeEach(() => setDefaultGuardedFetchDnsLookup(null));
+
+afterEach(() => {
+  setDefaultGuardedFetchDnsLookup(undefined);
+  vi.unstubAllGlobals();
+});
+
 // The allowlist runs before any fetch, so whether the fetcher was
 // called tells which side of it a URL landed on.
 function recordingFetcher(calls: string[]): typeof fetch {
@@ -115,13 +122,6 @@ const credential: Extract<ResolvedCredential, { authType: "oauth2" }> = {
 };
 
 describe("outlook list_messages delta", () => {
-  beforeEach(() => setDefaultGuardedFetchDnsLookup(null));
-
-  afterEach(() => {
-    setDefaultGuardedFetchDnsLookup(undefined);
-    vi.unstubAllGlobals();
-  });
-
   it("lists a folder through messages/delta and returns the deltaLink with raw rows", async () => {
     const deltaLink =
       "https://graph.microsoft.com/v1.0/me/mailFolders('AQMkADAwATM3ZmYtRFRM')/messages/delta?%24deltatoken=RFRM9";

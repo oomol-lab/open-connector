@@ -13,7 +13,13 @@ interface RunOperation {
     schema: Record<string, unknown>;
     description: string;
   }>;
-  responses: Record<string, { description: string }>;
+  responses: Record<
+    string,
+    {
+      description: string;
+      content?: { "application/json"?: { schema?: Record<string, unknown> } };
+    }
+  >;
 }
 
 const provider: ProviderDefinition = {
@@ -38,6 +44,22 @@ const provider: ProviderDefinition = {
 };
 
 describe("action execution OpenAPI", () => {
+  it("documents the declared effect in both action search response shapes", () => {
+    const document = createOpenApiDocument([provider]);
+    const expectedEffectSchema = {
+      description: "Compatibility alias derived from operationType.",
+      enum: ["read", "write", "destructive"],
+      type: "string",
+    };
+
+    expect(document.components.schemas.ActionSearchResult).toMatchObject({
+      properties: { effect: expectedEffectSchema },
+    });
+    expect(document.components.schemas.RuntimeActionMetadata).toMatchObject({
+      properties: { effect: expectedEffectSchema },
+    });
+  });
+
   it.each([
     ["generic", {}],
     ["concrete", { actionId: "example.echo" }],
@@ -74,6 +96,15 @@ describe("action execution OpenAPI", () => {
       );
       expect(path.post.responses["403"]).toBeDefined();
       expect(path.post.responses["429"]).toBeDefined();
+      expect(path.post.responses["200"]?.content?.["application/json"]?.schema).toMatchObject({
+        properties: {
+          outputSchema: {
+            type: "object",
+            description: expect.stringContaining("idempotent replay"),
+          },
+        },
+        required: expect.arrayContaining(["outputSchema"]),
+      });
       expect(path.post.description).toContain("24-hour replay window");
       expect(path.post.description).toContain("original HTTP status and body");
       expect(path.post.description).toContain("completed successes and failures");

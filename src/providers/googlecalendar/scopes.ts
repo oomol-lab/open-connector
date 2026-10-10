@@ -17,16 +17,7 @@ export const googlecalendarCalendarsWriteScopes: string[] = [
 export const googlecalendarSettingsReadScopes: string[] = [googleCalendarSettingsReadonlyScope];
 export const googlecalendarAclReadScopes: string[] = [googleCalendarAclsReadonlyScope];
 export const googlecalendarAclWriteScopes: string[] = [googleCalendarAclsScope];
-export const googlecalendarOAuthScopes: string[] = [
-  googleCalendarReadonlyScope,
-  googleCalendarEventsScope,
-  googleCalendarCalendarsScope,
-  googleCalendarCalendarListScope,
-  googleCalendarSettingsReadonlyScope,
-  googleCalendarAclsScope,
-  googleCalendarAclsReadonlyScope,
-  ...googleIdentityScopes,
-];
+export const googlecalendarOAuthScopes: string[] = [googleCalendarReadonlyScope];
 
 const googleCalendarScope = "https://www.googleapis.com/auth/calendar";
 const googleCalendarCalendarListReadonlyScope = "https://www.googleapis.com/auth/calendar.calendarlist.readonly";
@@ -43,6 +34,13 @@ const googleCalendarEventsFreeBusyScope = "https://www.googleapis.com/auth/calen
  * list stays {@link googlecalendarOAuthScopes}: a domain-wide-delegation grant names those exact scopes.
  */
 export const googlecalendarOptionalScopes: string[] = [
+  googleCalendarEventsScope,
+  googleCalendarCalendarsScope,
+  googleCalendarCalendarListScope,
+  googleCalendarSettingsReadonlyScope,
+  googleCalendarAclsScope,
+  googleCalendarAclsReadonlyScope,
+  ...googleIdentityScopes,
   googleCalendarCalendarListReadonlyScope,
   googleCalendarEventsFreeBusyScope,
   googleCalendarScope,

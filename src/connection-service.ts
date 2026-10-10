@@ -10,6 +10,7 @@ import type {
   CustomCredentialAuthDefinition,
   ProviderDefinition,
   ResolvedCredential,
+  RuntimeConfigReader,
   RuntimeLogger,
 } from "./core/types.ts";
 import type { MarketplacePricing, MarketplaceService } from "./marketplace/marketplace-service.ts";
@@ -43,6 +44,15 @@ export interface ConnectionSummary {
   oauthAuthorizationId?: string;
   marketplace?: { id: string; pricing: MarketplacePricing };
   saas?: StoredSaasConnection["reference"];
+  health?: ConnectionHealth;
+}
+
+/** Credential evidence, not a promise that every provider operation is permitted. */
+export interface ConnectionHealth {
+  state: "unknown" | "ready" | "refresh_required" | "reconnect_required";
+  observedAt: string;
+  expiresAt: string | null;
+  reason: string | null;
 }
 
 export interface ManagedConnectionSummary extends ConnectionSummary {
@@ -68,6 +78,7 @@ export interface ConnectionServiceOptions {
   catalog: CatalogStore;
   oauthCredentials?: IOAuthCredentialRefresher;
   providerLoader: IProviderLoader;
+  runtimeConfig?: RuntimeConfigReader;
   store: IConnectionStore;
   logger?: RuntimeLogger;
   marketplace?: MarketplaceService;
@@ -188,6 +199,7 @@ export class ConnectionService {
   private readonly oauthCredentialRefreshes = new Map<string, Promise<OAuthCredential>>();
   private readonly oauthCredentials?: IOAuthCredentialRefresher;
   private readonly providerLoader: IProviderLoader;
+  private readonly runtimeConfig?: RuntimeConfigReader;
   private readonly store: IConnectionStore;
   private readonly logger?: RuntimeLogger;
   private readonly marketplace?: MarketplaceService;
@@ -197,6 +209,7 @@ export class ConnectionService {
     this.catalog = input.catalog;
     this.oauthCredentials = input.oauthCredentials;
     this.providerLoader = input.providerLoader;
+    this.runtimeConfig = input.runtimeConfig;
     this.store = input.store;
     this.logger = input.logger;
     this.marketplace = input.marketplace;
@@ -680,6 +693,7 @@ export class ConnectionService {
       virtual: false,
       default: connectionName === defaultConnectionName,
       profile: credential.profile,
+      health: this.credentialHealth(credential),
     };
     // Credential metadata also contains client secrets. Expose only this runtime-owned string.
     if (credential.authType === "oauth2" && typeof credential.metadata.oauthAuthorizationId === "string") {
@@ -698,7 +712,29 @@ export class ConnectionService {
       virtual: true,
       default: connectionName === defaultConnectionName,
       profile: this.createNoAuthProfile(provider),
+      health: this.credentialHealth({ authType: "no_auth" }),
     };
+  }
+
+  private credentialHealth(credential: ResolvedCredential): ConnectionHealth {
+    const health: ConnectionHealth = {
+      state: "unknown",
+      observedAt: new Date().toISOString(),
+      expiresAt: credential.authType === "oauth2" ? (credential.expiresAt ?? null) : null,
+      reason: null,
+    };
+    if (credential.authType === "no_auth") {
+      health.state = "ready";
+    } else if (credential.authType === "oauth2" && isOAuthCredentialExpired(credential)) {
+      if (!credential.refreshToken) {
+        health.state = "reconnect_required";
+        health.reason = "oauth_token_expired";
+      } else {
+        health.state = "refresh_required";
+        health.reason = this.oauthCredentials ? "oauth_refresh_required" : "oauth_refresh_unavailable";
+      }
+    }
+    return health;
   }
 
   private async resolveMarketplaceSummary(
@@ -830,6 +866,7 @@ export class ConnectionService {
     return {
       fetcher: providerFetch,
       logger: this.logger,
+      runtimeConfig: this.runtimeConfig,
       signal,
     };
   }

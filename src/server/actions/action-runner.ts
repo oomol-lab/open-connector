@@ -2,7 +2,13 @@ import type { CatalogStore } from "../../catalog-store.ts";
 import type { ConnectionService, ConnectionSummary, ExecutionConnection } from "../../connection-service.ts";
 import type { ActionPolicyDecision, ActionPolicySnapshot } from "../../core/action-policy.ts";
 import type { ProviderHttpDispatchOptions } from "../../core/provider-http-dispatch.ts";
-import type { RuntimeLogger, ExecutionContext, ExecutionResult, TransitFileWriter } from "../../core/types.ts";
+import type {
+  RuntimeConfigReader,
+  RuntimeLogger,
+  ExecutionContext,
+  ExecutionResult,
+  TransitFileWriter,
+} from "../../core/types.ts";
 import type { MarketplaceService } from "../../marketplace/marketplace-service.ts";
 import type { IProviderLoader } from "../../providers/provider-loader.ts";
 import type { SaasExecutionService } from "../../saas/saas-execution-service.ts";
@@ -26,6 +32,7 @@ export interface ActionRunnerOptions {
   connections: ConnectionService;
   runs: IRunLogStore;
   transitFiles?: TransitFileWriter;
+  runtimeConfig?: RuntimeConfigReader;
   logger?: RuntimeLogger;
   marketplace?: MarketplaceService;
   saas?: SaasExecutionService;
@@ -301,6 +308,9 @@ export class ActionRunner {
     };
     if (this.options.transitFiles) {
       context.transitFiles = this.options.transitFiles;
+    }
+    if (this.options.runtimeConfig) {
+      context.runtimeConfig = this.options.runtimeConfig;
     }
     return context;
   }

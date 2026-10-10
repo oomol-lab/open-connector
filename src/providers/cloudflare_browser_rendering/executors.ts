@@ -12,7 +12,6 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { cloudflareCurrentUserDisplayName, readCloudflareCurrentUser } from "../cloudflare_dns/runtime-user.ts";
 import {
   defineProviderExecutors,
   defineProviderProxy,
@@ -147,26 +146,48 @@ export const credentialValidators: CredentialValidators = {
     };
   },
   async oauth2(input, { fetcher, signal }) {
-    const envelope = await cloudflareRequestEnvelope(
+    const result = await requestOAuthAccounts(
       input.accessToken,
-      { path: "/user" },
       { fetcher, signal },
+      { page: 1, perPage: 50 },
       "validate",
     );
-    const user = readCloudflareCurrentUser(envelope.result);
-    const displayName = cloudflareCurrentUserDisplayName(user, "Cloudflare Browser Run");
+    if (result.accounts.length === 0) {
+      throw new ProviderRequestError(400, "Cloudflare OAuth cannot access any accounts.");
+    }
+
+    const totalCount = optionalInteger(result.resultInfo.totalCount);
+    if (result.accounts.length === 1 && totalCount === 1) {
+      const account = result.accounts[0]!;
+      const accountId = readRequiredString(account, "id");
+      const accountName = readRequiredString(account, "name");
+      return {
+        profile: {
+          accountId,
+          displayName: accountName,
+        },
+        grantedScopes: input.profile.grantedScopes,
+        metadata: compactObject({
+          apiBaseUrl: cloudflareBrowserRenderingApiBaseUrl,
+          validationEndpoint: "/memberships?page=1&per_page=50&status=accepted",
+          accountId,
+          accountName,
+          accountType: optionalString(account.type),
+        }),
+      };
+    }
+
     return {
       profile: {
-        accountId: user.userId,
-        displayName,
+        accountId: input.profile.accountId,
+        displayName: "Cloudflare Browser Run",
       },
       grantedScopes: input.profile.grantedScopes,
-      metadata: compactObject({
+      metadata: {
         apiBaseUrl: cloudflareBrowserRenderingApiBaseUrl,
-        validationEndpoint: "/user",
-        userId: user.userId,
-        email: user.email,
-      }),
+        validationEndpoint: "/memberships?page=1&per_page=50&status=accepted",
+        availableAccounts: result.accounts,
+      },
     };
   },
 };

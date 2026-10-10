@@ -36,14 +36,13 @@ function isCatalogResponse(method: string, path: string): boolean {
     return false;
   }
 
+  // Runtime catalogs include mutable OAuth configuration and access policy.
+  // Only the static administration catalog can use the shared edge cache.
   return (
     path === "/api/providers" ||
     /^\/api\/providers\/[^/]+$/.test(path) ||
     path === "/api/actions" ||
-    (path !== "/api/actions/search" && /^\/api\/actions\/[^/]+$/.test(path)) ||
-    path === "/v1/providers" ||
-    path === "/v1/actions" ||
-    (path !== "/v1/actions/search" && /^\/v1\/actions\/[^/]+$/.test(path))
+    (path !== "/api/actions/search" && /^\/api\/actions\/[^/]+$/.test(path))
   );
 }
 

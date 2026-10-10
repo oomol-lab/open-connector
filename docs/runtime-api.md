@@ -69,6 +69,61 @@ limitations.
 Admin endpoints under `/api/*`, `/docs`, and the Web Console use `OOMOL_CONNECT_ADMIN_TOKEN` when it
 is configured.
 
+### OpenMeld Git upload-pack stream
+
+The OpenMeld Remote Agent can relay a read-only Git smart-HTTP exchange through these runtime-only
+routes:
+
+- `GET /v1/openmeld/git/:owner/:repo/info/refs?service=git-upload-pack`
+- `POST /v1/openmeld/git/:owner/:repo/git-upload-pack` with
+  `Content-Type: application/x-git-upload-pack-request`
+
+Both requests require the exact configured `OOMOL_CONNECT_RUNTIME_TOKEN` bearer (stored runtime
+tokens, JWTs, and administrator tokens are rejected) and the headers
+`X-OpenMeld-Organization-Id`, `X-OpenMeld-Requester-User-Id`, `X-OpenMeld-Operation-Id`, and
+`X-OpenMeld-Repository` (`owner/repo`, exactly matching the URL path).
+The Remote Agent must authenticate the requester through Core, confirm current Organization membership and that this
+requester owns an active GitHub connection, and restrict the operation to the selected repository
+before forwarding **each** request. OpenConnector derives the member connection name from the two
+verified IDs; callers cannot select the shared Organization connection. It resolves the stored
+credential anew for every request and logs the requester, repository, and operation ID without
+logging the credential. The GitHub credential stays inside OpenConnector. The runtime bearer
+must stay on the trusted Remote Agent host and must never be sent to an Agent Computer.
+
+The route constructs a fixed `github.com/:owner/:repo.git` target; it rejects other services,
+redirects, unexpected response types, and arbitrary URLs. The current deployment and runtime
+GitHub proxy policies are checked on every request. It streams the request and response
+bodies without the JSON proxy envelope or the Action timeout. `git-receive-pack` is unavailable.
+Git can advertise other readable refs in this repository; the caller must verify the fetched
+commit and tree against the pinned checkout after transfer. This endpoint does not itself enforce
+a pinned ref.
+
+The selected-connection routes add Organization GitHub App installations:
+
+- `GET /v1/openmeld/git-connections/:owner/:repo/info/refs?service=git-upload-pack`
+- `POST /v1/openmeld/git-connections/:owner/:repo/git-upload-pack`
+
+They require the same runtime bearer, requester, repository, and operation headers,
+plus `X-OpenMeld-Connection-Scope: member | shared` and `X-OO-Connector-Alias`.
+The alias must match the canonical member or shared connection for the verified
+Organization and requester IDs. The host must authorize the selected connection
+through Core on every exchange, including its current access policy and version.
+The `member` scope uses the stored OAuth or API token. The `shared` scope resolves
+the stored GitHub App installation using the existing runtime App configuration.
+It obtains a fresh installation token for each exchange and keeps that token in
+OpenConnector. Missing or revoked connections do not select another account.
+The legacy routes continue to select only the requester connection. Clients must
+not retry a missing selected-connection route through the legacy route.
+
+### Exact Action catalog lookup
+
+`GET /v1/actions?service=<service>&actionId=<action-id>` returns the usual Action
+array with at most one entry. It applies the current deployment and token policy
+before serialization. A missing, blocked, or wrong-service Action returns an empty
+array. Omitting `actionId` retains the service catalog behavior. Older producers
+may ignore this additive query filter, so clients must still select the exact ID
+and validate the service and executable metadata locally.
+
 ## Provider Triggers
 
 Provider Triggers run through registered server operations:
@@ -485,5 +540,8 @@ These endpoints power the Web Console, examples, and setup scripts:
 `caller` identifies the runtime entry point (`http`, `mcp`, or `web`), not an end-user identity. Each run uses
 its `executionId` as the stable run ID; `GET /api/runs/:id` returns that single redacted audit record.
 
-Action execution responses include `meta.executionId`, `meta.actionId`, and `meta.auditPersisted` once execution
-has started. `auditPersisted: false` means the action result is valid but its audit record could not be stored.
+Successful Action execution responses include the `outputSchema` used to interpret
+`data`, including when an idempotency key replays the stored response. They also
+include `meta.executionId`, `meta.actionId`, and `meta.auditPersisted` once
+execution has started. `auditPersisted: false` means the action result is valid
+but its audit record could not be stored.

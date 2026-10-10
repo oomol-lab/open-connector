@@ -1,11 +1,47 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
+import { jsonSchema as s } from "../../core/json-schema.ts";
 import { cloudflareWorkerActions } from "./actions.ts";
 
 const service = "cloudflare_worker";
 
 export const provider: ProviderDefinition = {
   service,
+  nativeHttp: {
+    baseUrl: "https://api.cloudflare.com/client/v4",
+    documentationUrl: "https://developers.cloudflare.com/api/resources/workers/",
+    auth: { type: "bearer", credentialField: "apiKey" },
+    cli: {
+      command: "cf",
+      baseUrlEnvironment: "CLOUDFLARE_API_BASE_URL",
+      tokenEnvironment: "CLOUDFLARE_API_TOKEN",
+      accountEnvironment: "CLOUDFLARE_ACCOUNT_ID",
+    },
+    read: [
+      { method: "GET", path: "^/accounts(?:/[^/]+(?:/workers(?:/.*)?)?)?$" },
+      { method: "GET", path: "^/memberships$" },
+      {
+        method: "POST",
+        path: "^/accounts/[^/]+/workers/observability/telemetry/query$",
+        requiredPermissions: ["Workers Observability Write"],
+        bodySchema: s.object(
+          {
+            dry: { const: true },
+            queryId: s.string({ minLength: 1, maxLength: 256 }),
+            timeframe: s.object(
+              { from: s.number({ minimum: 0 }), to: s.number({ minimum: 0 }) },
+              { required: ["from", "to"] },
+            ),
+            parameters: s.object({}, { additionalProperties: true }),
+            limit: s.integer({ minimum: 1, maximum: 1000 }),
+            view: s.string(),
+          },
+          { required: ["dry", "queryId", "timeframe", "parameters", "limit"], additionalProperties: true },
+        ),
+        timeWindow: { from: "timeframe.from", to: "timeframe.to", maxMilliseconds: 86_400_000 },
+      },
+    ],
+  },
   displayName: "Cloudflare Worker",
   categories: ["Developer Tools"],
   authTypes: ["custom_credential", "oauth2"],
