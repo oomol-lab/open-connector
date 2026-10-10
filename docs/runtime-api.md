@@ -316,6 +316,54 @@ recorded request boundary; it does not guarantee exactly-once execution across t
 SaaS deletion is asynchronous after local removal. Scheduling, key-error pause recovery and
 offline clone reset procedures are documented in [SaaS maintenance](saas-maintenance.md).
 
+### Externally Managed Credentials
+
+A host that keeps credentials outside the runtime can create it with `externalCredentials: true`
+(`createConnectorRuntime`; the standalone host reads `OOMOL_CONNECT_EXTERNAL_CREDENTIALS=1`).
+`GET /v1/health` then lists `external_credential` under `capabilities`, and `POST /v1/actions/:actionId`
+and `POST /v1/proxy/:service` accept a `credential` in the JSON body in place of a stored connection:
+the stored credential's own shape (`authType`, the token or key fields, `profile`, `metadata`;
+`expiresAt` is the credential's own expiry). The runtime executes with it and stores nothing.
+
+```json
+{
+  "input": {},
+  "credential": {
+    "authType": "oauth2",
+    "accessToken": "...",
+    "tokenType": "Bearer",
+    "expiresAt": "2030-01-01T00:00:00.000Z",
+    "refreshToken": "...",
+    "profile": { "accountId": "account-id", "displayName": "Account", "grantedScopes": ["read"] },
+    "metadata": { "oauthClientConfig": { "clientId": "..." } }
+  }
+}
+```
+
+The credential comes alone: a request that also names a connection (`alias`, `connectionName` or
+`x-oo-connector-app-id`) is refused with `invalid_input`, and a runtime that does not accept
+credentials refuses one with `external_credentials_disabled` rather than falling back to a stored
+connection. A persistent runtime token granted particular connections cannot execute with one
+(`connection_not_allowed`). An OAuth credential that is expired or within a minute of expiring is
+refused with `409 oauth_token_expired` and never refreshed on the caller's behalf: the host refreshes
+it through `POST /v1/credentials/refresh` with `{ "service": "...", "credential": {...} }`, which
+answers the refreshed credential (nothing stored), and retries. The provider's OAuth client secrets
+stay in this runtime's client configuration: a credential may carry its client without them, and a
+refresh or revocation puts them back when the configured client is the one the credential was minted
+under. A refresh the provider refused answers `400 oauth_token_refresh_failed` (reconnect);
+one the provider did not answer — no response, a timeout, a 5xx — answers `502 provider_error`
+(retry later). `POST /v1/credentials/revoke` takes the same body and answers `revoked`: `done`,
+`failed` or `unsupported`. A credential whose embedded client is not the configured one and
+carries no secret cannot be refreshed here and answers `400 oauth_client_config_required`. With an `Idempotency-Key`, the carried credential's service,
+provider account and a digest of its refresh token (its key, for an API key) stand for the
+connection in the request fingerprint: a retry with a refreshed access token of the same grant
+replays, another account or another grant conflicts — so a caller that knows only an account id
+cannot be served another caller's response — and a provider that rotates refresh tokens makes a
+retry after a rotation a new request (use a new key then). A request the runtime would refuse is
+refused before any claim, so it never completes a key: a token granted particular connections,
+or a credential that is expired or of an auth type the provider lacks — whose holder refreshes
+and retries under the same key, and runs instead of replaying the refusal.
+
 ### Idempotent Action Retries
 
 `POST /v1/actions/:actionId` accepts an optional `Idempotency-Key` header. Without this header,
@@ -400,6 +448,8 @@ by age.
 - `GET /v1/apps/services/:service`
 - `GET /v1/apps/authenticated`
 - `POST /v1/proxy/:service`
+- `POST /v1/credentials/refresh` and `POST /v1/credentials/revoke` — only on a runtime that accepts
+  externally managed credentials (below)
 
 `GET /v1/apps/authenticated` checks the repeated `service` query values and returns the authenticated
 service IDs from that candidate set. It returns an empty list when no candidates are supplied.

@@ -1,6 +1,6 @@
 import type { OAuth2AuthDefinition, ResolvedCredential } from "../core/types.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
-import type { OAuthClientConfigService } from "./oauth-client-config-service.ts";
+import type { OAuthClientConfig, OAuthClientConfigService } from "./oauth-client-config-service.ts";
 import type { OAuthTokenResult } from "./oauth-token.ts";
 
 import { ConnectionError } from "../connection-service.ts";
@@ -21,8 +21,22 @@ type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
  */
 export type OAuthRevocationOutcome = "done" | "failed" | "unsupported" | "skipped";
 
+export interface OAuthCredentialRefreshOptions {
+  /**
+   * The error code for a refresh the provider did not answer — no HTTP response,
+   * a timeout or a 5xx — as opposed to one it refused. A caller that holds the
+   * credential itself keeps it on the first and drops it on the second; omitted,
+   * both are `oauth_token_refresh_failed`.
+   */
+  transientErrorCode?: string;
+}
+
 export interface IOAuthCredentialRefresher {
-  refresh(service: string, credential: OAuthCredential): Promise<OAuthCredential>;
+  refresh(
+    service: string,
+    credential: OAuthCredential,
+    options?: OAuthCredentialRefreshOptions,
+  ): Promise<OAuthCredential>;
   /**
    * Revoke the credential at the provider's `revocationUrl`: `done` or
    * `unsupported` (none declared); a refusal or an unreachable endpoint throws.
@@ -42,27 +56,52 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
     this.providerLoader = providerLoader;
   }
 
-  async refresh(service: string, credential: OAuthCredential): Promise<OAuthCredential> {
+  async refresh(
+    service: string,
+    credential: OAuthCredential,
+    options: OAuthCredentialRefreshOptions = {},
+  ): Promise<OAuthCredential> {
     const auth = this.clientConfigs.getOAuthDefinition(service);
-    const config =
-      readOAuthClientConfigMetadata(service, credential.metadata) ?? (await this.clientConfigs.getConfig(service));
+    const config = await this.resolveClientConfig(service, credential);
     if (!config) {
       throw new ConnectionError(
         "oauth_client_config_required",
         `Configure an OAuth client for ${service} before refreshing its token.`,
       );
     }
+    // A credential that carries its client without the secret gets the configured client's only
+    // when the ids match (resolveClientConfig). Another client's secret this runtime does not hold
+    // is a configuration gap to report, not a refresh the provider refused.
+    if (
+      !config.clientSecret &&
+      auth.tokenEndpointAuthMethod !== "none" &&
+      readOAuthClientConfigMetadata(service, credential.metadata) !== undefined
+    ) {
+      throw new ConnectionError(
+        "oauth_client_config_required",
+        `${service} cannot refresh this credential: its OAuth client is not the configured one and no secret is held for it.`,
+      );
+    }
 
     const refreshToken = credential.refreshToken ?? "";
     const createError = (message: string): ConnectionError =>
       new ConnectionError("oauth_token_refresh_failed", message);
+    const createTransientError = options.transientErrorCode
+      ? (message: string): ConnectionError => new ConnectionError(options.transientErrorCode!, message)
+      : undefined;
     const providerOAuth = await this.providerLoader?.loadProviderOAuthRuntime?.(service);
     let refreshed: OAuthTokenResult;
     if (providerOAuth?.refreshAccessToken) {
+      // A provider runtime reads the client's secret extra fields off the metadata; a
+      // credential that came back without them gets the resolved client's for the call.
+      const metadata =
+        credential.metadata.oauthClientSecretExtra === undefined && Object.keys(config.secretExtra ?? {}).length > 0
+          ? { ...credential.metadata, oauthClientSecretExtra: config.secretExtra }
+          : credential.metadata;
       refreshed = await providerOAuth.refreshAccessToken({
         refreshToken,
         clientConfig: config,
-        metadata: credential.metadata,
+        metadata,
         providerSecret: credential.providerSecret,
         fetcher: providerFetch,
         createError,
@@ -79,6 +118,7 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
         tokenRequestFormat: auth.tokenRequestFormat,
         tokenUrl: this.clientConfigs.resolveEndpointUrl(service, auth.refreshTokenUrl ?? auth.tokenUrl, config),
         createError,
+        createTransientError,
       });
     }
     // A provider runtime may report an absolute expiry without a lifetime, or a
@@ -136,8 +176,7 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
     }
     const createError = (message: string): ConnectionError =>
       new ConnectionError("oauth_token_revocation_failed", message);
-    const config =
-      readOAuthClientConfigMetadata(service, credential.metadata) ?? (await this.clientConfigs.getConfig(service));
+    const config = await this.resolveClientConfig(service, credential);
     let revocationUrl: string;
     if (config) {
       revocationUrl = this.clientConfigs.resolveEndpointUrl(service, auth.revocationUrl, config);
@@ -159,6 +198,31 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
       createError,
     });
     return "done";
+  }
+
+  /**
+   * The OAuth client a credential was minted under: the one embedded in its
+   * metadata, else the configured one. A credential that left this runtime and
+   * came back carries its embedded client without the secrets (they stay in the
+   * runtime's client configuration, see `stripClientSecrets`), so when the
+   * configured client is the same client id, its secret and secret extra fields
+   * fill the blanks. Another client id gets nothing of the configured one.
+   */
+  private async resolveClientConfig(
+    service: string,
+    credential: OAuthCredential,
+  ): Promise<OAuthClientConfig | undefined> {
+    const embedded = readOAuthClientConfigMetadata(service, credential.metadata);
+    if (!embedded) return this.clientConfigs.getConfig(service);
+    const embeddedSecretExtra = Object.keys(embedded.secretExtra).length > 0;
+    if (embedded.clientSecret && embeddedSecretExtra) return embedded;
+    const configured = await this.clientConfigs.getConfig(service);
+    if (!configured || configured.clientId !== embedded.clientId) return embedded;
+    return {
+      ...embedded,
+      clientSecret: embedded.clientSecret || configured.clientSecret,
+      secretExtra: embeddedSecretExtra ? embedded.secretExtra : (configured.secretExtra ?? {}),
+    };
   }
 }
 

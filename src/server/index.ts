@@ -101,6 +101,7 @@ async function main(): Promise<void> {
     lazySchemas: parseBooleanEnv("OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS"),
     schemaCacheFiles: readPositiveIntegerEnv("OOMOL_CONNECT_CATALOG_SCHEMA_CACHE_FILES", defaultLazySchemaCacheFiles),
     apiReference: true,
+    externalCredentials: parseBooleanEnv("OOMOL_CONNECT_EXTERNAL_CREDENTIALS"),
     logger,
   });
 

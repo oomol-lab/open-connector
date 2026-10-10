@@ -91,11 +91,17 @@ interface RefreshTokenRequest extends OAuthTokenRequestOptions {
   refreshToken: string;
   extraFields?: Record<string, string>;
   createError: OAuthTokenErrorFactory;
+  /**
+   * Makes the error for a request the provider did not answer — no HTTP response, a
+   * timeout, a 5xx — as opposed to one it refused. Omitted, `createError` makes both.
+   */
+  createTransientError?: OAuthTokenErrorFactory;
 }
 
 interface TokenRequest extends OAuthTokenRequestOptions {
   fields: Record<string, string>;
   createError: OAuthTokenErrorFactory;
+  createTransientError?: OAuthTokenErrorFactory;
 }
 
 export type OAuthTokenErrorFactory = (message: string) => Error;
@@ -263,12 +269,13 @@ async function requestToken(input: TokenRequest): Promise<OAuthTokenResult> {
     if (input.signal?.aborted) {
       throw input.createError("OAuth token request was cancelled.");
     }
+    const createTransientError = input.createTransientError ?? input.createError;
     if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw input.createError("OAuth token request timed out.");
+      throw createTransientError("OAuth token request timed out.");
     }
     // A rejected fetch has no HTTP response to inspect, but the request may
     // still have reached the provider before the connection failed.
-    throw input.createError(`OAuth token request failed without an HTTP response: ${describeCause(error)}`);
+    throw createTransientError(`OAuth token request failed without an HTTP response: ${describeCause(error)}`);
   }
   try {
     const bytes = await readTokenResponseBytes(response, input.createError);
@@ -277,7 +284,10 @@ async function requestToken(input: TokenRequest): Promise<OAuthTokenResult> {
     if (!response.ok || !isEnvelopeSuccess(rawPayload, input.responseEnvelope)) {
       const providerMessage = readTokenErrorMessage(rawPayload, payload, input.responseEnvelope);
       const bodyDescription = bytes.byteLength === 0 ? "empty body" : "unrecognized response body";
-      throw input.createError(
+      // A 5xx is the provider failing to answer, not refusing: the same class as no response.
+      const createError =
+        response.status >= 500 ? (input.createTransientError ?? input.createError) : input.createError;
+      throw createError(
         providerMessage ??
           // Token endpoints and intermediaries can echo request credentials. Keep
           // arbitrary response bytes out of the public error while distinguishing

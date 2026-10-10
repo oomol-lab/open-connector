@@ -385,6 +385,48 @@ describe("ActionRunner", () => {
     expect(denied?.result).toMatchObject({ ok: false, error: { code: "connection_not_allowed" } });
     expect(resolveConnection).toHaveBeenCalledTimes(2);
   });
+
+  it("executes with a carried credential as the external connection and refuses it to a token granted particular connections", async () => {
+    const runs = new MemoryRunLogStore();
+    const resolveConnection = vi.spyOn(ConnectionService.prototype, "resolveForExecution");
+    const executor: ActionExecutor = vi.fn(async (_input, context) => ({
+      ok: true,
+      output: { account: (await context.getCredential("example"))?.profile.accountId },
+    }));
+    const runner = createRunner({
+      runs,
+      logger: createTestLogger().logger,
+      provider: authenticatedProvider,
+      providerLoader: new TestProviderLoader(executor),
+    });
+
+    const run = await runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "http",
+      credential,
+      policy: openPolicy,
+    });
+    expect(run?.result).toEqual({ ok: true, output: { account: credential.profile.accountId } });
+    expect(run?.connection).toMatchObject({ id: "external", connectionName: "external", authType: "api_key" });
+    expect(runs.items[0]).toMatchObject({ connectionId: "external", connectionProfile: credential.profile });
+    expect(resolveConnection).not.toHaveBeenCalled();
+
+    const denied = await runner.run({
+      actionId: "example.echo",
+      input: {},
+      caller: "http",
+      credential,
+      policy: new ActionPolicyService().createSnapshot(undefined, {
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+        allowedConnections: ["some-connection-id"],
+      }),
+    });
+    expect(denied?.result).toMatchObject({ ok: false, error: { code: "connection_not_allowed" } });
+    expect(executor).toHaveBeenCalledTimes(1);
+  });
 });
 
 function createRunner(options: {

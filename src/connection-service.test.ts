@@ -1457,6 +1457,81 @@ describe("ConnectionService disconnect revocation", () => {
   });
 });
 
+describe("ConnectionService external credentials", () => {
+  const carried: Extract<ResolvedCredential, { authType: "oauth2" }> = {
+    authType: "oauth2",
+    accessToken: "external-access-token",
+    tokenType: "Bearer",
+    expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
+    refreshToken: "external-refresh-token",
+    profile: { accountId: "external-account", displayName: "External Account", grantedScopes: ["read"] },
+    metadata: {
+      oauthClientConfig: {
+        clientId: "client-id",
+        clientSecret: "client-secret-value",
+        secretExtra: { developerToken: "developer-token-value" },
+      },
+      oauthClientExtra: { customerId: "customer-1" },
+      oauthClientSecretExtra: { developerToken: "developer-token-value" },
+    },
+  };
+
+  it("executes with a carried credential as the external connection and never refreshes it", async () => {
+    const service = createService([oauthProvider]);
+    const connection = service.resolveExternalCredential("example", carried);
+    expect(connection).toMatchObject({
+      kind: "external",
+      summary: {
+        id: "external",
+        connectionName: "external",
+        service: "example",
+        authType: "oauth2",
+        configured: true,
+        profile: carried.profile,
+      },
+    });
+    await expect(connection.getCredential("example")).resolves.toBe(carried);
+    await expect(connection.getCredential("other")).resolves.toBeUndefined();
+
+    expect(() =>
+      service.resolveExternalCredential("example", {
+        ...carried,
+        expiresAt: new Date(Date.now() - 1000).toISOString(),
+      }),
+    ).toThrow(expect.objectContaining({ code: "oauth_token_expired" }));
+    expect(() =>
+      service.resolveExternalCredential("example", {
+        authType: "api_key",
+        apiKey: "key",
+        values: { apiKey: "key" },
+        profile: carried.profile,
+        metadata: {},
+      }),
+    ).toThrow(expect.objectContaining({ code: "unsupported_auth_type" }));
+  });
+
+  it("refuses to refresh a carried credential without a refresh token or a refresher, else hands the refresher the transient code", async () => {
+    await expect(
+      createService([oauthProvider]).refreshCredential("example", { ...carried, refreshToken: undefined }),
+    ).rejects.toMatchObject({ code: "oauth_token_expired" });
+    await expect(createService([oauthProvider]).refreshCredential("example", carried)).rejects.toMatchObject({
+      code: "oauth_refresh_unavailable",
+    });
+
+    const refresh = vi.fn(async (_service: string, credential: typeof carried) => ({
+      ...credential,
+      accessToken: "refreshed-access-token",
+    }));
+    const service = createService([oauthProvider], {
+      oauthCredentials: { refresh } as unknown as OAuthCredentialRefreshService,
+    });
+    await expect(service.refreshCredential("example", carried)).resolves.toMatchObject({
+      accessToken: "refreshed-access-token",
+    });
+    expect(refresh).toHaveBeenCalledWith("example", carried, { transientErrorCode: "provider_error" });
+  });
+});
+
 interface CreateServiceOptions {
   providerHttpDispatch?: ProviderHttpDispatchOptions;
   logger?: ReturnType<typeof createTestLogger>;

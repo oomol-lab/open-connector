@@ -3,7 +3,7 @@ import type { ConnectionService, ConnectionSummary } from "../connection-service
 import type { ActionPolicySnapshot } from "../core/action-policy.ts";
 import type { ActionSearchDocument, ActionSearchIndexProvider } from "../core/action-search.ts";
 import type { ProviderHttpDispatchOptions } from "../core/provider-http-dispatch.ts";
-import type { RuntimeLogger, TransitFileUpload } from "../core/types.ts";
+import type { ResolvedCredential, RuntimeLogger, TransitFileUpload } from "../core/types.ts";
 import type { MarketplaceConfigInput, MarketplaceService } from "../marketplace/marketplace-service.ts";
 import type { OAuthClientConfigInput } from "../oauth/oauth-client-config-service.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
@@ -23,7 +23,12 @@ import type { Context, MiddlewareHandler } from "hono";
 
 import { Hono } from "hono";
 import { compress } from "hono/compress";
-import { ConnectionError, defaultConnectionName } from "../connection-service.ts";
+import {
+  ConnectionError,
+  defaultConnectionName,
+  externalConnectionName,
+  stripClientSecrets,
+} from "../connection-service.ts";
 import { ActionPolicyService, emptyPolicyRules } from "../core/action-policy.ts";
 import { DEFAULT_ACTION_SEARCH_LIMIT, createActionSearchIndexProvider, searchActions } from "../core/action-search.ts";
 import {
@@ -44,6 +49,7 @@ import { SaasError } from "../saas/saas-client.ts";
 import {
   ActionInputDepthError,
   createIdempotencyExpiry,
+  credentialFingerprint,
   hashActionRequest,
   hashIdempotencyKey,
   readIdempotencyKey,
@@ -153,7 +159,16 @@ export interface IConnectServerOptions {
   saasProject?: SaasProjectService;
   saas?: SaasExecutionService;
   saasOAuth?: SaasOAuthService;
+  /** Accept a credential in the body of `/v1` action and proxy requests, and serve `/v1/credentials/*`. Off by default. */
+  externalCredentials?: boolean;
 }
+
+/** A credential a `/v1` request carries instead of naming a stored connection. */
+type ExternalCredential = Exclude<ResolvedCredential, { authType: "no_auth" }>;
+
+type ExternalCredentialRead =
+  | { ok: true; credential: ExternalCredential | undefined }
+  | { ok: false; response: Response };
 
 /**
  * Local single-user HTTP server for catalog browsing, credential management,
@@ -223,7 +238,9 @@ export class ConnectServer {
         this.updateProviderPreference(context, context.req.param("service")),
       );
     }
-    app.get("/v1/health", (context) => writeRuntimeSuccess(context, { ok: true, runtime: "oomol-connect" }));
+    app.get("/v1/health", (context) =>
+      writeRuntimeSuccess(context, { ok: true, runtime: "oomol-connect", capabilities: this.runtimeCapabilities() }),
+    );
     app.get("/v1/providers/:service/setup", (context) =>
       this.getRuntimeProviderSetup(context, context.req.param("service")),
     );
@@ -258,6 +275,10 @@ export class ConnectServer {
       this.listRuntimeAppsByService(context, context.req.param("service")),
     );
     app.post("/v1/proxy/:service", (context) => this.createRuntimeProxyRequest(context, context.req.param("service")));
+    if (this.options.externalCredentials) {
+      app.post("/v1/credentials/refresh", (context) => this.refreshExternalCredential(context));
+      app.post("/v1/credentials/revoke", (context) => this.revokeExternalCredential(context));
+    }
 
     app.get("/openapi.json", async (context) => {
       const { createOpenApiDocument } = await import("./api/openapi.ts");
@@ -798,6 +819,9 @@ export class ConnectServer {
     const input = body.input ?? {};
     const connectionName = readConnectionName(context, body);
     const connectionId = optionalString(context.req.header("x-oo-connector-app-id"));
+    const external = await this.readExternalCredential(context, body, { actionId });
+    if (!external.ok) return external.response;
+    const credential = external.credential;
     const runtimeGrant = readRuntimeGrant(context);
     let policy: ActionPolicySnapshot;
     try {
@@ -821,6 +845,7 @@ export class ConnectServer {
           runtimeGrant,
           context.req.raw.signal,
           connectionId,
+          credential,
         ),
       );
     }
@@ -845,8 +870,37 @@ export class ConnectServer {
           runtimeGrant,
           context.req.raw.signal,
           connectionId,
+          credential,
         ),
       );
+    }
+
+    if (credential) {
+      // A request the runtime would refuse is refused here, before any claim, so the refusal
+      // never completes the key and a cached response is never replayed to a request that could
+      // no longer execute: a token granted particular connections (it names none), and a
+      // credential that is expired or of an auth type the provider lacks — whose holder then
+      // refreshes and retries under the same key, and runs instead of replaying the refusal.
+      const grant = policy.evaluateConnection();
+      if (!grant.allowed) {
+        return writeRuntimeFailure(context, {
+          status: 403,
+          errorCode: grant.code,
+          message: grant.message,
+          meta: { actionId },
+        });
+      }
+      try {
+        this.options.connections.resolveExternalCredential(action.service, credential);
+      } catch (error) {
+        if (!(error instanceof ConnectionError)) throw error;
+        return writeRuntimeFailure(context, {
+          status: mapConnectionErrorStatus(error),
+          errorCode: error.code,
+          message: error.message,
+          meta: { actionId },
+        });
+      }
     }
 
     const now = new Date();
@@ -855,8 +909,9 @@ export class ConnectServer {
     try {
       requestHash = hashActionRequest({
         actionId,
-        connectionName: connectionName ?? defaultConnectionName,
+        connectionName: credential ? externalConnectionName : (connectionName ?? defaultConnectionName),
         connectionId,
+        credentialFingerprint: credential ? credentialFingerprint(action.service, credential) : undefined,
         input,
         runtimeTokenId: runtimeGrant?.tokenId,
       });
@@ -908,6 +963,7 @@ export class ConnectServer {
       runtimeGrant,
       context.req.raw.signal,
       connectionId,
+      credential,
     );
     const completed = await this.options.idempotency.complete({
       keyHash,
@@ -931,6 +987,7 @@ export class ConnectServer {
     runtimeGrant: RuntimeGrant | undefined,
     signal: AbortSignal | undefined,
     connectionId?: string,
+    credential?: ExternalCredential,
   ): Promise<RuntimeActionHttpResult> {
     try {
       const run = await this.options.actions.run({
@@ -939,6 +996,7 @@ export class ConnectServer {
         caller: "http",
         connectionName,
         connectionId,
+        credential,
         policy,
         runtimeTokenId: runtimeGrant?.tokenId,
         signal,
@@ -987,6 +1045,8 @@ export class ConnectServer {
       throw error;
     }
 
+    const external = await this.readExternalCredential(context, body, { service });
+    if (!external.ok) return external.response;
     let policy: ActionPolicySnapshot;
     try {
       policy = await this.getPolicySnapshot(context);
@@ -998,11 +1058,13 @@ export class ConnectServer {
         meta: { service },
       });
     }
+    const { credential: _credential, ...proxyInput } = body;
     const result = await this.proxyRunner.run({
       service,
-      input: body,
+      input: proxyInput,
       connectionName: readConnectionName(context, body),
       connectionId: optionalString(context.req.header("x-oo-connector-app-id")),
+      credential: external.credential,
       policy,
       signal: context.req.raw.signal,
     });
@@ -1216,6 +1278,104 @@ export class ConnectServer {
       this.options.connections.disconnect(service, connectionName, { revoke: optionalBoolean(body.revoke) }),
       logContext,
     );
+  }
+
+  /** The optional abilities of this runtime a `/v1` client may check for before relying on them. */
+  private runtimeCapabilities(): string[] {
+    const capabilities: string[] = [];
+    if (this.options.externalCredentials) capabilities.push("external_credential");
+    return capabilities;
+  }
+
+  /**
+   * The credential a `/v1` execution request carries in its body, when this runtime
+   * accepts one. It comes alone: a request that also names a stored connection is
+   * refused rather than guessed at, and so is one sent to a runtime that does not
+   * take credentials, which must never fall back to a stored connection silently.
+   */
+  private async readExternalCredential(
+    context: Context,
+    body: Record<string, unknown>,
+    meta: Record<string, unknown>,
+  ): Promise<ExternalCredentialRead> {
+    if (body.credential === undefined) return { ok: true, credential: undefined };
+    const refuse = (errorCode: string, message: string): ExternalCredentialRead => ({
+      ok: false,
+      response: writeRuntimeFailure(context, { status: 400, errorCode, message, meta }),
+    });
+    if (!this.options.externalCredentials) {
+      return refuse("external_credentials_disabled", "This runtime does not accept a credential with the request.");
+    }
+    if (readConnectionName(context, body) !== undefined || context.req.header("x-oo-connector-app-id") !== undefined) {
+      return refuse("invalid_input", "credential cannot be combined with a connection name, alias or app id.");
+    }
+    const { externalCredentialInput } = await import("./api/credential-input.ts");
+    const parsed = externalCredentialInput.safeParse(body.credential);
+    if (!parsed.success) {
+      return refuse(
+        "invalid_input",
+        `credential: ${parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ")}`,
+      );
+    }
+    return { ok: true, credential: parsed.data };
+  }
+
+  /** `POST /v1/credentials/refresh`: refresh an OAuth credential the caller holds; nothing is stored. */
+  private async refreshExternalCredential(context: Context): Promise<Response> {
+    const { credentialRequestInput } = await import("./api/credential-input.ts");
+    const parsed = credentialRequestInput.safeParse(await readJsonBody(context));
+    if (!parsed.success) {
+      return writeRuntimeFailure(context, {
+        status: 400,
+        errorCode: "invalid_input",
+        message: parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "),
+      });
+    }
+    const { service, credential } = parsed.data;
+    try {
+      const refreshed = await this.options.connections.refreshCredential(service, credential);
+      return writeRuntimeSuccess(context, { credential: stripClientSecrets(refreshed) });
+    } catch (error) {
+      if (error instanceof ConnectionError) {
+        return writeRuntimeFailure(context, {
+          // A provider that did not answer is the one failure the caller should retry later.
+          status: error.code === "provider_error" ? 502 : mapConnectionErrorStatus(error),
+          errorCode: error.code,
+          message: error.message,
+          meta: { service },
+        });
+      }
+      throw error;
+    }
+  }
+
+  /** `POST /v1/credentials/revoke`: end an OAuth credential the caller holds at the provider, best effort. */
+  private async revokeExternalCredential(context: Context): Promise<Response> {
+    const { credentialRequestInput } = await import("./api/credential-input.ts");
+    const parsed = credentialRequestInput.safeParse(await readJsonBody(context));
+    if (!parsed.success) {
+      return writeRuntimeFailure(context, {
+        status: 400,
+        errorCode: "invalid_input",
+        message: parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "),
+      });
+    }
+    const { service, credential } = parsed.data;
+    try {
+      return writeRuntimeSuccess(context, {
+        revoked: await this.options.connections.revokeCredential(service, credential),
+      });
+    } catch (error) {
+      if (error instanceof ConnectionError) {
+        return writeRuntimeFailure(context, {
+          status: mapConnectionErrorStatus(error),
+          errorCode: error.code,
+          message: error.message,
+          meta: { service },
+        });
+      }
+      throw error;
+    }
   }
 
   private async createOAuthAuthorization(context: Context): Promise<Response> {

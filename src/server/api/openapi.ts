@@ -245,8 +245,12 @@ export function createOpenApiDocument(
         {
           ok: jsonSchema.boolean(),
           runtime: jsonSchema.string({ description: "Runtime identifier." }),
+          capabilities: jsonSchema.array(jsonSchema.string(), {
+            description:
+              "Optional abilities of this runtime: external_credential (a credential may ride in the body of action and proxy requests, and /v1/credentials/refresh and /v1/credentials/revoke are served).",
+          }),
         },
-        { required: ["ok", "runtime"], description: "Runtime health payload." },
+        { required: ["ok", "runtime", "capabilities"], description: "Runtime health payload." },
       ),
     }),
     "/api/auth/session": getOperation("System", "Read local admin auth session state.", {
@@ -376,6 +380,7 @@ export function createOpenApiDocument(
     "/api/files/{fileId}": createTransitFilePath(),
     "/v1/actions/{actionId}": runPath,
     "/v1/proxy/{service}": createProxyPath(),
+    ...createCredentialPaths(),
     "/v1/providers/{service}/trigger-permissions": runtimeGetOperation(
       "Triggers",
       "Read provider-native Trigger permission guidance.",
@@ -477,6 +482,65 @@ export function createOpenApiDocument(
     components: {
       schemas: {
         ActionDefinition: jsonSchema.unknownObject("Public action catalog definition with runtime execution status."),
+        CredentialProfile: jsonSchema.object(
+          {
+            accountId: jsonSchema.string({ description: "Stable provider account identity." }),
+            displayName: jsonSchema.string({ description: "Human-readable account label." }),
+            grantedScopes: jsonSchema.array(jsonSchema.string(), { description: "Granted scopes." }),
+          },
+          {
+            required: ["accountId", "displayName", "grantedScopes"],
+            description: "The account a credential belongs to.",
+          },
+        ),
+        ExternalOAuthCredential: jsonSchema.object(
+          {
+            authType: jsonSchema.literal("oauth2"),
+            accessToken: jsonSchema.string(),
+            tokenType: jsonSchema.string({ description: "Token type for the Authorization header, usually Bearer." }),
+            expiresAt: jsonSchema.string({
+              description: "ISO timestamp the access token expires at, if the provider gave one.",
+            }),
+            refreshToken: jsonSchema.string(),
+            providerSecret: jsonSchema.unknownObject("Provider-owned secret state stored with the credential."),
+            profile: { $ref: "#/components/schemas/CredentialProfile" },
+            metadata: jsonSchema.unknownObject(
+              "Runtime-owned metadata, including the OAuth client the credential was minted under without its secrets.",
+            ),
+          },
+          {
+            required: ["authType", "accessToken", "tokenType", "profile", "metadata"],
+            description: "An OAuth credential in the shape the runtime stores it.",
+          },
+        ),
+        ExternalCredential: jsonSchema.anyOf(
+          "A credential the caller holds and hands to the runtime with one request, in the shape the runtime stores it. Accepted only by a runtime created with externalCredentials; the runtime executes with it and stores nothing.",
+          [
+            { $ref: "#/components/schemas/ExternalOAuthCredential" },
+            jsonSchema.object(
+              {
+                authType: jsonSchema.literal("api_key"),
+                apiKey: jsonSchema.string(),
+                values: { type: "object", additionalProperties: { type: "string" } },
+                profile: { $ref: "#/components/schemas/CredentialProfile" },
+                metadata: jsonSchema.unknownObject("Runtime-owned metadata."),
+              },
+              {
+                required: ["authType", "apiKey", "values", "profile", "metadata"],
+                description: "An API key credential.",
+              },
+            ),
+            jsonSchema.object(
+              {
+                authType: jsonSchema.literal("custom_credential"),
+                values: { type: "object", additionalProperties: { type: "string" } },
+                profile: { $ref: "#/components/schemas/CredentialProfile" },
+                metadata: jsonSchema.unknownObject("Runtime-owned metadata."),
+              },
+              { required: ["authType", "values", "profile", "metadata"], description: "A custom credential." },
+            ),
+          ],
+        ),
         LocalAuthSession: jsonSchema.object(
           {
             adminAuthConfigured: jsonSchema.boolean({
@@ -1276,6 +1340,79 @@ function createRunPath(): Record<string, unknown> {
   };
 }
 
+/** `POST /v1/credentials/refresh` and `/revoke`, served only by a runtime created with externalCredentials. */
+function createCredentialPaths(): Record<string, unknown> {
+  const requestBody = {
+    required: true,
+    content: {
+      "application/json": {
+        schema: jsonSchema.object(
+          {
+            service: jsonSchema.string({ description: "Provider service identifier." }),
+            credential: { $ref: "#/components/schemas/ExternalOAuthCredential" },
+          },
+          { required: ["service", "credential"], description: "An OAuth credential the caller holds." },
+        ),
+      },
+    },
+  };
+  const failure = runtimeFailureSchema();
+  return {
+    "/v1/credentials/refresh": {
+      post: {
+        tags: ["Connections"],
+        summary: "Refresh an OAuth credential the caller holds.",
+        description:
+          "Exchanges the credential's refresh token for a new access token and answers the refreshed credential; nothing is stored. The provider's client secrets come from this runtime's OAuth client configuration when the credential was minted under the configured client. oauth_token_refresh_failed means the provider refused the refresh token (reconnect); provider_error means it did not answer (retry later).",
+        requestBody,
+        responses: {
+          200: jsonResponse(
+            runtimeSuccessSchema(
+              jsonSchema.object(
+                { credential: { $ref: "#/components/schemas/ExternalOAuthCredential" } },
+                {
+                  required: ["credential"],
+                  description: "The refreshed credential, without the OAuth client secrets.",
+                },
+              ),
+            ),
+          ),
+          400: jsonResponse(failure, "invalid_input, oauth_token_refresh_failed or oauth_client_config_required."),
+          404: jsonResponse(failure, "unknown_service."),
+          409: jsonResponse(failure, "oauth_token_expired (no refresh token) or oauth_refresh_unavailable."),
+          502: jsonResponse(failure, "provider_error: the provider did not answer; retry later."),
+        },
+      },
+    },
+    "/v1/credentials/revoke": {
+      post: {
+        tags: ["Connections"],
+        summary: "Revoke an OAuth credential the caller holds at the provider.",
+        description:
+          "Posts the credential's refresh token (else its access token) to the provider's revocation endpoint, best effort; nothing is stored or deleted here.",
+        requestBody,
+        responses: {
+          200: jsonResponse(
+            runtimeSuccessSchema(
+              jsonSchema.object(
+                {
+                  revoked: jsonSchema.stringEnum(
+                    "done (the provider accepted the token), failed (it refused or could not be reached) or unsupported (no revocation endpoint declared, or no token to revoke).",
+                    ["done", "failed", "unsupported"],
+                  ),
+                },
+                { required: ["revoked"], description: "What became of the grant at the provider." },
+              ),
+            ),
+          ),
+          400: jsonResponse(failure, "invalid_input."),
+          404: jsonResponse(failure, "unknown_service."),
+        },
+      },
+    },
+  };
+}
+
 function createProxyPath(): Record<string, unknown> {
   return {
     post: {
@@ -1314,6 +1451,7 @@ function createProxyPath(): Record<string, unknown> {
                 },
                 body: jsonSchema.unknown("Provider request body."),
                 ...namedConnectionProperties,
+                credential: { $ref: "#/components/schemas/ExternalCredential" },
               },
               {
                 required: ["endpoint", "method"],
@@ -1607,6 +1745,7 @@ function actionRunBody(input: JsonSchema, description: string): Record<string, u
           {
             input,
             ...namedConnectionProperties,
+            credential: { $ref: "#/components/schemas/ExternalCredential" },
           },
           { description },
         ),
