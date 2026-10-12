@@ -1977,13 +1977,22 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
             <Input value={manualClientId} onChange={(event) => setManualClientId(event.target.value)} required />
           </Label>
           <Label className="field">
-            <span>{t("providers.oauthClientSettings.clientSecret")}</span>
+            <span>
+              {t(
+                props.auth.clientSecretOptional
+                  ? "providers.oauthClientSettings.clientSecretOptional"
+                  : "providers.oauthClientSettings.clientSecret",
+              )}
+            </span>
             <Input
               type="password"
               value={manualClientSecret}
               onChange={(event) => setManualClientSecret(event.target.value)}
               required={props.auth.clientFields?.some((field) => field.key === "clientSecret" && field.required)}
             />
+            {props.auth.clientSecretOptional ? (
+              <small>{t("providers.oauthClientSettings.optionalSecretManualHint")}</small>
+            ) : null}
           </Label>
           {manualClientConfigFields.map((field) => (
             <CredentialInput

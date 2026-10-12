@@ -23,6 +23,8 @@ export const provider: ProviderDefinition = {
       scopes: linearOAuthScopes,
       scopeSeparator: ",",
       tokenEndpointAuthMethod: "client_secret_post",
+      clientSecretOptional: true,
+      pkce: { method: "S256" },
       authorizationParams: {},
     },
     {
