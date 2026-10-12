@@ -11,6 +11,8 @@ export type AuthDefinition =
       optionalScopes?: string[];
       authorizationOptions?: OAuthAuthorizationOption[];
       clientFields?: CredentialField[];
+      /** The provider accepts a public client (no secret, PKCE) when the secret is left blank. */
+      clientSecretOptional?: boolean;
       clientSetup?: OAuthClientSetup;
     };
 

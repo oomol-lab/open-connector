@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { providerUserAgent } from "../providers/provider-runtime.ts";
-import { requestAuthorizationCodeToken, requestRefreshToken, requestTokenRevocation } from "./oauth-token.ts";
+import {
+  requestAuthorizationCodeToken,
+  requestRefreshToken,
+  requestTokenRevocation,
+  resolveTokenEndpointAuthMethod,
+} from "./oauth-token.ts";
 
 const authorizationCodeRequest = {
   clientId: "client-id",
@@ -509,5 +514,37 @@ describe("OAuth token revocation", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe("resolveTokenEndpointAuthMethod", () => {
+  it("keeps the declared method whenever a secret is configured", () => {
+    expect(resolveTokenEndpointAuthMethod({ tokenEndpointAuthMethod: "client_secret_post" }, "secret")).toBe(
+      "client_secret_post",
+    );
+    expect(
+      resolveTokenEndpointAuthMethod(
+        { tokenEndpointAuthMethod: "client_secret_basic", clientSecretOptional: true },
+        "secret",
+      ),
+    ).toBe("client_secret_basic");
+  });
+
+  it("falls back to a public client only where the definition lets the secret be left blank", () => {
+    expect(
+      resolveTokenEndpointAuthMethod({ tokenEndpointAuthMethod: "client_secret_post", clientSecretOptional: true }, ""),
+    ).toBe("none");
+    expect(
+      resolveTokenEndpointAuthMethod(
+        { tokenEndpointAuthMethod: "client_secret_post", clientSecretOptional: true },
+        undefined,
+      ),
+    ).toBe("none");
+    // Without the flag a blank secret changes nothing: the request is what it
+    // always was, and the provider answers as it always did.
+    expect(resolveTokenEndpointAuthMethod({ tokenEndpointAuthMethod: "client_secret_post" }, "")).toBe(
+      "client_secret_post",
+    );
+    expect(resolveTokenEndpointAuthMethod({ tokenEndpointAuthMethod: "none" }, "")).toBe("none");
   });
 });

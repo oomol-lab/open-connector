@@ -19,6 +19,7 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
       scopes: outlookCalendarOAuthScopes,
       tokenEndpointAuthMethod: "client_secret_post",
+      clientSecretOptional: true,
       pkce: { method: "S256" },
       authorizationParams: { response_mode: "query" },
       clientConfigFields: [
@@ -37,9 +38,9 @@ export const provider: ProviderDefinition = {
       clientSetup: {
         docsUrl: "https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app",
         steps: [
-          "Register a web application in Microsoft Entra ID and add the callback URL shown by this runtime.",
+          "Register an application in Microsoft Entra ID and add the callback URL shown by this runtime: under the Web platform to use a client secret, or under Mobile and desktop applications (with public client flows allowed) to use none.",
           "Add the Microsoft Graph delegated permissions User.Read, Calendars.ReadWrite, Calendars.ReadWrite.Shared, and offline_access; the Shared permission enables delegated and shared calendars, and tenant policy may require administrator consent.",
-          "Create a client secret and save its value with the application client ID in this runtime.",
+          "Save the application client ID in this runtime, with a client secret for a Web platform registration or with the secret left blank for a Mobile and desktop registration.",
         ],
       },
     },

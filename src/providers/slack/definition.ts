@@ -175,7 +175,17 @@ export const provider: ProviderDefinition = {
       scopes: slackAuthorizationOptions.map((option) => option.id),
       scopeSeparator: ",",
       tokenEndpointAuthMethod: "client_secret_post",
+      clientSecretOptional: true,
+      pkce: { method: "S256" },
       authorizationOptions: slackAuthorizationOptions,
+      clientSetup: {
+        docsUrl: "https://api.slack.com/authentication/oauth-v2",
+        steps: [
+          "Create a Slack app, add the user scopes this provider requests under OAuth & Permissions, and add the callback URL shown by this runtime as a redirect URL.",
+          "Save the client ID with the client secret. To connect from a host that cannot keep a secret, turn on the app's PKCE option in its settings and leave the secret blank.",
+          "The PKCE option is a one-way, app-level switch: the app becomes a public client, its refresh tokens expire after 30 days, and localhost redirects are treated as desktop redirects, which cannot request bot scopes. An app that also serves the slackbot provider should stay confidential; a public slack client should be a second app.",
+        ],
+      },
     },
     {
       type: "api_key",
