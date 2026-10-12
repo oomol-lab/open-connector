@@ -6,17 +6,6 @@ import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 import { fusionApiOperations } from "./operations.ts";
 
-const imageReferenceSchema = s.object(
-  "An image reference using a public HTTP URL or base64 data URL.",
-  {
-    image_url: s.union(
-      [s.string({ format: "uri", pattern: "^https?://" }), s.string({ pattern: "^data:image/[^;,]+;base64,.+" })],
-      { description: "Publicly accessible image URL or base64-encoded image data URL" },
-    ),
-  },
-  { required: ["image_url"] },
-);
-
 const service = "fusion-api";
 const fusionApiActionsById = new Set(fusionApiOperations.map((operation) => `${service}.${operation.actionName}`));
 
@@ -68,10 +57,6 @@ function buildInputSchema(operation: FusionApiOperation): JsonSchema {
   const properties = Object.fromEntries(
     operation.inputFields.map((field) => [field.name, buildFieldSchema(field)] as const),
   );
-  if (operation.actionName === "openai_image_edit_async_submit") {
-    properties.images = { ...properties.images, items: imageReferenceSchema, minItems: 1, maxItems: 16 };
-    properties.mask = { ...imageReferenceSchema, description: properties.mask?.description };
-  }
   const required = operation.inputFields.filter((field) => field.required).map((field) => field.name);
   return s.object("The Fusion API request payload.", properties, {
     required,

@@ -1225,9 +1225,7 @@ export const fusionApiOperations: FusionApiOperation[] = [
         name: "model",
         kind: "string",
         required: false,
-        description: "OpenAI image model name",
-        enumValues: ["gpt-image-2", "gpt-image-2.5"],
-        defaultValue: "gpt-image-2",
+        description: "OpenAI image model: gpt-image-2 or gpt-image-2.5. Defaults to gpt-image-2.",
       },
       {
         name: "background",
@@ -1335,9 +1333,7 @@ export const fusionApiOperations: FusionApiOperation[] = [
         name: "model",
         kind: "string",
         required: false,
-        description: "OpenAI image model name",
-        enumValues: ["gpt-image-2", "gpt-image-2.5"],
-        defaultValue: "gpt-image-2",
+        description: "OpenAI image model: gpt-image-2 or gpt-image-2.5. Defaults to gpt-image-2.",
       },
       {
         name: "background",
@@ -1401,13 +1397,15 @@ export const fusionApiOperations: FusionApiOperation[] = [
         name: "images",
         kind: "array",
         required: true,
-        description: "Reference images to edit or compose from (1 to 16 images, at most 10 MiB per image)",
+        description:
+          "Reference images to edit or compose from: 1 to 16 objects with image_url, a public HTTP(S) URL or base64 image data URL. Each image must be at most 10 MiB. file_id is not supported.",
       },
       {
         name: "mask",
         kind: "object",
         required: false,
-        description: "Mask image reference for partial edits (at most 10 MiB)",
+        description:
+          "Mask object with image_url, a public HTTP(S) URL or base64 image data URL, at most 10 MiB. file_id is not supported.",
       },
     ],
   },
