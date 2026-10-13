@@ -144,9 +144,7 @@ export const litellmActionHandlers: ProviderActionHandlers<"litellm", LitellmAct
           "LiteLLM authenticated this key but has no record of it in the proxy key table, which is the case for the proxy master key. Connect a LiteLLM virtual key to read its budget.",
         );
       }
-      throw providerInputError(
-        `LiteLLM returned 404 for /key/info (${error.message}). Check that baseUrl points at the LiteLLM proxy root.`,
-      );
+      throw error;
     }
   },
 };
@@ -236,7 +234,7 @@ async function readLitellmError(response: Response, signal?: AbortSignal): Promi
   if (response.status === 429) {
     return new ProviderRequestError(429, message, details);
   }
-  if (response.status === 401 || response.status === 403) {
+  if (response.status === 401 || response.status === 403 || response.status === 404) {
     return new ProviderRequestError(response.status, message, details, "provider_error");
   }
   if (response.status >= 500) {
