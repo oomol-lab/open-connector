@@ -30,7 +30,7 @@ export async function requestShopifyJson(
     headers.set("content-type", "application/json");
     headers.set("user-agent", providerUserAgent);
     if (accessToken) headers.set("x-shopify-access-token", accessToken);
-    const response = await fetcher(target, { ...init, headers, signal, redirect: "error" });
+    const response = await fetcher(target, { ...init, headers, signal, redirect: "manual" });
     const body = await response.text();
     let payload: unknown;
     try {
