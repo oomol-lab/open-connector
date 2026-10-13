@@ -81,7 +81,7 @@ async function requestGreynoise(request: GreynoiseRequest): Promise<unknown> {
       throw new ProviderRequestError(
         404,
         optionalString(record?.message) ?? "GreyNoise lookup route returned 404",
-        undefined,
+        payload,
         "provider_error",
       );
     }
