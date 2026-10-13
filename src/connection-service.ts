@@ -36,6 +36,8 @@ export interface ConnectionSummary {
   connectionName: string;
   authType: AuthType | "marketplace";
   configured: boolean;
+  /** Known credential state; token expiry alone does not require new consent when refresh is available. */
+  status?: "active" | "reauth_required";
   virtual: boolean;
   default: boolean;
   profile: CredentialProfile;
@@ -544,10 +546,7 @@ export class ConnectionService {
       };
     const credential = stored.credential;
     return {
-      status:
-        credential.authType === "oauth2" && !credential.refreshToken && isOAuthCredentialExpired(credential)
-          ? "reauth_required"
-          : "active",
+      status: "active",
       ...this.createConfiguredConnectionSummary(
         this.getProvider(stored.service),
         stored.id,
@@ -693,6 +692,12 @@ export class ConnectionService {
       connectionName,
       authType: credential.authType,
       configured: true,
+      status:
+        credential.authType === "oauth2" &&
+        (credential.metadata.oauthReauthRequired === true ||
+          (!credential.refreshToken && isOAuthCredentialExpired(credential)))
+          ? "reauth_required"
+          : "active",
       virtual: false,
       default: connectionName === defaultConnectionName,
       profile: credential.profile,
@@ -855,6 +860,12 @@ export class ConnectionService {
     credential: OAuthCredential,
   ): Promise<OAuthCredential> {
     const service = connection.service;
+    if (credential.metadata.oauthReauthRequired === true) {
+      throw new ConnectionError(
+        "oauth_reauth_required",
+        `OAuth authorization is no longer valid. Reconnect ${service}.`,
+      );
+    }
     if (!isOAuthCredentialExpired(credential)) {
       return credential;
     }
@@ -896,11 +907,29 @@ export class ConnectionService {
     refresher: IOAuthCredentialRefresher,
   ): Promise<OAuthCredential> {
     const { id, revision, service, connectionName } = connection;
-    const nextCredential = await withProviderHttpDispatchResult(
-      { operation: "oauth", service, connectionId: id, connectionName },
-      () => refresher.refresh(service, credential),
-      this.providerHttpDispatch,
-    );
+    let nextCredential: OAuthCredential;
+    try {
+      nextCredential = await withProviderHttpDispatchResult(
+        { operation: "oauth", service, connectionId: id, connectionName },
+        () => refresher.refresh(service, credential),
+        this.providerHttpDispatch,
+      );
+    } catch (error) {
+      if (error instanceof ConnectionError && error.code === "oauth_reauth_required") {
+        // The revision fence prevents a late refusal from marking a replacement authorization as expired.
+        await this.store.updateCredential(
+          {
+            id,
+            revision,
+            service,
+            connectionName,
+            credential: { ...credential, metadata: { ...credential.metadata, oauthReauthRequired: true } },
+          },
+          true,
+        );
+      }
+      throw error;
+    }
     const updated = await this.store.updateCredential(
       {
         id,

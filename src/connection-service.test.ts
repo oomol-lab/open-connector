@@ -8,7 +8,7 @@ import type { IProviderLoader } from "./providers/provider-loader.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "./catalog-store.ts";
-import { ConnectionService } from "./connection-service.ts";
+import { ConnectionError, ConnectionService } from "./connection-service.ts";
 import { OAuthClientConfigService } from "./oauth/oauth-client-config-service.ts";
 import { OAuthCredentialRefreshService } from "./oauth/oauth-credential-refresh-service.ts";
 
@@ -624,6 +624,7 @@ describe("ConnectionService", () => {
       connectionName: "work",
       authType: "oauth2",
       configured: true,
+      status: "active",
       virtual: false,
       default: false,
       profile: testProfile,
@@ -784,6 +785,84 @@ describe("ConnectionService", () => {
         method: "POST",
       }),
     );
+  });
+
+  it.each([
+    [400, "invalid_grant", true],
+    [401, "invalid_grant", true],
+    [400, "invalid_client", false],
+    [429, "invalid_grant", false],
+    [503, "invalid_grant", false],
+    [0, "network_failure", false],
+  ])("reports the durable authorization state after a %s %s refresh refusal", async (status, errorCode, reauth) => {
+    const store = new MemoryConnectionStore();
+    const clientConfigs = createOAuthClientConfigs([oauthProvider]);
+    await clientConfigs.upsertConfig({ service: "example", clientId: "client-id", clientSecret: "client-secret" });
+    const service = createService([oauthProvider], {
+      store,
+      oauthCredentials: new OAuthCredentialRefreshService(clientConfigs),
+    });
+    const credential: Extract<ResolvedCredential, { authType: "oauth2" }> = {
+      authType: "oauth2",
+      accessToken: "expired-token",
+      tokenType: "Bearer",
+      refreshToken: "refresh-token",
+      expiresAt: "2026-01-01T00:00:00.000Z",
+      profile: testProfile,
+      metadata: {},
+    };
+    const stored = await store.set("example", "default", credential);
+    const fetcher = vi.fn(async () => {
+      if (!status) throw new Error("connection reset");
+      return Response.json({ error: errorCode }, { status });
+    });
+    vi.stubGlobal("fetch", fetcher);
+    await expect(service.getCredential("example")).rejects.toMatchObject({
+      code: reauth ? "oauth_reauth_required" : "oauth_token_refresh_failed",
+    });
+    await expect(service.listConnections()).resolves.toMatchObject([{ status: reauth ? "reauth_required" : "active" }]);
+    await expect(service.getManagedConnection(stored.id)).resolves.toMatchObject({
+      status: reauth ? "reauth_required" : "active",
+    });
+    if (reauth) {
+      await expect(service.getCredential("example")).rejects.toMatchObject({ code: "oauth_reauth_required" });
+      expect(fetcher).toHaveBeenCalledOnce();
+      await service.setOAuthCredential("example", {
+        ...credential,
+        accessToken: "fresh-token",
+        expiresAt: "2099-01-01T00:00:00.000Z",
+      });
+      await expect(service.getManagedConnection(stored.id)).resolves.toMatchObject({ status: "active" });
+      await expect(service.getCredential("example")).resolves.toMatchObject({ accessToken: "fresh-token" });
+    }
+  });
+
+  it("does not mark a newer authorization when an old refresh is rejected", async () => {
+    const store = new MemoryConnectionStore();
+    const credential: Extract<ResolvedCredential, { authType: "oauth2" }> = {
+      authType: "oauth2",
+      accessToken: "expired-token",
+      tokenType: "Bearer",
+      refreshToken: "refresh-token",
+      expiresAt: "2026-01-01T00:00:00.000Z",
+      profile: testProfile,
+      metadata: {},
+    };
+    const original = await store.set("example", "default", credential);
+    const service = createService([oauthProvider], {
+      store,
+      oauthCredentials: {
+        refresh: async () => {
+          await store.set("example", "default", { ...credential, accessToken: "replacement-token" });
+          throw new ConnectionError("oauth_reauth_required", "Reconnect example.");
+        },
+      },
+    });
+    await expect(service.getCredential("example")).rejects.toMatchObject({ code: "oauth_reauth_required" });
+    await expect(service.getManagedConnection(original.id)).resolves.toMatchObject({ status: "active" });
+    await expect(store.get("example", "default")).resolves.toMatchObject({
+      credential: { accessToken: "replacement-token", metadata: {} },
+    });
   });
 
   it("shares an in-flight OAuth refresh across concurrent requests", async () => {

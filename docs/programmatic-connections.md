@@ -154,7 +154,11 @@ POST /v1/connections/by-id/:appId/connect
 ```
 
 A successful OAuth request records the outcome of that attempt. Query connection details for
-its current state. An expired OAuth credential with no refresh token reports `reauth_required`.
+its current state. An expired OAuth credential with no refresh token, or a refresh rejected with
+OAuth `invalid_grant`, reports `reauth_required`. This state is also available in the local
+`/api/connections` summary. A new authorization clears it; network failures, rate limits, server
+errors and invalid client configuration do not mark a user's grant as expired. Listing connections
+only reads the saved state and does not contact the provider or refresh tokens.
 
 Reconnection takes the same OAuth body and returns a new request ID. Success keeps the original
 `appId`. If the original connection is deleted or its credentials change during authorization,

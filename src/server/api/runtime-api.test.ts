@@ -134,6 +134,7 @@ describe("runtime action HTTP results", () => {
     ["internal_error", 500],
     ["oauth_token_expired", 409],
     ["oauth_token_refresh_failed", 409],
+    ["oauth_reauth_required", 409],
     ["invalid_input", 400],
   ] as const)("maps %s execution failures to status %i", (code, status) => {
     expect(

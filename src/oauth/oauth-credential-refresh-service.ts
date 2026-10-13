@@ -1,7 +1,7 @@
 import type { OAuth2AuthDefinition, ResolvedCredential } from "../core/types.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { OAuthClientConfigService } from "./oauth-client-config-service.ts";
-import type { OAuthTokenResult } from "./oauth-token.ts";
+import type { OAuthTokenErrorFactory, OAuthTokenResult } from "./oauth-token.ts";
 
 import { ConnectionError } from "../connection-service.ts";
 import { optionalRecord, stringRecord } from "../core/cast.ts";
@@ -54,8 +54,10 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
     }
 
     const refreshToken = credential.refreshToken ?? "";
-    const createError = (message: string): ConnectionError =>
-      new ConnectionError("oauth_token_refresh_failed", message);
+    const createError: OAuthTokenErrorFactory = (message, failure) =>
+      failure?.errorCode === "invalid_grant" && (failure.status === 400 || failure.status === 401)
+        ? new ConnectionError("oauth_reauth_required", `OAuth authorization is no longer valid. Reconnect ${service}.`)
+        : new ConnectionError("oauth_token_refresh_failed", message);
     const providerOAuth = await this.providerLoader?.loadProviderOAuthRuntime?.(service);
     let refreshed: OAuthTokenResult;
     if (providerOAuth?.refreshAccessToken) {
