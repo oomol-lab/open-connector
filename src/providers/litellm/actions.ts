@@ -129,7 +129,7 @@ const embeddingInputSchema = s.object(
   },
 );
 
-const modelListOutputSchema = s.object("OpenAI-format list of the model names this key can call.", {
+const modelListOutputSchema = s.requiredObject("OpenAI-format list of the model names this key can call.", {
   data: rawObjectArraySchema,
 });
 
@@ -141,7 +141,7 @@ const modelInfoInputSchema = s.object(
   { optional: ["model"] },
 );
 
-const modelInfoSchema = s.object("Metadata LiteLLM reports for one model deployment.", {
+const modelInfoSchema = s.requiredObject("Metadata LiteLLM reports for one model deployment.", {
   modelName: s.string("The LiteLLM model name clients call."),
   modelId: s.nullableString("The deployment ID LiteLLM assigned, when present."),
   provider: s.nullableString("The upstream provider LiteLLM routes this deployment to, such as `openai` or `bedrock`."),
@@ -156,27 +156,30 @@ const modelInfoSchema = s.object("Metadata LiteLLM reports for one model deploym
   supportsResponseSchema: s.nullableBoolean("Whether the model supports JSON schema structured output."),
 });
 
-const modelInfoOutputSchema = s.object("Model deployments the LiteLLM proxy exposes to this key.", {
+const modelInfoOutputSchema = s.requiredObject("Model deployments the LiteLLM proxy exposes to this key.", {
   models: s.array("Model deployments with their capabilities and pricing.", modelInfoSchema),
 });
 
-const keyInfoOutputSchema = s.object("Budget, limits, and access for the LiteLLM key used by this connection.", {
-  keyAlias: s.nullableString("The key alias set when the key was created."),
-  keyName: s.nullableString("The redacted key name LiteLLM shows in the Admin UI."),
-  status: s.nullableString("The key status, such as `active`, `expired`, or `revoked`."),
-  spend: s.number("USD spent by the key in the current budget window."),
-  maxBudget: s.nullableNumber("The USD budget limit of the key, when one is set."),
-  remainingBudget: s.nullableNumber("USD left before the key hits its budget, when a budget is set."),
-  budgetDuration: s.nullableString("The budget reset period, such as `30d`."),
-  budgetResetAt: s.nullableString("When the current budget window ends and spend resets."),
-  models: s.stringArray("The model names this key may call. Empty means every model on the proxy."),
-  tpmLimit: s.nullableInteger("The tokens-per-minute limit of the key."),
-  rpmLimit: s.nullableInteger("The requests-per-minute limit of the key."),
-  teamId: s.nullableString("The team the key belongs to."),
-  userId: s.nullableString("The user the key belongs to."),
-  expires: s.nullableString("When the key stops authenticating requests."),
-  blocked: s.nullableBoolean("Whether the key is blocked."),
-});
+const keyInfoOutputSchema = s.requiredObject(
+  "Budget, limits, and access for the LiteLLM key used by this connection.",
+  {
+    keyAlias: s.nullableString("The key alias set when the key was created."),
+    keyName: s.nullableString("The redacted key name LiteLLM shows in the Admin UI."),
+    status: s.nullableString("The key status, such as `active`, `expired`, or `revoked`."),
+    spend: s.number("USD spent by the key in the current budget window."),
+    maxBudget: s.nullableNumber("The USD budget limit of the key, when one is set."),
+    remainingBudget: s.nullableNumber("USD left before the key hits its budget, when a budget is set."),
+    budgetDuration: s.nullableString("The budget reset period, such as `30d`."),
+    budgetResetAt: s.nullableString("When the current budget window ends and spend resets."),
+    models: s.stringArray("The model names this key may call. Empty means every model on the proxy."),
+    tpmLimit: s.nullableInteger("The tokens-per-minute limit of the key."),
+    rpmLimit: s.nullableInteger("The requests-per-minute limit of the key."),
+    teamId: s.nullableString("The team the key belongs to."),
+    userId: s.nullableString("The user the key belongs to."),
+    expires: s.nullableString("When the key stops authenticating requests."),
+    blocked: s.nullableBoolean("Whether the key is blocked."),
+  },
+);
 
 export const litellmActions: ActionDefinition[] = [
   defineProviderAction(service, {

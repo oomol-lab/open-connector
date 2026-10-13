@@ -38,7 +38,7 @@ const llmFields = {
   tag: s.string("A caller-defined identifier returned with the result.", { maxLength: 255 }),
 };
 
-export const queryChatGptVisibilityAction: ActionDefinition = defineProviderAction(service, {
+const queryChatGptVisibilityAction: ActionDefinition = defineProviderAction(service, {
   name: "query_dataforseo_chatgpt",
   operationType: "read",
   description: "Run a live ChatGPT response query for GEO research through DataForSEO.",
@@ -77,7 +77,7 @@ export const queryChatGptVisibilityAction: ActionDefinition = defineProviderActi
   outputSchema: dataForSeoOutput,
 });
 
-export const queryClaudeVisibilityAction: ActionDefinition = defineProviderAction(service, {
+const queryClaudeVisibilityAction: ActionDefinition = defineProviderAction(service, {
   name: "query_dataforseo_claude",
   operationType: "read",
   description: "Run a live Claude response query for GEO research through DataForSEO.",
@@ -118,7 +118,7 @@ export const queryClaudeVisibilityAction: ActionDefinition = defineProviderActio
   outputSchema: dataForSeoOutput,
 });
 
-export const queryGeminiVisibilityAction: ActionDefinition = defineProviderAction(service, {
+const queryGeminiVisibilityAction: ActionDefinition = defineProviderAction(service, {
   name: "query_dataforseo_gemini",
   operationType: "read",
   description: "Run a live Gemini response query for GEO research through DataForSEO.",
@@ -153,7 +153,7 @@ export const queryGeminiVisibilityAction: ActionDefinition = defineProviderActio
   outputSchema: dataForSeoOutput,
 });
 
-export const queryPerplexityVisibilityAction: ActionDefinition = defineProviderAction(service, {
+const queryPerplexityVisibilityAction: ActionDefinition = defineProviderAction(service, {
   name: "query_dataforseo_perplexity",
   operationType: "read",
   description: "Run a live Perplexity response query for GEO research through DataForSEO.",
@@ -186,7 +186,7 @@ export const queryPerplexityVisibilityAction: ActionDefinition = defineProviderA
   outputSchema: dataForSeoOutput,
 });
 
-export const getAiKeywordVolumeAction: ActionDefinition = defineProviderAction(service, {
+const getAiKeywordVolumeAction: ActionDefinition = defineProviderAction(service, {
   name: "get_dataforseo_ai_keyword_volume",
   operationType: "read",
   description: "Get AI-search volume estimates for up to 1,000 keywords.",
@@ -267,7 +267,7 @@ const optionalMentionFields = [
   "tag",
 ];
 
-export const getLlmMentionMetricsAction: ActionDefinition = defineProviderAction(service, {
+const getLlmMentionMetricsAction: ActionDefinition = defineProviderAction(service, {
   name: "get_dataforseo_llm_mention_metrics",
   operationType: "read",
   description: "Aggregate LLM mention metrics for domains and keyword entities.",
@@ -278,7 +278,7 @@ export const getLlmMentionMetricsAction: ActionDefinition = defineProviderAction
   outputSchema: dataForSeoOutput,
 });
 
-export const searchLlmMentionsAction: ActionDefinition = defineProviderAction(service, {
+const searchLlmMentionsAction: ActionDefinition = defineProviderAction(service, {
   name: "search_dataforseo_llm_mentions",
   operationType: "read",
   description: "Search individual LLM mention records for domains and keywords.",
@@ -289,7 +289,7 @@ export const searchLlmMentionsAction: ActionDefinition = defineProviderAction(se
   outputSchema: dataForSeoOutput,
 });
 
-export const getLlmMentionTopDomainsAction: ActionDefinition = defineProviderAction(service, {
+const getLlmMentionTopDomainsAction: ActionDefinition = defineProviderAction(service, {
   name: "get_dataforseo_llm_mention_top_domains",
   operationType: "read",
   description: "Get domains cited most often in LLM responses matching target entities.",
@@ -300,12 +300,110 @@ export const getLlmMentionTopDomainsAction: ActionDefinition = defineProviderAct
   outputSchema: dataForSeoOutput,
 });
 
+const getKeywordTrendsAction = defineProviderAction(service, {
+  name: "get_dataforseo_keyword_trends",
+  operationType: "read",
+  description:
+    "Compare popularity over time for up to five keywords using DataForSEO Trends for Google Search, News, or Shopping. These are DataForSEO estimates, not original Google Trends data or absolute search volumes.",
+  requiredScopes: [],
+  inputSchema: s.object(
+    "Keywords and optional location, search type, and time window for one live trends query.",
+    {
+      keywords: s.array("One to five keywords to compare.", s.string("A keyword to measure."), {
+        minItems: 1,
+        maxItems: 5,
+      }),
+      locationName: s.string(
+        "Full location name, such as United States. Use instead of locationCode; omit both for worldwide results.",
+      ),
+      locationCode: s.integer(
+        "DataForSEO location code, such as 2840 for the United States. Results cover the country containing this location.",
+      ),
+      type: s.stringEnum(
+        "Search type: web for Google Search (default), news for Google News, or ecommerce for Google Shopping.",
+        ["web", "news", "ecommerce"],
+      ),
+      dateFrom: s.string(
+        "Start date in YYYY-MM-DD format. Earliest is 2004-01-01 for web or 2008-01-01 for other types. Without a time window, upstream defaults to one year ago.",
+        { format: "date" },
+      ),
+      dateTo: s.string("End date in YYYY-MM-DD format; upstream defaults to today.", {
+        format: "date",
+      }),
+      timeRange: s.stringEnum("Preset time window. Upstream ignores this when dateFrom or dateTo is supplied.", [
+        "past_4_hours",
+        "past_day",
+        "past_7_days",
+        "past_30_days",
+        "past_90_days",
+        "past_12_months",
+        "past_5_years",
+      ]),
+      tag: llmFields.tag,
+    },
+    {
+      optional: ["locationName", "locationCode", "type", "dateFrom", "dateTo", "timeRange", "tag"],
+    },
+  ),
+  outputSchema: s.looseObject(
+    "The upstream DataForSEO Trends response. Inspect overall and task status codes; 20000 indicates success.",
+    {
+      status_code: s.integer("Overall upstream status code."),
+      status_message: s.string("Overall upstream status message."),
+      cost: s.number("Upstream reported cost in USD."),
+      tasks_error: s.integer("Number of tasks that failed."),
+      tasks: s.array(
+        "Live task responses, including business errors.",
+        s.looseObject("One upstream task response.", {
+          id: s.string("Upstream task identifier."),
+          status_code: s.integer("Task status code; 20000 indicates success."),
+          status_message: s.string("Task status message."),
+          result: s.nullable(
+            s.array(
+              "Trend results, or null when unavailable.",
+              s.looseObject("A trend result for the requested keywords and location.", {
+                keywords: s.array("Keywords in result order.", s.string("A result keyword.")),
+                items: s.array(
+                  "Trend graphs returned by the upstream service.",
+                  s.looseObject("One keyword popularity graph.", {
+                    keywords: s.array(
+                      "Keywords corresponding to the values and averages arrays.",
+                      s.string("A graph keyword."),
+                    ),
+                    averages: s.array(
+                      "Average relative popularity for each keyword over the time window.",
+                      s.number("Average popularity score."),
+                    ),
+                    data: s.array(
+                      "Time buckets; retain both dates because a bucket may span multiple days.",
+                      s.looseObject("A popularity time bucket.", {
+                        date_from: s.string("First date in this bucket."),
+                        date_to: s.string("Last date in this bucket."),
+                        timestamp: s.integer("Bucket Unix timestamp in seconds."),
+                        values: s.array(
+                          "Relative popularity in keyword order: 100 is the peak, and 0 indicates insufficient data. These are not search volumes.",
+                          s.number("Relative popularity score."),
+                        ),
+                      }),
+                    ),
+                  }),
+                ),
+              }),
+            ),
+          ),
+        }),
+      ),
+    },
+  ),
+});
+
 export const dataForSeoActions: ActionDefinition[] = [
   queryChatGptVisibilityAction,
   queryClaudeVisibilityAction,
   queryGeminiVisibilityAction,
   queryPerplexityVisibilityAction,
   getAiKeywordVolumeAction,
+  getKeywordTrendsAction,
   getLlmMentionMetricsAction,
   searchLlmMentionsAction,
   getLlmMentionTopDomainsAction,

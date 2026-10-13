@@ -63,14 +63,27 @@ async function requestGreynoise(request: GreynoiseRequest): Promise<unknown> {
       signal,
     });
     if (response.status === 404) {
-      // The Community API answers 404 for an IP it never observed. That is a valid
-      // lookup result, so normalize it instead of failing the action.
-      return {
-        ip: request.ip,
-        noise: false,
-        riot: false,
-        message: await readGreynoiseMessage(response),
-      };
+      const payload = parseProviderJsonBodyText(await readProviderErrorTextBody(response, "GreyNoise error response"), {
+        emptyBody: {},
+        invalidJsonMessage: "GreyNoise returned malformed JSON",
+        invalidJsonFallback: () => ({}),
+      });
+      const record = optionalRecord(payload);
+      if (record?.ip === request.ip && record.noise === false && record.riot === false)
+        return {
+          ...record,
+          ip: request.ip,
+          noise: false,
+          riot: false,
+          message:
+            optionalString(record.message) ?? "IP not observed scanning the internet or contained in RIOT data set.",
+        };
+      throw new ProviderRequestError(
+        404,
+        optionalString(record?.message) ?? "GreyNoise lookup route returned 404",
+        undefined,
+        "provider_error",
+      );
     }
     if (!response.ok) {
       throw await readGreynoiseError(response);
@@ -80,15 +93,6 @@ async function requestGreynoise(request: GreynoiseRequest): Promise<unknown> {
       invalidJsonMessage: "GreyNoise returned malformed JSON",
     });
   });
-}
-
-async function readGreynoiseMessage(response: Response): Promise<string> {
-  const payload = parseProviderJsonBodyText(await readProviderErrorTextBody(response, "GreyNoise error response"), {
-    emptyBody: {},
-    invalidJsonMessage: "GreyNoise returned malformed JSON",
-    invalidJsonFallback: () => ({}),
-  });
-  return optionalString(optionalRecord(payload)?.message) ?? "IP not observed scanning the internet.";
 }
 
 /**
@@ -103,6 +107,11 @@ async function readGreynoiseError(response: Response): Promise<ProviderRequestEr
   });
   const message =
     optionalString(optionalRecord(payload)?.message) ?? `GreyNoise request failed with HTTP ${response.status}`;
-  const status = response.status === 401 || response.status === 403 ? 502 : response.status;
-  return new ProviderRequestError(status, message, withRetryAfterSeconds(response, payload));
+  const status = response.status;
+  return new ProviderRequestError(
+    status,
+    message,
+    withRetryAfterSeconds(response, payload),
+    status === 429 ? "rate_limited" : "provider_error",
+  );
 }

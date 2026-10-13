@@ -99,6 +99,16 @@ const aisaActionRoutes: Record<string, AisaActionRoute> = {
   query_dataforseo_claude: dataForSeoLlmRoute("/apis/v1/dataforseo/ai_optimization/claude/llm_responses/live"),
   query_dataforseo_gemini: dataForSeoLlmRoute("/apis/v1/dataforseo/ai_optimization/gemini/llm_responses/live"),
   query_dataforseo_perplexity: dataForSeoLlmRoute("/apis/v1/dataforseo/ai_optimization/perplexity/llm_responses/live"),
+  get_dataforseo_keyword_trends: dataForSeoRoute("/apis/v1/dataforseo/keywords_data/dataforseo_trends/explore/live", {
+    keywords: "keywords",
+    locationName: "locationName",
+    locationCode: "locationCode",
+    type: "type",
+    dateFrom: "dateFrom",
+    dateTo: "dateTo",
+    timeRange: "timeRange",
+    tag: "tag",
+  }),
   get_dataforseo_ai_keyword_volume: dataForSeoRoute(
     "/apis/v1/dataforseo/ai_optimization/ai_keyword_data/keywords_search_volume/live",
     {

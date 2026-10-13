@@ -36,7 +36,6 @@ export interface LitellmContext {
 }
 
 type LitellmActionHandler = (input: Record<string, unknown>, context: LitellmContext) => Promise<unknown>;
-type LitellmRequestPhase = "validate" | "execute";
 
 interface LitellmRequestInput {
   path: string;
@@ -175,7 +174,7 @@ export async function validateLitellmCredential(
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const context = createLitellmContext(values, apiKey, fetcher, signal);
-  const payload = optionalRecord(await litellmRequest({ path: validationEndpoint }, context, "validate"));
+  const payload = optionalRecord(await litellmRequest({ path: validationEndpoint }, context));
   const host = new URL(context.baseUrl).host;
   return {
     profile: { accountId: `litellm:${host}`, displayName: `LiteLLM ${host}` },
@@ -222,11 +221,7 @@ export function normalizeLitellmBaseUrl(
  * checked), which is reported as `insufficient_credit` so callers can tell it
  * apart from a malformed request.
  */
-export async function readLitellmError(
-  response: Response,
-  phase: LitellmRequestPhase,
-  signal?: AbortSignal,
-): Promise<ProviderRequestError> {
+async function readLitellmError(response: Response, signal?: AbortSignal): Promise<ProviderRequestError> {
   const text = await readProviderErrorTextBody(response, `${requestLabel} error response`, signal);
   const envelope = parseLitellmErrorEnvelope(text);
   const message = envelope.message ?? (text.trim() || `${requestLabel} request failed with HTTP ${response.status}`);
@@ -242,7 +237,7 @@ export async function readLitellmError(
     return new ProviderRequestError(429, message, details);
   }
   if (response.status === 401 || response.status === 403) {
-    return new ProviderRequestError(phase === "validate" ? 400 : response.status, message, details);
+    return new ProviderRequestError(response.status, message, details, "provider_error");
   }
   if (response.status >= 500) {
     return new ProviderRequestError(response.status, message, details, "provider_error");
@@ -250,11 +245,7 @@ export async function readLitellmError(
   return new ProviderRequestError(400, message, details);
 }
 
-function litellmRequest(
-  input: LitellmRequestInput,
-  context: LitellmContext,
-  phase: LitellmRequestPhase = "execute",
-): Promise<unknown> {
+function litellmRequest(input: LitellmRequestInput, context: LitellmContext): Promise<unknown> {
   return runProviderRequest(
     { signal: context.signal, label: requestLabel, timeoutMs: input.timeoutMs },
     async (signal) => {
@@ -265,7 +256,7 @@ function litellmRequest(
         signal,
       });
       if (!response.ok) {
-        throw await readLitellmError(response, phase, signal);
+        throw await readLitellmError(response, signal);
       }
       return readProviderJsonBody(response, {
         emptyBody: null,
