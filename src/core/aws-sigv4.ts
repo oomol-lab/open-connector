@@ -244,7 +244,8 @@ function hmacSha256(key: string | Buffer, value: string): Buffer {
   return createHmac("sha256", key).update(value).digest();
 }
 
-function hmacHex(key: Buffer, value: string): string {
+/** Compute the hexadecimal HMAC-SHA256 signature of a UTF-8 message. */
+export function hmacHex(key: string | Buffer, value: string): string {
   return createHmac("sha256", key).update(value).digest("hex");
 }
 

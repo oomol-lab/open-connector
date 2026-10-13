@@ -5,25 +5,46 @@ import type {
   ProviderProxyExecutor,
   ResolvedCredential,
 } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { PollDefinition } from "../../triggers/common/poll.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
 import {
-  buildShopifyRestApiBaseUrl,
-  normalizeShopDomain,
-  shopifyActionHandlers,
-  validateShopifyCredential,
-} from "./runtime.ts";
-import { shopifyReadContentScope } from "./scopes.ts";
+  defineProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  requiredResponseRecord,
+} from "../provider-runtime.ts";
+import { bulkHandlers } from "./bulk.ts";
+import { catalogHandlers } from "./catalog.ts";
+import { buildShopifyApiBaseUrl, requestShopifyGraphQL } from "./client.ts";
+import { contentActionHandlers } from "./content-runtime.ts";
+import { customersHandlers } from "./customers.ts";
+import { graphqlHandlers } from "./graphql.ts";
+import { inventoryHandlers } from "./inventory.ts";
+import { shopifyOAuth } from "./oauth.ts";
+import { operationHandlers } from "./operations.ts";
+import { ordersHandlers } from "./orders.ts";
+import { normalizeShopDomain } from "./shop-domain.ts";
+import { shopHandlers } from "./shop.ts";
 import { shopifyShopEvent } from "./trigger-on-shop-event.ts";
 
 const service = "shopify";
 
 export const executors: ProviderExecutors = defineProviderExecutors({
   service,
-  handlers: shopifyActionHandlers,
+  handlers: {
+    ...operationHandlers,
+    ...shopHandlers,
+    ...catalogHandlers,
+    ...ordersHandlers,
+    ...customersHandlers,
+    ...inventoryHandlers,
+    ...bulkHandlers,
+    ...graphqlHandlers,
+    ...contentActionHandlers,
+  },
   async createContext(context: ExecutionContext, fetcher: typeof fetch) {
     const credential = await requireShopifyCredential(context);
     return {
@@ -31,6 +52,7 @@ export const executors: ProviderExecutors = defineProviderExecutors({
       shopDomain: shopifyCredentialDomain(credential),
       fetcher,
       signal: context.signal,
+      transitFiles: context.transitFiles,
     };
   },
 });
@@ -38,10 +60,12 @@ export const executors: ProviderExecutors = defineProviderExecutors({
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: async (context) => {
-    return buildShopifyRestApiBaseUrl(shopifyCredentialDomain(await requireShopifyCredential(context)));
+    return buildShopifyApiBaseUrl(shopifyCredentialDomain(await requireShopifyCredential(context)));
   },
   auth: { type: "none" },
   async customizeRequest({ context, headers }) {
+    headers.set("accept", "application/json");
+    headers.set("content-type", "application/json");
     headers.set("x-shopify-access-token", shopifyAccessToken(await requireShopifyCredential(context)));
   },
 });
@@ -51,7 +75,7 @@ export const credentialValidators: CredentialValidators = {
     return validateShopifyCredential(
       input.apiKey,
       normalizeShopDomain(optionalString(input.values.shopDomain)),
-      [shopifyReadContentScope],
+      [],
       fetcher,
       signal,
     );
@@ -98,7 +122,33 @@ function parseShopifyScopes(value: unknown): string[] {
   return (optionalString(value) ?? "")
     .split(/[ ,]+/u)
     .map((scope) => scope.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .flatMap((scope) => (scope.startsWith("write_") ? [scope, `read_${scope.slice(6)}`] : [scope]));
 }
 
+export const oauth: ProviderOAuthRuntime = shopifyOAuth;
+
 export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [shopifyShopEvent];
+
+async function validateShopifyCredential(
+  accessToken: string,
+  shopDomain: string,
+  grantedScopes: string[],
+  fetcher: typeof fetch,
+  signal?: AbortSignal,
+) {
+  const payload = await requestShopifyGraphQL({ accessToken, shopDomain, signal }, fetcher, {
+    query: "query ShopifyAccount { shop { id name myshopifyDomain } }",
+  });
+  const shop = requiredResponseRecord(requiredResponseRecord(payload.data, "data").shop, "shop");
+  return {
+    profile: { accountId: `shopify:${shopDomain}`, displayName: optionalString(shop.name) ?? shopDomain },
+    grantedScopes,
+    metadata: {
+      shopDomain,
+      apiBaseUrl: buildShopifyApiBaseUrl(shopDomain),
+      shopId: shop.id,
+      myshopifyDomain: shop.myshopifyDomain,
+    },
+  };
+}

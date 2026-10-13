@@ -18,9 +18,7 @@ function provider(overrides: Partial<ProviderDefinition>): ProviderDefinition {
 describe("resolveProviderScenario", () => {
   it("uses an explicit service mapping before its broad source categories", () => {
     expect(
-      resolveProviderScenario(
-        provider({ service: "shopify_admin", displayName: "Shopify Admin", categories: ["Productivity"] }),
-      ),
+      resolveProviderScenario(provider({ service: "shopify", displayName: "Shopify", categories: ["Productivity"] })),
     ).toBe("cross-border-ecommerce");
   });
 

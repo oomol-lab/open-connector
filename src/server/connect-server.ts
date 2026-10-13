@@ -1402,10 +1402,12 @@ export class ConnectServer {
 
     let service: string;
     try {
+      const callbackUrl = new URL(context.req.url);
       const completed = await this.options.oauthFlow.completeAuthorization({
         state,
         code,
-        callbackParameters: Object.fromEntries(new URL(context.req.url).searchParams),
+        callbackParameters: Object.fromEntries(callbackUrl.searchParams),
+        callbackQuery: callbackUrl.search,
         signal: context.req.raw.signal,
       });
       service = completed.service;

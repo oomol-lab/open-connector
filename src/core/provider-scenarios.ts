@@ -120,7 +120,6 @@ const scenarioByService = new Map<string, ProviderScenario>([
   ["triplewhale", "cross-border-ecommerce"],
   ["vercel", "developer"],
   ["shopify", "cross-border-ecommerce"],
-  ["shopifyadmin", "cross-border-ecommerce"],
   ["shopifypartner", "cross-border-ecommerce"],
   ["shopifystorefront", "cross-border-ecommerce"],
   ["shipbob", "cross-border-ecommerce"],

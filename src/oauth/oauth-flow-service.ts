@@ -43,6 +43,7 @@ export interface OAuthAuthorizationCompleteInput {
   state: string;
   code: string;
   callbackParameters?: Record<string, string>;
+  callbackQuery?: string;
   signal?: AbortSignal;
 }
 
@@ -308,6 +309,8 @@ export class OAuthFlowService {
           if (providerOAuth?.exchangeCode) {
             return providerOAuth.exchangeCode({
               code: input.code,
+              state: pending.state,
+              callbackQuery: input.callbackQuery,
               callbackParameters: input.callbackParameters,
               clientConfig: config,
               redirectUri,

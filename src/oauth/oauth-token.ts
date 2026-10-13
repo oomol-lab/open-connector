@@ -36,6 +36,10 @@ export interface OAuthTokenResult {
 
 export interface OAuthCodeExchangeInput {
   code: string;
+  /** State already claimed by the shared OAuth lifecycle. */
+  state?: string;
+  /** Original query string, preserving duplicate parameters for signature verification. */
+  callbackQuery?: string;
   /** Provider callback parameters other than code and state. */
   callbackParameters?: Record<string, string>;
   clientConfig: OAuthClientConfig;

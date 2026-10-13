@@ -1179,10 +1179,14 @@ describe("OAuthFlowService", () => {
 
   it("stores the token returned by a provider OAuth runtime", async () => {
     let callbackParameters: Record<string, string> | undefined;
+    let callbackQuery: string | undefined;
+    let callbackState: string | undefined;
     const services = createServices([oauthProvider], {
       oauthRuntime: {
         async exchangeCode(input) {
           callbackParameters = input.callbackParameters;
+          callbackQuery = input.callbackQuery;
+          callbackState = input.state;
           return {
             accessToken: "provider-access-token",
             refreshToken: "provider-access-token",
@@ -1206,6 +1210,7 @@ describe("OAuthFlowService", () => {
       state: started.state,
       code: "authorization-code",
       callbackParameters: { shop_id: "42" },
+      callbackQuery: "?shop_id=41&shop_id=42&hmac=signature",
     });
 
     await expect(services.connections.getCredential("example")).resolves.toMatchObject({
@@ -1217,6 +1222,8 @@ describe("OAuthFlowService", () => {
       metadata: { permissions: "read,write" },
     });
     expect(callbackParameters).toEqual({ shop_id: "42" });
+    expect(callbackQuery).toBe("?shop_id=41&shop_id=42&hmac=signature");
+    expect(callbackState).toBe(started.state);
   });
 
   it("rejects OAuth endpoint config values that resolve to local network targets", async () => {
