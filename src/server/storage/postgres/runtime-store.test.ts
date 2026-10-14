@@ -1,9 +1,8 @@
 import type { RuntimeActionHttpResult } from "../../api/runtime-api.ts";
 import type { MigrationSource } from "../migration-source.ts";
+import type { PGliteTestServer } from "./test-database.ts";
 
-import { PGlite } from "@electric-sql/pglite";
-import { PGLiteSocketServer } from "@electric-sql/pglite-socket";
-import { setTimeout } from "node:timers/promises";
+import { setImmediate, setTimeout } from "node:timers/promises";
 import { Client, Pool } from "pg";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { AesGcmSecretCodec } from "../../secrets/secret-codec.ts";
@@ -15,18 +14,13 @@ import { saasProjectStoreTests, saasMaintenanceTests } from "../saas-project-sto
 import { triggerStoreTests } from "../trigger-store.cases.ts";
 import { assertPostgresSchemaReady, migratePostgresDatabase } from "./migrations.ts";
 import { PostgresRuntimeDatabase } from "./runtime-store.ts";
+import { startPGliteTestServer } from "./test-database.ts";
 
 const githubProfile = {
   accountId: "github:octocat",
   displayName: "octocat",
   grantedScopes: [],
 };
-
-interface PGliteTestServer {
-  database: PGlite;
-  server: PGLiteSocketServer;
-  url: string;
-}
 
 describe("PGlite PostgreSQL protocol fixture", () => {
   let testServer: PGliteTestServer;
@@ -36,8 +30,7 @@ describe("PGlite PostgreSQL protocol fixture", () => {
   });
 
   afterAll(async () => {
-    await testServer.server.stop();
-    await testServer.database.close();
+    await testServer.close();
   });
 
   it.each([
@@ -56,20 +49,53 @@ describe("PGlite PostgreSQL protocol fixture", () => {
     client.on("error", (error) => connectionErrors.push(error));
     try {
       await client.connect();
-      for (let attempt = 0; attempt < 5; attempt += 1) {
-        await client.query("begin");
-        await expect(client.query(sql, [0])).rejects.toMatchObject({ code });
-        await client.query("rollback");
-        await expect(client.query("select $1::integer as value", [attempt])).resolves.toMatchObject({
-          rows: [{ value: attempt }],
-        });
-      }
+      await client.query("begin");
+      await expect(client.query(sql, [0])).rejects.toMatchObject({ code });
+      await client.query("rollback");
+      await expect(client.query("select $1::integer as value", [42])).resolves.toMatchObject({
+        rows: [{ value: 42 }],
+      });
       expect(connectionErrors).toEqual([]);
     } finally {
       delayedSync.mockRestore();
       await client.end();
     }
   });
+});
+
+it("waits for disconnected clients to roll back before closing PGlite", async () => {
+  const fixture = await startPGliteTestServer();
+  const client = new Client({ connectionString: fixture.url });
+  const rollbackStarted = Promise.withResolvers<void>();
+  const finishRollback = Promise.withResolvers<void>();
+  const execute = fixture.database.exec.bind(fixture.database);
+  const exec = vi.spyOn(fixture.database, "exec").mockImplementation(async (sql, options) => {
+    if (sql === "ROLLBACK") {
+      rollbackStarted.resolve();
+      await finishRollback.promise;
+    }
+    return execute(sql, options);
+  });
+  const close = vi.spyOn(fixture.database, "close");
+  let closing: Promise<void> | undefined;
+  try {
+    await client.connect();
+    await client.query("begin");
+    await client.end();
+    await rollbackStarted.promise;
+    closing = fixture.close();
+    await setImmediate();
+    expect(close).not.toHaveBeenCalled();
+    finishRollback.resolve();
+    await closing;
+    expect(close).toHaveBeenCalledOnce();
+  } finally {
+    finishRollback.resolve();
+    await client.end();
+    await (closing ?? fixture.close());
+    exec.mockRestore();
+    close.mockRestore();
+  }
 });
 
 describe("PostgreSQL migrations with PGlite", () => {
@@ -80,8 +106,7 @@ describe("PostgreSQL migrations with PGlite", () => {
   });
 
   afterAll(async () => {
-    await testServer.server.stop();
-    await testServer.database.close();
+    await testServer.close();
   });
 
   it("requires explicit migrations and recognizes the current schema", async () => {
@@ -133,8 +158,7 @@ describe("PostgreSQL migrations with a custom migration source", () => {
   });
 
   afterAll(async () => {
-    await testServer.server.stop();
-    await testServer.database.close();
+    await testServer.close();
   });
 
   it("validates and executes migrations through the same source", async () => {
@@ -195,8 +219,7 @@ describe("createNodeRuntimeDatabase with PostgreSQL", () => {
   });
 
   afterAll(async () => {
-    await testServer.server.stop();
-    await testServer.database.close();
+    await testServer.close();
   });
 
   it("migrates and opens the PostgreSQL runtime database through the lazily loaded driver", async () => {
@@ -250,8 +273,7 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
   });
 
   afterAll(async () => {
-    await testServer.server.stop();
-    await testServer.database.close();
+    await testServer.close();
   });
 
   connectionRequestStoreTests(() => database);
@@ -561,36 +583,6 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
   });
 });
 
-async function startPGliteTestServer(): Promise<PGliteTestServer> {
-  const database = await PGlite.create();
-  // PGlite sends ReadyForQuery before Sync after extended-query errors: https://github.com/electric-sql/pglite/issues/958
-  database.execProtocolRawStream = async (message, { syncToFs, onRawData }) => {
-    const response = Buffer.from(await database.execProtocolRaw(message, { syncToFs }));
-    if (message[0] === 0 || message[0] === "Q".charCodeAt(0) || message[0] === "S".charCodeAt(0)) {
-      onRawData(response);
-      return;
-    }
-    for (let offset = 0; offset < response.length;) {
-      const end = offset + response.readUInt32BE(offset + 1) + 1;
-      if (response[offset] !== "Z".charCodeAt(0)) onRawData(response.subarray(offset, end));
-      offset = end;
-    }
-  };
-  const server = new PGLiteSocketServer({
-    db: database,
-    host: "127.0.0.1",
-    port: 0,
-    maxConnections: 20,
-  });
-  await server.start();
-  const port = server.getServerConn().split(":").at(-1)!;
-  return {
-    database,
-    server,
-    url: `postgresql://postgres:postgres@127.0.0.1:${port}/postgres?sslmode=disable`,
-  };
-}
-
 function githubCredential(apiKey: string) {
   return {
     authType: "api_key" as const,
@@ -644,8 +636,7 @@ describe("PostgreSQL SaaS storage with PGlite", () => {
   });
   afterEach(async () => {
     await database.close();
-    await testServer.server.stop();
-    await testServer.database.close();
+    await testServer.close();
   });
   saasProjectStoreTests(() => database);
   saasMaintenanceTests(

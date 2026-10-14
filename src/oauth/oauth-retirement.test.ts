@@ -1,8 +1,7 @@
 import type { ProviderDefinition } from "../core/types.ts";
+import type { PGliteTestServer } from "../server/storage/postgres/test-database.ts";
 import type { RuntimeDatabase } from "../server/storage/runtime-database.ts";
 
-import { PGlite } from "@electric-sql/pglite";
-import { PGLiteSocketServer } from "@electric-sql/pglite-socket";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -15,6 +14,7 @@ import { D1RuntimeDatabase } from "../server/storage/d1/runtime-store.ts";
 import { SqliteD1Database } from "../server/storage/d1/test-database.ts";
 import { migratePostgresDatabase } from "../server/storage/postgres/migrations.ts";
 import { PostgresRuntimeDatabase } from "../server/storage/postgres/runtime-store.ts";
+import { startPGliteTestServer } from "../server/storage/postgres/test-database.ts";
 import { SqliteRuntimeDatabase } from "../server/storage/sqlite/runtime-store.ts";
 import { OAuthClientConfigService } from "./oauth-client-config-service.ts";
 import { OAuthFlowService } from "./oauth-flow-service.ts";
@@ -234,13 +234,10 @@ async function openFixture(backend: "sqlite" | "d1" | "postgres"): Promise<Runti
   }
   // CI supplies a real PostgreSQL service. Locally the same production pg driver runs against PGlite.
   let pgUrl = process.env.TEST_POSTGRES_URL;
-  let pglite: PGlite | undefined;
-  let server: PGLiteSocketServer | undefined;
+  let testServer: PGliteTestServer | undefined;
   if (!pgUrl) {
-    pglite = await PGlite.create();
-    server = new PGLiteSocketServer({ db: pglite, host: "127.0.0.1", port: 0, maxConnections: 20 });
-    await server.start();
-    pgUrl = `postgresql://postgres:postgres@${server.getServerConn()}/postgres?sslmode=disable`;
+    testServer = await startPGliteTestServer();
+    pgUrl = testServer.url;
   }
   const admin = new Pool({ connectionString: pgUrl, max: 1 });
   const schema = `retirement_${crypto.randomUUID().replaceAll("-", "")}`;
@@ -265,8 +262,7 @@ async function openFixture(backend: "sqlite" | "d1" | "postgres"): Promise<Runti
       for (const database of databases) await database.close();
       await admin.query(`drop schema ${schema} cascade`);
       await admin.end();
-      await server?.stop();
-      await pglite?.close();
+      await testServer?.close();
     },
   };
 }

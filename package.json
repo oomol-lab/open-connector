@@ -60,8 +60,8 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.5.5",
-    "@electric-sql/pglite-socket": "^0.2.8",
+    "@electric-sql/pglite": "^0.5.9",
+    "@electric-sql/pglite-socket": "^0.2.12",
     "@hyrious/configs": "^0.1.6",
     "@types/ali-oss": "^6.23.3",
     "@types/bun": "1.4.0",
