@@ -34,6 +34,32 @@ describe("createNodeTransitFileUpload", () => {
     await expect(service.read(result.fileId).then((stored) => stored.name)).resolves.toBe("发票.pdf");
   });
 
+  it("uses the file ID when an octet-stream part has no filename", async () => {
+    const { service, tempDir } = await createService();
+    const upload = createNodeTransitFileUpload({ transitFiles: service, tempDir });
+    const body = [
+      "--boundary",
+      'Content-Disposition: form-data; name="file"',
+      "Content-Type: application/octet-stream",
+      "",
+      "payload",
+      "--boundary--",
+      "",
+    ].join("\r\n");
+
+    const result = await upload(
+      new Request("http://localhost/api/files", {
+        method: "POST",
+        headers: { "content-type": "multipart/form-data; boundary=boundary" },
+        body,
+      }),
+    );
+
+    expect(result.name).toBe(result.fileId);
+    await expect(service.read(result.fileId).then((stored) => stored.file.text())).resolves.toBe("payload");
+    await expect(readdir(tempDir)).resolves.toEqual([]);
+  });
+
   it("repairs an unpaired surrogate from an extended multipart filename", async () => {
     const { service, tempDir } = await createService();
     const upload = createNodeTransitFileUpload({ transitFiles: service, tempDir });

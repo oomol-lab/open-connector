@@ -91,7 +91,7 @@ async function stageMultipartFile(request: Request, path: string, maxBytes: numb
       return {
         path,
         sizeBytes: writer.bytesWritten,
-        name: info.filename,
+        name: info.filename ?? "",
         mimeType: info.mimeType,
       };
     });
