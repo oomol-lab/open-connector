@@ -134,5 +134,31 @@ les apps OAuth ; OOMOL hébergé est le chemin qui inclut l'OAuth géré.
         <a href="https://nexusai.run/deploy?repo=https%3A%2F%2Fgithub.com%2Foomol-lab%2Fopen-connector&amp;dockerfile=docker%2FDockerfile&amp;env=OOMOL_CONNECT_ORIGIN%3D%7Burl%7D&amp;require=OOMOL_CONNECT_ADMIN_TOKEN&amp;generate=OOMOL_CONNECT_ENCRYPTION_KEY&amp;generate=OOMOL_CONNECT_RUNTIME_TOKEN&amp;template=open-connector"><strong>Déployer en un clic</strong></a>
       </td>
     </tr>
+    <tr>
+      <td valign="middle" align="center">
+        <a href="https://pethost.dev/"><img src="../../assets/deployment-options/pethost.svg" alt="Pethost" width="140"></a>
+      </td>
+      <td valign="top">
+        Un modèle en un clic qui exécute l'image publiée
+        <code>ghcr.io/oomol-lab/open-connector</code> avec sa propre adresse HTTPS. Il définit
+        <code>OOMOL_CONNECT_ORIGIN</code> sur cette adresse, demande le jeton admin et génère la clé
+        de chiffrement et le runtime token, de sorte que la Web Console et toutes les API exigent
+        une authentification dès le premier démarrage. Le répertoire de données, avec la base
+        SQLite, est sur un volume : il survit aux redémarrages et aux redéploiements.
+        <br><br>
+        <strong>Avantages :</strong> un prix mensuel fixe pour tout le serveur, qu'OpenConnector
+        peut partager avec d'autres apps et bases de données ; rien n'est facturé à l'usage et rien
+        ne se met en veille. Sauvegardes nocturnes, logs et chaque requête HTTP dans un seul
+        panneau, et un serveur MCP pour qu'un agent le déploie et le gère.
+        <br><br>
+        <strong>Prix :</strong> à partir de 9,99 €/mois pour 2 vCPU, 3 GB de mémoire et 30 GB de
+        SSD, ou 17,99 €/mois pour 4 vCPU, 6 GB et 60 GB, avec autant de projets qu'il en tient.
+        OpenConnector occupe environ 230 MB de mémoire au repos. Voir <a
+        href="https://pethost.dev/fr/#pricing">les tarifs Pethost</a>.
+      </td>
+      <td valign="middle" align="center">
+        <a href="https://pethost.dev/templates/open-connector/"><strong>Déployer en un clic</strong></a>
+      </td>
+    </tr>
   </tbody>
 </table>

@@ -129,5 +129,20 @@ platform では OAuth app を自分で登録する必要があります。マネ
         <a href="https://nexusai.run/deploy?repo=https%3A%2F%2Fgithub.com%2Foomol-lab%2Fopen-connector&amp;dockerfile=docker%2FDockerfile&amp;env=OOMOL_CONNECT_ORIGIN%3D%7Burl%7D&amp;require=OOMOL_CONNECT_ADMIN_TOKEN&amp;generate=OOMOL_CONNECT_ENCRYPTION_KEY&amp;generate=OOMOL_CONNECT_RUNTIME_TOKEN&amp;template=open-connector"><strong>ワンクリックデプロイ</strong></a>
       </td>
     </tr>
+    <tr>
+      <td valign="middle" align="center">
+        <a href="https://pethost.dev/"><img src="../../assets/deployment-options/pethost.svg" alt="Pethost" width="140"></a>
+      </td>
+      <td valign="top">
+        公開済みの <code>ghcr.io/oomol-lab/open-connector</code> イメージを専用の HTTPS アドレスで実行するワンクリックテンプレートです。<code>OOMOL_CONNECT_ORIGIN</code> をそのアドレスに設定し、admin token を入力させ、encryption key と runtime token を生成するため、Web Console とすべての API は最初の起動から認証が必要です。SQLite データベースを含むデータディレクトリは volume 上にあり、再起動や redeploy の後も残ります。
+        <br><br>
+        <strong>利点:</strong>サーバー全体が月額固定料金で、OpenConnector を他のアプリやデータベースと同じサーバーで動かせます。従量課金はなく、スリープもしません。夜間バックアップ、log、すべての HTTP リクエストを 1 つのパネルで確認でき、MCP サーバーを通じて agent がデプロイと管理を行えます。
+        <br><br>
+        <strong>料金:</strong>2 vCPU、3 GB メモリ、30 GB SSD で月額 €9.99 から、4 vCPU、6 GB、60 GB で月額 €17.99 です。プロジェクトは収まるだけ置けます。OpenConnector のアイドル時のメモリ使用量は約 230 MB です。<a href="https://pethost.dev/#pricing">Pethost の料金</a> を参照してください。
+      </td>
+      <td valign="middle" align="center">
+        <a href="https://pethost.dev/templates/open-connector/"><strong>ワンクリックデプロイ</strong></a>
+      </td>
+    </tr>
   </tbody>
 </table>

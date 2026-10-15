@@ -130,5 +130,30 @@ path that includes managed OAuth.
         <a href="https://nexusai.run/deploy?repo=https%3A%2F%2Fgithub.com%2Foomol-lab%2Fopen-connector&amp;dockerfile=docker%2FDockerfile&amp;env=OOMOL_CONNECT_ORIGIN%3D%7Burl%7D&amp;require=OOMOL_CONNECT_ADMIN_TOKEN&amp;generate=OOMOL_CONNECT_ENCRYPTION_KEY&amp;generate=OOMOL_CONNECT_RUNTIME_TOKEN&amp;template=open-connector"><strong>One-click deploy</strong></a>
       </td>
     </tr>
+    <tr>
+      <td valign="middle" align="center">
+        <a href="https://pethost.dev/"><img src="../../assets/deployment-options/pethost.svg" alt="Pethost" width="140"></a>
+      </td>
+      <td valign="top">
+        A one-click template that runs the published <code>ghcr.io/oomol-lab/open-connector</code>
+        image with its own HTTPS address. It sets <code>OOMOL_CONNECT_ORIGIN</code> to that address,
+        asks for the admin token, and generates the encryption key and runtime token, so the Web
+        Console and every API require authentication from the first start. The data directory, with
+        the SQLite database, is on a volume, so it survives restarts and redeploys.
+        <br><br>
+        <strong>Advantages:</strong> one flat monthly price for the whole server, which
+        OpenConnector can share with other apps and databases; nothing is metered and nothing
+        sleeps. Nightly backups, logs and every HTTP request in one panel, and an MCP server so an
+        agent can deploy and manage it.
+        <br><br>
+        <strong>Pricing:</strong> from €9.99/month for 2 vCPU, 3 GB memory and 30 GB SSD, or
+        €17.99/month for 4 vCPU, 6 GB and 60 GB, with as many projects as fit. OpenConnector takes
+        about 230 MB of memory at rest. See <a href="https://pethost.dev/#pricing">Pethost
+        pricing</a>.
+      </td>
+      <td valign="middle" align="center">
+        <a href="https://pethost.dev/templates/open-connector/"><strong>One-click deploy</strong></a>
+      </td>
+    </tr>
   </tbody>
 </table>

@@ -115,5 +115,20 @@
         <a href="https://nexusai.run/deploy?repo=https%3A%2F%2Fgithub.com%2Foomol-lab%2Fopen-connector&amp;dockerfile=docker%2FDockerfile&amp;env=OOMOL_CONNECT_ORIGIN%3D%7Burl%7D&amp;require=OOMOL_CONNECT_ADMIN_TOKEN&amp;generate=OOMOL_CONNECT_ENCRYPTION_KEY&amp;generate=OOMOL_CONNECT_RUNTIME_TOKEN&amp;template=open-connector"><strong>一键部署</strong></a>
       </td>
     </tr>
+    <tr>
+      <td valign="middle" align="center">
+        <a href="https://pethost.dev/"><img src="../../assets/deployment-options/pethost.svg" alt="Pethost" width="140"></a>
+      </td>
+      <td valign="top">
+        一键模板，运行已发布的 <code>ghcr.io/oomol-lab/open-connector</code> 镜像，并提供独立的 HTTPS 地址。它把 <code>OOMOL_CONNECT_ORIGIN</code> 设为该地址，要求填写 admin token，并生成加密密钥和 runtime token，因此 Web Console 和所有 API 从首次启动起就需要认证。包含 SQLite 数据库的数据目录位于卷上，重启和重新部署后都会保留。
+        <br><br>
+        <strong>优点：</strong>整台服务器按月固定价格计费，OpenConnector 可以与其他应用和数据库共用这台服务器；不按用量计费，也不会休眠。每晚备份、日志和每个 HTTP 请求都在同一个面板中，MCP 服务器让智能体可以部署和管理它。
+        <br><br>
+        <strong>价格：</strong>2 vCPU、3 GB 内存、30 GB SSD 起价 €9.99/月，4 vCPU、6 GB、60 GB 为 €17.99/月，能放下多少项目就放多少。OpenConnector 空闲时约占用 230 MB 内存。见 <a href="https://pethost.dev/#pricing">Pethost 定价</a>。
+      </td>
+      <td valign="middle" align="center">
+        <a href="https://pethost.dev/templates/open-connector/"><strong>一键部署</strong></a>
+      </td>
+    </tr>
   </tbody>
 </table>

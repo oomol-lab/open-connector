@@ -127,5 +127,20 @@ platform에서는 OAuth app을 직접 등록해야 합니다. 관리형 OAuth가
         <a href="https://nexusai.run/deploy?repo=https%3A%2F%2Fgithub.com%2Foomol-lab%2Fopen-connector&amp;dockerfile=docker%2FDockerfile&amp;env=OOMOL_CONNECT_ORIGIN%3D%7Burl%7D&amp;require=OOMOL_CONNECT_ADMIN_TOKEN&amp;generate=OOMOL_CONNECT_ENCRYPTION_KEY&amp;generate=OOMOL_CONNECT_RUNTIME_TOKEN&amp;template=open-connector"><strong>원클릭 배포</strong></a>
       </td>
     </tr>
+    <tr>
+      <td valign="middle" align="center">
+        <a href="https://pethost.dev/"><img src="../../assets/deployment-options/pethost.svg" alt="Pethost" width="140"></a>
+      </td>
+      <td valign="top">
+        게시된 <code>ghcr.io/oomol-lab/open-connector</code> 이미지를 전용 HTTPS 주소로 실행하는 원클릭 템플릿입니다. <code>OOMOL_CONNECT_ORIGIN</code>을 그 주소로 설정하고, admin token을 입력받고, 암호화 키와 runtime token을 생성하므로 Web Console과 모든 API는 첫 시작부터 인증이 필요합니다. SQLite 데이터베이스가 있는 데이터 디렉터리는 볼륨에 있어 재시작과 재배포 후에도 유지됩니다.
+        <br><br>
+        <strong>장점:</strong> 서버 전체에 월 고정 요금이며, OpenConnector를 다른 앱, 데이터베이스와 같은 서버에서 실행할 수 있습니다. 사용량 과금이 없고 절전 모드도 없습니다. 야간 백업, 로그, 모든 HTTP 요청을 하나의 패널에서 볼 수 있고, MCP 서버로 에이전트가 배포하고 관리할 수 있습니다.
+        <br><br>
+        <strong>가격:</strong> 2 vCPU, 3 GB 메모리, 30 GB SSD에 월 €9.99부터, 4 vCPU, 6 GB, 60 GB에 월 €17.99이며, 프로젝트는 들어가는 만큼 둘 수 있습니다. OpenConnector는 유휴 상태에서 약 230 MB의 메모리를 사용합니다. <a href="https://pethost.dev/#pricing">Pethost 가격</a>을 참고하세요.
+      </td>
+      <td valign="middle" align="center">
+        <a href="https://pethost.dev/templates/open-connector/"><strong>원클릭 배포</strong></a>
+      </td>
+    </tr>
   </tbody>
 </table>

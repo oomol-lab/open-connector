@@ -1,0 +1,26 @@
+<svg width="176" height="50" viewBox="0 0 176 50" xmlns="http://www.w3.org/2000/svg">
+  <title>Pethost</title>
+  <style>
+  .pethost-logotype {
+    fill: #0a0a0a;
+  }
+  .pethost-tile {
+    fill: #0e0e0e;
+  }
+  @media (prefers-color-scheme: dark) {
+    .pethost-logotype {
+      fill: #fafafa;
+    }
+    .pethost-tile {
+      stroke: #fafafa;
+      stroke-opacity: 0.3;
+      stroke-width: 4;
+    }
+  }
+  </style>
+  <g transform="translate(4 5) scale(0.3125)">
+    <rect class="pethost-tile" width="128" height="128" rx="28" />
+    <path transform="translate(22 27.4) scale(.857)" fill="#fff" fill-rule="evenodd" d="M49 85 C19 85 0 74 0 53 C0 37 1.5 22 4 10 C5.5 0 11 -1.5 17 2.5 L30 11.5 C36 15.5 42 16.5 49 16.5 C56 16.5 62 15.5 68 11.5 L81 2.5 C87 -1.5 92.5 0 94 10 C96.5 22 98 37 98 53 C98 74 79 85 49 85 Z M11 57 A16.5 16.5 0 0 1 44 57 A5 5 0 0 1 34 57 A6.5 6.5 0 0 0 21 57 A5 5 0 0 1 11 57 Z M54 57 A16.5 16.5 0 0 1 87 57 A5 5 0 0 1 77 57 A6.5 6.5 0 0 0 64 57 A5 5 0 0 1 54 57 Z" />
+  </g>
+  <text class="pethost-logotype" x="54" y="33" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="22" font-weight="700" letter-spacing="0.5">Pethost</text>
+</svg>
