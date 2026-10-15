@@ -257,10 +257,10 @@ export const twittrapiActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_users_by_ids",
     operationType: "read",
-    description: "Get up to 100 X profiles in one call by numeric user ID.",
+    description: "Get up to 500 X profiles in one call by numeric user ID.",
     requiredScopes: [],
     inputSchema: s.object("The accounts to read.", {
-      userIds: s.array("Numeric X user IDs.", userId, { minItems: 1, maxItems: 100 }),
+      userIds: s.array("Numeric X user IDs.", userId, { minItems: 1, maxItems: 500 }),
     }),
     outputSchema: s.object("The profiles X returned. IDs that X does not return are left out.", {
       users: s.array("Profiles in simple format.", userSchema),
