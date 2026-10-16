@@ -181,12 +181,14 @@ export const twittrapiActions: readonly ProviderActionDefinition[] = [
     requiredScopes: [],
     inputSchema: s.object("The post to read.", { tweetId }),
     outputSchema: s.object("The requested post.", {
-      tweet: s.looseObject(
-        "The post in simple format, or `{ id, unavailable: true }` when X does not return it (deleted, protected, or withheld).",
-        {
-          id: s.string("Numeric ID of the post."),
-          unavailable: s.boolean("Present and true when X did not return the post."),
-        },
+      tweet: s.describe(
+        s.nullable(
+          s.looseObject("The post in simple format, or an unavailable stub.", {
+            id: s.string("Numeric ID of the post."),
+            unavailable: s.boolean("Present and true when X did not return the post."),
+          }),
+        ),
+        "The post, an `{ id, unavailable: true }` stub when X hides it, or null when X returns nothing for the ID.",
       ),
     }),
   }),

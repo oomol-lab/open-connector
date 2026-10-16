@@ -112,6 +112,14 @@ describe("TwittrAPI actions", () => {
     expect(requests[0]!.url.pathname).toBe("/simpletweet/42");
   });
 
+  it("returns null when X returns nothing for the post ID", async () => {
+    const { fetcher } = mockFetcher(() => Response.json({ data: null }));
+
+    const result = await twittrapiActionHandlers.get_tweet({ tweetId: "42" }, { apiKey, fetcher });
+
+    expect(result).toEqual({ tweet: null });
+  });
+
   it("maps a 402 to insufficient credit with the upstream message", async () => {
     const { fetcher } = mockFetcher(() => Response.json({ error: "No balance left" }, { status: 402 }));
 

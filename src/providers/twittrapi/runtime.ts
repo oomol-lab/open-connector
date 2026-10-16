@@ -79,7 +79,8 @@ export const twittrapiActionHandlers: ProviderActionHandlers<"twittrapi", Twittr
   },
   async get_tweet(input, context) {
     const payload = await getTwittrapiJson({ path: `/simpletweet/${encodePathSegment(input.tweetId)}` }, context);
-    return { tweet: requiredResponseRecord(readData(payload), "TwittrAPI tweet") };
+    const tweet = readData(payload);
+    return { tweet: tweet === null ? null : requiredResponseRecord(tweet, "TwittrAPI tweet") };
   },
   async get_tweet_conversation(input, context) {
     const payload = await getTwittrapiJson(
