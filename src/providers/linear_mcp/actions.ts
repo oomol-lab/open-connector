@@ -5,6 +5,7 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "linear_mcp";
 const readScope = ["read"];
+const writeScope = ["write"];
 
 /** The signed-in Linear user as the MCP get_user tool reports it. */
 export interface LinearMcpUser {
@@ -52,6 +53,21 @@ export interface LinearMcpComment {
   createdAt?: string;
   updatedAt?: string;
   url?: string;
+}
+
+/**
+ * Typed fields lifted from one Linear MCP record that names a thing: a team, a
+ * project, a workflow state or a label. The list tools answer records of
+ * different shapes; only the id is required and the rest is best effort.
+ */
+export interface LinearMcpNamedRecord {
+  id: string;
+  name?: string;
+  key?: string;
+  type?: string;
+  color?: string;
+  url?: string;
+  state?: string;
 }
 
 const rawSchema = s.string(
@@ -107,6 +123,79 @@ const commentSchema = s.looseObject("A Linear issue comment.", {
   updatedAt: s.optional(s.string("Last edit time, when returned.")),
   url: s.optional(s.string("Link to the comment in Linear.")),
 });
+
+const namedRecordSchema = s.looseObject(
+  "A team, project, workflow state or label as Linear MCP lists it. Typed fields are lifted when present; the rest is only in the action's raw text.",
+  {
+    id: s.nonEmptyString("Record ID as Linear MCP returned it."),
+    name: s.optional(s.string("Display name.")),
+    key: s.optional(s.string("Team key such as ENG, when the record is a team.")),
+    type: s.optional(s.string("Workflow state type such as started or completed, when the record is a state.")),
+    color: s.optional(s.string("Color, when the record is a label.")),
+    url: s.optional(s.string("Link to the record in Linear, when returned.")),
+    state: s.optional(s.string("Project state, when the record is a project.")),
+  },
+);
+
+const issueFields = {
+  title: s.nonEmptyString("Issue title."),
+  description: s.string("Issue description in Markdown."),
+  team: s.nonEmptyString("Team key, name or ID the issue belongs to."),
+  assignee: s.string("Assignee as a user ID, name or email, or me for the signed-in user."),
+  state: s.string("Workflow state name or ID."),
+  priority: s.integer("Priority as Linear numbers it: 0 none, 1 urgent, 2 high, 3 medium, 4 low.", {
+    minimum: 0,
+    maximum: 4,
+  }),
+  labels: s.stringArray("Label names or IDs."),
+  project: s.string("Project name or ID."),
+  dueDate: s.string("Due date as YYYY-MM-DD."),
+  parentId: s.string("Parent issue ID or identifier, for a sub-issue."),
+  estimate: s.integer("Estimate on the team's scale."),
+};
+const optionalIssueFields = [
+  "description",
+  "assignee",
+  "state",
+  "priority",
+  "labels",
+  "project",
+  "dueDate",
+  "parentId",
+  "estimate",
+];
+
+const createIssueInputSchema = s.object(
+  "Fields forwarded to Linear's MCP save_issue tool without an id, which creates the issue. Keys this schema does not name pass through as given and Linear's server validates them.",
+  issueFields,
+  { optional: optionalIssueFields, additionalProperties: true },
+);
+
+const updateIssueInputSchema = s.object(
+  "Fields forwarded to Linear's MCP save_issue tool with an id, which updates the issue. Only the fields given change; keys this schema does not name pass through as given.",
+  { id: s.nonEmptyString("Issue ID or human identifier such as ENG-123, as returned by list_issues."), ...issueFields },
+  { optional: ["title", "team", ...optionalIssueFields], additionalProperties: true },
+);
+
+const createCommentInputSchema = s.object(
+  "Fields forwarded to Linear's MCP save_comment tool without an id, which creates the comment.",
+  {
+    issueId: s.nonEmptyString("Issue ID or human identifier such as ENG-123."),
+    body: s.nonEmptyString("Comment body in Markdown."),
+    parentId: s.string("Comment ID to reply to, for a threaded reply."),
+  },
+  { optional: ["parentId"], additionalProperties: true },
+);
+
+const listProjectsInputSchema = s.object(
+  "Filters forwarded to Linear's MCP list_projects tool. Keys this schema does not name pass through as given.",
+  {
+    team: s.nonEmptyString("Team key, name or ID whose projects to list."),
+    limit: s.integer("Maximum number of projects to return on this page.", { minimum: 1, maximum: 250 }),
+    cursor: s.nonEmptyString("Cursor returned by the previous page of the same query."),
+  },
+  { optional: ["team", "limit", "cursor"], additionalProperties: true },
+);
 
 const listIssuesInputSchema = s.object(
   "Filters forwarded to Linear's MCP list_issues tool. Which filters the tool honours is decided by Linear's server; unknown values are rejected there.",
@@ -171,6 +260,101 @@ export const linearMcpActions: ActionDefinition[] = [
     }),
     outputSchema: s.requiredObject("Comments on the issue.", {
       comments: s.array("Comments as returned, oldest first when Linear orders them.", commentSchema),
+      raw: rawSchema,
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "list_teams",
+    operationType: "read",
+    description:
+      "List the teams of the connected Linear workspace through Linear's MCP list_teams tool: the keys and IDs the issue tools take as team.",
+    requiredScopes: readScope,
+    followUpActions: ["linear_mcp.list_issue_statuses", "linear_mcp.list_issue_labels", "linear_mcp.create_issue"],
+    inputSchema: s.object({}),
+    outputSchema: s.requiredObject("The teams.", {
+      teams: s.array("Teams as returned.", namedRecordSchema),
+      raw: rawSchema,
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "list_projects",
+    operationType: "read",
+    description:
+      "List Linear projects through Linear's MCP list_projects tool, optionally for one team, with cursor pagination.",
+    requiredScopes: readScope,
+    inputSchema: listProjectsInputSchema,
+    outputSchema: s.requiredObject("One page of projects.", {
+      projects: s.array("Projects on this page.", namedRecordSchema),
+      hasNextPage: s.boolean("Whether another page follows."),
+      cursor: s.nullable(s.string("Cursor for the next page, when one is available.")),
+      raw: rawSchema,
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "list_issue_statuses",
+    operationType: "read",
+    description:
+      "List one team's workflow states through Linear's MCP list_issue_statuses tool: the names the issue tools take as state.",
+    requiredScopes: readScope,
+    inputSchema: s.requiredObject("The team whose workflow states to list.", {
+      team: s.nonEmptyString("Team key, name or ID."),
+    }),
+    outputSchema: s.requiredObject("The workflow states.", {
+      statuses: s.array("States as returned.", namedRecordSchema),
+      raw: rawSchema,
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "list_issue_labels",
+    operationType: "read",
+    description: "List issue labels through Linear's MCP list_issue_labels tool, for the workspace or one team.",
+    requiredScopes: readScope,
+    inputSchema: s.object(
+      "Optional team filter.",
+      { team: s.nonEmptyString("Team key, name or ID; omitted, the workspace's labels.") },
+      { optional: ["team"] },
+    ),
+    outputSchema: s.requiredObject("The labels.", {
+      labels: s.array("Labels as returned.", namedRecordSchema),
+      raw: rawSchema,
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "create_issue",
+    operationType: "write",
+    description:
+      "Create a Linear issue through Linear's MCP save_issue tool. Needs the write scope on the grant; an id in the input is dropped so this never updates an existing issue.",
+    requiredScopes: writeScope,
+    followUpActions: ["linear_mcp.get_issue", "linear_mcp.create_comment"],
+    inputSchema: createIssueInputSchema,
+    outputSchema: s.requiredObject("The created issue.", {
+      issue: s.nullable(issueSchema),
+      raw: rawSchema,
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "update_issue",
+    operationType: "write",
+    description:
+      "Update a Linear issue through Linear's MCP save_issue tool with its id: the title, description, team, assignee, state, priority, labels, project, due date, parent or estimate. Needs the write scope on the grant.",
+    requiredScopes: writeScope,
+    followUpActions: ["linear_mcp.get_issue"],
+    inputSchema: updateIssueInputSchema,
+    outputSchema: s.requiredObject("The updated issue.", {
+      issue: s.nullable(issueSchema),
+      raw: rawSchema,
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "create_comment",
+    operationType: "write",
+    description:
+      "Comment on a Linear issue through Linear's MCP save_comment tool, optionally as a reply to another comment. Needs the write scope on the grant.",
+    requiredScopes: writeScope,
+    followUpActions: ["linear_mcp.list_comments"],
+    inputSchema: createCommentInputSchema,
+    outputSchema: s.requiredObject("The created comment.", {
+      comment: s.nullable(commentSchema),
       raw: rawSchema,
     }),
   }),

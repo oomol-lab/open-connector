@@ -5,7 +5,7 @@ import type {
   ProviderActionSources,
   ProviderRuntimeHandler,
 } from "../provider-runtime.ts";
-import type { LinearMcpComment, LinearMcpIssue, LinearMcpUser } from "./actions.ts";
+import type { LinearMcpComment, LinearMcpIssue, LinearMcpNamedRecord, LinearMcpUser } from "./actions.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
 import { ProtocolError, SdkHttpError, UnauthorizedError } from "@modelcontextprotocol/client";
@@ -34,13 +34,38 @@ type LinearMcpPhase = "validate" | "execute";
 type LinearMcpContext = Pick<OAuthProviderContext, "accessToken" | "fetcher" | "signal">;
 type LinearMcpToolCall = Awaited<ReturnType<Client["callTool"]>>;
 
-/** The Linear MCP tool behind each action. Sign-in requires every one of them (see the validator). */
+/**
+ * The Linear MCP tool behind each action. Sign-in requires the four reads the
+ * connector was built on (linearMcpSignInTools, the validator); the reference
+ * reads and the writes are called as they are and fail on their own when the
+ * server does not list them. save_issue and save_comment create without an id
+ * and update with one, so two actions share each.
+ */
 export const linearMcpToolsByAction: ProviderActionSources<typeof service, string> = {
   get_self: "get_user",
   list_issues: "list_issues",
   get_issue: "get_issue",
   list_comments: "list_comments",
+  list_teams: "list_teams",
+  list_projects: "list_projects",
+  list_issue_statuses: "list_issue_statuses",
+  list_issue_labels: "list_issue_labels",
+  create_issue: "save_issue",
+  update_issue: "save_issue",
+  create_comment: "save_comment",
 };
+
+/**
+ * The tools every grant must serve at sign-in. The writes stay out on purpose: a
+ * read-only grant, the default, or an older server may not list them, and a
+ * credential must not be refused for a tool its grant could never call.
+ */
+const linearMcpSignInTools = [
+  linearMcpToolsByAction.get_self,
+  linearMcpToolsByAction.list_issues,
+  linearMcpToolsByAction.get_issue,
+  linearMcpToolsByAction.list_comments,
+];
 
 /** One tool call's text as returned plus the JSON it carried, when it carried any. */
 interface LinearMcpToolResult {
@@ -85,7 +110,75 @@ export const linearMcpActionHandlers: ProviderActionHandlers<
     const result = await callLinearMcpTool(context, "execute", linearMcpToolsByAction.list_comments, { issueId });
     return { comments: parseLinearMcpComments(result.payload), raw: result.text };
   },
+  async list_teams(_input, context) {
+    const result = await callLinearMcpTool(context, "execute", linearMcpToolsByAction.list_teams, {});
+    return { teams: parseLinearMcpRecords(result.payload, "teams"), raw: result.text };
+  },
+  async list_projects(input, context) {
+    const result = await callLinearMcpTool(
+      context,
+      "execute",
+      linearMcpToolsByAction.list_projects,
+      compactObject(input),
+    );
+    return {
+      projects: parseLinearMcpRecords(result.payload, "projects"),
+      ...parseLinearMcpPaging(result.payload),
+      raw: result.text,
+    };
+  },
+  async list_issue_statuses(input, context) {
+    const team = requiredInputString(input.team, "team");
+    const result = await callLinearMcpTool(context, "execute", linearMcpToolsByAction.list_issue_statuses, { team });
+    return {
+      statuses: parseLinearMcpRecords(result.payload, "statuses", "states", "workflowStates"),
+      raw: result.text,
+    };
+  },
+  async list_issue_labels(input, context) {
+    const result = await callLinearMcpTool(
+      context,
+      "execute",
+      linearMcpToolsByAction.list_issue_labels,
+      compactObject({ team: optionalString(input.team) }),
+    );
+    return { labels: parseLinearMcpRecords(result.payload, "labels", "issueLabels"), raw: result.text };
+  },
+  async create_issue(input, context) {
+    const title = requiredInputString(input.title, "title");
+    const team = requiredInputString(input.team, "team");
+    const result = await callLinearMcpTool(context, "execute", linearMcpToolsByAction.create_issue, {
+      ...withoutId(input),
+      title,
+      team,
+    });
+    return { issue: parseLinearMcpIssue(result.payload) ?? null, raw: result.text };
+  },
+  async update_issue(input, context) {
+    const id = requiredInputString(input.id, "id");
+    const result = await callLinearMcpTool(context, "execute", linearMcpToolsByAction.update_issue, {
+      ...compactObject(input),
+      id,
+    });
+    return { issue: parseLinearMcpIssue(result.payload) ?? null, raw: result.text };
+  },
+  async create_comment(input, context) {
+    const issueId = requiredInputString(input.issueId, "issueId");
+    const body = requiredInputString(input.body, "body");
+    const result = await callLinearMcpTool(context, "execute", linearMcpToolsByAction.create_comment, {
+      ...withoutId(input),
+      issueId,
+      body,
+    });
+    return { comment: parseLinearMcpComments(unwrapComment(result.payload))[0] ?? null, raw: result.text };
+  },
 };
+
+/** The input with any `id` dropped: save_issue and save_comment update when they see one, and a create never does. */
+function withoutId(input: Record<string, unknown>): Record<string, unknown> {
+  const { id: _id, ...rest } = compactObject(input);
+  return rest;
+}
 
 /**
  * Validate the OAuth grant against the MCP server: every tool the actions map
@@ -99,7 +192,7 @@ export async function validateLinearMcpCredential(
   const context = { accessToken: credential.accessToken, fetcher: options.fetcher, signal: options.signal };
   return withLinearMcpClient(context, "validate", async (client, signal) => {
     const available = await listLinearMcpToolNames(client, signal);
-    const missing = Object.values(linearMcpToolsByAction).filter((name) => !available.has(name));
+    const missing = linearMcpSignInTools.filter((name) => !available.has(name));
     if (missing.length > 0) {
       throw new ProviderRequestError(
         502,
@@ -193,10 +286,52 @@ function parseLinearMcpIssuePage(payload: unknown): {
   const record = optionalRecord(payload);
   const items = Array.isArray(payload) ? payload : looseArray(record?.issues ?? record?.nodes ?? record?.results);
   const issues = items.map(parseLinearMcpIssue).filter((issue) => issue !== undefined);
+  return { issues, ...parseLinearMcpPaging(payload) };
+}
+
+/** The page bounds of a list answer: a cursor under any of its names, and whether another page follows. */
+function parseLinearMcpPaging(payload: unknown): { hasNextPage: boolean; cursor: string | null } {
+  const record = optionalRecord(payload);
   const cursor = record ? (pickOptionalString(record, "cursor", "nextCursor", "endCursor") ?? null) : null;
   const hasNextPage =
     (record && (optionalBoolean(record.hasNextPage) ?? optionalBoolean(record.hasMore))) ?? cursor !== null;
-  return { issues, hasNextPage, cursor };
+  return { hasNextPage, cursor };
+}
+
+/**
+ * The records of a list answer — the first of the named arrays, the answer
+ * itself when it is an array, else `nodes` or `results` — each typed when it
+ * carries an id: a team, a project, a workflow state or a label.
+ */
+function parseLinearMcpRecords(payload: unknown, ...keys: string[]): LinearMcpNamedRecord[] {
+  const record = optionalRecord(payload);
+  const named = keys.map((key) => record?.[key]).find((value) => Array.isArray(value));
+  const items = Array.isArray(payload) ? payload : looseArray(named ?? record?.nodes ?? record?.results);
+  return items.flatMap((item) => {
+    const entry = optionalRecord(item);
+    const id = entry && pickOptionalString(entry, "id");
+    if (!entry || !id) return [];
+    return [
+      {
+        id,
+        ...compactObject({
+          name: pickOptionalString(entry, "name", "title"),
+          key: pickOptionalString(entry, "key"),
+          type: pickOptionalString(entry, "type"),
+          color: pickOptionalString(entry, "color"),
+          url: pickOptionalString(entry, "url"),
+          state: labelOf(entry.state ?? entry.status),
+        }),
+      },
+    ];
+  });
+}
+
+/** A save_comment answer as a one-item list for the comments reader: the comment under `comment`, else the answer itself. */
+function unwrapComment(payload: unknown): unknown[] {
+  const record = optionalRecord(payload);
+  const comment = record && (optionalRecord(record.comment) ?? record);
+  return comment ? [comment] : [];
 }
 
 function parseLinearMcpIssue(value: unknown): LinearMcpIssue | undefined {

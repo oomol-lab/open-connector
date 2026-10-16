@@ -15,7 +15,8 @@ interface RpcRequest {
 
 const endpoint = "https://mcp.linear.app/mcp";
 const accessToken = "synthetic-linear-mcp-token";
-const mappedTools = Object.values(linearMcpToolsByAction);
+const mappedTools = [...new Set(Object.values(linearMcpToolsByAction))];
+const signInTools = ["get_user", "list_issues", "get_issue", "list_comments"];
 
 // Fixtures follow the shapes Linear's MCP tools returned when exercised: the
 // list_issues id was the human identifier with the UUID beside it and the
@@ -78,11 +79,55 @@ const commentsBody = {
     { body: "no id" },
   ],
 };
+const teamsBody = {
+  teams: [
+    { id: "team-1", key: "ENG", name: "Engineering" },
+    { key: "NOID", name: "no id" },
+  ],
+};
+const projectsBody = {
+  projects: [
+    { id: "project-1", name: "Acme", state: { name: "started" }, url: "https://linear.app/acme/project/acme" },
+  ],
+  hasNextPage: false,
+};
+const statesBody = {
+  states: [
+    { id: "state-1", name: "In Progress", type: "started", color: "#f2c94c" },
+    { id: "state-2", name: "Done", type: "completed" },
+  ],
+};
+const labelsBody = { labels: [{ id: "label-1", name: "bug", color: "#eb5757" }] };
+const savedIssueBody = {
+  issue: {
+    id: "ENG-1311",
+    uuid: "7a2b4c6d-1e3f-4a5b-8c9d-0e1f2a3b4c5d",
+    title: "Write the card",
+    url: "https://linear.app/acme/issue/ENG-1311/write-the-card",
+    state: { id: "state-0", name: "Backlog" },
+    team: { id: "team-1", key: "ENG" },
+  },
+};
+const savedCommentBody = {
+  comment: {
+    id: "comment-3",
+    body: "On it.",
+    user: { id: selfBody.id, name: "Sam" },
+    createdAt: "2026-09-23T11:00:00.000Z",
+    url: "https://linear.app/acme/issue/ENG-1310#comment-3",
+  },
+};
 const bodiesByTool: Record<string, unknown> = {
   get_user: selfBody,
   list_issues: listBody,
   get_issue: issueBody,
   list_comments: commentsBody,
+  list_teams: teamsBody,
+  list_projects: projectsBody,
+  list_issue_statuses: statesBody,
+  list_issue_labels: labelsBody,
+  save_issue: savedIssueBody,
+  save_comment: savedCommentBody,
 };
 
 interface FixtureOptions {
@@ -169,6 +214,7 @@ describe("linear_mcp definition", () => {
     expect(oauth.authorizationUrl).toBe("https://mcp.linear.app/authorize");
     expect(oauth.tokenUrl).toBe("https://mcp.linear.app/token");
     expect(oauth.scopes).toEqual(["read"]);
+    expect(oauth.optionalScopes).toEqual(["write"]);
     expect(oauth.scopeSeparator).toBeUndefined();
     expect(oauth.tokenEndpointAuthMethod).toBe("none");
     expect(oauth.pkce).toEqual({ method: "S256" });
@@ -190,20 +236,33 @@ describe("linear_mcp definition", () => {
       grant_types: ["authorization_code", "refresh_token"],
       response_types: ["code"],
       token_endpoint_auth_method: "none",
-      scope: "read",
+      scope: "read write",
     });
   });
 
-  it("maps every action to a tool and spells action ids as service.name", () => {
+  it("maps every action to a tool, spells action ids as service.name, and keys the writes on the write scope", () => {
     expect(provider.actions.map((action) => action.id).sort()).toEqual([
+      "linear_mcp.create_comment",
+      "linear_mcp.create_issue",
       "linear_mcp.get_issue",
       "linear_mcp.get_self",
       "linear_mcp.list_comments",
+      "linear_mcp.list_issue_labels",
+      "linear_mcp.list_issue_statuses",
       "linear_mcp.list_issues",
+      "linear_mcp.list_projects",
+      "linear_mcp.list_teams",
+      "linear_mcp.update_issue",
     ]);
     expect(Object.keys(linearMcpToolsByAction).sort()).toEqual(provider.actions.map((action) => action.name).sort());
     expect(Object.keys(executors).sort()).toEqual(provider.actions.map((action) => action.id).sort());
-    for (const action of provider.actions) expect(action.operationType).toBe("read");
+    const writes = ["create_issue", "update_issue", "create_comment"];
+    for (const action of provider.actions) {
+      const isWrite = writes.includes(action.name);
+      expect(action.operationType).toBe(isWrite ? "write" : "read");
+      expect(action.requiredScopes).toEqual([isWrite ? "write" : "read"]);
+    }
+    expect(linearMcpToolsByAction.create_issue).toBe(linearMcpToolsByAction.update_issue);
   });
 });
 
@@ -223,6 +282,28 @@ describe("linear_mcp action input schemas", () => {
     expect(valid("get_issue", { id: "" })).toBe(false);
     expect(valid("list_comments", { issueId: "ENG-1310" })).toBe(true);
     expect(valid("list_comments", { issue_id: "ENG-1310" })).toBe(false);
+  });
+
+  it("take the write fields, require what a save needs, and pass unnamed keys through to Linear", () => {
+    const valid = (name: string, input: unknown) => validateActionInput(actionNamed(name), input).valid;
+    expect(valid("create_issue", { team: "ENG", title: "Write the card" })).toBe(true);
+    expect(
+      valid("create_issue", { team: "ENG", title: "Write the card", priority: 2, labels: ["bug"], cycle: "7" }),
+    ).toBe(true);
+    expect(valid("create_issue", { title: "no team" })).toBe(false);
+    expect(valid("create_issue", { team: "ENG", title: "" })).toBe(false);
+    expect(valid("create_issue", { team: "ENG", title: "x", priority: 5 })).toBe(false);
+    expect(valid("update_issue", { id: "ENG-1310", state: "Done" })).toBe(true);
+    expect(valid("update_issue", { state: "Done" })).toBe(false);
+    expect(valid("create_comment", { issueId: "ENG-1310", body: "On it." })).toBe(true);
+    expect(valid("create_comment", { issueId: "ENG-1310" })).toBe(false);
+    expect(valid("list_teams", {})).toBe(true);
+    expect(valid("list_projects", { team: "ENG", limit: 10 })).toBe(true);
+    expect(valid("list_projects", { limit: 0 })).toBe(false);
+    expect(valid("list_issue_statuses", { team: "ENG" })).toBe(true);
+    expect(valid("list_issue_statuses", {})).toBe(false);
+    expect(valid("list_issue_labels", {})).toBe(true);
+    expect(valid("list_issue_labels", { team: "ENG" })).toBe(true);
   });
 });
 
@@ -405,6 +486,103 @@ describe("linear_mcp handlers", () => {
     });
   });
 
+  it("create_issue saves without an id, dropping one the caller sent, and lifts the saved issue", async () => {
+    const host = fixture();
+    const output = await linearMcpActionHandlers.create_issue(
+      { id: "ENG-9", team: " ENG ", title: "Write the card", description: "The card.", priority: 2, labels: ["bug"] },
+      host.context,
+    );
+    expect(host.toolCalls()).toEqual([
+      {
+        name: "save_issue",
+        arguments: { team: "ENG", title: "Write the card", description: "The card.", priority: 2, labels: ["bug"] },
+      },
+    ]);
+    expect(output).toEqual({
+      issue: {
+        id: "ENG-1311",
+        identifier: "ENG-1311",
+        uuid: "7a2b4c6d-1e3f-4a5b-8c9d-0e1f2a3b4c5d",
+        title: "Write the card",
+        url: "https://linear.app/acme/issue/ENG-1311/write-the-card",
+        state: "Backlog",
+        team: "ENG",
+      },
+      raw: JSON.stringify(savedIssueBody),
+    });
+    await expect(linearMcpActionHandlers.create_issue({ title: "no team" }, host.context)).rejects.toMatchObject({
+      status: 400,
+      message: "team is required.",
+    });
+  });
+
+  it("update_issue saves with the id and only the fields given", async () => {
+    const host = fixture();
+    await linearMcpActionHandlers.update_issue({ id: " ENG-1310 ", state: "Done", assignee: undefined }, host.context);
+    expect(host.toolCalls()).toEqual([{ name: "save_issue", arguments: { id: "ENG-1310", state: "Done" } }]);
+    await expect(linearMcpActionHandlers.update_issue({ state: "Done" }, host.context)).rejects.toMatchObject({
+      status: 400,
+      message: "id is required.",
+    });
+  });
+
+  it("create_comment saves the body on the issue and lifts the saved comment", async () => {
+    const host = fixture();
+    const output = await linearMcpActionHandlers.create_comment(
+      { issueId: "ENG-1310", body: "On it.", parentId: "comment-1" },
+      host.context,
+    );
+    expect(host.toolCalls()).toEqual([
+      { name: "save_comment", arguments: { issueId: "ENG-1310", body: "On it.", parentId: "comment-1" } },
+    ]);
+    expect(output).toEqual({
+      comment: {
+        id: "comment-3",
+        body: "On it.",
+        user: "Sam",
+        userId: selfBody.id,
+        createdAt: "2026-09-23T11:00:00.000Z",
+        url: "https://linear.app/acme/issue/ENG-1310#comment-3",
+      },
+      raw: JSON.stringify(savedCommentBody),
+    });
+    await expect(linearMcpActionHandlers.create_comment({ issueId: "ENG-1310" }, host.context)).rejects.toMatchObject({
+      status: 400,
+      message: "body is required.",
+    });
+  });
+
+  it("lists teams, projects, workflow states and labels as named records", async () => {
+    const host = fixture();
+    expect(await linearMcpActionHandlers.list_teams({}, host.context)).toEqual({
+      teams: [{ id: "team-1", key: "ENG", name: "Engineering" }],
+      raw: JSON.stringify(teamsBody),
+    });
+    expect(await linearMcpActionHandlers.list_projects({ team: "ENG", limit: 10 }, host.context)).toEqual({
+      projects: [{ id: "project-1", name: "Acme", state: "started", url: "https://linear.app/acme/project/acme" }],
+      hasNextPage: false,
+      cursor: null,
+      raw: JSON.stringify(projectsBody),
+    });
+    expect(await linearMcpActionHandlers.list_issue_statuses({ team: "ENG" }, host.context)).toEqual({
+      statuses: [
+        { id: "state-1", name: "In Progress", type: "started", color: "#f2c94c" },
+        { id: "state-2", name: "Done", type: "completed" },
+      ],
+      raw: JSON.stringify(statesBody),
+    });
+    expect(await linearMcpActionHandlers.list_issue_labels({}, host.context)).toEqual({
+      labels: [{ id: "label-1", name: "bug", color: "#eb5757" }],
+      raw: JSON.stringify(labelsBody),
+    });
+    expect(host.toolCalls()).toEqual([
+      { name: "list_teams", arguments: {} },
+      { name: "list_projects", arguments: { team: "ENG", limit: 10 } },
+      { name: "list_issue_statuses", arguments: { team: "ENG" } },
+      { name: "list_issue_labels", arguments: {} },
+    ]);
+  });
+
   it("dispatches through the OAuth executor with the stored credential", async () => {
     const host = fixture();
     const originalFetch = globalThis.fetch;
@@ -425,7 +603,13 @@ describe("linear_mcp handlers", () => {
 });
 
 describe("linear_mcp credential validator", () => {
-  it("lists tools across pages, requires every mapped tool, and reads the profile from get_user me", async () => {
+  it("validates a read-only grant whose server lists no write tool", async () => {
+    const host = fixture({ tools: signInTools });
+    const result = await credentialValidators.oauth2!(oauthCredential(), { fetcher: host.fetcher });
+    expect(result).toMatchObject({ grantedScopes: ["read"], metadata: { discoveredToolCount: 4 } });
+  });
+
+  it("lists tools across pages, requires the four sign-in tools, and reads the profile from get_user me", async () => {
     const host = fixture({
       toolPages: [
         ["get_user", "list_issues", "create_issue"],
