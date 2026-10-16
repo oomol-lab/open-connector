@@ -68,6 +68,12 @@ interface NotionMcpToolAccess {
   landing_page_action: string | undefined;
 }
 
+interface NotionMcpCreatedPage {
+  id?: string;
+  url?: string;
+  title?: string;
+}
+
 /** One `<tag ...>body</tag>` element, with its position in the scanned text. */
 interface XmlBlock {
   attributes: string;
@@ -83,6 +89,9 @@ const contentOpening = /<content\b[^<>]*>/i;
 const tagAttribute = /(?<![\w:-])([\w:-]+)\s*=\s*"([^"]*)"/g;
 const anyTag = /<[^<>]+>/g;
 const namedEntities: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" };
+// A Notion page link in prose, and the 32-hex page id a link or an id carries.
+const notionLink = /https:\/\/(?:www\.)?notion\.so\/[^\s)"'<>]+/g;
+const notionPageId = /([0-9a-f]{32})(?:[?#]|$)/i;
 
 /** Notion's tools answer JSON in a text block on most calls and prose or XML fragments on the rest. */
 export function decodeNotionToolText(text: string): unknown {
@@ -221,6 +230,88 @@ export function parseNotionToolAccess(value: unknown): NotionMcpToolAccess[] {
       },
     ];
   });
+}
+
+/**
+ * The pages a notion-create-pages answer names, in its order: a `pages`/`results` list of `{id, url, title}`
+ * records, a single page record, or the page links in a prose answer, each id read off its link. An async task's
+ * id travels beside them when the server deferred the work.
+ */
+export function parseNotionCreatedPages(value: unknown): { pages: NotionMcpCreatedPage[]; async_task_id?: string } {
+  const record = optionalRecord(value);
+  const listed = findList(value, "pages", "results", "created_pages").flatMap((item) => {
+    const page = readCreatedPage(item);
+    return page ? [page] : [];
+  });
+  const single = listed.length === 0 ? readCreatedPage(record) : undefined;
+  const pages = listed.length > 0 ? listed : single ? [single] : linkedPages(optionalString(value) ?? textOf(record));
+  return { pages, ...compactObject({ async_task_id: asyncTaskId(record) }) };
+}
+
+/** The page a notion-update-page answer names: its link, when the prose or the record carries one, and a deferred task's id. */
+export function parseNotionUpdatedPage(value: unknown): { url?: string; async_task_id?: string } {
+  const record = optionalRecord(value);
+  const url =
+    (record && pickOptionalString(record, "url")) ?? linkedPages(optionalString(value) ?? textOf(record))[0]?.url;
+  return compactObject({ url, async_task_id: asyncTaskId(record) });
+}
+
+/** The comment a notion-create-comment answer names: the comment record itself, or the first of a listed shape. */
+export function parseNotionCreatedComment(value: unknown): { id?: string; discussion_id?: string } | undefined {
+  const record = optionalRecord(value);
+  const comment = record && (optionalRecord(record.comment) ?? record);
+  const typed: { id?: string; discussion_id?: string } = compactObject({
+    id: comment && pickOptionalString(comment, "id", "comment_id"),
+    discussion_id: comment && pickOptionalString(comment, "discussion_id"),
+  });
+  if (Object.keys(typed).length > 0) return typed;
+  const listed = parseNotionComments(value)[0];
+  if (!listed) return undefined;
+  const fromList: { id?: string; discussion_id?: string } = compactObject({
+    id: listed.id,
+    discussion_id: listed.discussion_id,
+  });
+  return Object.keys(fromList).length > 0 ? fromList : undefined;
+}
+
+function readCreatedPage(value: unknown): NotionMcpCreatedPage | undefined {
+  const record = optionalRecord(value);
+  if (!record) return undefined;
+  const url = pickOptionalString(record, "url");
+  const page: NotionMcpCreatedPage = compactObject({
+    id: pickOptionalString(record, "id", "page_id") ?? (url && pageIdOf(url)),
+    url,
+    title: readTitle(record),
+  });
+  return page.id !== undefined || page.url !== undefined ? page : undefined;
+}
+
+/** The page links a prose answer carries, each with the id its link ends in, in order and without repeats. */
+function linkedPages(text: string | undefined): NotionMcpCreatedPage[] {
+  if (!text) return [];
+  const seen = new Set<string>();
+  return [...text.matchAll(notionLink)].flatMap((match) => {
+    // A link at the end of a sentence carries its punctuation into the match.
+    const url = match[0].replace(/[.,;:!?]+$/, "");
+    if (seen.has(url)) return [];
+    seen.add(url);
+    return [compactObject({ id: pageIdOf(url), url })];
+  });
+}
+
+function pageIdOf(url: string): string | undefined {
+  return notionPageId.exec(url)?.[1]?.toLowerCase();
+}
+
+/** The text a tool answered under any of its names, for an answer that was JSON with the prose inside it. */
+function textOf(record: Record<string, unknown> | undefined): string | undefined {
+  return record ? pickOptionalString(record, "text", "message", "result") : undefined;
+}
+
+function asyncTaskId(record: Record<string, unknown> | undefined): string | undefined {
+  if (!record) return undefined;
+  const task = optionalRecord(record.async_task) ?? optionalRecord(record.task);
+  return pickOptionalString(record, "async_task_id", "task_id") ?? (task && pickOptionalString(task, "id", "task_id"));
 }
 
 /** The first present list among keys of a decoded object, or the value itself when it is a list. */

@@ -19,6 +19,7 @@ import { withMcpClient } from "../mcp-client.ts";
 import {
   defineOAuthProviderExecutors,
   mapProviderActionSources,
+  providerInputError,
   providerResponseError,
   providerUserAgent,
   ProviderRequestError,
@@ -30,10 +31,13 @@ import { notionMcpEndpoint } from "./endpoints.ts";
 import {
   decodeNotionToolText,
   parseNotionComments,
+  parseNotionCreatedComment,
+  parseNotionCreatedPages,
   parseNotionPage,
   parseNotionSearch,
   parseNotionSelf,
   parseNotionToolAccess,
+  parseNotionUpdatedPage,
 } from "./mcp-response.ts";
 
 const service = "notion_mcp";
@@ -84,7 +88,45 @@ const toolsByAction: ProviderActionSources<typeof service, NotionMcpActionSource
     arguments: () => ({}),
     parse: (value) => ({ tools: parseNotionToolAccess(value) }),
   },
+  create_pages: {
+    tool: "notion-create-pages",
+    arguments: (input) => {
+      const pages = looseArray(input.pages);
+      if (pages.length === 0) throw providerInputError("pages is required.");
+      return { ...compactObject(input), pages };
+    },
+    parse: (value) => ({ ...parseNotionCreatedPages(value) }),
+  },
+  update_page: {
+    tool: "notion-update-page",
+    arguments: (input) => ({
+      ...compactObject(input),
+      page_id: requiredInputString(input.page_id, "page_id"),
+      command: requiredInputString(input.command, "command"),
+    }),
+    parse: (value, input) => ({
+      page_id: requiredInputString(input.page_id, "page_id"),
+      ...parseNotionUpdatedPage(value),
+    }),
+  },
+  create_comment: {
+    tool: "notion-create-comment",
+    arguments: (input) => ({
+      ...compactObject(input),
+      page_id: requiredInputString(input.page_id, "page_id"),
+      markdown: requiredInputString(input.markdown, "markdown"),
+    }),
+    parse: (value) => compactObject({ comment: parseNotionCreatedComment(value) }),
+  },
 };
+
+/**
+ * The actions that change the workspace. Sign-in requires every read tool and
+ * none of these: a workspace whose owner withheld the writes from the
+ * connection, or an older server, may not list them, and a credential must
+ * not be refused for a tool it would never call.
+ */
+const writeActions = new Set<string>(["create_pages", "update_page", "create_comment"]);
 
 const handlers = mapProviderActionSources(
   service,
@@ -107,8 +149,9 @@ export const credentialValidators: CredentialValidators = {
     const { toolCount, self } = await withNotionMcpClient(context, "validate", async (client, signal) => {
       const tools = await listNotionTools(client, signal);
       const available = new Set(tools.map((tool) => tool.name));
-      const missing = Object.values(toolsByAction)
-        .map((source) => source.tool)
+      const missing = Object.entries(toolsByAction)
+        .filter(([action]) => !writeActions.has(action))
+        .map(([, source]) => source.tool)
         .filter((tool) => !available.has(tool));
       if (missing.length > 0) {
         throw new ProviderRequestError(

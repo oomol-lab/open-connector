@@ -136,6 +136,134 @@ const toolAccessOutputSchema = s.object("The plan report from notion-get-tool-ac
   raw: rawSchema,
 });
 
+const createPagesInputSchema = s.object(
+  "Arguments for Notion's notion-create-pages tool. Keys this schema does not name pass through as given.",
+  {
+    pages: s.array(
+      "The pages to create; every page in one call shares the parent.",
+      s.object(
+        "One page.",
+        {
+          properties: s.unknownObject(
+            "Property names to values. Outside a database the only property is title; inside one, the data source's own properties in the spellings notion-fetch shows.",
+          ),
+          content: s.string("The page body in Notion-flavored Markdown."),
+          icon: s.string("An emoji, a Notion icon identifier, or an external image URL."),
+          cover: s.string("An external image URL for the cover."),
+        },
+        { optional: ["properties", "content", "icon", "cover"], additionalProperties: true },
+      ),
+      { minItems: 1, maxItems: 100 },
+    ),
+    parent: s.unknownObject(
+      "Where the pages go, as the tool takes it: {page_id}, {database_id}, {data_source_id} or {teamspace_id}. Omitted with no creation_mode, the pages are private at the workspace level.",
+    ),
+    creation_mode: s.stringEnum("draft creates a durable private page; it cannot be combined with a parent.", [
+      "draft",
+    ]),
+    allow_async: s.boolean(
+      "Let the server accept the creation for background execution and answer an async task instead of the pages.",
+    ),
+  },
+  { optional: ["parent", "creation_mode", "allow_async"], additionalProperties: true },
+);
+
+const createdPageSchema = s.looseObject("One created page as the server named it.", {
+  id: s.string("The page ID."),
+  url: s.string("The page URL."),
+  title: s.string("The page title, when the server names one."),
+});
+
+const createPagesOutputSchema = s.object("The created pages.", {
+  pages: s.array(
+    "The pages the server named, in its order; empty when the answer named none, such as an async task.",
+    createdPageSchema,
+  ),
+  async_task_id: s.optional(
+    s.string("The async task ID when the server accepted the creation for background execution."),
+  ),
+  raw: rawSchema,
+});
+
+const updatePageInputSchema = s.object(
+  "Arguments for Notion's notion-update-page tool. Keys this schema does not name pass through as given.",
+  {
+    page_id: s.nonEmptyString("The page to update, by ID."),
+    command: s.stringEnum(
+      "What to change: the properties, a targeted search-and-replace in the content, the whole content, or an insertion at the start or the end.",
+      ["update_properties", "update_content", "replace_content", "insert_content"],
+    ),
+    properties: s.unknownObject("For update_properties: property names to values; null removes a value."),
+    content_updates: s.array(
+      "For update_content: search-and-replace operations.",
+      s.object(
+        "One replacement.",
+        {
+          old_str: s.nonEmptyString("The existing content to find; it must match the page exactly."),
+          new_str: s.string("The replacement."),
+          replace_all_matches: s.boolean("Replace every match; off, several matches fail the operation."),
+        },
+        { optional: ["replace_all_matches"] },
+      ),
+      { minItems: 1, maxItems: 100 },
+    ),
+    new_str: s.string("For replace_content: the whole new content in Notion-flavored Markdown."),
+    content: s.string("For insert_content: the Markdown to insert."),
+    position: s.unknownObject("For insert_content: {type: start} or {type: end}; omitted, the end."),
+    allow_deleting_content: s.boolean(
+      "Allow a content change to drop child pages and databases it no longer references; off, the server refuses and lists them.",
+    ),
+    allow_async: s.boolean(
+      "Let the server accept the update for background execution and answer an async task instead of the page.",
+    ),
+  },
+  {
+    optional: [
+      "properties",
+      "content_updates",
+      "new_str",
+      "content",
+      "position",
+      "allow_deleting_content",
+      "allow_async",
+    ],
+    additionalProperties: true,
+  },
+);
+
+const updatePageOutputSchema = s.object("The updated page.", {
+  page_id: s.string("The requested page ID, echoed back."),
+  url: s.optional(s.string("The page URL, when the server names one.")),
+  async_task_id: s.optional(
+    s.string("The async task ID when the server accepted the update for background execution."),
+  ),
+  raw: rawSchema,
+});
+
+const createCommentInputSchema = s.object(
+  "Arguments for Notion's notion-create-comment tool: a top-level comment on the page, a reply to a comment or a discussion, or a new discussion on selected content. Keys this schema does not name pass through as given.",
+  {
+    page_id: s.nonEmptyString("The page to comment on, by ID."),
+    markdown: s.nonEmptyString("The comment in inline Notion-flavored Markdown."),
+    reply_to_comment_id: s.string("A comment ID to reply to."),
+    discussion_id: s.string("A discussion ID or URL to reply in."),
+    selection_with_ellipsis: s.string(
+      "The content to comment on, as the tool takes it: about ten characters from its start, an ellipsis, about ten from its end.",
+    ),
+  },
+  { optional: ["reply_to_comment_id", "discussion_id", "selection_with_ellipsis"], additionalProperties: true },
+);
+
+const createCommentOutputSchema = s.object("The created comment.", {
+  comment: s.optional(
+    s.looseObject("The comment as the server named it.", {
+      id: s.string("The comment ID."),
+      discussion_id: s.string("The discussion the comment belongs to."),
+    }),
+  ),
+  raw: rawSchema,
+});
+
 export const notionMcpActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_self",
@@ -195,5 +323,35 @@ export const notionMcpActions: ActionDefinition[] = [
     requiredScopes: [],
     inputSchema: s.object({}),
     outputSchema: toolAccessOutputSchema,
+  }),
+  defineProviderAction(service, {
+    name: "create_pages",
+    operationType: "write",
+    description:
+      "Create one or more Notion pages through notion-create-pages, under a page, a database, a data source or a teamspace, or as a private draft. Returns the pages the server named, an async task ID when it deferred the work, and the raw response.",
+    requiredScopes: [],
+    followUpActions: ["notion_mcp.fetch_page", "notion_mcp.update_page"],
+    inputSchema: createPagesInputSchema,
+    outputSchema: createPagesOutputSchema,
+  }),
+  defineProviderAction(service, {
+    name: "update_page",
+    operationType: "write",
+    description:
+      "Change one Notion page through notion-update-page: its properties, a targeted search-and-replace in its content, its whole content, or an insertion at the start or the end. Returns the page ID, the URL when the server names one, an async task ID when it deferred the work, and the raw response.",
+    requiredScopes: [],
+    followUpActions: ["notion_mcp.fetch_page"],
+    inputSchema: updatePageInputSchema,
+    outputSchema: updatePageOutputSchema,
+  }),
+  defineProviderAction(service, {
+    name: "create_comment",
+    operationType: "write",
+    description:
+      "Comment on a Notion page through notion-create-comment: at the top level, as a reply to a comment or a discussion, or as a new discussion on selected content. Returns the comment the server named and the raw response.",
+    requiredScopes: [],
+    followUpActions: ["notion_mcp.list_comments"],
+    inputSchema: createCommentInputSchema,
+    outputSchema: createCommentOutputSchema,
   }),
 ];

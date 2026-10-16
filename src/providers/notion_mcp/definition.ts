@@ -10,7 +10,7 @@ export const provider: ProviderDefinition = {
   service,
   displayName: "Notion MCP",
   description:
-    "Search, read, and list comments on Notion pages through Notion's official remote MCP server, signed in with the connected user's own Notion account.",
+    "Search, read, create, update and comment on Notion pages through Notion's official remote MCP server, signed in with the connected user's own Notion account.",
   categories: ["Productivity"],
   authTypes: ["oauth2"],
   auth: [
