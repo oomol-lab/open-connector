@@ -185,6 +185,35 @@ interface PreviousCredentialRuntimeData {
 type CredentialValidatorCall = () => Promise<CredentialValidationResult | void> | undefined;
 type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
 
+const OAUTH_REFRESH_PERSIST_ATTEMPTS = 3;
+
+/**
+ * Lays a refresh result onto the connection's current credential. A refresh owns the token
+ * fields and the metadata keys it changed; everything else on `current` belongs to whoever
+ * bumped the revision and is kept.
+ */
+function mergeRefreshedOAuthCredential(
+  current: OAuthCredential,
+  spent: OAuthCredential,
+  refreshed: OAuthCredential,
+): OAuthCredential {
+  const metadata = { ...current.metadata };
+  for (const [key, value] of Object.entries(refreshed.metadata)) {
+    if (JSON.stringify(value) !== JSON.stringify(spent.metadata[key])) metadata[key] = value;
+  }
+  // A successful refresh proves the authorization is live, so a concurrent refusal's mark is stale.
+  delete metadata.oauthReauthRequired;
+  return {
+    ...current,
+    accessToken: refreshed.accessToken,
+    tokenType: refreshed.tokenType,
+    expiresAt: refreshed.expiresAt,
+    refreshToken: refreshed.refreshToken,
+    providerSecret: refreshed.providerSecret,
+    metadata,
+  };
+}
+
 /**
  * Coordinates local provider connection state.
  *
@@ -884,7 +913,11 @@ export class ConnectionService {
       );
     }
 
-    const refreshKey = `${connection.id}:${connection.revision}`;
+    // Single-flight on the refresh token being spent, not the row revision: a single-use
+    // (rotating) refresh token must reach the provider once even when an unrelated write
+    // bumps the revision mid-refresh. A replaced credential carries a different refresh
+    // token and still refreshes independently.
+    const refreshKey = JSON.stringify([connection.id, credential.refreshToken]);
     const currentRefresh = this.oauthCredentialRefreshes.get(refreshKey);
     if (currentRefresh) {
       return currentRefresh;
@@ -930,23 +963,33 @@ export class ConnectionService {
       }
       throw error;
     }
-    const updated = await this.store.updateCredential(
-      {
-        id,
-        revision,
-        service,
-        connectionName,
-        credential: nextCredential,
-      },
-      true,
-    );
-    if (!updated) {
-      throw new ConnectionError(
-        "connection_not_found",
-        `${service} connection changed while its OAuth credential was refreshing. Retry the action.`,
-      );
+    // The provider has now spent the old refresh token. With rotating single-use refresh
+    // tokens, discarding `nextCredential` loses the connection for good, so a lost
+    // revision race re-reads the row and lands the refreshed token fields on the latest
+    // revision, as long as that row still holds the credential this refresh spent.
+    let target: StoredLocalConnection = { ...connection, source: "local", credential: nextCredential };
+    for (let attempt = 0; attempt < OAUTH_REFRESH_PERSIST_ATTEMPTS; attempt++) {
+      if (await this.store.updateCredential(target, true)) return target.credential as OAuthCredential;
+      const current = await this.store.get(service, connectionName);
+      if (
+        current?.source === "saas" ||
+        current?.id !== id ||
+        current.credential.authType !== "oauth2" ||
+        current.credential.refreshToken !== credential.refreshToken ||
+        current.credential.metadata.oauthAuthorizationId !== credential.metadata.oauthAuthorizationId
+      ) {
+        // Deleted, converted, reconnected, or already rotated elsewhere: never overwrite it.
+        break;
+      }
+      target = {
+        ...current,
+        credential: mergeRefreshedOAuthCredential(current.credential, credential, nextCredential),
+      };
     }
-    return nextCredential;
+    throw new ConnectionError(
+      "connection_not_found",
+      `${service} connection changed while its OAuth credential was refreshing. Retry the action.`,
+    );
   }
 
   private async runCredentialValidator(
