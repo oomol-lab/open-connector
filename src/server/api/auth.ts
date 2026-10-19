@@ -19,6 +19,8 @@ const authCookieMaxAgeMs = authCookieMaxAgeSeconds * 1000;
 export interface LocalAuthOptions {
   adminToken?: string;
   runtimeToken?: string;
+  /** Keep runtime endpoints protected even when the last stored token is revoked. */
+  requireRuntimeAuth?: boolean;
   hasRuntimeTokens?(): Promise<boolean>;
   resolveRuntimeToken?(token: string): Promise<RuntimeGrant | undefined>;
   verifyRuntimeJwt?: RuntimeJwtVerifier;
@@ -49,6 +51,7 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
   if (
     !adminToken &&
     !runtimeToken &&
+    !options.requireRuntimeAuth &&
     !options.hasRuntimeTokens &&
     !options.resolveRuntimeToken &&
     !options.verifyRuntimeJwt
@@ -188,7 +191,7 @@ async function hasValidToken(context: Context, options: LocalAuthOptions, scope:
     const hasRuntimeTokens = options.hasRuntimeTokens
       ? await options.hasRuntimeTokens()
       : options.resolveRuntimeToken !== undefined;
-    if (!hasRuntimeTokens && !options.verifyRuntimeJwt) {
+    if (!options.requireRuntimeAuth && !hasRuntimeTokens && !options.verifyRuntimeJwt) {
       return true;
     }
     return hasValidRuntimeToken(context, options);

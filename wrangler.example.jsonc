@@ -3,7 +3,7 @@
   "name": "open-connector",
   "main": "src/server/cloudflare.ts",
   "compatibility_date": "2026-07-02",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "cache": {
     "enabled": true,
   },
@@ -11,8 +11,21 @@
     "directory": "dist/web",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*", "/v1/*", "/mcp*", "/oauth/*", "/docs", "/docs/*", "/openapi.json", "/health"],
+    "run_worker_first": [
+      "/.well-known/*",
+      "/api/*",
+      "/v1/*",
+      "/mcp*",
+      "/oauth/*",
+      "/docs",
+      "/docs/*",
+      "/openapi.json",
+      "/health",
+    ],
   },
+  // Optional ChatGPT-compatible MCP OAuth: create a dedicated KV namespace, then enable:
+  // "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "<oauth-kv-id>" }],
+  // Also set OOMOL_CONNECT_ORIGIN, OOMOL_CONNECT_ADMIN_TOKEN and OOMOL_CONNECT_ENCRYPTION_KEY.
   "triggers": { "crons": ["* * * * *"] },
   "observability": {
     "enabled": true,

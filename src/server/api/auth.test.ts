@@ -3,6 +3,31 @@ import { describe, expect, it, vi } from "vitest";
 import { createLocalAuthMiddleware } from "./auth.ts";
 
 describe("createLocalAuthMiddleware", () => {
+  it("keeps runtime endpoints protected before creation and after revocation of the last token", async () => {
+    let active = false;
+    const app = new Hono();
+    app.use(
+      "*",
+      createLocalAuthMiddleware({
+        adminToken: "admin-secret",
+        requireRuntimeAuth: true,
+        hasRuntimeTokens: async () => active,
+        resolveRuntimeToken: async (token) =>
+          active && token === "oct_valid"
+            ? { tokenId: "token-1", allowedActions: [], blockedActions: [], allowedProxies: [] }
+            : undefined,
+      }),
+    );
+    app.get("/v1/actions", (context) => context.json({ ok: true }));
+    app.post("/mcp", (context) => context.json({ ok: true }));
+    expect((await app.request("/v1/actions")).status).toBe(401);
+    active = true;
+    expect((await app.request("/v1/actions", { headers: authorize("Bearer", "oct_valid") })).status).toBe(200);
+    active = false;
+    expect((await app.request("/v1/actions", { headers: authorize("Bearer", "oct_valid") })).status).toBe(401);
+    expect((await app.request("/mcp", { method: "POST" })).status).toBe(401);
+  });
+
   it("fails closed when a runtime token resolver is configured without a token-count callback", async () => {
     const app = new Hono();
     app.use(

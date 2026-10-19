@@ -24,6 +24,25 @@ const provider = {
 };
 
 describe("cloudflare worker", () => {
+  it.each(["", " ", "\t\n"])(
+    "fails closed for an empty or whitespace administrator token with OAuth enabled (%j)",
+    async (adminToken) => {
+      const env: CloudflareEnv = {
+        ...createEnv(),
+        OAUTH_KV: new MemoryKVNamespace(),
+        OOMOL_CONNECT_ORIGIN: "https://connect.example.com",
+        OOMOL_CONNECT_ENCRYPTION_KEY: "test-encryption-key",
+        OOMOL_CONNECT_ADMIN_TOKEN: adminToken,
+      };
+      const response = await worker.fetch(
+        new Request("https://connect.example.com/oauth/mcp/authorize"),
+        env,
+        createExecutionContext(),
+      );
+      expect(response.status).toBe(503);
+    },
+  );
+
   afterEach(() => {
     vi.restoreAllMocks();
   });

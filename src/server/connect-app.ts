@@ -38,6 +38,7 @@ export interface ConnectAppOptions {
   secretCodec: ISecretCodec;
   adminToken?: string;
   runtimeToken?: string;
+  requireRuntimeAuth?: boolean;
   allowedCustomOAuth?: string[];
   verifyRuntimeJwt?: RuntimeJwtVerifier;
   actionPolicy?: ActionPolicyService;
@@ -161,6 +162,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
       auth: {
         adminToken: options.adminToken,
         runtimeToken: options.runtimeToken,
+        requireRuntimeAuth: options.requireRuntimeAuth,
         hasRuntimeTokens: hasStoredRuntimeTokens,
         resolveRuntimeToken: (token) => runtimeTokens.resolveToken(token),
         verifyRuntimeJwt: options.verifyRuntimeJwt,
@@ -176,6 +178,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
       oauthCloseDelaySeconds: options.oauthCloseDelaySeconds,
     }).createApp(),
     runtimeAuthConfigured:
+      Boolean(options.requireRuntimeAuth) ||
       Boolean(options.runtimeToken) ||
       Boolean(options.verifyRuntimeJwt) ||
       (options.computeRuntimeAuthConfigured === false ? false : await hasStoredRuntimeTokens()),

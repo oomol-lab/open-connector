@@ -1,6 +1,7 @@
 import type { CatalogStore } from "../catalog-store.ts";
 import type { AssetsBinding, KVNamespaceBinding, R2BucketBinding } from "./cloudflare/cloudflare-bindings.ts";
 import type { CloudflareEnv } from "./cloudflare/cloudflare-env.ts";
+import type { McpOAuthHandler } from "./cloudflare/mcp-oauth.ts";
 import type { ConnectApp } from "./connect-app.ts";
 import type { Logger } from "./logger.ts";
 import type { ISecretCodec } from "./secrets/secret-codec-core.ts";
@@ -36,6 +37,7 @@ interface CloudflareExecutionContext {
 const catalogCache = new PromiseCache<CatalogStore>();
 const secretCodecCache = new PromiseCache<ISecretCodec>();
 const appCache = new PromiseCache<ConnectApp>();
+const mcpOAuthCache = new PromiseCache<McpOAuthHandler>();
 
 export default {
   async scheduled(_event: unknown, env: CloudflareEnv, ctx: CloudflareExecutionContext): Promise<void> {
@@ -59,19 +61,40 @@ export default {
     };
     ctx.waitUntil(Promise.all([cleanup.run(), triggerCleanup()]).then(() => undefined));
   },
-  async fetch(request: Request, env: CloudflareEnv, _ctx: CloudflareExecutionContext): Promise<Response> {
-    setPrivateNetworkAccessAllowed(parsePrivateNetworkAccessFlag(env.OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK));
-    setEgressTrustedHosts(parseEgressTrustedHosts(env.OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS));
-    const publicOrigin = resolvePublicOrigin(request, env);
-    const { app } = await appCache.get(createCacheKey(env, publicOrigin), () => createCloudflareApp(env, publicOrigin));
-    const response = await app.fetch(request, env);
-    if (response.status === 404 && env.ASSETS && shouldServeAsset(request)) {
-      return env.ASSETS.fetch(request);
+  async fetch(request: Request, env: CloudflareEnv, ctx: CloudflareExecutionContext): Promise<Response> {
+    if (env.OAUTH_KV) {
+      if (
+        !env.OOMOL_CONNECT_ORIGIN?.trim() ||
+        !env.OOMOL_CONNECT_ADMIN_TOKEN?.trim() ||
+        !env.OOMOL_CONNECT_ENCRYPTION_KEY?.trim()
+      ) {
+        return new Response("MCP OAuth requires a configured origin, administrator token, and encryption key.", {
+          status: 503,
+        });
+      }
+      const origin = env.OOMOL_CONNECT_ORIGIN.trim().replace(/\/+$/, "");
+      const oauth = await mcpOAuthCache.get(origin, async () => {
+        const { createMcpOAuthHandler } = await import("./cloudflare/mcp-oauth.ts");
+        return createMcpOAuthHandler(origin, fetchRuntime);
+      });
+      return oauth.fetch(request, env, ctx);
     }
-
-    return response;
+    return fetchRuntime(request, env);
   },
 };
+
+async function fetchRuntime(request: Request, env: CloudflareEnv): Promise<Response> {
+  setPrivateNetworkAccessAllowed(parsePrivateNetworkAccessFlag(env.OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK));
+  setEgressTrustedHosts(parseEgressTrustedHosts(env.OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS));
+  const publicOrigin = resolvePublicOrigin(request, env);
+  const { app } = await appCache.get(createCacheKey(env, publicOrigin), () => createCloudflareApp(env, publicOrigin));
+  const response = await app.fetch(request, env);
+  if (response.status === 404 && env.ASSETS && shouldServeAsset(request)) {
+    return env.ASSETS.fetch(request);
+  }
+
+  return response;
+}
 
 async function createCloudflareApp(env: CloudflareEnv, publicOrigin: string): Promise<ConnectApp> {
   const assets = env.ASSETS;
@@ -111,6 +134,7 @@ async function createCloudflareApp(env: CloudflareEnv, publicOrigin: string): Pr
     secretCodec,
     adminToken: env.OOMOL_CONNECT_ADMIN_TOKEN,
     runtimeToken: env.OOMOL_CONNECT_RUNTIME_TOKEN,
+    requireRuntimeAuth: Boolean(env.OAUTH_KV),
     actionPolicy: new ActionPolicyService({
       allowedActions: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_ACTIONS),
       blockedActions: parseActionPolicyList(env.OOMOL_CONNECT_BLOCKED_ACTIONS),
@@ -176,6 +200,7 @@ function createCacheKey(env: CloudflareEnv, publicOrigin: string): string {
     configuredOrigin: env.OOMOL_CONNECT_ORIGIN ?? null,
     adminToken: env.OOMOL_CONNECT_ADMIN_TOKEN ?? "",
     runtimeToken: env.OOMOL_CONNECT_RUNTIME_TOKEN ?? "",
+    requireRuntimeAuth: Boolean(env.OAUTH_KV),
     encryptionKey: env.OOMOL_CONNECT_ENCRYPTION_KEY ?? "",
     allowedActions: env.OOMOL_CONNECT_ALLOWED_ACTIONS ?? "",
     blockedActions: env.OOMOL_CONNECT_BLOCKED_ACTIONS ?? "",
