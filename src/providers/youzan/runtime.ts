@@ -1,3 +1,4 @@
+import type { ProviderErrorCode } from "../../core/provider-error-codes.ts";
 import type { CredentialValidationResult, ExecutionResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
@@ -441,6 +442,11 @@ function requireNonNegativeInteger(value: unknown, label: string): number {
   return value;
 }
 
-function youzanError(code: string, message: string, status: number, details?: unknown): ProviderRequestError {
+function youzanError(
+  code: ProviderErrorCode,
+  message: string,
+  status: number,
+  details?: unknown,
+): ProviderRequestError {
   return new ProviderRequestError(status, message, details, code);
 }

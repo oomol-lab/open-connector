@@ -1,3 +1,4 @@
+import type { ProviderErrorCode } from "../../core/provider-error-codes.ts";
 import type { OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
 
 import { createHmac } from "node:crypto";
@@ -54,7 +55,7 @@ interface ShopeeNormalizedResponse {
 const shopeeImageMaxBytes = 10 * 1024 * 1024;
 const shopeeImageContentTypes = new Set(["image/jpeg", "image/png"]);
 
-function createShopeeError(code: string, message: string, status: number): ProviderRequestError {
+function createShopeeError(code: ProviderErrorCode, message: string, status: number): ProviderRequestError {
   return new ProviderRequestError(status, message, undefined, code);
 }
 

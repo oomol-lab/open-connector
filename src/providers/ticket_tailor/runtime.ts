@@ -177,7 +177,6 @@ function createError(response: Response, payload: unknown): ProviderRequestError
     response.status || 502,
     code ? `[${code}] ${upstreamMessage}` : upstreamMessage,
     payload,
-    code,
   );
 }
 function requireArray(value: unknown, label: string): unknown[] {

@@ -119,7 +119,6 @@ async function request(
       response.status || 502,
       `Bing Webmaster${code === undefined ? "" : ` (${String(code)})`}: ${optionalString(envelope?.Message) ?? `request failed (HTTP ${response.status})`}`,
       payload,
-      code === undefined ? undefined : String(code),
     );
   }
   if (payload === undefined) return null;

@@ -1,7 +1,7 @@
 import type { ExecutionContext, ResolvedCredential } from "../core/types.ts";
 import type { ProviderActionHandlers, ProviderActionSources } from "./provider-runtime.ts";
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 import { isPrivateNetworkAccessAllowed, setPrivateNetworkAccessAllowed } from "../core/request.ts";
 import {
   createProviderTimeout,
@@ -32,6 +32,13 @@ afterEach(() => {
 });
 
 describe("ProviderRequestError", () => {
+  it("restricts explicit codes to the provider vocabulary", () => {
+    expectTypeOf<ConstructorParameters<typeof ProviderRequestError>[3]>().toEqualTypeOf<
+      "authorization_failed" | "insufficient_credit" | "invalid_input" | "provider_error" | "rate_limited" | undefined
+    >();
+    expectTypeOf<ProviderRequestError["code"]>().toEqualTypeOf<ConstructorParameters<typeof ProviderRequestError>[3]>();
+  });
+
   it("keeps provider error codes on the shared request error", () => {
     const error = new ProviderRequestError(429, "Provider quota exhausted", { retryAfter: 30 }, "rate_limited");
 

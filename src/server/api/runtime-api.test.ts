@@ -3,9 +3,9 @@ import type { RuntimeActionHttpResult } from "./runtime-api.ts";
 
 import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
+import { providerErrorCodes } from "../../core/provider-error-codes.ts";
 import {
   parseRuntimeActionHttpResult,
-  providerErrorCodes,
   serializeRuntimeAction,
   serializeRuntimeActionResult,
   serializeRuntimeConnectedApp,

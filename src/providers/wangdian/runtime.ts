@@ -1,3 +1,4 @@
+import type { ProviderErrorCode } from "../../core/provider-error-codes.ts";
 import type { CredentialValidationResult, ExecutionResult } from "../../core/types.ts";
 import type {
   ProviderActionHandlers,
@@ -497,7 +498,12 @@ function createWangdianError(status: number, payload: unknown, phase: WangdianRe
   return wangdianError("provider_error", message, 502, payload);
 }
 
-function wangdianError(code: string, message: string, status: number, details?: unknown): ProviderRequestError {
+function wangdianError(
+  code: ProviderErrorCode,
+  message: string,
+  status: number,
+  details?: unknown,
+): ProviderRequestError {
   return new ProviderRequestError(status, message, details, code);
 }
 

@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { providerErrorCodes } from "../server/api/runtime-api.ts";
+import { providerErrorCodes } from "../core/provider-error-codes.ts";
 
 const providersDirectory = fileURLToPath(new URL(".", import.meta.url));
 
@@ -606,7 +606,7 @@ interface ErrorCodeArgumentHit {
  * with a status that has nothing to do with what the upstream said.
  */
 function findUndocumentedErrorCodes(sources: ProviderSource[]): ErrorCodeArgumentHit[] {
-  const allowed = new Set(providerErrorCodes);
+  const allowed = new Set<string>(providerErrorCodes);
   const scopes = findForwardedArgumentIndexes(sources, 3);
   const hits: ErrorCodeArgumentHit[] = [];
   for (const entry of sources) {

@@ -1,3 +1,4 @@
+import type { ProviderErrorCode } from "../../core/provider-error-codes.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { looseArray, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -113,7 +114,7 @@ async function assertGoogleResponse(response: Response, service: string): Promis
 async function extractGoogleError(
   response: Response,
   service: string,
-): Promise<{ message: string; details: unknown; code?: string }> {
+): Promise<{ message: string; details: unknown; code?: ProviderErrorCode }> {
   const rawText = await response.text().catch(() => "");
   if (!rawText) {
     return {
@@ -160,7 +161,7 @@ function isDriveQuotaReason(reason: string | undefined): boolean {
   return driveQuotaReasons.has((reason ?? "").toLowerCase().replace(/[^a-z]/g, ""));
 }
 
-function driveRateLimitCode(error: Record<string, unknown> | undefined): string | undefined {
+function driveRateLimitCode(error: Record<string, unknown> | undefined): ProviderErrorCode | undefined {
   if (!error) {
     return undefined;
   }

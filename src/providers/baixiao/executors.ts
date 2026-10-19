@@ -95,7 +95,6 @@ async function callTool(context: Context, name: string, args: Record<string, unk
       error.code === "unauthorized" ? 401 : 502,
       error.message ?? `Baixiao MCP returned ${error.code}`,
       error.raw,
-      error.code,
     );
   return result;
 }

@@ -1,3 +1,4 @@
+import type { ProviderErrorCode } from "../core/provider-error-codes.ts";
 import type { ProviderDispatchContext, ProviderHttpDispatchOptions } from "../core/provider-http-dispatch.ts";
 import type {
   ActionExecutor,
@@ -292,9 +293,9 @@ export interface ProviderInputFile {
 export class ProviderRequestError extends Error {
   readonly status: number;
   readonly details?: unknown;
-  readonly code?: string;
+  readonly code?: ProviderErrorCode;
 
-  constructor(status: number, message: string, details?: unknown, code?: string) {
+  constructor(status: number, message: string, details?: unknown, code?: ProviderErrorCode) {
     super(message);
     this.status = status;
     this.details = details;

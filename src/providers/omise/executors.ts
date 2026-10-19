@@ -144,7 +144,6 @@ async function request(
       response.status,
       optionalString(record?.message) ?? `Omise request failed with status ${response.status}`,
       payload,
-      optionalString(record?.code),
     );
   }
   return payload;

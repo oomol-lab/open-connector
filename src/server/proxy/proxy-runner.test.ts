@@ -15,7 +15,8 @@ import type { ProxyFailureStatus } from "./proxy-runner.ts";
 import { describe, expect, it, vi } from "vitest";
 import { ConnectionError } from "../../connection-service.ts";
 import { ActionPolicyService } from "../../core/action-policy.ts";
-import { providerErrorCodes, serializeRuntimeActionResult } from "../api/runtime-api.ts";
+import { providerErrorCodes } from "../../core/provider-error-codes.ts";
+import { serializeRuntimeActionResult } from "../api/runtime-api.ts";
 import { ProxyRunner } from "./proxy-runner.ts";
 
 const provider: ProviderDefinition = {

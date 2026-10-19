@@ -1,3 +1,4 @@
+import type { ProviderErrorCode } from "../../core/provider-error-codes.ts";
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
 
@@ -289,6 +290,6 @@ function stringifyOptionalArray(value: unknown) {
   return Array.isArray(value) ? value.join(",") : undefined;
 }
 
-function providerError(code: string, message: string, status: number): ProviderRequestError {
+function providerError(code: ProviderErrorCode, message: string, status: number): ProviderRequestError {
   return new ProviderRequestError(status, message, undefined, code);
 }
