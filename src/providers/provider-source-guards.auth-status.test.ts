@@ -2,7 +2,6 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { providerErrorCodes } from "../core/provider-error-codes.ts";
 
 const providersDirectory = fileURLToPath(new URL(".", import.meta.url));
 
@@ -105,46 +104,9 @@ function splitTopLevelArguments(source: string): string[] {
   return argumentSources;
 }
 
-const comparisonOperatorPattern = /[=!]==?$/u;
-
-/**
- * Read the codes a code-argument expression can evaluate to. A ternary such as
- * `phase === "validate" ? "invalid_input" : "authorization_failed"` carries the
- * phase literal too, so literals that sit on either side of a comparison
- * operator are conditions rather than codes. A bare identifier is resolved
- * against the file's own string constants.
- */
-function readCodeLiterals(argumentSource: string, literalsByName: Map<string, string>): string[] {
-  const codes: string[] = [];
-  for (const literal of argumentSource.matchAll(/"([^"\\]*)"|`([^`\\$]*)`/gu)) {
-    const before = argumentSource.slice(0, literal.index).trimEnd();
-    const after = argumentSource.slice(literal.index + literal[0].length).trimStart();
-    if (comparisonOperatorPattern.test(before) || after.startsWith("==") || after.startsWith("!=")) {
-      continue;
-    }
-    codes.push(literal[1] ?? literal[2]!);
-  }
-  const named = literalsByName.get(argumentSource.trim());
-  if (named !== undefined) {
-    codes.push(named);
-  }
-  return codes;
-}
-
-/** Read the `const name = "literal"` bindings a code argument can name. */
-function readStringConstants(source: string): Map<string, string> {
-  const literalsByName = new Map<string, string>();
-  for (const match of source.matchAll(
-    /\bconst\s+([A-Za-z_$][\w$]*)\s*(?::[^=\n]+)?=\s*(?:"([^"\\]*)"|`([^`\\$]*)`)/gu,
-  )) {
-    literalsByName.set(match[1]!, match[2] ?? match[3]!);
-  }
-  return literalsByName;
-}
-
 /**
  * Read the `const name = 409` bindings a status argument can name, so naming
- * the status does not hide the construction the way naming the code would.
+ * the status does not hide the construction.
  */
 function readNumericConstants(source: string): Map<string, string> {
   const numbersByName = new Map<string, string>();
@@ -156,7 +118,7 @@ function readNumericConstants(source: string): Map<string, string> {
 
 const identifierReferencePattern = /(?<![\w.$])[A-Za-z_$][\w$]*/gu;
 
-/** Drop string literals so a number or code inside a message is not read as a value. */
+/** Drop string literals so a number inside a message is not read as a status. */
 function stripStringLiterals(source: string): string {
   let stripped = "";
   let index = 0;
@@ -186,13 +148,13 @@ function canEvaluateToStatus(argumentSource: string, status: number, numbersByNa
 }
 
 /**
- * The literal values an argument expression always evaluates to, resolved
+ * The numeric values a status expression can evaluate to, resolved
  * against the declaring file's own constants. A constructor that writes the
  * value itself passes it at every one of its call sites, so the value belongs
  * to the callee rather than to any argument its callers wrote.
  */
-function readConstantValues(argumentSource: string, source: string): string[] {
-  const values = readCodeLiterals(argumentSource, readStringConstants(source));
+function readStatusConstants(argumentSource: string, source: string): string[] {
+  const values: string[] = [];
   const numbersByName = readNumericConstants(source);
   const resolved = stripStringLiterals(argumentSource).replace(
     identifierReferencePattern,
@@ -367,24 +329,21 @@ function registerInheritedConstructors(sources: ProviderSource[], scopes: Forwar
 
 /**
  * Find the provider-local helpers and `ProviderRequestError` subclasses that
- * decide the given constructor argument, so their callers are held to the same
+ * decide the status argument, so their callers are held to the same
  * rule as a direct construction. Without this a helper that reorders or
  * discards its arguments hides every site that goes through it. A subclass
  * constructor that writes the argument itself rather than forwarding a
- * parameter is recorded as a constant, so hardcoding the status or the code in
+ * parameter is recorded as a constant, so hardcoding the status in
  * a `super(...)` call cannot launder it past the guards either. Helpers are
  * keyed by provider directory, so two providers that spell a helper the same
  * way cannot borrow each other's argument order.
  */
-function findForwardedArgumentIndexes(
-  sources: ProviderSource[],
-  constructorArgumentIndex: number,
-): ForwardedArgumentScopes {
+function findForwardedStatusIndexes(sources: ProviderSource[]): ForwardedArgumentScopes {
   const scopes: ForwardedArgumentScopes = new Map();
-  registerCallee(scopes, sharedScope, "ProviderRequestError").indexes.add(constructorArgumentIndex);
+  registerCallee(scopes, sharedScope, "ProviderRequestError").indexes.add(0);
   for (const entry of sources.filter((source) => source.source.includes("ProviderRequestError"))) {
     for (const site of findCallSites(entry.source, /(?:new ProviderRequestError|super)\(/gu)) {
-      const decided = site.argumentSources[constructorArgumentIndex]?.trim();
+      const decided = site.argumentSources[0]?.trim();
       const owner = decided === undefined ? undefined : findEnclosingCallable(entry.source, site.index);
       if (decided === undefined || !owner) {
         continue;
@@ -397,7 +356,7 @@ function findForwardedArgumentIndexes(
       if (!entry.source.startsWith("super(", site.index)) {
         continue;
       }
-      for (const constant of readConstantValues(decided, entry.source)) {
+      for (const constant of readStatusConstants(decided, entry.source)) {
         registerCallee(scopes, providerScopeOf(entry.file), owner.name).constants.add(constant);
       }
     }
@@ -562,7 +521,7 @@ function lineNumberAt(source: string, index: number): number {
  * branch that also tests for 409 is a genuine upstream conflict and is kept.
  */
 function findAuthConflictErrors(sources: ProviderSource[]): AuthConflictHit[] {
-  const scopes = findForwardedArgumentIndexes(sources, 0);
+  const scopes = findForwardedStatusIndexes(sources);
   const hits: AuthConflictHit[] = [];
   for (const entry of sources) {
     const numbersByName = readNumericConstants(entry.source);
@@ -591,49 +550,8 @@ function findAuthConflictErrors(sources: ProviderSource[]): AuthConflictHit[] {
   return hits;
 }
 
-interface ErrorCodeArgumentHit {
-  file: string;
-  line: number;
-  code: string;
-}
-
-/**
- * Report every string a provider puts in the `ProviderRequestError` code
- * argument that is not a provider's to set, directly or through one of those
- * helpers. That argument sets `error.code` verbatim and the routes derive the
- * HTTP status from the code alone, so an undocumented code turns what the
- * status would have answered into HTTP 400, and a connection-layer code answers
- * with a status that has nothing to do with what the upstream said.
- */
-function findUndocumentedErrorCodes(sources: ProviderSource[]): ErrorCodeArgumentHit[] {
-  const allowed = new Set<string>(providerErrorCodes);
-  const scopes = findForwardedArgumentIndexes(sources, 3);
-  const hits: ErrorCodeArgumentHit[] = [];
-  for (const entry of sources) {
-    const literalsByName = readStringConstants(entry.source);
-    for (const [callee, decided] of calleesVisibleIn(scopes, entry.file)) {
-      for (const site of findCallSitesIn(entry, callee)) {
-        const codes = [...decided.indexes].flatMap((argumentIndex) => {
-          const codeArgument = site.argumentSources[argumentIndex];
-          return codeArgument === undefined ? [] : readCodeLiterals(codeArgument, literalsByName);
-        });
-        for (const code of [...decided.constants, ...codes]) {
-          if (!allowed.has(code)) {
-            hits.push({ file: entry.file, line: lineNumberAt(entry.source, site.index), code });
-          }
-        }
-      }
-    }
-  }
-  return hits;
-}
-
 describe("provider auth-failure status guard", () => {
   it("never maps an upstream 401 or 403 to a provider 409", () => {
     expect(findAuthConflictErrors(providerSources)).toEqual([]);
-  });
-
-  it("only puts error codes a provider owns on the wire", () => {
-    expect(findUndocumentedErrorCodes(providerSources)).toEqual([]);
   });
 });

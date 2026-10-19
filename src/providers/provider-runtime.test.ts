@@ -38,28 +38,21 @@ describe("ProviderRequestError", () => {
     >();
     expectTypeOf<ProviderRequestError["code"]>().toEqualTypeOf<ConstructorParameters<typeof ProviderRequestError>[3]>();
   });
-
-  it("keeps provider error codes on the shared request error", () => {
-    const error = new ProviderRequestError(429, "Provider quota exhausted", { retryAfter: 30 }, "rate_limited");
-
-    expect(error).toMatchObject({
-      status: 429,
-      message: "Provider quota exhausted",
-      details: { retryAfter: 30 },
-      code: "rate_limited",
-    });
-  });
 });
 
 describe("toProviderExecutionError", () => {
   it("prefers an explicit provider error code over status inference", () => {
     expect(
       toProviderExecutionError(
-        new ProviderRequestError(402, "Provider credit exhausted", undefined, "insufficient_credit"),
+        new ProviderRequestError(402, "Provider credit exhausted", { balance: 0 }, "insufficient_credit"),
         "failed",
       ),
     ).toMatchObject({
-      error: { code: "insufficient_credit" },
+      error: {
+        code: "insufficient_credit",
+        message: "Provider credit exhausted",
+        details: { status: 402, details: { balance: 0 } },
+      },
     });
   });
 
