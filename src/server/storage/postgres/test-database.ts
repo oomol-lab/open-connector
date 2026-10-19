@@ -18,7 +18,7 @@ export async function startPGliteTestServer(): Promise<PGliteTestServer> {
       onRawData(response);
       return;
     }
-    for (let offset = 0; offset < response.length;) {
+    for (let offset = 0; offset < response.length; ) {
       const end = offset + response.readUInt32BE(offset + 1) + 1;
       if (response[offset] !== "Z".charCodeAt(0)) onRawData(response.subarray(offset, end));
       offset = end;

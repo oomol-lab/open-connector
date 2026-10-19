@@ -76,8 +76,10 @@ const operations: ProviderActionSources<"pipedrive", Operation> = {
 };
 
 export const pipedriveActionHandlers: ProviderActionHandlers<"pipedrive", PipedriveActionHandler> =
-  mapProviderActionSources(service, operations, (_name, operation): PipedriveActionHandler =>
-    executeOperation(operation),
+  mapProviderActionSources(
+    service,
+    operations,
+    (_name, operation): PipedriveActionHandler => executeOperation(operation),
   );
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, pipedriveActionHandlers);
