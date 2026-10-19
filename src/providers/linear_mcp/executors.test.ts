@@ -482,7 +482,8 @@ describe("linear_mcp handlers", () => {
     const unauthorized = fixture({ status: 401 });
     await expect(linearMcpActionHandlers.get_self({}, unauthorized.context)).rejects.toMatchObject({
       status: 401,
-      message: "Linear MCP credential is invalid or expired; reconnect Linear.",
+      code: "provider_error",
+      message: expect.stringMatching(/Linear MCP (authorization request failed|request failed with HTTP 401)/),
     });
   });
 
@@ -662,8 +663,9 @@ describe("linear_mcp credential validator", () => {
     );
     expect(error).toBeInstanceOf(ProviderRequestError);
     expect(error).toMatchObject({
-      status: 400,
-      message: "Linear MCP credential is invalid or expired; reconnect Linear.",
+      status: 401,
+      code: "provider_error",
+      message: expect.stringMatching(/Linear MCP (authorization request failed|request failed with HTTP 401)/),
     });
   });
 });

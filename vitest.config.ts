@@ -1,6 +1,6 @@
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vitest/config";
-import { providerIconsPlugin } from "./web/provider-icons-plugin";
+import { providerIconsPlugin } from "./web/provider-icons-plugin.ts";
 
 export default defineConfig({
   plugins: [providerIconsPlugin({ iconUrls: {} })],

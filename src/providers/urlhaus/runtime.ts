@@ -96,7 +96,7 @@ async function requestUrlhaus(request: UrlhausRequest): Promise<unknown> {
   });
 }
 
-/** Lightweight credential check: lists one recent URL; a bad key fails with 401. */
+/** Lightweight credential check: lists one recent URL; HTTP failures retain their provider error semantics. */
 export async function validateUrlhausAuthKey(
   apiKey: string,
   fetcher: ProviderFetch,
@@ -130,6 +130,7 @@ function normalizeUrlEntry(record: Record<string, unknown>): Record<string, unkn
   const blacklists = optionalRecord(record.blacklists) ?? {};
   const idValue = record.id;
   return {
+    ...record,
     id: typeof idValue === "string" ? idValue : typeof idValue === "number" ? String(idValue) : "",
     urlhaus_reference: optionalString(record.urlhaus_reference) ?? "",
     url: optionalString(record.url) ?? "",
@@ -139,6 +140,7 @@ function normalizeUrlEntry(record: Record<string, unknown>): Record<string, unkn
     last_online: optionalString(record.last_online) ?? null,
     threat: optionalString(record.threat) ?? "",
     blacklists: {
+      ...blacklists,
       surbl: optionalString(blacklists.surbl) ?? "",
       spamhaus_dbl: optionalString(blacklists.spamhaus_dbl) ?? "",
     },
@@ -152,6 +154,7 @@ function normalizeUrlEntry(record: Record<string, unknown>): Record<string, unkn
 
 function normalizePayload(item: Record<string, unknown>): Record<string, unknown> {
   return {
+    ...item,
     firstseen: optionalString(item.firstseen) ?? "",
     filename: optionalString(item.filename) ?? null,
     file_type: optionalString(item.file_type) ?? "",
@@ -171,15 +174,11 @@ function stringifySize(value: unknown): string {
   return optionalString(value) ?? "";
 }
 
-/**
- * Map a URLhaus error onto the runtime's status conventions. A 401/403 means
- * the Auth-Key is missing or rejected and reconnecting with a valid key is
- * the fix; 429 is rate limiting.
- */
-async function readUrlhausError(response: Response): Promise<ProviderRequestError> {
+// HTTP status alone cannot distinguish an invalid key from access or subscription restrictions.
+export async function readUrlhausError(response: Response): Promise<ProviderRequestError> {
   const text = (await readProviderErrorTextBody(response, "URLhaus error response")).trim();
   const message = text.slice(0, 200) || `URLhaus request failed with HTTP ${response.status}`;
   const status = response.status;
-  const code = status === 429 ? "rate_limited" : status === 401 || status === 403 ? "unauthorized" : "provider_error";
+  const code = status === 429 ? "rate_limited" : "provider_error";
   return new ProviderRequestError(status, message, withRetryAfterSeconds(response, {}), code);
 }

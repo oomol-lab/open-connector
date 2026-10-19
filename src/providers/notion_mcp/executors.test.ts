@@ -527,8 +527,8 @@ describe("notion_mcp executors", () => {
   });
 
   it.each([
-    [401, "authorization_failed"],
-    [403, "authorization_failed"],
+    [401, "provider_error"],
+    [403, "provider_error"],
     [429, "rate_limited"],
   ])("maps a synthetic HTTP %i and never returns the token in the error", async (status, code) => {
     const host = createSyntheticHost([], async (request) =>
@@ -606,14 +606,15 @@ describe("notion_mcp credential validator", () => {
     }
   });
 
-  it("reports a rejected token as invalid credentials at sign-in", async () => {
+  it("preserves an ambiguous authorization failure at sign-in", async () => {
     const host = createSyntheticHost([], async (request) =>
       request.method === "POST" ? new Response("nope", { status: 401 }) : undefined,
     );
     try {
       await expect(credentialValidators.oauth2!(oauthCredential(), { fetcher: host.fetcher })).rejects.toMatchObject({
-        status: 400,
-        message: "Notion MCP credential is invalid or expired.",
+        status: 401,
+        code: "provider_error",
+        message: expect.stringMatching(/Notion MCP (authorization request failed|request failed with HTTP 401)/),
       });
     } finally {
       await host.close();

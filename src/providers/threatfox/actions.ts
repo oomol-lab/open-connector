@@ -44,7 +44,7 @@ export const threatfoxActions: ActionDefinition[] = [
     name: "lookup_ioc",
     operationType: "read",
     description:
-      "Check whether an indicator of compromise (IP address, domain, URL, or MD5/SHA256 file hash) is known to ThreatFox. Uses an exact-match search and returns the matching IOC entries with threat type, malware family, and confidence level when known, or a not-found result otherwise. Requires a free abuse.ch Auth-Key.",
+      "Check whether an indicator of compromise (IP address, domain, URL, or MD5/SHA256 file hash) is known to ThreatFox. Uses an exact-match IOC search or a file-hash search and returns the matching IOC entries with threat type, malware family, and confidence level when known, or a not-found result otherwise. Requires a free abuse.ch Auth-Key.",
     requiredScopes: [],
     inputSchema: s.requiredObject("IOC lookup input.", {
       ioc: s.string(

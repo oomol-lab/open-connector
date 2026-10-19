@@ -30,7 +30,6 @@ import {
 import { linearMcpEndpoint } from "./endpoints.ts";
 
 const service = "linear_mcp";
-type LinearMcpPhase = "validate" | "execute";
 type LinearMcpContext = Pick<OAuthProviderContext, "accessToken" | "fetcher" | "signal">;
 type LinearMcpToolCall = Awaited<ReturnType<Client["callTool"]>>;
 
@@ -83,13 +82,12 @@ export const linearMcpActionHandlers: ProviderActionHandlers<
   ProviderRuntimeHandler<OAuthProviderContext>
 > = {
   async get_self(_input, context) {
-    const result = await callLinearMcpTool(context, "execute", linearMcpToolsByAction.get_self, { query: "me" });
+    const result = await callLinearMcpTool(context, linearMcpToolsByAction.get_self, { query: "me" });
     return { user: parseLinearMcpUser(result.payload) ?? null, raw: result.text };
   },
   async list_issues(input, context) {
     const result = await callLinearMcpTool(
       context,
-      "execute",
       linearMcpToolsByAction.list_issues,
       compactObject({
         updatedAt: optionalString(input.updatedAt),
@@ -102,25 +100,20 @@ export const linearMcpActionHandlers: ProviderActionHandlers<
   },
   async get_issue(input, context) {
     const id = requiredInputString(input.id, "id");
-    const result = await callLinearMcpTool(context, "execute", linearMcpToolsByAction.get_issue, { id });
+    const result = await callLinearMcpTool(context, linearMcpToolsByAction.get_issue, { id });
     return { issue: parseLinearMcpIssue(result.payload) ?? null, raw: result.text };
   },
   async list_comments(input, context) {
     const issueId = requiredInputString(input.issueId, "issueId");
-    const result = await callLinearMcpTool(context, "execute", linearMcpToolsByAction.list_comments, { issueId });
+    const result = await callLinearMcpTool(context, linearMcpToolsByAction.list_comments, { issueId });
     return { comments: parseLinearMcpComments(result.payload), raw: result.text };
   },
   async list_teams(_input, context) {
-    const result = await callLinearMcpTool(context, "execute", linearMcpToolsByAction.list_teams, {});
+    const result = await callLinearMcpTool(context, linearMcpToolsByAction.list_teams, {});
     return { teams: parseLinearMcpRecords(result.payload, "teams"), raw: result.text };
   },
   async list_projects(input, context) {
-    const result = await callLinearMcpTool(
-      context,
-      "execute",
-      linearMcpToolsByAction.list_projects,
-      compactObject(input),
-    );
+    const result = await callLinearMcpTool(context, linearMcpToolsByAction.list_projects, compactObject(input));
     return {
       projects: parseLinearMcpRecords(result.payload, "projects"),
       ...parseLinearMcpPaging(result.payload),
@@ -129,7 +122,7 @@ export const linearMcpActionHandlers: ProviderActionHandlers<
   },
   async list_issue_statuses(input, context) {
     const team = requiredInputString(input.team, "team");
-    const result = await callLinearMcpTool(context, "execute", linearMcpToolsByAction.list_issue_statuses, { team });
+    const result = await callLinearMcpTool(context, linearMcpToolsByAction.list_issue_statuses, { team });
     return {
       statuses: parseLinearMcpRecords(result.payload, "statuses", "states", "workflowStates"),
       raw: result.text,
@@ -138,7 +131,6 @@ export const linearMcpActionHandlers: ProviderActionHandlers<
   async list_issue_labels(input, context) {
     const result = await callLinearMcpTool(
       context,
-      "execute",
       linearMcpToolsByAction.list_issue_labels,
       compactObject({ team: optionalString(input.team) }),
     );
@@ -147,7 +139,7 @@ export const linearMcpActionHandlers: ProviderActionHandlers<
   async create_issue(input, context) {
     const title = requiredInputString(input.title, "title");
     const team = requiredInputString(input.team, "team");
-    const result = await callLinearMcpTool(context, "execute", linearMcpToolsByAction.create_issue, {
+    const result = await callLinearMcpTool(context, linearMcpToolsByAction.create_issue, {
       ...withoutId(input),
       title,
       team,
@@ -156,7 +148,7 @@ export const linearMcpActionHandlers: ProviderActionHandlers<
   },
   async update_issue(input, context) {
     const id = requiredInputString(input.id, "id");
-    const result = await callLinearMcpTool(context, "execute", linearMcpToolsByAction.update_issue, {
+    const result = await callLinearMcpTool(context, linearMcpToolsByAction.update_issue, {
       ...compactObject(input),
       id,
     });
@@ -165,7 +157,7 @@ export const linearMcpActionHandlers: ProviderActionHandlers<
   async create_comment(input, context) {
     const issueId = requiredInputString(input.issueId, "issueId");
     const body = requiredInputString(input.body, "body");
-    const result = await callLinearMcpTool(context, "execute", linearMcpToolsByAction.create_comment, {
+    const result = await callLinearMcpTool(context, linearMcpToolsByAction.create_comment, {
       ...withoutId(input),
       issueId,
       body,
@@ -190,7 +182,7 @@ export async function validateLinearMcpCredential(
   options: CredentialValidatorOptions,
 ): Promise<CredentialValidationResult> {
   const context = { accessToken: credential.accessToken, fetcher: options.fetcher, signal: options.signal };
-  return withLinearMcpClient(context, "validate", async (client, signal) => {
+  return withLinearMcpClient(context, async (client, signal) => {
     const available = await listLinearMcpToolNames(client, signal);
     const missing = linearMcpSignInTools.filter((name) => !available.has(name));
     if (missing.length > 0) {
@@ -228,11 +220,10 @@ async function listLinearMcpToolNames(client: Client, signal: AbortSignal): Prom
 /** Call one tool in a fresh MCP session and return its text and parsed payload. */
 function callLinearMcpTool(
   context: LinearMcpContext,
-  phase: LinearMcpPhase,
   name: string,
   args: Record<string, unknown>,
 ): Promise<LinearMcpToolResult> {
-  return withLinearMcpClient(context, phase, async (client, signal) =>
+  return withLinearMcpClient(context, async (client, signal) =>
     readLinearMcpToolResult(name, await client.callTool({ name, arguments: args }, { signal })),
   );
 }
@@ -406,7 +397,6 @@ function parseLabels(value: unknown): string[] | undefined {
 
 function withLinearMcpClient<T>(
   context: LinearMcpContext,
-  phase: LinearMcpPhase,
   run: (client: Client, signal: AbortSignal) => Promise<T>,
 ): Promise<T> {
   return runProviderRequest({ signal: context.signal, label: "Linear MCP" }, (signal) =>
@@ -418,39 +408,29 @@ function withLinearMcpClient<T>(
         headers: { authorization: `Bearer ${context.accessToken}`, "user-agent": providerUserAgent },
         redirect: "manual",
         signal,
-        mapError: (error) => mapLinearMcpError(error, phase),
+        mapError: mapLinearMcpError,
       },
       (client) => run(client, signal),
     ),
   );
 }
 
-/**
- * A rejected token is a bad credential (400) while validating and an expired
- * authorization (401) while executing; other SDK failures keep a 4xx status or
- * become 502. Aborts and unknown errors pass through for the request wrapper.
- */
-function mapLinearMcpError(error: unknown, phase: LinearMcpPhase): unknown {
+// Status alone does not establish that reconnecting can resolve a provider failure.
+function mapLinearMcpError(error: unknown): unknown {
   if (error instanceof ProviderRequestError) return error;
-  if (error instanceof UnauthorizedError) return credentialError(phase);
+  if (error instanceof UnauthorizedError) {
+    return new ProviderRequestError(401, "Linear MCP authorization request failed.", undefined, "provider_error");
+  }
   if (error instanceof SdkHttpError) {
-    const status = error.status;
-    if (status === 401 || status === 403) return credentialError(phase);
     return new ProviderRequestError(
-      400 <= status && status < 500 ? status : 502,
-      `Linear MCP request failed: ${error.message}`,
-      error,
+      error.status,
+      `Linear MCP request failed with HTTP ${error.status}.`,
+      undefined,
+      error.status === 429 ? "rate_limited" : "provider_error",
     );
   }
   if (error instanceof ProtocolError) {
-    return new ProviderRequestError(502, `Linear MCP request failed: ${error.message}`, error);
+    return new ProviderRequestError(502, `Linear MCP protocol error ${error.code}.`, undefined, "provider_error");
   }
   return error;
-}
-
-function credentialError(phase: LinearMcpPhase): ProviderRequestError {
-  return new ProviderRequestError(
-    phase === "validate" ? 400 : 401,
-    "Linear MCP credential is invalid or expired; reconnect Linear.",
-  );
 }

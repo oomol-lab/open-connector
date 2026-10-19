@@ -90,6 +90,7 @@ async function requestCrtsh(request: CrtshRequest): Promise<unknown> {
 
 function normalizeCertificate(record: Record<string, unknown>): Record<string, unknown> {
   return {
+    ...record,
     id: optionalInteger(record.id) ?? 0,
     issuer_ca_id: optionalInteger(record.issuer_ca_id) ?? 0,
     issuer_name: optionalString(record.issuer_name) ?? "",
@@ -107,7 +108,7 @@ function normalizeCertificate(record: Record<string, unknown>): Record<string, u
  * The search endpoint needs no credentials, so an authorization failure is not
  * something reconnecting can fix.
  */
-async function readCrtshError(response: Response): Promise<ProviderRequestError> {
+export async function readCrtshError(response: Response): Promise<ProviderRequestError> {
   const text = (await readProviderErrorTextBody(response, "crt.sh error response")).trim();
   const message = text.slice(0, 200) || `crt.sh request failed with HTTP ${response.status}`;
   const status = response.status;

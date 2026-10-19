@@ -43,7 +43,6 @@ import {
 const service = "notion_mcp";
 const selfUserId = "self";
 
-type NotionMcpPhase = "validate" | "execute";
 type NotionMcpContext = Pick<OAuthProviderContext, "accessToken" | "fetcher" | "signal">;
 
 /** One action's tool, the arguments it sends, and the typed reading of the answer beside the raw text. */
@@ -143,10 +142,10 @@ export const executors: ProviderExecutors = defineOAuthProviderExecutors(service
 });
 
 export const credentialValidators: CredentialValidators = {
-  /** Require every tool the actions map, then identify the user so the account key is the Notion user ID. */
+  /** Require the baseline read tools, then identify the user by the Notion user ID. */
   async oauth2(input, { fetcher, signal }) {
     const context: NotionMcpContext = { accessToken: input.accessToken, fetcher, signal };
-    const { toolCount, self } = await withNotionMcpClient(context, "validate", async (client, signal) => {
+    const { toolCount, self } = await withNotionMcpClient(context, async (client, signal) => {
       const tools = await listNotionTools(client, signal);
       const available = new Set(tools.map((tool) => tool.name));
       const missing = Object.entries(toolsByAction)
@@ -217,7 +216,7 @@ async function callNotionTool(
   name: string,
   input: Record<string, unknown>,
 ): Promise<NotionMcpToolResult> {
-  const result = await withNotionMcpClient(context, "execute", (client, signal) =>
+  const result = await withNotionMcpClient(context, (client, signal) =>
     client.callTool({ name, arguments: input }, { signal }),
   );
   return readNotionToolResult(name, result);
@@ -253,7 +252,6 @@ function notionToolError(name: string, record: Record<string, unknown>): Provide
 
 function withNotionMcpClient<T>(
   context: NotionMcpContext,
-  phase: NotionMcpPhase,
   run: (client: Client, signal: AbortSignal) => Promise<T>,
 ): Promise<T> {
   return runProviderRequest({ signal: context.signal, label: "Notion MCP" }, (signal) =>
@@ -265,34 +263,29 @@ function withNotionMcpClient<T>(
         headers: { authorization: `Bearer ${context.accessToken}`, "user-agent": providerUserAgent },
         redirect: "manual",
         signal,
-        mapError: (error) => mapNotionMcpError(error, phase),
+        mapError: mapNotionMcpError,
       },
       (client) => run(client, signal),
     ),
   );
 }
 
-/**
- * Sign-in reports a rejected token as invalid input (400); a run reports it as an expired authorization (401).
- * Anything unrecognized is left to runProviderRequest, which tells a timeout (504) from a failure (502).
- */
-function mapNotionMcpError(error: unknown, phase: NotionMcpPhase): unknown {
+// Status alone does not establish that reconnecting can resolve a provider failure.
+function mapNotionMcpError(error: unknown): unknown {
   if (error instanceof ProviderRequestError) return error;
-  const credentialStatus = phase === "validate" ? 400 : 401;
   if (error instanceof UnauthorizedError) {
-    return new ProviderRequestError(credentialStatus, "Notion MCP credential is invalid or expired.");
+    return new ProviderRequestError(401, "Notion MCP authorization request failed.", undefined, "provider_error");
   }
   if (error instanceof SdkHttpError) {
-    const status = error.status;
-    if (status === 401 || status === 403) {
-      return new ProviderRequestError(credentialStatus, "Notion MCP credential is invalid or expired.");
-    }
-    // The SDK error carries the response body; only the status is reported so a token echoed in it never is.
-    const providerStatus = 400 <= status && status < 500 ? status : 502;
-    return new ProviderRequestError(providerStatus, `Notion MCP request failed with HTTP ${status}.`);
+    return new ProviderRequestError(
+      error.status,
+      `Notion MCP request failed with HTTP ${error.status}.`,
+      undefined,
+      error.status === 429 ? "rate_limited" : "provider_error",
+    );
   }
   if (error instanceof ProtocolError) {
-    return new ProviderRequestError(502, `Notion MCP request failed: ${error.message}`);
+    return new ProviderRequestError(502, `Notion MCP protocol error ${error.code}.`, undefined, "provider_error");
   }
   return error;
 }

@@ -7,6 +7,7 @@ import type {
 import type { UrlhausRuntimeContext } from "./runtime.ts";
 
 import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import { readUrlhausError } from "./runtime.ts";
 import { urlhausActionHandlers, urlhausApiBaseUrl, urlhausValidationPath, validateUrlhausAuthKey } from "./runtime.ts";
 
 const service = "urlhaus";
@@ -26,6 +27,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<UrlhausRunti
 });
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  readError: readUrlhausError,
   service,
   baseUrl: urlhausApiBaseUrl,
   auth: { type: "api_key_header", name: "Auth-Key" },

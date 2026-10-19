@@ -7,6 +7,7 @@ import type {
 import type { ThreatfoxRuntimeContext } from "./runtime.ts";
 
 import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import { readThreatfoxError } from "./runtime.ts";
 import { threatfoxActionHandlers, threatfoxApiBaseUrl, threatfoxApiPath, validateThreatfoxAuthKey } from "./runtime.ts";
 
 const service = "threatfox";
@@ -26,6 +27,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<ThreatfoxRun
 });
 
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
+  readError: readThreatfoxError,
   service,
   baseUrl: threatfoxApiBaseUrl,
   auth: { type: "api_key_header", name: "Auth-Key" },

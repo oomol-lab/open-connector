@@ -21,7 +21,7 @@ import {
 
 export const threatfoxApiBaseUrl = "https://threatfox-api.abuse.ch";
 export const threatfoxApiPath = "/api/v1/";
-export const threatfoxValidationQuery = { query: "get_iocs", days: 1 };
+const threatfoxValidationQuery = { query: "get_iocs", days: 1 };
 
 export interface ThreatfoxRuntimeContext {
   apiKey: string;
@@ -34,7 +34,13 @@ type ThreatfoxActionHandler = (input: Record<string, unknown>, context: Threatfo
 export const threatfoxActionHandlers: ProviderActionHandlers<"threatfox", ThreatfoxActionHandler> = {
   async lookup_ioc(input, context) {
     const ioc = lookupIocParam(input.ioc);
-    const payload = await requestThreatfox(context, { query: "search_ioc", search_term: ioc, exact_match: true });
+    const isHash =
+      (ioc.length === 32 || ioc.length === 64) &&
+      [...ioc.toLowerCase()].every((character) => "0123456789abcdef".includes(character));
+    const payload = await requestThreatfox(
+      context,
+      isHash ? { query: "search_hash", hash: ioc } : { query: "search_ioc", search_term: ioc, exact_match: true },
+    );
     const record = optionalRecord(payload);
     const queryStatus = optionalString(record?.query_status) ?? "";
     // ThreatFox reports "no_result" (singular) when the IOC is unknown.
@@ -102,7 +108,7 @@ async function requestThreatfox(context: ThreatfoxRuntimeContext, query: Record<
   });
 }
 
-/** Lightweight credential check: lists one day of recent IOCs; a bad key fails with 401. */
+/** Lightweight credential check: lists one day of recent IOCs; HTTP failures retain their provider error semantics. */
 export async function validateThreatfoxAuthKey(
   apiKey: string,
   fetcher: ProviderFetch,
@@ -117,6 +123,7 @@ export async function validateThreatfoxAuthKey(
 
 function normalizeIocEntry(record: Record<string, unknown>): Record<string, unknown> {
   return {
+    ...record,
     id: stringifyId(record.id),
     ioc: optionalString(record.ioc) ?? "",
     threat_type: optionalString(record.threat_type) ?? "",
@@ -137,6 +144,7 @@ function normalizeIocEntry(record: Record<string, unknown>): Record<string, unkn
 
 function normalizeMalwareSample(item: Record<string, unknown>): Record<string, unknown> {
   return {
+    ...item,
     time_stamp: optionalString(item.time_stamp) ?? "",
     md5_hash: optionalString(item.md5_hash) ?? "",
     sha256_hash: optionalString(item.sha256_hash) ?? "",
@@ -151,15 +159,11 @@ function stringifyId(value: unknown): string {
   return "";
 }
 
-/**
- * Map a ThreatFox error onto the runtime's status conventions. A 401/403 means
- * the Auth-Key is missing or rejected and reconnecting with a valid key is
- * the fix; 429 is rate limiting.
- */
-async function readThreatfoxError(response: Response): Promise<ProviderRequestError> {
+// HTTP status alone cannot distinguish an invalid key from access or subscription restrictions.
+export async function readThreatfoxError(response: Response): Promise<ProviderRequestError> {
   const text = (await readProviderErrorTextBody(response, "ThreatFox error response")).trim();
   const message = text.slice(0, 200) || `ThreatFox request failed with HTTP ${response.status}`;
   const status = response.status;
-  const code = status === 429 ? "rate_limited" : status === 401 || status === 403 ? "unauthorized" : "provider_error";
+  const code = status === 429 ? "rate_limited" : "provider_error";
   return new ProviderRequestError(status, message, withRetryAfterSeconds(response, {}), code);
 }
