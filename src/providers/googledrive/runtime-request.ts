@@ -7,6 +7,8 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 export type GoogleQueryValue = string | readonly string[] | undefined;
@@ -64,7 +66,7 @@ export async function googleRequest(url: string, input: GoogleRequestOptions): P
   const hasRequestBody = input.rawBody != null || hasJsonBody;
   const method = (input.method ?? (hasRequestBody ? "POST" : "GET")).toUpperCase();
   if ((method === "GET" || method === "HEAD") && hasRequestBody) {
-    throw new ProviderRequestError(400, `${service} ${method} request must not include a body`);
+    throw providerInputError(`${service} ${method} request must not include a body`);
   }
 
   const requestInit: RequestInit = {
@@ -87,7 +89,7 @@ export async function googleRequest(url: string, input: GoogleRequestOptions): P
     if (timeout.didTimeout() && isAbortLikeError(error)) {
       const timeoutSeconds = Math.max(1, Math.ceil(timeoutMs / 1000));
       const unit = timeoutSeconds === 1 ? "second" : "seconds";
-      throw new ProviderRequestError(502, `${service} request timed out after ${timeoutSeconds} ${unit}`);
+      throw providerResponseError(`${service} request timed out after ${timeoutSeconds} ${unit}`);
     }
     throw error;
   } finally {
@@ -111,10 +113,13 @@ async function assertGoogleResponse(response: Response, service: string): Promis
   throw new ProviderRequestError(response.status, message, details, code);
 }
 
-async function extractGoogleError(
-  response: Response,
-  service: string,
-): Promise<{ message: string; details: unknown; code?: ProviderErrorCode }> {
+interface GoogleResponseError {
+  message: string;
+  details: unknown;
+  code?: ProviderErrorCode;
+}
+
+async function extractGoogleError(response: Response, service: string): Promise<GoogleResponseError> {
   const rawText = await response.text().catch(() => "");
   if (!rawText) {
     return {

@@ -9,7 +9,13 @@ import {
   optionalString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { providerFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  providerFetch,
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 export interface ClickupActionContext {
   authType: "api_key" | "oauth2";
@@ -141,7 +147,7 @@ export const clickupActionHandlers: ProviderActionHandlers<"clickup", ClickupAct
     });
 
     if (!workspace) {
-      throw clickupRuntimeError("invalid_input", `unknown clickup workspace: ${workspaceId}`, 400);
+      throw providerInputError(`unknown clickup workspace: ${workspaceId}`);
     }
 
     return {
@@ -1078,7 +1084,7 @@ async function requestClickupJson(input: ClickupRequestOptions) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    throw clickupRuntimeError("provider_error", `ClickUp request failed: ${message}`, 502);
+    throw providerResponseError(`ClickUp request failed: ${message}`);
   }
 
   const objectPayload = await parseClickupJsonResponse(response, "ClickUp response");
@@ -1106,12 +1112,12 @@ async function parseClickupJsonResponse(response: Response, label: string) {
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    throw clickupRuntimeError("provider_error", `${label} parsing failed: ${message}`, 502);
+    throw providerResponseError(`${label} parsing failed: ${message}`);
   }
 
   const objectPayload = optionalRecord(payload);
   if (!objectPayload) {
-    throw clickupRuntimeError("provider_error", `${label} parsing failed: invalid JSON shape`, 502);
+    throw providerResponseError(`${label} parsing failed: invalid JSON shape`);
   }
 
   return objectPayload;
@@ -1126,17 +1132,17 @@ function mapClickupError(input: {
   const message = readErrorMessage(input.payload, input.status);
   if (input.status === 401) {
     if (input.mode === "validate") {
-      return clickupRuntimeError("invalid_input", message, 400);
+      return providerInputError(message);
     }
-    return clickupRuntimeError("credential_expired", message, 401);
+    return new ProviderRequestError(401, message);
   }
   if (input.status === 429) {
-    return clickupRuntimeError("rate_limited", message, 429);
+    return new ProviderRequestError(429, message);
   }
   if (input.status === 400 || (input.status === 404 && input.notFoundAsInvalidInput)) {
-    return clickupRuntimeError("invalid_input", message, 400);
+    return providerInputError(message);
   }
-  return clickupRuntimeError("provider_error", message, 502);
+  return providerResponseError(message);
 }
 
 function readErrorMessage(payload: Record<string, unknown>, status: number) {
@@ -1151,7 +1157,7 @@ function readErrorMessage(payload: Record<string, unknown>, status: number) {
 function readObjectField(payload: Record<string, unknown>, key: string) {
   const value = optionalRecord(payload[key]);
   if (!value) {
-    throw clickupRuntimeError("provider_error", `ClickUp response is missing ${key}`, 502);
+    throw providerResponseError(`ClickUp response is missing ${key}`);
   }
   return value;
 }
@@ -1163,7 +1169,7 @@ function readWrappedObject(payload: Record<string, unknown>, key: string) {
 function readArrayField(payload: Record<string, unknown>, key: string) {
   const value = payload[key];
   if (!Array.isArray(value)) {
-    throw clickupRuntimeError("provider_error", `ClickUp response is missing ${key}`, 502);
+    throw providerResponseError(`ClickUp response is missing ${key}`);
   }
   return value;
 }
@@ -1176,7 +1182,7 @@ function normalizeTaskTemplates(templates: unknown[]) {
     const parsed = optionalRecord(template);
     const id = asStringId(parsed?.id);
     if (!parsed || !id) {
-      throw clickupRuntimeError("provider_error", "ClickUp template entry is invalid", 502);
+      throw providerResponseError("ClickUp template entry is invalid");
     }
     return {
       ...parsed,
@@ -1216,7 +1222,7 @@ function readListLikeObject(payload: Record<string, unknown>) {
   if (looksLikeList(payload)) {
     return normalizeListLikeObject(payload);
   }
-  throw clickupRuntimeError("provider_error", "ClickUp response is missing list", 502);
+  throw providerResponseError("ClickUp response is missing list");
 }
 
 function looksLikeList(payload: Record<string, unknown>) {
@@ -1354,7 +1360,7 @@ function buildListTemplateOptions(value: unknown) {
 function buildSetCustomFieldValueBody(input: Record<string, unknown>) {
   const value = input.value;
   if (value === undefined) {
-    throw clickupRuntimeError("invalid_input", "value is required", 400);
+    throw providerInputError("value is required");
   }
   return compactObject({
     value,
@@ -1370,7 +1376,7 @@ function buildCreateChecklistBody(input: Record<string, unknown>) {
 
 function buildUpdateChecklistBody(input: Record<string, unknown>) {
   if (optionalString(input.name) === undefined && optionalInteger(input.position) === undefined) {
-    throw clickupRuntimeError("invalid_input", "at least one writable field is required", 400);
+    throw providerInputError("at least one writable field is required");
   }
 
   return compactObject({
@@ -1393,7 +1399,7 @@ function buildUpdateChecklistItemBody(input: Record<string, unknown>) {
     optionalBoolean(input.resolved) === undefined &&
     input.parent === undefined
   ) {
-    throw clickupRuntimeError("invalid_input", "at least one writable field is required", 400);
+    throw providerInputError("at least one writable field is required");
   }
 
   return compactObject({
@@ -1432,7 +1438,7 @@ async function resolveClickupAttachmentSource(
   const providedSources = [url, contentText, contentBase64].filter((value) => value !== undefined).length;
 
   if (providedSources !== 1) {
-    throw clickupRuntimeError("invalid_input", "exactly one attachment source field is required", 400);
+    throw providerInputError("exactly one attachment source field is required");
   }
 
   if (url) {
@@ -1453,7 +1459,7 @@ async function resolveClickupAttachmentSource(
   }
 
   if (contentBase64 === undefined) {
-    throw clickupRuntimeError("invalid_input", "attachment source is required", 400);
+    throw providerInputError("attachment source is required");
   }
 
   return {
@@ -1472,7 +1478,7 @@ async function fetchPublicAttachmentUrl(
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeoutHandle = setTimeout(() => {
       controller.abort();
-      reject(clickupRuntimeError("provider_error", "attachment source download timed out", 504));
+      reject(new ProviderRequestError(504, "attachment source download timed out"));
     }, attachmentDownloadTimeoutMs);
   });
 
@@ -1504,19 +1510,15 @@ async function fetchPublicAttachmentUrl(
     }
 
     if (!response) {
-      throw clickupRuntimeError("provider_error", "attachment source download failed", 502);
+      throw providerResponseError("attachment source download failed");
     }
 
     if ([301, 302, 303, 307, 308].includes(response.status)) {
-      throw clickupRuntimeError("provider_error", "attachment source redirected too many times", 502);
+      throw providerResponseError("attachment source redirected too many times");
     }
 
     if (!response.ok) {
-      throw clickupRuntimeError(
-        "provider_error",
-        `failed to fetch attachment source: ${response.status}`,
-        response.status,
-      );
+      throw new ProviderRequestError(response.status, `failed to fetch attachment source: ${response.status}`);
     }
 
     return {
@@ -1532,7 +1534,7 @@ function assertPublicClickupAttachmentUrl(value: string): URL {
   return assertPublicHttpUrl(value, {
     fieldName: "url",
     createError(message) {
-      return clickupRuntimeError("invalid_input", message, 400);
+      return providerInputError(message);
     },
   });
 }
@@ -1540,7 +1542,7 @@ function assertPublicClickupAttachmentUrl(value: string): URL {
 async function readAttachmentResponseBytes(response: Response) {
   const contentLength = parseContentLength(response.headers.get("content-length"));
   if (contentLength != null && contentLength > maxAttachmentBytes) {
-    throw clickupRuntimeError("invalid_input", `attachment source exceeds ${maxAttachmentBytes} bytes`, 400);
+    throw providerInputError(`attachment source exceeds ${maxAttachmentBytes} bytes`);
   }
 
   const body = response.body;
@@ -1561,7 +1563,7 @@ async function readAttachmentResponseBytes(response: Response) {
       total += value.byteLength;
       if (total > maxAttachmentBytes) {
         await reader.cancel();
-        throw clickupRuntimeError("invalid_input", `attachment source exceeds ${maxAttachmentBytes} bytes`, 400);
+        throw providerInputError(`attachment source exceeds ${maxAttachmentBytes} bytes`);
       }
       chunks.push(value);
     }
@@ -1587,12 +1589,12 @@ function parseContentLength(value: string | null) {
 function decodeBase64AttachmentContent(contentBase64: string) {
   const normalizedContent = contentBase64.trim();
   if (normalizedContent !== "" && normalizedContent.length % 4 !== 0) {
-    throw clickupRuntimeError("invalid_input", "contentBase64 must be valid base64", 400);
+    throw providerInputError("contentBase64 must be valid base64");
   }
 
   const bytes = Buffer.from(normalizedContent, "base64");
   if (bytes.toString("base64") !== normalizedContent) {
-    throw clickupRuntimeError("invalid_input", "contentBase64 must be valid base64", 400);
+    throw providerInputError("contentBase64 must be valid base64");
   }
   return Uint8Array.from(bytes);
 }
@@ -1660,7 +1662,7 @@ function buildTaskCommentsQuery(input: Record<string, unknown>) {
   const hasStart = optionalInteger(input.start) !== undefined;
   const hasStartId = optionalString(input.startId) !== undefined;
   if (hasStart !== hasStartId) {
-    throw clickupRuntimeError("invalid_input", "start and startId must be provided together", 400);
+    throw providerInputError("start and startId must be provided together");
   }
 
   return compactQuery({
@@ -1672,7 +1674,7 @@ function buildTaskCommentsQuery(input: Record<string, unknown>) {
 function requireProviderString(value: unknown, key: string) {
   const parsed = optionalString(value);
   if (!parsed) {
-    throw clickupRuntimeError("provider_error", `ClickUp response is missing ${key}`, 502);
+    throw providerResponseError(`ClickUp response is missing ${key}`);
   }
   return parsed;
 }
@@ -1680,7 +1682,7 @@ function requireProviderString(value: unknown, key: string) {
 function requireProviderBoolean(value: unknown, key: string) {
   const parsed = optionalBoolean(value);
   if (parsed === undefined) {
-    throw clickupRuntimeError("provider_error", `ClickUp response is missing ${key}`, 502);
+    throw providerResponseError(`ClickUp response is missing ${key}`);
   }
   return parsed;
 }
@@ -1688,7 +1690,7 @@ function requireProviderBoolean(value: unknown, key: string) {
 function requireProviderObject(value: unknown, key: string) {
   const parsed = optionalRecord(value);
   if (!parsed) {
-    throw clickupRuntimeError("provider_error", `ClickUp response is missing ${key}`, 502);
+    throw providerResponseError(`ClickUp response is missing ${key}`);
   }
   return parsed;
 }
@@ -1775,7 +1777,7 @@ function buildUpdateTaskBody(input: Record<string, unknown>) {
     customItemId !== undefined;
 
   if (!hasWritableField) {
-    throw clickupRuntimeError("invalid_input", "at least one writable field is required", 400);
+    throw providerInputError("at least one writable field is required");
   }
 
   return compactObject({
@@ -1812,7 +1814,7 @@ function buildAssigneeUpdates(input: Record<string, unknown>) {
 function requireString(value: unknown, fieldName: string) {
   const parsed = optionalString(value);
   if (!parsed) {
-    throw clickupRuntimeError("invalid_input", `${fieldName} is required`, 400);
+    throw providerInputError(`${fieldName} is required`);
   }
   return parsed;
 }
@@ -1820,7 +1822,7 @@ function requireString(value: unknown, fieldName: string) {
 function requireIdString(value: unknown, fieldName: string) {
   const parsed = asStringId(value);
   if (!parsed) {
-    throw clickupRuntimeError("invalid_input", `${fieldName} is required`, 400);
+    throw providerInputError(`${fieldName} is required`);
   }
   return parsed;
 }
@@ -1830,7 +1832,7 @@ function normalizeStringArray(value: unknown, fieldName: string) {
     return undefined;
   }
   if (!Array.isArray(value)) {
-    throw clickupRuntimeError("invalid_input", `${fieldName} must be an array`, 400);
+    throw providerInputError(`${fieldName} must be an array`);
   }
   return value.map((item) => requireString(item, fieldName));
 }
@@ -1840,12 +1842,12 @@ function normalizeIntegerArray(value: unknown, fieldName: string) {
     return undefined;
   }
   if (!Array.isArray(value)) {
-    throw clickupRuntimeError("invalid_input", `${fieldName} must be an array`, 400);
+    throw providerInputError(`${fieldName} must be an array`);
   }
   return value.map((item) => {
     const parsed = optionalInteger(item);
     if (parsed === undefined) {
-      throw clickupRuntimeError("invalid_input", `${fieldName} must contain integers`, 400);
+      throw providerInputError(`${fieldName} must contain integers`);
     }
     return parsed;
   });
@@ -1860,7 +1862,7 @@ function normalizeIntegerOrNone(value: unknown, fieldName: string) {
   }
   const parsed = optionalInteger(value);
   if (parsed === undefined) {
-    throw clickupRuntimeError("invalid_input", `${fieldName} must be an integer or "none"`, 400);
+    throw providerInputError(`${fieldName} must be an integer or "none"`);
   }
   return parsed;
 }
@@ -1871,7 +1873,7 @@ function normalizeNullableInteger(value: unknown, fieldName: string) {
   }
   const parsed = optionalInteger(value);
   if (parsed === undefined) {
-    throw clickupRuntimeError("invalid_input", `${fieldName} must be an integer or null`, 400);
+    throw providerInputError(`${fieldName} must be an integer or null`);
   }
   return parsed;
 }
@@ -1885,7 +1887,7 @@ function normalizeStringOrInteger(value: unknown, fieldName: string) {
   }
   const parsed = optionalInteger(value);
   if (parsed === undefined) {
-    throw clickupRuntimeError("invalid_input", `${fieldName} must be a string or integer`, 400);
+    throw providerInputError(`${fieldName} must be a string or integer`);
   }
   return parsed;
 }
@@ -1899,7 +1901,7 @@ function normalizeStringIntegerOrNull(value: unknown, fieldName: string) {
   }
   const parsed = optionalInteger(value);
   if (parsed === undefined) {
-    throw clickupRuntimeError("invalid_input", `${fieldName} must be a string, integer, or null`, 400);
+    throw providerInputError(`${fieldName} must be a string, integer, or null`);
   }
   return parsed;
 }
@@ -1909,7 +1911,7 @@ function normalizeNullableString(value: unknown, fieldName: string) {
     return value;
   }
   if (typeof value !== "string") {
-    throw clickupRuntimeError("invalid_input", `${fieldName} must be a string or null`, 400);
+    throw providerInputError(`${fieldName} must be a string or null`);
   }
   return value;
 }
@@ -1919,7 +1921,7 @@ function resolveDependencyTarget(input: Record<string, unknown>) {
   const dependencyOfTaskId = optionalString(input.dependencyOfTaskId);
   const provided = Number(Boolean(dependsOnTaskId)) + Number(Boolean(dependencyOfTaskId));
   if (provided !== 1) {
-    throw clickupRuntimeError("invalid_input", "exactly one dependency target field is required", 400);
+    throw providerInputError("exactly one dependency target field is required");
   }
   return compactObject({
     depends_on: dependsOnTaskId,
@@ -1932,12 +1934,12 @@ function normalizeMoveTaskStatusMappings(value: unknown) {
     return undefined;
   }
   if (!Array.isArray(value)) {
-    throw clickupRuntimeError("invalid_input", "statusMappings must be an array", 400);
+    throw providerInputError("statusMappings must be an array");
   }
   return value.map((entry) => {
     const parsedEntry = optionalRecord(entry);
     if (!parsedEntry) {
-      throw clickupRuntimeError("invalid_input", "statusMappings must contain objects", 400);
+      throw providerInputError("statusMappings must contain objects");
     }
     return compactObject({
       source_status: requireString(parsedEntry.sourceStatus, "statusMappings.sourceStatus"),
@@ -1952,7 +1954,7 @@ function normalizeOptionalObject(value: unknown, fieldName: string) {
   }
   const parsed = optionalRecord(value);
   if (!parsed) {
-    throw clickupRuntimeError("invalid_input", `${fieldName} must be an object`, 400);
+    throw providerInputError(`${fieldName} must be an object`);
   }
   return parsed;
 }
@@ -1962,12 +1964,12 @@ function normalizeRecordArray(value: unknown, fieldName: string) {
     return undefined;
   }
   if (!Array.isArray(value)) {
-    throw clickupRuntimeError("invalid_input", `${fieldName} must be an array`, 400);
+    throw providerInputError(`${fieldName} must be an array`);
   }
   return value.map((item) => {
     const parsed = optionalRecord(item);
     if (!parsed) {
-      throw clickupRuntimeError("invalid_input", `${fieldName} must contain objects`, 400);
+      throw providerInputError(`${fieldName} must contain objects`);
     }
     return parsed;
   });
@@ -1985,8 +1987,4 @@ function asStringId(value: unknown) {
 
 function compactQuery<T extends Record<string, unknown>>(value: T) {
   return Object.fromEntries(Object.entries(value).filter(([, child]) => child !== undefined)) as T;
-}
-
-function clickupRuntimeError(_code: string, message: string, status = 500): ProviderRequestError {
-  return new ProviderRequestError(status, message);
 }

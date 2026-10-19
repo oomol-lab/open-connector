@@ -1,22 +1,60 @@
-import type { ProviderErrorCode } from "../../core/provider-error-codes.ts";
 import type { OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
 
 import { createHmac } from "node:crypto";
 import {
-  looseArray as asArrayOrEmpty,
-  optionalInteger as asOptionalInteger,
-  optionalNumber as asOptionalNumber,
-  optionalRecord as asOptionalObject,
-  optionalString as asOptionalString,
+  looseArray,
+  optionalInteger,
+  optionalNumber,
+  optionalRecord,
+  optionalString,
   optionalBoolean,
+  recordOrEmpty,
 } from "../../core/cast.ts";
 import { createGuardedFetch } from "../../core/guarded-fetch.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import {
-  ProviderRequestError,
-  providerUserAgent as connectorUserAgent,
-  runProviderRequest,
-} from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
+
+interface ShopeeSignatureInput {
+  partnerId: number;
+  partnerKey: string;
+  path: string;
+  timestamp: number;
+  accessToken?: string;
+  entityId?: number;
+}
+
+interface ShopeeRefreshInventoryInput {
+  clientConfig: OAuthClientConfig;
+  providerSecret?: Record<string, unknown>;
+  fallbackRefreshToken: string;
+  fetcher: typeof fetch;
+  now?: Date;
+}
+
+interface ShopeeTokenRequestInput {
+  clientConfig: OAuthClientConfig;
+  body: Record<string, unknown>;
+  path: "/api/v2/auth/token/get" | "/api/v2/auth/access_token/get";
+  fetcher: typeof fetch;
+  now?: Date;
+}
+
+interface ShopeeEntityInfoInput {
+  entityType: "shop" | "merchant";
+  entityId: number;
+  accessToken: string;
+  clientConfig: OAuthClientConfig;
+  fetcher: typeof fetch;
+}
+
+interface ShopeeEntityTokenRefreshInput {
+  clientConfig: OAuthClientConfig;
+  entityType: "shop" | "merchant";
+  entityId: number;
+  refreshToken: string;
+  fetcher: typeof fetch;
+  now?: Date;
+}
 
 interface ShopeeEntityToken {
   accessToken: string;
@@ -55,29 +93,23 @@ interface ShopeeNormalizedResponse {
 const shopeeImageMaxBytes = 10 * 1024 * 1024;
 const shopeeImageContentTypes = new Set(["image/jpeg", "image/png"]);
 
-function createShopeeError(code: ProviderErrorCode, message: string, status: number): ProviderRequestError {
-  return new ProviderRequestError(status, message, undefined, code);
+interface ShopeeGuardedFetchOptions {
+  fieldName: string;
+  requireHttps?: boolean;
 }
 
-function asObjectOrEmpty(value: unknown): Record<string, unknown> {
-  return asOptionalObject(value) ?? {};
-}
-
-function createSsrfGuardedFetch(
-  fetcher: typeof fetch,
-  options: { fieldName: string; requireHttps?: boolean },
-): typeof fetch {
+function createSsrfGuardedFetch(fetcher: typeof fetch, options: ShopeeGuardedFetchOptions): typeof fetch {
   const guardedFetch = createGuardedFetch({
     fetch: fetcher,
-    createError: (message) => createShopeeError("invalid_input", message, 400),
+    createError: (message) => new ProviderRequestError(400, message, undefined, "invalid_input"),
   });
   return async (input, init) => {
     const url = assertPublicHttpUrl(String(input), {
       fieldName: options.fieldName,
-      createError: (message) => createShopeeError("invalid_input", message, 400),
+      createError: (message) => new ProviderRequestError(400, message, undefined, "invalid_input"),
     });
     if (options.requireHttps && url.protocol !== "https:") {
-      throw createShopeeError("invalid_input", `${options.fieldName} must use HTTPS.`, 400);
+      throw new ProviderRequestError(400, `${options.fieldName} must use HTTPS.`, undefined, "invalid_input");
     }
     return guardedFetch(url, init);
   };
@@ -113,7 +145,7 @@ export interface ShopeeRefreshInventoryResult {
 export function resolveShopeeApiBaseUrl(clientConfig: OAuthClientConfig): string {
   const apiBaseUrl = clientConfig.extra.apiBaseUrl?.trim();
   if (!apiBaseUrl) {
-    throw createShopeeError("provider_error", "Shopee API Base URL is unavailable.", 500);
+    throw new ProviderRequestError(500, "Shopee API Base URL is unavailable.", undefined, "provider_error");
   }
   return apiBaseUrl;
 }
@@ -121,7 +153,7 @@ export function resolveShopeeApiBaseUrl(clientConfig: OAuthClientConfig): string
 export function parseShopeePartnerId(clientConfig: OAuthClientConfig): number {
   const partnerId = Number(clientConfig.clientId);
   if (!Number.isSafeInteger(partnerId) || partnerId <= 0) {
-    throw createShopeeError("provider_error", "Shopee Partner ID must be a positive integer.", 500);
+    throw new ProviderRequestError(500, "Shopee Partner ID must be a positive integer.", undefined, "provider_error");
   }
   return partnerId;
 }
@@ -129,19 +161,12 @@ export function parseShopeePartnerId(clientConfig: OAuthClientConfig): number {
 function getShopeePartnerKey(clientConfig: OAuthClientConfig) {
   const partnerKey = clientConfig.clientSecret.trim();
   if (!partnerKey) {
-    throw createShopeeError("provider_error", "Shopee Partner Key is unavailable.", 500);
+    throw new ProviderRequestError(500, "Shopee Partner Key is unavailable.", undefined, "provider_error");
   }
   return partnerKey;
 }
 
-export function createShopeeSignature(input: {
-  partnerId: number;
-  partnerKey: string;
-  path: string;
-  timestamp: number;
-  accessToken?: string;
-  entityId?: number;
-}): string {
+export function createShopeeSignature(input: ShopeeSignatureInput): string {
   const base = [input.partnerId, input.path, input.timestamp, input.accessToken, input.entityId]
     .filter((value) => value != null)
     .join("");
@@ -152,16 +177,21 @@ export function parseShopeeToken(payload: ShopeeTokenPayload, now: Date = new Da
   assertShopeePayloadSuccess(payload, "Shopee token request");
   const accessToken = requireString(payload.access_token, "access_token");
   const refreshToken = requireString(payload.refresh_token, "refresh_token");
-  const expiresIn = asOptionalInteger(payload.expire_in);
+  const expiresIn = optionalInteger(payload.expire_in);
   if (expiresIn == null || expiresIn <= 0) {
-    throw createShopeeError("provider_error", "Shopee token response is missing a valid expire_in value.", 502);
+    throw new ProviderRequestError(
+      502,
+      "Shopee token response is missing a valid expire_in value.",
+      undefined,
+      "provider_error",
+    );
   }
   const shopIds = uniqueEntityIds([
-    ...asArrayOrEmpty(payload.shop_id_list),
+    ...looseArray(payload.shop_id_list),
     ...(payload.shop_id == null ? [] : [payload.shop_id]),
   ]);
   const merchantIds = uniqueEntityIds([
-    ...asArrayOrEmpty(payload.merchant_id_list),
+    ...looseArray(payload.merchant_id_list),
     ...(payload.merchant_id == null ? [] : [payload.merchant_id]),
   ]);
   return {
@@ -170,7 +200,7 @@ export function parseShopeeToken(payload: ShopeeTokenPayload, now: Date = new Da
     expiresAt: new Date(now.getTime() + expiresIn * 1_000).toISOString(),
     shopIds,
     merchantIds,
-    requestId: asOptionalString(payload.request_id),
+    requestId: optionalString(payload.request_id),
   };
 }
 
@@ -187,28 +217,25 @@ export function createInitialShopeeTokenInventory(token: ShopeeParsedToken): Sho
 }
 
 export function readShopeeTokenInventory(providerSecret: Record<string, unknown> | undefined): ShopeeTokenInventory {
-  const inventory = asOptionalObject(providerSecret?.tokenInventory);
+  const inventory = optionalRecord(providerSecret?.tokenInventory);
   return {
     shops: readEntityTokens(inventory?.shops),
     merchants: readEntityTokens(inventory?.merchants),
   };
 }
 
-export async function refreshShopeeTokenInventory(input: {
-  clientConfig: OAuthClientConfig;
-  providerSecret?: Record<string, unknown>;
-  fallbackRefreshToken: string;
-  fetcher: typeof fetch;
-  now?: Date;
-}): Promise<ShopeeRefreshInventoryResult> {
+export async function refreshShopeeTokenInventory(
+  input: ShopeeRefreshInventoryInput,
+): Promise<ShopeeRefreshInventoryResult> {
   const previous = readShopeeTokenInventory(input.providerSecret);
   const shopEntries = Object.entries(previous.shops);
   const merchantEntries = Object.entries(previous.merchants);
   if (shopEntries.length === 0 && merchantEntries.length === 0) {
-    throw createShopeeError(
-      "provider_error",
-      "Shopee connection has no authorized shop or merchant tokens to refresh.",
+    throw new ProviderRequestError(
       409,
+      "Shopee connection has no authorized shop or merchant tokens to refresh.",
+      undefined,
+      "provider_error",
     );
   }
 
@@ -244,18 +271,12 @@ export async function refreshShopeeTokenInventory(input: {
   }
   const representative = Object.values(merchants)[0] ?? Object.values(shops)[0];
   if (!representative) {
-    throw createShopeeError("provider_error", "Shopee token refresh returned no tokens.", 502);
+    throw new ProviderRequestError(502, "Shopee token refresh returned no tokens.", undefined, "provider_error");
   }
   return { inventory: { shops, merchants }, representative };
 }
 
-export async function requestShopeeToken(input: {
-  clientConfig: OAuthClientConfig;
-  body: Record<string, unknown>;
-  path: "/api/v2/auth/token/get" | "/api/v2/auth/access_token/get";
-  fetcher: typeof fetch;
-  now?: Date;
-}): Promise<ShopeeParsedToken> {
+export async function requestShopeeToken(input: ShopeeTokenRequestInput): Promise<ShopeeParsedToken> {
   const payload = await requestShopee({
     path: input.path,
     level: "public",
@@ -277,37 +298,37 @@ export async function executeShopeeAction(
       return executeEntityGet("/api/v2/merchant/get_merchant_info", "merchant", input, context);
     case "list_merchant_shops":
       return executeEntityGet("/api/v2/merchant/get_shop_list_by_merchant", "merchant", input, context, {
-        page_no: asOptionalInteger(input.page) ?? 1,
-        page_size: asOptionalInteger(input.pageSize) ?? 100,
+        page_no: optionalInteger(input.page) ?? 1,
+        page_size: optionalInteger(input.pageSize) ?? 100,
       });
     case "get_shop_info":
       return executeEntityGet("/api/v2/shop/get_shop_info", "shop", input, context);
     case "list_global_items":
       return executeEntityGet("/api/v2/global_product/get_global_item_list", "merchant", input, context, {
-        offset: asOptionalString(input.cursor),
-        page_size: asOptionalInteger(input.pageSize) ?? 50,
-        update_time_from: asOptionalInteger(input.updatedFrom),
-        update_time_to: asOptionalInteger(input.updatedTo),
+        offset: optionalString(input.cursor),
+        page_size: optionalInteger(input.pageSize) ?? 50,
+        update_time_from: optionalInteger(input.updatedFrom),
+        update_time_to: optionalInteger(input.updatedTo),
       });
     case "get_global_items":
       return executeEntityGet("/api/v2/global_product/get_global_item_info", "merchant", input, context, {
-        global_item_id_list: asArrayOrEmpty(input.globalItemIds).join(","),
+        global_item_id_list: looseArray(input.globalItemIds).join(","),
       });
     case "list_global_categories":
       return executeEntityGet("/api/v2/global_product/get_category", "merchant", input, context, {
-        language: asOptionalString(input.language) ?? "en",
+        language: optionalString(input.language) ?? "en",
       });
     case "get_global_attribute_tree":
       return executeEntityGet("/api/v2/global_product/get_attribute_tree", "merchant", input, context, {
-        category_id_list: asArrayOrEmpty(input.categoryIds).join(","),
-        language: asOptionalString(input.language) ?? "en",
+        category_id_list: looseArray(input.categoryIds).join(","),
+        language: optionalString(input.language) ?? "en",
       });
     case "list_global_brands":
       return executeEntityGet("/api/v2/global_product/get_brand_list", "merchant", input, context, {
-        category_id: asOptionalInteger(input.categoryId),
-        offset: asOptionalInteger(input.offset) ?? 0,
-        page_size: asOptionalInteger(input.pageSize) ?? 100,
-        status: asOptionalInteger(input.status) ?? 1,
+        category_id: optionalInteger(input.categoryId),
+        offset: optionalInteger(input.offset) ?? 0,
+        page_size: optionalInteger(input.pageSize) ?? 100,
+        status: optionalInteger(input.status) ?? 1,
       });
     case "upload_product_image":
       return uploadShopeeProductImage(input, context);
@@ -321,21 +342,21 @@ export async function executeShopeeAction(
       );
     case "list_shop_items":
       return executeEntityGet("/api/v2/product/get_item_list", "shop", input, context, {
-        offset: asOptionalInteger(input.offset) ?? 0,
-        page_size: asOptionalInteger(input.pageSize) ?? 100,
-        item_status: asArrayOrEmpty(input.statuses),
-        update_time_from: asOptionalInteger(input.updatedFrom),
-        update_time_to: asOptionalInteger(input.updatedTo),
+        offset: optionalInteger(input.offset) ?? 0,
+        page_size: optionalInteger(input.pageSize) ?? 100,
+        item_status: looseArray(input.statuses),
+        update_time_from: optionalInteger(input.updatedFrom),
+        update_time_to: optionalInteger(input.updatedTo),
       });
     case "get_shop_items":
       return executeEntityGet("/api/v2/product/get_item_base_info", "shop", input, context, {
-        item_id_list: asArrayOrEmpty(input.itemIds).join(","),
+        item_id_list: looseArray(input.itemIds).join(","),
         need_tax_info: optionalBoolean(input.includeTaxInfo),
         need_complaint_policy: optionalBoolean(input.includeComplaintPolicy),
       });
     case "get_item_models":
       return executeEntityGet("/api/v2/product/get_model_list", "shop", input, context, {
-        item_id: asOptionalInteger(input.itemId),
+        item_id: optionalInteger(input.itemId),
       });
     case "update_item_prices":
       return executeEntityPost("/api/v2/product/update_price", "shop", input, context, createItemPriceBody(input));
@@ -344,17 +365,17 @@ export async function executeShopeeAction(
     case "list_orders":
       validateOrderTimeRange(input);
       return executeEntityGet("/api/v2/order/get_order_list", "shop", input, context, {
-        time_range_field: asOptionalString(input.timeRangeField) ?? "update_time",
-        time_from: asOptionalInteger(input.timeFrom),
-        time_to: asOptionalInteger(input.timeTo),
-        page_size: asOptionalInteger(input.pageSize) ?? 100,
-        cursor: asOptionalString(input.cursor),
-        order_status: asOptionalString(input.orderStatus),
+        time_range_field: optionalString(input.timeRangeField) ?? "update_time",
+        time_from: optionalInteger(input.timeFrom),
+        time_to: optionalInteger(input.timeTo),
+        page_size: optionalInteger(input.pageSize) ?? 100,
+        cursor: optionalString(input.cursor),
+        order_status: optionalString(input.orderStatus),
       });
     case "get_orders":
       return executeEntityGet("/api/v2/order/get_order_detail", "shop", input, context, {
-        order_sn_list: asArrayOrEmpty(input.orderSerialNumbers).join(","),
-        response_optional_fields: asArrayOrEmpty(input.optionalFields).join(",") || undefined,
+        order_sn_list: looseArray(input.orderSerialNumbers).join(","),
+        response_optional_fields: looseArray(input.optionalFields).join(",") || undefined,
       });
     case "get_shipping_parameters":
       return executePackageGet("/api/v2/logistics/get_shipping_parameter", input, context);
@@ -362,44 +383,44 @@ export async function executeShopeeAction(
       return executeEntityPost("/api/v2/logistics/ship_order", "shop", input, context, createShipOrderBody(input));
     case "get_tracking_number":
       return executePackageGet("/api/v2/logistics/get_tracking_number", input, context, {
-        response_optional_fields: asArrayOrEmpty(input.optionalFields).join(",") || undefined,
+        response_optional_fields: looseArray(input.optionalFields).join(",") || undefined,
       });
     case "get_tracking_info":
       return executePackageGet("/api/v2/logistics/get_tracking_info", input, context);
     case "list_returns":
       validateReturnTimeRanges(input);
       return executeEntityGet("/api/v2/returns/get_return_list", "shop", input, context, {
-        page_no: asOptionalInteger(input.page) ?? 1,
-        page_size: asOptionalInteger(input.pageSize) ?? 40,
-        create_time_from: asOptionalInteger(input.createdFrom),
-        create_time_to: asOptionalInteger(input.createdTo),
-        update_time_from: asOptionalInteger(input.updatedFrom),
-        update_time_to: asOptionalInteger(input.updatedTo),
-        status: asOptionalString(input.status),
-        negotiation_status: asOptionalString(input.negotiationStatus),
-        seller_proof_status: asOptionalString(input.sellerProofStatus),
-        seller_compensation_status: asOptionalString(input.sellerCompensationStatus),
+        page_no: optionalInteger(input.page) ?? 1,
+        page_size: optionalInteger(input.pageSize) ?? 40,
+        create_time_from: optionalInteger(input.createdFrom),
+        create_time_to: optionalInteger(input.createdTo),
+        update_time_from: optionalInteger(input.updatedFrom),
+        update_time_to: optionalInteger(input.updatedTo),
+        status: optionalString(input.status),
+        negotiation_status: optionalString(input.negotiationStatus),
+        seller_proof_status: optionalString(input.sellerProofStatus),
+        seller_compensation_status: optionalString(input.sellerCompensationStatus),
       });
     case "get_return":
       return executeEntityGet("/api/v2/returns/get_return_detail", "shop", input, context, {
-        return_sn: asOptionalString(input.returnSerialNumber),
+        return_sn: optionalString(input.returnSerialNumber),
       });
     case "get_order_escrow":
       return executeEntityGet("/api/v2/payment/get_escrow_detail", "shop", input, context, {
-        order_sn: asOptionalString(input.orderSerialNumber),
+        order_sn: optionalString(input.orderSerialNumber),
       });
   }
-  throw createShopeeError("invalid_input", `Unknown Shopee action: ${actionName}`, 400);
+  throw new ProviderRequestError(400, `Unknown Shopee action: ${actionName}`, undefined, "invalid_input");
 }
 
 function createItemPriceBody(input: Record<string, unknown>) {
   return {
-    item_id: asOptionalInteger(input.itemId),
-    price_list: asArrayOrEmpty(input.prices).map((value) => {
-      const price = asObjectOrEmpty(value);
+    item_id: optionalInteger(input.itemId),
+    price_list: looseArray(input.prices).map((value) => {
+      const price = recordOrEmpty(value);
       return {
-        model_id: asOptionalInteger(price.modelId) ?? 0,
-        original_price: asOptionalNumber(price.originalPrice),
+        model_id: optionalInteger(price.modelId) ?? 0,
+        original_price: optionalNumber(price.originalPrice),
       };
     }),
   };
@@ -407,16 +428,16 @@ function createItemPriceBody(input: Record<string, unknown>) {
 
 function createItemStockBody(input: Record<string, unknown>) {
   return {
-    item_id: asOptionalInteger(input.itemId),
-    stock_list: asArrayOrEmpty(input.stocks).map((value) => {
-      const stock = asObjectOrEmpty(value);
+    item_id: optionalInteger(input.itemId),
+    stock_list: looseArray(input.stocks).map((value) => {
+      const stock = recordOrEmpty(value);
       return {
-        model_id: asOptionalInteger(stock.modelId) ?? 0,
-        seller_stock: asArrayOrEmpty(stock.sellerStock).map((locationValue) => {
-          const location = asObjectOrEmpty(locationValue);
+        model_id: optionalInteger(stock.modelId) ?? 0,
+        seller_stock: looseArray(stock.sellerStock).map((locationValue) => {
+          const location = recordOrEmpty(locationValue);
           return {
-            location_id: asOptionalString(location.locationId),
-            stock: asOptionalInteger(location.stock),
+            location_id: optionalString(location.locationId),
+            stock: optionalInteger(location.stock),
           };
         }),
       };
@@ -425,39 +446,44 @@ function createItemStockBody(input: Record<string, unknown>) {
 }
 
 function createShipOrderBody(input: Record<string, unknown>) {
-  const pickup = asOptionalObject(input.pickup);
-  const dropoff = asOptionalObject(input.dropoff);
-  const nonIntegrated = asOptionalObject(input.nonIntegrated);
+  const pickup = optionalRecord(input.pickup);
+  const dropoff = optionalRecord(input.dropoff);
+  const nonIntegrated = optionalRecord(input.nonIntegrated);
   const shippingMethodCount = [pickup, dropoff, nonIntegrated].filter(Boolean).length;
   if (shippingMethodCount !== 1) {
-    throw createShopeeError("invalid_input", "Provide exactly one of pickup, dropoff, or nonIntegrated.", 400);
+    throw new ProviderRequestError(
+      400,
+      "Provide exactly one of pickup, dropoff, or nonIntegrated.",
+      undefined,
+      "invalid_input",
+    );
   }
   return {
-    order_sn: asOptionalString(input.orderSerialNumber),
-    package_number: asOptionalString(input.packageNumber),
+    order_sn: optionalString(input.orderSerialNumber),
+    package_number: optionalString(input.packageNumber),
     pickup: pickup
       ? {
-          address_id: asOptionalInteger(pickup.addressId),
-          pickup_time_id: asOptionalString(pickup.pickupTimeId),
-          tracking_number: asOptionalString(pickup.trackingNumber),
+          address_id: optionalInteger(pickup.addressId),
+          pickup_time_id: optionalString(pickup.pickupTimeId),
+          tracking_number: optionalString(pickup.trackingNumber),
         }
       : undefined,
     dropoff: dropoff
       ? {
-          branch_id: asOptionalInteger(dropoff.branchId),
-          sender_real_name: asOptionalString(dropoff.senderRealName),
-          tracking_number: asOptionalString(dropoff.trackingNumber),
-          slug: asOptionalString(dropoff.slug),
+          branch_id: optionalInteger(dropoff.branchId),
+          sender_real_name: optionalString(dropoff.senderRealName),
+          tracking_number: optionalString(dropoff.trackingNumber),
+          slug: optionalString(dropoff.slug),
         }
       : undefined,
-    non_integrated: nonIntegrated ? { tracking_number: asOptionalString(nonIntegrated.trackingNumber) } : undefined,
+    non_integrated: nonIntegrated ? { tracking_number: optionalString(nonIntegrated.trackingNumber) } : undefined,
   };
 }
 
 async function uploadShopeeProductImage(input: Record<string, unknown>, context: ShopeeActionContext) {
-  const imageUrl = asOptionalString(input.imageUrl);
+  const imageUrl = optionalString(input.imageUrl);
   if (!imageUrl) {
-    throw createShopeeError("invalid_input", "imageUrl is required.", 400);
+    throw new ProviderRequestError(400, "imageUrl is required.", undefined, "invalid_input");
   }
   const guardedFetch = createSsrfGuardedFetch(context.fetcher, {
     fieldName: "imageUrl",
@@ -467,22 +493,27 @@ async function uploadShopeeProductImage(input: Record<string, unknown>, context:
     guardedFetch(imageUrl, { signal }),
   );
   if (!response.ok) {
-    throw createShopeeError("provider_error", `Shopee image download failed with HTTP ${response.status}.`, 502);
+    throw new ProviderRequestError(
+      502,
+      `Shopee image download failed with HTTP ${response.status}.`,
+      undefined,
+      "provider_error",
+    );
   }
   const contentType = response.headers.get("content-type")?.split(";", 1)[0]?.trim().toLowerCase();
   if (!contentType || !shopeeImageContentTypes.has(contentType)) {
-    throw createShopeeError("invalid_input", "imageUrl must return a JPG, JPEG, or PNG image.", 400);
+    throw new ProviderRequestError(400, "imageUrl must return a JPG, JPEG, or PNG image.", undefined, "invalid_input");
   }
   const bytes = await readImageBytes(response);
   const extension = contentType === "image/png" ? "png" : "jpg";
   const body = new FormData();
   body.set("image", new File([bytes], `product.${extension}`, { type: contentType }));
-  const scene = asOptionalString(input.scene);
-  const ratio = asOptionalString(input.ratio);
+  const scene = optionalString(input.scene);
+  const ratio = optionalString(input.ratio);
   if (scene) body.set("scene", scene);
   if (ratio) body.set("ratio", ratio);
   const inventory = readShopeeTokenInventory(context.providerSecret);
-  const entityId = resolveEntityId("shop", asOptionalInteger(input.shopId), inventory.shops);
+  const entityId = resolveEntityId("shop", optionalInteger(input.shopId), inventory.shops);
   const payload = await requestShopee({
     path: "/api/v2/media_space/upload_image",
     level: "shop",
@@ -498,7 +529,7 @@ async function uploadShopeeProductImage(input: Record<string, unknown>, context:
 async function readImageBytes(response: Response) {
   const declaredLength = Number(response.headers.get("content-length"));
   if (Number.isFinite(declaredLength) && declaredLength > shopeeImageMaxBytes) {
-    throw createShopeeError("invalid_input", "imageUrl exceeds Shopee's 10 MB image limit.", 400);
+    throw new ProviderRequestError(400, "imageUrl exceeds Shopee's 10 MB image limit.", undefined, "invalid_input");
   }
   if (!response.body) {
     return new Uint8Array();
@@ -512,7 +543,7 @@ async function readImageBytes(response: Response) {
     total += value.byteLength;
     if (total > shopeeImageMaxBytes) {
       await reader.cancel();
-      throw createShopeeError("invalid_input", "imageUrl exceeds Shopee's 10 MB image limit.", 400);
+      throw new ProviderRequestError(400, "imageUrl exceeds Shopee's 10 MB image limit.", undefined, "invalid_input");
     }
     chunks.push(value);
   }
@@ -526,31 +557,32 @@ async function readImageBytes(response: Response) {
 }
 
 function createGlobalItemBody(input: Record<string, unknown>) {
-  const imageIds = asArrayOrEmpty(input.imageIds);
-  const attributes = asArrayOrEmpty(input.attributes);
-  const sellerStock = asArrayOrEmpty(input.sellerStock);
-  const packageLength = asOptionalNumber(input.packageLength);
-  const packageWidth = asOptionalNumber(input.packageWidth);
-  const packageHeight = asOptionalNumber(input.packageHeight);
+  const imageIds = looseArray(input.imageIds);
+  const attributes = looseArray(input.attributes);
+  const sellerStock = looseArray(input.sellerStock);
+  const packageLength = optionalNumber(input.packageLength);
+  const packageWidth = optionalNumber(input.packageWidth);
+  const packageHeight = optionalNumber(input.packageHeight);
   const dimensionCount = [packageLength, packageWidth, packageHeight].filter((value) => value != null).length;
   if (dimensionCount !== 0 && dimensionCount !== 3) {
-    throw createShopeeError(
-      "invalid_input",
-      "packageLength, packageWidth, and packageHeight must be provided together.",
+    throw new ProviderRequestError(
       400,
+      "packageLength, packageWidth, and packageHeight must be provided together.",
+      undefined,
+      "invalid_input",
     );
   }
-  const brandId = asOptionalInteger(input.brandId);
-  const brandName = asOptionalString(input.brandName);
+  const brandId = optionalInteger(input.brandId);
+  const brandName = optionalString(input.brandName);
   return {
-    category_id: asOptionalInteger(input.categoryId),
-    global_item_name: asOptionalString(input.name),
-    description: asOptionalString(input.description),
-    global_item_sku: asOptionalString(input.sku),
+    category_id: optionalInteger(input.categoryId),
+    global_item_name: optionalString(input.name),
+    description: optionalString(input.description),
+    global_item_sku: optionalString(input.sku),
     image: imageIds.length > 0 ? { image_id_list: imageIds } : undefined,
-    original_price: asOptionalNumber(input.originalPrice),
-    normal_stock: asOptionalInteger(input.stock),
-    weight: asOptionalNumber(input.weight),
+    original_price: optionalNumber(input.originalPrice),
+    normal_stock: optionalInteger(input.stock),
+    weight: optionalNumber(input.weight),
     dimension:
       packageLength != null && packageWidth != null && packageHeight != null
         ? {
@@ -559,21 +591,21 @@ function createGlobalItemBody(input: Record<string, unknown>) {
             package_height: packageHeight,
           }
         : undefined,
-    pre_order: { days_to_ship: asOptionalInteger(input.daysToShip) },
-    condition: asOptionalString(input.condition),
+    pre_order: { days_to_ship: optionalInteger(input.daysToShip) },
+    condition: optionalString(input.condition),
     brand: brandId != null || brandName != null ? { brand_id: brandId, original_brand_name: brandName } : undefined,
     attribute_list:
       attributes.length > 0
         ? attributes.map((value) => {
-            const attribute = asObjectOrEmpty(value);
+            const attribute = recordOrEmpty(value);
             return {
-              attribute_id: asOptionalInteger(attribute.attributeId),
-              attribute_value_list: asArrayOrEmpty(attribute.values).map((item) => {
-                const attributeValue = asObjectOrEmpty(item);
+              attribute_id: optionalInteger(attribute.attributeId),
+              attribute_value_list: looseArray(attribute.values).map((item) => {
+                const attributeValue = recordOrEmpty(item);
                 return {
-                  value_id: asOptionalInteger(attributeValue.valueId),
-                  original_value_name: asOptionalString(attributeValue.originalValueName),
-                  value_unit: asOptionalString(attributeValue.valueUnit),
+                  value_id: optionalInteger(attributeValue.valueId),
+                  original_value_name: optionalString(attributeValue.originalValueName),
+                  value_unit: optionalString(attributeValue.valueUnit),
                 };
               }),
             };
@@ -582,23 +614,17 @@ function createGlobalItemBody(input: Record<string, unknown>) {
     seller_stock:
       sellerStock.length > 0
         ? sellerStock.map((value) => {
-            const stock = asObjectOrEmpty(value);
+            const stock = recordOrEmpty(value);
             return {
-              location_id: asOptionalString(stock.locationId),
-              stock: asOptionalInteger(stock.stock),
+              location_id: optionalString(stock.locationId),
+              stock: optionalInteger(stock.stock),
             };
           })
         : undefined,
   };
 }
 
-export async function fetchShopeeEntityInfo(input: {
-  entityType: "shop" | "merchant";
-  entityId: number;
-  accessToken: string;
-  clientConfig: OAuthClientConfig;
-  fetcher: typeof fetch;
-}): Promise<Record<string, unknown>> {
+export async function fetchShopeeEntityInfo(input: ShopeeEntityInfoInput): Promise<Record<string, unknown>> {
   const path = input.entityType === "shop" ? "/api/v2/shop/get_shop_info" : "/api/v2/merchant/get_merchant_info";
   return requestShopee({
     path,
@@ -619,7 +645,7 @@ async function executeEntityGet(
 ) {
   const inventory = readShopeeTokenInventory(context.providerSecret);
   const entities = entityType === "shop" ? inventory.shops : inventory.merchants;
-  const requestedId = asOptionalInteger(input[`${entityType}Id`]);
+  const requestedId = optionalInteger(input[`${entityType}Id`]);
   const entityId = resolveEntityId(entityType, requestedId, entities);
   const payload = await requestShopee({
     path,
@@ -640,8 +666,8 @@ function executePackageGet(
   extraQuery?: Record<string, string | number | boolean | readonly unknown[] | undefined>,
 ) {
   return executeEntityGet(path, "shop", input, context, {
-    order_sn: asOptionalString(input.orderSerialNumber),
-    package_number: asOptionalString(input.packageNumber),
+    order_sn: optionalString(input.orderSerialNumber),
+    package_number: optionalString(input.packageNumber),
     ...extraQuery,
   });
 }
@@ -655,7 +681,7 @@ async function executeEntityPost(
 ) {
   const inventory = readShopeeTokenInventory(context.providerSecret);
   const entities = entityType === "shop" ? inventory.shops : inventory.merchants;
-  const requestedId = asOptionalInteger(input[`${entityType}Id`]);
+  const requestedId = optionalInteger(input[`${entityType}Id`]);
   const entityId = resolveEntityId(entityType, requestedId, entities);
   const payload = await requestShopee({
     path,
@@ -717,22 +743,26 @@ async function requestShopee(input: ShopeeRequestInput & { now?: Date }): Promis
     } else if (input.body) {
       requestBody = JSON.stringify(input.body);
     }
+    const headers: Record<string, string> = {
+      accept: "application/json",
+      "user-agent": providerUserAgent,
+    };
+    if (!isFormData && input.body) {
+      headers["content-type"] = "application/json";
+    }
     const response = await input.fetcher(url, {
       method: input.body ? "POST" : "GET",
-      headers: {
-        accept: "application/json",
-        ...(!isFormData && input.body ? { "content-type": "application/json" } : {}),
-        "user-agent": connectorUserAgent,
-      },
+      headers,
       body: requestBody,
       signal,
     });
-    const payload = asOptionalObject(await response.json().catch(() => undefined));
+    const payload = optionalRecord(await response.json().catch(() => undefined));
     if (!payload) {
-      throw createShopeeError(
-        "provider_error",
-        `Shopee Open Platform returned a non-JSON response with HTTP ${response.status}.`,
+      throw new ProviderRequestError(
         response.ok ? 502 : response.status,
+        `Shopee Open Platform returned a non-JSON response with HTTP ${response.status}.`,
+        undefined,
+        "provider_error",
       );
     }
     assertShopeePayloadSuccess(payload, "Shopee Open Platform", response.status);
@@ -741,22 +771,27 @@ async function requestShopee(input: ShopeeRequestInput & { now?: Date }): Promis
 }
 
 function validateReturnTimeRanges(input: Record<string, unknown>) {
-  const createdFrom = asOptionalInteger(input.createdFrom);
-  const updatedFrom = asOptionalInteger(input.updatedFrom);
-  validateTimeRange(createdFrom, asOptionalInteger(input.createdTo), "Shopee return creation time range");
-  validateTimeRange(updatedFrom, asOptionalInteger(input.updatedTo), "Shopee return update time range");
+  const createdFrom = optionalInteger(input.createdFrom);
+  const updatedFrom = optionalInteger(input.updatedFrom);
+  validateTimeRange(createdFrom, optionalInteger(input.createdTo), "Shopee return creation time range");
+  validateTimeRange(updatedFrom, optionalInteger(input.updatedTo), "Shopee return update time range");
   if (createdFrom != null && updatedFrom != null && updatedFrom < createdFrom) {
-    throw createShopeeError("invalid_input", "Shopee return update time must not start before creation time.", 400);
+    throw new ProviderRequestError(
+      400,
+      "Shopee return update time must not start before creation time.",
+      undefined,
+      "invalid_input",
+    );
   }
 }
 
 function validateTimeRange(from: number | undefined, to: number | undefined, label: string) {
   if (from == null || to == null) return;
   if (to < from) {
-    throw createShopeeError("invalid_input", `${label} must end after it starts.`, 400);
+    throw new ProviderRequestError(400, `${label} must end after it starts.`, undefined, "invalid_input");
   }
   if (to - from > 15 * 24 * 60 * 60) {
-    throw createShopeeError("invalid_input", `${label} cannot exceed 15 days.`, 400);
+    throw new ProviderRequestError(400, `${label} cannot exceed 15 days.`, undefined, "invalid_input");
   }
 }
 
@@ -769,17 +804,18 @@ function assertShopeePayloadSuccess(
   label: string,
   httpStatus = 200,
 ) {
-  const error = asOptionalString(payload.error);
+  const error = optionalString(payload.error);
   if (!error && httpStatus < 400) {
     return;
   }
-  const message = asOptionalString(payload.message);
-  const requestId = asOptionalString(payload.request_id);
+  const message = optionalString(payload.message);
+  const requestId = optionalString(payload.request_id);
   const details = [error, message, requestId ? `request_id=${requestId}` : undefined].filter(Boolean).join(": ");
-  throw createShopeeError(
-    "provider_error",
-    `${label} failed${details ? `: ${details}` : ""}`,
+  throw new ProviderRequestError(
     httpStatus >= 400 ? httpStatus : 502,
+    `${label} failed${details ? `: ${details}` : ""}`,
+    undefined,
+    "provider_error",
   );
 }
 
@@ -789,15 +825,16 @@ function selectEntityToken(
   providerSecret: Record<string, unknown> | undefined,
 ) {
   if (entityId == null) {
-    throw createShopeeError("invalid_input", `Shopee ${entityType} ID is required.`, 400);
+    throw new ProviderRequestError(400, `Shopee ${entityType} ID is required.`, undefined, "invalid_input");
   }
   const inventory = readShopeeTokenInventory(providerSecret);
   const token = entityType === "shop" ? inventory.shops[String(entityId)] : inventory.merchants[String(entityId)];
   if (!token) {
-    throw createShopeeError(
-      "invalid_input",
-      `Shopee ${entityType} ${entityId} is not authorized by this connection.`,
+    throw new ProviderRequestError(
       400,
+      `Shopee ${entityType} ${entityId} is not authorized by this connection.`,
+      undefined,
+      "invalid_input",
     );
   }
   return token;
@@ -810,10 +847,11 @@ function resolveEntityId(
 ) {
   if (requestedId != null) {
     if (!entities[String(requestedId)]) {
-      throw createShopeeError(
-        "invalid_input",
-        `Shopee ${entityType} ${requestedId} is not authorized by this connection.`,
+      throw new ProviderRequestError(
         400,
+        `Shopee ${entityType} ${requestedId} is not authorized by this connection.`,
+        undefined,
+        "invalid_input",
       );
     }
     return requestedId;
@@ -822,23 +860,24 @@ function resolveEntityId(
   if (ids.length === 1) {
     return ids[0]!;
   }
-  throw createShopeeError(
-    "invalid_input",
+  throw new ProviderRequestError(
+    400,
     ids.length === 0
       ? `This Shopee connection has no authorized ${entityType}.`
       : `This Shopee connection has multiple ${entityType}s; provide ${entityType}Id.`,
-    400,
+    undefined,
+    "invalid_input",
   );
 }
 
 function readEntityTokens(value: unknown): Record<string, ShopeeEntityToken> {
-  const raw = asObjectOrEmpty(value);
+  const raw = recordOrEmpty(value);
   const result: Record<string, ShopeeEntityToken> = {};
   for (const [id, candidate] of Object.entries(raw)) {
-    const token = asOptionalObject(candidate);
-    const accessToken = asOptionalString(token?.accessToken);
-    const refreshToken = asOptionalString(token?.refreshToken);
-    const expiresAt = asOptionalString(token?.expiresAt);
+    const token = optionalRecord(candidate);
+    const accessToken = optionalString(token?.accessToken);
+    const refreshToken = optionalString(token?.refreshToken);
+    const expiresAt = optionalString(token?.expiresAt);
     if (accessToken && refreshToken && expiresAt) {
       result[id] = { accessToken, refreshToken, expiresAt };
     }
@@ -846,14 +885,7 @@ function readEntityTokens(value: unknown): Record<string, ShopeeEntityToken> {
   return result;
 }
 
-async function refreshShopeeEntityToken(input: {
-  clientConfig: OAuthClientConfig;
-  entityType: "shop" | "merchant";
-  entityId: number;
-  refreshToken: string;
-  fetcher: typeof fetch;
-  now?: Date;
-}) {
+async function refreshShopeeEntityToken(input: ShopeeEntityTokenRefreshInput) {
   const token = await requestShopeeToken({
     clientConfig: input.clientConfig,
     path: "/api/v2/auth/access_token/get",
@@ -880,30 +912,30 @@ function uniqueEntityIds(values: unknown[]) {
 }
 
 function requireString(value: unknown, fieldName: string) {
-  const string = asOptionalString(value);
+  const string = optionalString(value);
   if (!string) {
-    throw createShopeeError("provider_error", `Shopee token response is missing ${fieldName}.`, 502);
+    throw new ProviderRequestError(502, `Shopee token response is missing ${fieldName}.`, undefined, "provider_error");
   }
   return string;
 }
 
 function normalizeShopeeResponse(payload: Record<string, unknown>): ShopeeNormalizedResponse {
   return {
-    requestId: asOptionalString(payload.request_id),
+    requestId: optionalString(payload.request_id),
     data: payload,
   };
 }
 
 function validateOrderTimeRange(input: Record<string, unknown>) {
-  const from = asOptionalInteger(input.timeFrom);
-  const to = asOptionalInteger(input.timeTo);
+  const from = optionalInteger(input.timeFrom);
+  const to = optionalInteger(input.timeTo);
   if (from == null || to == null) {
-    throw createShopeeError("invalid_input", "timeFrom and timeTo are required.", 400);
+    throw new ProviderRequestError(400, "timeFrom and timeTo are required.", undefined, "invalid_input");
   }
   if (to < from) {
-    throw createShopeeError("invalid_input", "timeTo must not be earlier than timeFrom.", 400);
+    throw new ProviderRequestError(400, "timeTo must not be earlier than timeFrom.", undefined, "invalid_input");
   }
   if (to - from > 15 * 24 * 60 * 60) {
-    throw createShopeeError("invalid_input", "Shopee order time range cannot exceed 15 days.", 400);
+    throw new ProviderRequestError(400, "Shopee order time range cannot exceed 15 days.", undefined, "invalid_input");
   }
 }

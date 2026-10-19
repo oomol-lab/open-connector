@@ -11,7 +11,12 @@ import {
   optionalRecord,
   optionalString,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  providerUserAgent,
+  ProviderRequestError,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 export const teableApiBaseUrl = "https://app.teable.cn/api";
 const teableCurrentUserPath = "/auth/user";
@@ -77,10 +82,6 @@ async function executeGetCurrentUser(context: ApiKeyProviderContext) {
     phase: "execute",
   });
   return parseCurrentUser(payload);
-}
-
-function providerError(_code: string, message: string, status: number): ProviderRequestError {
-  return new ProviderRequestError(status, message);
 }
 
 async function executeListSpaces(context: ApiKeyProviderContext) {
@@ -203,10 +204,8 @@ async function teableRequest(path: string, input: TeableRequestInput) {
     if (error instanceof ProviderRequestError) {
       throw error;
     }
-    throw providerError(
-      "provider_error",
+    throw providerResponseError(
       error instanceof Error ? `Teable request failed: ${error.message}` : "Teable request failed",
-      502,
     );
   }
 
@@ -238,10 +237,8 @@ async function readTeablePayload(response: Response) {
     return JSON.parse(text) as unknown;
   } catch (error) {
     if (response.ok) {
-      throw providerError(
-        "provider_error",
+      throw providerResponseError(
         error instanceof Error ? `Teable returned malformed JSON: ${error.message}` : "Teable returned malformed JSON",
-        502,
       );
     }
     return text;
@@ -252,21 +249,21 @@ function createTeableError(response: Response, payload: unknown, phase: TeableRe
   const message = extractTeableErrorMessage(payload) || response.statusText || "Teable request failed";
 
   if (response.status === 429) {
-    return providerError("rate_limited", message, 429);
+    return new ProviderRequestError(429, message);
   }
   if (phase === "validate" && (response.status === 401 || response.status === 403)) {
-    return providerError("invalid_input", message, 400);
+    return providerInputError(message);
   }
   if (phase === "execute" && response.status === 401) {
-    return providerError("credential_expired", message, 401);
+    return new ProviderRequestError(401, message);
   }
   if (phase === "execute" && response.status === 403) {
-    return providerError("scope_missing", message, 403);
+    return new ProviderRequestError(403, message);
   }
   if (phase === "execute" && [400, 404, 422].includes(response.status)) {
-    return providerError("invalid_input", message, 400);
+    return providerInputError(message);
   }
-  return providerError("provider_error", message, response.status || 500);
+  return new ProviderRequestError(response.status || 500, message);
 }
 
 function extractTeableErrorMessage(payload: unknown) {
@@ -282,7 +279,7 @@ function parseCurrentUser(payload: unknown) {
   const id = optionalString(user.id);
   const name = optionalString(user.name);
   if (!id || !name) {
-    throw providerError("provider_error", "Teable current user response did not include id and name", 502);
+    throw providerResponseError("Teable current user response did not include id and name");
   }
 
   return compactObject({
@@ -296,7 +293,7 @@ function parseCurrentUser(payload: unknown) {
 function requireObject(payload: unknown, label: string) {
   const value = optionalRecord(payload);
   if (!value) {
-    throw providerError("provider_error", `Teable returned an invalid ${label} response`, 502);
+    throw providerResponseError(`Teable returned an invalid ${label} response`);
   }
   return value;
 }
@@ -305,7 +302,7 @@ function requireObjectArray(payload: unknown, label: string) {
   try {
     return objectArray(payload, label);
   } catch {
-    throw providerError("provider_error", `Teable returned an invalid ${label} response`, 502);
+    throw providerResponseError(`Teable returned an invalid ${label} response`);
   }
 }
 

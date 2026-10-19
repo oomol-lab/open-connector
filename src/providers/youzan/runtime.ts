@@ -1,4 +1,3 @@
-import type { ProviderErrorCode } from "../../core/provider-error-codes.ts";
 import type { CredentialValidationResult, ExecutionResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
@@ -9,6 +8,7 @@ import {
   ProviderRequestError,
   providerUserAgent,
   toProviderExecutionError,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 export const youzanApiBaseUrl = "https://open.youzanyun.com";
@@ -59,10 +59,10 @@ export function resolveYouzanCredential(input: Record<string, string>): YouzanCr
   const clientSecret = optionalString(input.clientSecret);
   const grantId = optionalString(input.grantId);
   if (!clientId || !clientSecret || !grantId) {
-    throw new ProviderRequestError(400, "youzan clientId, clientSecret, and grantId are required");
+    throw providerInputError("youzan clientId, clientSecret, and grantId are required");
   }
   if ([...grantId].some((character) => character < "0" || character > "9")) {
-    throw new ProviderRequestError(400, "youzan grantId must contain only digits");
+    throw providerInputError("youzan grantId must contain only digits");
   }
   return { clientId, clientSecret, grantId };
 }
@@ -313,7 +313,7 @@ export const youzanActionHandlers: ProviderActionHandlers<"youzan", ProviderRunt
 function validatePageWindow(input: Record<string, unknown>, defaultPageSize: number, maximum: number): void {
   const page = optionalInteger(input.page) ?? 1;
   if (page * (optionalInteger(input.pageSize) ?? defaultPageSize) > maximum) {
-    throw new ProviderRequestError(400, `page multiplied by pageSize cannot exceed ${maximum}`);
+    throw providerInputError(`page multiplied by pageSize cannot exceed ${maximum}`);
   }
 }
 
@@ -324,7 +324,7 @@ function validateOrderTimePairs(input: Record<string, unknown>): void {
     ["completedAfter", "completedBefore"],
   ]) {
     if ((input[after] !== undefined) !== (input[before] !== undefined)) {
-      throw new ProviderRequestError(400, `${after} and ${before} must be provided together`);
+      throw providerInputError(`${after} and ${before} must be provided together`);
     }
   }
 }
@@ -356,9 +356,14 @@ async function requestYouzanApi(
     throw createYouzanApiError(response.status, payload);
   }
   if (payload.data === undefined || payload.data === null) {
-    throw youzanError("provider_error", "Youzan returned an invalid data payload", 502);
+    throw new ProviderRequestError(502, "Youzan returned an invalid data payload", undefined, "provider_error");
   }
   return payload.data;
+}
+
+interface YouzanJsonResponse {
+  response: Response;
+  payload: Record<string, unknown>;
 }
 
 async function fetchYouzanJson(
@@ -366,7 +371,7 @@ async function fetchYouzanJson(
   init: RequestInit,
   fetcher: ProviderFetch,
   parentSignal?: AbortSignal,
-): Promise<{ response: Response; payload: Record<string, unknown> }> {
+): Promise<YouzanJsonResponse> {
   const timeout = createProviderTimeout(parentSignal);
   try {
     const response = await fetcher(url, { ...init, signal: timeout.signal });
@@ -376,18 +381,20 @@ async function fetchYouzanJson(
     try {
       parsed = JSON.parse(text) as unknown;
     } catch {
-      throw youzanError("provider_error", "Youzan returned invalid JSON", 502);
+      throw new ProviderRequestError(502, "Youzan returned invalid JSON", undefined, "provider_error");
     }
     const payload = optionalRecord(parsed);
-    if (!payload) throw youzanError("provider_error", "Youzan returned invalid JSON", 502);
+    if (!payload) throw new ProviderRequestError(502, "Youzan returned invalid JSON", undefined, "provider_error");
     return { response, payload };
   } catch (error) {
     if (error instanceof ProviderRequestError) throw error;
-    if (timeout.didTimeout()) throw youzanError("provider_error", "Youzan request timed out", 504);
-    throw youzanError(
-      "provider_error",
-      error instanceof Error ? `Youzan request failed: ${error.message}` : "Youzan request failed",
+    if (timeout.didTimeout())
+      throw new ProviderRequestError(504, "Youzan request timed out", undefined, "provider_error");
+    throw new ProviderRequestError(
       502,
+      error instanceof Error ? `Youzan request failed: ${error.message}` : "Youzan request failed",
+      undefined,
+      "provider_error",
     );
   } finally {
     timeout.cleanup();
@@ -400,20 +407,20 @@ function createYouzanTokenError(
   phase: YouzanPhase,
 ): ProviderRequestError {
   const message = readYouzanMessage(payload, "Youzan rejected the application credentials");
-  if (status === 429) return youzanError("rate_limited", message, 429, payload);
-  if (status >= 500) return youzanError("provider_error", message, 502, payload);
+  if (status === 429) return new ProviderRequestError(429, message, payload, "rate_limited");
+  if (status >= 500) return new ProviderRequestError(502, message, payload, "provider_error");
   return phase === "validate"
-    ? youzanError("invalid_input", message, 400, payload)
-    : youzanError("authorization_failed", message, 401, payload);
+    ? new ProviderRequestError(400, message, payload, "invalid_input")
+    : new ProviderRequestError(401, message, payload, "authorization_failed");
 }
 
 function createYouzanApiError(status: number, payload: Record<string, unknown>): ProviderRequestError {
   const message = readYouzanMessage(payload, "Youzan API request failed");
-  if (status === 429) return youzanError("rate_limited", message, 429, payload);
+  if (status === 429) return new ProviderRequestError(429, message, payload, "rate_limited");
   if (status === 401 || status === 403 || payload.code === 40010) {
-    return youzanError("authorization_failed", message, 401, payload);
+    return new ProviderRequestError(401, message, payload, "authorization_failed");
   }
-  return youzanError("provider_error", message, 502, payload);
+  return new ProviderRequestError(502, message, payload, "provider_error");
 }
 
 function readYouzanMessage(payload: Record<string, unknown>, fallback: string): string {
@@ -422,31 +429,23 @@ function readYouzanMessage(payload: Record<string, unknown>, fallback: string): 
 
 function requireObject(value: unknown, label: string): Record<string, unknown> {
   const object = optionalRecord(value);
-  if (!object) throw youzanError("provider_error", `${label} payload is invalid`, 502);
+  if (!object) throw new ProviderRequestError(502, `${label} payload is invalid`, undefined, "provider_error");
   return object;
 }
 
 function requireObjectArray(value: unknown, label: string): Record<string, unknown>[] {
-  if (!Array.isArray(value)) throw youzanError("provider_error", `${label} payload is invalid`, 502);
+  if (!Array.isArray(value))
+    throw new ProviderRequestError(502, `${label} payload is invalid`, undefined, "provider_error");
   const objects = value.map(optionalRecord);
   if (objects.some((item) => item === undefined)) {
-    throw youzanError("provider_error", `${label} payload is invalid`, 502);
+    throw new ProviderRequestError(502, `${label} payload is invalid`, undefined, "provider_error");
   }
   return objects as Record<string, unknown>[];
 }
 
 function requireNonNegativeInteger(value: unknown, label: string): number {
   if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
-    throw youzanError("provider_error", `${label} payload is invalid`, 502);
+    throw new ProviderRequestError(502, `${label} payload is invalid`, undefined, "provider_error");
   }
   return value;
-}
-
-function youzanError(
-  code: ProviderErrorCode,
-  message: string,
-  status: number,
-  details?: unknown,
-): ProviderRequestError {
-  return new ProviderRequestError(status, message, details, code);
 }

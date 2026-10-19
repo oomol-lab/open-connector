@@ -1,8 +1,7 @@
-import type { ProviderErrorCode } from "../../core/provider-error-codes.ts";
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
 
-import { optionalRecord, optionalString } from "../../core/cast.ts";
+import { booleanString, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   ProviderRequestError,
   providerUserAgent,
@@ -89,7 +88,7 @@ async function listWorkspacesAndLists(context: ZenkitActionContext) {
     phase: "execute",
   });
   if (!Array.isArray(payload)) {
-    throw providerError("provider_error", "Zenkit workspaces response must be an array", 502);
+    throw new ProviderRequestError(502, "Zenkit workspaces response must be an array", undefined, "provider_error");
   }
   return { workspaces: payload };
 }
@@ -130,10 +129,10 @@ async function searchEntries(input: Record<string, unknown>, context: ZenkitActi
       limit: stringifyOptionalNumber(input.limit),
       preferredListIds: stringifyOptionalArray(input.preferredListIds),
       excludeListEntryUUIDs: stringifyOptionalArray(input.excludeEntryUuids),
-      searchInArchive: stringifyOptionalBoolean(input.searchInArchive),
-      includeRelatedLists: stringifyOptionalBoolean(input.includeRelatedLists),
-      includeRelatedWorkspaces: stringifyOptionalBoolean(input.includeRelatedWorkspaces),
-      includeRelatedListElements: stringifyOptionalBoolean(input.includeRelatedListElements),
+      searchInArchive: booleanString(input.searchInArchive),
+      includeRelatedLists: booleanString(input.includeRelatedLists),
+      includeRelatedWorkspaces: booleanString(input.includeRelatedWorkspaces),
+      includeRelatedListElements: booleanString(input.includeRelatedListElements),
     },
   });
   return { results: requiredResponseRecord(payload, "Zenkit entry search response") };
@@ -227,22 +226,22 @@ async function readZenkitPayload(response: Response) {
     if (!response.ok) {
       return { message: text.trim().slice(0, 500) };
     }
-    throw providerError("provider_error", "Zenkit returned invalid JSON", 502);
+    throw new ProviderRequestError(502, "Zenkit returned invalid JSON", undefined, "provider_error");
   }
 }
 
 function mapZenkitError(status: number, payload: unknown, phase: "validate" | "execute") {
   const message = readZenkitErrorMessage(payload) ?? `Zenkit request failed with status ${status}`;
   if (status === 429) {
-    return providerError("rate_limited", message, 429);
+    return new ProviderRequestError(429, message, undefined, "rate_limited");
   }
   if (phase === "validate" && status >= 400 && status < 500) {
-    return providerError("invalid_input", message, 400);
+    return new ProviderRequestError(400, message, undefined, "invalid_input");
   }
   if (status === 400 || status === 404 || status === 409 || status === 422) {
-    return providerError("invalid_input", message, status === 404 ? 404 : 400);
+    return new ProviderRequestError(status === 404 ? 404 : 400, message, undefined, "invalid_input");
   }
-  return providerError("provider_error", message, status || 502);
+  return new ProviderRequestError(status || 502, message, undefined, "provider_error");
 }
 
 function readZenkitErrorMessage(payload: unknown) {
@@ -265,7 +264,7 @@ function requireAllId(value: unknown, fieldName: string) {
 
 function requirePositiveInteger(value: unknown, fieldName: string) {
   if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) {
-    throw providerError("invalid_input", `${fieldName} must be a positive integer`, 400);
+    throw new ProviderRequestError(400, `${fieldName} must be a positive integer`, undefined, "invalid_input");
   }
   return value;
 }
@@ -273,7 +272,7 @@ function requirePositiveInteger(value: unknown, fieldName: string) {
 function requireInputObject(value: unknown, fieldName: string) {
   const object = optionalRecord(value);
   if (!object) {
-    throw providerError("invalid_input", `${fieldName} must be an object`, 400);
+    throw new ProviderRequestError(400, `${fieldName} must be an object`, undefined, "invalid_input");
   }
   return object;
 }
@@ -282,14 +281,6 @@ function stringifyOptionalNumber(value: unknown) {
   return typeof value === "number" ? String(value) : undefined;
 }
 
-function stringifyOptionalBoolean(value: unknown) {
-  return typeof value === "boolean" ? String(value) : undefined;
-}
-
 function stringifyOptionalArray(value: unknown) {
   return Array.isArray(value) ? value.join(",") : undefined;
-}
-
-function providerError(code: ProviderErrorCode, message: string, status: number): ProviderRequestError {
-  return new ProviderRequestError(status, message, undefined, code);
 }

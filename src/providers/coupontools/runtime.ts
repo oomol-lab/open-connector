@@ -9,6 +9,8 @@ import {
   requiredInputString,
   requiredResponseRecord,
   runProviderRequest,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 export const coupontoolsApiBaseUrl = "https://api.coupontools.com";
@@ -84,7 +86,7 @@ export async function executeCoupontoolsAction(input: CoupontoolsActionInput, fe
     }
     case "create_single_use_url": {
       if (input.input.customvalcode != null && input.input.autovalcode != null) {
-        throw providerError("invalid_input", "customvalcode and autovalcode cannot be used together", 400);
+        throw providerInputError("customvalcode and autovalcode cannot be used together");
       }
       const raw = await requestCoupontoolsJson({
         path: "/v3/singleuse/create",
@@ -99,11 +101,7 @@ export async function executeCoupontoolsAction(input: CoupontoolsActionInput, fe
       const singleUseUrl = optionalString(raw.single_use_url)?.trim();
       const singleUseCode = optionalString(raw.single_use_code)?.trim();
       if (!singleUseUrl || !singleUseCode) {
-        throw providerError(
-          "provider_error",
-          "Coupontools response did not include single_use_url and single_use_code",
-          502,
-        );
+        throw providerResponseError("Coupontools response did not include single_use_url and single_use_code");
       }
       return {
         single_use_url: singleUseUrl,
@@ -116,7 +114,7 @@ export async function executeCoupontoolsAction(input: CoupontoolsActionInput, fe
 
 function requireCouponArray(value: unknown) {
   if (!Array.isArray(value)) {
-    throw providerError("provider_error", "Coupontools coupon_info must be an array", 502);
+    throw providerResponseError("Coupontools coupon_info must be an array");
   }
   return value;
 }
@@ -146,12 +144,12 @@ async function requestCoupontoolsJson(input: CoupontoolsRequestInput) {
 async function readCoupontoolsPayload(response: Response) {
   const text = await response.text();
   if (!text.trim()) {
-    throw providerError("provider_error", "Coupontools returned an empty response", 502);
+    throw providerResponseError("Coupontools returned an empty response");
   }
   try {
     return JSON.parse(text) as unknown;
   } catch {
-    throw providerError("provider_error", "Coupontools returned invalid JSON", 502);
+    throw providerResponseError("Coupontools returned invalid JSON");
   }
 }
 
@@ -169,24 +167,20 @@ function createCoupontoolsError(statusCode: number, payload: unknown, phase: "va
     optionalString(payloadRecord?.message)?.trim() ??
     `Coupontools request failed with status ${statusCode}`;
   if (statusCode == 429) {
-    return providerError("rate_limited", message, 429);
+    return new ProviderRequestError(429, message);
   }
   if (phase == "validate" && 400 <= statusCode && statusCode < 500) {
-    return providerError("invalid_input", message, 400);
+    return providerInputError(message);
   }
   if (statusCode == 401 || statusCode == 403) {
-    return providerError("provider_error", message, statusCode);
+    return new ProviderRequestError(statusCode, message);
   }
   if (400 <= statusCode && statusCode < 500) {
-    return providerError("invalid_input", message, statusCode);
+    return new ProviderRequestError(statusCode, message);
   }
-  return providerError("provider_error", message, statusCode >= 400 ? statusCode : 502);
+  return new ProviderRequestError(statusCode >= 400 ? statusCode : 502, message);
 }
 
 function requireStoredClientSecret(values: Record<string, string> | undefined) {
   return requiredInputString(values?.clientSecret, "clientSecret");
-}
-
-function providerError(_code: string, message: string, status: number): ProviderRequestError {
-  return new ProviderRequestError(status, message);
 }

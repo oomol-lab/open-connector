@@ -509,18 +509,14 @@ function mapTicketmasterErrorFromPayload(status: number, payload: Record<string,
   const message = extractTicketmasterErrorMessage(payload) ?? fallbackMessage;
 
   if (status === 429) {
-    return ticketmasterError("rate_limited", message, 429);
+    return new ProviderRequestError(429, message);
   }
 
   if ([400, 401, 403, 404].includes(status)) {
-    return ticketmasterError("invalid_input", message, status === 404 ? 400 : status);
+    return new ProviderRequestError(status === 404 ? 400 : status, message);
   }
 
-  return ticketmasterError("provider_error", message, status >= 500 ? 500 : status);
-}
-
-function ticketmasterError(_code: string, message: string, status = 500): ProviderRequestError {
-  return new ProviderRequestError(status, message);
+  return new ProviderRequestError(status >= 500 ? 500 : status, message);
 }
 
 async function readJsonBody(response: Response) {
