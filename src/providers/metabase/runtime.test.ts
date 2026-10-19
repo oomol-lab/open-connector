@@ -98,7 +98,12 @@ describe("Metabase REST compatibility", () => {
         calls.push({ url: String(url), init });
         return Response.json(payload);
       });
-      expect(validateActionInput(metabaseActions.find((action) => action.name === name)!, input).valid).toBe(true);
+      expect(
+        validateActionInput(
+          metabaseActions.find((action) => action.name === name)!,
+          input,
+        ).valid,
+      ).toBe(true);
       const result = await executors[`metabase.${name}`]!(input, context);
       const isList = name.startsWith("list_") || name === "search";
       const expectedValue = isList && !Array.isArray(payload) ? (payload as { data: unknown }).data : payload;

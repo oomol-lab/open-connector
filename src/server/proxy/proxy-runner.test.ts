@@ -200,12 +200,10 @@ describe("ProxyRunner", () => {
   });
 
   it("denies a restricted connection before executing the proxy", async () => {
-    const proxy = vi.fn(
-      async (): Promise<ProxyExecutionResult> => ({
-        ok: true,
-        response: { status: 200, headers: {}, data: null },
-      }),
-    );
+    const proxy = vi.fn(async (): Promise<ProxyExecutionResult> => ({
+      ok: true,
+      response: { status: 200, headers: {}, data: null },
+    }));
     const loadProxyExecutor = vi.fn(async () => proxy);
     const connections = createConnections();
     const actionPolicy = new ActionPolicyService({ allowedProxies: ["example"] });
@@ -249,12 +247,10 @@ describe("ProxyRunner", () => {
   });
 
   it("executes allowlisted proxy connections and leaves unrestricted tokens unchanged", async () => {
-    const proxy: ProviderProxyExecutor = vi.fn(
-      async (): Promise<ProxyExecutionResult> => ({
-        ok: true,
-        response: { status: 200, headers: {}, data: null },
-      }),
-    );
+    const proxy: ProviderProxyExecutor = vi.fn(async (): Promise<ProxyExecutionResult> => ({
+      ok: true,
+      response: { status: 200, headers: {}, data: null },
+    }));
     const actionPolicy = new ActionPolicyService({ allowedProxies: ["example"] });
     const runner = createRunner({
       providerLoader: new TestProviderLoader(proxy),
@@ -290,12 +286,10 @@ describe("ProxyRunner", () => {
   });
 
   it("does not apply connection grants to no-auth proxies", async () => {
-    const proxy: ProviderProxyExecutor = vi.fn(
-      async (): Promise<ProxyExecutionResult> => ({
-        ok: true,
-        response: { status: 200, headers: {}, data: null },
-      }),
-    );
+    const proxy: ProviderProxyExecutor = vi.fn(async (): Promise<ProxyExecutionResult> => ({
+      ok: true,
+      response: { status: 200, headers: {}, data: null },
+    }));
     const actionPolicy = new ActionPolicyService({ allowedProxies: ["example"] });
     const runner = createRunner({
       provider: { ...provider, authTypes: ["no_auth"], auth: [{ type: "no_auth" }] },
@@ -329,12 +323,10 @@ describe("ProxyRunner", () => {
   });
 
   it("applies connection grants to credentials on providers that also support no-auth", async () => {
-    const proxy = vi.fn(
-      async (): Promise<ProxyExecutionResult> => ({
-        ok: true,
-        response: { status: 200, headers: {}, data: null },
-      }),
-    );
+    const proxy = vi.fn(async (): Promise<ProxyExecutionResult> => ({
+      ok: true,
+      response: { status: 200, headers: {}, data: null },
+    }));
     const actionPolicy = new ActionPolicyService({ allowedProxies: ["example"] });
     const runner = createRunner({
       provider: {
@@ -361,12 +353,10 @@ describe("ProxyRunner", () => {
   });
 
   it("runs allowlisted proxies regardless of action policy", async () => {
-    const proxy: ProviderProxyExecutor = vi.fn(
-      async (): Promise<ProxyExecutionResult> => ({
-        ok: true,
-        response: { status: 200, headers: {}, data: null },
-      }),
-    );
+    const proxy: ProviderProxyExecutor = vi.fn(async (): Promise<ProxyExecutionResult> => ({
+      ok: true,
+      response: { status: 200, headers: {}, data: null },
+    }));
     const runner = createRunner({
       providerLoader: new TestProviderLoader(proxy),
     });
@@ -408,12 +398,10 @@ describe("ProxyRunner", () => {
   });
 
   it("rejects slash-prefixed absolute endpoints before loading executors", async () => {
-    const proxy: ProviderProxyExecutor = vi.fn(
-      async (): Promise<ProxyExecutionResult> => ({
-        ok: true,
-        response: { status: 200, headers: {}, data: null },
-      }),
-    );
+    const proxy: ProviderProxyExecutor = vi.fn(async (): Promise<ProxyExecutionResult> => ({
+      ok: true,
+      response: { status: 200, headers: {}, data: null },
+    }));
     const runner = createRunner({
       providerLoader: {
         loadActionExecutor: async () => undefined,
@@ -587,12 +575,10 @@ describe("ProxyRunner", () => {
   });
 
   it("passes HEAD requests through to provider proxy executors", async () => {
-    const proxy: ProviderProxyExecutor = vi.fn(
-      async (): Promise<ProxyExecutionResult> => ({
-        ok: true,
-        response: { status: 200, headers: {}, data: null },
-      }),
-    );
+    const proxy: ProviderProxyExecutor = vi.fn(async (): Promise<ProxyExecutionResult> => ({
+      ok: true,
+      response: { status: 200, headers: {}, data: null },
+    }));
     const runner = createRunner({
       providerLoader: new TestProviderLoader(proxy),
     });
@@ -615,12 +601,10 @@ describe("ProxyRunner", () => {
   });
 
   it("rejects GET and HEAD proxy requests with bodies", async () => {
-    const proxy: ProviderProxyExecutor = vi.fn(
-      async (): Promise<ProxyExecutionResult> => ({
-        ok: true,
-        response: { status: 200, headers: {}, data: null },
-      }),
-    );
+    const proxy: ProviderProxyExecutor = vi.fn(async (): Promise<ProxyExecutionResult> => ({
+      ok: true,
+      response: { status: 200, headers: {}, data: null },
+    }));
     const runner = createRunner({
       providerLoader: new TestProviderLoader(proxy),
     });
@@ -641,12 +625,10 @@ describe("ProxyRunner", () => {
   });
 
   it.each(["query", "headers"])("rejects a non-object %s field instead of silently dropping it", async (field) => {
-    const proxy: ProviderProxyExecutor = vi.fn(
-      async (): Promise<ProxyExecutionResult> => ({
-        ok: true,
-        response: { status: 200, headers: {}, data: null },
-      }),
-    );
+    const proxy: ProviderProxyExecutor = vi.fn(async (): Promise<ProxyExecutionResult> => ({
+      ok: true,
+      response: { status: 200, headers: {}, data: null },
+    }));
     const runner = createRunner({ providerLoader: new TestProviderLoader(proxy) });
 
     await expect(
@@ -711,12 +693,10 @@ describe("ProxyRunner", () => {
   });
 
   it("logs proxy endpoints without query strings", async () => {
-    const proxy: ProviderProxyExecutor = vi.fn(
-      async (): Promise<ProxyExecutionResult> => ({
-        ok: true,
-        response: { status: 200, headers: {}, data: null },
-      }),
-    );
+    const proxy: ProviderProxyExecutor = vi.fn(async (): Promise<ProxyExecutionResult> => ({
+      ok: true,
+      response: { status: 200, headers: {}, data: null },
+    }));
     const info = vi.fn();
     const logger = {
       info,

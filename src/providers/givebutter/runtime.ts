@@ -52,13 +52,10 @@ const givebutterActionSources: ProviderActionSources<"givebutter", GivebutterAct
 };
 
 export const givebutterActionHandlers: ProviderActionHandlers<"givebutter", GivebutterActionHandler> =
-  mapProviderActionSources(
-    "givebutter",
-    givebutterActionSources,
-    (_name, source): GivebutterActionHandler =>
-      source.kind === "list"
-        ? (input, context) => listGivebutterResource(input, context, source)
-        : (input, context) => getGivebutterResource(input, context, source),
+  mapProviderActionSources("givebutter", givebutterActionSources, (_name, source): GivebutterActionHandler =>
+    source.kind === "list"
+      ? (input, context) => listGivebutterResource(input, context, source)
+      : (input, context) => getGivebutterResource(input, context, source),
   );
 
 export async function validateGivebutterCredential(

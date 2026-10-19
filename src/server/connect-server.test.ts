@@ -3738,15 +3738,13 @@ describe("ConnectServer", () => {
   });
 
   it("uses the injected Node transit upload handler", async () => {
-    const uploadTransitFile = vi.fn(
-      async (): Promise<TransitFileUpload> => ({
-        fileId: `${"a".repeat(32)}.txt`,
-        downloadUrl: `http://localhost:3000/api/files/${"a".repeat(32)}.txt`,
-        sizeBytes: 6,
-        name: "streamed.txt",
-        mimeType: "text/plain",
-      }),
-    );
+    const uploadTransitFile = vi.fn(async (): Promise<TransitFileUpload> => ({
+      fileId: `${"a".repeat(32)}.txt`,
+      downloadUrl: `http://localhost:3000/api/files/${"a".repeat(32)}.txt`,
+      sizeBytes: 6,
+      name: "streamed.txt",
+      mimeType: "text/plain",
+    }));
     const app = createTestServer([apiKeyProvider], { uploadTransitFile }).createApp();
 
     const response = await app.request("/api/files", { method: "POST", body: "stream" });
