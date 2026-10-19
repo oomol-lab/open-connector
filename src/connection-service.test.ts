@@ -1143,6 +1143,74 @@ describe("ConnectionService", () => {
     });
   });
 
+  it.each(["success", "refusal"])(
+    "refreshes a new authorization with the same refresh token independently of a late %s",
+    async (outcome) => {
+      const store = new MemoryConnectionStore();
+      const expired: Extract<ResolvedCredential, { authType: "oauth2" }> = {
+        authType: "oauth2",
+        accessToken: "expired-token",
+        tokenType: "Bearer",
+        refreshToken: "reusable-refresh-token",
+        expiresAt: "2026-01-01T00:00:00.000Z",
+        profile: testProfile,
+        metadata: { oauthAuthorizationId: "authorization-1" },
+      };
+      const started = Promise.withResolvers<void>();
+      const release = Promise.withResolvers<void>();
+      const refresh = vi.fn(async (_service: string, credential: typeof expired) => {
+        if (credential.metadata.oauthAuthorizationId === "authorization-1") {
+          started.resolve();
+          await release.promise;
+          if (outcome === "refusal") {
+            throw new ConnectionError("oauth_reauth_required", "The previous authorization was revoked.");
+          }
+        }
+        return {
+          ...credential,
+          accessToken: `fresh-${credential.metadata.oauthAuthorizationId}`,
+          expiresAt: "2099-01-01T00:00:00.000Z",
+        };
+      });
+      const service = createService([oauthProvider], { store, oauthCredentials: { refresh } });
+      const original = await store.set("example", "default", expired);
+      const first = service.getCredential("example").catch((error: unknown) => error);
+      await started.promise;
+      const replacement = await store.set("example", "default", {
+        ...expired,
+        metadata: { oauthAuthorizationId: "authorization-2" },
+      });
+      const second = service.getCredential("example");
+
+      try {
+        await expect.poll(() => refresh.mock.calls.length).toBe(2);
+        await expect(second).resolves.toMatchObject({
+          accessToken: "fresh-authorization-2",
+          refreshToken: expired.refreshToken,
+          metadata: { oauthAuthorizationId: "authorization-2" },
+        });
+        expect(replacement.id).toBe(original.id);
+        expect(replacement.revision).not.toBe(original.revision);
+      } finally {
+        release.resolve();
+        await Promise.allSettled([first, second]);
+      }
+
+      expect(await first).toMatchObject({
+        code: outcome === "refusal" ? "oauth_reauth_required" : "connection_not_found",
+      });
+      const current = await store.get("example", "default");
+      expect(current?.credential).toMatchObject({
+        accessToken: "fresh-authorization-2",
+        refreshToken: expired.refreshToken,
+        metadata: { oauthAuthorizationId: "authorization-2" },
+      });
+      if (!current || current.source === "saas" || current.credential.authType !== "oauth2")
+        throw new Error("Expected OAuth credential");
+      expect(current.credential.metadata).not.toHaveProperty("oauthReauthRequired");
+    },
+  );
+
   describe("rotating single-use refresh tokens", () => {
     const expiredRotating = {
       authType: "oauth2" as const,

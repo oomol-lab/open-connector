@@ -915,9 +915,13 @@ export class ConnectionService {
 
     // Single-flight on the refresh token being spent, not the row revision: a single-use
     // (rotating) refresh token must reach the provider once even when an unrelated write
-    // bumps the revision mid-refresh. A replaced credential carries a different refresh
-    // token and still refreshes independently.
-    const refreshKey = JSON.stringify([connection.id, credential.refreshToken]);
+    // bumps the revision mid-refresh. A new authorization must refresh independently,
+    // even when the provider reuses the same refresh token across reconnects.
+    const refreshKey = JSON.stringify([
+      connection.id,
+      credential.refreshToken,
+      credential.metadata.oauthAuthorizationId,
+    ]);
     const currentRefresh = this.oauthCredentialRefreshes.get(refreshKey);
     if (currentRefresh) {
       return currentRefresh;
