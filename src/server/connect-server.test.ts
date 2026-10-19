@@ -2914,6 +2914,22 @@ describe("ConnectServer", () => {
     });
   });
 
+  it.each(["/api", "/v1"])("enforces search limit boundaries on %s", async (prefix) => {
+    const app = createTestServer([{ ...apiKeyProvider, actions: [echoAction] }]).createApp();
+
+    const accepted = await app.request(`${prefix}/actions/search?q=echo&limit=50`);
+    expect(accepted.status).toBe(200);
+
+    const rejected = await app.request(`${prefix}/actions/search?q=echo&limit=51`);
+    expect(rejected.status).toBe(400);
+    const message = "limit must be an integer between 1 and 50.";
+    await expect(rejected.json()).resolves.toMatchObject(
+      prefix === "/api"
+        ? { error: { code: "invalid_input", message } }
+        : { success: false, errorCode: "invalid_input", message },
+    );
+  });
+
   it("drops stale action search index hits that are missing from the catalog", async () => {
     const staleAction: ActionDefinition = {
       ...echoAction,
@@ -3722,13 +3738,15 @@ describe("ConnectServer", () => {
   });
 
   it("uses the injected Node transit upload handler", async () => {
-    const uploadTransitFile = vi.fn(async (): Promise<TransitFileUpload> => ({
-      fileId: `${"a".repeat(32)}.txt`,
-      downloadUrl: `http://localhost:3000/api/files/${"a".repeat(32)}.txt`,
-      sizeBytes: 6,
-      name: "streamed.txt",
-      mimeType: "text/plain",
-    }));
+    const uploadTransitFile = vi.fn(
+      async (): Promise<TransitFileUpload> => ({
+        fileId: `${"a".repeat(32)}.txt`,
+        downloadUrl: `http://localhost:3000/api/files/${"a".repeat(32)}.txt`,
+        sizeBytes: 6,
+        name: "streamed.txt",
+        mimeType: "text/plain",
+      }),
+    );
     const app = createTestServer([apiKeyProvider], { uploadTransitFile }).createApp();
 
     const response = await app.request("/api/files", { method: "POST", body: "stream" });

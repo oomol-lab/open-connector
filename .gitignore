@@ -23,3 +23,5 @@ xero-encryption-key.txt
 # README only embeds the SVGs. PNG doesn't delta-compress, so committing it
 # would grow the repo by ~60 KB per refresh for nothing.
 assets/star-history/star-history.png
+
+.zcode/
