@@ -380,7 +380,7 @@ describe("notion_mcp executors", () => {
     }
     const deferred = createSyntheticHost(allTools, undefined, {
       ...recordedAnswers,
-      "notion-create-pages": JSON.stringify({ async_task: { id: "task-1", status: "queued" } }),
+      "notion-create-pages": JSON.stringify({ object: "async_task", id: "task-1", status: "queued" }),
     });
     try {
       expect(await executors["notion_mcp.create_pages"]!({ pages: [{ content: "x" }] }, executionContext())).toEqual({
@@ -388,11 +388,27 @@ describe("notion_mcp executors", () => {
         output: {
           pages: [],
           async_task_id: "task-1",
-          raw: JSON.stringify({ async_task: { id: "task-1", status: "queued" } }),
+          raw: JSON.stringify({ object: "async_task", id: "task-1", status: "queued" }),
         },
       });
     } finally {
       await deferred.close();
+    }
+  });
+
+  it("update_page preserves async task IDs, warning objects and raw MCP responses", async () => {
+    const warnings = [{ code: "no_match", message: "No matching text", details: { index: 1 } }];
+    const raw = JSON.stringify({ object: "async_task", id: "task-2", status: "queued", warnings });
+    const host = createSyntheticHost(allTools, undefined, { ...recordedAnswers, "notion-update-page": raw });
+    try {
+      expect(
+        await executors["notion_mcp.update_page"]!({ page_id: "p-1", command: "update_content" }, executionContext()),
+      ).toEqual({
+        ok: true,
+        output: { page_id: "p-1", async_task_id: "task-2", warnings, raw },
+      });
+    } finally {
+      await host.close();
     }
   });
 

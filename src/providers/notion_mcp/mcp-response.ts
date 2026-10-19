@@ -239,6 +239,9 @@ export function parseNotionToolAccess(value: unknown): NotionMcpToolAccess[] {
  */
 export function parseNotionCreatedPages(value: unknown): { pages: NotionMcpCreatedPage[]; async_task_id?: string } {
   const record = optionalRecord(value);
+  if (record?.object === "async_task") {
+    return { pages: [], ...compactObject({ async_task_id: asyncTaskId(record) }) };
+  }
   const listed = findList(value, "pages", "results", "created_pages").flatMap((item) => {
     const page = readCreatedPage(item);
     return page ? [page] : [];
@@ -249,11 +252,26 @@ export function parseNotionCreatedPages(value: unknown): { pages: NotionMcpCreat
 }
 
 /** The page a notion-update-page answer names: its link, when the prose or the record carries one, and a deferred task's id. */
-export function parseNotionUpdatedPage(value: unknown): { url?: string; async_task_id?: string } {
+interface NotionMcpUpdatedPage {
+  url?: string;
+  async_task_id?: string;
+  warnings?: Record<string, unknown>[];
+}
+
+export function parseNotionUpdatedPage(value: unknown): NotionMcpUpdatedPage {
   const record = optionalRecord(value);
   const url =
     (record && pickOptionalString(record, "url")) ?? linkedPages(optionalString(value) ?? textOf(record))[0]?.url;
-  return compactObject({ url, async_task_id: asyncTaskId(record) });
+  return compactObject({
+    url,
+    async_task_id: asyncTaskId(record),
+    warnings: Array.isArray(record?.warnings)
+      ? record.warnings.flatMap((value) => {
+          const warning = optionalRecord(value);
+          return warning ? [warning] : [];
+        })
+      : undefined,
+  });
 }
 
 /** The comment a notion-create-comment answer names: the comment record itself, or the first of a listed shape. */
@@ -310,6 +328,7 @@ function textOf(record: Record<string, unknown> | undefined): string | undefined
 
 function asyncTaskId(record: Record<string, unknown> | undefined): string | undefined {
   if (!record) return undefined;
+  if (record.object === "async_task") return pickOptionalString(record, "id");
   const task = optionalRecord(record.async_task) ?? optionalRecord(record.task);
   return pickOptionalString(record, "async_task_id", "task_id") ?? (task && pickOptionalString(task, "id", "task_id"));
 }

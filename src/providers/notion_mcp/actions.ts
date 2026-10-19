@@ -237,6 +237,21 @@ const updatePageOutputSchema = s.object("The updated page.", {
   async_task_id: s.optional(
     s.string("The async task ID when the server accepted the update for background execution."),
   ),
+  warnings: s.optional(
+    s.array(
+      "Warnings about changes that were skipped or automatically corrected; omitted for clean updates.",
+      s.object(
+        "One update warning; additional upstream fields are preserved.",
+        {
+          code: s.string("Warning code."),
+          message: s.string("Explanation of the skipped or corrected change."),
+          category: s.string("Markdown parser warning category, when available."),
+          autofix: s.boolean("Whether the parser automatically corrected the content."),
+        },
+        { required: ["code", "message"], additionalProperties: true },
+      ),
+    ),
+  ),
   raw: rawSchema,
 });
 

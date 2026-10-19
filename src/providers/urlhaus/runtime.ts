@@ -39,6 +39,9 @@ export const urlhausActionHandlers: ProviderActionHandlers<"urlhaus", UrlhausAct
     if (queryStatus === "no_results") {
       return { found: false, query_status: queryStatus, entry: undefined };
     }
+    if (queryStatus === "invalid_url") {
+      throw providerInputError("URLhaus rejected the url as invalid.");
+    }
     if (queryStatus !== "ok" || !record) {
       throw new ProviderRequestError(502, `URLhaus returned an unexpected query_status: ${queryStatus || "missing"}`);
     }

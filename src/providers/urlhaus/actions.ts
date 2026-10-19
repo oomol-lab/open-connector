@@ -40,7 +40,7 @@ const urlEntrySchema = s.looseRequiredObject("URLhaus database entry for the que
 
 const lookupUrlSchema = s.looseRequiredObject("URLhaus URL lookup result.", {
   found: s.boolean("Whether URLhaus knows this URL."),
-  query_status: s.string("URLhaus query status: ok, no_results, or invalid_url."),
+  query_status: s.string("URLhaus query status: ok or no_results. Invalid URLs produce an invalid_input error."),
   entry: s.describe(s.optional(urlEntrySchema), "The URLhaus database entry, present when the URL is known."),
 });
 
