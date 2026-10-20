@@ -232,6 +232,73 @@ describe("outlook list_messages delta", () => {
   });
 });
 
+describe("outlook message management", () => {
+  beforeEach(() => setDefaultGuardedFetchDnsLookup(null));
+
+  afterEach(() => {
+    setDefaultGuardedFetchDnsLookup(undefined);
+    vi.unstubAllGlobals();
+  });
+
+  it.each([
+    ["move_message", { messageId: "old/id+", destinationId: "folder-1" }, "folder-1"],
+    ["archive_message", { messageId: "old/id+" }, "archive"],
+  ])("%s returns the moved message with its new ID", async (actionName, input, destinationId) => {
+    let request: Request | undefined;
+    const moved = { id: "new-id", parentFolderId: "target-folder", isRead: false };
+    vi.stubGlobal("fetch", async (url: RequestInfo | URL, init?: RequestInit) => {
+      request = new Request(url, init);
+      return Response.json(moved, { status: 201 });
+    });
+
+    expect(await execute(actionName, input)).toEqual({ ok: true, output: moved });
+    expect(request?.url).toBe("https://graph.microsoft.com/v1.0/me/messages/old%2Fid%2B/move");
+    expect(request?.method).toBe("POST");
+    expect(await request?.json()).toEqual({ destinationId });
+  });
+
+  it("acknowledges a deletion with an empty 204 response", async () => {
+    let request: Request | undefined;
+    vi.stubGlobal("fetch", async (url: RequestInfo | URL, init?: RequestInit) => {
+      request = new Request(url, init);
+      return new Response(null, { status: 204 });
+    });
+
+    expect(await execute("delete_message", { messageId: "message-1" })).toEqual({
+      ok: true,
+      output: { success: true },
+    });
+    expect(request?.url).toBe("https://graph.microsoft.com/v1.0/me/messages/message-1");
+    expect(request?.method).toBe("DELETE");
+    expect(await request?.text()).toBe("");
+  });
+
+  it.each([true, false])("sets isRead to %s without omitting false", async (isRead) => {
+    let request: Request | undefined;
+    vi.stubGlobal("fetch", async (url: RequestInfo | URL, init?: RequestInit) => {
+      request = new Request(url, init);
+      return Response.json({ id: "message-1", isRead });
+    });
+
+    expect(await execute("set_message_read", { messageId: "message-1", isRead })).toEqual({
+      ok: true,
+      output: { id: "message-1", isRead },
+    });
+    expect(request?.method).toBe("PATCH");
+    expect(await request?.json()).toEqual({ isRead });
+  });
+
+  it("does not acknowledge a failed deletion", async () => {
+    vi.stubGlobal("fetch", async () =>
+      Response.json({ error: { code: "ErrorItemNotFound", message: "Message not found." } }, { status: 404 }),
+    );
+    expect(await execute("delete_message", { messageId: "missing" })).toMatchObject({
+      ok: false,
+      error: { message: "Message not found.", details: { status: 404 } },
+    });
+  });
+});
+
 async function execute(actionName: string, input: Record<string, unknown>) {
   const context: ExecutionContext = {
     async getCredential(service) {

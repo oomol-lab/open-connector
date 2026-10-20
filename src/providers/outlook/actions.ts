@@ -209,6 +209,53 @@ const actions: OutlookActionSource[] = [
     outlookMessage,
   ),
   action(
+    "move_message",
+    "write",
+    "Move an Outlook message to another folder in the same mailbox. Use the returned message ID for subsequent operations because moving can change it.",
+    outlookWriteScopes,
+    [outlookProviderScopes.mailReadWrite],
+    input(
+      {
+        messageId,
+        destinationId: nonEmptyString(
+          "Destination folder ID or well-known name, such as inbox, archive, or deleteditems.",
+        ),
+      },
+      ["messageId", "destinationId"],
+    ),
+    outlookMessage,
+  ),
+  action(
+    "archive_message",
+    "write",
+    "Move an Outlook message to the mailbox's Archive folder. Use the returned message ID for subsequent operations. This does not move messages to an Exchange Online archive mailbox.",
+    outlookWriteScopes,
+    [outlookProviderScopes.mailReadWrite],
+    input({ messageId }, ["messageId"]),
+    outlookMessage,
+  ),
+  action(
+    "delete_message",
+    "destructive",
+    "Delete an Outlook message using the standard mailbox deletion operation. To explicitly move a message to Deleted Items, use move_message with destinationId deleteditems.",
+    outlookWriteScopes,
+    [outlookProviderScopes.mailReadWrite],
+    input({ messageId }, ["messageId"]),
+    success,
+  ),
+  action(
+    "set_message_read",
+    "write",
+    "Mark an Outlook message as read or unread.",
+    outlookWriteScopes,
+    [outlookProviderScopes.mailReadWrite],
+    input({ messageId, isRead: s.boolean({ description: "True to mark as read; false to mark as unread." }) }, [
+      "messageId",
+      "isRead",
+    ]),
+    outlookMessage,
+  ),
+  action(
     "create_draft",
     "write",
     "Create a new Outlook draft message with subject, body, recipients, and other writable message properties.",
