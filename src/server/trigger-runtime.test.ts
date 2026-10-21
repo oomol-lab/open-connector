@@ -1,6 +1,7 @@
 import type { IConnectionStore } from "../connection-service.ts";
 import type { ProviderHttpAttempt } from "../core/provider-http-dispatch.ts";
 import type { ProviderDefinition, ProviderProxyExecutor } from "../core/types.ts";
+import type { IntegrationReconcileContext } from "../triggers/common/integration.ts";
 import type { ConnectorProxyRequest } from "../triggers/common/proxy.ts";
 import type { ConnectApp } from "./connect-app.ts";
 
@@ -445,6 +446,44 @@ describe("Trigger runtime HTTP boundary", () => {
     await database.connectionStore.delete("github", "work");
     expect((await database.triggerStore.getFlowTrigger(id))?.status).toBe("abandoned");
     expect(hooks).toHaveLength(1);
+  });
+
+  it("routes managed resources with their own config and persists state through cleanup", async () => {
+    const definitions = await fixtureProviderLoader.loadTriggerDefinitions("github");
+    const definition = definitions?.find((item) => item.snapshot.key === "github.on_repo_event");
+    if (!definition || !("receive" in definition)) throw new Error("Missing fixture integration");
+    const reconcileResource = vi.fn(async (context: IntegrationReconcileContext) => {
+      expect(context.config).toEqual({ projectId: "project", endpointUrl: callback });
+      expect(context.endpointUrl).toBe(callback);
+      if (!context.active) expect(context.state?.subscription).toEqual({ hookId: "managed" });
+      await context.state!.saveSubscription(context.active ? { hookId: "managed" } : {}, context.now);
+      return { outcome: "ready" as const };
+    });
+    vi.spyOn(fixtureProviderLoader, "loadTriggerDefinitions").mockResolvedValue([
+      { ...definition, resources: { reconcile: reconcileResource } },
+    ]);
+    const body = {
+      operation: "resource",
+      config: { projectId: "project", endpointUrl: callback },
+      active: true,
+      requestKey: "managed",
+    };
+    expect((await request(body, "environment-token")).status).toBe(403);
+    expect(reconcileResource).not.toHaveBeenCalled();
+    expect((await request(body)).status).toBe(200);
+    const [record] = await database.triggerStore.list();
+    expect(record).toMatchObject({
+      mode: "resource",
+      tokenId,
+      connectionId,
+      status: "active",
+      subscription: { hookId: "managed" },
+    });
+    await connector.triggerMaintenance.cancel(record!.id, new AbortController().signal);
+    expect((await database.triggerStore.getFlowTrigger(record!.id))?.status).toBe("deleted");
+    expect(reconcileResource).toHaveBeenCalledTimes(2);
+    expect(reconcileResource.mock.calls[1]![0].active).toBe(false);
+    expect(calls).toEqual([]);
   });
 
   it("shares Feishu resources per account and cleans only after the final owner's demand is released", async () => {
