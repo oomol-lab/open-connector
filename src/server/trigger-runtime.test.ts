@@ -15,6 +15,7 @@ import { provider as github } from "../providers/github/definition.ts";
 import { provider as gmail } from "../providers/gmail/definition.ts";
 import { provider as linear } from "../providers/linear/definition.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
+import { provider as zoom } from "../providers/zoom/definition.ts";
 import { TriggerRunner } from "../triggers/trigger-runner.ts";
 import { createConnectApp } from "./connect-app.ts";
 import { TransitFileService } from "./files/transit-files.ts";
@@ -49,8 +50,9 @@ beforeEach(async () => {
   useNativeProxy = false;
   denyProviderDispatch = false;
   dispatchAttempts = [];
-  const sources: ProviderDefinition[] = [github, gmail, linear, feishu];
+  const sources: ProviderDefinition[] = [github, gmail, linear, feishu, zoom];
   const modulePaths: Record<string, string> = {
+    zoom: "../providers/zoom/executors.ts",
     github: "../providers/github/executors.ts",
     gmail: "../providers/gmail/executors.ts",
     linear: "../providers/linear/executors.ts",
@@ -132,6 +134,7 @@ beforeEach(async () => {
     blockedActions: ["*"],
     allowedProxies: [],
     allowedTriggers: [
+      "zoom.on_recording_ready",
       "github.on_repo_event",
       "gmail.on_message_received",
       "linear.on_issue_changed",
@@ -673,4 +676,70 @@ describe("Trigger runtime HTTP boundary", () => {
       request: { method: "DELETE", endpoint: "/drive/v1/files/second-document/delete_subscribe" },
     });
   });
+});
+
+it.each([
+  [[], 403],
+  [["cloud_recording:read:recording"], 200],
+  [["cloud_recording:read:recording:admin"], 200],
+])("checks Zoom recording scopes before executing a source operation: %j", async (scopes, status) => {
+  const connection = await database.connectionStore.set("zoom", "work", {
+    authType: "oauth2",
+    accessToken: "zoom-token",
+    tokenType: "Bearer",
+    profile: { accountId: "account", displayName: "Zoom", grantedScopes: scopes },
+    metadata: { providerAccountVerified: true },
+  });
+  const response = await request(
+    {
+      operation: "source",
+      request: {
+        action: "inspect",
+        source: {
+          identity: "account",
+          eventTypes: ["recording.completed"],
+          config: { accountId: "account", userId: "host" },
+          secrets: { signingSecret: "secret" },
+          state: {},
+        },
+      },
+    },
+    token,
+    connection.id,
+    "zoom",
+    "zoom.on_recording_ready",
+  );
+  expect(response.status, await response.clone().text()).toBe(status);
+  expect(calls).toHaveLength(0);
+});
+
+it("requires a persistent runtime token for shared source deliveries", async () => {
+  const runner = new TriggerRunner({
+    catalog: createCatalogStore([feishu]),
+    providerLoader: fixtureProviderLoader,
+    connections: new ConnectionService({
+      catalog: createCatalogStore([feishu]),
+      store: database.connectionStore,
+      providerLoader: fixtureProviderLoader,
+    }),
+    store: database.triggerStore,
+  });
+  await expect(
+    runner.run({
+      service: "feishu_app_bot",
+      triggerId: "feishu_app_bot.on_event",
+      policy: new ActionPolicyService().createSnapshot(),
+      signal: new AbortController().signal,
+      request: {
+        operation: "source",
+        request: {
+          action: "receive",
+          source: { identity: "app", eventTypes: [], config: {}, secrets: {}, state: {} },
+          headers: {},
+          rawBody: "e30=",
+          consumers: [],
+        },
+      },
+    }),
+  ).rejects.toMatchObject({ code: "trigger_owner_required" });
 });

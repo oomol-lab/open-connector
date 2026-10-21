@@ -67,7 +67,10 @@ export class TriggerRunner {
     const decision = input.policy.evaluateTrigger(input.triggerId);
     if (!decision.allowed) throw new HttpRequestError(decision.code, decision.message, 403);
     const stateful = !["read", "options", "source"].includes(input.request.operation);
-    if (stateful && !input.grant)
+    if (
+      (stateful || (input.request.operation === "source" && input.request.request.action === "receive")) &&
+      !input.grant
+    )
       throw new HttpRequestError(
         "trigger_owner_required",
         "Stateful Trigger operations require a persistent runtime token.",
@@ -81,6 +84,14 @@ export class TriggerRunner {
       input.signal,
       input.policy,
     );
+    const permission = this.options.catalog.providers
+      .find((provider) => provider.service === input.service)
+      ?.triggerPermissions?.find((permission) => permission.id === input.triggerId);
+    const alternatives = permission?.providerScopeAlternatives;
+    const cleanup =
+      (input.request.operation === "reconcile" || input.request.operation === "resource") && !input.request.active;
+    if (!cleanup && alternatives && !alternatives.some((scope) => target.scopes.includes(scope)))
+      throw new HttpRequestError("scope_missing", "The Trigger requires additional provider permissions.", 403);
     const request = input.request;
     if (request.operation === "source") {
       if (!("source" in definition) || !definition.source)
@@ -295,6 +306,7 @@ export class TriggerRunner {
       };
       return {
         proxy,
+        scopes: credential.profile.grantedScopes,
         owner: {
           service,
           connectionId: stored.id,
