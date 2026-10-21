@@ -85,6 +85,78 @@ const deliveryProductFieldMap: Record<string, string> = {
 };
 
 const weixinStoreActionHandlers: ProviderActionHandlers<typeof service, WeixinStoreActionHandler> = {
+  async list_league_promoters(input, context) {
+    const pageIndex = positiveInteger(input.pageIndex ?? 1, "pageIndex", providerInputError);
+    const pageSize = positiveInteger(input.pageSize ?? 20, "pageSize", providerInputError);
+    if (!Number.isSafeInteger(pageIndex) || pageSize > 20) {
+      throw providerInputError("pageIndex must be a safe positive integer and pageSize must be at most 20");
+    }
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/league/promoter/list/get",
+      body: { page_index: pageIndex, page_size: pageSize },
+    });
+  },
+  async get_league_promoter(input, context) {
+    if ((input.talentAppid !== undefined) === (input.talentSearchKey !== undefined)) {
+      throw providerInputError("Supply exactly one of talentAppid or talentSearchKey");
+    }
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/league/promoter/get",
+      body:
+        input.talentAppid !== undefined
+          ? { talent_appid: requiredInputString(input.talentAppid, "talentAppid") }
+          : { talent_search_key: requiredInputString(input.talentSearchKey, "talentSearchKey") },
+    });
+  },
+  async get_compass_product_data(input, context) {
+    const date = requiredInputString(input.date, "date");
+    const parsed = /^\d{8}$/.test(date)
+      ? new Date(`${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}T00:00:00Z`)
+      : new Date(Number.NaN);
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Shanghai",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+      .format(new Date())
+      .replaceAll("-", "");
+    if (
+      !Number.isFinite(parsed.getTime()) ||
+      parsed.toISOString().slice(0, 10).replaceAll("-", "") !== date ||
+      date >= today
+    ) {
+      throw providerInputError("date must be a valid YYYYMMDD date, yesterday or earlier in Asia/Shanghai");
+    }
+    const productId = positiveInteger(input.productId, "productId", providerInputError);
+    if (!Number.isSafeInteger(productId)) {
+      throw providerInputError("productId must be a safe positive integer");
+    }
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/compass/shop/product/data/get",
+      body: { ds: date, product_id: productId },
+    });
+  },
+  async get_product_restricted_info(input, context) {
+    if (!Array.isArray(input.productIds) || input.productIds.length < 1 || input.productIds.length > 50) {
+      throw providerInputError("productIds must contain 1 to 50 product ids");
+    }
+    const productIds = input.productIds.map((value) => {
+      const id = positiveInteger(value, "productIds", providerInputError);
+      if (!Number.isSafeInteger(id)) {
+        throw providerInputError("productIds must contain only safe positive integers");
+      }
+      return id;
+    });
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/product/getproductrestrictedinfo",
+      body: { product_ids: productIds },
+    });
+  },
   async upload_qualification_image(input, context) {
     const file = await readTransitFileInput(input.file, context);
     if (file.sizeBytes > 2 * 1024 * 1024) {

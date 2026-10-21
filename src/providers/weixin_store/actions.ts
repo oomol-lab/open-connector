@@ -820,4 +820,153 @@ export const weixinStoreActions: ProviderActionDefinition[] = [
     outputSchema: emptyOutputSchema,
     providerPermissions: [aftersaleManagePermission],
   }),
+  defineProviderAction(service, {
+    name: "list_league_promoters",
+    operationType: "read",
+    description:
+      "List the connected merchant's alliance talents. This is not a platform-wide talent search; follow continue_flag to paginate.",
+    inputSchema: s.actionInput(
+      {
+        pageIndex: s.positiveInteger("The 1-based page index.", { default: 1 }),
+        pageSize: s.positiveInteger("The number of talents per page, at most 20.", { maximum: 20, default: 20 }),
+      },
+      [],
+      "Merchant alliance talent pagination.",
+    ),
+    outputSchema: s.looseObject("The merchant alliance talent page.", {
+      total_num: s.integer("The total number of talents."),
+      continue_flag: s.boolean("Whether another page is available."),
+      list: s.array(
+        "The talents in this page.",
+        s.looseObject("One talent.", {
+          talent_appid: s.string("The talent appid used by get_league_promoter."),
+          nickname: s.string("The talent nickname; not a lookup identifier."),
+        }),
+      ),
+    }),
+    providerPermissions: [
+      "WeChat Store alliance access must be enabled and approved; service providers require permission set 141",
+    ],
+  }),
+  defineProviderAction(service, {
+    name: "get_league_promoter",
+    operationType: "read",
+    description:
+      "Read a known alliance talent's profile, sales metrics and blacklist status. Supply exactly one talent identifier, not a nickname.",
+    inputSchema: s.requireExactlyOneProperty(
+      s.actionInput(
+        {
+          talentAppid: s.nonEmptyString("The talent_appid returned by list_league_promoters."),
+          talentSearchKey: s.nonEmptyString(
+            "A talent appid or WeChat Channels finder_id; not a nickname or a third-party search id.",
+          ),
+        },
+        [],
+        "Exactly one known talent identifier.",
+      ),
+      ["talentAppid", "talentSearchKey"],
+    ),
+    outputSchema: s.looseObject("The alliance talent detail.", {
+      talent: s.looseObject("The talent profile and metrics.", {
+        base_talent_info: s.looseObject("Talent identity.", {
+          talent_appid: s.string("The talent appid."),
+          nickname: s.string("The nickname."),
+          head_img: s.string("The avatar URL."),
+        }),
+        data: s.looseObject("Upstream sales and window metrics.", {
+          total_sale_gmv: s.number("Lifetime sales GMV, in upstream units."),
+          sale_gmv_30d: s.number("30-day sales GMV, in upstream units."),
+          total_order_num: s.number("Lifetime orders."),
+          order_num_30d: s.number("30-day orders."),
+          sale_product_num_30d: s.number("Products sold in 30 days."),
+          window_product_num: s.number("Products in the talent window."),
+        }),
+        feature_info: s.looseObject("Talent features.", {
+          level: s.integer("The upstream level, 0 through 5."),
+          is_blacklisted: s.boolean("Whether the talent is blacklisted."),
+        }),
+      }),
+    }),
+    providerPermissions: [
+      "WeChat Store alliance access must be enabled and approved; service providers require permission set 141",
+    ],
+  }),
+  defineProviderAction(service, {
+    name: "get_compass_product_data",
+    operationType: "read",
+    description:
+      "Read historical Compass product click and transaction data. T+1 only: date must be yesterday or earlier in Asia/Shanghai. Monetary values and counts retain upstream string units.",
+    inputSchema: s.actionInput(
+      {
+        date: s.withExamples(
+          s.stringPattern("^[0-9]{8}$", {
+            description: "A valid historical date as YYYYMMDD, yesterday or earlier in Asia/Shanghai.",
+          }),
+          ["20240520"],
+        ),
+        productId: numericIdInput("The product id, no greater than JavaScript's maximum safe integer."),
+      },
+      ["date", "productId"],
+      "A historical product data query.",
+    ),
+    outputSchema: s.looseObject("Historical product data; upstream fields and nullable ratios are preserved.", {
+      product_info: s.looseObject("The product and historical metrics.", {
+        product_id: s.string("The product id."),
+        head_img_url: s.string("The product image URL."),
+        title: s.string("The title."),
+        price: s.string("The price in fen, as an upstream string."),
+        first_category_id: s.string("The first-level category id."),
+        second_category_id: s.string("The second-level category id."),
+        third_category_id: s.string("The third-level category id."),
+        data: s.looseObject("Raw Compass metrics; monetary values are in fen and ratios can be null.", {
+          product_click_uv: s.string("Unique product click visitors."),
+          product_click_cnt: s.string("Product clicks."),
+          pay_gmv: s.string("Paid GMV in fen."),
+          pay_cnt: s.string("Paid orders."),
+          pay_uv: s.string("Paying users."),
+          pay_product_cnt: s.string("Paid product quantity."),
+        }),
+      }),
+    }),
+    providerPermissions: ["WeChat Store Compass data access; service providers require permission set 175"],
+  }),
+  defineProviderAction(service, {
+    name: "get_product_restricted_info",
+    operationType: "read",
+    description:
+      "Read restricted sales scenes for 1 to 50 products, including alliance and talent-window restrictions. This does not change product status. Merchant quota: 100 calls per minute.",
+    inputSchema: s.actionInput(
+      {
+        productIds: s.array(
+          "Product ids, each no greater than JavaScript's maximum safe integer.",
+          numericIdInput("A product id."),
+          { minItems: 1, maxItems: 50 },
+        ),
+      },
+      ["productIds"],
+      "Products to inspect for scene restrictions.",
+    ),
+    outputSchema: s.looseObject("Product scene restrictions.", {
+      data: s.looseObject("The restriction response data.", {
+        restricted_info_list: s.array(
+          "Restrictions per product.",
+          s.looseObject("One product's restricted scenes.", {
+            product_id: s.integer("The product id."),
+            scene_info: s.array(
+              "Restricted scenes and policy sources.",
+              s.looseObject("One restriction.", {
+                scene: s.integer(
+                  "1 live, 2 short video, 3 store home/talent window, 4 search, 5 ads, 6 orders/cards, 7 alliance, 8 recommendation, 9 selling, 10 invalid-product hiding.",
+                ),
+                source: s.integer(
+                  "1 low-risk policy, 2 similar-product policy, 3 hidden-image policy, 4 trial category, 5 window hiding, 6 minimal mode, 7 selling restriction, 8 inventory restriction.",
+                ),
+              }),
+            ),
+          }),
+        ),
+      }),
+    }),
+    providerPermissions: ["WeChat Store product access; service providers require permission set 129"],
+  }),
 ];

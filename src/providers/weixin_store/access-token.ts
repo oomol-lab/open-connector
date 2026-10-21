@@ -52,7 +52,8 @@ interface WechatAccessTokenCacheEntry {
  * input, so they map to 400 instead of an upstream failure.
  */
 const wechatInvalidInputErrcodes = new Set([
-  9401020, 9700234, 10020017, 10020059, 10020060, 10020062, 10020063, 10020087, 10020094, 10020127, 10020504,
+  9401020, 9700234, 10020017, 10020059, 10020060, 10020062, 10020063, 10020087, 10020094, 10020127, 10020504, 10021069,
+  10023000, 10023001, 10024003,
 ]);
 
 const accessTokenCache = new Map<string, WechatAccessTokenCacheEntry>();
@@ -181,7 +182,8 @@ export function isWechatTokenError(errcode: number | null): boolean {
 
 /**
  * Map a failed WeChat API call to the shared provider error. Rate limits
- * (45009/45011) become 429, the missing-permission 48001 becomes 403, the
+ * (45009/45011/10020510) become 429, missing permission or disabled alliance
+ * (48001/10023007) becomes 403, the
  * 4xxxx client errcodes and the documented invalid-input store errcodes become
  * 400, and everything else becomes a 502.
  */
@@ -196,10 +198,10 @@ export function normalizeWechatApiError(result: WechatApiResult): ProviderReques
     // A bare HTTP 403 with no errcode envelope is the store's optional IP whitelist rejecting the caller.
     message = `${message}. If the store has an IP whitelist configured (微信小店后台 → 服务市场 → 经营工具 → 自研 → IP 白名单), add this runtime's public egress IP to it and try again.`;
   }
-  if (result.status === 429 || errcode === 45009 || errcode === 45011) {
+  if (result.status === 429 || errcode === 45009 || errcode === 45011 || errcode === 10020510) {
     return new ProviderRequestError(429, message, result.record);
   }
-  if (errcode === 48001) {
+  if (errcode === 48001 || errcode === 10023007) {
     return new ProviderRequestError(403, message, result.record);
   }
   if (errcode !== null && ((errcode >= 40000 && errcode < 50000) || wechatInvalidInputErrcodes.has(errcode))) {
