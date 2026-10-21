@@ -961,7 +961,7 @@ export const weixinStoreActions: ProviderActionDefinition[] = [
         restricted_info_list: s.array(
           "Restrictions per product.",
           s.looseObject("One product's restricted scenes.", {
-            product_id: s.integer("The product id."),
+            product_id: numericIdInput("The product id, returned as a number or numeric string."),
             scene_info: s.array(
               "Restricted scenes and policy sources.",
               s.looseObject("One restriction.", {
@@ -1121,7 +1121,10 @@ export const weixinStoreActions: ProviderActionDefinition[] = [
     outputSchema: s.looseObject("Alliance products.", {
       items: s.array(
         "Products and eligibility.",
-        s.looseObject("One alliance product.", { product_id: s.integer("The product id."), status: leaguePlanStatus }),
+        s.looseObject("One alliance product.", {
+          product_id: numericIdInput("The product id, returned as a number or numeric string."),
+          status: leaguePlanStatus,
+        }),
       ),
       has_more: s.boolean("Whether more products exist."),
       total_num: s.integer("Total products when requested."),

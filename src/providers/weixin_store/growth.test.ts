@@ -363,3 +363,27 @@ describe("WeChat Store cooperation workflow", () => {
     expect(validator.validate({ ...identity, operateType: 2 }).valid).toBe(true);
   });
 });
+
+describe("WeChat Store live response identifier compatibility", () => {
+  it.each([123, "123"])("preserves and validates upstream product id %j", async (productId) => {
+    const responses = [
+      {
+        action: "get_product_restricted_info",
+        input: { productIds: [123] },
+        output: { data: { restricted_info_list: [{ product_id: productId, scene_info: [{ scene: 7, source: 8 }] }] } },
+      },
+      {
+        action: "list_league_products",
+        input: {},
+        output: { items: [{ product_id: productId, status: 7 }], has_more: false, total_num: 1 },
+      },
+    ];
+    for (const { action, input, output } of responses) {
+      mockWechat(() => ({ errcode: 0, ...output }));
+      const result = await executors[`weixin_store.${action}`]!(input, executionContext());
+      expect(result).toEqual({ ok: true, output });
+      const schema = weixinStoreActions.find((definition) => definition.name === action)!.outputSchema;
+      expect(new Validator(schema).validate(output).valid).toBe(true);
+    }
+  });
+});
