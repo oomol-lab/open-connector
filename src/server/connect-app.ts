@@ -111,6 +111,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
   });
 
   const triggers = new TriggerRunner({
+    oauthClientConfigs,
     providerHttpDispatch: options.providerHttpDispatch,
     catalog: options.catalog,
     providerLoader: options.providerLoader,

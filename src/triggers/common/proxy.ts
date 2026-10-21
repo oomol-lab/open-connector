@@ -7,10 +7,14 @@ export interface ConnectorProxyRequest {
 }
 
 export interface ConnectorProxyResult {
+  readonly headers?: Readonly<Record<string, string>>;
   readonly data: unknown;
   readonly status: number;
 }
 
 export interface ConnectorProxy {
+  readonly oauthClientConfig?: { readonly clientId: string; readonly clientSecret?: string };
+  readonly providerAccountId?: string;
+  readonly authType?: string;
   execute(request: ConnectorProxyRequest, signal?: AbortSignal): Promise<ConnectorProxyResult>;
 }

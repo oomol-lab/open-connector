@@ -20,7 +20,12 @@ export async function executeResourceSubscription(
   input: Extract<TriggerRequest, { operation: "resource" }>,
   proxy: ConnectorProxy,
   signal: AbortSignal,
-): Promise<IntegrationReconcileResult> {
+): Promise<
+  IntegrationReconcileResult & {
+    readonly subscription?: Readonly<Record<string, import("./common/types.ts").JsonValue>>;
+    readonly reconcileAt?: number;
+  }
+> {
   const member = await subscriptionId(owner, input.requestKey);
   await store.insertFlowTrigger({
     mode: "resource",
@@ -36,7 +41,12 @@ export async function executeResourceSubscription(
     reconcileAt: 0,
     status: "active",
   });
-  return withSubscription<IntegrationReconcileResult>(store, member, signal, async (consumer, saveConsumer) => {
+  return withSubscription<
+    IntegrationReconcileResult & {
+      readonly subscription?: Readonly<Record<string, import("./common/types.ts").JsonValue>>;
+      readonly reconcileAt?: number;
+    }
+  >(store, member, signal, async (consumer, saveConsumer) => {
     consumer.connectionRevision = owner.connectionRevision;
     return executeResourceSubscriptionOperation(store, definition, consumer, saveConsumer, input, proxy, signal);
   });
@@ -51,7 +61,12 @@ export async function executeResourceSubscriptionOperation(
   input: Extract<TriggerRequest, { operation: "resource" }>,
   proxy: ConnectorProxy,
   signal: AbortSignal,
-): Promise<IntegrationReconcileResult> {
+): Promise<
+  IntegrationReconcileResult & {
+    readonly subscription?: Readonly<Record<string, import("./common/types.ts").JsonValue>>;
+    readonly reconcileAt?: number;
+  }
+> {
   const member = consumer.id;
   const owner = {
     tokenId: consumer.tokenId,
@@ -74,6 +89,34 @@ export async function executeResourceSubscriptionOperation(
   if (!input.active) {
     consumer.status = "deleting";
     await saveConsumer();
+  }
+  if ("reconcile" in definition) {
+    const result = await definition.reconcile({
+      active: input.active,
+      config: input.config,
+      connector: proxy,
+      signal,
+      now: new Date(),
+      endpointUrl: typeof input.config.endpointUrl === "string" ? input.config.endpointUrl : "",
+      callbackSecret: "",
+      idempotencyKey: member,
+      state: {
+        checkpoint: consumer.checkpoint,
+        subscription: consumer.subscription,
+        saveCheckpoint: async (checkpoint) => {
+          consumer.checkpoint = checkpoint;
+          await saveConsumer();
+        },
+        saveSubscription: async (subscription, reconcileAt) => {
+          consumer.subscription = subscription;
+          consumer.reconcileAt = reconcileAt.getTime();
+          await saveConsumer();
+        },
+      },
+    });
+    if (!input.active && result.outcome === "ready") consumer.status = "deleted";
+    await saveConsumer();
+    return { ...result, subscription: consumer.subscription, reconcileAt: consumer.reconcileAt };
   }
   for (const resource of definition.subscriptions(input.config)) {
     const shared = { ...owner, tokenId: "shared-resource" };
@@ -132,6 +175,7 @@ export async function abandonResourceSubscription(
   consumer: TriggerSubscription,
   signal: AbortSignal,
 ): Promise<void> {
+  if ("reconcile" in definition) return;
   for (const resource of definition.subscriptions(consumer.config)) {
     const id = await resourceSubscriptionId(consumer, resource.key);
     if (!(await store.getFlowTrigger(id))) continue;

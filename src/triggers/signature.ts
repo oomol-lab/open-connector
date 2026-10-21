@@ -1,6 +1,6 @@
 const encoder = new TextEncoder();
 
-export function bytes(value: string): Uint8Array {
+export function bytes(value: string): Uint8Array<ArrayBuffer> {
   return encoder.encode(value);
 }
 
@@ -9,7 +9,7 @@ export function sameSecret(candidate: string | undefined, expected: string): boo
 }
 
 export async function verifyBase64Hmac(
-  secret: string,
+  secret: string | Uint8Array,
   parts: readonly Uint8Array[],
   signature: string | undefined,
 ): Promise<boolean> {
@@ -18,18 +18,23 @@ export async function verifyBase64Hmac(
 }
 
 export async function verifyHexHmac(
-  secret: string,
+  secret: string | Uint8Array,
   parts: readonly Uint8Array[],
   signature: string | undefined,
+  hash = "SHA-256",
 ): Promise<boolean> {
   const candidate = signature == null ? undefined : hex(signature);
-  return candidate != null && sameBytes(candidate, await hmac(secret, parts));
+  return candidate != null && sameBytes(candidate, await hmac(secret, parts, hash));
 }
 
-async function hmac(secret: string, parts: readonly Uint8Array[]): Promise<Uint8Array> {
-  const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { hash: "SHA-256", name: "HMAC" }, false, [
-    "sign",
-  ]);
+async function hmac(secret: string | Uint8Array, parts: readonly Uint8Array[], hash = "SHA-256"): Promise<Uint8Array> {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    typeof secret == "string" ? encoder.encode(secret) : (secret as Uint8Array<ArrayBuffer>),
+    { hash, name: "HMAC" },
+    false,
+    ["sign"],
+  );
   const size = parts.reduce((total, part) => total + part.byteLength, 0);
   const source = new Uint8Array(size);
   let offset = 0;
