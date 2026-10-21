@@ -19,6 +19,7 @@ import { ConnectionService } from "../connection-service.ts";
 import { provider as slackProvider } from "../providers/slack/definition.ts";
 import { provider as slackbotProvider } from "../providers/slackbot/definition.ts";
 import { provider as tencentDocsProvider } from "../providers/tencent_docs/definition.ts";
+import { provider as zoomProvider } from "../providers/zoom/definition.ts";
 import { AesGcmSecretCodec } from "../server/secrets/secret-codec.ts";
 import { SqliteRuntimeDatabase } from "../server/storage/sqlite/runtime-store.ts";
 import { OAuthClientConfigService } from "./oauth-client-config-service.ts";
@@ -1448,3 +1449,26 @@ class MemoryOAuthStateStore implements IOAuthStateStore {
     return value;
   }
 }
+
+it.each(["cloud_recording:read:recording", "cloud_recording:read:recording:admin"])(
+  "requests Zoom recording access only when explicitly selected: %s",
+  async (recordingScope) => {
+    const services = createServices([{ ...zoomProvider, actions: [] }]);
+    await services.clientConfigs.upsertConfig({ service: "zoom", clientId: "client", clientSecret: "secret" });
+    const meeting = await services.flow.startAuthorization({ service: "zoom" });
+    const defaultScopes = new URL(meeting.authorizationUrl).searchParams.get("scope")!.split(" ");
+    expect(defaultScopes).toContain("meeting:write:meeting");
+    expect(defaultScopes.some((scope) => scope.startsWith("cloud_recording:"))).toBe(false);
+    await services.clientConfigs.upsertConfig({
+      service: "zoom",
+      clientId: "client",
+      clientSecret: "secret",
+      requestedScopes: [...defaultScopes, recordingScope],
+    });
+    const recording = await services.flow.startAuthorization({ service: "zoom" });
+    expect(new URL(recording.authorizationUrl).searchParams.get("scope")!.split(" ")).toEqual([
+      ...defaultScopes,
+      recordingScope,
+    ]);
+  },
+);

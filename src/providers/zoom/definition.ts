@@ -21,7 +21,7 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://zoom.us/oauth/token",
       refreshTokenUrl: "https://zoom.us/oauth/token",
       scopes: zoomProviderScopes,
-      optionalScopes: ["cloud_recording:read:recording:admin"],
+      optionalScopes: ["cloud_recording:read:recording", "cloud_recording:read:recording:admin"],
       tokenEndpointAuthMethod: "client_secret_basic",
     },
   ],
