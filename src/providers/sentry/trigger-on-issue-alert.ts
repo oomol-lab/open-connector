@@ -3,11 +3,13 @@ import type { IntegrationDefinition } from "../../triggers/common/integration.ts
 import { PermanentIntegrationError } from "../../triggers/common/integration.ts";
 import { isJsonObject } from "../../triggers/common/json.ts";
 import { webhookRequest } from "../../triggers/managed-webhook.ts";
+import { sentryApplication } from "../../triggers/sources/sentry.ts";
 import { snapshot } from "./trigger-on-issue-alert.definition.ts";
 
 export const sentryIssueAlert: IntegrationDefinition = {
   snapshot,
   eventSource: "sentry",
+  source: sentryApplication,
   async sourceIdentity(context) {
     const accountId = context.connector.providerAccountId;
     const { appId, installationId, organizationId } = context.config;

@@ -1,3 +1,5 @@
+import type { CreateEventSource, UpdateEventSource, EventSource } from "../sources/configuration.ts";
+import type { EventSourceDefinition } from "../sources/definition.ts";
 import type { TriggerConfigOption, TriggerConfigOptionsContext } from "./configOptions.ts";
 import type { ConnectorProxyRequest, ConnectorProxyResult, ConnectorProxy } from "./proxy.ts";
 import type { IntegrationEndpointMethod, JsonValue, TriggerKeySnapshot } from "./types.ts";
@@ -131,6 +133,7 @@ export type ResourceDefinition =
   | { readonly reconcile: (context: IntegrationReconcileContext) => Promise<IntegrationReconcileResult> };
 
 export interface IntegrationDefinition {
+  readonly source?: EventSourceDefinition<CreateEventSource, UpdateEventSource, Partial<EventSource>>;
   readonly sourceReceive?: (
     context: Omit<ListenerReadContext, "checkpoint"> & {
       readonly headers: Readonly<Record<string, string>>;

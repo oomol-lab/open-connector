@@ -38,7 +38,7 @@ export function createTriggerRoutes({
   app.post("/v1/providers/:service/triggers/:triggerId/execute", async (context) => {
     if (!triggers) throw new HttpRequestError("trigger_not_supported", "Trigger execution is unavailable.", 501);
     const { readTriggerRequest } = await import("../../triggers/request.ts");
-    const request = readTriggerRequest(await readJsonBody(context, 160 * 1024));
+    const request = readTriggerRequest(await readJsonBody(context, 2 * 1024 * 1024));
     const signal = AbortSignal.any([context.req.raw.signal, AbortSignal.timeout(45_000)]);
     const result = await triggers.run({
       service: context.req.param("service")!,

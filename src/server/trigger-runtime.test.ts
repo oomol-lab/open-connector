@@ -448,6 +448,48 @@ describe("Trigger runtime HTTP boundary", () => {
     expect(hooks).toHaveLength(1);
   });
 
+  it("executes shared source initialization and preparation through the authenticated runtime endpoint", async () => {
+    const app = await database.connectionStore.set(
+      "feishu_app_bot",
+      "source",
+      credential("feishu-key", "cli_verified"),
+    );
+    const execute = (body: unknown) =>
+      request({ operation: "source", request: body }, token, app.id, "feishu_app_bot", "feishu_app_bot.on_event");
+    const created = await execute({
+      action: "initialize",
+      input: {
+        version: 1,
+        name: "Source",
+        teamId: null,
+        connectionId: app.id,
+        verificationToken: "verify",
+        encryptKey: "encrypt",
+        eventTypes: ["approval_instance"],
+        manageSubscriptions: true,
+      },
+    });
+    expect(created.status).toBe(200);
+    const result = (await created.json()) as { data: { source: { identity: string; state: Record<string, unknown> } } };
+    expect(result.data.source).toMatchObject({
+      identity: "cli_verified",
+      state: { projection: { ready: false, view: { appId: "cli_verified" } } },
+    });
+    const prepared = await execute({
+      action: "prepare",
+      source: { ...result.data.source, state: { verifiedAt: Date.now() } },
+      config: { eventTypes: ["approval_instance"], resource: { kind: "approval", id: "approval" } },
+    });
+    expect(prepared.status).toBe(200);
+    expect(await prepared.json()).toMatchObject({
+      data: { subscriptions: [{ key: '["approval","approval"]' }], source: { state: { projection: { ready: true } } } },
+    });
+    expect(
+      (await execute({ action: "initialize", input: { kind: "slack", version: 1, name: "Wrong provider" } })).status,
+    ).toBe(400);
+    expect(calls).toHaveLength(0);
+  });
+
   it("routes managed resources with their own config and persists state through cleanup", async () => {
     const definitions = await fixtureProviderLoader.loadTriggerDefinitions("github");
     const definition = definitions?.find((item) => item.snapshot.key === "github.on_repo_event");

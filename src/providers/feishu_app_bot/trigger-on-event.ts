@@ -2,12 +2,14 @@ import type { IntegrationDefinition } from "../../triggers/common/integration.ts
 
 import { PermanentIntegrationError } from "../../triggers/common/integration.ts";
 import { isJsonObject } from "../../triggers/common/json.ts";
+import { feishuApplication } from "../../triggers/sources/feishu.ts";
 import { additionalSnapshot0 } from "./trigger-on-event.definition.ts";
 import { feishuSubscriptions, feishuResponse } from "./trigger-subscriptions.ts";
 
 export const feishuEvents: readonly IntegrationDefinition[] = [
   {
     eventSource: "feishu",
+    source: feishuApplication,
     resources: { subscriptions: (config) => feishuSubscriptions(config, "feishu_app_bot"), response: feishuResponse },
     snapshot: additionalSnapshot0,
     receive(context) {

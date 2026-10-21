@@ -2,11 +2,13 @@ import type { IntegrationDefinition } from "../../triggers/common/integration.ts
 
 import { PermanentIntegrationError } from "../../triggers/common/integration.ts";
 import { isJsonObject } from "../../triggers/common/json.ts";
+import { intercomApplication } from "../../triggers/sources/intercom.ts";
 import { snapshot } from "./trigger-on-conversation-event.definition.ts";
 
 export const intercomConversationEvents: IntegrationDefinition = {
   snapshot,
   eventSource: "intercom",
+  source: intercomApplication,
   receive(context) {
     if (context.eventSourceId !== context.config.sourceId)
       return { outcome: "respond", status: 404, body: "", contentType: "text/plain" };

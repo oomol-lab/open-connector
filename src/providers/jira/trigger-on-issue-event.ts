@@ -6,12 +6,14 @@ import { IntegrationConnectionError } from "../../triggers/common/integration.ts
 import { PermanentIntegrationError } from "../../triggers/common/integration.ts";
 import { isJsonObject } from "../../triggers/common/json.ts";
 import { webhookRequest } from "../../triggers/managed-webhook.ts";
+import { jiraProject } from "../../triggers/sources/jira.ts";
 import { snapshot } from "./trigger-on-issue-event.definition.ts";
 import { reconcileJiraResource, requireJiraCloud, jiraEvents } from "./trigger-resource.ts";
 
 export const jiraIssueEvents: IntegrationDefinition = {
   snapshot,
   eventSource: "jira",
+  source: jiraProject,
   resources: { reconcile: reconcileJiraResource },
   async sourceIdentity(context) {
     const cloudId = requireJiraCloud(context.connector);

@@ -26,6 +26,7 @@ import {
   executeResourceSubscriptionOperation,
   abandonResourceSubscription,
 } from "./resources.ts";
+import { executeSourceOperation } from "./sources/operation.ts";
 import { executeSubscription, executeSubscriptionOperation } from "./subscriptions.ts";
 
 interface TriggerRunnerOptions {
@@ -65,7 +66,7 @@ export class TriggerRunner {
   private async runTrigger(input: RunTriggerInput): Promise<unknown> {
     const decision = input.policy.evaluateTrigger(input.triggerId);
     if (!decision.allowed) throw new HttpRequestError(decision.code, decision.message, 403);
-    const stateful = !["read", "options", "sourceIdentity", "sourceReceive"].includes(input.request.operation);
+    const stateful = !["read", "options", "source"].includes(input.request.operation);
     if (stateful && !input.grant)
       throw new HttpRequestError(
         "trigger_owner_required",
@@ -81,6 +82,13 @@ export class TriggerRunner {
       input.policy,
     );
     const request = input.request;
+    if (request.operation === "source") {
+      if (!("source" in definition) || !definition.source)
+        throw new HttpRequestError("invalid_input", "This Trigger has no shared source protocol.");
+      return this.providerOperation(input.service, () =>
+        executeSourceOperation(definition, request.request, target.proxy, input.signal),
+      );
+    }
     if (request.operation === "receive") {
       if (!("receive" in definition) || definition.eventSource)
         throw new HttpRequestError("invalid_input", "This Trigger has no remote webhook.");
@@ -93,34 +101,6 @@ export class TriggerRunner {
           target.proxy,
           input.signal,
         ),
-      );
-    }
-    if (request.operation === "sourceReceive") {
-      if (!("sourceReceive" in definition) || !definition.eventSource || !definition.sourceReceive)
-        throw new HttpRequestError("invalid_input", "This Trigger has no shared source verifier.");
-      const receive = definition.sourceReceive;
-      return this.providerOperation(input.service, () =>
-        receive({
-          config: request.config,
-          headers: request.headers,
-          rawBody: request.rawBody,
-          connector: target.proxy,
-          now: new Date(),
-          signal: input.signal,
-        }),
-      );
-    }
-    if (request.operation === "sourceIdentity") {
-      if (!("sourceIdentity" in definition) || !definition.eventSource || !definition.sourceIdentity)
-        throw new HttpRequestError("invalid_input", "This Trigger has no source identity operation.");
-      const identity = definition.sourceIdentity;
-      return this.providerOperation(input.service, () =>
-        identity({
-          config: request.config,
-          connector: target.proxy,
-          now: new Date(),
-          signal: input.signal,
-        }),
       );
     }
     if (request.operation === "resource") {

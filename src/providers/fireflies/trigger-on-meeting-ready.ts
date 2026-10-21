@@ -5,11 +5,13 @@ import { TransientIntegrationError } from "../../triggers/common/integration.ts"
 import { PermanentIntegrationError } from "../../triggers/common/integration.ts";
 import { isJsonObject } from "../../triggers/common/json.ts";
 import { webhookRequest } from "../../triggers/managed-webhook.ts";
+import { firefliesAccount } from "../../triggers/sources/fireflies.ts";
 import { snapshot } from "./trigger-on-meeting-ready.definition.ts";
 
 export const firefliesMeetingReady: IntegrationDefinition = {
   snapshot,
   eventSource: "fireflies",
+  source: firefliesAccount,
   async sourceIdentity(context): Promise<Readonly<Record<string, JsonValue>>> {
     const accountId = context.connector.providerAccountId;
     if (!accountId) throw new PermanentIntegrationError("Fireflies requires a verified connection identity.");
