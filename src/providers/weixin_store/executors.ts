@@ -7,6 +7,7 @@ import {
   objectArray,
   optionalBoolean,
   optionalInteger,
+  optionalNumber,
   optionalRecord,
   optionalString,
   positiveInteger,
@@ -85,6 +86,169 @@ const deliveryProductFieldMap: Record<string, string> = {
 };
 
 const weixinStoreActionHandlers: ProviderActionHandlers<typeof service, WeixinStoreActionHandler> = {
+  async list_league_promoter_products(input, context) {
+    const talentAppid = requiredInputString(input.talentAppid, "talentAppid");
+    const dataType = positiveInteger(input.dataType, "dataType", providerInputError);
+    const pageIndex = positiveInteger(input.pageIndex ?? 1, "pageIndex", providerInputError);
+    const pageSize = positiveInteger(input.pageSize ?? 20, "pageSize", providerInputError);
+    if (![1, 2].includes(dataType) || !Number.isSafeInteger(pageIndex) || pageSize > 20) {
+      throw providerInputError("dataType must be 1 or 2, pageIndex a safe positive integer, and pageSize at most 20");
+    }
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/league/talent/getproductdatalist",
+      body: { talent_appid: talentAppid, get_data_type: dataType, page_index: pageIndex, page_size: pageSize },
+    });
+  },
+  async list_product_promotion_talents(input, context) {
+    const productId = positiveInteger(input.productId, "productId", providerInputError);
+    const promotionPlanId = positiveInteger(input.promotionPlanId, "promotionPlanId", providerInputError);
+    const pageIndex = positiveInteger(input.pageIndex ?? 1, "pageIndex", providerInputError);
+    const pageSize = positiveInteger(input.pageSize ?? 10, "pageSize", providerInputError);
+    if (![productId, promotionPlanId, pageIndex].every(Number.isSafeInteger) || pageSize > 10) {
+      throw providerInputError("Ids and pageIndex must be safe positive integers; pageSize must be at most 10");
+    }
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/league/promotion/talent/list",
+      body: compactObject({
+        product_id: productId,
+        promotion_plan_id: promotionPlanId,
+        page_index: pageIndex,
+        page_size: pageSize,
+        talent_appid:
+          input.talentAppid === undefined ? undefined : requiredInputString(input.talentAppid, "talentAppid"),
+      }),
+    });
+  },
+  get_product_audit_strategy(_input, context) {
+    return callWechatApi(context, { method: "POST", path: "/channels/ec/product/auditstrategy/get", body: {} });
+  },
+  async list_product_promotion_plans(input, context) {
+    const productId = positiveInteger(input.productId, "productId", providerInputError);
+    const pageIndex = positiveInteger(input.pageIndex ?? 1, "pageIndex", providerInputError);
+    const pageSize = positiveInteger(input.pageSize ?? 20, "pageSize", providerInputError);
+    const type =
+      input.promotionPlanType === undefined
+        ? undefined
+        : positiveInteger(input.promotionPlanType, "promotionPlanType", providerInputError);
+    if (
+      ![productId, pageIndex].every(Number.isSafeInteger) ||
+      pageSize > 20 ||
+      (type !== undefined && ![100, 200, 300].includes(type))
+    ) {
+      throw providerInputError(
+        "Ids and pageIndex must be safe positive integers, pageSize at most 20, and promotionPlanType 100, 200 or 300",
+      );
+    }
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/league/promotion/plan/list",
+      body: compactObject({
+        product_id: productId,
+        page_index: pageIndex,
+        page_size: pageSize,
+        promotion_plan_type: type,
+      }),
+    });
+  },
+  async list_league_products(input, context) {
+    const pageIndex = positiveInteger(input.pageIndex ?? 1, "pageIndex", providerInputError);
+    const pageSize = positiveInteger(input.pageSize ?? 20, "pageSize", providerInputError);
+    const productId =
+      input.productId === undefined ? undefined : positiveInteger(input.productId, "productId", providerInputError);
+    if (
+      !Number.isSafeInteger(pageIndex) ||
+      pageSize > 100 ||
+      pageSize * pageIndex > 5000 ||
+      (productId !== undefined && !Number.isSafeInteger(productId))
+    ) {
+      throw providerInputError(
+        "Product id must be safe, pageSize at most 100, and pageSize multiplied by pageIndex at most 5000",
+      );
+    }
+    if (input.needTotalNum !== undefined && typeof input.needTotalNum !== "boolean") {
+      throw providerInputError("needTotalNum must be a boolean");
+    }
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/league/item/list/get",
+      body: compactObject({
+        page_index: pageIndex,
+        page_size: pageSize,
+        product_id: productId,
+        need_total_num: input.needTotalNum,
+      }),
+    });
+  },
+  async get_league_plan(input, context) {
+    const type = positiveInteger(input.type, "type", providerInputError);
+    const productId = positiveInteger(input.productId, "productId", providerInputError);
+    const promotionPlanId =
+      input.promotionPlanId === undefined
+        ? undefined
+        : positiveInteger(input.promotionPlanId, "promotionPlanId", providerInputError);
+    if (
+      ![100, 300].includes(type) ||
+      !Number.isSafeInteger(productId) ||
+      (promotionPlanId !== undefined && !Number.isSafeInteger(promotionPlanId))
+    ) {
+      throw providerInputError("type must be 100 or 300 and ids must be safe positive integers");
+    }
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/league/item/get",
+      body: compactObject({ type, product_id: productId, promotion_plan_id: promotionPlanId }),
+    });
+  },
+  async invite_league_promoter(input, context) {
+    if ((input.promoterId !== undefined) === (input.finderId !== undefined)) {
+      throw providerInputError("Supply exactly one of promoterId or finderId");
+    }
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/league/promoter/add",
+      body:
+        input.promoterId !== undefined
+          ? { promoter_id: requiredInputString(input.promoterId, "promoterId") }
+          : { finder_id: requiredInputString(input.finderId, "finderId") },
+    });
+  },
+  async update_league_plan(input, context) {
+    const type = positiveInteger(input.type, "type", providerInputError);
+    const productId = positiveInteger(input.productId, "productId", providerInputError);
+    const promotionPlanId = positiveInteger(input.promotionPlanId, "promotionPlanId", providerInputError);
+    const operateType = positiveInteger(input.operateType, "operateType", providerInputError);
+    if (
+      ![100, 300].includes(type) ||
+      ![productId, promotionPlanId].every(Number.isSafeInteger) ||
+      ![1, 2, 4].includes(operateType)
+    ) {
+      throw providerInputError("type must be 100 or 300, ids safe positive integers, and operateType 1, 2 or 4");
+    }
+    const ratio = optionalNumber(input.ratio);
+    if (
+      operateType === 1
+        ? ratio === undefined || !Number.isFinite(ratio) || ratio < 0 || ratio > 90
+        : input.ratio !== undefined
+    ) {
+      throw providerInputError("ratio must be between 0 and 90 for operateType 1 and omitted for operateType 2 or 4");
+    }
+    if (input.exclusiveInfo !== undefined || input.exclusive_info !== undefined) {
+      throw providerInputError("Audience and timing edits are not supported by this action");
+    }
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/league/item/upd",
+      body: compactObject({
+        type,
+        product_id: productId,
+        promotion_plan_id: promotionPlanId,
+        operate_type: operateType,
+        ratio,
+      }),
+    });
+  },
   async list_league_promoters(input, context) {
     const pageIndex = positiveInteger(input.pageIndex ?? 1, "pageIndex", providerInputError);
     const pageSize = positiveInteger(input.pageSize ?? 20, "pageSize", providerInputError);

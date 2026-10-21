@@ -213,3 +213,153 @@ describe("WeChat Store read-only growth actions", () => {
     expect(new Validator(restricted.inputSchema).validate({ productIds: Array(51).fill(123) }).valid).toBe(false);
   });
 });
+
+describe("WeChat Store cooperation workflow", () => {
+  it.each([
+    [
+      "list_league_promoter_products",
+      { talentAppid: "talent-1", dataType: 2 },
+      "/channels/ec/league/talent/getproductdatalist",
+      { talent_appid: "talent-1", get_data_type: 2, page_index: 1, page_size: 20 },
+    ],
+    [
+      "list_product_promotion_talents",
+      { productId: "123", promotionPlanId: "456", talentAppid: "talent-1" },
+      "/channels/ec/league/promotion/talent/list",
+      { product_id: 123, promotion_plan_id: 456, talent_appid: "talent-1", page_index: 1, page_size: 10 },
+    ],
+    ["get_product_audit_strategy", {}, "/channels/ec/product/auditstrategy/get", {}],
+    [
+      "list_product_promotion_plans",
+      { productId: "123", promotionPlanType: 200, pageIndex: 2 },
+      "/channels/ec/league/promotion/plan/list",
+      { product_id: 123, promotion_plan_type: 200, page_index: 2, page_size: 20 },
+    ],
+    [
+      "list_league_products",
+      { productId: "123", needTotalNum: false },
+      "/channels/ec/league/item/list/get",
+      { product_id: 123, need_total_num: false, page_index: 1, page_size: 20 },
+    ],
+    [
+      "get_league_plan",
+      { type: 300, productId: "123", promotionPlanId: "456" },
+      "/channels/ec/league/item/get",
+      { type: 300, product_id: 123, promotion_plan_id: 456 },
+    ],
+    ["get_league_plan", { type: 100, productId: 123 }, "/channels/ec/league/item/get", { type: 100, product_id: 123 }],
+    [
+      "invite_league_promoter",
+      { promoterId: "verified-promoter" },
+      "/channels/ec/league/promoter/add",
+      { promoter_id: "verified-promoter" },
+    ],
+    [
+      "invite_league_promoter",
+      { finderId: "verified-finder" },
+      "/channels/ec/league/promoter/add",
+      { finder_id: "verified-finder" },
+    ],
+    [
+      "update_league_plan",
+      { type: 100, productId: "123", promotionPlanId: "456", operateType: 2 },
+      "/channels/ec/league/item/upd",
+      { type: 100, product_id: 123, promotion_plan_id: 456, operate_type: 2 },
+    ],
+    [
+      "update_league_plan",
+      { type: 300, productId: 123, promotionPlanId: 456, operateType: 4 },
+      "/channels/ec/league/item/upd",
+      { type: 300, product_id: 123, promotion_plan_id: 456, operate_type: 4 },
+    ],
+    [
+      "update_league_plan",
+      { type: 100, productId: 123, promotionPlanId: 456, operateType: 1, ratio: 0 },
+      "/channels/ec/league/item/upd",
+      { type: 100, product_id: 123, promotion_plan_id: 456, operate_type: 1, ratio: 0 },
+    ],
+  ])("maps %s to the exact upstream operation", async (action, input, path, body) => {
+    const output = { list: [], continue_flag: false, fail_talent_appids: ["failed-talent"] };
+    const requests = mockWechat(() => ({ errcode: 0, ...output }));
+    expect(await executors[`weixin_store.${action}`]!(input, executionContext())).toEqual({ ok: true, output });
+    expect(requests).toHaveLength(2);
+    expect(requests[1]).toEqual({ path, method: "POST", body, token: "mock-token" });
+  });
+
+  it.each([
+    ["list_league_promoter_products", { talentAppid: "x", dataType: 3 }],
+    ["list_league_promoter_products", { talentAppid: "x", dataType: 1, pageSize: 21 }],
+    ["list_league_promoter_products", { talentAppid: "", dataType: 1 }],
+    ["list_product_promotion_talents", { productId: 123, promotionPlanId: 456, pageSize: 11 }],
+    ["list_product_promotion_talents", { productId: 123, promotionPlanId: "9007199254740993" }],
+    ["list_product_promotion_plans", { productId: 123, promotionPlanType: 1 }],
+    ["list_product_promotion_plans", { productId: 123, pageSize: 21 }],
+    ["list_product_promotion_plans", { productId: "9007199254740993" }],
+    ["list_league_products", { pageSize: 100, pageIndex: 51 }],
+    ["list_league_products", { pageSize: 101 }],
+    ["list_league_products", { pageIndex: 0 }],
+    ["list_league_products", { needTotalNum: "true" }],
+    ["get_league_plan", { type: 200, productId: 123 }],
+    ["get_league_plan", { type: 1, productId: 123 }],
+    ["invite_league_promoter", {}],
+    ["invite_league_promoter", { promoterId: "p", finderId: "f" }],
+    ["invite_league_promoter", { talentAppid: "not-an-invitation-id" }],
+    ["invite_league_promoter", { promoterId: " " }],
+    ["update_league_plan", { type: 100, productId: 123, promotionPlanId: 456, operateType: 1 }],
+    ["update_league_plan", { type: 100, productId: 123, promotionPlanId: 456, operateType: 1, ratio: 500000 }],
+    ["update_league_plan", { type: 100, productId: 123, promotionPlanId: 456, operateType: 1, ratio: Number.NaN }],
+    ["update_league_plan", { type: 100, productId: 123, promotionPlanId: 456, operateType: 4, ratio: 50 }],
+    ["update_league_plan", { type: 200, productId: 123, promotionPlanId: 456, operateType: 2 }],
+    ["update_league_plan", { type: 100, productId: 123, promotionPlanId: 456, operateType: 3 }],
+    ["update_league_plan", { type: 100, productId: 123, promotionPlanId: 456, operateType: 2, exclusiveInfo: {} }],
+    ["update_league_plan", { type: 100, productId: 123, promotionPlanId: "9007199254740993", operateType: 2 }],
+  ])("rejects invalid %s before any upstream request: %j", async (action, input) => {
+    const requests = mockWechat();
+    expect(await executors[`weixin_store.${action}`]!(input, executionContext())).toMatchObject({
+      ok: false,
+      error: { code: "invalid_input" },
+    });
+    expect(requests).toEqual([]);
+  });
+
+  it.each([
+    [10023002, "rate_limited", 429],
+    [10023003, "invalid_input", 409],
+    [10023004, "invalid_input", 409],
+    [10023006, "invalid_input", 409],
+    [10023103, "invalid_input", 404],
+    [10023109, "invalid_input", 400],
+    [10023114, "authorization_failed", 403],
+    [10023115, "authorization_failed", 403],
+  ])("reports cooperation failure %i once without a mutation fallback", async (errcode, code, status) => {
+    const requests = mockWechat(() => ({ errcode, errmsg: "mock cooperation failure" }));
+    expect(
+      await executors["weixin_store.invite_league_promoter"]!({ promoterId: "verified-promoter" }, executionContext()),
+    ).toMatchObject({ ok: false, error: { code, details: { status } } });
+    expect(requests).toHaveLength(2);
+    expect(requests[1]!.path).toBe("/channels/ec/league/promoter/add");
+  });
+
+  it("marks only invitation and plan updates as writes and validates commission semantics in schemas", () => {
+    for (const name of ["invite_league_promoter", "update_league_plan"]) {
+      expect(weixinStoreActions.find((action) => action.name === name)!.operationType).toBe("write");
+    }
+    for (const name of [
+      "list_league_promoter_products",
+      "list_product_promotion_talents",
+      "get_product_audit_strategy",
+      "list_product_promotion_plans",
+      "list_league_products",
+      "get_league_plan",
+    ]) {
+      expect(weixinStoreActions.find((action) => action.name === name)!.operationType).toBe("read");
+    }
+    const action = weixinStoreActions.find((action) => action.name === "update_league_plan")!;
+    const validator = new Validator(action.inputSchema);
+    const identity = { type: 100, productId: 123, promotionPlanId: 456 };
+    expect(validator.validate({ ...identity, operateType: 1 }).valid).toBe(false);
+    expect(validator.validate({ ...identity, operateType: 1, ratio: 50 }).valid).toBe(true);
+    expect(validator.validate({ ...identity, operateType: 4, ratio: 50 }).valid).toBe(false);
+    expect(validator.validate({ ...identity, operateType: 2 }).valid).toBe(true);
+  });
+});
