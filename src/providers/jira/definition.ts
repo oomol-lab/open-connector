@@ -2,6 +2,8 @@ import type { ProviderDefinition } from "../../core/types.ts";
 
 import { jiraActions } from "./actions.ts";
 import { jiraOAuthScopes } from "./scopes.ts";
+import { snapshot } from "./trigger-on-issue-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "jira";
 
@@ -10,6 +12,8 @@ const service = "jira";
  */
 export const provider: ProviderDefinition = {
   service,
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Jira",
   categories: ["Productivity", "Developer Tools"],
   authTypes: ["oauth2", "custom_credential"],

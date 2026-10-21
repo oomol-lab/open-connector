@@ -1,9 +1,13 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 
 import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
 import { tallyActionHandlers, tallyApiBaseUrl, validateTallyCredential } from "./runtime.ts";
+import { tallyFormResponse } from "./trigger-on-form-response.ts";
 
 const service = "tally";
+
+export const triggers: readonly IntegrationDefinition[] = [tallyFormResponse];
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, tallyActionHandlers);
 

@@ -2,6 +2,8 @@ import type { ProviderDefinition } from "../../core/types.ts";
 
 import { sentryActions } from "./actions.ts";
 import { sentryProviderScopes } from "./scopes.ts";
+import { snapshot } from "./trigger-on-issue-alert.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "sentry";
 
@@ -10,6 +12,8 @@ const service = "sentry";
  */
 export const provider: ProviderDefinition = {
   service,
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Sentry",
   categories: ["Developer Tools", "Security"],
   authTypes: ["oauth2"],

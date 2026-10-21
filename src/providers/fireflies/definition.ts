@@ -1,6 +1,8 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { firefliesActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-meeting-ready.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "fireflies";
 
@@ -9,6 +11,8 @@ const service = "fireflies";
  */
 export const provider: ProviderDefinition = {
   service,
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Fireflies",
   categories: ["AI", "Productivity", "Communication"],
   authTypes: ["api_key"],

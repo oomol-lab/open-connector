@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { AsanaActionHandler } from "./runtime.ts";
 
 import { compactObject, optionalString, requiredRecord } from "../../core/cast.ts";
@@ -16,6 +17,7 @@ import { taskActionHandlers } from "./runtime-tasks.ts";
 import { workspaceUserTeamActionHandlers } from "./runtime-workspaces-users-teams.ts";
 import { asanaApiBaseUrl, requestAsana } from "./runtime.ts";
 import { readAsanaGrantedScopes } from "./scopes.ts";
+import { asanaTaskEvent } from "./trigger-on-task-event.ts";
 
 const service = "asana";
 const asanaValidationPath = "/users/me";
@@ -91,3 +93,5 @@ async function validateAsanaCredential(
     }),
   };
 }
+
+export const triggers: readonly IntegrationDefinition[] = [asanaTaskEvent];

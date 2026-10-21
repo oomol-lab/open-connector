@@ -1,7 +1,9 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 
 import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
 import { resendActionHandlers, resendApiBaseUrl, validateResendCredential } from "./runtime.ts";
+import { resendEmailEvent } from "./trigger-on-email-event.ts";
 
 const service = "resend";
 
@@ -19,3 +21,5 @@ export const credentialValidators: CredentialValidators = {
     return validateResendCredential(input.apiKey, fetcher, signal);
   },
 };
+
+export const triggers: readonly IntegrationDefinition[] = [resendEmailEvent];

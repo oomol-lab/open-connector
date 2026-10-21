@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import {
@@ -22,6 +23,7 @@ import {
   defineProviderProxy,
   providerUserAgent,
 } from "../provider-runtime.ts";
+import { jiraIssueEvents } from "./trigger-on-issue-event.ts";
 
 type JiraAccessibleResource = {
   id?: unknown;
@@ -1179,3 +1181,5 @@ function trimLeadingSlash(value: string) {
   }
   return value.slice(index);
 }
+
+export const triggers: readonly IntegrationDefinition[] = [jiraIssueEvents];

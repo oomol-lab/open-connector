@@ -1,9 +1,13 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { resendActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-email-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 export const provider: ProviderDefinition = {
   service: "resend",
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Resend",
   categories: ["Communication", "Marketing"],
   authTypes: ["api_key"],

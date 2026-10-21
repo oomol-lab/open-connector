@@ -1,6 +1,8 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { vercelActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-deployment-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "vercel";
 
@@ -9,6 +11,8 @@ const service = "vercel";
  */
 export const provider: ProviderDefinition = {
   service,
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Vercel",
   categories: ["Developer Tools"],
   authTypes: ["api_key"],

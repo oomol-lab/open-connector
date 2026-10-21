@@ -9,6 +9,8 @@ import { asanaTeamActions } from "./actions-teams.ts";
 import { asanaUserActions } from "./actions-users.ts";
 import { asanaWorkspaceActions } from "./actions-workspaces.ts";
 import { asanaOAuthScopes } from "./scopes.ts";
+import { snapshot } from "./trigger-on-task-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "asana";
 const asanaAuthorizationUrl = "https://app.asana.com/-/oauth_authorize";
@@ -16,6 +18,8 @@ const asanaTokenUrl = "https://app.asana.com/-/oauth_token";
 
 export const provider: ProviderDefinition = {
   service,
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Asana",
   categories: ["Productivity"],
   authTypes: ["oauth2", "api_key"],

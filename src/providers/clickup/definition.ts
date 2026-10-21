@@ -1,6 +1,8 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { clickupActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-task-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "clickup";
 
@@ -9,6 +11,8 @@ const service = "clickup";
  */
 export const provider: ProviderDefinition = {
   service,
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "ClickUp",
   categories: ["Productivity"],
   authTypes: ["oauth2", "api_key"],

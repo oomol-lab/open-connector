@@ -4,10 +4,12 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { ClickupActionContext } from "./runtime.ts";
 
 import { defineProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
 import { clickupActionHandlers, clickupApiOrigin, validateClickupCredential } from "./runtime.ts";
+import { clickupTaskEvent } from "./trigger-on-task-event.ts";
 
 const service = "clickup";
 
@@ -66,3 +68,5 @@ export const credentialValidators: CredentialValidators = {
     return validateClickupCredential(input.accessToken, "oauth2", fetcher, signal);
   },
 };
+
+export const triggers: readonly IntegrationDefinition[] = [clickupTaskEvent];

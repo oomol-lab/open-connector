@@ -1,7 +1,9 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 
 import { defineBearerProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
 import { calendlyActionHandlers, calendlyApiOrigin, validateCalendlyCredential } from "./runtime.ts";
+import { calendlyBookingEvent } from "./trigger-on-booking-event.ts";
 
 const service = "calendly";
 
@@ -21,3 +23,5 @@ export const credentialValidators: CredentialValidators = {
     return validateCalendlyCredential(input.accessToken, fetcher, signal);
   },
 };
+
+export const triggers: readonly IntegrationDefinition[] = [calendlyBookingEvent];

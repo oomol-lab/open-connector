@@ -1,6 +1,8 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { intercomActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-conversation-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "intercom";
 
@@ -12,6 +14,8 @@ const service = "intercom";
  */
 export const provider: ProviderDefinition = {
   service,
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Intercom",
   categories: ["Communication", "Productivity"],
   authTypes: ["oauth2"],

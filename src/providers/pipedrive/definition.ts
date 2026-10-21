@@ -1,11 +1,15 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { pipedriveActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-crm-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "pipedrive";
 
 export const provider: ProviderDefinition = {
   service,
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Pipedrive",
   categories: ["Productivity", "Marketing"],
   authTypes: ["api_key"],

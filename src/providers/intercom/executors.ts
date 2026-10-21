@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { IntercomActionContext } from "./runtime.ts";
 
 import { defineProviderExecutors, defineProviderProxy, requireOAuthCredential } from "../provider-runtime.ts";
@@ -14,6 +15,7 @@ import {
   resolveIntercomApiBaseUrl,
   validateIntercomOAuthCredential,
 } from "./runtime.ts";
+import { intercomConversationEvents } from "./trigger-on-conversation-event.ts";
 
 const service = "intercom";
 
@@ -50,3 +52,5 @@ export const credentialValidators: CredentialValidators = {
     return validateIntercomOAuthCredential(input, fetcher, signal);
   },
 };
+
+export const triggers: readonly IntegrationDefinition[] = [intercomConversationEvents];

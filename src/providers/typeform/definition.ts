@@ -1,13 +1,25 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { typeformActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-form-response.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "typeform";
 
-const typeformRequestedProviderScopes = ["accounts:read", "forms:read", "responses:read", "workspaces:read", "offline"];
+const typeformRequestedProviderScopes = [
+  "accounts:read",
+  "forms:read",
+  "responses:read",
+  "workspaces:read",
+  "offline",
+  "webhooks:read",
+  "webhooks:write",
+];
 
 export const provider: ProviderDefinition = {
   service,
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Typeform",
   categories: ["Productivity", "Data"],
   authTypes: ["oauth2", "api_key"],

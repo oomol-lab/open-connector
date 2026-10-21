@@ -2,6 +2,8 @@ import type { ProviderDefinition } from "../../core/types.ts";
 
 import { slackBotOAuthScopes } from "../slack/scopes.ts";
 import { slackbotActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "slackbot";
 
@@ -10,6 +12,8 @@ const service = "slackbot";
  */
 export const provider: ProviderDefinition = {
   service,
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Slack Bot",
   categories: ["Communication", "Productivity"],
   authTypes: ["oauth2"],

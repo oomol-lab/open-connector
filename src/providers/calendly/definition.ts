@@ -1,6 +1,8 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { calendlyActions, calendlyProviderScopes } from "./actions.ts";
+import { snapshot } from "./trigger-on-booking-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "calendly";
 const calendlyOAuthAuthorizationUrl = "https://auth.calendly.com/oauth/authorize";
@@ -11,6 +13,8 @@ const calendlyOAuthTokenUrl = "https://auth.calendly.com/oauth/token";
  */
 export const provider: ProviderDefinition = {
   service,
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Calendly",
   categories: ["Productivity"],
   authTypes: ["oauth2", "api_key"],

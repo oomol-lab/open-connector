@@ -14,4 +14,4 @@ const slackReadScopes = [
 
 const slackWriteScopes = ["chat:write", "im:write", "files:write", "reactions:write"];
 
-export const slackBotOAuthScopes: string[] = [...slackReadScopes, ...slackWriteScopes];
+export const slackBotOAuthScopes: string[] = [...slackReadScopes, ...slackWriteScopes, "app_mentions:read"];

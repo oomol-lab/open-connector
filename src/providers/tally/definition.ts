@@ -1,6 +1,8 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { tallyActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-form-response.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "tally";
 
@@ -20,4 +22,6 @@ export const provider: ProviderDefinition = {
   ],
   homepageUrl: "https://tally.so",
   actions: tallyActions,
+  triggers: [snapshot],
+  triggerPermissions,
 };
