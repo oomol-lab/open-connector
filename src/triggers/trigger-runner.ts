@@ -26,7 +26,6 @@ import {
   executeResourceSubscriptionOperation,
   abandonResourceSubscription,
 } from "./resources.ts";
-import { executeSourceOperation } from "./sources/operation.ts";
 import { executeSubscription, executeSubscriptionOperation } from "./subscriptions.ts";
 
 interface TriggerRunnerOptions {
@@ -94,6 +93,7 @@ export class TriggerRunner {
       throw new HttpRequestError("scope_missing", "The Trigger requires additional provider permissions.", 403);
     const request = input.request;
     if (request.operation === "source") {
+      const { executeSourceOperation } = await import("./sources/operation.ts");
       if (!("source" in definition) || !definition.source)
         throw new HttpRequestError("invalid_input", "This Trigger has no shared source protocol.");
       return this.providerOperation(input.service, () =>
