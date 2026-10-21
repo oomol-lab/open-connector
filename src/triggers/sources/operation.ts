@@ -28,7 +28,13 @@ export const sourceOperationSchema: z.ZodType<SourceOperation> = z.discriminated
   z.strictObject({
     action: z.literal("receive"),
     source: configuration,
-    headers: z.record(z.string(), z.string().max(8192)),
+    headers: z
+      .record(z.string(), z.string().max(8192))
+      .refine(
+        (headers) =>
+          new Set(Object.keys(headers).map((name) => name.toLowerCase())).size === Object.keys(headers).length,
+        "Duplicate webhook header.",
+      ),
     rawBody: z
       .string()
       .max(90000)

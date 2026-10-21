@@ -275,13 +275,19 @@ export class TriggerRunner {
         );
       const executor = await this.options.providerLoader.loadProxyExecutor(service);
       if (!executor) throw new HttpRequestError("trigger_not_supported", "The provider has no Trigger transport.", 501);
+      let oauthClientConfig: ConnectorProxy["oauthClientConfig"];
+      if (service === "jira" && credential.authType === "oauth2") {
+        oauthClientConfig = readOAuthClientConfigMetadata(service, credential.metadata);
+        if (!oauthClientConfig?.clientSecret) {
+          const configured = await this.options.oauthClientConfigs?.getConfig(service);
+          if (oauthClientConfig == null) oauthClientConfig = configured;
+          else if (configured?.clientId === oauthClientConfig.clientId)
+            oauthClientConfig = { ...oauthClientConfig, clientSecret: configured.clientSecret };
+        }
+      }
       const proxy: ConnectorProxy = {
         authType: credential.authType,
-        oauthClientConfig:
-          service === "jira" && credential.authType === "oauth2"
-            ? (readOAuthClientConfigMetadata(service, credential.metadata) ??
-              (await this.options.oauthClientConfigs?.getConfig(service)))
-            : undefined,
+        oauthClientConfig,
         providerAccountId: credential.profile.accountId,
         execute: async (request, requestSignal) => {
           signal.throwIfAborted();

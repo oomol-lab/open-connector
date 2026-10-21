@@ -13,6 +13,7 @@ import { ActionPolicyService } from "../core/action-policy.ts";
 import { provider as feishu } from "../providers/feishu_app_bot/definition.ts";
 import { provider as github } from "../providers/github/definition.ts";
 import { provider as gmail } from "../providers/gmail/definition.ts";
+import { provider as jira } from "../providers/jira/definition.ts";
 import { provider as linear } from "../providers/linear/definition.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
 import { provider as zoom } from "../providers/zoom/definition.ts";
@@ -50,8 +51,9 @@ beforeEach(async () => {
   useNativeProxy = false;
   denyProviderDispatch = false;
   dispatchAttempts = [];
-  const sources: ProviderDefinition[] = [github, gmail, linear, feishu, zoom];
+  const sources: ProviderDefinition[] = [github, gmail, linear, feishu, zoom, jira];
   const modulePaths: Record<string, string> = {
+    jira: "../providers/jira/executors.ts",
     zoom: "../providers/zoom/executors.ts",
     github: "../providers/github/executors.ts",
     gmail: "../providers/gmail/executors.ts",
@@ -87,6 +89,12 @@ beforeEach(async () => {
               },
             };
           else if (provider.service === "feishu_app_bot") data = { code: 0, data: {} };
+          else if (provider.service === "jira")
+            data = request.endpoint.startsWith("/project/")
+              ? { id: "100", key: "TEST" }
+              : request.endpoint === "/myself"
+                ? { accountId: "user" }
+                : { baseUrl: "https://test.atlassian.net" };
           else if (request.method === "GET")
             data = request.endpoint.endsWith("/hooks")
               ? hooks
@@ -742,4 +750,91 @@ it("requires a persistent runtime token for shared source deliveries", async () 
       },
     }),
   ).rejects.toMatchObject({ code: "trigger_owner_required" });
+});
+
+it.each([
+  [undefined, "app", true],
+  ["", "app", true],
+  [undefined, "different-app", false],
+  ["connection-secret", "different-app", true],
+])(
+  "uses a matching Jira client fallback without mixing OAuth applications: %s %s",
+  async (secret, configuredId, accepted) => {
+    const connection = await database.connectionStore.set("jira", "work", {
+      authType: "oauth2",
+      accessToken: "jira-token",
+      tokenType: "Bearer",
+      profile: { accountId: "jira:cloud:user", displayName: "Jira", grantedScopes: [] },
+      metadata: { providerAccountVerified: true, oauthClientConfig: { clientId: "app", clientSecret: secret } },
+    });
+    const catalog = createCatalogStore([jira]);
+    const getConfig = vi.fn(async () => ({
+      service: "jira",
+      clientId: configuredId,
+      clientSecret: "service-secret",
+      extra: {},
+      secretExtra: {},
+    }));
+    const runner = new TriggerRunner({
+      catalog,
+      providerLoader: fixtureProviderLoader,
+      store: database.triggerStore,
+      oauthClientConfigs: { getConfig },
+      connections: new ConnectionService({
+        catalog,
+        providerLoader: fixtureProviderLoader,
+        store: database.connectionStore,
+      }),
+    });
+    const result = runner.run({
+      service: "jira",
+      triggerId: "jira.on_issue_event",
+      connectionId: connection.id,
+      policy: new ActionPolicyService().createSnapshot(),
+      signal: new AbortController().signal,
+      request: {
+        operation: "source",
+        request: {
+          action: "initialize",
+          input: {
+            kind: "jira",
+            version: 1,
+            name: "Project",
+            connectionId: connection.id,
+            teamId: null,
+            project: "TEST",
+            eventTypes: ["jira:issue_created"],
+          },
+        },
+      },
+    });
+    if (accepted)
+      await expect(result).resolves.toMatchObject({ source: { config: { projectId: "100", cloudId: "cloud" } } });
+    else {
+      await expect(result).rejects.toMatchObject({ code: "trigger_connection_error" });
+      expect(calls).toHaveLength(0);
+    }
+    expect(getConfig).toHaveBeenCalledTimes(secret ? 0 : 1);
+  },
+);
+
+it("rejects case-insensitive duplicate headers in shared source requests", async () => {
+  const { readTriggerRequest } = await import("../triggers/request.ts");
+  const operation = {
+    operation: "source",
+    request: {
+      action: "receive",
+      source: { identity: "app", eventTypes: [], config: {}, secrets: {}, state: {} },
+      rawBody: "e30=",
+      consumers: [],
+      headers: { Authorization: "token" },
+    },
+  };
+  expect(() => readTriggerRequest(operation)).not.toThrow();
+  expect(() =>
+    readTriggerRequest({
+      ...operation,
+      request: { ...operation.request, headers: { Authorization: "token", authorization: "another" } },
+    }),
+  ).toThrow();
 });
