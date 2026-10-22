@@ -691,10 +691,7 @@ describe("OAuthFlowService", () => {
     await expect(services.connections.getCredential("example")).resolves.toBeUndefined();
   });
 
-  // The one fact get_installation depends on, proven through the real flow: Slack's
-  // bot install response names the workspace and the approver, and the stored
-  // credential keeps both while dropping every secret in the same response.
-  it("keeps the Slack bot install identity in the stored credential and drops its secrets", async () => {
+  it("keeps the Slack bot install identity and excludes top-level tokens from metadata", async () => {
     const services = createServices([{ ...slackbotProvider, actions: [] }]);
     await services.clientConfigs.upsertConfig({
       service: "slackbot",
@@ -733,11 +730,12 @@ describe("OAuthFlowService", () => {
         authed_user: { id: "U0ADMIN01" },
       },
     });
-    const metadata = JSON.stringify((credential as { metadata: unknown }).metadata);
+    if (credential?.authType !== "oauth2") throw new Error("Expected an OAuth credential");
+    const metadata = JSON.stringify(credential.metadata);
     expect(metadata).not.toContain("xoxb-bot-secret");
     expect(metadata).not.toContain("xoxe-refresh-secret");
 
-    // And the action reads exactly that stored credential, with no Slack request.
+    // Reading installation metadata needs no additional request with a fresh credential.
     const slackRequests = vi.mocked(fetch).mock.calls.length;
     const install = slackbotExecutors["slackbot.get_installation"]!;
     await expect(

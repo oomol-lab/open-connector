@@ -22,16 +22,11 @@ const sharedActions: ActionDefinition[] = slackActions
     }),
   );
 
-/**
- * `get_current_user` stays out of this provider because a bot token has no user
- * to report. This answers a different question: who installed the app, and in
- * which workspace. It reads the stored install response and makes no request.
- */
 const getInstallation: ActionDefinition = defineProviderAction(service, {
   name: "get_installation",
   operationType: "read",
   description:
-    "Get the workspace this Slack app was installed in and the person who approved the install, from the stored OAuth install response. Makes no Slack request.",
+    "Get the workspace and installer from the stored OAuth installation response. OAuth credentials may be refreshed before execution.",
   requiredScopes: [],
   inputSchema: s.object({}),
   outputSchema: s.object(

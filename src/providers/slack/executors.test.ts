@@ -829,10 +829,6 @@ describe("Slack current credential identity", () => {
 describe("Slack bot install identity", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  // The OAuth install response, as Slack returns it, with the secrets still in
-  // it. The runtime strips access_token / refresh_token before storing the rest
-  // as credential metadata; the fixture keeps one nested secret on purpose so a
-  // regression that copies authed_user wholesale would show up in the output.
   const installMetadata = {
     ok: true,
     token_type: "bot",
@@ -900,12 +896,9 @@ describe("Slack bot install identity", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  // The output is a public shape and the credential also holds tokens. Assert the
-  // WHOLE serialized result rather than the presence of the new keys, so a field
-  // that leaks in beside them fails here too.
   it("never returns tokens, scopes, or enterprise data held beside the identity", async () => {
     const execute = slackbotExecutors["slackbot.get_installation"]!;
-    const result = await execute!(
+    const result = await execute(
       {},
       {
         getCredential: async () =>
@@ -932,10 +925,16 @@ describe("Slack bot install identity", () => {
     ]) {
       expect(serialized).not.toContain(secret);
     }
-    expect(result).toMatchObject({ ok: true });
-    expect(Object.keys((result as { output: object }).output).sort()).toEqual(
-      ["appId", "authedUserId", "botUserId", "teamId", "teamName"].sort(),
-    );
+    expect(result).toEqual({
+      ok: true,
+      output: {
+        teamId: "T0TEAM001",
+        teamName: "Example Workspace",
+        authedUserId: "U0ADMIN01",
+        botUserId: "UBOT0001",
+        appId: "A0APP0001",
+      },
+    });
   });
 
   it("reports null for the optional name and app id when the install did not carry them", async () => {
