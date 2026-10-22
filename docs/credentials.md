@@ -90,6 +90,13 @@ callback that completed its consent. It changes only when a new consent complete
 refresh, so a caller can tell a fresh grant from the credential it replaced. Connections made
 before this field existed omit it.
 
+For a Slack bot connection, `profile.accountId` is the bot user, not the person who approved the
+install. `slackbot.get_installation` answers that instead: it returns the workspace (`teamId`,
+`teamName`), the approver (`authedUserId`), the bot (`botUserId`) and `appId`, read from the stored
+install response with no Slack request. A connection made without an OAuth install, such as a
+pasted `api_key`, or before the install response was stored, has no such identity, so the action
+fails with a 400 until Slack is connected again through OAuth.
+
 Check current connections:
 
 ```bash

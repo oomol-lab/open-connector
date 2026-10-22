@@ -32,7 +32,14 @@ import { slackConversationTypes } from "./constants.ts";
 export const slackApiBaseUrl = "https://slack.com/api";
 const slackFileUrlMaxBytes = 100 * 1024 * 1024;
 
-type SlackActionContext = Omit<OAuthProviderContext, "providerSecret" | "tokenType">;
+type SlackActionContext = Omit<OAuthProviderContext, "providerSecret" | "tokenType"> & {
+  /**
+   * The stored OAuth credential's runtime metadata: the `oauth.v2.access`
+   * response minus its secrets. Empty for an `api_key` credential, which no
+   * OAuth exchange produced. Read by `get_installation`; it makes no request.
+   */
+  metadata: Record<string, unknown>;
+};
 type SlackOAuthTokenKind = "bot" | "user";
 
 interface SlackPayloadError {
@@ -63,6 +70,7 @@ export function defineSlackProviderExecutors(
     async createContext(context, fetcher): Promise<SlackActionContext> {
       const credential = await context.getCredential(service);
       let accessToken: string;
+      let metadata: Record<string, unknown> = {};
       if (credential?.authType === "oauth2") {
         if (readSlackTokenKind(credential.accessToken, credential.metadata) != tokenKind) {
           throw new ProviderRequestError(
@@ -71,6 +79,7 @@ export function defineSlackProviderExecutors(
           );
         }
         accessToken = credential.accessToken;
+        metadata = credential.metadata;
       } else if (credential?.authType === "api_key") {
         // A pasted token was authorized by no OAuth flow, so the user/bot flow
         // gate above has nothing to check for it; Slack enforces its own
@@ -83,6 +92,7 @@ export function defineSlackProviderExecutors(
       const providerContext: SlackActionContext = {
         accessToken,
         fetcher,
+        metadata,
         signal: context.signal,
       };
       if (context.transitFiles) {
@@ -180,6 +190,9 @@ export const slackActionHandlers: ProviderActionHandlers<"slack", SlackActionHan
   },
 };
 
+export const slackbotInstallationHandler: SlackActionHandler = (_input, context) =>
+  Promise.resolve(slackGetInstallation(context));
+
 export const slackCredentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const payload = await slackAuthTest({ accessToken: input.apiKey, fetcher, signal });
@@ -249,6 +262,40 @@ function slackCredentialProfile(payload: SlackAuthTestPayload): { accountId: str
 async function slackGetCurrentUser(context: SlackActionContext): Promise<unknown> {
   const identity = readSlackAuthTestIdentity(await slackAuthTest(context));
   return { teamId: identity.teamId, userId: identity.userId, isBot: identity.botId !== undefined };
+}
+
+/**
+ * Read who installed the Slack app and where, from the stored OAuth credential.
+ *
+ * `auth.test` cannot answer this for a bot token: it reports the bot itself, and
+ * the workspace `team_id` only. The token exchange response names the workspace
+ * as `team.id` and the person who approved the install as `authed_user.id`, and
+ * the runtime keeps that response, minus its secrets, as credential metadata. So
+ * this makes no Slack request.
+ *
+ * Refuses rather than guesses when a required ID is absent, which means the
+ * credential was not produced by an OAuth install (an `api_key` credential) or
+ * predates the metadata being stored, so it needs to be connected again.
+ */
+function slackGetInstallation(context: SlackActionContext): unknown {
+  const team = optionalRecord(context.metadata.team);
+  const authedUser = optionalRecord(context.metadata.authed_user);
+  const teamId = optionalString(team?.id);
+  const authedUserId = optionalString(authedUser?.id);
+  const botUserId = optionalString(context.metadata.bot_user_id);
+  if (!teamId || !authedUserId || !botUserId) {
+    throw new ProviderRequestError(
+      400,
+      "the stored Slack credential carries no install identity; reconnect Slack through OAuth so the install response is stored with the credential",
+    );
+  }
+  return {
+    teamId,
+    teamName: optionalString(team?.name) ?? null,
+    authedUserId,
+    botUserId,
+    appId: optionalString(context.metadata.app_id) ?? null,
+  };
 }
 
 async function slackListChannels(input: Record<string, unknown>, context: SlackActionContext): Promise<unknown> {

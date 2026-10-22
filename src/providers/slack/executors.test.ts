@@ -826,6 +826,174 @@ describe("Slack current credential identity", () => {
   });
 });
 
+describe("Slack bot install identity", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  // The OAuth install response, as Slack returns it, with the secrets still in
+  // it. The runtime strips access_token / refresh_token before storing the rest
+  // as credential metadata; the fixture keeps one nested secret on purpose so a
+  // regression that copies authed_user wholesale would show up in the output.
+  const installMetadata = {
+    ok: true,
+    token_type: "bot",
+    bot_user_id: "UBOT0001",
+    app_id: "A0APP0001",
+    team: { id: "T0TEAM001", name: "Example Workspace" },
+    enterprise: { id: "E0ENT0001", name: "Example Enterprise" },
+    authed_user: { id: "U0ADMIN01", scope: "chat:write", token_type: "user" },
+  };
+
+  it("exposes a scope-free, empty-input install contract only on Slack Bot", () => {
+    const action = slackbotActions.find((action) => action.id === "slackbot.get_installation");
+    expect(action).toBeDefined();
+    expect(action!.operationType).toBe("read");
+    expect(action!.requiredScopes).toEqual([]);
+    expect(validateActionInput(action!, {}).valid).toBe(true);
+    expect(validateActionInput(action!, { teamId: "TOTHER" }).valid).toBe(false);
+    const output = new Validator(action!.outputSchema);
+    const valid = {
+      teamId: "T0TEAM001",
+      teamName: "Example Workspace",
+      authedUserId: "U0ADMIN01",
+      botUserId: "UBOT0001",
+      appId: "A0APP0001",
+    };
+    expect(output.validate(valid).valid).toBe(true);
+    expect(output.validate({ ...valid, teamName: null, appId: null }).valid).toBe(true);
+    for (const missing of ["teamId", "teamName", "authedUserId", "botUserId", "appId"]) {
+      const { [missing]: _removed, ...rest } = valid as Record<string, unknown>;
+      expect(output.validate(rest).valid).toBe(false);
+    }
+    expect(output.validate({ ...valid, teamId: "" }).valid).toBe(false);
+    expect(output.validate({ ...valid, authedUserId: "" }).valid).toBe(false);
+    // A user connection has its own get_current_user; this one belongs to the bot provider.
+    expect(slackActions.some((action) => action.name === "get_installation")).toBe(false);
+    expect(slackExecutors["slack.get_installation"]).toBeUndefined();
+  });
+
+  it("reads the install identity from stored metadata without calling Slack", async () => {
+    const execute = slackbotExecutors["slackbot.get_installation"];
+    expect(execute).toBeDefined();
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await execute!(
+      {},
+      {
+        getCredential: async (service) => {
+          expect(service).toBe("slackbot");
+          return oauthCredential("bot", installMetadata, "xoxb-secret-bot-token");
+        },
+      },
+    );
+
+    expect(result).toEqual({
+      ok: true,
+      output: {
+        teamId: "T0TEAM001",
+        teamName: "Example Workspace",
+        authedUserId: "U0ADMIN01",
+        botUserId: "UBOT0001",
+        appId: "A0APP0001",
+      },
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  // The output is a public shape and the credential also holds tokens. Assert the
+  // WHOLE serialized result rather than the presence of the new keys, so a field
+  // that leaks in beside them fails here too.
+  it("never returns tokens, scopes, or enterprise data held beside the identity", async () => {
+    const execute = slackbotExecutors["slackbot.get_installation"]!;
+    const result = await execute!(
+      {},
+      {
+        getCredential: async () =>
+          oauthCredential(
+            "bot",
+            {
+              ...installMetadata,
+              refresh_token: "xoxe-secret-refresh",
+              authed_user: { ...installMetadata.authed_user, access_token: "xoxp-secret-user-token" },
+              oauthClientSecretExtra: { appBearerToken: "secret-app-token" },
+            },
+            "xoxb-secret-bot-token",
+          ),
+      },
+    );
+    const serialized = JSON.stringify(result);
+    for (const secret of [
+      "xoxb-secret-bot-token",
+      "xoxe-secret-refresh",
+      "xoxp-secret-user-token",
+      "secret-app-token",
+      "chat:write",
+      "E0ENT0001",
+    ]) {
+      expect(serialized).not.toContain(secret);
+    }
+    expect(result).toMatchObject({ ok: true });
+    expect(Object.keys((result as { output: object }).output).sort()).toEqual(
+      ["appId", "authedUserId", "botUserId", "teamId", "teamName"].sort(),
+    );
+  });
+
+  it("reports null for the optional name and app id when the install did not carry them", async () => {
+    const execute = slackbotExecutors["slackbot.get_installation"]!;
+    await expect(
+      execute(
+        {},
+        {
+          getCredential: async () =>
+            oauthCredential("bot", {
+              bot_user_id: "UBOT0001",
+              team: { id: "T0TEAM001" },
+              authed_user: { id: "U0ADMIN01" },
+            }),
+        },
+      ),
+    ).resolves.toMatchObject({
+      ok: true,
+      output: { teamId: "T0TEAM001", teamName: null, authedUserId: "U0ADMIN01", botUserId: "UBOT0001", appId: null },
+    });
+  });
+
+  it.each([
+    { name: "no metadata at all", metadata: {} },
+    { name: "no team", metadata: { ...installMetadata, team: undefined } },
+    { name: "team without id", metadata: { ...installMetadata, team: { name: "Example Workspace" } } },
+    { name: "blank team id", metadata: { ...installMetadata, team: { id: "  " } } },
+    { name: "no authed_user", metadata: { ...installMetadata, authed_user: undefined } },
+    { name: "authed_user without id", metadata: { ...installMetadata, authed_user: { scope: "chat:write" } } },
+    { name: "authed_user as a string", metadata: { ...installMetadata, authed_user: "U0ADMIN01" } },
+    { name: "team as an array", metadata: { ...installMetadata, team: ["T0TEAM001"] } },
+    { name: "no bot_user_id", metadata: { ...installMetadata, bot_user_id: undefined } },
+    { name: "non-string ids", metadata: { ...installMetadata, team: { id: 123 }, authed_user: { id: 456 } } },
+  ])("refuses instead of guessing when the stored install has $name", async ({ metadata }) => {
+    const execute = slackbotExecutors["slackbot.get_installation"]!;
+    const result = await execute({}, { getCredential: async () => oauthCredential("bot", metadata) });
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "invalid_input", details: { status: 400 } },
+    });
+    expect(result).not.toHaveProperty("output");
+  });
+
+  it("refuses an api_key credential, which no OAuth install produced", async () => {
+    const execute = slackbotExecutors["slackbot.get_installation"]!;
+    const result = await execute({}, { getCredential: async () => apiKeyCredential("xoxb-pasted-token") });
+    expect(result).toMatchObject({ ok: false, error: { details: { status: 400 } } });
+    expect(result).not.toHaveProperty("output");
+  });
+
+  it("still rejects a user-path credential on the bot provider", async () => {
+    const execute = slackbotExecutors["slackbot.get_installation"]!;
+    await expect(
+      execute({}, { getCredential: async () => oauthCredential("user", installMetadata, "xoxp-user-token") }),
+    ).resolves.toMatchObject({ ok: false, error: { code: "authorization_failed" } });
+  });
+});
+
 describe("Slack discovery page validation", () => {
   afterEach(() => vi.unstubAllGlobals());
 

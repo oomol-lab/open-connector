@@ -18,6 +18,7 @@ import { createCatalogStore } from "../catalog-store.ts";
 import { ConnectionService } from "../connection-service.ts";
 import { provider as slackProvider } from "../providers/slack/definition.ts";
 import { provider as slackbotProvider } from "../providers/slackbot/definition.ts";
+import { executors as slackbotExecutors } from "../providers/slackbot/executors.ts";
 import { provider as tencentDocsProvider } from "../providers/tencent_docs/definition.ts";
 import { provider as zoomProvider } from "../providers/zoom/definition.ts";
 import { AesGcmSecretCodec } from "../server/secrets/secret-codec.ts";
@@ -688,6 +689,70 @@ describe("OAuthFlowService", () => {
       code: "connection_cancelled",
     });
     await expect(services.connections.getCredential("example")).resolves.toBeUndefined();
+  });
+
+  // The one fact get_installation depends on, proven through the real flow: Slack's
+  // bot install response names the workspace and the approver, and the stored
+  // credential keeps both while dropping every secret in the same response.
+  it("keeps the Slack bot install identity in the stored credential and drops its secrets", async () => {
+    const services = createServices([{ ...slackbotProvider, actions: [] }]);
+    await services.clientConfigs.upsertConfig({
+      service: "slackbot",
+      clientId: "bot-client-id",
+      clientSecret: "bot-client-secret",
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          ok: true,
+          access_token: "xoxb-bot-secret",
+          refresh_token: "xoxe-refresh-secret",
+          token_type: "bot",
+          expires_in: 43_200,
+          scope: "chat:write,im:write",
+          bot_user_id: "UBOT0001",
+          app_id: "A0APP0001",
+          team: { id: "T0TEAM001", name: "Example Workspace" },
+          authed_user: { id: "U0ADMIN01", access_token: "xoxp-user-secret", refresh_token: "xoxe-user-secret" },
+        }),
+      ),
+    );
+
+    const started = await services.flow.startAuthorization({ service: "slackbot" });
+    await services.flow.completeAuthorization({ state: started.state, code: "bot-code" });
+
+    const credential = await services.connections.getCredential("slackbot");
+    expect(credential).toMatchObject({
+      authType: "oauth2",
+      accessToken: "xoxb-bot-secret",
+      metadata: {
+        bot_user_id: "UBOT0001",
+        app_id: "A0APP0001",
+        team: { id: "T0TEAM001", name: "Example Workspace" },
+        authed_user: { id: "U0ADMIN01" },
+      },
+    });
+    const metadata = JSON.stringify((credential as { metadata: unknown }).metadata);
+    expect(metadata).not.toContain("xoxb-bot-secret");
+    expect(metadata).not.toContain("xoxe-refresh-secret");
+
+    // And the action reads exactly that stored credential, with no Slack request.
+    const slackRequests = vi.mocked(fetch).mock.calls.length;
+    const install = slackbotExecutors["slackbot.get_installation"]!;
+    await expect(
+      install({}, { getCredential: async (service) => services.connections.getCredential(service) }),
+    ).resolves.toMatchObject({
+      ok: true,
+      output: {
+        teamId: "T0TEAM001",
+        teamName: "Example Workspace",
+        authedUserId: "U0ADMIN01",
+        botUserId: "UBOT0001",
+        appId: "A0APP0001",
+      },
+    });
+    expect(vi.mocked(fetch).mock.calls.length).toBe(slackRequests);
   });
 
   it("uses separate Slack user and bot authorization paths with the same OAuth app", async () => {
