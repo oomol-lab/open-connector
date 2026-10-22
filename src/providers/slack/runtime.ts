@@ -268,9 +268,7 @@ export async function slackbotInstallationHandler(
   const authedUserId = optionalString(authedUser?.id);
   const botUserId = optionalString(context.metadata.bot_user_id);
   if (!teamId || !authedUserId || !botUserId) {
-    throw providerInputError(
-      "The stored Slack credential has no installation identity. Reconnect Slack through OAuth.",
-    );
+    return null;
   }
   return {
     teamId,

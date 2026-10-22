@@ -855,6 +855,8 @@ describe("Slack bot install identity", () => {
       appId: "A0APP0001",
     };
     expect(output.validate(valid).valid).toBe(true);
+    expect(output.validate(null).valid).toBe(true);
+    expect(output.validate({}).valid).toBe(false);
     expect(output.validate({ ...valid, teamName: null, appId: null }).valid).toBe(true);
     for (const missing of ["teamId", "teamName", "authedUserId", "botUserId", "appId"]) {
       const { [missing]: _removed, ...rest } = valid as Record<string, unknown>;
@@ -968,21 +970,16 @@ describe("Slack bot install identity", () => {
     { name: "team as an array", metadata: { ...installMetadata, team: ["T0TEAM001"] } },
     { name: "no bot_user_id", metadata: { ...installMetadata, bot_user_id: undefined } },
     { name: "non-string ids", metadata: { ...installMetadata, team: { id: 123 }, authed_user: { id: 456 } } },
-  ])("refuses instead of guessing when the stored install has $name", async ({ metadata }) => {
+  ])("returns null when the OAuth metadata has $name", async ({ metadata }) => {
     const execute = slackbotExecutors["slackbot.get_installation"]!;
     const result = await execute({}, { getCredential: async () => oauthCredential("bot", metadata) });
-    expect(result).toMatchObject({
-      ok: false,
-      error: { code: "invalid_input", details: { status: 400 } },
-    });
-    expect(result).not.toHaveProperty("output");
+    expect(result).toEqual({ ok: true, output: null });
   });
 
-  it("refuses an api_key credential, which no OAuth install produced", async () => {
+  it("returns null for an API-key connection", async () => {
     const execute = slackbotExecutors["slackbot.get_installation"]!;
     const result = await execute({}, { getCredential: async () => apiKeyCredential("xoxb-pasted-token") });
-    expect(result).toMatchObject({ ok: false, error: { details: { status: 400 } } });
-    expect(result).not.toHaveProperty("output");
+    expect(result).toEqual({ ok: true, output: null });
   });
 
   it("still rejects a user-path credential on the bot provider", async () => {

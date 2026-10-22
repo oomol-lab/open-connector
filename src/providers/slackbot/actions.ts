@@ -26,18 +26,20 @@ const getInstallation: ActionDefinition = defineProviderAction(service, {
   name: "get_installation",
   operationType: "read",
   description:
-    "Get the workspace and installer from the stored OAuth installation response. OAuth credentials may be refreshed before execution.",
+    "Get the workspace and authorizing user from stored OAuth metadata. This information is available only for OAuth connections. Returns null for API-key connections or incomplete OAuth metadata. OAuth credentials may be refreshed before execution.",
   requiredScopes: [],
   inputSchema: s.object({}),
-  outputSchema: s.object(
-    {
-      teamId: s.nonEmptyString("The Slack workspace ID the app was installed in."),
-      teamName: s.nullable(s.string({ description: "The workspace display name, when the install carried one." })),
-      authedUserId: s.nonEmptyString("The Slack user ID of the person who approved the install."),
-      botUserId: s.nonEmptyString("The Slack user ID of the app's bot user."),
-      appId: s.nullable(s.string({ description: "The Slack app ID, when the install carried one." })),
-    },
-    { required: ["teamId", "teamName", "authedUserId", "botUserId", "appId"] },
+  outputSchema: s.nullable(
+    s.object(
+      {
+        teamId: s.nonEmptyString("The Slack workspace ID the app was installed in."),
+        teamName: s.nullable(s.string({ description: "The workspace display name, when the install carried one." })),
+        authedUserId: s.nonEmptyString("The Slack user ID of the person who approved the install."),
+        botUserId: s.nonEmptyString("The Slack user ID of the app's bot user."),
+        appId: s.nullable(s.string({ description: "The Slack app ID, when the install carried one." })),
+      },
+      { required: ["teamId", "teamName", "authedUserId", "botUserId", "appId"] },
+    ),
   ),
 });
 
