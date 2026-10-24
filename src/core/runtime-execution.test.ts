@@ -67,3 +67,17 @@ it("restores the parent network policy after a failed invocation", async () => {
     expect(getProviderNetworkPolicy().trustedHosts).toEqual(["parent"]);
   });
 });
+
+it("allows an explicit empty network policy to override inherited permissions", async () => {
+  await withRuntimeExecution(
+    { network: { allowPrivateNetwork: true, trustedHosts: ["parent"] } },
+    { operation: "runtime" },
+    async () => {
+      await withRuntimeExecution({ network: {} }, { operation: "runtime" }, async () => {
+        await Promise.resolve();
+        expect(getProviderNetworkPolicy()).toEqual({});
+      });
+      expect(getProviderNetworkPolicy().allowPrivateNetwork).toBe(true);
+    },
+  );
+});

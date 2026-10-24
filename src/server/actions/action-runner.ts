@@ -142,7 +142,8 @@ export class ActionRunner {
             connectionName: connection.summary?.connectionName,
           },
           async () => {
-            const definition = (await this.options.catalog.getAction(action.id))!;
+            const definition = await this.options.catalog.getAction(action.id);
+            if (!definition) throw new ExecutionError("unknown_action", `Unknown action: ${action.id}`, "not_found");
             input.signal?.throwIfAborted();
             return executeProviderAction(
               definition,
@@ -179,6 +180,7 @@ export class ActionRunner {
         if (input.signal?.aborted) {
           result = cancelledExecutionResult();
         } else if (error instanceof ExecutionError) {
+          failureKind = error.kind;
           if (error instanceof ExecutionPolicyError) policy = error.decision;
           result = { ok: false, error: { code: error.code, message: error.message } };
         } else if (error instanceof SaasError) {

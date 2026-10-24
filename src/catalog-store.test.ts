@@ -1,21 +1,64 @@
 import type { CatalogStore, ProviderSummaryDefinition } from "./catalog-store.ts";
 import type { JsonSchema, ProviderDefinition } from "./core/types.ts";
 
+import * as jsonSchema from "@cfworker/json-schema";
 import { mkdir, mkdtemp, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { catalogIndexFileName, createCatalogIndex } from "./catalog-index.ts";
 import { defaultLazySchemaCacheFiles } from "./catalog-lazy-schemas.ts";
 import { createCatalogStore, loadCatalog, resolveExecutableActionIds } from "./catalog-store.ts";
+import { validateActionInput } from "./core/validation.ts";
+
+vi.mock("@cfworker/json-schema", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@cfworker/json-schema")>();
+  return { ...actual, Validator: vi.fn(class extends actual.Validator {}) };
+});
 
 const temporaryDirectories: string[] = [];
 
 afterEach(async () => {
+  vi.restoreAllMocks();
   await Promise.all(temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })));
 });
 
 describe("catalog store", () => {
+  it.each([false, true])("reuses compiled validators while definitions are resident (lazy=%s)", async (lazySchemas) => {
+    const catalogDir = await writeCatalogDir([
+      providerFixture("example", ["ping"]),
+      providerFixture("remote", ["ping"]),
+    ]);
+    const catalog = await loadCatalog(catalogDir, { lazySchemas, lazySchemaCacheFiles: 1 });
+    const compiled = vi.mocked(jsonSchema.Validator);
+    compiled.mockClear();
+    const [first, concurrent] = await Promise.all([
+      catalog.getAction("example.ping"),
+      catalog.getAction("example.ping"),
+    ]);
+    if (!first || !concurrent) throw new Error("Missing fixture action");
+    expect(concurrent).toBe(first);
+    validateActionInput(first, {});
+    const repeated = await catalog.getAction(first.id);
+    if (!repeated) throw new Error("Missing fixture action");
+    expect(repeated).toBe(first);
+    validateActionInput(repeated, {});
+    expect(compiled).toHaveBeenCalledTimes(1);
+
+    await catalog.getAction("remote.ping");
+    await writeProviderFile(catalogDir, providerFixture("example", ["ping"], 2));
+    const reloaded = await catalog.getAction(first.id);
+    if (!reloaded) throw new Error("Missing fixture action");
+    if (lazySchemas) {
+      expect(reloaded).not.toBe(first);
+      expect(reloaded.inputSchema).toEqual(schemaFor("ping", 2));
+    } else {
+      expect(reloaded).toBe(first);
+    }
+    validateActionInput(reloaded, {});
+    expect(compiled).toHaveBeenCalledTimes(lazySchemas ? 2 : 1);
+  });
+
   it("preserves optional provider descriptions without defaulting missing ones", () => {
     const providers: ProviderDefinition[] = [
       {

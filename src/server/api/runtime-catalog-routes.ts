@@ -178,10 +178,13 @@ export function createRuntimeCatalogRoutes({
     }
 
     const actions = catalog.actions.filter((action) => action.service === service);
-    return writeRuntimeSuccess(
-      context,
-      await Promise.all(actions.map(async (action) => serializeRuntimeAction((await catalog.getAction(action.id))!))),
-    );
+    const definitions = await Promise.all(actions.map((action) => catalog.getAction(action.id)));
+    const results = [];
+    for (const [index, definition] of definitions.entries()) {
+      if (!definition) return writeRuntimeFailure(context, unknownActionFailure(actions[index]!.id));
+      results.push(serializeRuntimeAction(definition));
+    }
+    return writeRuntimeSuccess(context, results);
   });
 
   app.get("/actions/search", async (context) => {

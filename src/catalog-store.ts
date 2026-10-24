@@ -151,6 +151,8 @@ function createCatalog(
   const providerSummariesJson = JSON.stringify(providerSummaries);
 
   const actionsById = new Map(actions.map((action) => [action.id, action]));
+  // Follow the source object's lifetime so the file LRU still controls schema retention.
+  const definitions = new WeakMap<ActionDefinition, RuntimeActionDefinition>();
   return {
     providers: runtimeProviders,
     // TextEncoder rather than Buffer: the Cloudflare Workers build shares this function.
@@ -161,7 +163,13 @@ function createCatalog(
     async getAction(id) {
       const summary = actionsById.get(id);
       if (!summary) return undefined;
-      return { ...(await readAction(id)), ...summary };
+      const source = await readAction(id);
+      let definition = definitions.get(source);
+      if (!definition) {
+        definition = { ...source, ...summary };
+        definitions.set(source, definition);
+      }
+      return definition;
     },
     executableActionIds: executableActions,
   };

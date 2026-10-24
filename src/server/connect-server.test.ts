@@ -1,3 +1,4 @@
+import type { CatalogStore } from "../catalog-store.ts";
 import type { IConnectionStore, StoredConnection } from "../connection-store.ts";
 import type { ActionPolicyService } from "../core/action-policy.ts";
 import type { TokenPolicy } from "../core/action-policy.ts";
@@ -4238,6 +4239,25 @@ describe("ConnectServer", () => {
   });
 });
 
+it.each(["missing", "unreadable"])("handles %s definitions in runtime catalog responses", async (state) => {
+  const catalog = createCatalogStore([catalogOnlyProvider]);
+  vi.spyOn(catalog, "getAction").mockImplementation(async () => {
+    if (state === "unreadable") throw new Error("private catalog file path");
+    return undefined;
+  });
+  const app = createTestServer([catalogOnlyProvider], { catalog }).createApp();
+  for (const path of [
+    `/v1/actions?service=${catalogOnlyProvider.service}`,
+    `/v1/actions/${catalogOnlyProvider.actions[0]!.id}`,
+  ]) {
+    const response = await app.request(path);
+    expect(response.status).toBe(state === "missing" ? 404 : 500);
+    const body = await response.json();
+    expect(body.errorCode).toBe(state === "missing" ? "unknown_action" : "internal_error");
+    expect(JSON.stringify(body)).not.toContain("private catalog file path");
+  }
+});
+
 interface TestAuthOptions {
   adminToken?: string;
   runtimeToken?: string;
@@ -4245,6 +4265,7 @@ interface TestAuthOptions {
 }
 
 interface CreateTestServerOptions {
+  catalog?: CatalogStore;
   marketplace?: MarketplaceService;
   auth?: TestAuthOptions;
   publicOrigin?: string;
@@ -4269,9 +4290,11 @@ interface CreateTestServerOptions {
 function createTestServer(providers: ProviderDefinition[], options: CreateTestServerOptions = {}): ConnectServer {
   const requestDatabase = new SqliteRuntimeDatabase(":memory:");
   requestDatabases.push(requestDatabase);
-  const catalog = createCatalogStore(providers, {
-    executableActionIds: ["example.echo"],
-  });
+  const catalog =
+    options.catalog ??
+    createCatalogStore(providers, {
+      executableActionIds: ["example.echo"],
+    });
   const providerLoader: IProviderLoader = options.providerLoader ?? new EmptyProviderLoader();
   const idempotency = options.idempotency ?? new MemoryIdempotencyStore();
   const runtimeTokens = options.runtimeTokens ?? new RuntimeTokenService(new MemoryRuntimeTokenStore());

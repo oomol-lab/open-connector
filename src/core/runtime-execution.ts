@@ -5,6 +5,7 @@ import { withProviderHttpDispatch } from "./provider-http-dispatch.ts";
 import { getProviderNetworkPolicy, withProviderNetworkPolicy } from "./provider-network-policy.ts";
 
 export interface RuntimeExecutionOptions {
+  /** Omission inherits the active scope; pass {} to explicitly require public-only defaults. */
   network?: ProviderNetworkPolicy;
   providerHttpDispatch?: ProviderHttpDispatchOptions;
 }

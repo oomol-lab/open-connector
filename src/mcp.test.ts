@@ -1,3 +1,4 @@
+import type { CatalogStore } from "./catalog-store.ts";
 import type { IConnectionStore, StoredConnection } from "./connection-store.ts";
 import type { ActionPolicySnapshot } from "./core/action-policy.ts";
 import type { ActionDefinition, ActionExecutor, ProviderDefinition, ResolvedCredential } from "./core/types.ts";
@@ -92,6 +93,30 @@ const secondaryCredential: ResolvedCredential = {
 };
 
 describe("MCP server", () => {
+  it.each(["missing", "unreadable"])("returns structured discovery errors for %s action definitions", async (state) => {
+    const catalog = createCatalogStore([exampleProvider]);
+    vi.spyOn(catalog, "getAction").mockImplementation(async () => {
+      if (state === "unreadable") throw new Error("private catalog file path");
+      return undefined;
+    });
+    await withMcpClient(
+      async (client) => {
+        for (const request of [
+          { name: "search_actions", arguments: { service: "example" } },
+          { name: "get_action_guide", arguments: { actionId: "example.echo" } },
+        ]) {
+          const response = await client.callTool(request);
+          expect(response.structuredContent).toMatchObject({
+            ok: false,
+            error: { code: state === "missing" ? "unknown_action" : "internal_error" },
+          });
+          expect(JSON.stringify(response)).not.toContain("private catalog file path");
+        }
+      },
+      { catalog },
+    );
+  });
+
   it("lists the discovery tools through the MCP protocol", async () => {
     await withMcpClient(async (client) => {
       const result = await client.listTools();
@@ -707,11 +732,13 @@ function policySnapshotFor(policy: McpPolicyOptions): () => Promise<ActionPolicy
 
 async function withMcpClient(
   run: (client: Client) => Promise<void>,
-  policy: McpPolicyOptions & { signal?: AbortSignal } = {},
+  policy: McpPolicyOptions & { signal?: AbortSignal; catalog?: CatalogStore } = {},
 ): Promise<void> {
-  const catalog = createCatalogStore([exampleProvider], {
-    executableActionIds: ["example.echo"],
-  });
+  const catalog =
+    policy.catalog ??
+    createCatalogStore([exampleProvider], {
+      executableActionIds: ["example.echo"],
+    });
   const providerLoader = new EchoProviderLoader();
   const connections = new ConnectionService({
     catalog,

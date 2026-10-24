@@ -266,19 +266,35 @@ async function searchActions(
     : options.catalog.actions
         .filter((action) => !input.service || action.service === input.service)
         .slice(0, input.limit);
-  const actions = rankedActions.map(async (action) => ({
-    id: action.id,
-    service: action.service,
-    name: action.name,
-    description: action.description,
-    operationType: action.operationType,
-    capability: summarizeActionCapability(
-      describeActionCapability(action, policy, await getSelectedConnectionSummary(options, action.service, undefined)),
-    ),
-    inputSummary: summarizeInputSchema((await options.catalog.getAction(action.id))!.inputSchema),
-  }));
-
-  return successPayload(await Promise.all(actions));
+  try {
+    const actions = await Promise.all(
+      rankedActions.map(async (action) => {
+        const definition = await options.catalog.getAction(action.id);
+        if (!definition) return undefined;
+        return {
+          id: action.id,
+          service: action.service,
+          name: action.name,
+          description: action.description,
+          operationType: action.operationType,
+          capability: summarizeActionCapability(
+            describeActionCapability(
+              action,
+              policy,
+              await getSelectedConnectionSummary(options, action.service, undefined),
+            ),
+          ),
+          inputSummary: summarizeInputSchema(definition.inputSchema),
+        };
+      }),
+    );
+    const missing = actions.findIndex((action) => action === undefined);
+    if (missing !== -1) return errorPayload("unknown_action", `Unknown action: ${rankedActions[missing]!.id}`);
+    return successPayload(actions);
+  } catch (error) {
+    if (error instanceof ConnectionError) return connectionErrorPayload(error, policy);
+    return errorPayload("internal_error", "Action discovery failed.");
+  }
 }
 
 async function getActionGuide(
@@ -286,7 +302,12 @@ async function getActionGuide(
   actionId: string,
   connectionName: string | undefined,
 ): Promise<ToolPayload> {
-  const action = await options.catalog.getAction(actionId);
+  let action: RuntimeActionDefinition | undefined;
+  try {
+    action = await options.catalog.getAction(actionId);
+  } catch {
+    return errorPayload("internal_error", "Action catalog could not be loaded.");
+  }
   if (!action) {
     return errorPayload("unknown_action", `Unknown action: ${actionId}`);
   }
