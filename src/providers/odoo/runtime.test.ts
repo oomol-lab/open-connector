@@ -1,7 +1,7 @@
 import type { OdooActionContext } from "./runtime.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { setPrivateNetworkAccessAllowed } from "../../core/provider-network-policy.test-support.ts";
+import { withProviderNetworkPolicy } from "../../core/provider-network-policy.ts";
 import { createProviderFetch } from "../provider-runtime.ts";
 import { credentialValidators } from "./executors.ts";
 import { createOdooContext, odooActionHandlers } from "./runtime.ts";
@@ -22,7 +22,6 @@ function actionContext(fetcher: typeof fetch): OdooActionContext {
 }
 
 afterEach(() => {
-  setPrivateNetworkAccessAllowed(false);
   vi.restoreAllMocks();
 });
 
@@ -216,11 +215,12 @@ describe("Odoo JSON-RPC", () => {
       message: expect.stringContaining("HTTPS"),
     });
     expect(fetcher).not.toHaveBeenCalled();
-    setPrivateNetworkAccessAllowed(true);
-    await expect(credentialValidators.customCredential!(input, { fetcher })).resolves.toHaveProperty(
-      "profile.accountId",
-      "http://odoo.example.com/jsonrpc:company:7",
-    );
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      await expect(credentialValidators.customCredential!(input, { fetcher })).resolves.toHaveProperty(
+        "profile.accountId",
+        "http://odoo.example.com/jsonrpc:company:7",
+      );
+    });
   });
 
   it("requires the deployment opt-in for private instances in credential validation", async () => {
@@ -228,11 +228,12 @@ describe("Odoo JSON-RPC", () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(rpcResult(7));
     await expect(credentialValidators.customCredential!(input, { fetcher })).rejects.toMatchObject({ status: 400 });
     expect(fetcher).not.toHaveBeenCalled();
-    setPrivateNetworkAccessAllowed(true);
-    await expect(credentialValidators.customCredential!(input, { fetcher })).resolves.toHaveProperty(
-      "profile.accountId",
-      "http://10.0.0.5:8069/jsonrpc:company:7",
-    );
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      await expect(credentialValidators.customCredential!(input, { fetcher })).resolves.toHaveProperty(
+        "profile.accountId",
+        "http://10.0.0.5:8069/jsonrpc:company:7",
+      );
+    });
   });
 
   it.each([
@@ -244,9 +245,10 @@ describe("Odoo JSON-RPC", () => {
     "https://odoo.example.com?database=company",
     "https://odoo.example.com#fragment",
   ])("rejects unsafe or ambiguous instance URL %s before authentication", async (baseUrl) => {
-    setPrivateNetworkAccessAllowed(true);
-    const fetcher = vi.fn<typeof fetch>();
-    await expect(createOdooContext({ ...values, baseUrl }, fetcher)).rejects.toMatchObject({ status: 400 });
-    expect(fetcher).not.toHaveBeenCalled();
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      const fetcher = vi.fn<typeof fetch>();
+      await expect(createOdooContext({ ...values, baseUrl }, fetcher)).rejects.toMatchObject({ status: 400 });
+      expect(fetcher).not.toHaveBeenCalled();
+    });
   });
 });

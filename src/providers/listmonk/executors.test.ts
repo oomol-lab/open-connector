@@ -2,7 +2,7 @@ import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setDefaultGuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";
-import { setPrivateNetworkAccessAllowed } from "../../core/provider-network-policy.test-support.ts";
+import { withProviderNetworkPolicy } from "../../core/provider-network-policy.ts";
 import { createProviderFetch } from "../provider-runtime.ts";
 import { credentialValidators, executors, proxy } from "./executors.ts";
 
@@ -76,7 +76,7 @@ beforeEach(() => {
 
 afterEach(() => {
   setDefaultGuardedFetchDnsLookup(null);
-  setPrivateNetworkAccessAllowed(false);
+
   vi.unstubAllGlobals();
 });
 
@@ -286,22 +286,23 @@ describe("Listmonk executors", () => {
 
 describe("Listmonk credential validation", () => {
   it("validates against a private instance when the deployment opts in", async () => {
-    setPrivateNetworkAccessAllowed(true);
-    const requests: string[] = [];
-    const fetchMock = vi.fn(async (url: RequestInfo | URL, init?: RequestInit) => {
-      requests.push(`${String(url)} ${new Headers(init?.headers).get("authorization")}`);
-      return Response.json({ data: { id: 2, username: "api-bot", type: "api" } });
-    });
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      const requests: string[] = [];
+      const fetchMock = vi.fn(async (url: RequestInfo | URL, init?: RequestInit) => {
+        requests.push(`${String(url)} ${new Headers(init?.headers).get("authorization")}`);
+        return Response.json({ data: { id: 2, username: "api-bot", type: "api" } });
+      });
 
-    const result = await credentialValidators.apiKey!(
-      { apiKey: "secret-token", values: { baseUrl: "http://10.0.0.8:9000/api", apiUser: "api-bot" } },
-      { fetcher: createProviderFetch({ fetch: fetchMock }) },
-    );
+      const result = await credentialValidators.apiKey!(
+        { apiKey: "secret-token", values: { baseUrl: "http://10.0.0.8:9000/api", apiUser: "api-bot" } },
+        { fetcher: createProviderFetch({ fetch: fetchMock }) },
+      );
 
-    expect(requests).toEqual(["http://10.0.0.8:9000/api/profile token api-bot:secret-token"]);
-    expect(result).toMatchObject({
-      profile: { accountId: "listmonk:http://10.0.0.8:9000:api-bot" },
-      metadata: { baseUrl: "http://10.0.0.8:9000" },
+      expect(requests).toEqual(["http://10.0.0.8:9000/api/profile token api-bot:secret-token"]);
+      expect(result).toMatchObject({
+        profile: { accountId: "listmonk:http://10.0.0.8:9000:api-bot" },
+        metadata: { baseUrl: "http://10.0.0.8:9000" },
+      });
     });
   });
 

@@ -1,4 +1,4 @@
-import type { IConnectionStore, StoredConnection } from "../../connection-service.ts";
+import type { IConnectionStore, StoredConnection } from "../../connection-store.ts";
 import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
 import type { ToolAnnotations } from "@modelcontextprotocol/server";
 

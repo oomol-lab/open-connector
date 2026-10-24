@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { setDefaultGuardedFetchDnsLookup } from "./guarded-fetch.ts";
-import { setEgressTrustedHosts } from "./provider-network-policy.test-support.ts";
+import { withProviderNetworkPolicy } from "./provider-network-policy.ts";
 import { isFailureEnvelope, isSuccessEnvelope, readRemoteJson, requestRemote } from "./remote-http.ts";
 
 afterEach(() => {
   setDefaultGuardedFetchDnsLookup(null);
-  setEgressTrustedHosts([]);
+
   vi.useRealTimers();
 });
 
@@ -26,12 +26,13 @@ describe("remote HTTP", () => {
 
   it("rejects private DNS answers even for deployment trusted hosts", async () => {
     setDefaultGuardedFetchDnsLookup(async () => [{ address: "10.0.0.2", family: 4 }]);
-    setEgressTrustedHosts(["example.com"]);
-    const fetcher = vi.fn<typeof fetch>();
-    await expect(
-      requestRemote({ url: "https://example.com", label: "Remote", fetcher }, async () => null),
-    ).rejects.toMatchObject({ kind: "invalid_url" });
-    expect(fetcher).not.toHaveBeenCalled();
+    return withProviderNetworkPolicy({ trustedHosts: ["example.com"] }, async () => {
+      const fetcher = vi.fn<typeof fetch>();
+      await expect(
+        requestRemote({ url: "https://example.com", label: "Remote", fetcher }, async () => null),
+      ).rejects.toMatchObject({ kind: "invalid_url" });
+      expect(fetcher).not.toHaveBeenCalled();
+    });
   });
 
   it("rejects redirects without forwarding the key and closes the response", async () => {

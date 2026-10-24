@@ -32,6 +32,31 @@ describe("runtime network policy", () => {
     expect(getProviderNetworkPolicy()).toEqual({});
   });
 
+  it.each([
+    [false, false],
+    [false, true],
+    [true, false],
+    [true, true],
+  ])(
+    "requires both runtime permission %s and provider opt-in %s for private fetch targets",
+    async (permission, optIn) => {
+      const transport = vi.fn<typeof fetch>(async () => new Response("ok"));
+      const fetcher = createProviderFetch({
+        fetch: transport,
+        network: { allowPrivateNetwork: permission },
+        allowPrivateNetwork: optIn ? isPrivateNetworkAccessAllowed : undefined,
+      });
+      if (permission && optIn) {
+        await expect(fetcher("http://10.0.0.2")).resolves.toBeInstanceOf(Response);
+        expect(transport).toHaveBeenCalledTimes(1);
+      } else {
+        await expect(fetcher("http://10.0.0.2")).rejects.toThrow("private");
+        expect(transport).not.toHaveBeenCalled();
+      }
+      await expect(fetcher("http://169.254.169.254")).rejects.toThrow();
+    },
+  );
+
   it("retains injected trusted hosts when rewrapping transport and keeps downloads public-only", async () => {
     const transport = vi.fn<typeof fetch>(async () => new Response("ok"));
     const trusted = createProviderFetch({

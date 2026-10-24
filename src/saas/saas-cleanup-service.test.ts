@@ -1,4 +1,7 @@
+import type { ProviderNetworkPolicy } from "../core/provider-network-policy.ts";
+
 import { afterEach, expect, it, vi } from "vitest";
+import { getProviderNetworkPolicy, withProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import { AesGcmSecretCodec } from "../server/secrets/secret-codec.ts";
 import { SqliteRuntimeDatabase } from "../server/storage/sqlite/runtime-store.ts";
 import { SaasCleanupService } from "./saas-cleanup-service.ts";
@@ -58,8 +61,9 @@ async function setup() {
     });
   });
   const warn = vi.fn();
-  const create = () => {
+  const create = (network?: ProviderNetworkPolicy) => {
     const worker = new SaasCleanupService({
+      network,
       store: db.saasProjectStore,
       requests: db.connectionRequestStore,
       client: new SaasClient(fetcher),
@@ -274,4 +278,19 @@ it("continues running on the Node timer without requests and stops scheduling on
   f.advance(60_000);
   await vi.advanceTimersByTimeAsync(60_000);
   expect(f.behavior.deletes).toBe(1);
+});
+
+it("binds its own policy across asynchronous cleanup without an HTTP request", async () => {
+  const f = await setup();
+  const pending = await f.queue(true);
+  const policy = { allowPrivateNetwork: true, trustedHosts: ["trusted.example"] };
+  f.fetcher.mockImplementationOnce(async () => {
+    await Promise.resolve();
+    expect(getProviderNetworkPolicy()).toEqual(policy);
+    return Response.json({ success: true, data: { connectedAccountId: pending.connectionRequestId, deleted: true } });
+  });
+  await withProviderNetworkPolicy({}, () => f.create(policy).run());
+  expect(f.fetcher).toHaveBeenCalledTimes(1);
+  expect((await f.db.saasProjectStore.getCleanupStats()).pending).toBe(0);
+  expect(getProviderNetworkPolicy()).toEqual({});
 });

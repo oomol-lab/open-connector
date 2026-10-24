@@ -1,7 +1,7 @@
 import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { setPrivateNetworkAccessAllowed } from "../../core/provider-network-policy.test-support.ts";
+import { withProviderNetworkPolicy } from "../../core/provider-network-policy.ts";
 import { validateActionInput } from "../../core/validation.ts";
 import { metabaseActions } from "./actions.ts";
 import { credentialValidators, executors, proxy } from "./executors.ts";
@@ -18,7 +18,6 @@ const context: ExecutionContext = { getCredential: async () => credential };
 
 afterEach(() => {
   vi.unstubAllGlobals();
-  setPrivateNetworkAccessAllowed(false);
 });
 
 interface RestCase {
@@ -190,14 +189,20 @@ describe("Metabase REST compatibility", () => {
   });
 
   it("retains HTTPS public-only URL policy even with the deployment private-network flag enabled", () => {
-    setPrivateNetworkAccessAllowed(true);
-    for (const url of ["http://example.com", "https://127.0.0.1", "https://10.0.0.1", "https://user:pass@example.com"])
-      expect(() => normalizeMetabaseUrls(url)).toThrow();
-    for (const url of ["https://example.com/bi", "https://example.com/bi/api/", "example.com/bi"])
-      expect(normalizeMetabaseUrls(url)).toEqual({
-        instanceUrl: "https://example.com/bi",
-        apiBaseUrl: "https://example.com/bi/api",
-      });
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      for (const url of [
+        "http://example.com",
+        "https://127.0.0.1",
+        "https://10.0.0.1",
+        "https://user:pass@example.com",
+      ])
+        expect(() => normalizeMetabaseUrls(url)).toThrow();
+      for (const url of ["https://example.com/bi", "https://example.com/bi/api/", "example.com/bi"])
+        expect(normalizeMetabaseUrls(url)).toEqual({
+          instanceUrl: "https://example.com/bi",
+          apiBaseUrl: "https://example.com/bi/api",
+        });
+    });
   });
 
   it("rejects missing credentials for both REST and MCP before egress", async () => {

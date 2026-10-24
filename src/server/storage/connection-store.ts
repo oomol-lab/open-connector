@@ -1,4 +1,4 @@
-import type { IConnectionStore, StoredConnection, StoredLocalConnection } from "../../connection-service.ts";
+import type { IConnectionStore, StoredConnection, StoredLocalConnection } from "../../connection-store.ts";
 import type { ResolvedCredential } from "../../core/types.ts";
 import type { ISecretCodec } from "../secrets/secret-codec-core.ts";
 import type { RequestTransaction } from "./connection-request-store.ts";

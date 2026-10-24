@@ -1,10 +1,9 @@
-import { afterEach, describe, expect, it } from "vitest";
-import { setPrivateNetworkAccessAllowed } from "../../core/provider-network-policy.test-support.ts";
+import { describe, expect, it } from "vitest";
+import { withProviderNetworkPolicy } from "../../core/provider-network-policy.ts";
 import { genericImapRuntimeConfig } from "./config.ts";
 
 // Tests mutate the deployment-level private-network flag; reset it to the secure
 // default after each case so state never leaks between tests.
-afterEach(() => setPrivateNetworkAccessAllowed(false));
 
 function readCredential(imapHost: string, smtpHost?: string) {
   const values: Record<string, string> = {
@@ -41,17 +40,19 @@ describe("generic IMAP host access", () => {
   });
 
   it("keeps loopback, link-local, and metadata targets blocked even when private networks are enabled", () => {
-    setPrivateNetworkAccessAllowed(true);
-    for (const host of ["127.0.0.1", "169.254.169.254", "100.100.100.200", "0.0.0.0", "localhost", "foo.localhost"]) {
-      expect(() => readCredential(host)).toThrow();
-    }
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      for (const host of ["127.0.0.1", "169.254.169.254", "100.100.100.200", "0.0.0.0", "localhost", "foo.localhost"]) {
+        expect(() => readCredential(host)).toThrow();
+      }
+    });
   });
 
   it("allows RFC 1918, CGNAT, and private hostname mailboxes when the deployment enables private networks", () => {
-    setPrivateNetworkAccessAllowed(true);
-    for (const host of ["10.0.0.1", "172.16.0.1", "192.168.1.1", "100.64.0.1", "mail.internal", "imap.home"]) {
-      expect(readCredential(host).imapHost).toBe(host);
-    }
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      for (const host of ["10.0.0.1", "172.16.0.1", "192.168.1.1", "100.64.0.1", "mail.internal", "imap.home"]) {
+        expect(readCredential(host).imapHost).toBe(host);
+      }
+    });
   });
 
   it("rejects values that are not bare hostnames", () => {
@@ -71,9 +72,10 @@ describe("generic IMAP host access", () => {
   });
 
   it("guards the SMTP host derived from the IMAP host", () => {
-    setPrivateNetworkAccessAllowed(true);
-    // The derived host follows the IMAP host, so both stay inside the policy.
-    expect(readCredential("imap.internal").smtpHost).toBe("smtp.internal");
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      // The derived host follows the IMAP host, so both stay inside the policy.
+      expect(readCredential("imap.internal").smtpHost).toBe("smtp.internal");
+    });
   });
 
   it("derives the SMTP host from an imap-prefixed label, and leaves other names alone", () => {
@@ -84,10 +86,11 @@ describe("generic IMAP host access", () => {
   });
 
   it("accepts a single-label host so private-network deployments can reach a LAN mailbox", () => {
-    setPrivateNetworkAccessAllowed(true);
-    expect(readCredential("mailserver").imapHost).toBe("mailserver");
-    // The shared guard still owns the decision, so loopback names stay blocked.
-    expect(() => readCredential("localhost")).toThrow();
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      expect(readCredential("mailserver").imapHost).toBe("mailserver");
+      // The shared guard still owns the decision, so loopback names stay blocked.
+      expect(() => readCredential("localhost")).toThrow();
+    });
   });
 
   it("reads the optional submission port and rejects values that are not ports", () => {

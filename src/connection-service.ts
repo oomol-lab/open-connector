@@ -1,4 +1,11 @@
 import type { CatalogStore, RuntimeProviderDefinition } from "./catalog-store.ts";
+import type {
+  IConnectionStore,
+  StoredConnection,
+  StoredLocalConnection,
+  StoredSaasConnection,
+  SaasConnectionReference,
+} from "./connection-store.ts";
 import type { ProviderHttpDispatchOptions } from "./core/provider-http-dispatch.ts";
 import type {
   ApiKeyAuthDefinition,
@@ -77,38 +84,6 @@ export interface ConnectionServiceOptions {
   marketplace?: MarketplaceService;
 }
 
-export interface SaasConnectionReference {
-  managedProjectId: string;
-  providerConfigId: string;
-  externalUserId: string;
-  connectedAccountId: string;
-  localRequestId: string;
-}
-
-export interface StoredSaasConnection {
-  source: "saas";
-  credential?: never;
-  id: string;
-  revision: string;
-  service: string;
-  connectionName: string;
-  reference: SaasConnectionReference;
-  profile: CredentialProfile;
-  status: "active" | "reauth_required";
-  comment: string | null;
-}
-
-export type StoredConnection = StoredLocalConnection | StoredSaasConnection;
-
-export interface StoredLocalConnection {
-  source?: "local";
-  id: string;
-  revision: string;
-  service: string;
-  connectionName: string;
-  credential: ResolvedCredential;
-}
-
 export interface DisconnectOptions {
   /**
    * `true` also revokes the OAuth grant at the provider once the credential is
@@ -145,24 +120,6 @@ interface SaasExecutionConnection {
   kind: "saas";
   summary: ManagedConnectionSummary;
   reference: SaasConnectionReference;
-}
-
-/**
- * Storage contract for local provider connections.
- */
-export interface IConnectionStore {
-  get(service: string, connectionName: string): Promise<StoredConnection | undefined>;
-  getRetirementGeneration(service: string, connectionName: string): Promise<string>;
-  setIfCurrentGeneration(
-    service: string,
-    connectionName: string,
-    credential: ResolvedCredential,
-    retirementGeneration: string,
-  ): Promise<StoredLocalConnection | undefined>;
-  set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredLocalConnection>;
-  updateCredential(input: StoredLocalConnection, refresh?: boolean): Promise<boolean>;
-  delete(service: string, connectionName: string): Promise<void>;
-  list(): Promise<StoredConnection[]>;
 }
 
 interface ApiKeyCredentialValidationInput {

@@ -2,7 +2,7 @@ import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { setDefaultGuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";
-import { setPrivateNetworkAccessAllowed } from "../../core/provider-network-policy.test-support.ts";
+import { withProviderNetworkPolicy } from "../../core/provider-network-policy.ts";
 import { credentialValidators, executors, proxy } from "./executors.ts";
 
 const creditUsagePath = "/v2/team/credit-usage";
@@ -71,7 +71,7 @@ function expectAllRejected(outcomes: Record<string, EntryPointOutcome>, message:
 
 afterEach(() => {
   setDefaultGuardedFetchDnsLookup(null);
-  setPrivateNetworkAccessAllowed(false);
+
   vi.unstubAllGlobals();
 });
 
@@ -132,13 +132,14 @@ describe("Firecrawl API base URL", () => {
     );
     expect(fetch).not.toHaveBeenCalled();
 
-    setPrivateNetworkAccessAllowed(true);
-    expectAllAccepted(await runEntryPoints({ baseUrl: lanInstanceUrl }));
-    expect(requestedUrls(fetch)).toEqual([
-      `${lanInstanceUrl}${creditUsagePath}`,
-      `${lanInstanceUrl}${creditUsagePath}`,
-      `${lanInstanceUrl}${creditUsagePath}`,
-    ]);
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      expectAllAccepted(await runEntryPoints({ baseUrl: lanInstanceUrl }));
+      expect(requestedUrls(fetch)).toEqual([
+        `${lanInstanceUrl}${creditUsagePath}`,
+        `${lanInstanceUrl}${creditUsagePath}`,
+        `${lanInstanceUrl}${creditUsagePath}`,
+      ]);
+    });
   });
 
   it("rejects a public hostname that resolves to a private address by default", async () => {
@@ -154,11 +155,11 @@ describe("Firecrawl API base URL", () => {
 
   it("keeps loopback and cloud metadata targets blocked even when private networks are allowed", async () => {
     const fetch = stubFirecrawlFetch();
-    setPrivateNetworkAccessAllowed(true);
-
-    expectAllRejected(await runEntryPoints({ baseUrl: "http://127.0.0.1:3002" }), "must not target");
-    expectAllRejected(await runEntryPoints({ baseUrl: "http://169.254.169.254" }), "must not target");
-    expect(fetch).not.toHaveBeenCalled();
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      expectAllRejected(await runEntryPoints({ baseUrl: "http://127.0.0.1:3002" }), "must not target");
+      expectAllRejected(await runEntryPoints({ baseUrl: "http://169.254.169.254" }), "must not target");
+      expect(fetch).not.toHaveBeenCalled();
+    });
   });
 
   it("rejects base URLs with embedded credentials", async () => {

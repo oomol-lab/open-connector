@@ -237,16 +237,18 @@ multicast, and other unsafe special-use targets remain blocked.
 
 ## Lazy catalog schemas
 
-The generated catalog ships one JSON file per provider, and the `inputSchema` and `outputSchema` of
-their actions are most of those bytes. The server keeps the whole catalog in memory, which is the
-largest allocation it makes and the one that matters on a 256 MB class machine such as the Helm
-chart's default `256Mi` request or a small Fly machine.
+The generated catalog ships one JSON file per provider. Action input and output schemas
+make up most of that data. Both the standalone server and embedded runtime now load
+schemas on demand by default, reducing startup work and resident memory.
 
-Schemas stay on disk by default. Set `OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS=false` to load them eagerly instead. To explicitly retain the default:
+To restore eager loading, which keeps the complete catalog in memory:
 
 ```bash
-OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS=true npm run dev
+OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS=false npm run dev
 ```
+
+Embedded hosts use `lazySchemas: false` for the same behavior. This default changed
+from eager loading for the standalone server; see the [release notes](../CHANGELOG.md).
 
 Action metadata stays in memory: ids, names, descriptions, required scopes, provider permissions,
 follow-up and async lifecycle links, and execution flags. Only the two schema fields are read back
@@ -255,7 +257,7 @@ provider files stay cached. `OOMOL_CONNECT_CATALOG_SCHEMA_CACHE_FILES` tunes tha
 cached file holds every schema of one provider, typically tens to a few hundred KB parsed, so 64
 files is on the order of a few MB to a few tens of MB. Values that are not positive integers fall
 back to the default. Set it higher when one server serves many providers repeatedly, and lower on
-the tightest machines. Responses are byte-identical to the default mode, so this is a
+the tightest machines. Responses are byte-identical to eager loading, so this is a
 memory-for-reads trade and not an API change.
 
 `npm run generate:catalog` also writes `catalog/apps-index.json`, the catalog without its schemas.

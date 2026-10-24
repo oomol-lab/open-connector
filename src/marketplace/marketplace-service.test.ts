@@ -5,7 +5,7 @@ import type { IMarketplaceStore, ProviderPreference, StoredMarketplaceConfig } f
 import { describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "../catalog-store.ts";
 import { setDefaultGuardedFetchDnsLookup } from "../core/guarded-fetch.ts";
-import { setEgressTrustedHosts } from "../core/provider-network-policy.test-support.ts";
+import { withProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import { defaultMarketplaceDiscoveryUrl } from "./default-marketplace.ts";
 import { MarketplaceService } from "./marketplace-service.ts";
 
@@ -34,40 +34,40 @@ describe("MarketplaceService", () => {
   it.each(["http", "https"])(
     "preserves %s discovery, validation and execution for trusted VPN hosts",
     async (protocol) => {
-      setEgressTrustedHosts(["marketplace.example"]);
-      setDefaultGuardedFetchDnsLookup(async () => [{ address: "10.0.0.2", family: 4 }]);
-      const fetcher = vi.fn<typeof fetch>().mockImplementation(async (input) => {
-        const url = new URL(String(input));
-        if (url.pathname === "/validate") return new Response(null, { status: 204 });
-        if (url.pathname === "/actions/example.run") return jsonResponse({ success: true, data: { ok: true } });
-        return jsonResponse({
-          version: 1,
-          id: "vpn",
-          name: "VPN",
-          pricing: "free",
-          validate: "/validate",
-          endpoint: "/actions",
-          actions: ["example.run"],
+      return withProviderNetworkPolicy({ trustedHosts: ["marketplace.example"] }, async () => {
+        setDefaultGuardedFetchDnsLookup(async () => [{ address: "10.0.0.2", family: 4 }]);
+        const fetcher = vi.fn<typeof fetch>().mockImplementation(async (input) => {
+          const url = new URL(String(input));
+          if (url.pathname === "/validate") return new Response(null, { status: 204 });
+          if (url.pathname === "/actions/example.run") return jsonResponse({ success: true, data: { ok: true } });
+          return jsonResponse({
+            version: 1,
+            id: "vpn",
+            name: "VPN",
+            pricing: "free",
+            validate: "/validate",
+            endpoint: "/actions",
+            actions: ["example.run"],
+          });
         });
+        const service = new MarketplaceService({
+          catalog: createCatalogStore([provider]),
+          store: new MemoryMarketplaceStore(),
+          secretCodec: reversibleCodec,
+          fetcher,
+        });
+        try {
+          await service.configure({ discoveryUrl: `${protocol}://marketplace.example/discovery`, apiKey: "secret" });
+          expect(await service.execute("example.run", {})).toEqual({ ok: true, output: { ok: true } });
+          expect(fetcher.mock.calls.map(([url]) => String(url))).toEqual([
+            `${protocol}://marketplace.example/discovery`,
+            `${protocol}://marketplace.example/validate`,
+            `${protocol}://marketplace.example/actions/example.run`,
+          ]);
+        } finally {
+          setDefaultGuardedFetchDnsLookup(null);
+        }
       });
-      const service = new MarketplaceService({
-        catalog: createCatalogStore([provider]),
-        store: new MemoryMarketplaceStore(),
-        secretCodec: reversibleCodec,
-        fetcher,
-      });
-      try {
-        await service.configure({ discoveryUrl: `${protocol}://marketplace.example/discovery`, apiKey: "secret" });
-        expect(await service.execute("example.run", {})).toEqual({ ok: true, output: { ok: true } });
-        expect(fetcher.mock.calls.map(([url]) => String(url))).toEqual([
-          `${protocol}://marketplace.example/discovery`,
-          `${protocol}://marketplace.example/validate`,
-          `${protocol}://marketplace.example/actions/example.run`,
-        ]);
-      } finally {
-        setEgressTrustedHosts([]);
-        setDefaultGuardedFetchDnsLookup(null);
-      }
     },
   );
 

@@ -1,4 +1,4 @@
-import type { SaasConnectionReference } from "../connection-service.ts";
+import type { SaasConnectionReference } from "../connection-store.ts";
 import type { SaasActionResult, SaasProxyResult } from "./saas-client.ts";
 import type { SaasProjectService } from "./saas-project-service.ts";
 

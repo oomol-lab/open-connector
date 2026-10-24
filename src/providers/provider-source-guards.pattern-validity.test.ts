@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { sourceScanTimeout } from "./provider-source-guards.support.ts";
 
 const sourceDir = fileURLToPath(new URL(".", import.meta.url));
 
@@ -51,7 +52,7 @@ function lineOf(source: string, index: number): number {
 
 const sourceFiles = listSourceFiles(sourceDir);
 
-describe("provider schema pattern guard", { timeout: Math.max(5_000, sourceFiles.length * 5) }, () => {
+describe("provider schema pattern guard", { timeout: sourceScanTimeout(sourceFiles.length) }, () => {
   it("keeps every provider JSON-Schema pattern compilable", () => {
     const offenders: string[] = [];
     let scannedFiles = 0;

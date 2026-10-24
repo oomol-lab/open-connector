@@ -2,7 +2,7 @@ import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { setDefaultGuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";
-import { setPrivateNetworkAccessAllowed } from "../../core/provider-network-policy.test-support.ts";
+import { withProviderNetworkPolicy } from "../../core/provider-network-policy.ts";
 import { credentialValidators, executors, proxy } from "./executors.ts";
 
 const tailscaleInstanceUrl = "https://gitea.tailnet.ts.net";
@@ -60,7 +60,7 @@ function expectAllRejected(outcomes: Record<string, EntryPointOutcome>, message:
 
 afterEach(() => {
   setDefaultGuardedFetchDnsLookup(null);
-  setPrivateNetworkAccessAllowed(false);
+
   vi.unstubAllGlobals();
 });
 
@@ -90,17 +90,17 @@ describe("Gitea private-network access", () => {
     const fetch = vi.fn(async (_input: RequestInfo | URL) => Response.json({ id: 7, login: "alice" }));
     vi.stubGlobal("fetch", fetch);
     setDefaultGuardedFetchDnsLookup(async () => [{ address: "100.64.0.12", family: 4 }]);
-    setPrivateNetworkAccessAllowed(true);
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      const outcomes = await runEntryPoints(tailscaleInstanceUrl);
 
-    const outcomes = await runEntryPoints(tailscaleInstanceUrl);
-
-    expectAllAccepted(outcomes);
-    expect(outcomes.validate!.result).toMatchObject({ metadata: { baseUrl: tailscaleInstanceUrl } });
-    expect(fetch.mock.calls.map(([url]) => String(url))).toEqual([
-      `${tailscaleInstanceUrl}/api/v1/user`,
-      `${tailscaleInstanceUrl}/api/v1/user`,
-      `${tailscaleInstanceUrl}/api/v1/user`,
-    ]);
+      expectAllAccepted(outcomes);
+      expect(outcomes.validate!.result).toMatchObject({ metadata: { baseUrl: tailscaleInstanceUrl } });
+      expect(fetch.mock.calls.map(([url]) => String(url))).toEqual([
+        `${tailscaleInstanceUrl}/api/v1/user`,
+        `${tailscaleInstanceUrl}/api/v1/user`,
+        `${tailscaleInstanceUrl}/api/v1/user`,
+      ]);
+    });
   });
 
   it("rejects a plain-HTTP LAN instance by default and reaches it once opted in", async () => {
@@ -111,13 +111,14 @@ describe("Gitea private-network access", () => {
     expectAllRejected(await runEntryPoints(lanInstanceUrl), "must not target private or reserved IP addresses");
     expect(fetch).not.toHaveBeenCalled();
 
-    setPrivateNetworkAccessAllowed(true);
-    expectAllAccepted(await runEntryPoints(lanInstanceUrl));
-    expect(fetch.mock.calls.map(([url]) => String(url))).toEqual([
-      `${lanInstanceUrl}/api/v1/user`,
-      `${lanInstanceUrl}/api/v1/user`,
-      `${lanInstanceUrl}/api/v1/user`,
-    ]);
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      expectAllAccepted(await runEntryPoints(lanInstanceUrl));
+      expect(fetch.mock.calls.map(([url]) => String(url))).toEqual([
+        `${lanInstanceUrl}/api/v1/user`,
+        `${lanInstanceUrl}/api/v1/user`,
+        `${lanInstanceUrl}/api/v1/user`,
+      ]);
+    });
   });
 
   it("requires the opt-in for public plain-HTTP instances", async () => {
@@ -137,32 +138,36 @@ describe("Gitea private-network access", () => {
     expectAllRejected(await runEntryPoints("https://gitea.internal"), "must not target local hosts");
     expect(fetch).not.toHaveBeenCalled();
 
-    setPrivateNetworkAccessAllowed(true);
-    expectAllAccepted(await runEntryPoints("https://gitea.internal"));
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      expectAllAccepted(await runEntryPoints("https://gitea.internal"));
+    });
   });
 
   it("keeps loopback and metadata targets blocked even when opted in", async () => {
     const fetch = vi.fn();
     vi.stubGlobal("fetch", fetch);
-    setPrivateNetworkAccessAllowed(true);
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      setDefaultGuardedFetchDnsLookup(async () => [{ address: "127.0.0.1", family: 4 }]);
+      expectAllRejected(
+        await runEntryPoints(tailscaleInstanceUrl),
+        "must not resolve to private or reserved IP addresses",
+      );
 
-    setDefaultGuardedFetchDnsLookup(async () => [{ address: "127.0.0.1", family: 4 }]);
-    expectAllRejected(
-      await runEntryPoints(tailscaleInstanceUrl),
-      "must not resolve to private or reserved IP addresses",
-    );
+      setDefaultGuardedFetchDnsLookup(null);
+      expectAllRejected(
+        await runEntryPoints("http://127.0.0.1:3000"),
+        "must not target private or reserved IP addresses",
+      );
+      expectAllRejected(
+        await runEntryPoints("http://169.254.169.254"),
+        "must not target private or reserved IP addresses",
+      );
+      expectAllRejected(
+        await runEntryPoints("https://metadata.google.internal"),
+        "must not target cloud metadata hosts",
+      );
 
-    setDefaultGuardedFetchDnsLookup(null);
-    expectAllRejected(
-      await runEntryPoints("http://127.0.0.1:3000"),
-      "must not target private or reserved IP addresses",
-    );
-    expectAllRejected(
-      await runEntryPoints("http://169.254.169.254"),
-      "must not target private or reserved IP addresses",
-    );
-    expectAllRejected(await runEntryPoints("https://metadata.google.internal"), "must not target cloud metadata hosts");
-
-    expect(fetch).not.toHaveBeenCalled();
+      expect(fetch).not.toHaveBeenCalled();
+    });
   });
 });

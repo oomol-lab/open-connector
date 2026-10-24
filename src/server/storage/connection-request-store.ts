@@ -1,4 +1,4 @@
-import type { StoredConnection, StoredSaasConnection } from "../../connection-service.ts";
+import type { StoredConnection, StoredSaasConnection } from "../../connection-store.ts";
 import type { ResolvedCredential } from "../../core/types.ts";
 import type { OAuthAuthorizationState } from "../../oauth/oauth-flow-service.ts";
 import type { ISecretCodec } from "../secrets/secret-codec-core.ts";

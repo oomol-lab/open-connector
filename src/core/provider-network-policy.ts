@@ -2,7 +2,11 @@ import { AsyncLocalStorage } from "node:async_hooks";
 
 /** Runtime-owned egress permissions; never populate them from provider input. */
 export interface ProviderNetworkPolicy {
-  /** Permit opted-in instance hosts on private networks; reserved targets stay blocked. */
+  /**
+   * Runtime permission read by isPrivateNetworkAccessAllowed(). Binding this policy
+   * alone does not relax fetch targets: the provider must also opt in through its
+   * transport's allowPrivateNetwork callback. Reserved targets stay blocked.
+   */
   readonly allowPrivateNetwork?: boolean;
   /** Hosts whose DNS answers may use private or VPN-mapped ranges. */
   readonly trustedHosts?: readonly string[];

@@ -20,6 +20,7 @@ export interface ResolvedAddress {
 export type GuardedFetchDnsLookup = (hostname: string) => Promise<ResolvedAddress[]>;
 
 export interface GuardedFetchOptions {
+  /** Bind runtime policy; private targets still require the transport's allowPrivateNetwork opt-in. */
   network?: ProviderNetworkPolicy;
   /** Optional dispatcher at the screened raw-transport seam; every redirect hop passes through it. */
   dispatchAttempt?: GuardedHttpDispatcher;

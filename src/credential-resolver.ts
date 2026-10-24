@@ -1,4 +1,4 @@
-import type { IConnectionStore, StoredLocalConnection } from "./connection-service.ts";
+import type { IConnectionStore, StoredLocalConnection } from "./connection-store.ts";
 import type { ProviderHttpDispatchOptions } from "./core/provider-http-dispatch.ts";
 import type { ResolvedCredential } from "./core/types.ts";
 import type { IOAuthCredentialRefresher } from "./oauth/oauth-credential-refresh-service.ts";

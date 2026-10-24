@@ -3,9 +3,8 @@ import type { MailCredential } from "./protocol.ts";
 import type { LookupFunction, TcpNetConnectOpts } from "node:net";
 
 import { Socket } from "node:net";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { setPrivateNetworkAccessAllowed } from "../../core/provider-network-policy.test-support.ts";
-import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import { describe, expect, it, vi } from "vitest";
+import { withProviderNetworkPolicy } from "../../core/provider-network-policy.ts";
 import { genericImapRuntimeConfig } from "../../providers/generic_imap/config.ts";
 import { createMailProtocol } from "./protocol.ts";
 
@@ -30,12 +29,6 @@ const unguardedConfig = {
 const publicIpv4 = { address: "93.184.216.34", family: 4 };
 const secondPublicIpv4 = { address: "93.184.216.35", family: 4 };
 const publicIpv6 = { address: "2606:2800:220:1:248:1893:25c8:1946", family: 6 };
-
-const initialPrivateNetworkAccess = isPrivateNetworkAccessAllowed();
-
-afterEach(() => {
-  setPrivateNetworkAccessAllowed(initialPrivateNetworkAccess);
-});
 
 function lookup(...addresses: Array<{ address: string; family: number }>): GuardedFetchDnsLookup {
   return async () => addresses;
@@ -193,30 +186,32 @@ describe("mail host pinning", () => {
   });
 
   it("accepts a private address when the deployment opted in", async () => {
-    setPrivateNetworkAccessAllowed(true);
-    const createImapClient = imapClientFactory();
-    const privateAddress = { address: "10.0.0.5", family: 4 };
-    const protocol = createMailProtocol(guardedConfig, {
-      createImapClient,
-      lookup: lookup(privateAddress),
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      const createImapClient = imapClientFactory();
+      const privateAddress = { address: "10.0.0.5", family: 4 };
+      const protocol = createMailProtocol(guardedConfig, {
+        createImapClient,
+        lookup: lookup(privateAddress),
+      });
+
+      await protocol.validateImapCredential(credential);
+
+      const config = configPassedTo(createImapClient);
+      await expect(readLookupAddresses(lookupFromImapConfig(config))).resolves.toEqual([privateAddress]);
     });
-
-    await protocol.validateImapCredential(credential);
-
-    const config = configPassedTo(createImapClient);
-    await expect(readLookupAddresses(lookupFromImapConfig(config))).resolves.toEqual([privateAddress]);
   });
 
   it("still blocks loopback when the deployment opted in to private networks", async () => {
-    setPrivateNetworkAccessAllowed(true);
-    const createImapClient = imapClientFactory();
-    const protocol = createMailProtocol(guardedConfig, {
-      createImapClient,
-      lookup: lookup({ address: "127.0.0.1", family: 4 }),
-    });
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      const createImapClient = imapClientFactory();
+      const protocol = createMailProtocol(guardedConfig, {
+        createImapClient,
+        lookup: lookup({ address: "127.0.0.1", family: 4 }),
+      });
 
-    await expect(protocol.validateImapCredential(credential)).rejects.toThrow(/IMAP host must not resolve/);
-    expect(createImapClient).not.toHaveBeenCalled();
+      await expect(protocol.validateImapCredential(credential)).rejects.toThrow(/IMAP host must not resolve/);
+      expect(createImapClient).not.toHaveBeenCalled();
+    });
   });
 
   it("screens an IP literal host without resolving it", async () => {

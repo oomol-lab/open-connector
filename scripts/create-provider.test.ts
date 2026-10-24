@@ -1,7 +1,7 @@
 import type { ProviderDefinition, ProviderExecutors, ExecutionContext } from "../src/core/types.ts";
 
 import { execFile } from "node:child_process";
-import { mkdtemp, mkdir, readFile, rm, symlink } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, symlink, writeFile, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
@@ -56,4 +56,32 @@ it("rejects unsafe endpoints and traversal before creating files", async () => {
   ]) {
     await expect(run(process.execPath, [script, ...args], { cwd: directory })).rejects.toThrow();
   }
+});
+
+it("removes a partial provider after a write failure so creation can be retried", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "connect-scaffold-"));
+  directories.push(directory);
+  await mkdir(join(directory, "src/providers"), { recursive: true });
+  const preload = join(directory, "fail-write.mjs");
+  await writeFile(
+    preload,
+    `import fs from "node:fs/promises";
+import { syncBuiltinESMExports } from "node:module";
+const writeFile = fs.writeFile;
+fs.writeFile = async (path, ...args) => {
+  if (String(path).endsWith("executors.ts")) throw new Error("simulated write failure");
+  return writeFile(path, ...args);
+};
+syncBuiltinESMExports();
+`,
+  );
+  const args = [script, "retry_fixture", "Fixture", "https://api.example.com/data"];
+  await expect(run(process.execPath, ["--import", preload, ...args], { cwd: directory })).rejects.toThrow(
+    "simulated write failure",
+  );
+  await expect(stat(join(directory, "src/providers/retry_fixture"))).rejects.toMatchObject({ code: "ENOENT" });
+  await run(process.execPath, args, { cwd: directory });
+  expect(await readFile(join(directory, "src/providers/retry_fixture/executors.ts"), "utf8")).toContain(
+    "defineProviderExecutors",
+  );
 });

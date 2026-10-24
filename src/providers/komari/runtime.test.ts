@@ -1,12 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { setPrivateNetworkAccessAllowed } from "../../core/provider-network-policy.test-support.ts";
+import { describe, expect, it } from "vitest";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { komariActions } from "./actions.ts";
 import { komariOperations } from "./operations.ts";
 import { komariActionHandlers, normalizeKomariBaseUrl, validateKomariCredential } from "./runtime.ts";
-
-beforeEach(() => setPrivateNetworkAccessAllowed(false));
-afterEach(() => setPrivateNetworkAccessAllowed(false));
 
 describe("normalizeKomariBaseUrl", () => {
   it("gates private-network instances and always rejects embedded credentials", () => {

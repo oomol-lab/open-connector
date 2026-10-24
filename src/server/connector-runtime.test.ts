@@ -463,6 +463,46 @@ describe("headless runtime", () => {
     }
   });
 
+  it("allows private provider validation only in the opted-in runtime", async () => {
+    const transport = vi.fn<typeof fetch>(async () => {
+      await Promise.resolve();
+      return Response.json({ username: "alice" });
+    });
+    vi.stubGlobal("fetch", transport);
+    runtime = await createConnectorRuntime({
+      ...(await fixture(["kobotoolbox"])),
+      network: { allowPrivateNetwork: true },
+    });
+    const peer = await createConnectorRuntime({
+      ...(await fixture(["kobotoolbox"])),
+      network: { allowPrivateNetwork: false },
+    });
+    const connect = (target: ConnectorRuntime) =>
+      target.fetch(
+        new Request(`${publicOrigin}/api/connections/kobotoolbox`, {
+          method: "PUT",
+          headers: { authorization: "Bearer admin-token", "content-type": "application/json" },
+          body: JSON.stringify({
+            authType: "api_key",
+            values: { apiKey: "fixture-secret", baseUrl: "https://10.0.0.5" },
+          }),
+        }),
+      );
+    try {
+      const [allowed, denied] = await Promise.all([connect(runtime), connect(peer)]);
+      expect(allowed.status).toBe(200);
+      expect(denied.status).toBe(400);
+      expect(await denied.text()).toContain("private or reserved");
+      expect(transport).toHaveBeenCalledTimes(1);
+      expect(String(transport.mock.calls[0]![0])).toBe("https://10.0.0.5/me/");
+      await peer.close();
+      expect((await connect(runtime)).status).toBe(200);
+      expect(transport).toHaveBeenCalledTimes(2);
+    } finally {
+      await peer.close();
+    }
+  });
+
   it("allows independent runtimes after initialization failures and peer shutdown", async () => {
     const options = await fixture();
     await expect(createConnectorRuntime({ ...options, publicOrigin: "file:///bad" })).rejects.toThrow("publicOrigin");

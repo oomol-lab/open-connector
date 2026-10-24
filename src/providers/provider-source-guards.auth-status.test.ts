@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { sourceScanTimeout } from "./provider-source-guards.support.ts";
 
 const providersDirectory = fileURLToPath(new URL(".", import.meta.url));
 
@@ -546,7 +547,7 @@ function findAuthConflictErrors(sources: ProviderSource[]): AuthConflictHit[] {
   return hits;
 }
 
-describe("provider auth-failure status guard", { timeout: Math.max(5_000, sourceFiles.length * 5) }, () => {
+describe("provider auth-failure status guard", { timeout: sourceScanTimeout(sourceFiles.length) }, () => {
   it("never maps an upstream 401 or 403 to a provider 409", () => {
     const providerSources: ProviderSource[] = sourceFiles.map((file) => {
       const source = readFileSync(file, "utf8");

@@ -2,7 +2,7 @@ import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { setDefaultGuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";
-import { setPrivateNetworkAccessAllowed } from "../../core/provider-network-policy.test-support.ts";
+import { withProviderNetworkPolicy } from "../../core/provider-network-policy.ts";
 import { credentialValidators, executors, proxy } from "./executors.ts";
 
 const tailscaleInstanceUrl = "https://n8n.tailnet.ts.net";
@@ -62,7 +62,7 @@ afterEach(() => {
   // `null`, not `undefined`: undefined would restore the automatic node:dns
   // default, and vitest.setup.ts disables real DNS for the whole suite.
   setDefaultGuardedFetchDnsLookup(null);
-  setPrivateNetworkAccessAllowed(false);
+
   vi.unstubAllGlobals();
 });
 
@@ -83,19 +83,19 @@ describe("n8n private-network access", () => {
     const fetch = vi.fn(async (_input: RequestInfo | URL) => Response.json({ data: [] }));
     vi.stubGlobal("fetch", fetch);
     setDefaultGuardedFetchDnsLookup(async () => [{ address: "100.64.0.12", family: 4 }]);
-    setPrivateNetworkAccessAllowed(true);
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      const outcomes = await runEntryPoints(tailscaleInstanceUrl);
 
-    const outcomes = await runEntryPoints(tailscaleInstanceUrl);
-
-    expect(outcomes).toMatchObject({ validate: { ok: true }, execute: { ok: true }, proxy: { ok: true } });
-    expect(outcomes.validate!.result).toMatchObject({
-      metadata: { apiBaseUrl: `${tailscaleInstanceUrl}/api/v1` },
+      expect(outcomes).toMatchObject({ validate: { ok: true }, execute: { ok: true }, proxy: { ok: true } });
+      expect(outcomes.validate!.result).toMatchObject({
+        metadata: { apiBaseUrl: `${tailscaleInstanceUrl}/api/v1` },
+      });
+      expect(fetch.mock.calls.map(([url]) => String(url))).toEqual([
+        `${tailscaleInstanceUrl}/api/v1/discover`,
+        `${tailscaleInstanceUrl}/api/v1/workflows`,
+        `${tailscaleInstanceUrl}/api/v1/workflows`,
+      ]);
     });
-    expect(fetch.mock.calls.map(([url]) => String(url))).toEqual([
-      `${tailscaleInstanceUrl}/api/v1/discover`,
-      `${tailscaleInstanceUrl}/api/v1/workflows`,
-      `${tailscaleInstanceUrl}/api/v1/workflows`,
-    ]);
   });
 
   it("rejects a plain-HTTP LAN instance by default and reaches it once opted in", async () => {
@@ -107,15 +107,16 @@ describe("n8n private-network access", () => {
     expectAllRejected(await runEntryPoints(lanInstanceUrl), "instanceUrl must use https");
     expect(fetch).not.toHaveBeenCalled();
 
-    setPrivateNetworkAccessAllowed(true);
-    const outcomes = await runEntryPoints(lanInstanceUrl);
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      const outcomes = await runEntryPoints(lanInstanceUrl);
 
-    expect(outcomes).toMatchObject({ validate: { ok: true }, execute: { ok: true }, proxy: { ok: true } });
-    expect(fetch.mock.calls.map(([url]) => String(url))).toEqual([
-      `${lanInstanceUrl}/api/v1/discover`,
-      `${lanInstanceUrl}/api/v1/workflows`,
-      `${lanInstanceUrl}/api/v1/workflows`,
-    ]);
+      expect(outcomes).toMatchObject({ validate: { ok: true }, execute: { ok: true }, proxy: { ok: true } });
+      expect(fetch.mock.calls.map(([url]) => String(url))).toEqual([
+        `${lanInstanceUrl}/api/v1/discover`,
+        `${lanInstanceUrl}/api/v1/workflows`,
+        `${lanInstanceUrl}/api/v1/workflows`,
+      ]);
+    });
   });
 
   it("rejects a private-hostname instance by default and reaches it once opted in", async () => {
@@ -126,37 +127,40 @@ describe("n8n private-network access", () => {
     expectAllRejected(await runEntryPoints("https://n8n.internal"), "instanceUrl must not target local hosts");
     expect(fetch).not.toHaveBeenCalled();
 
-    setPrivateNetworkAccessAllowed(true);
-
-    expect(await runEntryPoints("https://n8n.internal")).toMatchObject({
-      validate: { ok: true },
-      execute: { ok: true },
-      proxy: { ok: true },
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      expect(await runEntryPoints("https://n8n.internal")).toMatchObject({
+        validate: { ok: true },
+        execute: { ok: true },
+        proxy: { ok: true },
+      });
     });
   });
 
   it("keeps loopback and metadata targets blocked even when opted in", async () => {
     const fetch = vi.fn();
     vi.stubGlobal("fetch", fetch);
-    setPrivateNetworkAccessAllowed(true);
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      setDefaultGuardedFetchDnsLookup(async () => [{ address: "127.0.0.1", family: 4 }]);
+      expectAllRejected(
+        await runEntryPoints(tailscaleInstanceUrl),
+        "must not resolve to private or reserved IP addresses",
+      );
 
-    setDefaultGuardedFetchDnsLookup(async () => [{ address: "127.0.0.1", family: 4 }]);
-    expectAllRejected(
-      await runEntryPoints(tailscaleInstanceUrl),
-      "must not resolve to private or reserved IP addresses",
-    );
+      setDefaultGuardedFetchDnsLookup(null);
+      expectAllRejected(
+        await runEntryPoints("http://127.0.0.1:5678"),
+        "must not target private or reserved IP addresses",
+      );
+      expectAllRejected(
+        await runEntryPoints("http://169.254.169.254"),
+        "must not target private or reserved IP addresses",
+      );
+      expectAllRejected(
+        await runEntryPoints("https://metadata.google.internal"),
+        "must not target cloud metadata hosts",
+      );
 
-    setDefaultGuardedFetchDnsLookup(null);
-    expectAllRejected(
-      await runEntryPoints("http://127.0.0.1:5678"),
-      "must not target private or reserved IP addresses",
-    );
-    expectAllRejected(
-      await runEntryPoints("http://169.254.169.254"),
-      "must not target private or reserved IP addresses",
-    );
-    expectAllRejected(await runEntryPoints("https://metadata.google.internal"), "must not target cloud metadata hosts");
-
-    expect(fetch).not.toHaveBeenCalled();
+      expect(fetch).not.toHaveBeenCalled();
+    });
   });
 });

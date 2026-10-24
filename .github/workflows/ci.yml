@@ -43,21 +43,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # 1) Lint
       - name: Lint (oxlint)
         run: npm run lint
 
       - name: Check formatting (oxfmt)
         run: npm run format
 
-      # 2) Typecheck (build): regenerates the registry, type-checks src/scripts/examples.
+      # Typecheck: regenerates the registry, type-checks src/scripts/examples.
       - name: Typecheck
         run: npm run typecheck
 
       - name: Build web
         run: npm run build:web
 
-      # 3) Action examples: generate the catalog as the docs build does, then validate every
+      # Action examples: generate the catalog as the docs build does, then validate every
       # schema-derived example against its action's input schema, as AGENTS.md requires.
       - name: Validate action examples
         run: npm run generate:catalog && node scripts/check-action-examples.ts

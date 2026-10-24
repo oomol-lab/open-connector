@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from "vitest";
-import { setPrivateNetworkAccessAllowed, setEgressTrustedHosts } from "./provider-network-policy.test-support.ts";
+import { describe, expect, it } from "vitest";
+import { withProviderNetworkPolicy } from "./provider-network-policy.ts";
 import {
   assertPublicHttpUrl,
   classifyIpAddress,
@@ -296,17 +296,16 @@ describe("classifyIpAddress", () => {
 });
 
 describe("private network access deployment flag", () => {
-  afterEach(() => setPrivateNetworkAccessAllowed(false));
-
   it("is disabled by default", () => {
     expect(isPrivateNetworkAccessAllowed()).toBe(false);
   });
 
   it("reflects the configured value", () => {
-    setPrivateNetworkAccessAllowed(true);
-    expect(isPrivateNetworkAccessAllowed()).toBe(true);
-    setPrivateNetworkAccessAllowed(false);
-    expect(isPrivateNetworkAccessAllowed()).toBe(false);
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      expect(isPrivateNetworkAccessAllowed()).toBe(true);
+
+      withProviderNetworkPolicy({}, () => expect(isPrivateNetworkAccessAllowed()).toBe(false));
+    });
   });
 
   it("parses only explicit truthy env values", () => {
@@ -328,8 +327,6 @@ function readPublicUrl(value: string, allowPrivateNetwork = false): URL {
 }
 
 describe("trusted egress hosts", () => {
-  afterEach(() => setEgressTrustedHosts([]));
-
   it("parses a comma-separated list and drops entries that would match nothing", () => {
     expect(parseEgressTrustedHosts(" .feishu.cn , API.Example.com ,, . ,")).toEqual([".feishu.cn", "api.example.com"]);
     expect(parseEgressTrustedHosts(undefined)).toEqual([]);
@@ -337,21 +334,23 @@ describe("trusted egress hosts", () => {
   });
 
   it("matches a dot-prefixed entry against the domain and its subdomains only", () => {
-    setEgressTrustedHosts([".feishu.cn"]);
-    expect(isEgressTrustedHost("feishu.cn")).toBe(true);
-    expect(isEgressTrustedHost("open.feishu.cn")).toBe(true);
-    expect(isEgressTrustedHost("OPEN.FEISHU.CN")).toBe(true);
-    expect(isEgressTrustedHost("open.feishu.cn.")).toBe(true);
-    // A look-alike registration must not inherit the allowlist.
-    expect(isEgressTrustedHost("evilfeishu.cn")).toBe(false);
-    expect(isEgressTrustedHost("feishu.cn.attacker.example")).toBe(false);
+    return withProviderNetworkPolicy({ trustedHosts: [".feishu.cn"] }, async () => {
+      expect(isEgressTrustedHost("feishu.cn")).toBe(true);
+      expect(isEgressTrustedHost("open.feishu.cn")).toBe(true);
+      expect(isEgressTrustedHost("OPEN.FEISHU.CN")).toBe(true);
+      expect(isEgressTrustedHost("open.feishu.cn.")).toBe(true);
+      // A look-alike registration must not inherit the allowlist.
+      expect(isEgressTrustedHost("evilfeishu.cn")).toBe(false);
+      expect(isEgressTrustedHost("feishu.cn.attacker.example")).toBe(false);
+    });
   });
 
   it("requires an exact match for an entry without a leading dot", () => {
-    setEgressTrustedHosts(["api.example.com"]);
-    expect(isEgressTrustedHost("api.example.com")).toBe(true);
-    expect(isEgressTrustedHost("sub.api.example.com")).toBe(false);
-    expect(isEgressTrustedHost("example.com")).toBe(false);
+    return withProviderNetworkPolicy({ trustedHosts: ["api.example.com"] }, async () => {
+      expect(isEgressTrustedHost("api.example.com")).toBe(true);
+      expect(isEgressTrustedHost("sub.api.example.com")).toBe(false);
+      expect(isEgressTrustedHost("example.com")).toBe(false);
+    });
   });
 
   it("trusts no hosts by default", () => {

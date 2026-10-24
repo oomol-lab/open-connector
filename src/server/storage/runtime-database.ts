@@ -1,4 +1,4 @@
-import type { IConnectionStore } from "../../connection-service.ts";
+import type { IConnectionStore } from "../../connection-store.ts";
 import type { IMarketplaceStore } from "../../marketplace/marketplace-service.ts";
 import type { IOAuthClientConfigStore } from "../../oauth/oauth-client-config-service.ts";
 import type { IOAuthStateStore } from "../../oauth/oauth-flow-service.ts";

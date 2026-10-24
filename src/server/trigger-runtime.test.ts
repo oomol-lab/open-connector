@@ -1,4 +1,4 @@
-import type { IConnectionStore } from "../connection-service.ts";
+import type { IConnectionStore } from "../connection-store.ts";
 import type { ProviderHttpAttempt } from "../core/provider-http-dispatch.ts";
 import type { ProviderDefinition, ProviderProxyExecutor } from "../core/types.ts";
 import type { IntegrationReconcileContext } from "../triggers/common/integration.ts";
@@ -10,12 +10,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "../catalog-store.ts";
 import { ConnectionService } from "../connection-service.ts";
 import { ActionPolicyService } from "../core/action-policy.ts";
+import { withProviderNetworkPolicy } from "../core/provider-network-policy.ts";
+import { isPrivateNetworkAccessAllowed } from "../core/request.ts";
 import { provider as feishu } from "../providers/feishu_app_bot/definition.ts";
 import { provider as github } from "../providers/github/definition.ts";
 import { provider as gmail } from "../providers/gmail/definition.ts";
 import { provider as jira } from "../providers/jira/definition.ts";
 import { provider as linear } from "../providers/linear/definition.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
+import { createProviderFetch } from "../providers/provider-runtime.ts";
 import { provider as zoom } from "../providers/zoom/definition.ts";
 import { TriggerRunner } from "../triggers/trigger-runner.ts";
 import { createConnectApp } from "./connect-app.ts";
@@ -153,6 +156,7 @@ beforeEach(async () => {
   tokenId = created.record.id;
   fixtureProviderLoader = new ProviderLoader(modules);
   connector = await createConnectApp({
+    network: { allowPrivateNetwork: true },
     providerHttpDispatch: {
       beforeAttempt: (attempt) => {
         dispatchAttempts.push(attempt);
@@ -432,6 +436,23 @@ describe("Trigger runtime HTTP boundary", () => {
     expect(hooks).toHaveLength(0);
     await subscription();
     expect((await (await request(receive)).json()).data.result).toMatchObject({ outcome: "respond", status: 404 });
+  });
+
+  it("uses its runtime policy for private egress during background trigger cleanup", async () => {
+    const id = await subscription();
+    await database.runtimeTokenStore.revoke(tokenId);
+    const transport = vi.fn<typeof fetch>(async () => new Response(null, { status: 204 }));
+    const fetcher = createProviderFetch({ fetch: transport, allowPrivateNetwork: isPrivateNetworkAccessAllowed });
+    vi.spyOn(fixtureProviderLoader, "loadProxyExecutor").mockResolvedValue(async (_request, context) => {
+      await Promise.resolve();
+      const response = await fetcher("http://10.0.0.2/hooks/1", { signal: context.signal });
+      return { ok: true, response: { status: response.status, headers: {}, data: null } };
+    });
+    const maintenanceNow = Date.now() + 60_001;
+    vi.spyOn(Date, "now").mockReturnValue(maintenanceNow);
+    await withProviderNetworkPolicy({}, () => connector.triggerMaintenance.run());
+    expect(transport).toHaveBeenCalledTimes(1);
+    expect((await database.triggerStore.getFlowTrigger(id))?.status).toBe("deleted");
   });
 
   it("retains failed cleanup after revocation, allows same-account recovery, and supports explicit abandonment", async () => {

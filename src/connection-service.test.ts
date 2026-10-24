@@ -1,4 +1,4 @@
-import type { IConnectionStore, StoredConnection } from "./connection-service.ts";
+import type { IConnectionStore, StoredConnection } from "./connection-store.ts";
 import type { ProviderHttpAttempt, ProviderHttpDispatchOptions } from "./core/provider-http-dispatch.ts";
 import type { ActionExecutor, CredentialValidators, ProviderDefinition, ResolvedCredential } from "./core/types.ts";
 import type { MarketplaceService } from "./marketplace/marketplace-service.ts";

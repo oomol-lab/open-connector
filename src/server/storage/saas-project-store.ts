@@ -1,4 +1,4 @@
-import type { StoredSaasConnection } from "../../connection-service.ts";
+import type { StoredSaasConnection } from "../../connection-store.ts";
 import type { ISecretCodec } from "../secrets/secret-codec-core.ts";
 import type { RequestStatement, RequestTransaction } from "./connection-request-store.ts";
 import type { RuntimeRow } from "./runtime-sql.ts";

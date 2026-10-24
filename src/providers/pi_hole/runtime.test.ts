@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { setPrivateNetworkAccessAllowed } from "../../core/provider-network-policy.test-support.ts";
+import { withProviderNetworkPolicy } from "../../core/provider-network-policy.ts";
 import {
   clearPiHoleSessionCache,
   normalizePiHoleApiPath,
@@ -10,7 +10,6 @@ import {
 import { createTestContext, sessionResponse } from "./test-helpers.ts";
 
 afterEach(() => {
-  setPrivateNetworkAccessAllowed(false);
   clearPiHoleSessionCache();
 });
 
@@ -32,17 +31,17 @@ describe("normalizePiHoleBaseUrl", () => {
   it("allows private instances only with the deployment opt-in", () => {
     expect(() => normalizePiHoleBaseUrl("http://10.0.0.2")).toThrow("private or reserved IP addresses");
 
-    setPrivateNetworkAccessAllowed(true);
-
-    expect(normalizePiHoleBaseUrl("http://10.0.0.2")).toBe("http://10.0.0.2");
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      expect(normalizePiHoleBaseUrl("http://10.0.0.2")).toBe("http://10.0.0.2");
+    });
   });
 
   it("rejects reserved metadata and IPv6 targets even with the deployment opt-in", () => {
-    setPrivateNetworkAccessAllowed(true);
-
-    expect(() => normalizePiHoleBaseUrl("https://169.254.169.254")).toThrow("private or reserved IP addresses");
-    expect(() => normalizePiHoleBaseUrl("http://[::ffff:169.254.169.254]/")).toThrow("IPv6");
-    expect(() => normalizePiHoleBaseUrl("https://metadata.google.internal")).toThrow("cloud metadata hosts");
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      expect(() => normalizePiHoleBaseUrl("https://169.254.169.254")).toThrow("private or reserved IP addresses");
+      expect(() => normalizePiHoleBaseUrl("http://[::ffff:169.254.169.254]/")).toThrow("IPv6");
+      expect(() => normalizePiHoleBaseUrl("https://metadata.google.internal")).toThrow("cloud metadata hosts");
+    });
   });
 
   it("rejects URLs carrying user info, query, or hash", () => {

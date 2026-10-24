@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { assertProviderId } from "../src/core/provider-id.ts";
 import { assertPublicHttpUrl } from "../src/core/request.ts";
@@ -17,9 +17,10 @@ const description = JSON.stringify(`Read data from ${displayName.trim()}.`);
 
 // An existing provider must never be partially overwritten.
 await mkdir(directory);
-await writeFile(
-  join(directory, "definition.ts"),
-  `import type { ProviderDefinition } from "../../core/types.ts";
+try {
+  await writeFile(
+    join(directory, "definition.ts"),
+    `import type { ProviderDefinition } from "../../core/types.ts";
 import { actions } from "./actions.ts";
 
 export const provider: ProviderDefinition = {
@@ -31,10 +32,10 @@ export const provider: ProviderDefinition = {
   actions,
 };
 `,
-);
-await writeFile(
-  join(directory, "actions.ts"),
-  `import type { ActionDefinition } from "../../core/types.ts";
+  );
+  await writeFile(
+    join(directory, "actions.ts"),
+    `import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
@@ -48,10 +49,10 @@ export const actions: ActionDefinition[] = [
   }),
 ];
 `,
-);
-await writeFile(
-  join(directory, "executors.ts"),
-  `import type { ProviderExecutors } from "../../core/types.ts";
+  );
+  await writeFile(
+    join(directory, "executors.ts"),
+    `import type { ProviderExecutors } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import { defineProviderExecutors, runProviderRequest, readProviderJsonBody, readProviderErrorTextBody, ProviderRequestError } from "../provider-runtime.ts";
 
@@ -80,7 +81,18 @@ export const executors: ProviderExecutors = defineProviderExecutors({
   createContext: (context, fetcher): Context => ({ fetcher, signal: context.signal }),
 });
 `,
-);
+  );
+} catch (error) {
+  try {
+    await rm(directory, { recursive: true, force: true });
+  } catch (cleanupError) {
+    throw new AggregateError(
+      [error, cleanupError],
+      "Provider creation failed and its incomplete directory could not be removed.",
+    );
+  }
+  throw error;
+}
 console.log(
   `Created ${directory}. Replace the generic action/schema with the provider's documented contract, then run npm run generate:catalog and npm run fix-check.`,
 );

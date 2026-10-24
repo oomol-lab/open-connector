@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { sourceScanTimeout } from "./provider-source-guards.support.ts";
 
 const providersDirectory = fileURLToPath(new URL(".", import.meta.url));
 const guardFile = fileURLToPath(import.meta.url);
@@ -52,7 +53,7 @@ function readProviderSource(relativePath: string): string {
 
 const sourceFiles = listProviderSourceFiles(providersDirectory, "");
 
-describe("provider source guards", { timeout: Math.max(5_000, sourceFiles.length * 5) }, () => {
+describe("provider source guards", { timeout: sourceScanTimeout(sourceFiles.length) }, () => {
   it("keeps btoa out of provider source outside the binary-string allowlist", () => {
     const offenders = sourceFiles.filter((relativePath) => {
       if (join(providersDirectory, relativePath) === guardFile) {

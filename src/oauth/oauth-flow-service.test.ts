@@ -1,4 +1,4 @@
-import type { IConnectionStore, StoredConnection } from "../connection-service.ts";
+import type { IConnectionStore, StoredConnection } from "../connection-store.ts";
 import type {
   ActionExecutor,
   CredentialValidators,

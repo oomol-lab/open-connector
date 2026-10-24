@@ -1,4 +1,4 @@
-import type { IConnectionStore } from "../../../connection-service.ts";
+import type { IConnectionStore } from "../../../connection-store.ts";
 import type { TokenPolicy } from "../../../core/action-policy.ts";
 import type { RuntimeLogger } from "../../../core/types.ts";
 import type {

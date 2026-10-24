@@ -39,10 +39,11 @@ import { readBoundedResponseBytes } from "../core/request.ts";
 export type ProviderFetch = typeof fetch;
 
 export interface ProviderFetchOptions {
+  /** Bind runtime policy; private targets still require the transport's allowPrivateNetwork opt-in. */
   network?: ProviderNetworkPolicy;
   /** Base transport; defaults to the global fetch. A guarded fetch is unwrapped so guards never stack. */
   fetch?: ProviderFetch;
-  /** Allow private-network targets for this provider's egress (see `assertPublicHttpUrl`); default public-only. */
+  /** Opt into runtime private-network permission with isPrivateNetworkAccessAllowed; omitted keeps targets public-only. */
   allowPrivateNetwork?: () => boolean;
   /**
    * Skip the DNS resolved-address check (URL and redirect guards still apply).

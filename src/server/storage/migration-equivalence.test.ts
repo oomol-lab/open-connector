@@ -19,6 +19,8 @@ interface Index {
   predicate: string | null;
 }
 
+// Deliberately conservative: this is not SQL semantic normalization. Verify complex
+// dialect-specific expressions and pin exact exceptions instead of stripping meaningful parentheses.
 function normalizeExpression(value: string | null): string | null {
   return (
     value
