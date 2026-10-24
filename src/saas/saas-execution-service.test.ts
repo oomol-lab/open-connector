@@ -6,6 +6,7 @@ import { createCatalogStore } from "../catalog-store.ts";
 import { ConnectionService } from "../connection-service.ts";
 import { ActionPolicyService } from "../core/action-policy.ts";
 import { ActionRunner } from "../server/actions/action-runner.ts";
+import { serializeProxyFailure } from "../server/api/runtime-api.ts";
 import { createConnectApp } from "../server/connect-app.ts";
 import { TransitFileService } from "../server/files/transit-files.ts";
 import { ProxyRunner } from "../server/proxy/proxy-runner.ts";
@@ -133,10 +134,13 @@ async function setup() {
       policy,
       ...overrides,
     });
-  const runProxy = (
+  const runProxy = async (
     input: unknown = { endpoint: "/items", method: "GET" },
     overrides: Partial<Parameters<ProxyRunner["run"]>[0]> = {},
-  ) => proxy.run({ service: "example", input, connectionName: "work", policy, ...overrides });
+  ) => {
+    const result = await proxy.run({ service: "example", input, connectionName: "work", policy, ...overrides });
+    return result.ok ? result : { ok: false, ...serializeProxyFailure(result) };
+  };
   return {
     db,
     project,
@@ -212,8 +216,8 @@ it("rejects action, proxy and connection grants and invalid local schemas before
 
 it("rechecks the final selected connection grant if it changes during resolution", async () => {
   const f = await setup();
-  const original = f.connections.resolveForExecution.bind(f.connections);
-  vi.spyOn(f.connections, "resolveForExecution").mockImplementation(async (...args) => {
+  const original = f.connections.resolveConnection.bind(f.connections);
+  vi.spyOn(f.connections, "resolveConnection").mockImplementation(async (...args) => {
     const target = await original(...args);
     target.summary!.id = "changed";
     return target;

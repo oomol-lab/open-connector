@@ -1,26 +1,25 @@
 import type { CatalogStore } from "../../catalog-store.ts";
 import type { ConnectionService } from "../../connection-service.ts";
 import type { ActionPolicySnapshot } from "../../core/action-policy.ts";
-import type { ProviderHttpDispatchOptions } from "../../core/provider-http-dispatch.ts";
+import type { ExecutionFailureKind } from "../../core/execution-error.ts";
+import type { RuntimeExecutionOptions } from "../../core/runtime-execution.ts";
 import type { RuntimeLogger, ProxyRequestInput, ProxyResponse } from "../../core/types.ts";
 import type { IProviderLoader } from "../../providers/provider-loader.ts";
 import type { SaasExecutionService } from "../../saas/saas-execution-service.ts";
 
 import { ConnectionError } from "../../connection-error.ts";
-import { optionalInteger, optionalRecord, requiredRecord, requiredString } from "../../core/cast.ts";
-import { withProviderHttpDispatch } from "../../core/provider-http-dispatch.ts";
+import { optionalRecord, requiredRecord, requiredString } from "../../core/cast.ts";
+import { connectionExecutionError, ExecutionError } from "../../core/execution-error.ts";
+import { withRuntimeExecution } from "../../core/runtime-execution.ts";
+import { resolveExecutionTarget } from "../../execution-target.ts";
 import {
   ProviderDispatchRequestError,
   toProviderExecutionError,
   withProviderHttpDispatchResult,
 } from "../../providers/provider-runtime.ts";
-import { SaasError } from "../../saas/saas-client.ts";
-import { mapConnectionErrorStatus } from "../api/runtime-api.ts";
+import { SaasError, saasExecutionFailureKind } from "../../saas/saas-client.ts";
 
-export type ProxyFailureStatus = 400 | 402 | 403 | 404 | 409 | 413 | 429 | 500 | 501 | 502 | 503 | 504;
-
-export interface ProxyRunnerOptions {
-  providerHttpDispatch?: ProviderHttpDispatchOptions;
+export interface ProxyRunnerOptions extends RuntimeExecutionOptions {
   catalog: CatalogStore;
   providerLoader: IProviderLoader;
   connections: ConnectionService;
@@ -48,7 +47,7 @@ export type ProxyRunResult =
 
 export interface ProxyRunFailure {
   ok: false;
-  status: ProxyFailureStatus;
+  kind?: ExecutionFailureKind;
   errorCode: string;
   message: string;
   data?: unknown;
@@ -70,10 +69,8 @@ export class ProxyRunner {
 
   async run(input: RunProxyInput): Promise<ProxyRunResult> {
     const provider = this.options.catalog.providers.find((candidate) => candidate.service === input.service);
-    return withProviderHttpDispatch(
-      { operation: "proxy", service: provider?.service },
-      () => this.runProxy(input),
-      this.options.providerHttpDispatch,
+    return withRuntimeExecution(this.options, { operation: "proxy", service: provider?.service }, () =>
+      this.runProxy(input),
     );
   }
 
@@ -82,7 +79,7 @@ export class ProxyRunner {
     if (!provider) {
       return {
         ok: false,
-        status: 404,
+        kind: "not_found",
         errorCode: "invalid_input",
         message: `unknown service: ${input.service}`,
         meta: { service: input.service },
@@ -93,7 +90,7 @@ export class ProxyRunner {
     if (!decision.allowed) {
       return {
         ok: false,
-        status: 403,
+        kind: "forbidden",
         errorCode: decision.code,
         message: decision.message,
         meta: { service: provider.service },
@@ -113,37 +110,14 @@ export class ProxyRunner {
     const startedAtMs = Date.now();
     let executionId: string | undefined;
     try {
-      const connection = await this.options.connections.getConnectionSummary(
-        provider.service,
-        input.connectionName,
-        input.connectionId,
-      );
-      const connectionDecision =
-        connection?.authType === "no_auth" ? undefined : input.policy.evaluateConnection(connection?.id);
-      if (connectionDecision && !connectionDecision.allowed) {
-        return {
-          ok: false,
-          status: 403,
-          errorCode: connectionDecision.code,
-          message: connectionDecision.message,
-          meta: { service: provider.service },
-        };
-      }
-      const target = await this.options.connections.resolveForExecution(
-        provider.service,
-        input.connectionName,
-        input.connectionId,
-      );
-      const targetDecision =
-        target.summary?.authType === "no_auth" ? undefined : input.policy.evaluateConnection(target.summary?.id);
-      if (targetDecision && !targetDecision.allowed)
-        return {
-          ok: false,
-          status: 403,
-          errorCode: targetDecision.code,
-          message: targetDecision.message,
-          meta: { service: provider.service },
-        };
+      const target = await resolveExecutionTarget({
+        connections: this.options.connections,
+        service: provider.service,
+        connectionName: input.connectionName,
+        connectionId: input.connectionId,
+        operation: "proxy",
+        policy: input.policy,
+      });
       this.options.logger?.info(logContext, "proxy request started");
       if (target.kind === "saas") {
         executionId = crypto.randomUUID();
@@ -174,19 +148,11 @@ export class ProxyRunner {
           meta: { service: provider.service, executionId, remoteExecutionId: remote.executionId },
         };
       }
-      if (target.kind === "marketplace")
-        return {
-          ok: false,
-          status: 501,
-          errorCode: "proxy_not_supported",
-          message: "Marketplace connections do not support proxy execution.",
-          meta: { service: provider.service },
-        };
       const executor = await this.options.providerLoader.loadProxyExecutor(provider.service, provider.displayName);
       if (!executor)
         return {
           ok: false,
-          status: 501,
+          kind: "unsupported",
           errorCode: "proxy_not_supported",
           message: `Proxy execution is not supported for ${provider.service}.`,
           meta: { service: provider.service },
@@ -219,7 +185,6 @@ export class ProxyRunner {
 
       const failure = {
         ok: false as const,
-        status: this.mapProxyErrorStatus(result.error.code, result.error.details),
         errorCode: result.error.code,
         message: result.error.message,
         data: result.error.details ?? null,
@@ -232,7 +197,7 @@ export class ProxyRunner {
       if (executionId && input.signal?.aborted)
         return {
           ok: false,
-          status: 400,
+          kind: "invalid_input",
           errorCode: "execution_cancelled",
           message: "Proxy execution was cancelled.",
           meta: { service: provider.service, executionId },
@@ -244,7 +209,7 @@ export class ProxyRunner {
         );
         return {
           ok: false,
-          status: error.status,
+          kind: saasExecutionFailureKind(error),
           errorCode: error.code,
           message: error.message,
           data: error.retryAfter ? { details: { retryAfter: error.retryAfter } } : undefined,
@@ -254,28 +219,26 @@ export class ProxyRunner {
       if (error instanceof ProviderDispatchRequestError) {
         return {
           ok: false,
-          status: 429,
+          kind: "rate_limited",
           errorCode: "rate_limited",
           message: error.message,
           data: toProviderExecutionError(error, error.message).error?.details,
           meta: { service: provider.service },
         };
       }
+      if (error instanceof ExecutionError) {
+        return {
+          ok: false,
+          kind: error.kind,
+          errorCode: error.code,
+          message: error.message,
+          meta: { service: provider.service },
+        };
+      }
       if (error instanceof ConnectionError) {
-        const missingConnectionDecision =
-          error.code === "connection_not_found" ? input.policy.evaluateConnection() : undefined;
-        if (missingConnectionDecision && !missingConnectionDecision.allowed) {
-          return {
-            ok: false,
-            status: 403,
-            errorCode: missingConnectionDecision.code,
-            message: missingConnectionDecision.message,
-            meta: { service: provider.service },
-          };
-        }
         const failure: ProxyRunFailure = {
           ok: false,
-          status: mapConnectionErrorStatus(error),
+          kind: connectionExecutionError(error).kind,
           errorCode: error.code,
           message: error.message,
           meta: { service: provider.service },
@@ -287,7 +250,7 @@ export class ProxyRunner {
       this.options.logger?.warn({ ...logContext, durationMs, errorCode: "internal_error" }, "proxy request failed");
       return {
         ok: false,
-        status: 500,
+        kind: "internal",
         errorCode: "internal_error",
         message: "Proxy request failed unexpectedly.",
         meta: { service: provider.service },
@@ -330,7 +293,7 @@ export class ProxyRunner {
       if (error instanceof ProxyInputError) {
         return {
           ok: false,
-          status: 400,
+          kind: "invalid_input",
           errorCode: "invalid_input",
           message: error.message,
         };
@@ -371,38 +334,6 @@ export class ProxyRunner {
       }
     }
     return false;
-  }
-
-  /**
-   * Map a provider proxy failure onto the HTTP status the `/v1` proxy route
-   * returns. It must answer what `mapExecutionErrorStatus` answers on the action
-   * route for every code a provider executor can raise: both front doors serve
-   * the same provider error object.
-   */
-  private mapProxyErrorStatus(code: string, details: unknown): ProxyFailureStatus {
-    const upstreamStatus = optionalInteger(optionalRecord(details)?.status);
-    if (upstreamStatus === 413) {
-      return 413;
-    }
-    if (code === "insufficient_credit") {
-      return 402;
-    }
-    if (code === "invalid_input" && upstreamStatus === 404) {
-      return 404;
-    }
-    if (code === "authorization_failed") {
-      return 403;
-    }
-    if (code === "connection_not_found") {
-      return 404;
-    }
-    if (code === "rate_limited") {
-      return 429;
-    }
-    if (code === "provider_error") {
-      return 500;
-    }
-    return 400;
   }
 }
 

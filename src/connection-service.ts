@@ -103,21 +103,21 @@ export interface DisconnectedConnectionSummary {
   revoked: OAuthRevocationOutcome;
 }
 
-export type ExecutionConnection = LocalExecutionConnection | MarketplaceExecutionConnection | SaasExecutionConnection;
+export type ResolvedConnection = LocalResolvedConnection | MarketplaceResolvedConnection | SaasResolvedConnection;
 
-interface LocalExecutionConnection {
-  kind: "local";
+interface LocalResolvedConnection {
+  source: "local";
   summary?: ConnectionSummary;
-  getCredential(service: string): Promise<ResolvedCredential | undefined>;
+  credential?: ResolvedCredential;
 }
 
-interface MarketplaceExecutionConnection {
-  kind: "marketplace";
+interface MarketplaceResolvedConnection {
+  source: "marketplace";
   summary: ConnectionSummary;
 }
 
-interface SaasExecutionConnection {
-  kind: "saas";
+interface SaasResolvedConnection {
+  source: "saas";
   summary: ManagedConnectionSummary;
   reference: SaasConnectionReference;
 }
@@ -271,24 +271,24 @@ export class ConnectionService {
         : undefined;
   }
 
-  async resolveForExecution(
+  async resolveConnection(
     service: string,
     connectionName?: string,
     connectionId?: string,
-  ): Promise<ExecutionConnection> {
+  ): Promise<ResolvedConnection> {
     const provider = this.getProvider(service);
     const stored = await this.selectStoredConnection(service, connectionName, connectionId);
     const name = stored?.connectionName ?? normalizeConnectionName(connectionName);
     const marketplace = connectionId
       ? undefined
       : await this.resolveMarketplaceSummary(provider, connectionName, Boolean(stored));
-    if (marketplace) return { kind: "marketplace", summary: marketplace };
+    if (marketplace) return { source: "marketplace", summary: marketplace };
     if (!stored && connectionName && !this.supportsAuth(provider, "no_auth")) {
       throw new ConnectionError("connection_not_found", `${service} connection not found: ${name}.`);
     }
 
     if (stored?.source === "saas")
-      return { kind: "saas", summary: this.createManagedConnectionSummary(stored), reference: stored.reference };
+      return { source: "saas", summary: this.createManagedConnectionSummary(stored), reference: stored.reference };
     let credential = stored ? await this.credentials.resolve(stored) : undefined;
     credential ??= this.supportsAuth(provider, "no_auth") ? { authType: "no_auth" } : undefined;
     const summary = stored
@@ -298,9 +298,9 @@ export class ConnectionService {
         : undefined;
 
     return {
-      kind: "local",
+      source: "local",
       summary,
-      getCredential: async (requestedService) => (requestedService === service ? credential : undefined),
+      credential,
     };
   }
 

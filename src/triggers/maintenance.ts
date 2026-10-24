@@ -1,13 +1,13 @@
 import type { ActionPolicyService } from "../core/action-policy.ts";
-import type { ProviderNetworkPolicy } from "../core/provider-network-policy.ts";
+import type { RuntimeExecutionOptions } from "../core/runtime-execution.ts";
 import type { RuntimeLogger } from "../core/types.ts";
 import type { IRuntimePolicyStore } from "../server/storage/runtime-policy-store.ts";
 import type { IRuntimeTokenStore } from "../server/storage/runtime-token-service.ts";
 import type { TriggerStore } from "./store.ts";
 import type { TriggerRunner } from "./trigger-runner.ts";
 
-import { withProviderNetworkPolicy } from "../core/provider-network-policy.ts";
-import { HttpRequestError } from "../server/api/http-utils.ts";
+import { ExecutionError } from "../core/execution-error.ts";
+import { withRuntimeExecution } from "../core/runtime-execution.ts";
 import { withSubscription } from "./subscriptions.ts";
 
 export interface TriggerSubscriptionSummary {
@@ -22,8 +22,7 @@ export interface TriggerSubscriptionSummary {
   reconcileAt: number;
 }
 
-interface TriggerMaintenanceOptions {
-  network?: ProviderNetworkPolicy;
+interface TriggerMaintenanceOptions extends RuntimeExecutionOptions {
   store: TriggerStore;
   runner: TriggerRunner;
   tokens: IRuntimeTokenStore;
@@ -60,7 +59,7 @@ export class TriggerMaintenance {
   async cancel(id: string, signal: AbortSignal): Promise<void> {
     await withSubscription(this.options.store, id, signal, async (record, save) => {
       if (record.mode === "resource-set")
-        throw new HttpRequestError("invalid_input", "Cancel the owning resource subscriptions.");
+        throw new ExecutionError("invalid_input", "Cancel the owning resource subscriptions.");
       if (record.status === "deleted" || record.status === "abandoned") return;
       record.status = "deleting";
       await save();
@@ -71,7 +70,7 @@ export class TriggerMaintenance {
   async abandon(id: string, signal: AbortSignal): Promise<void> {
     await withSubscription(this.options.store, id, signal, async (record, save) => {
       if (record.mode === "resource-set")
-        throw new HttpRequestError("invalid_input", "Abandon the owning resource subscriptions.");
+        throw new ExecutionError("invalid_input", "Abandon the owning resource subscriptions.");
       if (record.status === "deleted" || record.status === "abandoned") return;
       if (record.mode === "resource") await this.options.runner.abandonResource(record, signal);
       record.status = "abandoned";
@@ -81,7 +80,7 @@ export class TriggerMaintenance {
 
   run(): Promise<void> {
     if (this.shutdown.signal.aborted) return Promise.resolve();
-    this.pending ??= withProviderNetworkPolicy(this.options.network ?? {}, () => this.runBatch())
+    this.pending ??= withRuntimeExecution(this.options, { operation: "runtime" }, () => this.runBatch())
       .catch(() => {
         this.options.logger?.warn(
           { errorCode: "trigger_cleanup_failed" },

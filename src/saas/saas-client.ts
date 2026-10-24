@@ -1,3 +1,4 @@
+import type { ExecutionFailureKind } from "../core/execution-error.ts";
 import type { RemoteHttpFailure } from "../core/remote-http.ts";
 import type { ProxyRequestInput, ProxyResponse } from "../core/types.ts";
 import type { ManagedProject } from "../server/storage/saas-project-store.ts";
@@ -562,4 +563,23 @@ async function createSchemas() {
     executionFailureSchema,
     executionIdentifier,
   };
+}
+
+/** Translate the remote HTTP contract at the SaaS boundary. */
+export function saasExecutionFailureKind(error: SaasError): ExecutionFailureKind {
+  const kinds: Record<SaasError["status"], ExecutionFailureKind> = {
+    400: "invalid_input",
+    402: "payment_required",
+    403: "forbidden",
+    404: "not_found",
+    409: "conflict",
+    413: "too_large",
+    429: "rate_limited",
+    500: "internal",
+    501: "unsupported",
+    502: "upstream",
+    503: "unavailable",
+    504: "timeout",
+  };
+  return kinds[error.status];
 }

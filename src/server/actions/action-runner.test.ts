@@ -217,7 +217,7 @@ describe("ActionRunner", () => {
     const runs = new MemoryRunLogStore();
     const providerLoader = new TestProviderLoader(async () => ({ ok: true, output: {} }));
     const loadExecutor = vi.spyOn(providerLoader, "loadActionExecutor");
-    const resolveConnection = vi.spyOn(ConnectionService.prototype, "resolveForExecution");
+    const resolveConnection = vi.spyOn(ConnectionService.prototype, "resolveConnection");
     const controller = new AbortController();
     controller.abort();
     const runner = createRunner({ runs, logger: createTestLogger().logger, providerLoader });
@@ -250,7 +250,7 @@ describe("ActionRunner", () => {
         await lookupPending;
         return undefined;
       });
-    const resolveConnection = vi.spyOn(ConnectionService.prototype, "resolveForExecution");
+    const resolveConnection = vi.spyOn(ConnectionService.prototype, "resolveConnection");
     const controller = new AbortController();
     const runner = createRunner({ runs, logger: createTestLogger().logger, providerLoader });
 
@@ -293,7 +293,7 @@ describe("ActionRunner", () => {
     const { logger } = createTestLogger();
     const providerLoader = new TestProviderLoader(async () => ({ ok: true, output: {} }));
     const loadExecutor = vi.spyOn(providerLoader, "loadActionExecutor");
-    const resolveConnection = vi.spyOn(ConnectionService.prototype, "resolveForExecution");
+    const resolveConnection = vi.spyOn(ConnectionService.prototype, "resolveConnection");
     const actionPolicy = new ActionPolicyService({ blockedActions: ["example.echo"] });
     const runner = createRunner({ runs, logger, providerLoader });
 
@@ -324,7 +324,7 @@ describe("ActionRunner", () => {
     const runs = new MemoryRunLogStore();
     const providerLoader = new TestProviderLoader(async () => ({ ok: true, output: {} }));
     const loadExecutor = vi.spyOn(providerLoader, "loadActionExecutor");
-    const resolveConnection = vi.spyOn(ConnectionService.prototype, "resolveForExecution");
+    const resolveConnection = vi.spyOn(ConnectionService.prototype, "resolveConnection");
     const actionPolicy = new ActionPolicyService();
     const policy = actionPolicy.createSnapshot(undefined, {
       allowedActions: [],
@@ -362,7 +362,7 @@ describe("ActionRunner", () => {
 
   it("uses stable IDs for credential connections on a provider that also supports no-auth", async () => {
     const runs = new MemoryRunLogStore();
-    const resolveConnection = vi.spyOn(ConnectionService.prototype, "resolveForExecution");
+    const resolveConnection = vi.spyOn(ConnectionService.prototype, "resolveConnection");
     const actionPolicy = new ActionPolicyService();
     const store = new MemoryConnectionStore();
     const connection = await store.set("example", "work", credential);

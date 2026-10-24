@@ -1,13 +1,16 @@
 import type { RuntimeActionDefinition, RuntimeProviderDefinition } from "../../catalog-store.ts";
 import type { ConnectionError } from "../../connection-error.ts";
 import type { ConnectionSummary, ManagedConnectionSummary } from "../../connection-service.ts";
+import type { ExecutionFailureKind } from "../../core/execution-error.ts";
 import type { ProviderAuthSetup } from "../../core/provider-setup.ts";
 import type { ExecutionResult, ProviderScenario } from "../../core/types.ts";
 import type { OAuthClientConfigSummary } from "../../oauth/oauth-client-config-service.ts";
 import type { TriggerPermission } from "../../triggers/metadata.ts";
+import type { ProxyRunFailure } from "../proxy/proxy-runner.ts";
 import type { Context } from "hono";
 
 import { optionalInteger, optionalString, optionalRecord, requiredRecord } from "../../core/cast.ts";
+import { connectionExecutionError } from "../../core/execution-error.ts";
 import { describeProviderAuth } from "../../core/provider-setup.ts";
 
 export type RuntimeStatus = 400 | 401 | 402 | 403 | 404 | 409 | 413 | 429 | 500 | 501 | 502 | 503 | 504;
@@ -93,7 +96,7 @@ export interface RuntimeActionResultInput {
   actionId: string;
   executionId: string;
   remoteExecutionId?: string;
-  failureStatus?: RuntimeStatus;
+  failureKind?: ExecutionFailureKind;
   retryAfter?: string;
   auditPersisted: boolean;
   result: ExecutionResult;
@@ -222,7 +225,9 @@ export function serializeRuntimeActionResult(input: RuntimeActionResultInput): R
   }
 
   return serializeRuntimeFailure({
-    status: input.failureStatus ?? mapExecutionErrorStatus(result.error?.code, result.error?.details),
+    status: input.failureKind
+      ? executionFailureStatus(input.failureKind)
+      : mapExecutionErrorStatus(result.error?.code, result.error?.details),
     errorCode: result.error?.code ?? "provider_error",
     message: result.error?.message ?? "Action execution failed.",
     data: input.retryAfter ? { details: { retryAfter: input.retryAfter } } : (result.error?.details ?? null),
@@ -279,22 +284,15 @@ function readRuntimeRetryAfterSeconds(result: RuntimeActionHttpResult): number |
   return seconds !== undefined && Number.isSafeInteger(seconds) && seconds >= 0 ? seconds : undefined;
 }
 
-export function mapConnectionErrorStatus(error: ConnectionError): 400 | 404 | 409 {
-  if (error.code === "unknown_service" || error.code === "connection_not_found") {
-    return 404;
-  }
-  if (
-    error.code === "oauth_token_expired" ||
-    error.code === "oauth_reauth_required" ||
-    error.code === "oauth_refresh_unavailable" ||
-    error.code === "oauth_token_refresh_failed"
-  ) {
-    return 409;
-  }
-  return 400;
+export function mapConnectionErrorStatus(error: ConnectionError): RuntimeStatus {
+  return executionFailureStatus(connectionExecutionError(error).kind);
 }
 
-function mapExecutionErrorStatus(code: string | undefined, details?: unknown): RuntimeStatus {
+function mapExecutionErrorStatus(
+  code: string | undefined,
+  details?: unknown,
+  operation: "action" | "proxy" = "action",
+): RuntimeStatus {
   const upstreamStatus = optionalInteger(optionalRecord(details)?.status);
   if (upstreamStatus === 413) {
     return 413;
@@ -305,6 +303,20 @@ function mapExecutionErrorStatus(code: string | undefined, details?: unknown): R
   if (code === "invalid_input" && upstreamStatus === 404) {
     return 404;
   }
+  // Proxy executor error envelopes historically use 400 for unclassified failures.
+  // Runtime failures carry an explicit kind and do not enter this mapping.
+  if (
+    operation === "proxy" &&
+    ![
+      "insufficient_credit",
+      "invalid_input",
+      "authorization_failed",
+      "connection_not_found",
+      "rate_limited",
+      "provider_error",
+    ].includes(code ?? "")
+  )
+    return 400;
   if (code === "internal_error" || code === "provider_error" || code === "executor_unavailable") {
     return 500;
   }
@@ -422,4 +434,35 @@ export function serializeRuntimeTriggerPermissions(
     ...permission,
     requiredScopes: permission.providerPermissions,
   }));
+}
+
+export function executionFailureStatus(kind: ExecutionFailureKind): RuntimeStatus {
+  const statuses: Record<ExecutionFailureKind, RuntimeStatus> = {
+    invalid_input: 400,
+    unauthorized: 401,
+    payment_required: 402,
+    forbidden: 403,
+    not_found: 404,
+    conflict: 409,
+    too_large: 413,
+    rate_limited: 429,
+    internal: 500,
+    unsupported: 501,
+    upstream: 502,
+    unavailable: 503,
+    timeout: 504,
+  };
+  return statuses[kind];
+}
+
+export function serializeProxyFailure(failure: ProxyRunFailure): RuntimeFailureInput {
+  return {
+    status: failure.kind
+      ? executionFailureStatus(failure.kind)
+      : mapExecutionErrorStatus(failure.errorCode, failure.data, "proxy"),
+    errorCode: failure.errorCode,
+    message: failure.message,
+    data: failure.data,
+    meta: failure.meta,
+  };
 }

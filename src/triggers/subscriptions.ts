@@ -10,8 +10,8 @@ import type { TriggerSubscription, TriggerStore } from "./store.ts";
 
 import { randomBytes } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
+import { ExecutionError } from "../core/execution-error.ts";
 import { randomUUIDv7 } from "../core/uuid-v7.ts";
-import { HttpRequestError } from "../server/api/http-utils.ts";
 import { canonicalJsonBytes, digestBytes } from "./common/encoding.ts";
 export type SubscriptionOwner = Pick<
   TriggerSubscription,
@@ -37,14 +37,14 @@ export async function withSubscription<T>(
 ): Promise<T> {
   const lease = randomUUIDv7();
   if (!(await store.claimFlowTrigger(id, lease, Date.now(), Date.now() + 60_000)))
-    throw new HttpRequestError("invalid_input", "Trigger subscription is busy", 409);
+    throw new ExecutionError("invalid_input", "Trigger subscription is busy", "conflict");
   try {
     const record = await store.getFlowTrigger(id);
-    if (!record) throw new HttpRequestError("trigger_not_found", "Subscription not found", 404);
+    if (!record) throw new ExecutionError("trigger_not_found", "Subscription not found", "not_found");
     const save = async () => {
       signal.throwIfAborted();
       if (!(await store.saveFlowTrigger(record, lease, Date.now())))
-        throw new HttpRequestError("invalid_input", "Trigger subscription lease expired", 409);
+        throw new ExecutionError("invalid_input", "Trigger subscription lease expired", "conflict");
     };
     return await run(record, save);
   } finally {
@@ -74,7 +74,11 @@ export async function executeSubscription(
   if (input.operation === "reconcile" && input.active && !input.subscriptionId) {
     const url = new URL(input.endpointUrl);
     if (url.protocol !== "https:" || url.username || url.password || url.hash)
-      throw new HttpRequestError("invalid_input", "A HTTPS callback without credentials or fragment is required", 400);
+      throw new ExecutionError(
+        "invalid_input",
+        "A HTTPS callback without credentials or fragment is required",
+        "invalid_input",
+      );
     await store.insertFlowTrigger({
       mode: "webhook",
       id,
@@ -99,7 +103,7 @@ export async function executeSubscription(
         subscription: {},
         reconcileAt: Date.now() + 60_000,
       };
-    throw new HttpRequestError("trigger_not_found", "Subscription not found", 404);
+    throw new ExecutionError("trigger_not_found", "Subscription not found", "not_found");
   }
   if (
     existing.tokenId !== owner.tokenId ||
@@ -108,7 +112,7 @@ export async function executeSubscription(
     existing.triggerId !== owner.triggerId ||
     existing.providerAccountId !== owner.providerAccountId
   )
-    throw new HttpRequestError("trigger_not_found", "Subscription not found", 404);
+    throw new ExecutionError("trigger_not_found", "Subscription not found", "not_found");
   return withSubscription(store, id, signal, async (record, save) => {
     return executeSubscriptionOperation(record, save, definition, input, proxy, signal);
   });
@@ -151,9 +155,13 @@ export async function executeSubscriptionOperation(
       };
     const url = new URL(input.endpointUrl);
     if (url.protocol !== "https:" || url.username || url.password || url.hash)
-      throw new HttpRequestError("invalid_input", "A HTTPS callback without credentials or fragment is required", 400);
+      throw new ExecutionError(
+        "invalid_input",
+        "A HTTPS callback without credentials or fragment is required",
+        "invalid_input",
+      );
     if (record.status === "abandoned")
-      throw new HttpRequestError("trigger_abandoned", "Create a new request key after abandoning cleanup.", 409);
+      throw new ExecutionError("trigger_abandoned", "Create a new request key after abandoning cleanup.", "conflict");
     if (record.status === "deleted") {
       record.config = input.config;
       record.endpointUrl = url.href;
@@ -166,17 +174,17 @@ export async function executeSubscriptionOperation(
       await save();
     }
     if (!isDeepStrictEqual(record.config, input.config) || record.endpointUrl !== url.href)
-      throw new HttpRequestError(
+      throw new ExecutionError(
         "invalid_input",
         "Subscription request key is already bound to another configuration",
-        409,
+        "conflict",
       );
     if (!input.active) {
       record.status = "deleting";
       await save();
     }
     if (input.active && record.status !== "active")
-      throw new HttpRequestError("invalid_input", "Subscription is being deleted", 409);
+      throw new ExecutionError("invalid_input", "Subscription is being deleted", "conflict");
     const callback = new URL(record.endpointUrl);
     callback.searchParams.set("connector_subscription", record.callbackNonce);
     const result = await definition.reconcile({
@@ -216,14 +224,15 @@ export async function executeSubscriptionOperation(
       reconcileAt: record.reconcileAt,
     };
   if (!definition.snapshot.endpoint.methods.includes(input.method))
-    throw new HttpRequestError("invalid_input", "Unsupported webhook method.");
+    throw new ExecutionError("invalid_input", "Unsupported webhook method.");
   const rawBody = Uint8Array.from(Buffer.from(input.rawBody, "base64"));
-  if (rawBody.byteLength > 64 * 1024) throw new HttpRequestError("invalid_input", "Webhook body is too large", 400);
+  if (rawBody.byteLength > 64 * 1024)
+    throw new ExecutionError("invalid_input", "Webhook body is too large", "invalid_input");
   if (!rawBody.byteLength && !definition.snapshot.endpoint.body.allowEmpty)
-    throw new HttpRequestError("invalid_input", "Webhook body is required.");
+    throw new ExecutionError("invalid_input", "Webhook body is required.");
   const type = input.headers["content-type"]?.split(";")[0]?.trim().toLowerCase();
   if (rawBody.byteLength && type !== "application/json")
-    throw new HttpRequestError("invalid_input", "Webhook content type must be application/json.");
+    throw new ExecutionError("invalid_input", "Webhook content type must be application/json.");
   let payload: unknown = null;
   if (rawBody.byteLength > 0) {
     const text = new TextDecoder().decode(rawBody);
@@ -232,12 +241,12 @@ export async function executeSubscriptionOperation(
         type === "application/x-www-form-urlencoded" ? Object.fromEntries(new URLSearchParams(text)) : JSON.parse(text);
     } catch (error) {
       if (error instanceof SyntaxError)
-        throw new HttpRequestError("invalid_input", "Invalid webhook JSON payload", 400);
+        throw new ExecutionError("invalid_input", "Invalid webhook JSON payload", "invalid_input");
       throw error;
     }
   }
   if (Array.isArray(payload) && !definition.snapshot.endpoint.body.allowArray)
-    throw new HttpRequestError("invalid_input", "Webhook body must not be an array.");
+    throw new ExecutionError("invalid_input", "Webhook body must not be an array.");
   const result = await definition.receive({
     bindingId: id,
     callbackSecret: record.callbackSecret,

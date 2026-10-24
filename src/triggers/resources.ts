@@ -6,7 +6,7 @@ import type { TriggerSubscription, TriggerStore } from "./store.ts";
 import type { SubscriptionOwner } from "./subscriptions.ts";
 
 import { isDeepStrictEqual } from "node:util";
-import { HttpRequestError } from "../server/api/http-utils.ts";
+import { ExecutionError } from "../core/execution-error.ts";
 import { canonicalJsonBytes, digestBytes } from "./common/encoding.ts";
 import { subscriptionId, withSubscription } from "./subscriptions.ts";
 
@@ -74,9 +74,9 @@ export async function executeResourceSubscriptionOperation(
     await saveConsumer();
   }
   if (!isDeepStrictEqual(consumer.config, input.config))
-    throw new HttpRequestError("invalid_input", "Resource request key is bound to another configuration", 409);
+    throw new ExecutionError("invalid_input", "Resource request key is bound to another configuration", "conflict");
   if (input.active && consumer.status !== "active")
-    throw new HttpRequestError("invalid_input", "Resource subscription is being deleted", 409);
+    throw new ExecutionError("invalid_input", "Resource subscription is being deleted", "conflict");
   if (!input.active) {
     consumer.status = "deleting";
     await saveConsumer();

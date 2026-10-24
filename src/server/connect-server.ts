@@ -25,8 +25,8 @@ import { compress } from "hono/compress";
 import { ActionPolicyService } from "../core/action-policy.ts";
 import { createActionSearchIndexProvider } from "../core/action-search.ts";
 import { optionalRecord } from "../core/cast.ts";
-import { withProviderHttpDispatch } from "../core/provider-http-dispatch.ts";
-import { withProviderNetworkPolicy } from "../core/provider-network-policy.ts";
+import { ExecutionError } from "../core/execution-error.ts";
+import { withRuntimeExecution } from "../core/runtime-execution.ts";
 import { ProviderDispatchRequestError, toProviderExecutionError } from "../providers/provider-runtime.ts";
 import { SaasError } from "../saas/saas-client.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
@@ -42,6 +42,7 @@ import { createMcpRoutes, loadMcpModule } from "./api/mcp-routes.ts";
 import { createPolicyRoutes } from "./api/policy-routes.ts";
 import { createPolicySnapshotProvider } from "./api/policy-snapshot.ts";
 import { createRunLogRoutes } from "./api/run-log-routes.ts";
+import { executionFailureStatus } from "./api/runtime-api.ts";
 import { writeRuntimeFailure, writeRuntimeSuccess } from "./api/runtime-api.ts";
 import { createRuntimeAppRoutes } from "./api/runtime-app-routes.ts";
 import { createRuntimeCatalogRoutes } from "./api/runtime-catalog-routes.ts";
@@ -118,6 +119,7 @@ export class ConnectServer {
     this.actionSearch = options.actionSearch ?? createActionSearchIndexProvider(options.catalog.actions);
     this.actionPolicy = options.actionPolicy ?? new ActionPolicyService();
     this.proxyRunner = new ProxyRunner({
+      network: options.network,
       providerHttpDispatch: options.providerHttpDispatch,
       catalog: options.catalog,
       providerLoader: options.providerLoader,
@@ -137,9 +139,7 @@ export class ConnectServer {
     const auth = this.options.auth ?? {};
 
     app.use("*", async (_context, next) => {
-      await withProviderNetworkPolicy(this.options.network ?? {}, () =>
-        withProviderHttpDispatch({ operation: "runtime" }, next, this.options.providerHttpDispatch),
-      );
+      await withRuntimeExecution(this.options, { operation: "runtime" }, next);
     });
 
     app.use("*", async (context, next) => {
@@ -412,15 +412,16 @@ export class ConnectServer {
           error.status,
         );
       }
-      if (error instanceof HttpRequestError) {
+      if (error instanceof HttpRequestError || error instanceof ExecutionError) {
+        const status = error instanceof ExecutionError ? executionFailureStatus(error.kind) : error.status;
         if (context.req.path.startsWith("/v1/")) {
           return writeRuntimeFailure(context, {
-            status: error.status,
+            status,
             errorCode: error.code,
             message: error.message,
           });
         }
-        return jsonError(context, error.status, error.code, error.message);
+        return jsonError(context, status, error.code, error.message);
       }
       this.options.logger?.error(
         {
