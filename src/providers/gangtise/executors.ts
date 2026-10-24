@@ -6,7 +6,8 @@ import type {
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 
-import { defineProviderExecutors, mapProviderActionHandlers, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { providerUserAgent } from "../provider-runtime.ts";
 import { gangtiseActions } from "./actions.ts";

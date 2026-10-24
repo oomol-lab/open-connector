@@ -7,7 +7,8 @@ import type {
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { requiredString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { basicAuthorizationHeader, providerInputError } from "../provider-runtime.ts";
 import { executeClickhelpAction, normalizeClickhelpApiBaseUrl, validateClickhelpCredential } from "./runtime.ts";

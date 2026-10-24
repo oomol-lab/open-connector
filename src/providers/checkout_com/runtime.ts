@@ -2,7 +2,7 @@ import type { ExecutionContext } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
 import {
   providerInputError,
   providerResponseError,

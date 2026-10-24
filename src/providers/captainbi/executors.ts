@@ -6,7 +6,8 @@ import type {
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 
-import { defineProviderExecutors, mapProviderActionHandlers, requireCustomCredential } from "../provider-executors.ts";
+import { requireCustomCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,

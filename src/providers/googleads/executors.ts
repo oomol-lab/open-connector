@@ -12,7 +12,8 @@ import {
   optionalString,
 } from "../../core/cast.ts";
 import { googleJsonRequest, googleRequest } from "../googledrive/runtime-request.ts";
-import { defineProviderExecutors, requireOAuthCredential } from "../provider-executors.ts";
+import { requireOAuthCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 import { googleAdsScope } from "./scopes.ts";

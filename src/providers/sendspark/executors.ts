@@ -6,7 +6,7 @@ import type {
 } from "../../core/types.ts";
 
 import { requiredString } from "../../core/cast.ts";
-import { requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
 import {
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,

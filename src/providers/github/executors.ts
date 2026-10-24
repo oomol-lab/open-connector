@@ -8,11 +8,8 @@ import type { IntegrationDefinition } from "../../triggers/common/integration.ts
 import type { PollDefinition } from "../../triggers/common/poll.ts";
 import type { GitHubActionContext, GitHubActionHandler } from "./runtime-shared.ts";
 
-import {
-  combineProviderActionHandlers,
-  defineProviderExecutors,
-  requireBearerCredential,
-} from "../provider-executors.ts";
+import { requireBearerCredential } from "../provider-credentials.ts";
+import { combineProviderActionHandlers, defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import {

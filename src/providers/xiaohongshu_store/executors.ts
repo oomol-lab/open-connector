@@ -15,7 +15,8 @@ import {
   pickOptionalString,
   requiredBoolean,
 } from "../../core/cast.ts";
-import { defineProviderExecutors, mapProviderActionSources, requireCustomCredential } from "../provider-executors.ts";
+import { requireCustomCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors, mapProviderActionSources } from "../provider-executors.ts";
 import {
   providerInputError,
   providerResponseError,

@@ -8,7 +8,8 @@ import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,

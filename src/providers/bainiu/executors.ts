@@ -3,7 +3,8 @@ import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { createHash } from "node:crypto";
 import { optionalRecord, optionalRawString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential, mapProviderActionHandlers } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
 import { defineProviderProxy, readProviderProxyErrorMessage } from "../provider-proxy.ts";
 import {
   requiredInputString,

@@ -5,7 +5,7 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { createHash, createHmac, randomUUID } from "node:crypto";
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { requireOAuthCredential } from "../provider-executors.ts";
+import { requireOAuthCredential } from "../provider-credentials.ts";
 import {
   ProviderRequestError,
   createProviderTimeout,

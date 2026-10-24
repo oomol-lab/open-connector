@@ -11,7 +11,8 @@ import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { compactObject, optionalNumber, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import { defineProviderExecutors, requireBearerCredential } from "../provider-executors.ts";
+import { requireBearerCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,

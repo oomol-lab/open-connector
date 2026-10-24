@@ -1,7 +1,8 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 
-import { defineProviderExecutors, mapProviderActionNames, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors, mapProviderActionNames } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { requiredInputString } from "../provider-runtime.ts";
 import { coupontoolsActions } from "./actions.ts";

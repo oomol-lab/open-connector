@@ -2,7 +2,8 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { createProviderFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 interface Context {

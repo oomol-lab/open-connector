@@ -8,7 +8,8 @@ import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { isIP } from "node:net";
 import { nullableString, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   isAbortLikeError,

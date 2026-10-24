@@ -7,7 +7,8 @@ import type {
 import type { ApiKeyProviderContext } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { credentialProviderProxyBaseUrl, defineProviderProxy } from "../provider-proxy.ts";
 import { normalizeSimlaApiBaseUrl, simlaActionHandlers, validateSimlaCredential } from "./runtime.ts";
 

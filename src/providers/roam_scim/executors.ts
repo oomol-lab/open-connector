@@ -6,7 +6,7 @@ import type {
 } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
-import { requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { createProviderFetch } from "../provider-runtime.ts";
 import {

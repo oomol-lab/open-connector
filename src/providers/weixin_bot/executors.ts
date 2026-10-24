@@ -1,7 +1,8 @@
 import type { ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 import type { WeixinBotContext } from "./runtime.ts";
 
-import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { requireCustomCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { weixinBotActionHandlers } from "./runtime.ts";
 

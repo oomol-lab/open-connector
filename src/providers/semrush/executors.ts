@@ -7,7 +7,8 @@ import type {
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { compactObject, optionalIntegerLike, optionalRawString } from "../../core/cast.ts";
-import { defineProviderExecutors, mapProviderActionSources, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors, mapProviderActionSources } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 

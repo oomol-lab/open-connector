@@ -11,7 +11,7 @@ import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-
 
 import { CastError, compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import { requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   createProviderFetch,

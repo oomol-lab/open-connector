@@ -2,7 +2,8 @@ import type { CredentialValidationResult, ExecutionContext, ProviderExecutors } 
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { compactObject, looseArray, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { isAbortLikeError, providerFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const productiveApiBaseUrl = "https://api.productive.io/api/v2/";

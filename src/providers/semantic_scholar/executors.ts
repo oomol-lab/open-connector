@@ -15,7 +15,8 @@ import {
   recordOrEmpty,
 } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import { defineProviderExecutors, mapProviderActionSources, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors, mapProviderActionSources } from "../provider-executors.ts";
 import { defineProviderProxy, providerProxyEndpointPrefixes } from "../provider-proxy.ts";
 import {
   ProviderRequestError,

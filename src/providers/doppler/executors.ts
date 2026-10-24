@@ -7,11 +7,8 @@ import type {
 import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
-import {
-  combineProviderActionHandlers,
-  defineProviderExecutors,
-  requireApiKeyCredential,
-} from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { combineProviderActionHandlers, defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { dopplerChangeRequestActionHandlers } from "./runtime.change-requests.ts";
 import { dopplerIntegrationActionHandlers } from "./runtime.integrations.ts";

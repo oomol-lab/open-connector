@@ -4,7 +4,7 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalScalarString, optionalString } from "../../core/cast.ts";
-import { requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
 import {
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,

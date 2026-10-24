@@ -15,7 +15,7 @@ import {
   requireOAuthCredential,
   requireCustomCredential,
   requireBearerCredential,
-} from "./provider-executors.ts";
+} from "./provider-credentials.ts";
 import {
   createProviderFetch,
   providerUserAgent,

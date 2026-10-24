@@ -7,7 +7,8 @@ import type {
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { requireCustomCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,

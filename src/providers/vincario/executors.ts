@@ -1,6 +1,7 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 
-import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { requireCustomCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { handlers, readContext, validateCredential } from "./runtime.ts";
 
 const service = "vincario";

@@ -4,7 +4,7 @@ import type { ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const elevioApiBaseUrl = "https://api.elev.io/v1";

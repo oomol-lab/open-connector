@@ -9,7 +9,8 @@ import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { BazhuayuRuntimeContext } from "./runtime.ts";
 
-import { defineProviderExecutors, mapProviderActionHandlers, requireCustomCredential } from "../provider-executors.ts";
+import { requireCustomCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,

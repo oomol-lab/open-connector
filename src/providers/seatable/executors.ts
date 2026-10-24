@@ -1,7 +1,8 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { createProviderFetch } from "../provider-runtime.ts";
 import { createSeaTableContext, seatableActionHandlers, validateSeaTableCredential } from "./runtime.ts";
 

@@ -8,7 +8,8 @@ import type {
 import type { ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 

@@ -8,7 +8,8 @@ import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider
 import type { BtMcpContext } from "./runtime.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { requireCustomCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { createProviderFetch } from "../provider-runtime.ts";
 import { callBtMcpTool, createBtMcpContext, listBtMcpTools, validateBtMcpCredential } from "./runtime.ts";
 

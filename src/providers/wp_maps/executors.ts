@@ -1,6 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { readWpMapsCredential, validateWpMapsCredential, wpMapsActionHandlers, wpMapsApiBaseUrl } from "./runtime.ts";

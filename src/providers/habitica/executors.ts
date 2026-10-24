@@ -16,7 +16,8 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { createProviderProxyUrl, normalizeProviderProxyHeaders, toProviderProxyError } from "../provider-proxy.ts";
 import {
   createProviderFetch,

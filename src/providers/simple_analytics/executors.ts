@@ -7,7 +7,8 @@ import type {
 import type { ApiKeyProviderContext } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { simpleAnalyticsActionHandlers, simpleAnalyticsBaseUrl, validateSimpleAnalyticsCredential } from "./runtime.ts";

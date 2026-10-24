@@ -4,11 +4,11 @@ import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 import type { MondayActionHandler } from "./runtime-common.ts";
 
+import { requireBearerCredential } from "../provider-credentials.ts";
 import {
   combineProviderActionHandlers,
   defineProviderExecutors,
   mapProviderActionSources,
-  requireBearerCredential,
 } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,

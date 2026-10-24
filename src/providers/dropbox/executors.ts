@@ -17,7 +17,8 @@ import {
   requiredRecord,
 } from "../../core/cast.ts";
 import { storeResponseInTransit } from "../../core/request.ts";
-import { defineOAuthProviderExecutors, requireOAuthCredential } from "../provider-executors.ts";
+import { requireOAuthCredential } from "../provider-credentials.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
   normalizeProviderProxyEndpoint,

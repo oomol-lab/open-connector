@@ -37,12 +37,8 @@ import { createFeishuTaskActionHandlers } from "../feishu/shared/task-runtime.ts
 import { createFeishuVcActionHandlers } from "../feishu/shared/vc-runtime.ts";
 import { createFeishuWhiteboardActionHandlers } from "../feishu/shared/whiteboard-runtime.ts";
 import { createFeishuWikiActionHandlers } from "../feishu/shared/wiki-runtime.ts";
-import {
-  defineProviderExecutors,
-  getProviderActionHandler,
-  mapProviderActionHandlers,
-  requireCustomCredential,
-} from "../provider-executors.ts";
+import { requireCustomCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors, getProviderActionHandler, mapProviderActionHandlers } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,

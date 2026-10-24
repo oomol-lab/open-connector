@@ -16,7 +16,8 @@ import {
   recordOrEmpty,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { requireCustomCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   createProviderFetch,

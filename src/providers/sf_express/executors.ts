@@ -6,11 +6,8 @@ import type {
 } from "../../core/types.ts";
 import type { SfExpressActionContext } from "./runtime.ts";
 
-import {
-  combineProviderActionHandlers,
-  defineProviderExecutors,
-  requireCustomCredential,
-} from "../provider-executors.ts";
+import { requireCustomCredential } from "../provider-credentials.ts";
+import { combineProviderActionHandlers, defineProviderExecutors } from "../provider-executors.ts";
 import { sfExpressColdchainHandlers } from "./runtime-coldchain.ts";
 import { sfExpressFreightCoreHandlers } from "./runtime-freight-core.ts";
 import { sfExpressFreightForwardCrossborderHandlers } from "./runtime-freight-forward-crossborder.ts";

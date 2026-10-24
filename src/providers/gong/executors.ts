@@ -7,7 +7,8 @@ import type {
 import type { GongContext } from "./runtime.ts";
 
 import { Buffer } from "node:buffer";
-import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { requireCustomCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,

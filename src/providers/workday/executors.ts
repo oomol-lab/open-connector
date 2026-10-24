@@ -1,6 +1,7 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 
-import { defineProviderExecutors, requireOAuthCredential } from "../provider-executors.ts";
+import { requireOAuthCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { validateWorkdayCredential, workdayActionHandlers } from "./runtime.ts";
 
 const service = "workday";

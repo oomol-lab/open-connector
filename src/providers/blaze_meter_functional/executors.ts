@@ -8,7 +8,8 @@ import type { BlazeMeterFunctionalContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
 import { createBlazeMeterProxyExecutor } from "../blaze_meter_performance/shared-runtime.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import {
   blazeMeterFunctionalActionHandlers,
   requireBlazeMeterFunctionalApiKeyId,

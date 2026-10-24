@@ -1,7 +1,7 @@
 import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import { requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { requiredInputString } from "../provider-runtime.ts";
 import { executors, signpathApiBaseUrl, validateSignpathCredential } from "./runtime.ts";

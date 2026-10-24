@@ -7,11 +7,8 @@ import type {
 import type { HomeAssistantActionContext, HomeAssistantActionHandler } from "./runtime.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import {
-  combineProviderActionHandlers,
-  defineProviderExecutors,
-  requireApiKeyCredential,
-} from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { combineProviderActionHandlers, defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { homeAssistantConfigActionHandlers } from "./runtime-config.ts";
 import { homeAssistantWebSocketActionHandlers } from "./runtime-ws.ts";

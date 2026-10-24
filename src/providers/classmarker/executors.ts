@@ -9,7 +9,8 @@ import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { sha256Hex } from "../../core/aws-sigv4.ts";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 

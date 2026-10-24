@@ -2,7 +2,8 @@ import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import {
   createProviderTimeout,
   providerUserAgent,

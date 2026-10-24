@@ -6,7 +6,8 @@ import type {
 } from "../../core/types.ts";
 import type { GistActionContext } from "./runtime-shared.ts";
 
-import { defineProviderExecutors, requireBearerCredential } from "../provider-executors.ts";
+import { requireBearerCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { gistApiBaseUrl, gistApiVersion, gistDefaultAcceptHeader } from "./runtime-shared.ts";
 import { gistActionHandlers, validateGistCredential } from "./runtime.ts";

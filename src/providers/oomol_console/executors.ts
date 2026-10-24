@@ -7,7 +7,8 @@ import type {
 import type { ProviderActionHandlers, ProviderActionName, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { OomolConsoleContext } from "./runtime.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { createProviderFetch } from "../provider-runtime.ts";
 import { createOomolConsoleMemberDirectory } from "./member-directory.ts";
 import { defaultEndpoints } from "./request.ts";

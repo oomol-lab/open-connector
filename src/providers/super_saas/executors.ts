@@ -7,7 +7,8 @@ import type {
 import type { ApiKeyProviderContext, ProviderRuntimeContextFactory } from "../provider-executors.ts";
 
 import { requiredString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { providerInputError } from "../provider-runtime.ts";
 import { superSaasActionHandlers, superSaasApiBaseUrl, validateSuperSaasCredential } from "./runtime.ts";

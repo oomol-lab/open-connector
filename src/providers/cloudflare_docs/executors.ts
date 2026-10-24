@@ -1,7 +1,8 @@
 import type { ExecutionContext, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { CloudflareDocsActionContext } from "./runtime.ts";
 
-import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { requireCustomCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { cloudflareDocsActionHandlers, cloudflareDocsMcpUrl } from "./runtime.ts";
 

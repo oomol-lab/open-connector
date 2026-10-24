@@ -1,7 +1,8 @@
 import type { ExecutionContext, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { InfluxdbCloudActionContext } from "./runtime.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { influxdbCloudActionHandlers, resolveInfluxdbCloudApiBaseUrl } from "./runtime.ts";
 

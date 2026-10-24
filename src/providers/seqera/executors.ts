@@ -1,7 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { createProviderFetch } from "../provider-runtime.ts";
 import { defineSeqeraExecutors, normalizeSeqeraApiBaseUrl, validateSeqeraCredential } from "./runtime.ts";

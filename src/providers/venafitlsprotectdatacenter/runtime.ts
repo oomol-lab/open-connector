@@ -5,7 +5,8 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 import { createHash } from "node:crypto";
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, encodePathSegment, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { requireCustomCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import {
   providerInputError,
   ProviderRequestError,

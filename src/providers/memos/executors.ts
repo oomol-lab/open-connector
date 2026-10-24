@@ -9,7 +9,8 @@ import type { MemosContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { createProviderFetch, ProviderRequestError } from "../provider-runtime.ts";
 import { createMemosContext, memosActionHandlers, normalizeMemosBaseUrl, validateMemosCredential } from "./runtime.ts";

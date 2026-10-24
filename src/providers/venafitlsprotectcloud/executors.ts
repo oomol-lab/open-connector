@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { executors, venafiCloudBaseUrls, validateVenafiCloudCredential } from "./runtime.ts";
 

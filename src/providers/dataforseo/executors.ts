@@ -7,7 +7,8 @@ import type {
 
 import { Buffer } from "node:buffer";
 import { optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { requireCustomCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { dataForSeoActionHandlers, dataForSeoApiBaseUrl, requestDataForSeoUserData } from "./runtime.ts";

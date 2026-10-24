@@ -2,7 +2,8 @@ import type { CredentialValidationResult, ExecutionContext, ProviderExecutors } 
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, stringArray } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const pendoRegions: Record<PendoRegion, string> = {

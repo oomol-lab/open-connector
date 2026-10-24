@@ -7,7 +7,8 @@ import type {
 import type { KaleidoActionContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { kaleidoActionHandlers, normalizeKaleidoBaseUrl, validateKaleidoCredential } from "./runtime.ts";
 

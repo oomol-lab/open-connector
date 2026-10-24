@@ -7,7 +7,8 @@ import type {
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { optionalString, requiredString } from "../../core/cast.ts";
-import { defineProviderExecutors, mapProviderActionHandlers, requireOAuthCredential } from "../provider-executors.ts";
+import { requireOAuthCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { baiduNetdiskActions } from "./actions.ts";
 import { executeBaiduNetdiskMcpAction, verifyBaiduNetdiskMcpConnection } from "./runtime-mcp.ts";

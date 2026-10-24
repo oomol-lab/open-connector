@@ -8,7 +8,8 @@ import type { IntegrationDefinition } from "../../triggers/common/integration.ts
 import type { PollDefinition } from "../../triggers/common/poll.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { requireCustomCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,

@@ -1,7 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { Buffer } from "node:buffer";
-import { requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
 import {
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,

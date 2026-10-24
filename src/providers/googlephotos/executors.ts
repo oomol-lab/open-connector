@@ -18,7 +18,8 @@ import {
   stringArray,
 } from "../../core/cast.ts";
 import { storeResponseInTransit } from "../../core/request.ts";
-import { defineProviderExecutors, requireOAuthCredential } from "../provider-executors.ts";
+import { requireOAuthCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 

@@ -9,7 +9,8 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { createHash, createHmac } from "node:crypto";
 import { compactObject, optionalInteger, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, mapProviderActionSources, requireCustomCredential } from "../provider-executors.ts";
+import { requireCustomCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors, mapProviderActionSources } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   providerInputError,

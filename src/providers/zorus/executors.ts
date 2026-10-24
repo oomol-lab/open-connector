@@ -3,7 +3,8 @@ import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { arrayPayload, requestJson } from "../http-json-runtime.ts";
-import { defineApiKeyProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,

@@ -4,7 +4,8 @@ import type { ProviderActionHandlers } from "../provider-executors.ts";
 import { Buffer } from "node:buffer";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 const mailgunDefaultApiBaseUrl = "https://api.mailgun.net";

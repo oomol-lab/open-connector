@@ -30,7 +30,7 @@ Before editing, read:
 - `CONTRIBUTING.md`.
 - `docs/catalog-format.md`.
 - Existing providers with similar auth and runtime shape under `src/providers`.
-- Shared provider helpers in `src/core/json-schema.ts`, `src/core/cast.ts`, `src/core/request.ts`, `src/core/types.ts`, `src/providers/provider-runtime.ts`, `src/providers/provider-executors.ts`, `src/providers/provider-proxy.ts`, and `src/providers/provider-files.ts`.
+- Shared provider helpers in `src/core/json-schema.ts`, `src/core/cast.ts`, `src/core/request.ts`, `src/core/types.ts`, `src/providers/provider-runtime.ts`, `src/providers/provider-executors.ts`, `src/providers/provider-credentials.ts`, `src/providers/provider-proxy.ts`, and `src/providers/provider-files.ts`.
 
 When the provider has official API documentation, use it as the source of truth for endpoints, auth, pagination, request bodies, response envelopes, limits, and error behavior. If you also have a reference implementation, compare it against the official docs instead of copying it blindly.
 

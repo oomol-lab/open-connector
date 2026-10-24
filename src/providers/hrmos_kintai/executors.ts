@@ -1,7 +1,8 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { HrmosContext } from "./runtime.ts";
 
-import { defineProviderExecutors, mapProviderActionHandlers, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { providerInputError } from "../provider-runtime.ts";
 import { hrmosKintaiActions } from "./actions.ts";

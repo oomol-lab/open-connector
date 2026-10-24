@@ -4,7 +4,8 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 import type { TailscaleOperationDefinition } from "./operations.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineProviderExecutors, mapProviderActionHandlers, requireCustomCredential } from "../provider-executors.ts";
+import { requireCustomCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
 import { ProviderRequestError, readProviderJsonBody, readProviderTextBody } from "../provider-runtime.ts";
 import { tailscaleOperations } from "./operations.ts";
 

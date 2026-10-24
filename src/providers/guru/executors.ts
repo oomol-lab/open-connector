@@ -10,7 +10,8 @@ import type { ProviderActionHandlers } from "../provider-executors.ts";
 import { Buffer } from "node:buffer";
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,

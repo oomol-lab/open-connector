@@ -1,4 +1,5 @@
-import type { ApiKeyProviderContext } from "./provider-executors.ts";
+import type { TransitFileWriter } from "../core/types.ts";
+import type { ProviderFetch } from "./provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../core/cast.ts";
 import { readBoundedResponseBytes } from "../core/request.ts";
@@ -12,6 +13,12 @@ import {
   runProviderRequest,
   readProviderErrorTextBody,
 } from "./provider-runtime.ts";
+
+interface FileTransferContext {
+  fetcher: ProviderFetch;
+  transitFiles?: TransitFileWriter;
+  signal?: AbortSignal;
+}
 
 export interface ProviderTransitFile {
   fileId: string;
@@ -70,7 +77,7 @@ export async function uploadProviderUrlToTransitFile(
     name: string;
     source: string;
   },
-  context: Pick<ApiKeyProviderContext, "fetcher" | "transitFiles" | "signal">,
+  context: FileTransferContext,
 ): Promise<ProviderTransitFile | null> {
   if (!context.transitFiles) {
     return null;
@@ -144,7 +151,7 @@ export async function uploadProviderUrlToTransitFile(
  */
 export async function readTransitFileInput(
   input: unknown,
-  context: Pick<ApiKeyProviderContext, "transitFiles">,
+  context: Pick<FileTransferContext, "transitFiles">,
 ): Promise<ProviderInputFile> {
   if (!context.transitFiles) {
     throw new ProviderRequestError(400, "Transit file storage is not enabled.");

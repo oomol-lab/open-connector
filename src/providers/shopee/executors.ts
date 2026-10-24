@@ -3,7 +3,8 @@ import type { OAuthClientConfig } from "../../oauth/oauth-client-config-service.
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { looseArray, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireOAuthCredential } from "../provider-executors.ts";
+import { requireOAuthCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { providerResponseError } from "../provider-runtime.ts";
 import { shopeeActions } from "./actions.ts";
 import { executeShopeeAction, fetchShopeeEntityInfo } from "./runtime.ts";

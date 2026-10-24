@@ -7,7 +7,8 @@ import type {
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { PollDefinition } from "../../triggers/common/poll.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential, requireOAuthCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential, requireOAuthCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,

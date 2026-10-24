@@ -4,7 +4,7 @@ import type { ProviderActionHandlers } from "../provider-executors.ts";
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
 import {
   createProviderTimeout,
   providerInputError,

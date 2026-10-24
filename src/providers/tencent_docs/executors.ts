@@ -8,7 +8,7 @@ import type {
 } from "../../core/types.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
-import { requireOAuthCredential } from "../provider-executors.ts";
+import { requireOAuthCredential } from "../provider-credentials.ts";
 import {
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,

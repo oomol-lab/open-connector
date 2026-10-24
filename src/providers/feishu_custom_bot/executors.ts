@@ -9,7 +9,8 @@ import type { ProviderActionHandlers } from "../provider-executors.ts";
 import { Buffer } from "node:buffer";
 import { createHash, createHmac } from "node:crypto";
 import { compactObject, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,

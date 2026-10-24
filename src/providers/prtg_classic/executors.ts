@@ -5,7 +5,8 @@ import type {
   ProviderProxyExecutor,
 } from "../../core/types.ts";
 
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { credentialProviderProxyBaseUrl, defineProviderProxy } from "../provider-proxy.ts";
 import { createPrtgClassicActionContext, prtgClassicActionHandlers, validatePrtgClassicCredential } from "./runtime.ts";
 

@@ -19,7 +19,8 @@ import {
   compactObject,
   optionalBoolean,
 } from "../googledrive/runtime-shared.ts";
-import { defineProviderExecutors, requireOAuthCredential } from "../provider-executors.ts";
+import { requireOAuthCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 

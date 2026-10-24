@@ -2,7 +2,8 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { AmplitudeActionContext } from "./runtime.ts";
 
 import { optionalString, requiredString } from "../../core/cast.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 import {

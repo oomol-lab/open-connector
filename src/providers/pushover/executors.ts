@@ -1,7 +1,7 @@
 import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { optionalRecord } from "../../core/cast.ts";
-import { requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
 import {
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,

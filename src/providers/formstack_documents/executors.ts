@@ -2,7 +2,8 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { FormstackDocumentsContext } from "./runtime.ts";
 
 import { Buffer } from "node:buffer";
-import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { requireCustomCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   formstackDocumentsActionHandlers,

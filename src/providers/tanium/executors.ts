@@ -8,7 +8,8 @@ import type { TaniumContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import {
   normalizeProviderProxyEndpoint,
   normalizeProviderProxyHeaders,

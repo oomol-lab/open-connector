@@ -10,7 +10,8 @@ import type { ProviderActionHandlers } from "../provider-executors.ts";
 import { Buffer } from "node:buffer";
 import { optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, encodePathSegment, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { defineProviderExecutors, requireApiKeyCredential, requireCustomCredential } from "../provider-executors.ts";
+import { requireApiKeyCredential, requireCustomCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,

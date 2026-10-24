@@ -5,7 +5,8 @@ import type {
   ProviderProxyExecutor,
 } from "../../core/types.ts";
 
-import { defineProviderExecutors, mapProviderActionNames, requireCustomCredential } from "../provider-executors.ts";
+import { requireCustomCredential } from "../provider-credentials.ts";
+import { defineProviderExecutors, mapProviderActionNames } from "../provider-executors.ts";
 import { defineProviderProxy, providerProxyEndpointPrefixes } from "../provider-proxy.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { appleMapsActions } from "./actions.ts";
