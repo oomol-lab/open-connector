@@ -223,7 +223,7 @@ async function readJsonPayload(response: Response): Promise<unknown> {
 
 function createDailybotError(status: number, payload: unknown, phase: DailybotPhase): ProviderRequestError {
   const message = extractDailybotMessage(payload) ?? `Dailybot request failed with ${status || 500}`;
-  if (phase === "validate" && (status === 401 || status === 403)) return new ProviderRequestError(400, message);
+  if (phase === "validate" && (status === 401 || status === 403)) return providerInputError(message);
   return new ProviderRequestError(status || 500, message);
 }
 

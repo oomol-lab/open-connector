@@ -14,6 +14,8 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 type ZhihuActionHandler = (
@@ -362,7 +364,7 @@ async function buildZhihuError(response: Response, mode: "validate" | "execute")
   }
 
   if (mode === "validate" && (response.status === 400 || response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (mode === "execute" && (response.status === 401 || response.status === 403)) {
@@ -370,7 +372,7 @@ async function buildZhihuError(response: Response, mode: "validate" | "execute")
   }
 
   if (mode === "execute" && (response.status === 400 || response.status === 404)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   return new ProviderRequestError(response.status || 500, message);
@@ -386,7 +388,7 @@ function buildZhihuPayloadError(payload: unknown, mode: "validate" | "execute") 
   }
 
   if (mode === "validate" && (code === 10001 || code === 20001)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (mode === "execute" && code === 20001) {
@@ -394,10 +396,10 @@ function buildZhihuPayloadError(payload: unknown, mode: "validate" | "execute") 
   }
 
   if (mode === "execute" && code === 10001) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 async function readZhihuPayload(response: Response) {

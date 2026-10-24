@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
-import { providerResponseError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  providerResponseError,
+  providerUserAgent,
+  ProviderRequestError,
+  providerInputError,
+} from "../provider-runtime.ts";
 
 export const workiomApiBaseUrl = "https://api.workiom.com";
 export const workiomApiPathPrefix = "/api/services/app";
@@ -189,7 +194,7 @@ function createWorkiomError(response: Response, payload: unknown, phase: Workiom
   if (response.status === 401 || response.status === 403 || record?.unAuthorizedRequest === true) {
     return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
   }
-  if (response.status >= 400 && response.status < 500) return new ProviderRequestError(400, message);
+  if (response.status >= 400 && response.status < 500) return providerInputError(message);
   return new ProviderRequestError(response.status || 500, message);
 }
 

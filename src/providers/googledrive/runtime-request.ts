@@ -9,12 +9,12 @@ import {
   ProviderRequestError,
   providerInputError,
   providerResponseError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 export type GoogleQueryValue = string | readonly string[] | undefined;
 
 const defaultService = "googledrive";
-const googleDefaultRequestTimeoutMs = 30_000;
 
 export interface GoogleRequestOptions {
   accessToken: string;
@@ -80,7 +80,7 @@ export async function googleRequest(url: string, input: GoogleRequestOptions): P
         : headers,
     ...(input.rawBody != null ? { body: input.rawBody } : hasJsonBody ? { body: JSON.stringify(input.body) } : {}),
   };
-  const timeoutMs = input.timeoutMs ?? googleDefaultRequestTimeoutMs;
+  const timeoutMs = input.timeoutMs ?? defaultProviderRequestTimeoutMs;
   const timeout = createProviderTimeout(input.signal, timeoutMs);
   let response: Response;
   try {

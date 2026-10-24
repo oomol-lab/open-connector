@@ -17,6 +17,7 @@ import {
   defineProviderProxy,
   providerProxyEndpointPrefixes,
   ProviderRequestError,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "enigma";
@@ -712,7 +713,7 @@ function createEnigmaError(response: Response, payload: unknown, phase: EnigmaRe
   }
 
   if (phase === "validate" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (phase === "execute" && status === 401) {
@@ -724,7 +725,7 @@ function createEnigmaError(response: Response, payload: unknown, phase: EnigmaRe
   }
 
   if (status === 400 || status === 404 || status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   return new ProviderRequestError(status >= 500 ? 502 : status, message);

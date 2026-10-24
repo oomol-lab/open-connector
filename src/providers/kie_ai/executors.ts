@@ -133,7 +133,7 @@ function mapKieAiError(code: number, message: string, status: number): ProviderR
     case 403:
       return new ProviderRequestError(401, message);
     case 422:
-      return new ProviderRequestError(400, message);
+      return providerInputError(message);
     case 429:
       return new ProviderRequestError(429, message);
     default:

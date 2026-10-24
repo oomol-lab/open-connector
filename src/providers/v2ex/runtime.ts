@@ -9,12 +9,13 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requiredResponseRecord,
+  providerInputError,
+  providerResponseError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 export const v2exApiBaseUrl = "https://www.v2ex.com/api/v2";
 export const v2exLegacyApiBaseUrl = "https://www.v2ex.com/api";
-
-const v2exRequestTimeoutMs = 30_000;
 
 type V2exRequestPhase = "validate" | "execute";
 type V2exActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -217,7 +218,7 @@ async function requestV2exLegacyJson(input: {
   fetcher: ProviderFetch;
   signal?: AbortSignal;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, v2exRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   const url = new URL(`${v2exLegacyApiBaseUrl}${input.path}`);
   let response: Response;
   let payload: unknown;
@@ -232,7 +233,7 @@ async function requestV2exLegacyJson(input: {
     if (timeout.didTimeout() || isAbortLikeError(error)) {
       throw new ProviderRequestError(
         504,
-        `V2EX legacy ${input.path} request timed out after ${Math.ceil(v2exRequestTimeoutMs / 1000)} seconds`,
+        `V2EX legacy ${input.path} request timed out after ${Math.ceil(defaultProviderRequestTimeoutMs / 1000)} seconds`,
       );
     }
     if (error instanceof ProviderRequestError) throw error;
@@ -260,7 +261,7 @@ async function requestV2exJson(input: {
   signal?: AbortSignal;
   phase: V2exRequestPhase;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, v2exRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   const url = buildV2exUrl(input.path, input.query);
   let response: Response;
   let payload: unknown;
@@ -276,7 +277,7 @@ async function requestV2exJson(input: {
     if (timeout.didTimeout() || isAbortLikeError(error)) {
       throw new ProviderRequestError(
         504,
-        `V2EX ${input.path} request timed out after ${Math.ceil(v2exRequestTimeoutMs / 1000)} seconds`,
+        `V2EX ${input.path} request timed out after ${Math.ceil(defaultProviderRequestTimeoutMs / 1000)} seconds`,
       );
     }
     if (error instanceof ProviderRequestError) throw error;
@@ -394,7 +395,7 @@ function mapV2exError(
   const resolvedMessage = message || "V2EX request failed";
   const authAware = options?.authAware ?? true;
   if (status === 429) return new ProviderRequestError(429, resolvedMessage);
-  if (phase === "validate" && (status === 401 || status === 403)) return new ProviderRequestError(400, resolvedMessage);
+  if (phase === "validate" && (status === 401 || status === 403)) return providerInputError(resolvedMessage);
   if (authAware && phase === "execute" && status === 401) return new ProviderRequestError(401, resolvedMessage);
   if (phase === "execute" && status === 403) return new ProviderRequestError(403, resolvedMessage);
   return new ProviderRequestError(status || 500, resolvedMessage);
@@ -402,6 +403,6 @@ function mapV2exError(
 
 function mapV2exSuccessError(message: string | undefined, phase: V2exRequestPhase): ProviderRequestError {
   const resolvedMessage = message || "V2EX request failed";
-  if (phase === "validate") return new ProviderRequestError(400, resolvedMessage);
-  return new ProviderRequestError(502, resolvedMessage);
+  if (phase === "validate") return providerInputError(resolvedMessage);
+  return providerResponseError(resolvedMessage);
 }

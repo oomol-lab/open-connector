@@ -3,10 +3,15 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalNumber, optionalRecord, requiredRecord } from "../../core/cast.ts";
-import { isAbortLikeError, providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
+import {
+  isAbortLikeError,
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+  defaultProviderRequestTimeoutMs,
+} from "../provider-runtime.ts";
 
 export const fireberryApiBaseUrl = "https://api.fireberry.com";
-export const fireberryDefaultRequestTimeoutMs = 30_000;
 
 type FireberryRequestPhase = "validate" | "execute";
 type FireberryObjectName = "account" | "contact";
@@ -221,8 +226,8 @@ async function requestFireberryJson(input: {
   signal?: AbortSignal;
 }) {
   const signal = input.signal
-    ? AbortSignal.any([input.signal, AbortSignal.timeout(fireberryDefaultRequestTimeoutMs)])
-    : AbortSignal.timeout(fireberryDefaultRequestTimeoutMs);
+    ? AbortSignal.any([input.signal, AbortSignal.timeout(defaultProviderRequestTimeoutMs)])
+    : AbortSignal.timeout(defaultProviderRequestTimeoutMs);
 
   try {
     const response = await input.fetcher(buildFireberryUrl(input.path, input.query), {

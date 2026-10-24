@@ -26,13 +26,13 @@ import {
   readProviderTextBody,
   requireApiKeyCredential,
   requiredInputString,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "files_com";
 const filesComApiHostSuffix = ".files.com";
 const filesComApiPathPrefix = "/api/rest/v1";
 const filesComValidationEndpoint = "/users/me.json";
-const filesComDefaultRequestTimeoutMs = 30_000;
 
 interface FilesComActionContext extends ApiKeyProviderContext {
   subdomain: string;
@@ -453,7 +453,7 @@ function pickAccountLabel(payload: unknown): string | undefined {
 }
 
 function composeFilesComRequestSignal(parent?: AbortSignal): AbortSignal {
-  const timeout = AbortSignal.timeout(filesComDefaultRequestTimeoutMs);
+  const timeout = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   return parent ? AbortSignal.any([parent, timeout]) : timeout;
 }
 

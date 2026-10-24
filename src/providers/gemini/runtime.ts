@@ -2,7 +2,12 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { jsonObject, readBoundedResponseBytes } from "../../core/request.ts";
-import { isAbortLikeError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  isAbortLikeError,
+  providerUserAgent,
+  ProviderRequestError,
+  defaultProviderRequestTimeoutMs,
+} from "../provider-runtime.ts";
 
 export const geminiApiBaseUrl = "https://generativelanguage.googleapis.com/v1beta";
 export const geminiDefaultTextModel = "gemini-2.5-flash";
@@ -13,7 +18,6 @@ export const geminiDefaultVideoModel = "veo-3.0-generate-001";
 export const geminiDefaultVideoPollIntervalMs = 10_000;
 export const geminiDefaultVideoMaxWaitMs: number = 12 * 60_000;
 export const geminiDefaultRequestTimeoutMs = 10_000;
-export const geminiDefaultLongRunningRequestTimeoutMs = 30_000;
 
 type GeminiErrorMode = "validate" | "execute";
 
@@ -305,7 +309,7 @@ export async function generateGeminiImage(
     },
     context,
     "generate_image",
-    resolveGeminiTimeoutMs(input.timeout, geminiDefaultLongRunningRequestTimeoutMs),
+    resolveGeminiTimeoutMs(input.timeout, defaultProviderRequestTimeoutMs),
   );
 
   await assertGeminiResponse(response, "execute", "generate_image");
@@ -360,7 +364,7 @@ export async function generateGeminiVideos(
     },
     context,
     "generate_videos",
-    geminiDefaultLongRunningRequestTimeoutMs,
+    defaultProviderRequestTimeoutMs,
   );
 
   await assertGeminiResponse(response, "execute", "generate_videos");
@@ -462,7 +466,7 @@ async function fetchGeminiVideoOperation(
     },
     context,
     "get_videos_operation",
-    geminiDefaultLongRunningRequestTimeoutMs,
+    defaultProviderRequestTimeoutMs,
   );
 
   await assertGeminiResponse(response, "execute", "get_videos_operation");
@@ -662,7 +666,7 @@ async function downloadMediaBytes(
     },
     context,
     "media download",
-    geminiDefaultLongRunningRequestTimeoutMs,
+    defaultProviderRequestTimeoutMs,
   );
 
   if (!response.ok) {

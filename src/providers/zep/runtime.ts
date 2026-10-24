@@ -8,6 +8,8 @@ import {
   ProviderRequestError,
   readProviderTextBody,
   runProviderRequest,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 export const zepApiBaseUrl = "https://api.getzep.com/api/v2";
@@ -208,15 +210,15 @@ function createZepError(status: number, payload: unknown, phase: "validate" | "e
   const message = extractZepErrorMessage(payload) ?? `Zep request failed with status ${status}`;
   if (status === 429) return new ProviderRequestError(429, message);
   if (phase === "validate" && status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 401 || status === 403) {
     return new ProviderRequestError(status, message);
   }
   if (status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function extractZepErrorMessage(payload: unknown): string | undefined {

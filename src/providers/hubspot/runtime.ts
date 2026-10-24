@@ -6,12 +6,11 @@ import { ProtocolError } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
 import { compactObject } from "../../core/cast.ts";
 import { withMcpClient } from "../mcp-client.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, defaultProviderRequestTimeoutMs } from "../provider-runtime.ts";
 
 type HubspotMcpToolResult = Awaited<ReturnType<Client["callTool"]>>;
 
 export const hubspotMcpEndpoint = "https://mcp.hubspot.com/";
-const hubspotMcpRequestTimeoutMs = 30_000;
 
 interface HubspotActionContext {
   accessToken: string;
@@ -384,7 +383,7 @@ async function listHubspotMcpTools(input: { accessToken: string; fetcher: typeof
       mapError: (error) => mapHubspotMcpError("hubspot", error),
     },
     async (client) => {
-      const result = await client.listTools({}, { timeout: hubspotMcpRequestTimeoutMs });
+      const result = await client.listTools({}, { timeout: defaultProviderRequestTimeoutMs });
       if (!result.tools.some((tool) => directMcpToolNames.has(tool.name) || tool.name === "get_user_details")) {
         throw new ProviderRequestError(502, "hubspot MCP did not advertise any supported tools");
       }
@@ -399,7 +398,7 @@ async function callHubspotMcpTool(input: HubspotMcpToolCallInput) {
       bearerToken: input.accessToken,
       service: "hubspot",
       fetcher: input.fetcher,
-      requestTimeoutMs: hubspotMcpRequestTimeoutMs,
+      requestTimeoutMs: defaultProviderRequestTimeoutMs,
       toolName: input.toolName,
       arguments: input.arguments,
     });

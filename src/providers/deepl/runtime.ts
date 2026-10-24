@@ -1,7 +1,13 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  providerUserAgent,
+  ProviderRequestError,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 export const deeplApiBaseUrl = "https://api.deepl.com";
 export const deeplApiFreeBaseUrl = "https://api-free.deepl.com";
@@ -186,13 +192,13 @@ function createDeeplHttpError(status: number, payload: unknown, mode: DeeplReque
   const message = extractDeeplErrorMessage(payload) ?? `DeepL request failed with status ${status}`;
 
   if (status === 400) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 401 || status === 403) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 404) {
-    return new ProviderRequestError(502, message);
+    return providerResponseError(message);
   }
   if (status === 429 || status === 456) {
     return new ProviderRequestError(429, message);

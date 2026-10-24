@@ -11,6 +11,7 @@ import {
   defineProviderProxy,
   providerUserAgent,
   requiredResponseRecord,
+  providerInputError,
 } from "../provider-runtime.ts";
 import { stripeEvent } from "./trigger-on-event.ts";
 
@@ -383,7 +384,7 @@ function mapStripeError(status: number, message: string): ProviderRequestError {
   }
 
   if (status === 400 || status === 404) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (status === 429) {

@@ -8,6 +8,8 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 const sendgridDefaultBaseUrl = "https://api.sendgrid.com";
@@ -481,13 +483,13 @@ function sendgridHeaders(apiKey: string, hasBody: boolean) {
 function mapSendgridError(status: number, message: string, mode: "validate" | "execute") {
   if (status === 401) {
     if (mode === "validate") {
-      return new ProviderRequestError(400, message);
+      return providerInputError(message);
     }
     return new ProviderRequestError(401, message);
   }
   if (status === 403) {
     if (mode === "validate") {
-      return new ProviderRequestError(400, message);
+      return providerInputError(message);
     }
     return new ProviderRequestError(403, message);
   }
@@ -495,9 +497,9 @@ function mapSendgridError(status: number, message: string, mode: "validate" | "e
     return new ProviderRequestError(429, message);
   }
   if (status === 400 || status === 404) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 async function readSendgridError(response: Response): Promise<SendgridErrorInfo> {

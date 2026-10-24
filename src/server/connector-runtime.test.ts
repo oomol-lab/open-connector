@@ -5,6 +5,7 @@ import { cp, mkdtemp, mkdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { getProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import { createConnectorRuntime } from "./connector-runtime.ts";
 import { AesGcmSecretCodec } from "./secrets/secret-codec.ts";
 import { SqliteRuntimeDatabase } from "./storage/sqlite/runtime-store.ts";
@@ -429,7 +430,40 @@ describe("headless runtime", () => {
     expect((await request("/v1/health", undefined, "runtime-token")).status).toBe(503);
   });
 
-  it("allows one active runtime and releases the slot on initialization failure or close", async () => {
+  it("keeps concurrent runtimes' network policies independent after peer shutdown", async () => {
+    const seen: boolean[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>(async () => {
+        await Promise.resolve();
+        seen.push(getProviderNetworkPolicy().allowPrivateNetwork ?? false);
+        return Response.json({ login: "fixture", id: 123 });
+      }),
+    );
+    runtime = await createConnectorRuntime({ ...(await fixture()), network: { allowPrivateNetwork: true } });
+    const peer = await createConnectorRuntime({ ...(await fixture()), network: { allowPrivateNetwork: false } });
+    const connect = (target: ConnectorRuntime) =>
+      target.fetch(
+        new Request(`${publicOrigin}/api/connections/github`, {
+          method: "PUT",
+          headers: { authorization: "Bearer admin-token", "content-type": "application/json" },
+          body: JSON.stringify({ authType: "api_key", values: { apiKey: "fixture-secret" } }),
+        }),
+      );
+    try {
+      const responses = await Promise.all([connect(runtime), connect(peer)]);
+      expect(responses.map((response) => response.status)).toEqual([200, 200]);
+      expect(seen.sort()).toEqual([false, true]);
+      await runtime.close();
+      seen.length = 0;
+      expect((await connect(peer)).status).toBe(200);
+      expect(seen).toEqual([false]);
+    } finally {
+      await peer.close();
+    }
+  });
+
+  it("allows independent runtimes after initialization failures and peer shutdown", async () => {
     const options = await fixture();
     await expect(createConnectorRuntime({ ...options, publicOrigin: "file:///bad" })).rejects.toThrow("publicOrigin");
     await expect(createConnectorRuntime({ ...options, transitFiles: { maxBytes: 0 } })).rejects.toThrow("maxBytes");
@@ -437,9 +471,8 @@ describe("headless runtime", () => {
       "exact http(s) origin",
     );
     runtime = await createConnectorRuntime(options);
-    await expect(createConnectorRuntime(options)).rejects.toThrow("Only one");
-    await runtime.close();
-    runtime = await createConnectorRuntime(options);
+    const peer = await createConnectorRuntime(await fixture());
+    await peer.close();
     expect((await request("/v1/health", undefined, "runtime-token")).status).toBe(200);
   });
 });

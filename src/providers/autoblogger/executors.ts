@@ -19,6 +19,7 @@ import {
   requireApiKeyCredential,
   requiredInputString,
   toProviderProxyError,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "autoblogger";
@@ -278,7 +279,7 @@ async function readAutobloggerPayload(response: Response): Promise<unknown> {
 function createAutobloggerError(status: number, payload: unknown, phase: "validate" | "execute"): ProviderRequestError {
   const message = readErrorMessage(payload) ?? `autoblogger request failed with ${status}`;
   if (status === 400 || status === 404) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   } else if (status === 401 || looksLikeAuthError(payload)) {
     return new ProviderRequestError(phase === "validate" ? 401 : 400, message);
   } else if (status === 402 || status === 429) {
@@ -304,7 +305,7 @@ function readErrorMessage(payload: unknown): string | undefined {
 }
 
 function readDashboardEmail(value: unknown): string {
-  return requiredString(value, "dashboardEmail", (message) => new ProviderRequestError(400, message));
+  return requiredString(value, "dashboardEmail", providerInputError);
 }
 
 function requiredResponseString(value: unknown, fieldName: string): string {

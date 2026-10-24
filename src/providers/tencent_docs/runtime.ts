@@ -8,7 +8,7 @@ import {
   optionalRecord,
   optionalString,
 } from "../../core/cast.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { ProviderRequestError, providerInputError, providerResponseError } from "../provider-runtime.ts";
 
 const tencentDocsUserInfoUrl = "https://docs.qq.com/oauth/v2/userinfo";
 export const tencentDocsApiBaseUrl: string = "https://docs.qq.com";
@@ -519,7 +519,7 @@ function mapTencentDocsBusinessError(ret: number, message: string, status: numbe
 
 function mapTencentDocsHttpError(status: number, message: string) {
   if (status === 400) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 401 || status === 403) {
     return new ProviderRequestError(status, message);
@@ -671,7 +671,7 @@ function normalizeNullableInteger(value: unknown) {
 function requireString(value: unknown, message: string) {
   const stringValue = optionalString(value);
   if (!stringValue) {
-    throw new ProviderRequestError(502, message);
+    throw providerResponseError(message);
   }
   return stringValue;
 }
@@ -686,7 +686,7 @@ function requireActionInputString(value: unknown, fieldName: string) {
 
 function requireRecord(value: unknown, message: string) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new ProviderRequestError(502, message);
+    throw providerResponseError(message);
   }
   return value as Record<string, unknown>;
 }

@@ -2,12 +2,11 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, defaultProviderRequestTimeoutMs } from "../provider-runtime.ts";
 import { netlifyConnectorScopes } from "./actions.ts";
 
 export const netlifyApiBaseUrl = "https://api.netlify.com/api/v1";
 const netlifyValidationPath = "/user";
-const sourceFetchTimeoutMs = 30_000;
 const maxSourceBytes = 100 * 1024 * 1024;
 
 type NetlifyRequestPhase = "validate" | "execute";
@@ -585,7 +584,7 @@ async function downloadSourceFile(
 }> {
   const url = validateSourceUrl(sourceUrl, fieldName);
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), sourceFetchTimeoutMs);
+  const timeout = setTimeout(() => controller.abort(), defaultProviderRequestTimeoutMs);
 
   try {
     const response = await fetcher(url, {

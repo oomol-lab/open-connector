@@ -27,6 +27,7 @@ import {
   readProviderProxyResponse,
   requireApiKeyCredential,
   toProviderProxyError,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "mixpanel";
@@ -639,10 +640,10 @@ function createMixpanelError(
     return new ProviderRequestError(phase === "validate" ? 400 : response.status, message);
   }
   if (response.status === 404 && (phase === "validate" || notFoundAsInvalidInput)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 400 || response.status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(response.status || 502, message);
 }

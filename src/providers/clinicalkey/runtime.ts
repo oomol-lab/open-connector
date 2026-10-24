@@ -6,6 +6,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   runProviderRequest,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 export const clinicalKeyApiBaseUrl = "https://api.elsevier.com/sushi/r51";
@@ -196,7 +197,7 @@ function createClinicalKeyError(status: number, payload: unknown, phase: Clinica
   }
 
   if (phase === "validate" && status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (status === 401 || status === 403) {
@@ -207,7 +208,7 @@ function createClinicalKeyError(status: number, payload: unknown, phase: Clinica
     return new ProviderRequestError(502, message, status);
   }
 
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function extractClinicalKeyErrorMessage(payload: unknown): string | undefined {

@@ -2,7 +2,13 @@ import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-ru
 import type { InstabotActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  runProviderRequest,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 export interface InstabotCredentialCheck {
   providerAccountId?: string;
@@ -144,7 +150,7 @@ export async function executeInstabotAction(
   return handler(
     input.input,
     readInstabotCredential({
-      apiKey: requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message)),
+      apiKey: requiredString(input.apiKey, "apiKey", providerInputError),
       masterApiKey: input.values?.masterApiKey ?? "",
     }),
     fetcher,
@@ -240,7 +246,7 @@ function createInstabotError(status: number, payload: unknown, phase: InstabotPh
     return new ProviderRequestError(429, message);
   }
   if (phase === "validate" && status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (phase === "execute" && status === 401) {
     return new ProviderRequestError(401, message);
@@ -263,7 +269,7 @@ function normalizeStatus(payload: Record<string, unknown>) {
 
 function readInstabotCredential(input: Record<string, string>): InstabotCredential {
   return {
-    apiKey: requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message)),
+    apiKey: requiredString(input.apiKey, "apiKey", providerInputError),
     masterApiKey: readRequiredString(input.masterApiKey, "masterApiKey"),
   };
 }
@@ -274,7 +280,7 @@ function readUserId(value: unknown) {
 
 function requirePositiveInteger(value: unknown, message: string) {
   if (typeof value !== "number" || !Number.isInteger(value) || value < 1) {
-    throw new ProviderRequestError(400, message);
+    throw providerInputError(message);
   }
   return value;
 }
@@ -304,7 +310,7 @@ function readResolve(value: unknown) {
 function requireObject(value: unknown, message: string) {
   const record = optionalRecord(value);
   if (!record) {
-    throw new ProviderRequestError(502, message);
+    throw providerResponseError(message);
   }
   return record;
 }

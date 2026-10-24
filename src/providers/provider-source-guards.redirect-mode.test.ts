@@ -39,7 +39,9 @@ function isCommentLine(line: string): boolean {
   return trimmed.startsWith("//") || trimmed.startsWith("*");
 }
 
-describe("provider redirect mode guard", () => {
+const sourceFiles = listSourceFiles(providersDir);
+
+describe("provider redirect mode guard", { timeout: Math.max(5_000, sourceFiles.length * 5) }, () => {
   it("recognizes the error redirect mode in its common spellings", () => {
     expect(errorRedirectMode.test('{ redirect: "error" }')).toBe(true);
     expect(errorRedirectMode.test("{ redirect: 'error' }")).toBe(true);
@@ -49,7 +51,7 @@ describe("provider redirect mode guard", () => {
   });
 
   it("keeps provider requests off the redirect mode Cloudflare Workers does not implement", () => {
-    const files = listSourceFiles(providersDir);
+    const files = sourceFiles;
     expect(files.length).toBeGreaterThanOrEqual(minimumScannedFiles);
 
     const offenders = files.flatMap((path) =>

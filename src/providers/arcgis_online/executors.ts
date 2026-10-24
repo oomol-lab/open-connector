@@ -11,6 +11,7 @@ import {
   ProviderRequestError,
   readProviderJsonBody,
   requireApiKeyCredential,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "arcgis_online";
@@ -188,7 +189,7 @@ function createArcgisOnlineError(status: number, payload: unknown): ProviderRequ
     return new ProviderRequestError(401, message);
   }
   if (status === 400 || upstreamCode === 400) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(status >= 500 ? status : 502, message);
 }

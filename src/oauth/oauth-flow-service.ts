@@ -16,7 +16,8 @@ import type {
 import type { OAuthTokenResult } from "./oauth-token.ts";
 
 import { createHash, randomBytes } from "node:crypto";
-import { ConnectionError, normalizeConnectionName } from "../connection-service.ts";
+import { ConnectionError } from "../connection-error.ts";
+import { normalizeConnectionName } from "../connection-service.ts";
 import {
   providerFetch,
   ProviderDispatchRequestError,

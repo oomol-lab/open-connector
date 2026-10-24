@@ -8,10 +8,10 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 export const sendmatorApiBaseUrl = "https://api.sendmator.com/api/v1";
-const sendmatorDefaultRequestTimeoutMs = 30_000;
 
 type SendmatorActionHandler = (input: Record<string, unknown>, context: SendmatorActionContext) => Promise<unknown>;
 
@@ -176,7 +176,7 @@ async function requestSendmatorJson(input: {
     headers["content-type"] = "application/json";
   }
 
-  const timeout = createProviderTimeout(input.signal, sendmatorDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   try {
     response = await input.fetcher(url.toString(), {
@@ -189,7 +189,7 @@ async function requestSendmatorJson(input: {
     throw new ProviderRequestError(
       502,
       timeout.didTimeout() || isAbortLikeError(error)
-        ? `sendmator request timed out after ${sendmatorDefaultRequestTimeoutMs}ms`
+        ? `sendmator request timed out after ${defaultProviderRequestTimeoutMs}ms`
         : `sendmator request failed: ${error instanceof Error ? error.message : "Unknown transport error"}`,
     );
   } finally {

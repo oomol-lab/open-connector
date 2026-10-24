@@ -1,5 +1,5 @@
 import { requiredString } from "../../core/cast.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { ProviderRequestError, providerInputError } from "../provider-runtime.ts";
 
 const base32Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 export const totpDigits = 6;
@@ -22,10 +22,9 @@ export interface TotpCode {
  * Validate and normalize the three fields stored for a TOTP connection.
  */
 export function readTotpCredential(values: Record<string, string>): TotpCredential {
-  const createError = (message: string): ProviderRequestError => new ProviderRequestError(400, message);
-  const website = requiredString(values.website, "website", createError);
-  const username = requiredString(values.username, "username", createError);
-  const secret = requiredString(values.secret, "secret", createError);
+  const website = requiredString(values.website, "website", providerInputError);
+  const username = requiredString(values.username, "username", providerInputError);
+  const secret = requiredString(values.secret, "secret", providerInputError);
   const websiteUrl = parseWebsiteUrl(website);
   decodeBase32Secret(secret);
   return { website, username, secret, websiteUrl };

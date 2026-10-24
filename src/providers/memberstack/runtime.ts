@@ -8,6 +8,7 @@ import {
   providerUserAgent,
   requiredInputString,
   runProviderRequest,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const memberstackApiBaseUrl = "https://admin.memberstack.com";
@@ -232,7 +233,7 @@ function createMemberstackError(status: number, payload: unknown, phase: Members
   }
 
   if (phase === "validate" && status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (phase === "execute" && status === 401) {

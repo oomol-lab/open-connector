@@ -17,13 +17,13 @@ import {
   defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 import { folkCompanyMutableKeys, folkPersonMutableKeys } from "./actions.ts";
 
 const service = "folk";
 const folkApiBaseUrl = "https://api.folk.app";
 const folkCurrentUserPath = "/v1/users/me";
-const folkDefaultRequestTimeoutMs = 30_000;
 
 type FolkPhase = "validate" | "execute";
 type FolkActionContext = ApiKeyProviderContext;
@@ -276,7 +276,7 @@ export const credentialValidators: CredentialValidators = {
 };
 
 async function requestFolkJson(context: FolkActionContext, input: FolkRequestInput): Promise<Record<string, unknown>> {
-  const timeoutSignal = AbortSignal.timeout(folkDefaultRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = context.signal ? AbortSignal.any([context.signal, timeoutSignal]) : timeoutSignal;
 
   try {

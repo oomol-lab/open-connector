@@ -117,7 +117,7 @@ function mapError(response: Response, payload: unknown, phase: "validate" | "exe
     optionalString(record?.title) ??
     `Evervault request failed with status ${response.status}`;
   if (response.status === 429) return new ProviderRequestError(429, message);
-  if (phase === "validate" && response.status < 500) return new ProviderRequestError(400, message);
+  if (phase === "validate" && response.status < 500) return providerInputError(message);
   if (response.status === 401) return new ProviderRequestError(401, message);
   if (response.status === 403) return new ProviderRequestError(403, message);
   return new ProviderRequestError(response.status < 500 ? 400 : 502, message);

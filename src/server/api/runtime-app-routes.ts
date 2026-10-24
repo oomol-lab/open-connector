@@ -3,7 +3,7 @@ import type { ActionPolicySnapshot } from "../../core/action-policy.ts";
 import type { Context } from "hono";
 
 import { Hono } from "hono";
-import { ConnectionError } from "../../connection-service.ts";
+import { ConnectionError } from "../../connection-error.ts";
 import {
   mapConnectionErrorStatus,
   serializeRuntimeConnectedApp,

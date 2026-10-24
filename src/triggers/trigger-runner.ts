@@ -11,7 +11,7 @@ import type { ConnectorProxy } from "./common/proxy.ts";
 import type { TriggerRequest } from "./request.ts";
 import type { TriggerSubscription, TriggerStore } from "./store.ts";
 
-import { ConnectionError } from "../connection-service.ts";
+import { ConnectionError } from "../connection-error.ts";
 import { optionalInteger, optionalRecord } from "../core/cast.ts";
 import { withProviderHttpDispatch } from "../core/provider-http-dispatch.ts";
 import { readOAuthClientConfigMetadata } from "../oauth/oauth-client-config-service.ts";

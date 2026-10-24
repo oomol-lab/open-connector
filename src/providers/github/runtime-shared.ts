@@ -1,7 +1,7 @@
 import type { TransitFileWriter } from "../../core/types.ts";
 
 import { compactObject, optionalInteger, optionalString, optionalRawString } from "../../core/cast.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { ProviderRequestError, providerInputError } from "../provider-runtime.ts";
 
 export { compactObject };
 
@@ -199,7 +199,7 @@ export function normalizeGitHubError(
     return new ProviderRequestError(404, message);
   }
   if (response.status === 400 || response.status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   return new ProviderRequestError(500, message, response.status);

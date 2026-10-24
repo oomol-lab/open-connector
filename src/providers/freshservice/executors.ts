@@ -15,11 +15,11 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "freshservice";
 const freshserviceValidationPath = "/api/v2/tickets";
-const freshserviceDefaultRequestTimeoutMs = 30_000;
 const freshserviceDefaultPageSize = 30;
 
 interface FreshserviceActionContext {
@@ -260,7 +260,7 @@ async function requestFreshserviceJson(
   context: FreshserviceActionContext,
   input: FreshserviceRequestInput,
 ): Promise<unknown> {
-  const timeoutSignal = AbortSignal.timeout(freshserviceDefaultRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = context.signal ? AbortSignal.any([context.signal, timeoutSignal]) : timeoutSignal;
 
   let response: Response;
@@ -281,7 +281,7 @@ async function requestFreshserviceJson(
     if (timeoutSignal.aborted && !context.signal?.aborted && isAbortLikeError(error)) {
       throw new ProviderRequestError(
         504,
-        `Freshservice request timed out after ${Math.max(1, Math.ceil(freshserviceDefaultRequestTimeoutMs / 1000))} seconds`,
+        `Freshservice request timed out after ${Math.max(1, Math.ceil(defaultProviderRequestTimeoutMs / 1000))} seconds`,
       );
     }
 

@@ -8,6 +8,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 export interface OksignActionContext {
@@ -27,7 +28,6 @@ type OksignActionHandler = (input: Record<string, unknown>, context: OksignActio
 type OksignRequestHeaders = Record<string, string | undefined>;
 
 export const oksignApiBaseUrl = "https://www.oksign.be";
-const oksignDefaultTimeoutMs = 30_000;
 const oksignCreditsPath = "/services/rest/v1/credits/retrieve";
 const oksignActiveDocumentsPath = "/services/rest/v1/documents/active";
 const oksignMetadataV2Path = "/services/rest/v2/metadata/retrieve";
@@ -197,7 +197,7 @@ async function requestOksignJson(input: {
   headers?: OksignRequestHeaders;
   emptyReasonAsNull?: boolean;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.signal, oksignDefaultTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(new URL(input.path, oksignApiBaseUrl), {
       method: "GET",
@@ -222,7 +222,7 @@ async function requestOksignJson(input: {
     if (timeout.didTimeout() || isAbortLikeError(error)) {
       throw new ProviderRequestError(
         504,
-        `OKSign request timed out after ${Math.max(1, Math.ceil(oksignDefaultTimeoutMs / 1000))} seconds`,
+        `OKSign request timed out after ${Math.max(1, Math.ceil(defaultProviderRequestTimeoutMs / 1000))} seconds`,
       );
     }
 

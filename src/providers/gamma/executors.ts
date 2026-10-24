@@ -11,12 +11,12 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requiredInputString,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "gamma";
 const gammaApiBaseUrl = "https://public-api.gamma.app";
 const gammaApiVersionPath = "/v1.0";
-const gammaDefaultRequestTimeoutMs = 30_000;
 
 type GammaRequestPhase = "validate" | "execute";
 type GammaActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -290,7 +290,9 @@ function isTerminalGenerationStatus(status: string | undefined): boolean {
 
 async function gammaRequest(input: GammaRequestInput): Promise<unknown> {
   const requestTimeoutMs =
-    input.timeoutMs == null ? gammaDefaultRequestTimeoutMs : Math.min(gammaDefaultRequestTimeoutMs, input.timeoutMs);
+    input.timeoutMs == null
+      ? defaultProviderRequestTimeoutMs
+      : Math.min(defaultProviderRequestTimeoutMs, input.timeoutMs);
   const timeoutSignal = AbortSignal.timeout(requestTimeoutMs);
   const signal = input.context.signal ? AbortSignal.any([input.context.signal, timeoutSignal]) : timeoutSignal;
   const url = new URL(`${gammaApiVersionPath}${input.path}`, gammaApiBaseUrl);

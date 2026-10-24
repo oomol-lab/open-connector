@@ -4,7 +4,7 @@ import type { SaasOAuthService } from "../../saas/saas-oauth-service.ts";
 import type { z } from "zod";
 
 import { Hono } from "hono";
-import { ConnectionError } from "../../connection-service.ts";
+import { ConnectionError } from "../../connection-error.ts";
 import { OAuthClientConfigError } from "../../oauth/oauth-client-config-service.ts";
 import { OAuthFlowError } from "../../oauth/oauth-flow-service.ts";
 import { SaasError } from "../../saas/saas-client.ts";

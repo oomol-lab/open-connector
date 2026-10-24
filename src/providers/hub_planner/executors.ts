@@ -11,6 +11,8 @@ import {
   readProviderTextBody,
   requiredInputString,
   runProviderRequest,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 const service = "hub_planner";
@@ -277,9 +279,9 @@ function buildHubPlannerError(status: number, payload: unknown, phase: HubPlanne
     return new ProviderRequestError(status, message);
   }
   if (status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function extractHubPlannerErrorMessage(payload: unknown): string | undefined {

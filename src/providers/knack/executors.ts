@@ -283,7 +283,7 @@ async function readKnackPayload(response: Response): Promise<unknown> {
 function normalizeKnackError(status: number, payload: unknown, phase: KnackRequestPhase): ProviderRequestError {
   const message = readKnackErrorMessage(payload) ?? `Knack request failed with status ${status}`;
   if (phase === "validate" || status === 400 || status === 401 || status === 403 || status === 404) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 429) {
     return new ProviderRequestError(429, message);

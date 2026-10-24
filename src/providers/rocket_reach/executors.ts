@@ -21,11 +21,11 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "rocket_reach";
 const rocketReachApiBaseUrl = "https://api.rocketreach.co/api/v2";
-const requestTimeoutMs = 30_000;
 
 type RocketReachQueryValue = string | number | boolean | Array<string | number> | undefined;
 type RocketReachActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -388,7 +388,7 @@ async function requestRocketReachJson(input: {
   const timeout = setTimeout(() => {
     timedOut = true;
     controller.abort();
-  }, requestTimeoutMs);
+  }, defaultProviderRequestTimeoutMs);
   const signal = input.signal ?? controller.signal;
   try {
     const response = await input.fetcher(buildRocketReachUrl(input.path, input.query ?? {}), {
@@ -410,7 +410,7 @@ async function requestRocketReachJson(input: {
     if (timedOut && error instanceof Error && (error.name === "AbortError" || error.name === "TimeoutError")) {
       throw new ProviderRequestError(
         502,
-        `rocket_reach ${input.path} request timed out after ${Math.ceil(requestTimeoutMs / 1000)} seconds`,
+        `rocket_reach ${input.path} request timed out after ${Math.ceil(defaultProviderRequestTimeoutMs / 1000)} seconds`,
       );
     }
     if (error instanceof ProviderRequestError) {

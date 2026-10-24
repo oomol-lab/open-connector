@@ -8,11 +8,11 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
+  providerResponseError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 export const pushsaferApiBaseUrl = "https://www.pushsafer.com";
-
-const pushsaferDefaultRequestTimeoutMs = 30_000;
 
 type PushsaferRequestPhase = "validate" | "execute";
 
@@ -196,7 +196,7 @@ async function requestPushsaferJson(input: PushsaferRequestInput) {
         "user-agent": providerUserAgent,
       },
       body: params,
-      signal: input.signal ?? AbortSignal.timeout(pushsaferDefaultRequestTimeoutMs),
+      signal: input.signal ?? AbortSignal.timeout(defaultProviderRequestTimeoutMs),
     });
     const payload = await readPayload(response);
     if (response.status !== 200) {
@@ -233,7 +233,7 @@ function requireSuccessPayload(payload: unknown) {
   }
   if (record.status !== 1) {
     const message = extractErrorMessage(record) ?? "Pushsafer rejected the request";
-    throw new ProviderRequestError(502, message);
+    throw providerResponseError(message);
   }
   return record;
 }
@@ -246,7 +246,7 @@ function createPushsaferError(status: number, payload: unknown, phase: Pushsafer
   if (status === 250 || status === 255 || status === 401 || status === 403) {
     return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function extractErrorMessage(payload: unknown) {

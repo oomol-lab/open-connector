@@ -8,6 +8,7 @@ import {
   ProviderRequestError,
   readProviderTextBody,
   runProviderRequest,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 export const zenscrapeApiBaseUrl = "https://app.zenscrape.com/api/v1";
@@ -139,13 +140,13 @@ function createZenscrapeError(status: number, body: string, phase: ZenscrapePhas
   const message = extractZenscrapeErrorMessage(body) ?? `Zenscrape request failed with status ${status}`;
   if (status === 429) return new ProviderRequestError(429, message);
   if (phase === "validate" && status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (phase === "execute" && (status === 401 || status === 403)) {
     return new ProviderRequestError(status, message);
   }
   if (phase === "execute" && status === 400) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(status || 502, message);
 }

@@ -4,7 +4,7 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, providerInputError } from "../provider-runtime.ts";
 
 type AlgoliaRequestPhase = "validate" | "execute";
 
@@ -434,7 +434,7 @@ function createAlgoliaError(
     `algolia request failed with ${response.status}`;
 
   if (response.status === 400) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 401) {
     return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
@@ -443,7 +443,7 @@ function createAlgoliaError(
     return new ProviderRequestError(phase === "validate" ? 400 : 403, message);
   }
   if (response.status === 404 && notFoundAsInvalidInput) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 429) {
     return new ProviderRequestError(429, message);

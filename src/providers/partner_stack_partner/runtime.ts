@@ -284,7 +284,7 @@ function createPartnerStackTransportError(error: unknown) {
     error instanceof Error && error.message.trim()
       ? `PartnerStack Partner request failed: ${error.message}`
       : "PartnerStack Partner request failed";
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function extractErrorMessage(payload: unknown): string | undefined {

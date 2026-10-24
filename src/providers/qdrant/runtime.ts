@@ -291,7 +291,7 @@ function createQdrantError(status: number, payload: unknown, phase: QdrantReques
     optionalString(record?.message) ??
     `Qdrant request failed with status ${status}`;
   if ((status === 401 || status === 403) && phase === "validate") {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(status >= 500 ? 502 : status || 502, message);
 }

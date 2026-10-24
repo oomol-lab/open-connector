@@ -3,7 +3,13 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 const service = "geokeo";
 const geokeoApiBaseUrl = "https://geokeo.com";
@@ -153,14 +159,14 @@ function createGeokeoStatusError(status: string): ProviderRequestError {
   }
 
   if (status === "INVALID_REQUEST") {
-    return new ProviderRequestError(400, status);
+    return providerInputError(status);
   }
 
   if (status === "ACCESS_DENIED") {
-    return new ProviderRequestError(400, status);
+    return providerInputError(status);
   }
 
-  return new ProviderRequestError(502, status);
+  return providerResponseError(status);
 }
 
 function readGeokeoStatus(payload: Record<string, unknown> | undefined): string | undefined {

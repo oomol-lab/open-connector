@@ -2,7 +2,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject } from "../../core/cast.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { ProviderRequestError, providerInputError } from "../provider-runtime.ts";
 
 export const deutschlandgptApiBaseUrl = "https://api.deutschlandgpt.de/v2";
 
@@ -117,6 +117,6 @@ function mapError(status: number, payload: unknown, validating: boolean): Provid
           : typeof record?.message === "string"
             ? record.message
             : `DeutschlandGPT request failed with HTTP ${status}`;
-  if ((status === 401 || status === 403) && validating) return new ProviderRequestError(400, message);
+  if ((status === 401 || status === 403) && validating) return providerInputError(message);
   return new ProviderRequestError(status, message);
 }

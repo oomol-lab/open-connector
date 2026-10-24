@@ -8,6 +8,7 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "paddle";
@@ -275,7 +276,7 @@ function createPaddleError(response: Response, payload: unknown, phase: PaddleRe
   }
 
   if (phase === "validate" && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (phase === "execute" && (response.status === 401 || response.status === 403)) {
@@ -283,7 +284,7 @@ function createPaddleError(response: Response, payload: unknown, phase: PaddleRe
   }
 
   if (phase === "execute" && [400, 404, 422].includes(response.status)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   return new ProviderRequestError(response.status || 500, message);

@@ -8,11 +8,10 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 export const glyphicApiBaseUrl = "https://api.glyphic.ai";
-
-const glyphicRequestTimeoutMs = 30_000;
 
 type GlyphicRequestMode = "validate" | "execute";
 type GlyphicQueryValue = string | number | boolean | readonly string[] | null | undefined;
@@ -178,7 +177,7 @@ async function requestGlyphicJson(
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
   mode: GlyphicRequestMode,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, glyphicRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(buildGlyphicUrl(input.path, input.query), {
       method: input.method,
@@ -200,7 +199,10 @@ async function requestGlyphicJson(
       throw error;
     }
     if (timeout.didTimeout() || isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, `Glyphic request timed out after ${glyphicRequestTimeoutMs / 1000} seconds`);
+      throw new ProviderRequestError(
+        504,
+        `Glyphic request timed out after ${defaultProviderRequestTimeoutMs / 1000} seconds`,
+      );
     }
 
     const message = error instanceof Error && error.message.trim() ? error.message : "request failed";

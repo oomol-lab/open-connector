@@ -472,7 +472,7 @@ function createCrossrefError(status: number, payload: unknown, phase: "execute" 
     );
   }
   if (status === 401 && phase === "validate") {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 401 && hasApiKey) {
     return new ProviderRequestError(401, message);
@@ -670,7 +670,7 @@ function normalizeDoi(value: string) {
 function readMessageObject(payload: Record<string, unknown>, message: string) {
   const record = optionalRecord(payload.message);
   if (!record) {
-    throw new ProviderRequestError(502, message);
+    throw providerResponseError(message);
   }
   return record;
 }
@@ -877,4 +877,5 @@ import {
   providerUserAgent,
   ProviderRequestError,
   runProviderRequest,
+  providerResponseError,
 } from "../provider-runtime.ts";

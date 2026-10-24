@@ -9,10 +9,15 @@ import {
   optionalString,
   requiredRecord,
 } from "../../core/cast.ts";
-import { isAbortLikeError, providerFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  isAbortLikeError,
+  providerFetch,
+  ProviderRequestError,
+  providerUserAgent,
+  defaultProviderRequestTimeoutMs,
+} from "../provider-runtime.ts";
 
 export const getnoteBaseUrl = "https://openapi.biji.com";
-const getnoteRequestTimeoutMs = 30_000;
 
 type GetnoteContext = {
   apiKey: string;
@@ -494,7 +499,7 @@ async function getnoteRequest(context: GetnoteContext, request: GetnoteRequest) 
     }
   }
 
-  const timeoutSignal = AbortSignal.timeout(getnoteRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = context.signal ? AbortSignal.any([context.signal, timeoutSignal]) : timeoutSignal;
   let response: Response;
   try {

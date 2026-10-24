@@ -50,9 +50,11 @@ function readProviderSource(relativePath: string): string {
   return readFileSync(join(providersDirectory, relativePath), "utf8");
 }
 
-describe("provider source guards", () => {
+const sourceFiles = listProviderSourceFiles(providersDirectory, "");
+
+describe("provider source guards", { timeout: Math.max(5_000, sourceFiles.length * 5) }, () => {
   it("keeps btoa out of provider source outside the binary-string allowlist", () => {
-    const offenders = listProviderSourceFiles(providersDirectory, "").filter((relativePath) => {
+    const offenders = sourceFiles.filter((relativePath) => {
       if (join(providersDirectory, relativePath) === guardFile) {
         return false;
       }

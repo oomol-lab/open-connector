@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { setPrivateNetworkAccessAllowed, setEgressTrustedHosts } from "./provider-network-policy.test-support.ts";
 import {
   assertPublicHttpUrl,
   classifyIpAddress,
@@ -11,8 +12,6 @@ import {
   parsePrivateNetworkAccessFlag,
   readBoundedResponseBytes,
   storeResponseInTransit,
-  setEgressTrustedHosts,
-  setPrivateNetworkAccessAllowed,
 } from "./request.ts";
 
 it.each([undefined, "2"])(

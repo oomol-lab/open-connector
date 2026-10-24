@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { setPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import { setPrivateNetworkAccessAllowed } from "../../core/provider-network-policy.test-support.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { komariActions } from "./actions.ts";
 import { komariOperations } from "./operations.ts";

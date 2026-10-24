@@ -2,7 +2,12 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+  providerInputError,
+} from "../provider-runtime.ts";
 
 export const ambeeApiBaseUrl = "https://api.ambeedata.com";
 
@@ -220,7 +225,7 @@ function createAmbeeError(status: number, payload: unknown, phase: AmbeePhase) {
     return new ProviderRequestError(429, message);
   }
   if (status === 400) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 401 || status === 403) {
     return new ProviderRequestError(phase === "validate" ? 400 : status, message);

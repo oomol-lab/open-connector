@@ -7,12 +7,12 @@ import {
   defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "feathery";
 const featheryApiBaseUrl = "https://api.feathery.io";
 const featheryValidationPath = "/api/account/";
-const featheryRequestTimeoutMs = 30_000;
 
 type FeatheryRequestMode = "validate" | "execute";
 type FeatheryRequestMethod = "GET" | "POST" | "PATCH" | "DELETE";
@@ -331,7 +331,7 @@ async function requestFeatheryJson(input: FeatheryRequestInput, fetcher: typeof 
     }
   }
 
-  const timeoutSignal = AbortSignal.timeout(featheryRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = input.signal ? AbortSignal.any([input.signal, timeoutSignal]) : timeoutSignal;
   try {
     const response = await fetcher(url.toString(), {

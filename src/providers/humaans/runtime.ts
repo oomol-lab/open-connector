@@ -1,5 +1,10 @@
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 export const humaansApiBaseUrl = "https://app.humaans.io/api";
 export const humaansValidationPath = "/token-info";
 
@@ -161,14 +166,14 @@ function mapHumaansError(
 ) {
   const message = extractErrorMessage(payload) ?? `Humaans API request failed with status ${status}`;
   if (status === 401) {
-    return phase === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(401, message);
+    return phase === "validate" ? providerInputError(message) : new ProviderRequestError(401, message);
   }
   if (status === 403) return new ProviderRequestError(403, message);
   if (inputErrorStatuses.includes(status)) {
     return new ProviderRequestError(status === 404 ? 404 : 400, message);
   }
   if (status === 429) return new ProviderRequestError(429, message);
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function extractErrorMessage(payload: unknown) {

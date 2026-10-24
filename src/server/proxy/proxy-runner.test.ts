@@ -13,7 +13,7 @@ import type { Logger } from "../logger.ts";
 import type { ProxyFailureStatus } from "./proxy-runner.ts";
 
 import { describe, expect, it, vi } from "vitest";
-import { ConnectionError } from "../../connection-service.ts";
+import { ConnectionError } from "../../connection-error.ts";
 import { ActionPolicyService } from "../../core/action-policy.ts";
 import { providerErrorCodes } from "../../core/provider-error-codes.ts";
 import { serializeRuntimeActionResult } from "../api/runtime-api.ts";

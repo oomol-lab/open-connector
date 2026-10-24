@@ -13,6 +13,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const keygenApiBaseUrl = "https://api.keygen.sh/v1/accounts";
@@ -702,7 +703,7 @@ function createKeygenError(response: Response, payload: unknown, phase: KeygenRe
   }
 
   if (phase === "validate" && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (phase === "execute" && usedAuth && (response.status === 401 || response.status === 403)) {
@@ -710,11 +711,11 @@ function createKeygenError(response: Response, payload: unknown, phase: KeygenRe
   }
 
   if (phase === "execute" && !usedAuth && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if ([400, 404, 422].includes(response.status)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   return new ProviderRequestError(response.status || 500, message);

@@ -9,7 +9,12 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 export interface SorftimeCredentialCheck {
   providerAccountId?: string;
@@ -66,7 +71,7 @@ export async function validateSorftimeCredential(
     endpoint: "RequestStreamMonth",
     domain: 1,
     body: {},
-    apiKey: requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message)),
+    apiKey: requiredString(input.apiKey, "apiKey", providerInputError),
     fetcher,
     phase: "validate",
   });
@@ -212,7 +217,7 @@ function requireOrdered(
   message = `${start} must not be later than ${end}`,
 ): void {
   if (typeof input[start] === "string" && typeof input[end] === "string" && input[start] > input[end]) {
-    throw new ProviderRequestError(400, message);
+    throw providerInputError(message);
   }
 }
 
@@ -531,10 +536,10 @@ function createSorftimeHttpError(response: Response, payload: unknown, phase: So
     return new ProviderRequestError(429, message);
   }
   if (response.status === 401 || response.status === 403) {
-    return phase === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(401, message);
+    return phase === "validate" ? providerInputError(message) : new ProviderRequestError(401, message);
   }
   if (phase === "execute" && [400, 404, 422].includes(response.status)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(response.status || 502, message);
 }
@@ -542,13 +547,13 @@ function createSorftimeHttpError(response: Response, payload: unknown, phase: So
 function createSorftimeBusinessError(code: number, message: string | undefined, phase: SorftimeRequestPhase) {
   const detail = message ?? `Sorftime request failed with code ${code}`;
   if (phase === "validate") {
-    return new ProviderRequestError(400, detail);
+    return providerInputError(detail);
   }
   if ([500, 501, 502].includes(code)) {
     return new ProviderRequestError(429, detail);
   }
   if ([10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 23, 24, 97].includes(code)) {
-    return new ProviderRequestError(400, detail);
+    return providerInputError(detail);
   }
   if ([4, 694].includes(code)) {
     return new ProviderRequestError(402, detail);
@@ -559,7 +564,7 @@ function createSorftimeBusinessError(code: number, message: string | undefined, 
   if ([400, 401, 402].includes(code)) {
     return new ProviderRequestError(403, detail);
   }
-  return new ProviderRequestError(502, detail);
+  return providerResponseError(detail);
 }
 
 function extractSorftimeMessage(payload: Record<string, unknown> | undefined) {

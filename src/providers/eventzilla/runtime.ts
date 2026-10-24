@@ -8,11 +8,11 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 export const eventzillaApiBaseUrl = "https://www.eventzillaapi.net/api/v2";
 const eventzillaValidationPath = "/users";
-const eventzillaDefaultTimeoutMs = 30_000;
 
 type EventzillaPhase = "validate" | "execute";
 type EventzillaContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -204,7 +204,7 @@ async function requestEventzillaJson(
   input: EventzillaRequestInput,
   context: EventzillaContext,
 ): Promise<Record<string, unknown>> {
-  const timeout = createProviderTimeout(context.signal, eventzillaDefaultTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(buildEventzillaUrl(input.path, input.query), {
       method: "GET",
@@ -233,7 +233,7 @@ async function requestEventzillaJson(
     if (timeout.didTimeout() || isAbortLikeError(error)) {
       throw new ProviderRequestError(
         504,
-        `Eventzilla request timed out after ${Math.ceil(eventzillaDefaultTimeoutMs / 1000)} seconds`,
+        `Eventzilla request timed out after ${Math.ceil(defaultProviderRequestTimeoutMs / 1000)} seconds`,
         error,
       );
     }

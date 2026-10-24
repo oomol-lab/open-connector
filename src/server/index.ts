@@ -105,7 +105,10 @@ async function main(): Promise<void> {
       : undefined,
     transitFiles: readTransitFileOptions(),
     runLimit,
-    lazySchemas: parseBooleanEnv("OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS"),
+    lazySchemas:
+      optionalEnv("OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS") === undefined
+        ? true
+        : parseBooleanEnv("OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS"),
     schemaCacheFiles: readPositiveIntegerEnv("OOMOL_CONNECT_CATALOG_SCHEMA_CACHE_FILES", defaultLazySchemaCacheFiles),
     apiReference: true,
     oauthCloseDelaySeconds,

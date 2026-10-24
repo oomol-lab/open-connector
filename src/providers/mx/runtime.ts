@@ -233,7 +233,7 @@ function createMxError(response: Response, payload: unknown, phase: MxPhase) {
     return new ProviderRequestError(429, message);
   }
   if (phase === "validate" || response.status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(response.status || 502, message);
 }

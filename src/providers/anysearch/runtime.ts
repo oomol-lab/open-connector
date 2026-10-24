@@ -19,6 +19,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   readProviderJsonBody,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 type AnySearchRequestPhase = "validate" | "execute";
@@ -401,7 +402,7 @@ function createAnySearchMcpToolError(
     return new ProviderRequestError(401, message);
   }
   if (symbol && invalidInputErrorSymbols.has(symbol)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   const normalized = message.toLowerCase();
@@ -421,9 +422,9 @@ function createAnySearchMcpToolError(
     normalized.includes("must ") ||
     normalized.includes("unsupported content")
   ) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function readMcpErrorSymbol(content: string | undefined): string | undefined {

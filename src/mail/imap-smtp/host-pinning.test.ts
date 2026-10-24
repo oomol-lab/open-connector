@@ -4,7 +4,8 @@ import type { LookupFunction, TcpNetConnectOpts } from "node:net";
 
 import { Socket } from "node:net";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { isPrivateNetworkAccessAllowed, setPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import { setPrivateNetworkAccessAllowed } from "../../core/provider-network-policy.test-support.ts";
+import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { genericImapRuntimeConfig } from "../../providers/generic_imap/config.ts";
 import { createMailProtocol } from "./protocol.ts";
 

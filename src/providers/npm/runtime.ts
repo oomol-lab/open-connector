@@ -7,6 +7,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 export const npmRegistryBaseUrl = "https://registry.npmjs.org";
@@ -346,7 +347,7 @@ function createNpmError(response: Response, payload: unknown, phase: NpmRequestP
   if (response.status === 429) {
     return new ProviderRequestError(429, message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function extractNpmErrorMessage(payload: unknown) {
@@ -562,14 +563,14 @@ async function mapWithConcurrency<T, R>(items: T[], concurrency: number, worker:
 function requireObject(value: unknown, message: string): Record<string, unknown> {
   const object = optionalRecord(value);
   if (!object) {
-    throw new ProviderRequestError(502, message);
+    throw providerResponseError(message);
   }
   return object;
 }
 
 function requireArray(value: unknown, message: string): unknown[] {
   if (!Array.isArray(value)) {
-    throw new ProviderRequestError(502, message);
+    throw providerResponseError(message);
   }
   return value;
 }

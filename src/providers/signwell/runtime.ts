@@ -8,11 +8,12 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  providerInputError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const signwellApiBaseUrl = "https://www.signwell.com";
 const signwellValidationPath = "/api/v1/me";
-const signwellDefaultTimeoutMs = 30_000;
 
 type SignwellPhase = "validate" | "execute";
 type SignwellActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -258,7 +259,7 @@ async function requestSignwellJson<T>(input: {
   body?: Record<string, unknown>;
   signal?: AbortSignal;
 }): Promise<T> {
-  const timeoutHandle = createProviderTimeout(input.signal, signwellDefaultTimeoutMs);
+  const timeoutHandle = createProviderTimeout(input.signal);
 
   try {
     const response = await input.fetcher(new URL(input.path, signwellApiBaseUrl), {
@@ -291,7 +292,7 @@ async function requestSignwellJson<T>(input: {
     if (timeoutHandle.didTimeout() || isAbortLikeError(error)) {
       throw new ProviderRequestError(
         504,
-        `SignWell request timed out after ${Math.max(1, Math.ceil(signwellDefaultTimeoutMs / 1000))} seconds`,
+        `SignWell request timed out after ${Math.max(1, Math.ceil(defaultProviderRequestTimeoutMs / 1000))} seconds`,
       );
     }
 
@@ -333,13 +334,13 @@ function createSignwellError(status: number, payload: unknown, phase: SignwellPh
     return new ProviderRequestError(429, message);
   }
   if (phase === "validate" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (phase === "execute" && (status === 401 || status === 403)) {
     return new ProviderRequestError(401, message);
   }
   if (status === 404 || status === 400 || status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status >= 400 && status < 500) {
     return new ProviderRequestError(status, message);

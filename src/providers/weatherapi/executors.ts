@@ -14,11 +14,11 @@ import {
   defineProviderProxy,
   isAbortLikeError,
   ProviderRequestError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "weatherapi";
 const weatherapiApiBaseUrl = "https://api.weatherapi.com/v1/";
-const weatherapiDefaultRequestTimeoutMs = 30_000;
 const weatherapiValidationQuery = "London";
 
 type WeatherapiActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
@@ -229,7 +229,7 @@ async function weatherapiRequestJson(
   phase: "validate" | "execute",
 ): Promise<unknown> {
   const url = weatherapiRequestUrl(path, apiKey, params);
-  const timeout = createProviderTimeout(context.signal, weatherapiDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
 
   let response: Response;
   let payload: unknown;
@@ -245,7 +245,7 @@ async function weatherapiRequestJson(
         502,
         `WeatherAPI ${path} request timed out after ${Math.max(
           1,
-          Math.ceil(weatherapiDefaultRequestTimeoutMs / 1000),
+          Math.ceil(defaultProviderRequestTimeoutMs / 1000),
         )} seconds`,
       );
     }

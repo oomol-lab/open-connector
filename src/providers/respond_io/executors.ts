@@ -11,6 +11,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "respond_io";
@@ -320,7 +321,7 @@ function readTags(value: unknown): string[] {
 function trimInputString(value: unknown, fieldName: string): string {
   return requiredString(value, fieldName, (message) => {
     const normalized = message.endsWith(".") ? message.slice(0, -1) : message;
-    return new ProviderRequestError(400, normalized);
+    return providerInputError(normalized);
   });
 }
 
@@ -361,7 +362,7 @@ function mapHttpError(status: number, message: string, phase: RespondIoPhase): P
     return new ProviderRequestError(429, message);
   }
   if (status === 400 || status === 404 || status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(status >= 500 ? 502 : status, message);
 }

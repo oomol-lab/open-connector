@@ -10,11 +10,11 @@ import {
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "hackerrank_work";
 const hackerrankWorkApiBaseUrl = "https://www.hackerrank.com/x/api/v3";
-const hackerrankWorkDefaultRequestTimeoutMs = 30_000;
 
 type RequestMode = "validate" | "execute";
 type HackerrankWorkActionContext = ApiKeyProviderContext;
@@ -158,7 +158,7 @@ async function requestHackerrankWorkJson(
   query: Record<string, string | number | undefined>,
   mode: RequestMode,
 ): Promise<Record<string, unknown>> {
-  const timeoutSignal = AbortSignal.timeout(hackerrankWorkDefaultRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = context.signal ? AbortSignal.any([context.signal, timeoutSignal]) : timeoutSignal;
 
   try {

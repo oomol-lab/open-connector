@@ -6,11 +6,12 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requiredResponseRecord,
+  providerInputError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 export const clinicalTrialsGovApiBaseUrl = "https://clinicaltrials.gov/api/v2";
 
-const requestTimeoutMs = 30_000;
 export const maxResponseBytes: number = 16 * 1024 * 1024;
 const maxBatchIdsPerRequest = 100;
 const maxRequestUrlBytes = 7_000;
@@ -475,7 +476,7 @@ async function requestStudyBatches(
 ) {
   const studies: Record<string, unknown>[] = [];
   const responseBudget: ResponseBudget = { consumedBytes: 0, maxBytes: maxResponseBytes };
-  const deadlineAt = Date.now() + requestTimeoutMs;
+  const deadlineAt = Date.now() + defaultProviderRequestTimeoutMs;
   for (let start = 0; start < nctIds.length; start += maxBatchIdsPerRequest) {
     const remainingTimeMs = deadlineAt - Date.now();
     if (remainingTimeMs <= 0) {
@@ -515,7 +516,7 @@ async function requestJson(
   fetcher: typeof fetch,
   allowNotFound = false,
   responseBudget?: ResponseBudget,
-  timeoutMs = requestTimeoutMs,
+  timeoutMs = defaultProviderRequestTimeoutMs,
 ) {
   const url = new URL(`${clinicalTrialsGovApiBaseUrl}${path}`);
   url.search = query.toString();
@@ -672,7 +673,7 @@ function requestTimeoutError(): ProviderRequestError {
 function mapResponseError(status: number, body: string) {
   const message = body.trim().slice(0, 4_096) || `ClinicalTrials.gov request failed with status ${status}`;
   if (status === 400 || status === 404) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 429) {
     return new ProviderRequestError(429, message);

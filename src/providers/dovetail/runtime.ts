@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, providerInputError } from "../provider-runtime.ts";
 
 export const dovetailApiBaseUrl = "https://dovetail.com/api";
 
@@ -276,7 +276,7 @@ function buildDovetailError(status: number, payload: unknown, phase: DovetailReq
     (phase === "validate" ? "invalid Dovetail personal API key" : `Dovetail request failed with ${status}`);
 
   if (status === 400) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (status === 401) {

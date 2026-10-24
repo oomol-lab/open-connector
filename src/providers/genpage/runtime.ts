@@ -2,7 +2,12 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  runProviderRequest,
+  providerInputError,
+} from "../provider-runtime.ts";
 
 export const genpageApiBaseUrl = "https://backend.genpage.ai";
 type Method = "GET" | "POST";
@@ -109,7 +114,7 @@ function createError(status: number, payload: unknown, phase: Phase): ProviderRe
   const message =
     optionalString(record?.detail) || optionalString(record?.message) || `GenPage request failed with status ${status}`;
   if (status === 429) return new ProviderRequestError(429, message);
-  if (phase === "validate" && 400 <= status && status < 500) return new ProviderRequestError(400, message);
+  if (phase === "validate" && 400 <= status && status < 500) return providerInputError(message);
   return new ProviderRequestError(status || 500, message);
 }
 function requireArray(value: unknown): unknown[] {

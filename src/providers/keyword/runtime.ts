@@ -2,7 +2,12 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
+import {
+  providerUserAgent,
+  ProviderRequestError,
+  runProviderRequest,
+  providerInputError,
+} from "../provider-runtime.ts";
 
 export const keywordApiBaseUrl = "https://app.keyword.com";
 
@@ -150,7 +155,7 @@ function createKeywordError(response: Response, payload: unknown, phase: Keyword
   }
 
   if (phase === "validate" && response.status >= 400 && response.status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   return new ProviderRequestError(response.status || 502, message);

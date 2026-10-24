@@ -8,6 +8,7 @@ import {
   isAbortSignalError,
   ProviderRequestError,
   providerUserAgent,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 type MauticCredential = {
@@ -177,7 +178,7 @@ export function normalizeMauticBaseUrl(
 
   const url = assertPublicHttpUrl(trimmed, {
     fieldName: "baseUrl",
-    createError: (message) => new ProviderRequestError(400, message),
+    createError: providerInputError,
     allowPrivateNetwork,
   });
   if (url.protocol !== "https:") {
@@ -391,7 +392,7 @@ function mapMauticError(
     return new ProviderRequestError(403, "The connected Mautic user does not have permission to perform this action");
   }
   if (phase === "validate" && response.status >= 400 && response.status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 404) {
     return new ProviderRequestError(404, message);

@@ -9,6 +9,8 @@ import type {
 import type { CloudflareEnv } from "./cloudflare/cloudflare-env.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { getProviderNetworkPolicy } from "../core/provider-network-policy.ts";
+import { MarketplaceService } from "../marketplace/marketplace-service.ts";
 import worker from "./cloudflare.ts";
 import { createWorkerSecretCodec } from "./secrets/worker-secret-codec.ts";
 import { D1RuntimeDatabase } from "./storage/d1/runtime-store.ts";
@@ -24,6 +26,36 @@ const provider = {
 };
 
 describe("cloudflare worker", () => {
+  it("does not reuse an application with a different network policy", async () => {
+    const policies: unknown[] = [];
+    vi.spyOn(MarketplaceService.prototype, "initialize").mockImplementation(async () => {
+      policies.push(getProviderNetworkPolicy());
+    });
+    const env = createEnv();
+    const fetchHealth = (network: Partial<CloudflareEnv>) =>
+      worker.fetch(
+        new Request("https://network-policy.example.com/health"),
+        { ...env, ...network },
+        createExecutionContext(),
+      );
+    await fetchHealth({ OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK: "true" });
+    await fetchHealth({ OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK: "false" });
+    await fetchHealth({
+      OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK: "false",
+      OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS: "api.example.com",
+    });
+    const response = await fetchHealth({
+      OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK: "false",
+      OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS: "api.example.com",
+    });
+    expect(response.status).toBe(200);
+    expect(policies).toEqual([
+      { allowPrivateNetwork: true, trustedHosts: [] },
+      { allowPrivateNetwork: false, trustedHosts: [] },
+      { allowPrivateNetwork: false, trustedHosts: ["api.example.com"] },
+    ]);
+  });
+
   it.each(["", " ", "\t\n"])(
     "fails closed for an empty or whitespace administrator token with OAuth enabled (%j)",
     async (adminToken) => {

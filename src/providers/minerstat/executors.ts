@@ -10,6 +10,8 @@ import {
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 const service = "minerstat";
@@ -159,9 +161,9 @@ function createMinerstatError(status: number, payload: unknown, phase: Minerstat
     return new ProviderRequestError(429, message);
   }
   if (status === 400 || status === 404 || status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function extractMinerstatErrorMessage(payload: unknown): string | undefined {

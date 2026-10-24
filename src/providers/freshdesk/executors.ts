@@ -15,12 +15,12 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "freshdesk";
 const freshdeskValidationPath = "/api/v2/account";
 const defaultFreshdeskPageSize = 30;
-const freshdeskDefaultRequestTimeoutMs = 30_000;
 
 interface FreshdeskActionContext {
   apiKey: string;
@@ -219,7 +219,7 @@ function resolveFreshdeskBaseUrl(values: Record<string, string>, metadata: Recor
 }
 
 async function requestFreshdeskJson(input: FreshdeskActionContext & FreshdeskRequestInput): Promise<unknown> {
-  const timeoutSignal = AbortSignal.timeout(freshdeskDefaultRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = input.signal ? AbortSignal.any([input.signal, timeoutSignal]) : timeoutSignal;
 
   let response: Response;
@@ -242,7 +242,7 @@ async function requestFreshdeskJson(input: FreshdeskActionContext & FreshdeskReq
     if (timeoutSignal.aborted && !input.signal?.aborted && isAbortLikeError(error)) {
       throw new ProviderRequestError(
         504,
-        `Freshdesk request timed out after ${Math.max(1, Math.ceil(freshdeskDefaultRequestTimeoutMs / 1000))} seconds`,
+        `Freshdesk request timed out after ${Math.max(1, Math.ceil(defaultProviderRequestTimeoutMs / 1000))} seconds`,
       );
     }
     throw new ProviderRequestError(

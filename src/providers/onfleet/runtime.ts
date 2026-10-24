@@ -7,6 +7,8 @@ import {
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 export const onfleetApiBaseUrl = "https://onfleet.com/api/v2";
@@ -186,7 +188,7 @@ function createOnfleetError(response: Response, payload: unknown, phase: Onfleet
     `Onfleet request failed with status ${response.status}`;
 
   if (phase === "validate" && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 400 || response.status === 404 || response.status === 422) {
     return new ProviderRequestError(response.status, message);
@@ -224,6 +226,6 @@ function requireObject(value: unknown, label: string) {
 }
 
 function requireArray(value: unknown, message: string) {
-  if (!Array.isArray(value)) throw new ProviderRequestError(502, message);
+  if (!Array.isArray(value)) throw providerResponseError(message);
   return value.map((item) => requireObject(item, "Onfleet task"));
 }

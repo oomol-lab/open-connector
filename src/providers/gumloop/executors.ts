@@ -23,12 +23,12 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "gumloop";
 const gumloopApiBaseUrl = "https://api.gumloop.com/api/v1";
 const gumloopValidationPath = "/list_saved_items";
-const gumloopDefaultRequestTimeoutMs = 30_000;
 
 type GumloopRequestPhase = "validate" | "execute";
 type GumloopQueryValue = boolean | number | string | null | undefined;
@@ -304,7 +304,7 @@ async function killGumloopFlowRun(input: Record<string, unknown>, context: Gumlo
 
 async function requestGumloopJson(options: GumloopRequestOptions): Promise<Record<string, unknown>> {
   const hasJsonBody = options.body !== undefined;
-  const timeoutSignal = AbortSignal.timeout(gumloopDefaultRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = options.signal ? AbortSignal.any([options.signal, timeoutSignal]) : timeoutSignal;
 
   try {

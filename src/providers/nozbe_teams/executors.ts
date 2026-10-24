@@ -10,6 +10,8 @@ import {
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 const service = "nozbe_teams";
@@ -225,12 +227,12 @@ function buildNozbeError(response: Response, text: string, phase: NozbeRequestPh
     return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
   }
   if ([400, 404, 409, 422].includes(response.status)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 429) {
     return new ProviderRequestError(429, message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function readNozbeErrorMessage(status: number, text: string): string {
@@ -253,7 +255,7 @@ function resourcePath(resource: string, id: unknown): string {
 }
 
 function requireResourceId(value: unknown): string {
-  return requiredString(value, "Nozbe resource ID", (message) => new ProviderRequestError(400, message));
+  return requiredString(value, "Nozbe resource ID", providerInputError);
 }
 
 function validateUpdateBody(body: Record<string, unknown>, resource: string): void {

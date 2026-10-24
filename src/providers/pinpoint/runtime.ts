@@ -1,5 +1,10 @@
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+} from "../provider-runtime.ts";
 
 interface ApiKeyProviderActionInput {
   apiKey: string;
@@ -178,7 +183,7 @@ function createPinpointError(status: number, payload: unknown, phase: "validate"
   const message = extractPinpointError(payload) ?? `Pinpoint request failed with status ${status}`;
   if (status === 401 || status === 403) return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
   if (status === 429) return new ProviderRequestError(429, message);
-  if (400 <= status && status < 500) return new ProviderRequestError(400, message);
+  if (400 <= status && status < 500) return providerInputError(message);
   return new ProviderRequestError(status || 502, message);
 }
 

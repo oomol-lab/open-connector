@@ -199,7 +199,7 @@ async function readMailsSoErrorMessage(response: Response): Promise<string> {
 
 function mapMailsSoError(status: number, message: string, phase: MailsSoRequestPhase): ProviderRequestError {
   if (status === 400 || status === 404) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 401) {
     if (message.toLowerCase().includes("paid subscription")) {

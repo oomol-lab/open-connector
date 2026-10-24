@@ -10,10 +10,14 @@ import { createHash } from "node:crypto";
 import { optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import { withMcpClient } from "../mcp-client.ts";
-import { providerUserAgent, ProviderRequestError, toProviderExecutionError } from "../provider-runtime.ts";
+import {
+  providerUserAgent,
+  ProviderRequestError,
+  toProviderExecutionError,
+  defaultProviderRequestTimeoutMs,
+} from "../provider-runtime.ts";
 
 const lingxingMcpHost = "openmcp.lingxing.com";
-const lingxingRequestTimeoutMs = 30_000;
 const lingxingToolIntervalMs = 1_000;
 const maximumTrackedRateLimitKeys = 1_024;
 
@@ -210,7 +214,7 @@ export async function callLingxingTool(
         arguments: argumentsValue,
       },
       {
-        timeout: lingxingRequestTimeoutMs,
+        timeout: defaultProviderRequestTimeoutMs,
         signal: context.signal,
       },
     );
@@ -231,7 +235,7 @@ async function discoverLingxingTools(context: LingxingContext): Promise<
     const result = await client.listTools(
       {},
       {
-        timeout: lingxingRequestTimeoutMs,
+        timeout: defaultProviderRequestTimeoutMs,
         signal: context.signal,
       },
     );

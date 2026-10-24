@@ -11,12 +11,12 @@ import {
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "workpath";
 const workpathApiBaseUrl = "https://connect.workpath.com/api/v3";
 const workpathValidationPath = "/users";
-const workpathDefaultRequestTimeoutMs = 30_000;
 
 type WorkpathRequestMode = "validate" | "execute";
 type WorkpathActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -196,7 +196,7 @@ async function workpathRequest(
     }
   }
 
-  const timeout = createProviderTimeout(context.signal, workpathDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
       method: "GET",
@@ -226,7 +226,7 @@ async function workpathRequest(
     if (timeout.didTimeout() || isAbortLikeError(error)) {
       throw new ProviderRequestError(
         504,
-        `Workpath ${input.path} request timed out after ${Math.ceil(workpathDefaultRequestTimeoutMs / 1000)} seconds`,
+        `Workpath ${input.path} request timed out after ${Math.ceil(defaultProviderRequestTimeoutMs / 1000)} seconds`,
       );
     }
 

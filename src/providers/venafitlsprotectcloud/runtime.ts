@@ -9,13 +9,13 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 export const venafiCloudBaseUrls = {
   us: "https://api.venafi.cloud",
   eu: "https://api.venafi.eu",
 };
-const requestTimeoutMs = 30_000;
 
 interface VenafiCloudContext {
   apiKey: string;
@@ -134,7 +134,7 @@ async function requestVenafiCloud(input: {
       "tppl-api-key": input.apiKey,
       "user-agent": providerUserAgent,
     },
-    signal: input.signal ?? AbortSignal.timeout(requestTimeoutMs),
+    signal: input.signal ?? AbortSignal.timeout(defaultProviderRequestTimeoutMs),
   });
   const payload = await readPayload(response);
   if (!response.ok) throw upstreamError(response.status, payload, input.operation, input.phase);

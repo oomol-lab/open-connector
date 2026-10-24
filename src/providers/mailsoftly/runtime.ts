@@ -1,7 +1,12 @@
 import type { MailsoftlyActionName } from "./actions.ts";
 
 import { optionalRecord, requiredString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 export interface MailsoftlyCredentialCheck {
   providerAccountId?: string;
@@ -60,7 +65,7 @@ export async function validateMailsoftlyCredential(
   fetcher: typeof fetch,
 ): Promise<MailsoftlyCredentialCheck> {
   const payload = await requestMailsoftly({
-    apiKey: requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message)),
+    apiKey: requiredString(input.apiKey, "apiKey", providerInputError),
     fetcher,
     method: "POST",
     path: "/authentication",
@@ -191,15 +196,15 @@ function readErrorMessage(payload: unknown) {
 
 function mapMailsoftlyError(status: number, message: string, phase: MailsoftlyRequestPhase) {
   if (status === 401 || status === 403) {
-    return phase === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(401, message);
+    return phase === "validate" ? providerInputError(message) : new ProviderRequestError(401, message);
   }
   if (status === 429) {
     return new ProviderRequestError(429, message);
   }
   if (status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function requireObject(value: unknown, fieldName: string) {

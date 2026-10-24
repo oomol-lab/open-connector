@@ -17,10 +17,10 @@ import {
   ProviderRequestError,
   requireApiKeyCredential,
   requiredResponseRecord,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "flowiseai";
-const flowiseaiRequestTimeoutMs = 30_000;
 
 type FlowiseaiRequestPhase = "validate" | "execute";
 type FlowiseaiActionHandler = (input: Record<string, unknown>, context: FlowiseaiActionContext) => Promise<unknown>;
@@ -166,7 +166,7 @@ export const credentialValidators: CredentialValidators = {
 };
 
 async function requestFlowiseJson(input: FlowiseaiRequestInput): Promise<unknown> {
-  const timeoutSignal = AbortSignal.timeout(flowiseaiRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = input.signal ? AbortSignal.any([input.signal, timeoutSignal]) : timeoutSignal;
 
   try {

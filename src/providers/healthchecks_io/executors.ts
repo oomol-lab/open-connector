@@ -17,11 +17,11 @@ import {
   providerInputError,
   ProviderRequestError,
   providerUserAgent,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "healthchecks_io";
 const healthchecksIoApiBaseUrl = "https://healthchecks.io/api/v3";
-const healthchecksIoDefaultRequestTimeoutMs = 30_000;
 
 type HealthchecksIoPhase = "validate" | "execute";
 type HealthchecksIoMethod = "GET" | "POST" | "DELETE";
@@ -216,7 +216,7 @@ async function requestHealthchecksIoJson(input: {
   body?: Record<string, unknown>;
   emptyBody?: boolean;
 }): Promise<unknown> {
-  const timeoutSignal = AbortSignal.timeout(healthchecksIoDefaultRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = input.context.signal ? AbortSignal.any([input.context.signal, timeoutSignal]) : timeoutSignal;
 
   try {

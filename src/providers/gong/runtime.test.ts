@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { setPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import { setPrivateNetworkAccessAllowed } from "../../core/provider-network-policy.test-support.ts";
 import { normalizeGongApiBaseUrl } from "./runtime.ts";
 
 afterEach(() => setPrivateNetworkAccessAllowed(false));

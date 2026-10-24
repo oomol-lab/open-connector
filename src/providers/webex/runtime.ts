@@ -1,5 +1,5 @@
 import { optionalRecord as asOptionalObject, optionalString as asOptionalString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, providerInputError } from "../provider-runtime.ts";
 
 export const webexApiBaseUrl = "https://webexapis.com/v1";
 
@@ -311,12 +311,12 @@ async function mapWebexError(response: Response) {
     return new ProviderRequestError(403, message);
   }
   if (response.status === 404) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 423 || response.status === 429 || response.status >= 500) {
     return new ProviderRequestError(response.status === 429 ? 429 : 502, message);
   }
-  return new ProviderRequestError(400, message);
+  return providerInputError(message);
 }
 
 function readNextPageUrl(link: string | null) {

@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  providerUserAgent,
+  ProviderRequestError,
+  providerInputError,
+} from "../provider-runtime.ts";
 export const megaventoryApiBaseUrl = "https://api.megaventory.com/v2017a";
 const recordAction = "InsertOrUpdateNonEmptyFields";
 const lists: Record<string, { path: string; responseKey: string; outputKey: string }> = {
@@ -204,7 +209,7 @@ function error(code: number, payload: unknown, phase: "validate" | "execute") {
     optionalString(optionalRecord(optionalRecord(payload)?.ResponseStatus)?.Message) ??
     `Megaventory request failed with status ${code}`;
   if (code === 429) return new ProviderRequestError(429, message);
-  if (phase === "validate") return new ProviderRequestError(400, message);
+  if (phase === "validate") return providerInputError(message);
   if (
     message.toLowerCase().includes("api key") ||
     message.toLowerCase().includes("apikey") ||
@@ -212,7 +217,7 @@ function error(code: number, payload: unknown, phase: "validate" | "execute") {
     code === 403
   )
     return new ProviderRequestError(401, message);
-  if (code < 500) return new ProviderRequestError(400, message);
+  if (code < 500) return providerInputError(message);
   return new ProviderRequestError(code || 502, message);
 }
 function object(value: unknown, label: string): Record<string, unknown> {

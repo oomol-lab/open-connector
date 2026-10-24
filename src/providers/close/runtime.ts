@@ -10,6 +10,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requiredResponseRecord,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 export const closeApiBaseUrl = "https://api.close.com/api/v1";
@@ -446,10 +447,10 @@ function buildCloseError(
     optionalString(payload.message) ??
     `Close request failed with status ${status || 502}`;
   if (mode === "validation" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 400 || status === 404) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 429) {
     return new ProviderRequestError(429, message);

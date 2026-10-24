@@ -8,12 +8,12 @@ import {
   defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "football_data";
 const footballDataBaseUrl = "https://api.football-data.org/v4";
 const footballDataApiOrigin = "https://api.football-data.org";
-const defaultRequestTimeoutMs = 30_000;
 
 type FootballDataContext = ApiKeyProviderContext;
 type FootballDataPhase = "validate" | "execute";
@@ -197,7 +197,7 @@ async function footballDataRequestJson(
     }
   }
 
-  const timeoutSignal = AbortSignal.timeout(defaultRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = context.signal ? AbortSignal.any([context.signal, timeoutSignal]) : timeoutSignal;
 
   try {

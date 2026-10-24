@@ -1,9 +1,13 @@
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+  defaultProviderRequestTimeoutMs,
+} from "../provider-runtime.ts";
 
 export const gangtiseApiBaseUrl = "https://openapi.gangtise.com";
 const gangtiseCredentialUrl = "https://open-platform.gangtise.com/";
-const gangtiseRequestTimeoutMs = 30_000;
 const loginPath = "/application/auth/oauth/open/loginV2";
 const securitiesSearchPath = "/application/open-reference/securities/search";
 const realtimeQuotePath = "/application/open-quote/quote/realtime";
@@ -988,7 +992,7 @@ async function postGangtiseJson(input: {
   fetcher: typeof fetch;
   phase: GangtiseRequestPhase;
 }) {
-  const timeout = createTimeoutSignal({ timeoutMs: gangtiseRequestTimeoutMs });
+  const timeout = createTimeoutSignal({ timeoutMs: defaultProviderRequestTimeoutMs });
   let response: Response;
   let payload: unknown;
   try {
@@ -1060,7 +1064,7 @@ function createGangtiseError(
     return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
   }
   if (response.status === 400 || response.status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(response.status >= 500 ? 502 : response.status || 502, message);
 }

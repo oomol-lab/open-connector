@@ -11,7 +11,7 @@ import {
   recordOrEmpty,
 } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, providerInputError } from "../provider-runtime.ts";
 
 export const cyberimpactApiBaseUrl: string = "https://api.cyberimpact.com";
 
@@ -269,7 +269,7 @@ function normalizePaginatedPayload(
 
 function createCyberimpactError(status: number, payload: unknown, phase: CyberimpactPhase): ProviderRequestError {
   const message = readErrorMessage(payload) ?? `Cyberimpact request failed with status ${status}`;
-  if (phase === "validate" && (status === 401 || status === 403)) return new ProviderRequestError(400, message);
+  if (phase === "validate" && (status === 401 || status === 403)) return providerInputError(message);
   return new ProviderRequestError(status || 502, message);
 }
 
@@ -281,5 +281,5 @@ function readErrorMessage(payload: unknown): string | undefined {
 }
 
 function assertAtLeastOne(input: Record<string, unknown>, keys: string[], message: string): void {
-  if (keys.every((key) => input[key] === undefined)) throw new ProviderRequestError(400, message);
+  if (keys.every((key) => input[key] === undefined)) throw providerInputError(message);
 }

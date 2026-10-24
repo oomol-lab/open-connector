@@ -11,6 +11,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requiredResponseRecord,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 type QueryValue = string | number | boolean | undefined;
@@ -313,7 +314,7 @@ function createEodhdApisError(status: number, payload: unknown): ProviderRequest
   const message = extractEodhdApisErrorMessage(payload) ?? `EODHD APIs request failed with status ${status}`;
 
   if (status === 400 || status === 401 || status === 403 || status === 404 || status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (status === 429) {

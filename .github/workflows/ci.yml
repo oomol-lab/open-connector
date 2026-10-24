@@ -1,10 +1,5 @@
 name: CI
 
-# PR quality gates for OOMOL Connect, run serially in a single job:
-#   1) Lint (oxlint + oxfmt)  ->  2) Typecheck (build)  ->  3) Action examples  ->  4) Unit tests (vitest)
-# Serial keeps it simple and fail-fast: dependencies install once and a failing
-# earlier step short-circuits the rest. Also runs on pushes to main so the default
-# branch stays green and the npm cache stays warm for PR runs.
 on:
   push:
     branches: [main]
@@ -28,24 +23,8 @@ env:
 
 jobs:
   ci:
-    name: Lint, Typecheck & Test
+    name: Lint, Typecheck & Build
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_DB: open_connector_test
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_USER: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-    env:
-      TEST_POSTGRES_URL: postgresql://postgres:postgres@127.0.0.1:5432/open_connector_test
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -75,11 +54,45 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Build web
+        run: npm run build:web
+
       # 3) Action examples: generate the catalog as the docs build does, then validate every
       # schema-derived example against its action's input schema, as AGENTS.md requires.
       - name: Validate action examples
         run: npm run generate:catalog && node scripts/check-action-examples.ts
 
-      # 4) Unit tests (vitest): covers src and the web workspace.
-      - name: Run tests (vitest)
-        run: npm test
+  test:
+    name: Tests (${{ matrix.shard }}/4)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: open_connector_test
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_POSTGRES_URL: postgresql://postgres:postgres@127.0.0.1:5432/open_connector_test
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Run tests
+        run: npm test -- --shard=${{ matrix.shard }}/4

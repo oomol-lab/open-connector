@@ -25,6 +25,7 @@ import {
   providerUserAgent,
   readProviderProxyResponse,
   toProviderProxyError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "flomo";
@@ -32,7 +33,6 @@ const flomoWebhookHost = "flomoapp.com";
 const flomoWebhookPathPrefix = "/iwh/";
 const flomoMcpEndpoint = "https://flomoapp.com/mcp";
 const flomoMcpTokenField = "token";
-const flomoRequestTimeoutMs = 30_000;
 
 type FlomoActionHandler = (input: Record<string, unknown>, context: FlomoActionContext) => Promise<unknown>;
 type FlomoMcpToolResult = Awaited<ReturnType<Client["callTool"]>>;
@@ -234,7 +234,7 @@ async function createFlomoMemo(input: {
   fetcher: typeof fetch;
   signal?: AbortSignal;
 }): Promise<unknown> {
-  const timeoutSignal = AbortSignal.timeout(flomoRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = input.signal ? AbortSignal.any([input.signal, timeoutSignal]) : timeoutSignal;
 
   try {
@@ -303,7 +303,7 @@ async function requestFlomoProxy(
     }
   }
 
-  const timeoutSignal = AbortSignal.timeout(flomoRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   init.signal = signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal;
 
   try {
@@ -395,7 +395,7 @@ async function listFlomoMcpTools(input: {
     const result = await client.listTools(
       {},
       {
-        timeout: flomoRequestTimeoutMs,
+        timeout: defaultProviderRequestTimeoutMs,
       },
     );
     return result.tools.map((tool) => ({
@@ -417,7 +417,7 @@ async function callFlomoMcpTool(input: {
         arguments: input.arguments,
       },
       {
-        timeout: flomoRequestTimeoutMs,
+        timeout: defaultProviderRequestTimeoutMs,
       },
     );
     return normalizeMcpToolResult(input.toolName, result);

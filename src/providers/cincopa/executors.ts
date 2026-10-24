@@ -15,12 +15,12 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "cincopa";
 const apiBaseUrl = "https://api.cincopa.com/v2";
 const validationPath = "/ping.json";
-const requestTimeoutMs = 30_000;
 
 type CincopaMode = "validate" | "execute";
 interface CincopaContext {
@@ -171,8 +171,8 @@ async function requestJson(input: {
   query?: Record<string, string | undefined>;
 }): Promise<unknown> {
   const signal = input.context.signal
-    ? AbortSignal.any([input.context.signal, AbortSignal.timeout(requestTimeoutMs)])
-    : AbortSignal.timeout(requestTimeoutMs);
+    ? AbortSignal.any([input.context.signal, AbortSignal.timeout(defaultProviderRequestTimeoutMs)])
+    : AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   let response: Response;
   let payload: unknown;
   try {

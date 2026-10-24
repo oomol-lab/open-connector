@@ -9,11 +9,16 @@ import {
   optionalRecord,
   optionalString,
 } from "../../core/cast.ts";
-import { providerFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  providerFetch,
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+  defaultProviderRequestTimeoutMs,
+} from "../provider-runtime.ts";
 
 export const razorpayApiBaseUrl = "https://api.razorpay.com/v1";
 const razorpayValidationPath = "/payments";
-const razorpayDefaultRequestTimeoutMs = 30_000;
 
 const asOptionalInteger = optionalInteger;
 const asOptionalString = optionalString;
@@ -256,7 +261,7 @@ async function requestRazorpayJson(input: {
   }
 
   const timeout = createTimeoutSignal({
-    timeoutMs: razorpayDefaultRequestTimeoutMs,
+    timeoutMs: defaultProviderRequestTimeoutMs,
   });
 
   try {
@@ -310,7 +315,7 @@ function createRazorpayError(status: number, payload: unknown, phase: RazorpayRe
   }
 
   if (phase === "validate" && [400, 401, 403].includes(status)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (phase === "execute" && [401, 403].includes(status)) {
@@ -318,7 +323,7 @@ function createRazorpayError(status: number, payload: unknown, phase: RazorpayRe
   }
 
   if (phase === "execute" && [400, 404, 409, 422].includes(status)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   return new ProviderRequestError(500, message, status || 500);

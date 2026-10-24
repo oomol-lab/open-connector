@@ -8,6 +8,7 @@ import {
   defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "diffbot";
@@ -97,7 +98,7 @@ function buildDiffbotArticleUrl(input: Record<string, unknown>, apiKey: string):
   }
   const publicUrl = assertPublicHttpUrl(target, {
     fieldName: "url",
-    createError: (message) => new ProviderRequestError(400, message),
+    createError: providerInputError,
   });
   if (publicUrl.protocol !== "https:" || publicUrl.username || publicUrl.password) {
     throw new ProviderRequestError(400, "url must use https and must not include credentials");
@@ -168,10 +169,10 @@ function createDiffbotHttpError(status: number, raw: string, json: unknown, phas
     return new ProviderRequestError(429, message);
   }
   if ((status === 401 || status === 403) && phase === "validate") {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 400) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(status, message);
 }

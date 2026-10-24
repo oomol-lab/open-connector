@@ -13,7 +13,12 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { encodePathSegment, queryParams } from "../../core/request.ts";
-import { providerResponseError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  providerResponseError,
+  providerUserAgent,
+  ProviderRequestError,
+  providerInputError,
+} from "../provider-runtime.ts";
 import { zeplinReadScope } from "./scopes.ts";
 
 export const zeplinApiBaseUrl = "https://api.zeplin.dev/v1";
@@ -245,7 +250,7 @@ function mapZeplinError(status: number, text: string, phase: ZeplinRequestPhase)
     return new ProviderRequestError(429, message);
   }
   if (status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(status || 502, message);
 }

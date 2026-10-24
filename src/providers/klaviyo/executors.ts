@@ -355,7 +355,7 @@ function mapKlaviyoHttpError(
     return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
   }
   if (status === 400 || status === 404 || status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 429) {
     return new ProviderRequestError(429, message);

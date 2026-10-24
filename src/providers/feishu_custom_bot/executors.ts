@@ -21,6 +21,7 @@ import {
   requireApiKeyCredential,
   requiredInputString,
   toProviderProxyError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "feishu_custom_bot";
@@ -28,7 +29,6 @@ const feishuCustomBotApiBaseUrl = "https://open.feishu.cn";
 const feishuCustomBotWebhookPathPrefix = "/open-apis/bot/v2/hook/";
 const feishuCustomBotAllowedWebhookHosts = new Set([new URL(feishuCustomBotApiBaseUrl).host]);
 const feishuCustomBotMaxPayloadBytes = 20 * 1024;
-const feishuCustomBotRequestTimeoutMs = 30_000;
 
 const feishuCustomBotFetch = createProviderFetch({ skipDnsValidation: true });
 const feishuCustomBotProbeBadRequestCode = 9499;
@@ -523,7 +523,7 @@ function requiredFeishuCustomBotObject(value: unknown, fieldName: string): Recor
 
 function createFeishuCustomBotRequestSignal(parent?: AbortSignal): FeishuCustomBotRequestSignal {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), feishuCustomBotRequestTimeoutMs);
+  const timeout = setTimeout(() => controller.abort(), defaultProviderRequestTimeoutMs);
   const abortFromParent = (): void => controller.abort(parent?.reason);
   if (parent?.aborted) {
     controller.abort(parent.reason);

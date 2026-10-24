@@ -51,13 +51,13 @@ import {
   requireCustomCredential,
   requiredInputString,
   toProviderProxyError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 import { feishuAppBotActions, feishuAppBotProviderScopes } from "./actions.ts";
 import { feishuEvents } from "./trigger-on-event.ts";
 
 const service = "feishu_app_bot";
 const feishuOpenBaseUrl = "https://open.feishu.cn/open-apis";
-const feishuRequestTimeoutMs = 30_000;
 const feishuTenantAccessTokenRefreshSkewMs = 60_000;
 const feishuMaxImageUploadSourceBytes = 10 * 1024 * 1024;
 const feishuMaxFileUploadSourceBytes = 30 * 1024 * 1024;
@@ -1401,7 +1401,7 @@ function normalizeMimeType(value: string | null | undefined): string | undefined
 
 function createFeishuRequestSignal(parent?: AbortSignal): FeishuRequestSignal {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), feishuRequestTimeoutMs);
+  const timeout = setTimeout(() => controller.abort(), defaultProviderRequestTimeoutMs);
   const abortFromParent = (): void => controller.abort(parent?.reason);
   if (parent?.aborted) {
     controller.abort(parent.reason);

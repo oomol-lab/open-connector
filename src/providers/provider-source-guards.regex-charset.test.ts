@@ -246,9 +246,11 @@ function findNonLatin1RegexCharacters(path: string, source: string): string[] {
   return offenders;
 }
 
-describe("provider regex charset guard", () => {
+const sourceFiles = listSourceFiles(sourceDir);
+
+describe("provider regex charset guard", { timeout: Math.max(5_000, sourceFiles.length * 5) }, () => {
   it("keeps every regex literal inside Latin-1", () => {
-    const files = listSourceFiles(sourceDir);
+    const files = sourceFiles;
     const offenders: string[] = [];
     let literals = 0;
     for (const path of files) {

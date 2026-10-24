@@ -11,6 +11,7 @@ import {
   ProviderRequestError,
   readProviderTextBody,
   requireApiKeyCredential,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 const service = "ambivo";
@@ -311,7 +312,7 @@ function mapAmbivoError(status: number, payload: unknown, mode: "validate" | "ex
   } else if (status === 400 || status === 404 || status === 409 || status === 422) {
     return new ProviderRequestError(status, message);
   } else {
-    return new ProviderRequestError(502, message);
+    return providerResponseError(message);
   }
 }
 
@@ -446,7 +447,7 @@ function readObjectArray(value: unknown, fieldName: string) {
 
 function requireObject(value: unknown, message: string) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new ProviderRequestError(502, message);
+    throw providerResponseError(message);
   }
   return value as Record<string, unknown>;
 }

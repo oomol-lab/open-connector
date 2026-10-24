@@ -9,6 +9,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requiredInputString,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 interface WorkableContext {
@@ -193,13 +194,13 @@ async function buildWorkableError(response: Response, input: WorkableRequestInpu
   const message = extractWorkableErrorMessage(payload) ?? `Workable request failed with ${response.status}`;
   if (response.status === 429) return new ProviderRequestError(429, message);
   if (input.phase === "validate" && [400, 401, 403, 404].includes(response.status)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (input.phase === "execute" && (response.status === 401 || response.status === 403)) {
     return new ProviderRequestError(401, message);
   }
   if (response.status === 400 || response.status === 422 || (response.status === 404 && input.notFoundAsInvalidInput)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(response.status || 500, message);
 }

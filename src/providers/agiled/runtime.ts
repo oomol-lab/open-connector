@@ -2,10 +2,9 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, defaultProviderRequestTimeoutMs } from "../provider-runtime.ts";
 
 export const agiledApiBaseUrl = "https://my.agiled.app/api/v1";
-export const agiledDefaultRequestTimeoutMs = 30_000;
 
 interface AgiledActionContext {
   apiKey: string;
@@ -191,7 +190,7 @@ function buildRequestOptions(context: AgiledActionContext): AgiledRequestOptions
 }
 
 async function requestAgiledJson(path: string, options: AgiledRequestOptions): Promise<unknown> {
-  const timeoutSignal = AbortSignal.timeout(agiledDefaultRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = options.signal ? AbortSignal.any([options.signal, timeoutSignal]) : timeoutSignal;
 
   try {

@@ -4,7 +4,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, readBoundedResponseBytes, storeResponseInTransit } from "../../core/request.ts";
-import { providerFetch, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerFetch, providerUserAgent, ProviderRequestError, providerInputError } from "../provider-runtime.ts";
 
 type KlangioActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 type KlangioJobOutput = "mxml" | "midi" | "pdf" | "gp5" | "json" | "midi_quant";
@@ -264,7 +264,7 @@ async function resolveKlangioUploadSource(
   if (fileUrl) {
     const url = assertPublicHttpUrl(fileUrl, {
       fieldName: "file.url",
-      createError: (message) => new ProviderRequestError(400, message),
+      createError: providerInputError,
     });
     const response = await providerFetch(url, {
       method: "GET",
@@ -323,7 +323,7 @@ async function readKlangioUploadSourceBytes(response: Response): Promise<Uint8Ar
   return readBoundedResponseBytes(response, {
     maxBytes: maxKlangioUploadSourceBytes,
     fieldName: "klangio upload source",
-    createError: (message) => new ProviderRequestError(400, message),
+    createError: providerInputError,
   });
 }
 
@@ -398,7 +398,7 @@ function createKlangioError(response: Response, payload: unknown): ProviderReque
   }
 
   if (response.status >= 400 && response.status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   return new ProviderRequestError(response.status || 500, message);

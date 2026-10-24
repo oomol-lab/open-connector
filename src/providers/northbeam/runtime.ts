@@ -204,7 +204,7 @@ function mapNorthbeamError(status: number, payload: unknown, phase: NorthbeamPha
   }
 
   if (phase === "validate" && status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (phase === "execute" && (status === 401 || status === 403)) {

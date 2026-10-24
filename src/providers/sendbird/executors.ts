@@ -13,6 +13,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const sendbirdUserAgent = providerUserAgent;
@@ -613,7 +614,7 @@ function createSendbirdError(response: Response, payload: unknown, phase: Sendbi
   }
 
   if (phase === "validate" && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (response.status === 400 || response.status === 404) {

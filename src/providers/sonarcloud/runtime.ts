@@ -18,6 +18,7 @@ import {
   readProviderTextBody,
   requiredInputString,
   runProviderRequest,
+  providerResponseError,
 } from "../provider-runtime.ts";
 import { sonarCloudAllowedApiBaseUrls, sonarCloudDefaultApiBaseUrl } from "./constants.ts";
 
@@ -206,7 +207,7 @@ async function readSonarCloudPayload(response: Response): Promise<unknown> {
 function createSonarCloudError(status: number, payload: unknown, phase: SonarCloudPhase): ProviderRequestError {
   const message = extractSonarCloudErrorMessage(payload) ?? `SonarQube Cloud request failed with status ${status}`;
   if (status === 429) return new ProviderRequestError(429, message);
-  if (phase === "validate" && status >= 400 && status < 500) return new ProviderRequestError(400, message);
+  if (phase === "validate" && status >= 400 && status < 500) return providerInputError(message);
   if (status >= 400 && status < 500) return new ProviderRequestError(status, message);
   return new ProviderRequestError(status || 502, message);
 }
@@ -414,16 +415,16 @@ function stringifyOptionalBoolean(value: unknown): string | undefined {
 }
 
 function readProviderRecord(value: unknown, message: string): Record<string, unknown> {
-  return requiredRecord(value, "response", () => new ProviderRequestError(502, message));
+  return requiredRecord(value, "response", () => providerResponseError(message));
 }
 
 function readProviderRecords(value: unknown, message: string): Array<Record<string, unknown>> {
-  return objectArray(value, "response", () => new ProviderRequestError(502, message));
+  return objectArray(value, "response", () => providerResponseError(message));
 }
 
 function readProviderString(value: unknown, message: string): string {
   const stringValue = optionalString(value);
-  if (stringValue === undefined) throw new ProviderRequestError(502, message);
+  if (stringValue === undefined) throw providerResponseError(message);
   return stringValue;
 }
 

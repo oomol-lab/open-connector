@@ -7,6 +7,7 @@ import {
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 export interface HelpdeskCredentialCheck {
@@ -57,7 +58,7 @@ export async function validateHelpdeskCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
 ): Promise<HelpdeskCredentialCheck> {
-  const apiKey = requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message));
+  const apiKey = requiredString(input.apiKey, "apiKey", providerInputError);
   const accountId = requireHelpdeskAccountId(input);
   const { payload } = await requestHelpdesk({
     path: helpdeskValidationEndpoint,
@@ -424,13 +425,13 @@ function createHelpdeskError(status: number, payload: unknown, phase: HelpdeskRe
     return new ProviderRequestError(429, message);
   }
   if (phase === "validate" && status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (phase === "execute" && (status === 401 || status === 403)) {
     return new ProviderRequestError(401, message);
   }
   if (phase === "execute" && (status === 400 || status === 404 || status === 422)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(status || 500, message);
 }

@@ -17,6 +17,8 @@ import {
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 const service = "planhat";
@@ -305,19 +307,19 @@ function pickQuery(input: Record<string, unknown>, keys: string[]): Record<strin
 function readObject(value: unknown, message: string): Record<string, unknown> {
   const record = optionalRecord(value);
   if (!record) {
-    throw new ProviderRequestError(502, message);
+    throw providerResponseError(message);
   }
   return record;
 }
 
 function readArray(value: unknown, message: string): Array<Record<string, unknown>> {
-  return objectArray(value, message, () => new ProviderRequestError(502, message));
+  return objectArray(value, message, () => providerResponseError(message));
 }
 
 function requiredProviderString(value: unknown, message: string): string {
   const text = optionalRawString(value);
   if (!text?.trim()) {
-    throw new ProviderRequestError(502, message);
+    throw providerResponseError(message);
   }
   return text;
 }
@@ -349,13 +351,13 @@ function createPlanhatError(
     return new ProviderRequestError(429, message);
   }
   if (phase === "validate" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (phase === "execute" && (status === 401 || status === 403)) {
     return new ProviderRequestError(401, message);
   }
   if (status === 400 || status === 404 || status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(status >= 500 || status < 400 ? 502 : status, message);
 }

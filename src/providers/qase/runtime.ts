@@ -8,7 +8,12 @@ import {
   optionalRecord as asOptionalObject,
   optionalString as asOptionalString,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  providerUserAgent,
+  ProviderRequestError,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 export const qaseApiBaseUrl = "https://api.qase.io/v1";
 interface QaseActionInput {
@@ -240,9 +245,9 @@ function createQaseError(response: Response, payload: unknown, phase: "validate"
     return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
   }
   if (400 <= response.status && response.status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function readPage(payload: unknown, entity: string) {

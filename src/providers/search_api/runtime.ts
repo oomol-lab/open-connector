@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, providerInputError } from "../provider-runtime.ts";
 
 type SearchApiPhase = "validate" | "execute";
 type SearchApiQueryValue = string | number | boolean | undefined;
@@ -307,7 +307,7 @@ async function readJsonPayload(response: Response): Promise<unknown> {
 function createSearchApiError(status: number, payload: unknown, phase: SearchApiPhase): ProviderRequestError {
   const message = extractSearchApiMessage(payload) ?? `SearchApi request failed with ${status || 500}`;
   if (phase === "validate" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(status || 500, message);
 }

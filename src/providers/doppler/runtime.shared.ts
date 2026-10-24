@@ -1,5 +1,5 @@
 import { optionalRecord, optionalString } from "../../core/cast.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { ProviderRequestError, providerInputError } from "../provider-runtime.ts";
 
 export const dopplerApiBaseUrl = "https://api.doppler.com";
 
@@ -104,7 +104,7 @@ export function createDopplerError(
   }
 
   if (phase === "validate" && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (phase === "execute" && response.status === 401) {
@@ -112,7 +112,7 @@ export function createDopplerError(
   }
 
   if (response.status === 400 || response.status === 404) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (phase === "execute" && response.status === 403) {

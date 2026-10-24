@@ -2,7 +2,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, providerInputError } from "../provider-runtime.ts";
 
 export const plausibleDefaultBaseUrl = "https://plausible.io";
 
@@ -176,7 +176,7 @@ function createPlausibleError(
     return new ProviderRequestError(429, message);
   }
   if ((status === 404 && notFoundAsInvalidInput) || status === 400 || status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(status >= 500 ? 502 : status, message);
 }
@@ -219,7 +219,7 @@ export function normalizePlausibleBaseUrl(value?: string): string {
   }
   const url = assertPublicHttpUrl(value, {
     fieldName: "baseUrl",
-    createError: (message) => new ProviderRequestError(400, message),
+    createError: providerInputError,
   });
   if (url.protocol !== "https:") {
     throw new ProviderRequestError(400, "Base URL must use https");

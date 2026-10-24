@@ -22,12 +22,12 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "check";
 const sandboxApiBaseUrl = "https://sandbox.checkhq.com";
 const productionApiBaseUrl = "https://api.checkhq.com";
-const requestTimeoutMs = 30_000;
 
 type CheckEnvironment = "sandbox" | "production";
 type CheckPhase = "validate" | "execute";
@@ -164,8 +164,8 @@ async function requestCheckJson(input: {
   body?: Record<string, unknown>;
 }): Promise<unknown> {
   const signal = input.context.signal
-    ? AbortSignal.any([input.context.signal, AbortSignal.timeout(requestTimeoutMs)])
-    : AbortSignal.timeout(requestTimeoutMs);
+    ? AbortSignal.any([input.context.signal, AbortSignal.timeout(defaultProviderRequestTimeoutMs)])
+    : AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   let response: Response;
   let payload: unknown;
   try {

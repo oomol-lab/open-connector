@@ -8,11 +8,11 @@ import {
   defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "float";
 const floatApiBaseUrl = "https://api.float.com/v3";
-const floatDefaultRequestTimeoutMs = 30_000;
 
 type FloatActionContext = ApiKeyProviderContext;
 type FloatActionHandler = (input: Record<string, unknown>, context: FloatActionContext) => Promise<unknown>;
@@ -197,7 +197,7 @@ export const credentialValidators: CredentialValidators = {
 };
 
 async function requestFloatJson(context: FloatActionContext, input: FloatRequestInput): Promise<FloatListResponse> {
-  const timeoutSignal = AbortSignal.timeout(floatDefaultRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = context.signal ? AbortSignal.any([context.signal, timeoutSignal]) : timeoutSignal;
 
   try {

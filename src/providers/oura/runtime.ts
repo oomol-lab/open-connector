@@ -258,7 +258,7 @@ function mapOuraError(input: OuraErrorInput): ProviderRequestError {
     return new ProviderRequestError(input.phase === "validate" ? 400 : 401, message);
   }
   if (input.status === 400 || input.status === 422 || (input.status === 404 && input.notFoundAsInvalidInput)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   return new ProviderRequestError(input.status, message);

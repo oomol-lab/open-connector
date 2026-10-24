@@ -319,7 +319,7 @@ async function createElevenreaderError(
     return new ProviderRequestError(429, message);
   }
   if (response.status >= 400 && response.status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(response.status >= 400 && response.status < 600 ? response.status : 502, message);
 }

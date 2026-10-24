@@ -10,12 +10,12 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requiredInputString,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const needleApiBaseUrl = "https://needle.app";
 const needleSearchBaseUrl = "https://search.needle.app";
 const needleValidationPath = "/api/v1/collections";
-const needleDefaultRequestTimeoutMs = 30_000;
 
 type NeedleActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type NeedleActionHandler = (input: Record<string, unknown>, context: NeedleActionContext) => Promise<unknown>;
@@ -211,7 +211,7 @@ async function needleRequest(
 }
 
 async function needleRawRequest(context: NeedleActionContext, input: NeedleRequestInput): Promise<Response> {
-  const timeout = createProviderTimeout(context.signal, needleDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
 
   try {
     return await context.fetcher(new URL(input.path, input.baseUrl ?? needleApiBaseUrl), {
@@ -228,7 +228,7 @@ async function needleRawRequest(context: NeedleActionContext, input: NeedleReque
     if (timeout.didTimeout() && isAbortLikeError(error)) {
       throw new ProviderRequestError(
         504,
-        `Needle request timed out after ${Math.max(1, Math.ceil(needleDefaultRequestTimeoutMs / 1000))} seconds`,
+        `Needle request timed out after ${Math.max(1, Math.ceil(defaultProviderRequestTimeoutMs / 1000))} seconds`,
       );
     }
 

@@ -2,7 +2,12 @@ import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-ru
 import type { FaktooraActionName } from "./actions.ts";
 
 import { requiredString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 export interface FaktooraCredentialCheck {
   providerAccountId?: string;
@@ -105,7 +110,7 @@ export async function validateFaktooraCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
 ): Promise<FaktooraCredentialCheck> {
-  const apiKey = requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message));
+  const apiKey = requiredString(input.apiKey, "apiKey", providerInputError);
   await requestFaktooraJson({
     apiKey,
     fetcher,
@@ -187,15 +192,15 @@ function createFaktooraError(status: number, payload: unknown, phase: FaktooraRe
   const message = extractMessage(payload) ?? `Faktoora request failed with status ${status}`;
   if (status === 429) return new ProviderRequestError(429, message);
   if ((status === 401 || status === 403) && phase === "validate") {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 401 || status === 403) {
     return new ProviderRequestError(401, message);
   }
   if (status === 400 || status === 404 || status === 409 || status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function extractMessage(payload: unknown) {

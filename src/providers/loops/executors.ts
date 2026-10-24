@@ -13,6 +13,7 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "loops";
@@ -274,7 +275,7 @@ function createLoopsError(response: Response, payload: unknown, phase: "validate
     return new ProviderRequestError(429, message);
   }
   if (phase === "validate" && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (phase === "execute" && (response.status === 401 || response.status === 403)) {
     return new ProviderRequestError(401, message);

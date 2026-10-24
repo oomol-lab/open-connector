@@ -14,13 +14,13 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 import { foremArticleMutableKeys } from "./actions.ts";
 
 const service = "forem";
 const foremDefaultBaseUrl = "https://dev.to";
 const foremApiPathPrefix = "/api";
-const foremDefaultRequestTimeoutMs = 30_000;
 
 type ForemPhase = "validate" | "execute";
 type ForemMethod = "GET" | "POST" | "PUT";
@@ -265,7 +265,7 @@ async function requestForemJson<T>(context: ForemActionContext, input: ForemRequ
   }
 
   const body = input.body ? JSON.stringify(input.body) : undefined;
-  const timeoutSignal = AbortSignal.timeout(foremDefaultRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = context.signal ? AbortSignal.any([context.signal, timeoutSignal]) : timeoutSignal;
 
   try {

@@ -1,7 +1,13 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 interface AccountProfile {
   providerAccountId: string;
@@ -549,11 +555,11 @@ function mapSurveyMonkeyError(status: number, payload: unknown, phase: SurveyMon
   }
   if (status === 403) {
     if (phase === "validate") {
-      return new ProviderRequestError(400, message);
+      return providerInputError(message);
     }
     if (errorId === "1014") return new ProviderRequestError(403, message);
     if (errorId === "1017") return new ProviderRequestError(429, message);
-    if (errorId === "1018") return new ProviderRequestError(502, message);
+    if (errorId === "1018") return providerResponseError(message);
     return new ProviderRequestError(403, message);
   }
   if (status === 400 || status === 404 || status === 422) {

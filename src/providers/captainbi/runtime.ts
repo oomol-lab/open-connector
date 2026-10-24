@@ -10,6 +10,8 @@ import {
   createProviderTimeout,
   providerUserAgent as connectorUserAgent,
   ProviderRequestError,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 export const captainBiApiBaseUrl: string = "https://openapi.captainbi.com";
@@ -356,7 +358,7 @@ function mapCaptainBiHttpError(status: number, payload: unknown, phase: CaptainB
     return new ProviderRequestError(429, message);
   }
   if (phase === "validate" && [400, 401, 403].includes(status)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 401 || (operation === "access token exchange" && [400, 403].includes(status))) {
     return new ProviderRequestError(401, message);
@@ -367,7 +369,7 @@ function mapCaptainBiHttpError(status: number, payload: unknown, phase: CaptainB
   if ([400, 404, 409, 422].includes(status)) {
     return new ProviderRequestError(status === 404 ? 404 : 400, message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function mapCaptainBiBusinessError(
@@ -381,14 +383,14 @@ function mapCaptainBiBusinessError(
     `CaptainBI ${operation} failed${code == null ? "" : ` with code ${code}`}`;
   switch (code) {
     case 100903:
-      return new ProviderRequestError(400, message);
+      return providerInputError(message);
     case 100904:
     case 100910:
       return new ProviderRequestError(429, message);
     case 100902:
     case 100906:
     case 100907:
-      return phase === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(401, message);
+      return phase === "validate" ? providerInputError(message) : new ProviderRequestError(401, message);
     case 100901:
     case 100905:
     case 100908:
@@ -399,7 +401,7 @@ function mapCaptainBiBusinessError(
     case 100914:
       return new ProviderRequestError(403, message);
     default:
-      return new ProviderRequestError(502, message);
+      return providerResponseError(message);
   }
 }
 

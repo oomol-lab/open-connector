@@ -9,6 +9,7 @@ import {
   providerFetch,
   ProviderRequestError,
   providerUserAgent,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 export const amplitudeApiBaseUrl = "https://amplitude.com";
@@ -219,7 +220,7 @@ function requireNonEmptyString(value: unknown, fieldName: string) {
 }
 
 function requireAmplitudeSecretKey(value: unknown): string {
-  return requiredString(value, "apiKey", (message) => new ProviderRequestError(400, message));
+  return requiredString(value, "apiKey", providerInputError);
 }
 
 function normalizeDataResidency(value: unknown) {
@@ -262,7 +263,7 @@ function mapAmplitudeError(status: number, payload: unknown, phase: "validate" |
   let message = readAmplitudeErrorMessage(payload) ?? `Amplitude request failed with ${status}`;
   if (status === 401 || status === 403) {
     if (phase === "validate") {
-      return new ProviderRequestError(400, message);
+      return providerInputError(message);
     }
     return new ProviderRequestError(401, message);
   }

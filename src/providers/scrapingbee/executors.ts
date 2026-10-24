@@ -8,7 +8,13 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { booleanString, compactObject, optionalRecord, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  defineProviderProxy,
+  ProviderRequestError,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 const service = "scrapingbee";
 const scrapingbeeApiOrigin = "https://app.scrapingbee.com";
@@ -176,7 +182,7 @@ function parseScrapingbeeUsage(payload: unknown): ScrapingbeeUsage {
 function createScrapingbeeError(status: number, body: string, phase: ScrapingbeeRequestPhase): ProviderRequestError {
   const message = extractErrorMessage(body) ?? `ScrapingBee request failed with status ${status}`;
   if (phase === "validate" && [400, 401, 403].includes(status)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(status || 500, message);
 }
@@ -204,7 +210,7 @@ function parseScrapingbeeJson(body: string, invalidMessage: string): unknown {
   try {
     return JSON.parse(body) as unknown;
   } catch {
-    throw new ProviderRequestError(502, invalidMessage);
+    throw providerResponseError(invalidMessage);
   }
 }
 

@@ -2,7 +2,12 @@ import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-ru
 import type { VidaActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  runProviderRequest,
+  providerInputError,
+} from "../provider-runtime.ts";
 
 export interface VidaCredentialCheck {
   providerAccountId?: string;
@@ -79,7 +84,7 @@ export async function validateVidaCredential(
 ): Promise<VidaCredentialCheck> {
   const payload = await requestVidaJson({
     path: "/api/v2/account",
-    apiKey: requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message)),
+    apiKey: requiredString(input.apiKey, "apiKey", providerInputError),
     params: {},
     fetcher,
     phase: "validate",
@@ -110,11 +115,7 @@ export async function executeVidaAction(
     throw new ProviderRequestError(500, `vida action is not implemented yet: ${input.actionName}`);
   }
 
-  return handler(
-    input.input,
-    fetcher,
-    requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message)),
-  );
+  return handler(input.input, fetcher, requiredString(input.apiKey, "apiKey", providerInputError));
 }
 
 function buildTargetAccountParams(input: Record<string, unknown>) {
@@ -183,7 +184,7 @@ function createVidaError(status: number, payload: unknown, phase: VidaPhase) {
     return new ProviderRequestError(429, message);
   }
   if (phase === "validate" && status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (phase === "execute" && (status === 401 || status === 403)) {
     return new ProviderRequestError(status, message);

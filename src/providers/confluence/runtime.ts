@@ -17,10 +17,11 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requiredInputString,
+  providerResponseError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 export const confluenceValidationPath = "/spaces";
-export const confluenceDefaultTimeoutMs = 30_000;
 const defaultLimit = 25;
 const atlassianApiOrigin = "https://api.atlassian.com";
 
@@ -269,7 +270,7 @@ export async function requestConfluenceJson(input: ConfluenceRequestInput): Prom
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, confluenceDefaultTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   let payload: unknown;
   try {
@@ -284,7 +285,7 @@ export async function requestConfluenceJson(input: ConfluenceRequestInput): Prom
     if (timeout.didTimeout() || isAbortLikeError(error)) {
       throw new ProviderRequestError(
         504,
-        `Confluence request timed out after ${Math.ceil(confluenceDefaultTimeoutMs / 1000)} seconds`,
+        `Confluence request timed out after ${Math.ceil(defaultProviderRequestTimeoutMs / 1000)} seconds`,
       );
     }
     if (error instanceof ProviderRequestError) {
@@ -341,13 +342,13 @@ function createConfluenceError(
 ): ProviderRequestError {
   const message = extractConfluenceErrorMessage(payload) ?? response.statusText ?? "Confluence request failed";
   if (phase === "validate" && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (notFoundAsInvalidInput && response.status === 404) {
     return new ProviderRequestError(404, message);
   }
   if (response.status === 400) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(response.status || 502, message, payload);
 }
@@ -485,7 +486,7 @@ function buildOptionalPageBody(input: Record<string, unknown>): Record<string, u
 function requireObject(value: unknown, message: string): Record<string, unknown> {
   const object = optionalRecord(value);
   if (!object) {
-    throw new ProviderRequestError(502, message);
+    throw providerResponseError(message);
   }
   return object;
 }

@@ -16,7 +16,12 @@ import {
   optionalRecord,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { mapProviderActionSources, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  mapProviderActionSources,
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+} from "../provider-runtime.ts";
 
 export const vapiApiBaseUrl = "https://api.vapi.ai";
 
@@ -418,7 +423,7 @@ async function resolveVapiUploadSource(
   if (fileUrl) {
     const url = assertPublicHttpUrl(fileUrl, {
       fieldName: "file.url",
-      createError: (message) => new ProviderRequestError(400, message),
+      createError: providerInputError,
     });
     const response = await context.fetcher(url, { signal: context.signal });
     if (!response.ok) {
@@ -431,7 +436,7 @@ async function resolveVapiUploadSource(
     };
   }
   try {
-    const bytes = base64Bytes(contentBase64, "file.contentBase64", (message) => new ProviderRequestError(400, message));
+    const bytes = base64Bytes(contentBase64, "file.contentBase64", providerInputError);
     return {
       bytes: bytes.buffer,
       fileName,
@@ -497,7 +502,7 @@ async function normalizeVapiError(response: Response, mode: "validate" | "execut
     return new ProviderRequestError(mode === "validate" ? 400 : 401, message);
   }
   if (response.status === 400 || response.status === 404 || response.status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 429) {
     return new ProviderRequestError(429, message);

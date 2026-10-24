@@ -18,6 +18,7 @@ import {
   providerUserAgent,
   requireApiKeyCredential,
   toProviderExecutionError,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "aftership";
@@ -266,7 +267,7 @@ function createAftershipError(
 
   if (response.status === 401 || response.status === 403) {
     if (phase === "validate") {
-      return new ProviderRequestError(400, message);
+      return providerInputError(message);
     }
     return new ProviderRequestError(response.status, message, payload);
   }

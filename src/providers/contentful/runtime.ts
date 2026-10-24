@@ -8,6 +8,7 @@ import {
   providerUserAgent,
   requiredInputString,
   requiredResponseRecord,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 export const contentfulApiBaseUrl = "https://api.contentful.com";
@@ -355,7 +356,7 @@ function createContentfulError(
 ): ProviderRequestError {
   const message = optionalString(optionalRecord(payload)?.message);
   if (response.status === 404 && notFoundMessage) {
-    return new ProviderRequestError(400, notFoundMessage);
+    return providerInputError(notFoundMessage);
   }
   if (response.status === 400) {
     return new ProviderRequestError(400, message ?? "invalid Contentful request");

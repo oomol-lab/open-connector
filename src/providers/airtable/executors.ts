@@ -25,6 +25,7 @@ import {
   providerResponseError,
   providerUserAgent,
   requiredResponseRecord,
+  providerInputError,
 } from "../provider-runtime.ts";
 import { airtableRecordChanged } from "./trigger-on-record-changed.ts";
 
@@ -499,10 +500,10 @@ function createAirtableError(
     return new ProviderRequestError(mode === "validate" ? 400 : response.status, message);
   }
   if (notFoundAsInvalidInput && response.status === 404) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 429) {
     return new ProviderRequestError(429, message);

@@ -4,7 +4,12 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  providerUserAgent,
+  ProviderRequestError,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 const simlaValidationPath = "/api/credentials";
 
@@ -99,7 +104,7 @@ export function normalizeSimlaApiBaseUrl(input?: string): string {
 
   const parsed = assertPublicHttpUrl(raw, {
     fieldName: "apiBaseUrl",
-    createError: (message) => new ProviderRequestError(400, message),
+    createError: providerInputError,
   });
   if (parsed.protocol !== "https:") {
     throw new ProviderRequestError(400, "apiBaseUrl must use https");
@@ -449,16 +454,16 @@ function mapSimlaError(input: {
     return new ProviderRequestError(429, message);
   }
   if (input.status === 404 && input.notFoundAsInvalidInput) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (input.status === 401 || input.status === 403) {
     return new ProviderRequestError(input.mode === "validate" ? 400 : 401, message);
   }
   if (input.status >= 400 && input.status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function extractSimlaErrorMessage(payload: Record<string, unknown>): string | undefined {

@@ -9,6 +9,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "ipregistry";
@@ -268,7 +269,7 @@ function mapIpregistryError(
     return new ProviderRequestError(phase === "validate" ? 400 : 401, normalizedMessage);
   }
   if (status === 400 || status === 404) {
-    return new ProviderRequestError(400, normalizedMessage);
+    return providerInputError(normalizedMessage);
   }
   if (status === 402 || status === 429) {
     return new ProviderRequestError(429, normalizedMessage);

@@ -3,7 +3,7 @@ import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { OAuthClientConfigService } from "./oauth-client-config-service.ts";
 import type { OAuthTokenErrorFactory, OAuthTokenResult } from "./oauth-token.ts";
 
-import { ConnectionError } from "../connection-service.ts";
+import { ConnectionError } from "../connection-error.ts";
 import { optionalRecord, stringRecord } from "../core/cast.ts";
 import { providerFetch } from "../providers/provider-runtime.ts";
 import { readOAuthClientConfigMetadata } from "./oauth-client-config-service.ts";

@@ -55,8 +55,10 @@ layouts do not expose this package's own copy for a direct host import. On Bun,
 pass the same `fetch` handler to `Bun.serve()` and skip `@hono/node-server`.
 
 Importing the package starts nothing. Configuration is explicit; the library
-does not read environment variables. One runtime may be active per process
-because provider egress policy is process-wide. Keep administrator credentials
+does not read environment variables. Multiple runtimes may share a process; each
+owns its network policy and background tasks. Use separate data directories and
+database namespaces for independent tenants. Closing one runtime does not change
+another runtime’s network policy. Keep administrator credentials
 in your backend and authorize users before making management calls.
 
 `publicOrigin` is the external HTTP(S) URL of the runtime. A path such as

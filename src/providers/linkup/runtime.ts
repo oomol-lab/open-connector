@@ -8,11 +8,12 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  providerInputError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 export const linkupApiBaseUrl = "https://api.linkup.so";
 const linkupValidationPath = "/v1/credits/balance";
-const linkupDefaultRequestTimeoutMs = 30_000;
 
 type LinkupActionContext = ApiKeyProviderContext;
 type LinkupActionHandler = (input: Record<string, unknown>, context: LinkupActionContext) => Promise<unknown>;
@@ -134,7 +135,7 @@ async function linkupRequest(
   context: Pick<LinkupActionContext, "apiKey" | "fetcher" | "signal">,
   input: LinkupRequestInput,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, linkupDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(new URL(input.path, linkupApiBaseUrl), {
       method: input.method,
@@ -159,7 +160,7 @@ async function linkupRequest(
     if (timeout.didTimeout() || isAbortLikeError(error)) {
       throw new ProviderRequestError(
         504,
-        `Linkup ${input.path} request timed out after ${Math.max(1, Math.ceil(linkupDefaultRequestTimeoutMs / 1000))} seconds`,
+        `Linkup ${input.path} request timed out after ${Math.max(1, Math.ceil(defaultProviderRequestTimeoutMs / 1000))} seconds`,
       );
     }
     throw new ProviderRequestError(
@@ -192,13 +193,13 @@ function buildLinkupError(response: Response, payload: unknown, mode: "validate"
     return new ProviderRequestError(429, message);
   }
   if (mode === "validate" && [400, 401, 403].includes(response.status)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (mode === "execute" && [401, 403].includes(response.status)) {
     return new ProviderRequestError(401, message);
   }
   if (mode === "execute" && response.status === 400) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(response.status || 502, message);
 }

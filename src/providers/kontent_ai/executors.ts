@@ -17,11 +17,11 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "kontent_ai";
 const kontentAiApiBaseUrl = "https://manage.kontent.ai/v2";
-const kontentAiDefaultRequestTimeoutMs = 30_000;
 
 type KontentAiPhase = "validate" | "execute";
 type KontentAiIdentifierType = "id" | "codename" | "externalId";
@@ -269,7 +269,7 @@ async function requestKontentAiJson(input: {
   signal?: AbortSignal;
   continuationToken?: string;
 }): Promise<KontentAiRequestResult> {
-  const timeout = createProviderTimeout(input.signal, kontentAiDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   let response: Response;
   let payload: unknown;
   try {
@@ -296,7 +296,7 @@ async function requestKontentAiJson(input: {
     if (timeout.didTimeout() || isAbortLikeError(error)) {
       throw new ProviderRequestError(
         504,
-        `Kontent.ai ${input.path} request timed out after ${Math.ceil(kontentAiDefaultRequestTimeoutMs / 1000)} seconds`,
+        `Kontent.ai ${input.path} request timed out after ${Math.ceil(defaultProviderRequestTimeoutMs / 1000)} seconds`,
       );
     }
     throw new ProviderRequestError(

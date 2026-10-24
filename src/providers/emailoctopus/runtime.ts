@@ -4,7 +4,13 @@ import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-
 
 import { compactObject, objectArray, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 export const emailoctopusApiBaseUrl = "https://emailoctopus.com/api/1.6";
 const emailoctopusValidationPath = "/lists";
@@ -341,10 +347,10 @@ function createEmailoctopusHttpError(
     return new ProviderRequestError(429, message);
   }
   if (mode === "validate" && status === 401) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 400 || status === 404 || status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(status || 500, message);
 }
@@ -367,7 +373,7 @@ function contactPath(input: Record<string, unknown>): string {
 }
 
 function readObjectArray(value: unknown, fieldName: string): Array<Record<string, unknown>> {
-  return Array.isArray(value) ? objectArray(value, fieldName, (message) => new ProviderRequestError(502, message)) : [];
+  return Array.isArray(value) ? objectArray(value, fieldName, providerResponseError) : [];
 }
 
 function optionalStringArray(value: unknown): string[] | undefined {

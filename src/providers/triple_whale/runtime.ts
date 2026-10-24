@@ -10,7 +10,7 @@ import {
   optionalRecord,
   optionalString,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, providerInputError } from "../provider-runtime.ts";
 
 const tripleWhaleApiBaseUrl = "https://api.triplewhale.com/api/v2/";
 const tripleWhaleValidateApiKeyPath = "/users/api-keys/me";
@@ -176,7 +176,7 @@ function createTripleWhaleError(
   }
 
   if (phase === "validate" && [400, 401, 403].includes(response.status)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (phase === "execute" && [401, 403].includes(response.status)) {
@@ -184,7 +184,7 @@ function createTripleWhaleError(
   }
 
   if (phase === "execute" && [400, 404, 422].includes(response.status)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   return new ProviderRequestError(response.status || 500, message);

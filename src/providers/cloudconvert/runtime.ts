@@ -10,11 +10,12 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  providerInputError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const cloudconvertApiBaseUrl = "https://api.cloudconvert.com/v2";
 const cloudconvertSyncApiBaseUrl = "https://sync.api.cloudconvert.com/v2";
-const cloudconvertDefaultRequestTimeoutMs = 30_000;
 const cloudconvertWaitRequestTimeoutMs = 300_000;
 const cloudconvertJobTasksInclude = ["tasks"];
 const reservedConvertTaskOptionKeys = new Set([
@@ -388,7 +389,7 @@ function buildConversionTypeQuery(input: Record<string, unknown>): Record<string
 function buildUrlConversionJobPayload(input: Record<string, unknown>): Record<string, unknown> {
   const sourceUrl = assertPublicHttpUrl(requireInputString(input.sourceUrl, "sourceUrl"), {
     fieldName: "sourceUrl",
-    createError: (message) => new ProviderRequestError(400, message),
+    createError: providerInputError,
   }).toString();
   const outputFormat = requireInputString(input.outputFormat, "outputFormat");
   const conversionOptions = optionalRecord(input.conversionOptions) ?? {};
@@ -543,7 +544,7 @@ async function cloudconvertFetch(input: CloudconvertRequestInput): Promise<Respo
     headers.set("content-type", "application/json");
     body = JSON.stringify(input.body);
   }
-  const timeout = createProviderTimeout(input.signal, input.timeoutMs ?? cloudconvertDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal, input.timeoutMs);
   try {
     return await input.fetcher(url, {
       method: input.method ?? "GET",
@@ -555,10 +556,7 @@ async function cloudconvertFetch(input: CloudconvertRequestInput): Promise<Respo
     if (isAbortLikeError(error) && timeout.didTimeout()) {
       throw new ProviderRequestError(
         504,
-        `CloudConvert ${input.path} request timed out after ${Math.max(
-          1,
-          Math.ceil((input.timeoutMs ?? cloudconvertDefaultRequestTimeoutMs) / 1000),
-        )} seconds`,
+        `CloudConvert ${input.path} request timed out after ${Math.max(1, Math.ceil((input.timeoutMs ?? defaultProviderRequestTimeoutMs) / 1000))} seconds`,
       );
     }
     throw new ProviderRequestError(
@@ -578,13 +576,13 @@ async function toCloudconvertError(
   const payload = await readCloudconvertPayload(response);
   const message = extractCloudconvertErrorMessage(payload, response.status);
   if (phase === "validate" && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 400 || response.status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 404 && notFoundAsInvalidInput) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 429) {
     return new ProviderRequestError(429, message);
@@ -661,7 +659,7 @@ function readOptionalPositiveInteger(value: unknown, fieldName: string): number 
   if (value == null) {
     return undefined;
   }
-  const parsed = optionalIntegerLike(value, fieldName, (message) => new ProviderRequestError(400, message));
+  const parsed = optionalIntegerLike(value, fieldName, providerInputError);
   if (parsed === undefined || parsed <= 0) {
     throw new ProviderRequestError(400, `${fieldName} must be a positive integer`);
   }

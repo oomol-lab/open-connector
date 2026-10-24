@@ -8,10 +8,10 @@ import {
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 export const tavilyApiBaseUrl = "https://api.tavily.com";
-const defaultTimeoutMs = 30_000;
 
 type TavilyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
@@ -95,7 +95,7 @@ async function tavilyRawRequest(
   context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
   input: TavilyRequestInput,
 ): Promise<Response> {
-  const timeout = createProviderTimeout(context.signal, defaultTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     return await context.fetcher(new URL(input.path, tavilyApiBaseUrl), {
       method: input.method ?? "POST",
@@ -111,7 +111,7 @@ async function tavilyRawRequest(
     if (timeout.didTimeout() && isAbortLikeError(error)) {
       throw new ProviderRequestError(
         502,
-        `Tavily request timed out after ${Math.ceil(defaultTimeoutMs / 1000)} seconds`,
+        `Tavily request timed out after ${Math.ceil(defaultProviderRequestTimeoutMs / 1000)} seconds`,
       );
     }
     throw new ProviderRequestError(

@@ -9,6 +9,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requiredInputString,
+  providerInputError,
 } from "../provider-runtime.ts";
 import { workdayOAuthScopes } from "./scopes.ts";
 
@@ -263,11 +264,11 @@ function createWorkdayError(
 ): ProviderRequestError {
   const message = extractWorkdayErrorMessage(payload) ?? `workday request failed with ${status}`;
   if (status === 429) return new ProviderRequestError(429, message);
-  if (phase === "validate" && (status === 401 || status === 403)) return new ProviderRequestError(400, message);
+  if (phase === "validate" && (status === 401 || status === 403)) return providerInputError(message);
   if (phase === "execute" && status === 401) return new ProviderRequestError(401, message);
   if (phase === "execute" && status === 403) return new ProviderRequestError(403, message);
-  if (status === 404 && notFoundAsInvalidInput) return new ProviderRequestError(400, message);
-  if (status === 400 || status === 404 || status === 422) return new ProviderRequestError(400, message);
+  if (status === 404 && notFoundAsInvalidInput) return providerInputError(message);
+  if (status === 400 || status === 404 || status === 422) return providerInputError(message);
   return new ProviderRequestError(status >= 400 ? status : 502, message);
 }
 

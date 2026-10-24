@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { setPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import { setPrivateNetworkAccessAllowed } from "../../core/provider-network-policy.test-support.ts";
 import { genericImapRuntimeConfig } from "./config.ts";
 
 // Tests mutate the deployment-level private-network flag; reset it to the secure

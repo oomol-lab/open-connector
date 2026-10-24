@@ -10,6 +10,8 @@ import {
   providerUserAgent,
   ProviderRequestError,
   readProviderJsonBody,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 const service = "serveravatar";
@@ -176,12 +178,12 @@ function mapServerAvatarError(status: number, payload: unknown, phase: ServerAva
     return new ProviderRequestError(401, message);
   }
   if (status === 400 || status === 404 || status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 429) {
     return new ProviderRequestError(429, message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function extractServerAvatarErrorMessage(payload: unknown): string | undefined {

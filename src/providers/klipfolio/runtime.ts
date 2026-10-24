@@ -2,7 +2,12 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  runProviderRequest,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 export const klipfolioApiBaseUrl = "https://api.klipfolio.com/api/1.0";
 
@@ -188,7 +193,7 @@ function createKlipfolioError(status: number, payload: unknown, phase: Klipfolio
   if (status >= 400 && status < 500) {
     return new ProviderRequestError(status, message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function extractKlipfolioErrorMessage(payload: unknown): string | undefined {
@@ -250,7 +255,7 @@ function normalizeAsset(value: unknown): Record<string, unknown> {
 function requireRecord(value: unknown, message: string): Record<string, unknown> {
   const record = optionalRecord(value);
   if (!record) {
-    throw new ProviderRequestError(502, message);
+    throw providerResponseError(message);
   }
   return record;
 }

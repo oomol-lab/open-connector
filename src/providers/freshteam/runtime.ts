@@ -14,10 +14,10 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const freshteamValidationPath = "/api/employees";
-const freshteamDefaultRequestTimeoutMs = 30_000;
 const defaultFreshteamPage = 1;
 
 export interface FreshteamActionContext {
@@ -287,7 +287,7 @@ function compactQuery(input: Record<string, string | number | undefined>): Recor
 }
 
 async function requestFreshteamJson(input: FreshteamRequestInput): Promise<FreshteamResponse> {
-  const timeout = createProviderTimeout(input.signal, freshteamDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
 
   try {
     const response = await input.fetcher(buildFreshteamUrl(input.baseUrl, input.path, input.query), {
@@ -317,7 +317,7 @@ async function requestFreshteamJson(input: FreshteamRequestInput): Promise<Fresh
     throw new ProviderRequestError(
       timeout.didTimeout() || isAbortLikeError(error) ? 504 : 502,
       timeout.didTimeout()
-        ? `Freshteam request timed out after ${Math.max(1, Math.ceil(freshteamDefaultRequestTimeoutMs / 1000))} seconds`
+        ? `Freshteam request timed out after ${Math.max(1, Math.ceil(defaultProviderRequestTimeoutMs / 1000))} seconds`
         : error instanceof Error
           ? `Freshteam request failed: ${error.message}`
           : "Freshteam request failed",

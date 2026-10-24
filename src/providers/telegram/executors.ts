@@ -17,12 +17,13 @@ import {
   isAbortLikeError,
   ProviderRequestError,
   requireApiKeyCredential,
+  providerInputError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 import { telegramUpdate } from "./trigger-on-update.ts";
 
 const service = "telegram";
 const telegramApiBaseUrl = "https://api.telegram.org";
-const telegramDefaultRequestTimeoutMs = 30_000;
 
 interface TelegramApiEnvelope<T> {
   ok?: boolean;
@@ -858,7 +859,7 @@ async function telegramRequest<TResult>(input: {
   const timeoutHandle = setTimeout(() => {
     timedOut = true;
     controller.abort();
-  }, telegramDefaultRequestTimeoutMs);
+  }, defaultProviderRequestTimeoutMs);
   const abortFromContext = (): void => controller.abort();
   input.context.signal?.addEventListener("abort", abortFromContext, { once: true });
 
@@ -874,7 +875,7 @@ async function telegramRequest<TResult>(input: {
     if (timedOut && isAbortLikeError(error)) {
       throw new ProviderRequestError(
         502,
-        `telegram ${input.method} request timed out after ${Math.ceil(telegramDefaultRequestTimeoutMs / 1000)} seconds`,
+        `telegram ${input.method} request timed out after ${Math.ceil(defaultProviderRequestTimeoutMs / 1000)} seconds`,
       );
     }
     const message = error instanceof Error && error.message.trim() !== "" ? error.message : "request failed";
@@ -935,10 +936,10 @@ function buildTelegramError(input: {
     return new ProviderRequestError(429, message);
   }
   if (input.phase === "validate" && status === 401) {
-    return new ProviderRequestError(400, description);
+    return providerInputError(description);
   }
   if (status === 400 || status === 404 || status === 409) {
-    return new ProviderRequestError(400, description);
+    return providerInputError(description);
   }
   return new ProviderRequestError(status || 500, description);
 }
@@ -1337,7 +1338,7 @@ function validateTelegramUrl(value: unknown, fieldName: string): string | undefi
   }
   return assertPublicHttpUrl(text, {
     fieldName,
-    createError: (message) => new ProviderRequestError(400, message),
+    createError: providerInputError,
   }).toString();
 }
 

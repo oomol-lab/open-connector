@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  providerUserAgent,
+  ProviderRequestError,
+  providerInputError,
+} from "../provider-runtime.ts";
 
 export const workizApiBaseUrl = "https://api.workiz.com/api/v1";
 
@@ -97,6 +102,6 @@ function mapError(status: number, payload: unknown, phase: "validate" | "execute
     optionalString(body?.message) ?? optionalString(body?.error) ?? `workiz request failed with status ${status}`;
   if (status === 429) return new ProviderRequestError(429, message);
   if (status === 401 || status === 403) return new ProviderRequestError(phase === "validate" ? 400 : status, message);
-  if (phase === "validate" && status < 500) return new ProviderRequestError(400, message);
+  if (phase === "validate" && status < 500) return providerInputError(message);
   return new ProviderRequestError(status >= 500 ? 502 : status, message);
 }

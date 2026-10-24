@@ -2,7 +2,7 @@ import type { CredentialValidationResult, ExecutionContext } from "../../core/ty
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, providerInputError } from "../provider-runtime.ts";
 
 const truveraTestnetApiBaseUrl = "https://api-testnet.truvera.io";
 const truveraProductionApiBaseUrl = "https://api.truvera.io";
@@ -320,7 +320,7 @@ function createTruveraError(response: Response, payload: unknown, phase: Truvera
   }
 
   if (phase === "validate" && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (phase === "execute" && (response.status === 401 || response.status === 403)) {

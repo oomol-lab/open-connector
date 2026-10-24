@@ -8,11 +8,10 @@ import {
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 export const prospeoApiBaseUrl = "https://api.prospeo.io";
-
-const defaultRequestTimeoutMs = 30_000;
 
 type ProspeoMode = "validate" | "execute";
 
@@ -172,7 +171,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
 
 async function requestProspeoJson(input: ProspeoRequestInput, context: ProspeoRequestContext) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), defaultRequestTimeoutMs);
+  const timeout = setTimeout(() => controller.abort(), defaultProviderRequestTimeoutMs);
 
   try {
     const response = await context.fetcher(buildProspeoUrl(input.path), {

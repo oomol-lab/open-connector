@@ -9,6 +9,7 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 type SignpathActionContext = {
@@ -239,7 +240,7 @@ function createSignpathError(status: number, payload: unknown, phase: SignpathPh
   }
 
   if (status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   return new ProviderRequestError(status || 502, message);

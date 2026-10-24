@@ -1,5 +1,7 @@
 import type { GuardedHttpDispatcher } from "./provider-http-dispatch.ts";
+import type { ProviderNetworkPolicy } from "./provider-network-policy.ts";
 
+import { withProviderNetworkPolicy } from "./provider-network-policy.ts";
 import { assertPublicHttpUrl, classifyIpAddress, isEgressTrustedHost, isIpAddress, isIpv4Address } from "./request.ts";
 
 /**
@@ -18,6 +20,7 @@ export interface ResolvedAddress {
 export type GuardedFetchDnsLookup = (hostname: string) => Promise<ResolvedAddress[]>;
 
 export interface GuardedFetchOptions {
+  network?: ProviderNetworkPolicy;
   /** Optional dispatcher at the screened raw-transport seam; every redirect hop passes through it. */
   dispatchAttempt?: GuardedHttpDispatcher;
   /**
@@ -142,6 +145,8 @@ const bodyHeaders = ["content-encoding", "content-language", "content-length", "
 
 /** Base transport behind each guarded fetch (undefined = global fetch) so re-wrapping never stacks guards. */
 const guardedFetchBases = new WeakMap<typeof fetch, typeof fetch | undefined>();
+/** Preserve an explicitly bound runtime policy when a provider rewraps its transport. */
+const guardedFetchPolicies = new WeakMap<typeof fetch, ProviderNetworkPolicy>();
 /** Retain admission when a caller replaces the egress policy without stacking guards. */
 const guardedFetchDispatchers = new WeakMap<typeof fetch, GuardedHttpDispatcher | undefined>();
 
@@ -205,10 +210,11 @@ export function unwrapGuardedFetch(fetcher: typeof fetch | undefined): typeof fe
  */
 export function createGuardedFetch(options: GuardedFetchOptions = {}): typeof fetch {
   const baseFetch = unwrapGuardedFetch(options.fetch);
+  const network = options.network ?? (options.fetch && guardedFetchPolicies.get(options.fetch));
   const dispatchAttempt = options.dispatchAttempt ?? (options.fetch && guardedFetchDispatchers.get(options.fetch));
   const createError = options.createError ?? ((message: string) => new TypeError(message));
   const maxRedirects = options.maxRedirects ?? defaultMaxRedirects;
-  const guardedFetch = (async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  const performFetch = (async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const transport = baseFetch ?? globalThis.fetch;
     const requestId = dispatchAttempt ? crypto.randomUUID() : "";
     let redirectHop = 0;
@@ -336,6 +342,10 @@ export function createGuardedFetch(options: GuardedFetchOptions = {}): typeof fe
     }
   }) as typeof fetch;
 
+  const guardedFetch = (
+    network ? (input, init) => withProviderNetworkPolicy(network, () => performFetch(input, init)) : performFetch
+  ) as typeof fetch;
+  if (network) guardedFetchPolicies.set(guardedFetch, network);
   guardedFetchBases.set(guardedFetch, baseFetch);
   guardedFetchDispatchers.set(guardedFetch, dispatchAttempt);
   return guardedFetch;

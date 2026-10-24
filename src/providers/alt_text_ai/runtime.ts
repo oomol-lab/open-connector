@@ -2,7 +2,12 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalString, requiredRecord } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
+import {
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+  providerInputError,
+} from "../provider-runtime.ts";
 
 export const altTextAiApiBaseUrl = "https://alttext.ai/api/v1";
 
@@ -251,7 +256,7 @@ function createError(response: Response, payload: unknown, phase: RequestPhase):
   const message = extractErrorMessage(payload) ?? response.statusText ?? "AltText.ai request failed";
 
   if (phase === "validate" && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   return new ProviderRequestError(response.status || 500, message, payload);

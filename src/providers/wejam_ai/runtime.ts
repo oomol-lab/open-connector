@@ -9,6 +9,8 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 import { wejamAiExportResourceValues } from "./constants.ts";
 
@@ -173,7 +175,7 @@ function createWejamAiError(status: number, payload: unknown, phase: WejamAiPhas
   const message = extractWejamAiErrorMessage(payload) ?? `Jam request failed with status ${status}`;
 
   if (phase === "validate" && status === 401) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (phase === "execute" && status === 401) {
     return new ProviderRequestError(401, message);
@@ -218,7 +220,7 @@ function normalizeDataExportPayload(
 
   return {
     resource,
-    data: objectArray(body.data, "Jam data-export response data", (message) => new ProviderRequestError(502, message)),
+    data: objectArray(body.data, "Jam data-export response data", providerResponseError),
     meta: {
       total: readRequiredNumber(meta, "total"),
       page: readRequiredNumber(meta, "page"),

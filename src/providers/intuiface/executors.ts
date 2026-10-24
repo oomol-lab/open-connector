@@ -9,6 +9,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "intuiface";
@@ -181,11 +182,11 @@ function toIntuifaceError(response: Response, payload: unknown, phase: "validate
   if (response.status === 429) {
     return new ProviderRequestError(429, message);
   } else if (phase === "validate" && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   } else if (phase === "execute" && (response.status === 401 || response.status === 403)) {
     return new ProviderRequestError(401, message);
   } else if (response.status === 400) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   } else {
     return new ProviderRequestError(response.status || 500, message);
   }

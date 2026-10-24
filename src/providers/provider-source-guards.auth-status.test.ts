@@ -382,11 +382,7 @@ interface ProviderSource {
   lines: string[];
 }
 
-const providerSources: ProviderSource[] = listProviderSourceFiles(providersDirectory).map((file) => {
-  const source = readFileSync(file, "utf8");
-  // `providerScopeOf` splits these paths on `/`, so a Windows backslash would make every provider shared.
-  return { file: relative(providersDirectory, file).replaceAll("\\", "/"), source, lines: source.split("\n") };
-});
+const sourceFiles = listProviderSourceFiles(providersDirectory);
 
 const sourceIndexes = new Map<string, SourceIndex>();
 
@@ -550,8 +546,14 @@ function findAuthConflictErrors(sources: ProviderSource[]): AuthConflictHit[] {
   return hits;
 }
 
-describe("provider auth-failure status guard", () => {
+describe("provider auth-failure status guard", { timeout: Math.max(5_000, sourceFiles.length * 5) }, () => {
   it("never maps an upstream 401 or 403 to a provider 409", () => {
+    const providerSources: ProviderSource[] = sourceFiles.map((file) => {
+      const source = readFileSync(file, "utf8");
+      // `providerScopeOf` splits these paths on `/`, so a Windows backslash would make every provider shared.
+      return { file: relative(providersDirectory, file).replaceAll("\\", "/"), source, lines: source.split("\n") };
+    });
+
     expect(findAuthConflictErrors(providerSources)).toEqual([]);
   });
 });

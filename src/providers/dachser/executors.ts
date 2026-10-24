@@ -13,6 +13,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "dachser";
@@ -145,7 +146,7 @@ async function requestDachser(
     if (value !== undefined) url.searchParams.set(name, String(value));
   }
 
-  const timeoutSignal = AbortSignal.timeout(30_000);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = context.signal ? AbortSignal.any([context.signal, timeoutSignal]) : timeoutSignal;
   const headers = new Headers({
     accept: "application/json",

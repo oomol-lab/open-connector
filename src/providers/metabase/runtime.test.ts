@@ -1,7 +1,7 @@
 import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { setPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import { setPrivateNetworkAccessAllowed } from "../../core/provider-network-policy.test-support.ts";
 import { validateActionInput } from "../../core/validation.ts";
 import { metabaseActions } from "./actions.ts";
 import { credentialValidators, executors, proxy } from "./executors.ts";

@@ -20,7 +20,6 @@ import {
 
 const service = "clearout";
 const clearoutDefaultBaseUrl = "https://api.clearout.io/v2";
-const clearoutDefaultRequestTimeoutMs = 30_000;
 
 interface ClearoutContext {
   apiKey: string;
@@ -158,7 +157,7 @@ async function requestClearoutJson(input: {
   body?: Record<string, unknown>;
   timeoutMs?: number;
 }): Promise<unknown> {
-  const timeout = createProviderTimeout(input.context.signal, input.timeoutMs ?? clearoutDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal, input.timeoutMs);
   try {
     const response = await input.context.fetcher(buildUrl(input.context.baseUrl, input.path), {
       method: input.method,

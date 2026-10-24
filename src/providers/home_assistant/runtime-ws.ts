@@ -6,7 +6,12 @@ import type { HomeAssistantActionContext, HomeAssistantActionHandler } from "./r
 import { compactObject, objectArray, optionalRecord, optionalString } from "../../core/cast.ts";
 import { openGuardedWebSocket } from "../../core/guarded-websocket.ts";
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerInputError,
+  providerResponseError,
+  defaultProviderRequestTimeoutMs,
+} from "../provider-runtime.ts";
 import { homeAssistantRegistryNames } from "./actions.ts";
 import { readInputString } from "./runtime.ts";
 
@@ -14,7 +19,6 @@ import { readInputString } from "./runtime.ts";
  * Deadline covering the whole session: handshake, authentication, and every
  * command in the batch. Matches the REST action timeout.
  */
-const homeAssistantWebSocketTimeoutMs = 30_000;
 
 const registryCommandTypes: Record<HomeAssistantRegistryName, string> = {
   entities: "config/entity_registry/list",
@@ -78,7 +82,7 @@ export const homeAssistantWebSocketActionHandlers: ProviderActionHandlerSubset<
     const [payload] = await runHomeAssistantCommands(context, [
       {
         type: "execute_script",
-        sequence: objectArray(input.sequence, "sequence", (message) => new ProviderRequestError(400, message)),
+        sequence: objectArray(input.sequence, "sequence", providerInputError),
         ...compactObject({ variables: optionalRecord(input.variables) }),
       },
     ]);
@@ -118,12 +122,12 @@ async function runHomeAssistantCommands(
   // One deadline for the whole session. The handshake may use all of it, and the
   // command phase then gets whatever is left, so a slow instance cannot spend the
   // budget twice.
-  const deadline = Date.now() + homeAssistantWebSocketTimeoutMs;
+  const deadline = Date.now() + defaultProviderRequestTimeoutMs;
   const socket = await openGuardedWebSocket(buildWebSocketUrl(context.baseUrl), {
     allowPrivateNetwork: isPrivateNetworkAccessAllowed,
-    createError: (message) => new ProviderRequestError(400, message),
+    createError: providerInputError,
     createFailure: createConnectionError,
-    connectTimeoutMs: homeAssistantWebSocketTimeoutMs,
+    connectTimeoutMs: defaultProviderRequestTimeoutMs,
     signal: context.signal,
     fieldName: "Home Assistant base URL",
   });
@@ -319,7 +323,7 @@ function createConnectionError(kind: GuardedWebSocketFailure, message: string): 
   if (kind === "timeout") {
     return new ProviderRequestError(504, "Home Assistant WebSocket connection timed out");
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 /**
@@ -337,9 +341,9 @@ function createCommandError(error: unknown, commandType: string): ProviderReques
     return new ProviderRequestError(404, message);
   }
   if (code === "invalid_format" || code === "id_reuse") {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function readRegistryNames(value: unknown): HomeAssistantRegistryName[] {
@@ -370,7 +374,7 @@ function readOptionalConfigList(value: unknown, fieldName: string): Array<Record
   if (value === undefined || value === null) {
     return undefined;
   }
-  return objectArray(value, fieldName, (message) => new ProviderRequestError(400, message));
+  return objectArray(value, fieldName, providerInputError);
 }
 
 function closeQuietly(socket: WebSocketLike): void {

@@ -21,6 +21,8 @@ import {
   readProviderTextBody,
   requireCustomCredential,
   toProviderProxyError,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 const hotjarApiBaseUrl = "https://api.hotjar.io";
@@ -333,7 +335,7 @@ function readHotjarPage(payload: unknown, label: string): HotjarPage {
 function requireObject(value: unknown, message: string) {
   const object = optionalRecord(value);
   if (!object) {
-    throw new ProviderRequestError(502, message);
+    throw providerResponseError(message);
   }
   return object;
 }
@@ -372,7 +374,7 @@ function requiredString(value: unknown, fieldName: string) {
 function mapHotjarError(status: number, payload: unknown, phase: "validate" | "execute", operation: string) {
   const message = readHotjarErrorMessage(payload) ?? `Hotjar ${operation} failed with status ${status}`;
   if (phase == "validate" && (status == 400 || status == 401 || status == 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   } else if (status == 401 || (operation == "access token exchange" && (status == 400 || status == 403))) {
     return new ProviderRequestError(401, message);
   } else if (status == 403) {
@@ -382,7 +384,7 @@ function mapHotjarError(status: number, payload: unknown, phase: "validate" | "e
   } else if (status == 400 || status == 404 || status == 409 || status == 422) {
     return new ProviderRequestError(status == 404 ? 404 : 400, message);
   } else {
-    return new ProviderRequestError(502, message);
+    return providerResponseError(message);
   }
 }
 

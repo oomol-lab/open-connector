@@ -10,9 +10,9 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requireCustomCredential,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
-const requestTimeoutMs = 30_000;
 interface Credentials {
   domain: string;
   clientId: string;
@@ -206,7 +206,7 @@ async function guardedRequest(
       "user-agent": providerUserAgent,
       ...init.headers,
     },
-    signal: signal ?? AbortSignal.timeout(requestTimeoutMs),
+    signal: signal ?? AbortSignal.timeout(defaultProviderRequestTimeoutMs),
   });
   const text = await response.text();
   let payload: unknown = {};

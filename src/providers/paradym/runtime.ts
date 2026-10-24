@@ -3,7 +3,13 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, looseArray, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 export const paradymApiBaseUrl = "https://api.paradym.id";
 
@@ -341,18 +347,18 @@ function unwrapParadymData(payload: unknown) {
 function mapParadymError(status: number, payload: unknown, mode: ParadymRequestMode) {
   const message = readErrorMessage(payload) ?? `Paradym API request failed with status ${status}`;
   if (status === 401 || status === 403) {
-    return mode === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(401, message);
+    return mode === "validate" ? providerInputError(message) : new ProviderRequestError(401, message);
   }
 
   if (status === 400 || status === 404 || status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (status === 429) {
     return new ProviderRequestError(429, message);
   }
 
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function readErrorMessage(payload: unknown) {

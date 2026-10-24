@@ -366,7 +366,7 @@ function createContentstackError(status: number, payload: unknown, phase: Conten
   const message =
     extractContentstackErrorMessage(payload) ?? `Contentstack Content Delivery request failed with status ${status}`;
   if (phase === "validate" && status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status >= 400 && status < 500) {
     return new ProviderRequestError(status, message);

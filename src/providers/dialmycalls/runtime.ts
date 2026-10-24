@@ -7,6 +7,7 @@ import {
   providerUserAgent,
   requiredResponseRecord,
   runProviderRequest,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 export interface DialmycallsCredentialCheck {
@@ -143,7 +144,7 @@ export async function validateDialMyCallsCredential(
   fetcher: typeof fetch,
 ): Promise<DialmycallsCredentialCheck> {
   const payload = await requestDialMyCallsJson({
-    apiKey: requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message)),
+    apiKey: requiredString(input.apiKey, "apiKey", providerInputError),
     path: "/account",
     fetcher,
     phase: "validate",
@@ -178,11 +179,7 @@ export async function executeDialMyCallsAction(
     throw new ProviderRequestError(500, `dialmycalls action is not implemented yet: ${input.actionName}`);
   }
 
-  return handler(
-    input.input,
-    fetcher,
-    requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message)),
-  );
+  return handler(input.input, fetcher, requiredString(input.apiKey, "apiKey", providerInputError));
 }
 
 async function requestDialMyCallsJson(input: {
@@ -253,7 +250,7 @@ function createDialMyCallsError(status: number, payload: unknown, phase: DialMyC
   }
 
   if (phase === "validate" && upstreamStatus >= 400 && upstreamStatus < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (phase === "execute" && (upstreamStatus === 401 || upstreamStatus === 403)) {

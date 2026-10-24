@@ -2,7 +2,12 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+  providerInputError,
+} from "../provider-runtime.ts";
 
 export const amplemarketApiBaseUrl = "https://api.amplemarket.com";
 
@@ -264,7 +269,7 @@ function mapAmplemarketError(status: number, payload: unknown, mode: "validate" 
     return new ProviderRequestError(429, message);
   }
   if (status >= 400 && status < 500 && mode === "execute") {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(status >= 500 ? status : 502, message);
 }

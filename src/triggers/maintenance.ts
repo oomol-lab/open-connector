@@ -1,10 +1,12 @@
 import type { ActionPolicyService } from "../core/action-policy.ts";
+import type { ProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import type { RuntimeLogger } from "../core/types.ts";
 import type { IRuntimePolicyStore } from "../server/storage/runtime-policy-store.ts";
 import type { IRuntimeTokenStore } from "../server/storage/runtime-token-service.ts";
 import type { TriggerStore } from "./store.ts";
 import type { TriggerRunner } from "./trigger-runner.ts";
 
+import { withProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import { HttpRequestError } from "../server/api/http-utils.ts";
 import { withSubscription } from "./subscriptions.ts";
 
@@ -21,6 +23,7 @@ export interface TriggerSubscriptionSummary {
 }
 
 interface TriggerMaintenanceOptions {
+  network?: ProviderNetworkPolicy;
   store: TriggerStore;
   runner: TriggerRunner;
   tokens: IRuntimeTokenStore;
@@ -78,7 +81,7 @@ export class TriggerMaintenance {
 
   run(): Promise<void> {
     if (this.shutdown.signal.aborted) return Promise.resolve();
-    this.pending ??= this.runBatch()
+    this.pending ??= withProviderNetworkPolicy(this.options.network ?? {}, () => this.runBatch())
       .catch(() => {
         this.options.logger?.warn(
           { errorCode: "trigger_cleanup_failed" },

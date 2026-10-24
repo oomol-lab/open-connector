@@ -232,7 +232,7 @@ function createOnePasswordEventsError(
     extractOnePasswordEventsErrorMessage(payload) ?? `1Password Events request failed with status ${status}`;
 
   if (phase === "validate" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (phase === "execute" && (status === 401 || status === 403)) {

@@ -306,7 +306,7 @@ function mapTypeformError(input: {
 
   if (input.phase === "validate") {
     if (input.status === 401 || input.status === 403) {
-      return new ProviderRequestError(400, message);
+      return providerInputError(message);
     }
 
     return new ProviderRequestError(input.status, message);
@@ -317,7 +317,7 @@ function mapTypeformError(input: {
   }
 
   if (input.status === 400 || (input.status === 404 && input.notFoundAsInvalidInput)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   return new ProviderRequestError(input.status, message);

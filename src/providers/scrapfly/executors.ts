@@ -22,6 +22,7 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requiredInputString,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "scrapfly";
@@ -294,7 +295,7 @@ function createScrapflyError(
     return new ProviderRequestError(429, message);
   }
   if (phase === "validate" && status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(status || 500, message);
 }

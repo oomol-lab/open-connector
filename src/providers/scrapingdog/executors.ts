@@ -253,7 +253,7 @@ function buildScrapingdogUrl(path: string, query: Record<string, ScrapingdogQuer
 function createScrapingdogError(status: number, body: string, phase: ScrapingdogPhase): ProviderRequestError {
   const message = extractScrapingdogMessage(body) ?? `Scrapingdog request failed with ${status}`;
   if (phase === "validate" && [400, 401, 403].includes(status)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 403) {
     return new ProviderRequestError(429, message);

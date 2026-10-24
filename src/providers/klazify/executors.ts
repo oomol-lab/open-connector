@@ -21,6 +21,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   runProviderRequest,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "klazify";
@@ -341,12 +342,12 @@ function createKlazifyError(
     }
 
     if (normalizedMessage.includes("/unreachable") || normalizedMessage.includes("/no indexable content")) {
-      return new ProviderRequestError(400, message);
+      return providerInputError(message);
     }
   }
 
   if (phase === "validate" && status < 400) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   return new ProviderRequestError(status || 500, message);

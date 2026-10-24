@@ -7,6 +7,7 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requiredResponseRecord,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 export interface ZylvieCredentialCheck {
@@ -170,7 +171,7 @@ export async function validateZylvieCredential(
   fetcher: typeof fetch,
 ): Promise<ZylvieCredentialCheck> {
   const payload = await requestZylvieJson({
-    apiKey: requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message)),
+    apiKey: requiredString(input.apiKey, "apiKey", providerInputError),
     path: "/me",
     method: "GET",
     fetcher,
@@ -287,13 +288,13 @@ function createRequestError(response: Response, payload: unknown, phase: Request
     return new ProviderRequestError(429, message);
   }
   if (phase === "validate" && response.status >= 400 && response.status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (phase === "execute" && (response.status === 401 || response.status === 403)) {
     return new ProviderRequestError(401, message);
   }
   if ([400, 404, 409, 422].includes(response.status)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(response.status || 500, message);
 }

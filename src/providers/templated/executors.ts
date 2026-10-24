@@ -23,6 +23,7 @@ import {
   ProviderRequestError,
   requiredInputString,
   requiredResponseRecord,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "templated";
@@ -278,10 +279,10 @@ function createTemplatedError(
     return new ProviderRequestError(429, message);
   }
   if (phase === "validate" && response.status === 401) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (notFoundAsInvalidInput && response.status === 404) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(response.status || 500, message);
 }

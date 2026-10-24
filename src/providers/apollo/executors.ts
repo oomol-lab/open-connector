@@ -9,11 +9,11 @@ import {
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "apollo";
 const apolloApiBaseUrl = "https://api.apollo.io";
-const apolloDefaultRequestTimeoutMs = 30_000;
 
 type ApolloQueryValue = boolean | number | string | string[] | undefined;
 type ApolloRequestPhase = "validate" | "execute";
@@ -177,7 +177,7 @@ async function requestApolloJson(input: {
   signal?: AbortSignal;
   phase: ApolloRequestPhase;
 }): Promise<unknown> {
-  const timeoutSignal = AbortSignal.timeout(apolloDefaultRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = input.signal ? AbortSignal.any([input.signal, timeoutSignal]) : timeoutSignal;
   const url = new URL(input.path, apolloApiBaseUrl);
   for (const [key, value] of Object.entries(input.query ?? {})) {

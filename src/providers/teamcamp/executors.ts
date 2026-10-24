@@ -14,6 +14,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requiredInputString,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "teamcamp";
@@ -235,7 +236,7 @@ function createTeamcampError(
     response.status === 403 ||
     (response.status === 404 && notFoundAsInvalidInput)
   ) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(response.status || 500, message);
 }

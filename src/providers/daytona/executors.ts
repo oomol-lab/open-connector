@@ -7,6 +7,7 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "daytona";
@@ -174,9 +175,8 @@ function mapError(response: Response, payload: unknown, phase: RequestPhase) {
     optionalString(record?.error) ??
     `Daytona request failed with HTTP ${response.status}`;
   if (response.status === 429) return new ProviderRequestError(429, message);
-  if (phase === "validate" && response.status >= 400 && response.status < 500)
-    return new ProviderRequestError(400, message);
+  if (phase === "validate" && response.status >= 400 && response.status < 500) return providerInputError(message);
   if (response.status === 401 || response.status === 403) return new ProviderRequestError(401, message);
-  if (response.status >= 400 && response.status < 500) return new ProviderRequestError(400, message);
+  if (response.status >= 400 && response.status < 500) return providerInputError(message);
   return new ProviderRequestError(response.status || 500, message);
 }

@@ -9,12 +9,12 @@ import {
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "formbricks";
 const formbricksApiBaseUrl = "https://app.formbricks.com/api/v2";
 const formbricksValidationPath = "/me";
-const formbricksRequestTimeoutMs = 30_000;
 
 type FormbricksRequestMode = "validate" | "execute";
 type FormbricksActionContext = ApiKeyProviderContext;
@@ -172,7 +172,7 @@ async function requestFormbricksJson(
   context: Pick<FormbricksActionContext, "apiKey" | "fetcher" | "signal">,
   input: FormbricksRequestInput,
 ): Promise<Record<string, unknown>> {
-  const timeoutSignal = AbortSignal.timeout(formbricksRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = context.signal ? AbortSignal.any([context.signal, timeoutSignal]) : timeoutSignal;
 
   try {

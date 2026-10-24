@@ -20,6 +20,7 @@ import {
   readProviderProxyResponse,
   requiredResponseRecord,
   toProviderProxyError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 import { harvestOAuthScopes } from "./scopes.ts";
 
@@ -28,7 +29,6 @@ const harvestApiBaseUrl = "https://api.harvestapp.com";
 const harvestAccountsUrl = "https://id.getharvest.com/api/v2/accounts";
 const harvestFetch = createProviderFetch({ skipDnsValidation: true });
 const harvestValidationPath = "/v2/users/me";
-const harvestRequestTimeoutMs = 30_000;
 
 type HarvestRequestMode = "validate" | "execute";
 type HarvestActionHandler = (input: Record<string, unknown>, context: HarvestActionContext) => Promise<unknown>;
@@ -518,7 +518,7 @@ async function requestHarvest(input: HarvestRequestOptions): Promise<{ payload: 
     body = JSON.stringify(input.body);
   }
 
-  const timeoutSignal = AbortSignal.timeout(harvestRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = input.signal ? AbortSignal.any([input.signal, timeoutSignal]) : timeoutSignal;
 
   try {
@@ -603,7 +603,7 @@ async function requestHarvestAccounts(
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<unknown> {
-  const timeoutSignal = AbortSignal.timeout(harvestRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const resolvedSignal = signal ? AbortSignal.any([signal, timeoutSignal]) : timeoutSignal;
 
   try {

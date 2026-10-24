@@ -45,7 +45,7 @@ through runtime options to admit, delay or deny each upstream HTTP attempt.
 | `OOMOL_CONNECT_S3_SECRET_ACCESS_KEY`        | SDK credential chain      | Explicit S3 secret access key. Configure it with the access key ID, or omit both.                                                                                           |
 | `OOMOL_CONNECT_S3_SESSION_TOKEN`            | unset                     | Optional session token used with explicit S3 credentials.                                                                                                                   |
 | `OOMOL_CONNECT_RUN_LIMIT`                   | `5000`                    | Maximum number of recent action run audit records to retain.                                                                                                                |
-| `OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS`        | `false`                   | Read action JSON schemas from the catalog files on demand instead of keeping them in memory. See below.                                                                     |
+| `OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS`        | `true`                    | Read action JSON schemas from the catalog files on demand instead of keeping them in memory. See below.                                                                     |
 | `OOMOL_CONNECT_CATALOG_SCHEMA_CACHE_FILES`  | `64`                      | Provider files whose action schemas stay cached when lazy schemas are on.                                                                                                   |
 | `OOMOL_CONNECT_OAUTH_CLOSE_DELAY_SECONDS`   | `5`                       | Seconds the OAuth completion page waits before closing its window. `0` closes it as soon as it loads.                                                                       |
 | `OOMOL_CONNECT_OAUTH_RESULT_ORIGINS`        | unset                     | Comma-separated exact origins a provider-refusal callback page may `postMessage` its result to (its opener). `*` is refused.                                                |
@@ -242,7 +242,7 @@ their actions are most of those bytes. The server keeps the whole catalog in mem
 largest allocation it makes and the one that matters on a 256 MB class machine such as the Helm
 chart's default `256Mi` request or a small Fly machine.
 
-Set `OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS=true` to keep those schemas on disk instead:
+Schemas stay on disk by default. Set `OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS=false` to load them eagerly instead. To explicitly retain the default:
 
 ```bash
 OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS=true npm run dev
@@ -353,3 +353,13 @@ The body limit is 64 KiB. Slack timestamps may differ from server time by at mos
 Errors use the runtime failure envelope with `success: false`, `errorCode`, `message`, `data` and `meta`. Infrastructure failures remain server errors rather than invalid signatures.
 
 When updating the default OAuth app through `PUT /api/oauth/configs/slackbot`, keep the same `clientId` and omit `clientSecret` or individual `secretExtra` keys to retain their stored values. Submit a new `secretExtra.signingSecret` to rotate it, or an empty string to clear it. Other configuration fields retain their existing replacement semantics. The console keeps blank secret inputs unchanged and provides an explicit clear-on-save checkbox for optional secrets. Changing `clientId` starts a new application configuration and does not inherit old secrets. Already-created Connections retain their own metadata; verification always reads the current default application configuration.
+
+## Standalone and embedded configuration
+
+The standalone server reads the environment variables on this page, owns its HTTP
+listener, and closes the runtime on process shutdown. The [embedded runtime](headless.md)
+accepts explicit options, leaves HTTP serving and shutdown to the host, and does not
+read these environment variables. Both default to lazy action schemas; use
+`OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS=false` or `lazySchemas: false` for eager loading.
+The embedded package includes its catalog and migrations; custom `assets` paths
+must point to those generated assets. The host must await `runtime.close()`.

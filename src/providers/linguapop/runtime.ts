@@ -202,7 +202,7 @@ function mapLinguapopError(status: number, message: string, phase: LinguapopRequ
     return new ProviderRequestError(401, message);
   }
   if (status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(status || 502, message);
 }

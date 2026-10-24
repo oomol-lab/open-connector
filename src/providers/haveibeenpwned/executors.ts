@@ -18,11 +18,11 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requiredResponseRecord,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "haveibeenpwned";
 const haveibeenpwnedApiBaseUrl = "https://haveibeenpwned.com/api/v3";
-const haveibeenpwnedDefaultRequestTimeoutMs = 30_000;
 
 type HaveIBeenPwnedRequestPhase = "validate" | "execute";
 type HaveIBeenPwnedActionContext = ApiKeyProviderContext;
@@ -247,7 +247,7 @@ async function requestHaveIBeenPwnedJson(input: {
   signal?: AbortSignal;
   query?: Record<string, string | undefined>;
 }): Promise<unknown> {
-  const timeoutSignal = AbortSignal.timeout(haveibeenpwnedDefaultRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = input.signal ? AbortSignal.any([input.signal, timeoutSignal]) : timeoutSignal;
 
   try {

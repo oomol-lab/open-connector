@@ -3,7 +3,13 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError, readProviderTextBody } from "../provider-runtime.ts";
+import {
+  providerUserAgent,
+  ProviderRequestError,
+  readProviderTextBody,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 export const baiduMapsApiBaseUrl = "https://api.map.baidu.com";
 export const baiduMapsValidationPath = "/reverse_geocoding/v3/";
@@ -633,7 +639,7 @@ function normalizeBaiduMapsError(
       return new ProviderRequestError(429, message);
     }
     if (baiduMapsInputStatuses.has(status)) {
-      return new ProviderRequestError(400, message);
+      return providerInputError(message);
     }
     if (baiduMapsAuthStatuses.has(status)) {
       return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
@@ -641,7 +647,7 @@ function normalizeBaiduMapsError(
     // A non-zero Baidu status we don't specifically classify. Baidu returns
     // HTTP 200 even for errors, so `response.status` is 200 here and would be
     // misclassified as a client error; surface an explicit upstream failure.
-    return new ProviderRequestError(502, message);
+    return providerResponseError(message);
   }
   // No numeric Baidu status: fall back to the HTTP status when it is itself an
   // error, otherwise treat the unexpected body as an upstream failure.

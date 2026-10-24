@@ -15,6 +15,8 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 const service = "talenox";
@@ -205,9 +207,9 @@ function mapTalenoxError(status: number, payload: unknown, phase: "validate" | "
     return new ProviderRequestError(status, message);
   }
   if (status === 400 || status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function readErrorMessage(payload: unknown): string | undefined {
@@ -238,5 +240,5 @@ function readObjectArrayPayload(value: unknown, resourceName: string): Array<Rec
 }
 
 function readPositiveId(value: unknown, fieldName: string): number {
-  return positiveInteger(value, fieldName, (message) => new ProviderRequestError(400, message));
+  return positiveInteger(value, fieldName, providerInputError);
 }

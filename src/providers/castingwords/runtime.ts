@@ -232,7 +232,7 @@ function createCastingwordsError(status: number, payload: unknown, phase: Castin
     return new ProviderRequestError(429, message);
   }
   if (status === 400) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 401 || status === 403) {
     return new ProviderRequestError(phase === "validate" ? 401 : status, message);

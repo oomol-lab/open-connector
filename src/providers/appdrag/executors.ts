@@ -21,11 +21,11 @@ import {
   readProviderProxyResponse,
   requireApiKeyCredential,
   toProviderProxyError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "appdrag";
 const appdragHomepageUrl = "https://appdrag.com";
-const appdragDefaultRequestTimeoutMs = 30_000;
 const appdragResponseWrapperDescription = "/api/<folder>/<function>";
 const appdragFetch = createProviderFetch({ skipDnsValidation: true });
 
@@ -253,7 +253,7 @@ async function requestAppdrag(
   init: RequestInit,
   context: Pick<ApiKeyProviderContext, "fetcher" | "signal">,
 ): Promise<AppdragResponse> {
-  const timeoutSignal = AbortSignal.timeout(appdragDefaultRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = context.signal ? AbortSignal.any([context.signal, timeoutSignal]) : timeoutSignal;
 
   try {

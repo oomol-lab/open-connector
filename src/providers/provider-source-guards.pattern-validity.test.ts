@@ -49,12 +49,14 @@ function lineOf(source: string, index: number): number {
   return line;
 }
 
-describe("provider schema pattern guard", () => {
+const sourceFiles = listSourceFiles(sourceDir);
+
+describe("provider schema pattern guard", { timeout: Math.max(5_000, sourceFiles.length * 5) }, () => {
   it("keeps every provider JSON-Schema pattern compilable", () => {
     const offenders: string[] = [];
     let scannedFiles = 0;
     let scannedPatterns = 0;
-    for (const file of listSourceFiles(sourceDir)) {
+    for (const file of sourceFiles) {
       // `operations` is a module directory, not a file-name shape.
       const normalized = file.replaceAll("\\", "/");
       if (!schemaModuleName.test(basename(file)) && !normalized.includes("/operations/")) {

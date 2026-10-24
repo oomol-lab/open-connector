@@ -13,6 +13,7 @@ import {
   defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "securitytrails";
@@ -201,7 +202,7 @@ function buildSecuritytrailsError(
 ): ProviderRequestError {
   const message = readSecuritytrailsMessage(payload) ?? `SecurityTrails request failed with ${status || 500}`;
   if (phase === "validate" && status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(status || 500, message);
 }

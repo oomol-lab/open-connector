@@ -24,6 +24,7 @@ import {
   providerUserAgent,
   requireApiKeyCredential,
   runProviderRequest,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "semantic_scholar";
@@ -423,7 +424,7 @@ function createSemanticScholarError(status: number, payload: unknown, phase: Sem
   }
 
   if (phase === "validate" && status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (phase === "execute" && (status === 401 || status === 403)) {

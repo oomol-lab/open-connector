@@ -808,7 +808,7 @@ function mapWooCommerceError(status: number, data: unknown, phase: "validate" | 
   const payload = optionalRecord(data) ?? {};
   const message = optionalString(payload.message) ?? `WooCommerce API request failed with status ${status}`;
   if (phase === "validate" || status === 400 || status === 401 || status === 403 || status === 404) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 429) return new ProviderRequestError(429, message);
   return new ProviderRequestError(status || 500, message);

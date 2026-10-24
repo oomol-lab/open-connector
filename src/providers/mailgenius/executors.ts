@@ -16,11 +16,11 @@ import {
   ProviderRequestError,
   providerUserAgent,
   readProviderJsonBody,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "mailgenius";
 const mailgeniusApiBaseUrl = "https://app.mailgenius.com";
-const requestTimeoutMs = 30_000;
 
 type MailgeniusRequestPhase = "validate" | "execute";
 
@@ -151,7 +151,7 @@ async function requestMailgeniusJson(
     url.searchParams.set(key, value);
   }
 
-  const timeout = createProviderTimeout(context.signal, requestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   let response: Response;
   let payload: unknown;
   try {
@@ -174,7 +174,10 @@ async function requestMailgeniusJson(
       throw error;
     }
     if (timeout.didTimeout()) {
-      throw new ProviderRequestError(504, `MailGenius request timed out after ${requestTimeoutMs / 1000} seconds`);
+      throw new ProviderRequestError(
+        504,
+        `MailGenius request timed out after ${defaultProviderRequestTimeoutMs / 1000} seconds`,
+      );
     }
     throw new ProviderRequestError(
       502,

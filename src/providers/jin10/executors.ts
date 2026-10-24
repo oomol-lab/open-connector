@@ -14,13 +14,13 @@ import {
   defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "jin10";
 const jin10McpOrigin = "https://mcp.jin10.com";
 const jin10McpEndpoint = "https://mcp.jin10.com/mcp";
 const jin10QuoteCodesResourceUri = "quote://codes";
-const jin10RequestTimeoutMs = 30_000;
 
 type Jin10ActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type Jin10ActionHandler = (input: Record<string, unknown>, context: Jin10ActionContext) => Promise<unknown>;
@@ -105,7 +105,7 @@ async function listJin10McpTools(input: {
     const result = await client.listTools(
       {},
       {
-        timeout: jin10RequestTimeoutMs,
+        timeout: defaultProviderRequestTimeoutMs,
       },
     );
     return result.tools.map((tool) => ({
@@ -127,7 +127,7 @@ async function callJin10McpTool(
         arguments: argumentsInput,
       },
       {
-        timeout: jin10RequestTimeoutMs,
+        timeout: defaultProviderRequestTimeoutMs,
       },
     );
     return normalizeJin10McpToolResult(toolName, result);
@@ -141,7 +141,7 @@ async function readJin10QuoteCodes(context: Jin10ActionContext): Promise<unknown
         uri: jin10QuoteCodesResourceUri,
       },
       {
-        timeout: jin10RequestTimeoutMs,
+        timeout: defaultProviderRequestTimeoutMs,
       },
     );
     const content = result.contents[0];

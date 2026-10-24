@@ -13,10 +13,11 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  providerInputError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "formsite";
-const formsiteDefaultRequestTimeoutMs = 30_000;
 const formsiteValidationPathSuffix = "/forms";
 
 type FormsiteRequestPhase = "validate" | "execute";
@@ -313,7 +314,7 @@ async function formsiteFetch(
     headers.set("content-type", "application/x-www-form-urlencoded;charset=UTF-8");
   }
 
-  const timeoutSignal = AbortSignal.timeout(formsiteDefaultRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = context.signal ? AbortSignal.any([context.signal, timeoutSignal]) : timeoutSignal;
 
   try {
@@ -366,7 +367,7 @@ async function toFormsiteError(
     return new ProviderRequestError(429, message);
   }
   if (response.status === 400 || response.status === 422 || (notFoundAsInvalidInput && response.status === 404)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(response.status >= 500 ? 502 : response.status || 502, message);
 }

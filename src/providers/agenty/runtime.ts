@@ -4,12 +4,16 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, recordOrEmpty, requiredRecord } from "../../core/cast.ts";
 import { storeResponseInTransit } from "../../core/request.ts";
-import { providerFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  providerFetch,
+  ProviderRequestError,
+  providerUserAgent,
+  defaultProviderRequestTimeoutMs,
+} from "../provider-runtime.ts";
 
 export const agentyApiBaseUrl = "https://api.agenty.com/v2";
 export const agentyBrowserBaseUrl = "https://browser.agenty.com/api";
 const agentyValidationPath = "/agents";
-const agentyTimeoutMs = 30_000;
 
 export type AgentyRuntimeContext = {
   apiKey: string;
@@ -507,7 +511,7 @@ async function downloadJobResult(input: Record<string, unknown>, context: Agenty
   });
   const record = unwrapAgentyPayload(payload);
   const downloadUrl = asRequiredString(record.downloadlink ?? record.downloadLink, "downloadlink");
-  const timeoutSignal = AbortSignal.timeout(agentyTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = context.signal ? AbortSignal.any([context.signal, timeoutSignal]) : timeoutSignal;
 
   try {
@@ -635,7 +639,7 @@ async function requestAgentyApiResponse(input: {
   body?: unknown;
   baseUrl?: string;
 }) {
-  const timeoutSignal = AbortSignal.timeout(agentyTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = input.context.signal ? AbortSignal.any([input.context.signal, timeoutSignal]) : timeoutSignal;
 
   try {
@@ -677,7 +681,7 @@ async function requestAgentyBrowser(input: {
   input: Record<string, unknown>;
   context: AgentyRuntimeContext;
 }) {
-  const timeoutSignal = AbortSignal.timeout(agentyTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = input.context.signal ? AbortSignal.any([input.context.signal, timeoutSignal]) : timeoutSignal;
 
   try {
@@ -724,7 +728,7 @@ async function requestAgentyJson(input: {
   body?: unknown;
   query?: URLSearchParams;
 }) {
-  const timeoutSignal = AbortSignal.timeout(agentyTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = input.signal ? AbortSignal.any([input.signal, timeoutSignal]) : timeoutSignal;
 
   try {

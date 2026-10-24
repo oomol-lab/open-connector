@@ -24,11 +24,11 @@ import {
   ProviderRequestError,
   requireApiKeyCredential,
   requiredResponseRecord,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "seqera";
 const defaultSeqeraApiBaseUrl = "https://api.cloud.seqera.io";
-const seqeraRequestTimeoutMs = 30_000;
 const seqeraValidationEndpoint = "/user-info";
 
 type SeqeraRequestPhase = "validate" | "execute";
@@ -369,7 +369,7 @@ async function seqeraFetch(input: {
     body = JSON.stringify(input.body);
   }
 
-  const timeout = createProviderTimeout(input.signal, seqeraRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     return await input.fetcher(url, {
       method: input.method ?? "GET",
@@ -381,7 +381,7 @@ async function seqeraFetch(input: {
     if (timeout.didTimeout() || isAbortLikeError(error)) {
       throw new ProviderRequestError(
         502,
-        `seqera ${input.path} request timed out after ${Math.max(1, Math.ceil(seqeraRequestTimeoutMs / 1000))} seconds`,
+        `seqera ${input.path} request timed out after ${Math.max(1, Math.ceil(defaultProviderRequestTimeoutMs / 1000))} seconds`,
       );
     }
 

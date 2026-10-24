@@ -18,13 +18,9 @@ import {
   ProviderRequestError,
   readProviderJsonBody,
   providerUserAgent,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
-import {
-  buildConfluenceOAuthApiBaseUrls,
-  confluenceActionHandlers,
-  confluenceDefaultTimeoutMs,
-  validateConfluenceCredential,
-} from "./runtime.ts";
+import { buildConfluenceOAuthApiBaseUrls, confluenceActionHandlers, validateConfluenceCredential } from "./runtime.ts";
 import {
   confluencePageReadScope,
   confluencePageWriteScope,
@@ -98,7 +94,7 @@ async function validateConfluenceOAuthCredential(
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const timeout = createProviderTimeout(signal, confluenceDefaultTimeoutMs);
+  const timeout = createProviderTimeout(signal);
   let resourcesResponse: Response;
   let resourcesPayload: unknown;
   try {
@@ -119,7 +115,7 @@ async function validateConfluenceOAuthCredential(
     if (timeout.didTimeout() || isAbortLikeError(error)) {
       throw new ProviderRequestError(
         504,
-        `Confluence request timed out after ${Math.ceil(confluenceDefaultTimeoutMs / 1000)} seconds`,
+        `Confluence request timed out after ${Math.ceil(defaultProviderRequestTimeoutMs / 1000)} seconds`,
       );
     }
     if (error instanceof ProviderRequestError) {

@@ -2,6 +2,7 @@ import type { CatalogStore } from "../catalog-store.ts";
 import type { ConnectionService } from "../connection-service.ts";
 import type { ActionSearchIndexProvider } from "../core/action-search.ts";
 import type { ProviderHttpDispatchOptions } from "../core/provider-http-dispatch.ts";
+import type { ProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import type { RuntimeLogger, TransitFileUpload } from "../core/types.ts";
 import type { MarketplaceService } from "../marketplace/marketplace-service.ts";
 import type { OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
@@ -25,6 +26,7 @@ import { ActionPolicyService } from "../core/action-policy.ts";
 import { createActionSearchIndexProvider } from "../core/action-search.ts";
 import { optionalRecord } from "../core/cast.ts";
 import { withProviderHttpDispatch } from "../core/provider-http-dispatch.ts";
+import { withProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import { ProviderDispatchRequestError, toProviderExecutionError } from "../providers/provider-runtime.ts";
 import { SaasError } from "../saas/saas-client.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
@@ -64,6 +66,7 @@ export async function preloadOptionalServerModules(): Promise<void> {
  * Dependencies required to construct the local connector server.
  */
 export interface IConnectServerOptions {
+  network?: ProviderNetworkPolicy;
   providerHttpDispatch?: ProviderHttpDispatchOptions;
   catalog: CatalogStore;
   /** Public origin of this runtime, used for the HTTP request examples in Action guides. */
@@ -134,7 +137,9 @@ export class ConnectServer {
     const auth = this.options.auth ?? {};
 
     app.use("*", async (_context, next) => {
-      await withProviderHttpDispatch({ operation: "runtime" }, next, this.options.providerHttpDispatch);
+      await withProviderNetworkPolicy(this.options.network ?? {}, () =>
+        withProviderHttpDispatch({ operation: "runtime" }, next, this.options.providerHttpDispatch),
+      );
     });
 
     app.use("*", async (context, next) => {

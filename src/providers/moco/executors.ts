@@ -21,6 +21,8 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 type MocoRequestPhase = "validate" | "execute";
@@ -445,21 +447,21 @@ function mapMocoError(
 ): ProviderRequestError {
   const message = extractErrorMessage(payload) ?? (response.statusText || "MOCO request failed");
   if (phase === "validate" && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (phase === "execute" && (response.status === 401 || response.status === 403)) {
     return new ProviderRequestError(401, message);
   }
   if (response.status === 404 && notFoundAsInvalidInput) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 400 || response.status === 404 || response.status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 429) {
     return new ProviderRequestError(429, message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 async function readResponsePayload(response: Response): Promise<unknown> {

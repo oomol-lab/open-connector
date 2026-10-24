@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 export const tallyApiBaseUrl = "https://api.tally.so";
 
@@ -122,7 +127,7 @@ async function readTallyJson(response: Response, message: string): Promise<unkno
   try {
     return (await response.json()) as unknown;
   } catch {
-    throw new ProviderRequestError(502, message);
+    throw providerResponseError(message);
   }
 }
 
@@ -141,7 +146,7 @@ async function readTallyError(response: Response): Promise<string> {
 
 function mapTallyError(status: number, message: string, phase: "validate" | "execute"): ProviderRequestError {
   if (status === 429) return new ProviderRequestError(429, message);
-  if (phase === "validate" && (status === 401 || status === 403)) return new ProviderRequestError(400, message);
+  if (phase === "validate" && (status === 401 || status === 403)) return providerInputError(message);
   if (phase === "execute" && (status === 401 || status === 403)) return new ProviderRequestError(status, message);
   if (status === 400 || status === 404 || status === 422) return new ProviderRequestError(status, message);
   return new ProviderRequestError(status || 502, message);

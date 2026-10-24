@@ -7,6 +7,8 @@ import {
   isAbortLikeError,
   ProviderRequestError,
   providerUserAgent,
+  providerInputError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 export interface MoreTreesCredentialCheck {
@@ -19,7 +21,6 @@ export interface MoreTreesCredentialCheck {
 export const moreTreesAccountOrigin = "https://user-management-service.platform.moretrees.eco";
 export const moreTreesProjectOrigin = "https://project-management-service.platform.moretrees.eco";
 export const moreTreesTransactionOrigin = "https://transaction-management-service.platform.moretrees.eco";
-export const moreTreesRequestTimeoutMs = 30_000;
 
 const moreTreesAccountPath = "/user-management-api/external/accounts";
 const moreTreesForestPath = "/user-management-api/external/forest";
@@ -44,7 +45,7 @@ export async function validateMoreTreesCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
 ): Promise<MoreTreesCredentialCheck> {
-  const apiKey = requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message)).trim();
+  const apiKey = requiredString(input.apiKey, "apiKey", providerInputError).trim();
   const accountCode = requireCredentialValue(input.accountCode, "accountCode");
   const publicValidationKey = requireCredentialValue(input.publicValidationKey, "publicValidationKey");
 
@@ -96,7 +97,7 @@ async function executeGetAccount(input: MoreTreesActionInput, fetcher: typeof fe
   const accountCode = resolveStoredAccountCode(input.providerMetadata);
   return requestMoreTreesJson({
     url: `${moreTreesAccountOrigin}${moreTreesAccountPath}/${encodeURIComponent(accountCode)}`,
-    apiKey: requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message)).trim(),
+    apiKey: requiredString(input.apiKey, "apiKey", providerInputError).trim(),
     fetcher,
     phase: "execute",
   });
@@ -128,7 +129,7 @@ async function executePlantTrees(input: MoreTreesActionInput, fetcher: typeof fe
   return requestMoreTreesJson({
     url: `${moreTreesTransactionOrigin}${moreTreesPlantPath}`,
     method: "POST",
-    apiKey: requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message)).trim(),
+    apiKey: requiredString(input.apiKey, "apiKey", providerInputError).trim(),
     body: compactObject({
       payment_account_code: resolveStoredAccountCode(input.providerMetadata),
       test: input.input.test,
@@ -208,7 +209,7 @@ async function requestMoreTreesJson(input: {
     headers.set("content-type", "application/json");
   }
 
-  const timeout = createProviderTimeout(undefined, moreTreesRequestTimeoutMs);
+  const timeout = createProviderTimeout(undefined);
   try {
     const response = await input.fetcher(input.url, {
       method: input.method ?? "GET",
@@ -228,7 +229,7 @@ async function requestMoreTreesJson(input: {
     if (timeout.didTimeout() || isAbortLikeError(error)) {
       throw new ProviderRequestError(
         504,
-        `More Trees request timed out after ${moreTreesRequestTimeoutMs / 1000} seconds`,
+        `More Trees request timed out after ${defaultProviderRequestTimeoutMs / 1000} seconds`,
       );
     }
     throw new ProviderRequestError(
@@ -264,7 +265,7 @@ function createMoreTreesError(response: Response, payload: unknown, phase: MoreT
     return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
   }
   if ([400, 404, 406, 422].includes(response.status)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(response.status || 500, message);
 }

@@ -1,6 +1,12 @@
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 interface ApiKeyProviderActionInput {
   apiKey: string;
@@ -214,9 +220,9 @@ function createSmartsuiteError(response: Response, payload: unknown, phase: "val
     return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
   }
   if (400 <= response.status && response.status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function readWorkspaceId(input: Record<string, unknown> | undefined) {

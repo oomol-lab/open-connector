@@ -8,10 +8,10 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requiredInputString,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 export const mailblusterApiBaseUrl = "https://api.mailbluster.com";
-const mailblusterDefaultRequestTimeoutMs = 30_000;
 
 type MailblusterActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
@@ -131,7 +131,7 @@ async function requestMailblusterJson(input: {
   if (input.body) {
     headers["content-type"] = "application/json";
   }
-  const timeout = createProviderTimeout(input.context.signal, mailblusterDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.context.signal);
 
   let response: Response;
   try {
@@ -145,7 +145,7 @@ async function requestMailblusterJson(input: {
     throw new ProviderRequestError(
       timeout.didTimeout() ? 504 : 502,
       timeout.didTimeout()
-        ? `MailBluster request timed out after ${mailblusterDefaultRequestTimeoutMs}ms`
+        ? `MailBluster request timed out after ${defaultProviderRequestTimeoutMs}ms`
         : error instanceof Error
           ? `MailBluster request failed: ${error.message}`
           : "MailBluster request failed",

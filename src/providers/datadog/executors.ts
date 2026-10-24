@@ -21,11 +21,11 @@ import {
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   toProviderProxyError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 import { datadogApiKeySites, datadogOAuthSites } from "./sites.ts";
 
 const service = "datadog";
-const datadogDefaultRequestTimeoutMs = 30_000;
 const datadogCredentialHelpUrl = "https://docs.datadoghq.com/account_management/api-app-keys/";
 
 type DatadogRequestPhase = "validate" | "execute";
@@ -376,8 +376,8 @@ async function datadogRequestJson(
   }
 
   const signal = context.signal
-    ? AbortSignal.any([context.signal, AbortSignal.timeout(datadogDefaultRequestTimeoutMs)])
-    : AbortSignal.timeout(datadogDefaultRequestTimeoutMs);
+    ? AbortSignal.any([context.signal, AbortSignal.timeout(defaultProviderRequestTimeoutMs)])
+    : AbortSignal.timeout(defaultProviderRequestTimeoutMs);
 
   let response: Response;
   let payload: unknown;

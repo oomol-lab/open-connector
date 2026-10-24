@@ -222,11 +222,13 @@ function groupByProvider(files: string[]): string[][] {
   return [...groups.values()];
 }
 
-describe("provider abort predicates", () => {
+const sourceFiles = listSourceFiles(providersDir);
+
+describe("provider abort predicates", { timeout: Math.max(5_000, sourceFiles.length * 5) }, () => {
   it("never guards a timeout branch on AbortError alone", () => {
     const dead: string[] = [];
     let scanned = 0;
-    for (const group of groupByProvider(listSourceFiles(providersDir))) {
+    for (const group of groupByProvider(sourceFiles)) {
       const sources = group.map((path) => ({ path, source: readFileSync(path, "utf8") }));
       if (!sources.some((entry) => entry.source.includes("AbortSignal.timeout"))) {
         continue;

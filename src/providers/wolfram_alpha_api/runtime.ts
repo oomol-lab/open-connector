@@ -9,6 +9,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requiredInputString,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 export const wolframAlphaApiBaseUrl = "https://api.wolframalpha.com";
@@ -223,12 +224,12 @@ function createWolframAlphaError(status: number, body: string, phase: WolframAlp
   const message = body.trim() || `Wolfram|Alpha request failed with ${status || 500}`;
   if (phase === "validate") {
     if (status === 400 || status === 401 || status === 403 || looksLikeCredentialError(message)) {
-      return new ProviderRequestError(400, message);
+      return providerInputError(message);
     }
     if (status === 429) return new ProviderRequestError(429, message);
     return new ProviderRequestError(status || 500, message);
   }
-  if (status === 400 || status === 501) return new ProviderRequestError(400, message);
+  if (status === 400 || status === 501) return providerInputError(message);
   if (status === 401 || status === 403 || looksLikeCredentialError(message))
     return new ProviderRequestError(401, message);
   if (status === 429) return new ProviderRequestError(429, message);

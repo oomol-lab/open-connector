@@ -1,7 +1,12 @@
 import type { TikHubDiscoverInput, TikHubDiscoverResult, TikHubDiscoveredEndpoint } from "./endpoint-types.ts";
 
 import { createHash } from "node:crypto";
-import { createProviderTimeout, isAbortLikeError, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  isAbortLikeError,
+  ProviderRequestError,
+  defaultProviderRequestTimeoutMs,
+} from "../provider-runtime.ts";
 import { cancelResponseBody, readBoundedResponseText } from "./bounded-response.ts";
 import { parseTikHubOpenApiCatalog } from "./endpoint-document.ts";
 import { isEligibleTikHubEndpointCategory } from "./endpoint-policy.ts";
@@ -12,7 +17,6 @@ const openApiTimeoutMs = 15_000;
 const openApiMaxBytes = 8 * 1024 * 1024;
 const catalogTtlMs = 60_000;
 const catalogStaleTtlMs = 60 * 60_000;
-const catalogFailureTtlMs = 30_000;
 const discoveryPageMaxBytes = 4 * 1024 * 1024;
 const cursorMaxLength = 1_024;
 
@@ -133,7 +137,7 @@ async function refreshCatalog(fetcher: typeof fetch, cache: CatalogCache) {
     return { snapshot, stale: false };
   } catch (error) {
     if (error instanceof TransientOpenApiError && cache.snapshot && Date.now() < cache.snapshot.staleUntil) {
-      cache.retryAfter = Date.now() + catalogFailureTtlMs;
+      cache.retryAfter = Date.now() + defaultProviderRequestTimeoutMs;
       return { snapshot: cache.snapshot, stale: true };
     }
     throw error;

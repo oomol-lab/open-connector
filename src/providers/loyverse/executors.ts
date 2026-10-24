@@ -16,6 +16,7 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requiredResponseRecord,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 const service = "loyverse";
@@ -288,13 +289,13 @@ function mapLoyverseError(status: number, errors: Array<Record<string, unknown>>
   const message = [code, field, details].filter(Boolean).join(": ") || "Loyverse request failed";
 
   if (status === 401 || code === "UNAUTHORIZED") {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 429) {
     return new ProviderRequestError(429, message);
   }
   if (status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }

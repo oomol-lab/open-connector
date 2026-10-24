@@ -15,6 +15,7 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 export const printavoApiBaseUrl = "https://www.printavo.com/api/v2";
@@ -462,7 +463,7 @@ async function readPrintavoPayload(response: Response): Promise<unknown> {
 function createPrintavoError(status: number, payload: unknown, phase: PrintavoRequestPhase): ProviderRequestError {
   const message = extractPrintavoErrorMessage(payload) ?? `Printavo request failed with status ${status}`;
   if (phase === "validate" && status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(status || 500, message);
 }

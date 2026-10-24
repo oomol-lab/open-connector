@@ -1,7 +1,12 @@
 import type { TheOfficialBoardActionName } from "./actions.ts";
 
 import { requiredString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 export interface TheOfficialBoardCredentialCheck {
   providerAccountId?: string;
@@ -116,15 +121,15 @@ async function readPayload(response: Response): Promise<unknown> {
 
 function mapError(status: number, message: string, phase: "validation" | "execution") {
   if (status === 401 || status === 403) {
-    return phase === "validation" ? new ProviderRequestError(400, message) : new ProviderRequestError(401, message);
+    return phase === "validation" ? providerInputError(message) : new ProviderRequestError(401, message);
   }
   if (status === 429) {
     return new ProviderRequestError(429, message);
   }
   if (status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function readErrorMessage(payload: unknown) {

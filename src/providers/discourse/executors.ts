@@ -25,9 +25,9 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requireApiKeyCredential,
+  providerInputError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
-
-export const discourseDefaultRequestTimeoutMs = 30_000;
 
 type DiscourseHttpMethod = "GET" | "POST";
 type DiscoursePhase = "validate" | "execute";
@@ -313,7 +313,7 @@ export function normalizeDiscourseBaseUrl(
   try {
     url = assertPublicHttpUrl(value.trim(), {
       fieldName: "baseUrl",
-      createError: (message) => new ProviderRequestError(400, message),
+      createError: providerInputError,
       allowPrivateNetwork,
     });
   } catch (error) {
@@ -353,7 +353,7 @@ async function requestDiscourseJson(input: {
   signal?: AbortSignal;
   notFoundAsInvalidInput?: boolean;
 }) {
-  const timeout = createProviderTimeout(input.signal, discourseDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
 
   try {
     const response = await input.fetcher(buildDiscourseUrl(input.credential.baseUrl, input.path, input.query), {
@@ -380,7 +380,7 @@ async function requestDiscourseJson(input: {
     if (timeout.didTimeout()) {
       throw new ProviderRequestError(
         504,
-        `Discourse ${input.path} request timed out after ${Math.ceil(discourseDefaultRequestTimeoutMs / 1000)} seconds`,
+        `Discourse ${input.path} request timed out after ${Math.ceil(defaultProviderRequestTimeoutMs / 1000)} seconds`,
       );
     }
 
@@ -443,11 +443,11 @@ function mapDiscourseHttpError(input: {
   }
 
   if (input.status === 404 && input.notFoundAsInvalidInput) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (input.status === 400 || input.status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   return new ProviderRequestError(input.status >= 500 ? 502 : input.status || 502, message);

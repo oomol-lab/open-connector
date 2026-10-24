@@ -4,7 +4,12 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, requiredString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  providerUserAgent,
+  ProviderRequestError,
+  providerInputError,
+} from "../provider-runtime.ts";
 
 type QueryValue = string | number | readonly string[] | undefined;
 type QuoActionContext = ApiKeyProviderContext;
@@ -241,7 +246,7 @@ function createQuoError(status: number, payload: unknown) {
   const message = extractErrorMessage(payload) ?? `Quo request failed with ${status || 500}`;
 
   if (status === 400 || status === 401 || status === 404) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (status === 402 || status === 403) {

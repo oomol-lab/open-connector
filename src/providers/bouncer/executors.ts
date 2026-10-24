@@ -19,11 +19,11 @@ import {
   providerInputError,
   ProviderRequestError,
   providerUserAgent,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "bouncer";
 const bouncerApiBaseUrl = "https://api.usebouncer.com";
-const bouncerDefaultRequestTimeoutMs = 30_000;
 
 type BouncerRequestPhase = "validate" | "execute";
 type BouncerActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -211,7 +211,7 @@ async function requestBouncerVerifyEmail(
     phase: input.phase,
     query: {
       email: input.email,
-      timeout: String(bouncerDefaultRequestTimeoutMs / 1000),
+      timeout: String(defaultProviderRequestTimeoutMs / 1000),
     },
   });
 
@@ -437,7 +437,7 @@ async function requestBouncerJson(input: {
     }
   }
 
-  const timeout = createProviderTimeout(input.signal, bouncerDefaultRequestTimeoutMs);
+  const timeout = createProviderTimeout(input.signal);
   try {
     const headers: Record<string, string> = {
       accept: "application/json",

@@ -19,6 +19,7 @@ import {
   requiredInputString,
   requiredResponseRecord,
   setSearchParams,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "teamtailor";
@@ -283,7 +284,7 @@ function mapTeamtailorError(
     return new ProviderRequestError(phase === "validate" ? 400 : response.status, message);
   }
   if (response.status === 404 && notFoundAsInvalidInput) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 429) {
     return new ProviderRequestError(429, message);

@@ -3,7 +3,7 @@ import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { compactObject } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, providerInputError } from "../provider-runtime.ts";
 
 export const placidApiBaseUrl: string = "https://api.placid.app";
 const templatesPath = "/api/rest/templates";
@@ -184,13 +184,13 @@ function createPlacidError(status: number, payload: unknown, phase: PlacidPhase)
     optionalString(record?.detail) ??
     `placid request failed with status ${status}`;
   if (status === 401 && phase === "validate") {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 401 && phase === "execute") {
     return new ProviderRequestError(401, message);
   }
   if (status === 400 || status === 404 || status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(status === 429 ? 429 : status >= 500 ? 502 : status, message);
 }

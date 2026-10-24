@@ -7,6 +7,7 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requiredResponseRecord,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 export const screenshotbaseApiBaseUrl = "https://api.screenshotbase.com";
@@ -180,13 +181,13 @@ function createScreenshotbaseError(status: number, payload: unknown, phase: Scre
     return new ProviderRequestError(429, message);
   }
   if (phase === "validate" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (phase === "execute" && (status === 401 || status === 403)) {
     return new ProviderRequestError(401, message);
   }
   if (status === 400 || status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 408) {
     return new ProviderRequestError(504, message);

@@ -3,7 +3,13 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent, requiredResponseRecord } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  requiredResponseRecord,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 const mailjetApiBaseUrl = "https://api.mailjet.com/v3/REST";
 const mailjetValidationPath = "/contact?Limit=1";
@@ -219,9 +225,9 @@ function createMailjetError(
     return new ProviderRequestError(429, message);
   }
   if (phase === "validate") {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function extractMailjetErrorMessage(payload: unknown): string | undefined {

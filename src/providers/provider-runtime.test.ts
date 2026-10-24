@@ -2,7 +2,8 @@ import type { ExecutionContext, ResolvedCredential } from "../core/types.ts";
 import type { ProviderActionHandlers, ProviderActionSources } from "./provider-runtime.ts";
 
 import { afterEach, describe, expect, expectTypeOf, it, vi } from "vitest";
-import { isPrivateNetworkAccessAllowed, setPrivateNetworkAccessAllowed } from "../core/request.ts";
+import { setPrivateNetworkAccessAllowed } from "../core/provider-network-policy.test-support.ts";
+import { isPrivateNetworkAccessAllowed } from "../core/request.ts";
 import {
   downloadUploadSource,
   createProviderTimeout,

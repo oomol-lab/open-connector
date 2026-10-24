@@ -7,7 +7,7 @@ import { SdkError, SdkErrorCode } from "@modelcontextprotocol/client";
 import { posix } from "node:path";
 import { compactObject, optionalInteger, optionalString } from "../../core/cast.ts";
 import { withMcpClient } from "../mcp-client.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { ProviderRequestError, defaultProviderRequestTimeoutMs } from "../provider-runtime.ts";
 import {
   baiduNetdiskFileCategories,
   baiduNetdiskListTypes,
@@ -17,7 +17,6 @@ import {
 import { normalizeBaiduNetdiskError, parseBaiduNetdiskJson } from "./runtime.ts";
 
 const baiduNetdiskMcpEndpoint = new URL("https://mcp-pan.baidu.com/sse");
-const requestTimeoutMs = 30_000;
 type BaiduNetdiskListType = (typeof baiduNetdiskListTypes)[number];
 const baiduNetdiskListToolByType = {
   all: "file_list",
@@ -60,7 +59,7 @@ export type BaiduNetdiskMcpContext = {
 
 export async function verifyBaiduNetdiskMcpConnection(accessToken: string, fetcher: ProviderFetch): Promise<void> {
   await withBaiduNetdiskMcpClient(accessToken, fetcher, async (client) => {
-    const result = await client.listTools({}, { timeout: requestTimeoutMs });
+    const result = await client.listTools({}, { timeout: defaultProviderRequestTimeoutMs });
     const toolsByName = new Map(result.tools.map((tool) => [tool.name, tool]));
     for (const toolName of requiredToolNames) {
       const tool = toolsByName.get(toolName);
@@ -246,7 +245,7 @@ async function callBaiduNetdiskMcpTool(
   context: BaiduNetdiskMcpContext,
 ) {
   return withBaiduNetdiskMcpClient(context.accessToken, context.fetcher, async (client) => {
-    const result = await client.callTool({ name, arguments: args }, { timeout: requestTimeoutMs });
+    const result = await client.callTool({ name, arguments: args }, { timeout: defaultProviderRequestTimeoutMs });
     let payload: Record<string, unknown>;
     try {
       payload =

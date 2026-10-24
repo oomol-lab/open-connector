@@ -19,6 +19,7 @@ import {
   ProviderRequestError,
   readProviderTextBody,
   requireApiKeyCredential,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "octopus_deploy";
@@ -338,10 +339,10 @@ function mapHttpError(status: number, message: string, phase: "validate" | "exec
     return new ProviderRequestError(401, message);
   }
   if (status === 401 || status === 403 || (phase === "validate" && status === 404)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 400 || status === 404 || status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 429) {
     return new ProviderRequestError(429, message);

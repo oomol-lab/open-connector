@@ -15,6 +15,7 @@ import {
   ProviderRequestError,
   readProviderJsonBody,
   requiredInputString,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 type FastNoteSyncRequestPhase = "execute" | "validate";
@@ -461,7 +462,7 @@ function mapFastNoteSyncBusinessError(
     return phase === "validate" ? providerInputError(message) : new ProviderRequestError(401, message);
   if (code === 303) return new ProviderRequestError(429, message);
   if (code === 305 || (code != null && code >= 400 && code < 500)) return providerInputError(message);
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function isFastNoteSyncCredentialErrorCode(code: number | undefined): boolean {

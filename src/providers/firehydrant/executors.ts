@@ -16,11 +16,11 @@ import {
   defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "firehydrant";
 const firehydrantApiBaseUrl = "https://api.firehydrant.io/v1";
-const firehydrantRequestTimeoutMs = 30_000;
 
 type RequestPhase = "validate" | "execute";
 type FirehydrantContext = ApiKeyProviderContext;
@@ -339,7 +339,7 @@ async function requestJson(input: FirehydrantRequestInput): Promise<unknown> {
     }
   }
 
-  const timeoutSignal = AbortSignal.timeout(firehydrantRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = input.signal ? AbortSignal.any([input.signal, timeoutSignal]) : timeoutSignal;
   let response: Response;
   try {

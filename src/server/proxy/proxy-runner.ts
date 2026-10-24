@@ -6,7 +6,7 @@ import type { RuntimeLogger, ProxyRequestInput, ProxyResponse } from "../../core
 import type { IProviderLoader } from "../../providers/provider-loader.ts";
 import type { SaasExecutionService } from "../../saas/saas-execution-service.ts";
 
-import { ConnectionError } from "../../connection-service.ts";
+import { ConnectionError } from "../../connection-error.ts";
 import { optionalInteger, optionalRecord, requiredRecord, requiredString } from "../../core/cast.ts";
 import { withProviderHttpDispatch } from "../../core/provider-http-dispatch.ts";
 import {

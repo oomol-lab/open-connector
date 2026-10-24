@@ -15,6 +15,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   runProviderRequest,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 export const worksnapsApiBaseUrl = "https://api.worksnaps.com/api";
@@ -260,7 +261,7 @@ function buildWorksnapsHeaders(apiKey: string): Headers {
 function createWorksnapsError(status: number, body: string, phase: "validate" | "execute"): ProviderRequestError {
   const message = extractWorksnapsErrorMessage(body) ?? `Worksnaps request failed with status ${status}`;
   if (phase === "validate" && status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(status || 502, message);
 }

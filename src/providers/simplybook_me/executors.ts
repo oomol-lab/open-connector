@@ -9,6 +9,8 @@ import {
   ProviderRequestError,
   readProviderJsonBody,
   requireApiKeyCredential,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 const service = "simplybook_me";
@@ -219,9 +221,9 @@ function mapJsonRpcError(error: JsonRpcErrorPayload): ProviderRequestError {
     return new ProviderRequestError(401, message);
   }
   if (code === -32602 || code === -32080 || code === -32085 || code === -32001) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function mapHttpError(status: number, message: string): ProviderRequestError {
@@ -249,7 +251,7 @@ function requireCompanyLogin(value: unknown): string {
 function requireObjectPayload(value: unknown, message: string): Record<string, unknown> {
   const record = optionalRecord(value);
   if (!record) {
-    throw new ProviderRequestError(502, message);
+    throw providerResponseError(message);
   }
   return record;
 }
@@ -263,12 +265,12 @@ function normalizeObjectList(value: unknown, message: string): Array<Record<stri
 
 function normalizeIntegerList(value: unknown, message: string): number[] {
   if (!Array.isArray(value)) {
-    throw new ProviderRequestError(502, message);
+    throw providerResponseError(message);
   }
   return value.map((item) => {
     const parsed = Number(item);
     if (!Number.isInteger(parsed)) {
-      throw new ProviderRequestError(502, message);
+      throw providerResponseError(message);
     }
     return parsed;
   });

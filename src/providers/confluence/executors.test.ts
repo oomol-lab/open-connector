@@ -3,8 +3,9 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { defaultProviderRequestTimeoutMs } from "../provider-runtime.ts";
 import { credentialValidators, proxy } from "./executors.ts";
-import { confluenceActionHandlers, confluenceDefaultTimeoutMs, requestConfluenceJson } from "./runtime.ts";
+import { confluenceActionHandlers, requestConfluenceJson } from "./runtime.ts";
 import { confluenceOAuthScopes } from "./scopes.ts";
 
 const oauthCredential = {
@@ -136,7 +137,7 @@ describe("Confluence OAuth credentials", () => {
         }),
     }).catch((error: unknown) => error);
 
-    await vi.advanceTimersByTimeAsync(confluenceDefaultTimeoutMs);
+    await vi.advanceTimersByTimeAsync(defaultProviderRequestTimeoutMs);
 
     await expect(validation).resolves.toMatchObject({
       status: 504,

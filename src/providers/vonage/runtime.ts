@@ -10,6 +10,7 @@ import {
   providerUserAgent,
   readProviderJsonBody,
   runProviderRequest,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 export const vonageApiBaseUrl = "https://rest.nexmo.com";
@@ -254,8 +255,8 @@ function mapSmsError(status: string, message?: string): ProviderRequestError {
   const text = message ?? `Vonage rejected the SMS with status ${status}`;
   if (status === "1" || status === "9" || status === "10") return new ProviderRequestError(429, text);
   if (["4", "8", "11", "14", "32"].includes(status)) return new ProviderRequestError(401, text);
-  if (invalidInputSmsStatuses.has(status)) return new ProviderRequestError(400, text);
-  return new ProviderRequestError(502, text);
+  if (invalidInputSmsStatuses.has(status)) return providerInputError(text);
+  return providerResponseError(text);
 }
 
 function requireResponseRecord(value: unknown, label: string): Record<string, unknown> {

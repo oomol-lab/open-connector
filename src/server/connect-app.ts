@@ -1,6 +1,7 @@
 import type { CatalogStore } from "../catalog-store.ts";
 import type { ActionPolicyService } from "../core/action-policy.ts";
 import type { ProviderHttpDispatchOptions } from "../core/provider-http-dispatch.ts";
+import type { ProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import type { RuntimeLogger, TransitFileUpload } from "../core/types.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { RuntimeJwtVerifier } from "./api/runtime-jwt.ts";
@@ -11,6 +12,7 @@ import type { Hono } from "hono";
 
 import { ConnectionService } from "../connection-service.ts";
 import { ActionPolicyService as ExecutionPolicyService } from "../core/action-policy.ts";
+import { withProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import { MarketplaceService } from "../marketplace/marketplace-service.ts";
 import { OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import { OAuthCredentialRefreshService } from "../oauth/oauth-credential-refresh-service.ts";
@@ -28,6 +30,7 @@ import { ConnectServer } from "./connect-server.ts";
 import { RuntimeTokenService } from "./storage/runtime-token-service.ts";
 
 export interface ConnectAppOptions {
+  network?: ProviderNetworkPolicy;
   catalog: CatalogStore;
   providerLoader: IProviderLoader;
   providerHttpDispatch?: ProviderHttpDispatchOptions;
@@ -61,6 +64,10 @@ export interface ConnectApp {
 }
 
 export async function createConnectApp(options: ConnectAppOptions): Promise<ConnectApp> {
+  const network = Object.freeze({
+    allowPrivateNetwork: options.network?.allowPrivateNetwork ?? false,
+    trustedHosts: Object.freeze([...(options.network?.trustedHosts ?? [])]),
+  });
   const saasClient = new SaasClient();
   const saasProject = new SaasProjectService({
     catalog: options.catalog,
@@ -80,7 +87,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
     store: options.runtimeDatabase.marketplaceStore,
     secretCodec: options.secretCodec,
   });
-  await marketplace.initialize();
+  await withProviderNetworkPolicy(network, () => marketplace.initialize());
   const runtimeTokens = new RuntimeTokenService(options.runtimeDatabase.runtimeTokenStore, options.logger);
   const hasStoredRuntimeTokens = async (): Promise<boolean> => (await runtimeTokens.listTokens()).length > 0;
   const allowedCustomOAuth = new Set(options.allowedCustomOAuth);
@@ -122,6 +129,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
     store: options.runtimeDatabase.triggerStore,
   });
   const triggerMaintenance = new TriggerMaintenance({
+    network,
     store: options.runtimeDatabase.triggerStore,
     runner: triggers,
     tokens: options.runtimeDatabase.runtimeTokenStore,
@@ -132,12 +140,14 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
   return {
     triggerMaintenance,
     saasCleanup: new SaasCleanupService({
+      network,
       store: options.runtimeDatabase.saasProjectStore,
       requests: options.runtimeDatabase.connectionRequestStore,
       client: saasClient,
       logger: options.logger,
     }),
     app: new ConnectServer({
+      network,
       providerHttpDispatch: options.providerHttpDispatch,
       catalog: options.catalog,
       publicOrigin: options.publicOrigin,

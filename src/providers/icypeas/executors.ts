@@ -17,11 +17,11 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requiredInputString,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "icypeas";
 const icypeasApiBaseUrl = "https://app.icypeas.com/api";
-const icypeasRequestTimeoutMs = 30_000;
 const icypeasValidationPath = "/bulk-single-searchs/read";
 
 type IcypeasRequestMode = "validate" | "execute";
@@ -184,7 +184,7 @@ async function requestIcypeasJson(
   context: IcypeasActionContext,
   mode: IcypeasRequestMode,
 ): Promise<unknown> {
-  const timeout = createProviderTimeout(context.signal, icypeasRequestTimeoutMs);
+  const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(buildIcypeasUrl(input.path), {
       method: "POST",
@@ -211,7 +211,7 @@ async function requestIcypeasJson(
     if (timeout.didTimeout() || isAbortLikeError(error)) {
       throw new ProviderRequestError(
         504,
-        `Icypeas request timed out after ${Math.ceil(icypeasRequestTimeoutMs / 1000)} seconds`,
+        `Icypeas request timed out after ${Math.ceil(defaultProviderRequestTimeoutMs / 1000)} seconds`,
       );
     }
 

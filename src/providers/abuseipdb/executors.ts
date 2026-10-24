@@ -16,11 +16,11 @@ import {
   ProviderRequestError,
   requireApiKeyCredential,
   requiredResponseRecord,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "abuseipdb";
 const abuseipdbApiBaseUrl = "https://api.abuseipdb.com/api/v2";
-const abuseipdbDefaultRequestTimeoutMs = 30_000;
 const abuseipdbValidationIpAddress = "8.8.8.8";
 
 type AbuseipdbRequestPhase = "validate" | "execute";
@@ -232,8 +232,8 @@ async function requestAbuseipdbJson<T>(input: {
   let response: Response;
   let payload: unknown;
   const signal = input.context.signal
-    ? AbortSignal.any([input.context.signal, AbortSignal.timeout(abuseipdbDefaultRequestTimeoutMs)])
-    : AbortSignal.timeout(abuseipdbDefaultRequestTimeoutMs);
+    ? AbortSignal.any([input.context.signal, AbortSignal.timeout(defaultProviderRequestTimeoutMs)])
+    : AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   try {
     response = await input.context.fetcher(buildAbuseipdbUrl(input.path, input.query ?? {}), {
       method: "GET",

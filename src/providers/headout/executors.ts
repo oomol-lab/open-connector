@@ -25,13 +25,13 @@ import {
   ProviderRequestError,
   requireApiKeyCredential,
   requiredResponseRecord,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "headout";
 const headoutProductionApiBaseUrl = "https://www.headout.com/api/public/v1";
 const headoutSandboxApiBaseUrl = "https://sandbox.api.test-headout.com/api/public/v1";
 const headoutValidationPath = "/booking";
-const headoutDefaultTimeoutMs = 30_000;
 
 type HeadoutPhase = "validate" | "execute";
 type HeadoutQueryValue = boolean | number | string | undefined;
@@ -255,7 +255,7 @@ async function requestHeadoutJson(input: {
 }): Promise<unknown> {
   const apiBaseUrl = input.context.apiBaseUrl ?? resolveHeadoutApiBaseUrl(input.context.apiKey);
   const url = buildHeadoutUrl(apiBaseUrl, input.path, input.query);
-  const timeoutSignal = AbortSignal.timeout(headoutDefaultTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = input.context.signal ? AbortSignal.any([input.context.signal, timeoutSignal]) : timeoutSignal;
 
   try {
@@ -282,7 +282,7 @@ async function requestHeadoutJson(input: {
     if (isAbortLikeError(error)) {
       throw new ProviderRequestError(
         502,
-        `headout ${input.path} request timed out after ${Math.ceil(headoutDefaultTimeoutMs / 1000)} seconds`,
+        `headout ${input.path} request timed out after ${Math.ceil(defaultProviderRequestTimeoutMs / 1000)} seconds`,
       );
     }
     throw new ProviderRequestError(

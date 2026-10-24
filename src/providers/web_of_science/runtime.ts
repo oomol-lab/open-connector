@@ -11,6 +11,8 @@ import {
   readProviderJsonBody,
   requiredInputString,
   setSearchParams,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 const webOfScienceApiBaseUrl = "https://api.clarivate.com/apis/wos-starter/v1";
@@ -184,10 +186,10 @@ function createWebOfScienceError(status: number, payload: unknown, phase: WebOfS
     return new ProviderRequestError(429, message);
   }
   if (phase === "validate" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (phase === "validate" && status >= 400 && status < 500) {
-    return new ProviderRequestError(502, message);
+    return providerResponseError(message);
   }
   if (status === 401 || status === 403) {
     return new ProviderRequestError(status, message);
@@ -293,7 +295,7 @@ function readStringArray(value: unknown): string[] {
 function requireResponseRecord(value: unknown, message: string): Record<string, unknown> {
   const record = optionalRecord(value);
   if (!record) {
-    throw new ProviderRequestError(502, message);
+    throw providerResponseError(message);
   }
   return record;
 }

@@ -256,7 +256,7 @@ function readTargetUrl(value: unknown): string {
   const rawUrl = requiredInputString(value, "url");
   const url = assertPublicHttpUrl(rawUrl, {
     fieldName: "url",
-    createError: (message) => new ProviderRequestError(400, message),
+    createError: providerInputError,
   });
   if (url.username || url.password) {
     throw new ProviderRequestError(400, "url must not include credentials");
@@ -301,13 +301,13 @@ async function createWebscrapingAiError(response: Response, phase: WebscrapingAi
     return new ProviderRequestError(429, message);
   }
   if (phase === "validate" && response.status === 403) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (phase === "execute" && response.status === 403) {
     return new ProviderRequestError(403, message);
   }
   if (response.status === 400) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 504) {
     return new ProviderRequestError(504, message);

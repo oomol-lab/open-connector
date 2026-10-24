@@ -1,5 +1,11 @@
 import { optionalRecord, optionalString } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 export const mintlifyApiBaseUrl = "https://api.mintlify.com/v1";
 type MintlifyRequestPhase = "validate" | "execute";
@@ -130,9 +136,9 @@ function createMintlifyError(response: Response, payload: unknown, phase: Mintli
     return new ProviderRequestError(phase === "validate" ? 400 : 403, message);
   }
   if (response.status === 400 || response.status === 404 || response.status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function isAbortError(error: unknown) {

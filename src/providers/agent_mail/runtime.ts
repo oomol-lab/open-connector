@@ -3,7 +3,12 @@ import type { ProviderActionHandlers, ProviderFetch } from "../provider-runtime.
 import type { AgentMailOperationDefinition } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { mapProviderActionHandlers, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  mapProviderActionHandlers,
+  providerUserAgent,
+  ProviderRequestError,
+  providerInputError,
+} from "../provider-runtime.ts";
 import { agentMailOperations } from "./actions.ts";
 
 export const agentMailApiBaseUrl = "https://api.agentmail.to";
@@ -218,7 +223,7 @@ function createAgentMailError(
     return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
   }
   if (response.status === 404 && notFoundAsInvalidInput) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 400 || response.status === 404 || response.status === 422) {
     return new ProviderRequestError(response.status, message);

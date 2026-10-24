@@ -18,6 +18,8 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requiredInputString,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 export const moesifApiBaseUrl = "https://api.moesif.com/v1";
@@ -147,7 +149,7 @@ export async function validateMoesifCredential(
 ): Promise<CredentialValidationResult> {
   const payload = await requestMoesifJson({
     path: buildOrganizationPath(undefined, "apps"),
-    apiKey: requiredString(apiKey, "apiKey", (message) => new ProviderRequestError(400, message)),
+    apiKey: requiredString(apiKey, "apiKey", providerInputError),
     params: {
       take: "1",
     },
@@ -254,7 +256,7 @@ function createMoesifError(status: number, payload: unknown, phase: "validate" |
   }
 
   if (phase === "validate" && status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (phase === "execute" && (status === 401 || status === 403)) {
@@ -356,7 +358,7 @@ function normalizeWorkspace(payload: unknown): NormalizedWorkspace {
 function requireRecord(value: unknown, message: string): Record<string, unknown> {
   const record = optionalRecord(value);
   if (!record) {
-    throw new ProviderRequestError(502, message);
+    throw providerResponseError(message);
   }
   return record;
 }

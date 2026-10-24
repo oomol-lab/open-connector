@@ -9,7 +9,12 @@ import {
   optionalInteger,
   optionalBoolean,
 } from "../../core/cast.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  providerUserAgent,
+  ProviderRequestError,
+  providerInputError,
+} from "../provider-runtime.ts";
 
 export const datascopeApiBaseUrl = "https://www.mydatascope.com/api/external/";
 
@@ -290,7 +295,7 @@ function createDatascopeHttpError(status: number, payload: unknown, phase: Datas
   }
 
   if (status === 400 || status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (status === 429) {

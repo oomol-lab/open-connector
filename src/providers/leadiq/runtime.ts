@@ -1,7 +1,12 @@
 import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 export interface LeadiqCredentialCheck {
   providerAccountId?: string;
@@ -161,7 +166,7 @@ function requireAdvancedSearchFilter(input: Record<string, unknown>): void {
 
 function requireAnyStringField(input: Record<string, unknown>, fields: string[], message: string): void {
   if (!fields.some((field) => typeof input[field] === "string" && input[field].trim().length > 0)) {
-    throw new ProviderRequestError(400, message);
+    throw providerInputError(message);
   }
 }
 
@@ -269,9 +274,9 @@ function mapLeadiqError(status: number, message: string, phase: LeadiqRequestPha
     return new ProviderRequestError(429, message);
   }
   if (status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function requireGraphqlObject(data: Record<string, unknown>, field: string) {

@@ -2,10 +2,9 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { booleanString, compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, defaultProviderRequestTimeoutMs } from "../provider-runtime.ts";
 
 export const agilityApiBaseUrl = "https://api.aglty.io";
-const agilityDefaultRequestTimeoutMs = 30_000;
 
 type AgilityPhase = "validate" | "execute";
 
@@ -233,7 +232,7 @@ async function requestAgilityJson(input: {
   signal?: AbortSignal;
   phase: AgilityPhase;
 }): Promise<unknown> {
-  const timeoutSignal = AbortSignal.timeout(agilityDefaultRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = input.signal ? AbortSignal.any([input.signal, timeoutSignal]) : timeoutSignal;
 
   try {

@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  providerUserAgent,
+  ProviderRequestError,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 export const cuttlyApiBaseUrl = "https://cutt.ly";
 const cuttlyApiPath = "/api/api.php";
@@ -285,9 +290,9 @@ function mapCuttlyMessageToError(message: string, mode: CuttlyMode): ProviderReq
     normalized.includes("url does not exist") ||
     normalized.includes("do not own")
   ) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function createCuttlyAuthError(mode: CuttlyMode, message: string): ProviderRequestError {

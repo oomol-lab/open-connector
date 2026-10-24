@@ -22,11 +22,11 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "api_sports";
 const apiSportsApiBaseUrl = "https://v3.football.api-sports.io";
-const apiSportsDefaultRequestTimeoutMs = 30_000;
 
 type QueryValue = string | number | boolean | Array<string | number> | undefined;
 type ApiSportsRequestMode = "validate" | "execute";
@@ -397,7 +397,7 @@ async function apiSportsGet<T extends ApiSportsResponsePayload>(
   context: ApiSportsActionContext,
   mode: ApiSportsRequestMode = "execute",
 ): Promise<T> {
-  const timeoutSignal = AbortSignal.timeout(apiSportsDefaultRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = context.signal ? AbortSignal.any([context.signal, timeoutSignal]) : timeoutSignal;
 
   try {
@@ -422,7 +422,7 @@ async function apiSportsGet<T extends ApiSportsResponsePayload>(
     if (isAbortLikeError(error)) {
       throw new ProviderRequestError(
         502,
-        `api_sports ${path} request timed out after ${Math.max(1, Math.ceil(apiSportsDefaultRequestTimeoutMs / 1000))} seconds`,
+        `api_sports ${path} request timed out after ${Math.max(1, Math.ceil(defaultProviderRequestTimeoutMs / 1000))} seconds`,
       );
     }
     throw new ProviderRequestError(502, error instanceof Error ? error.message : "api_sports request failed");

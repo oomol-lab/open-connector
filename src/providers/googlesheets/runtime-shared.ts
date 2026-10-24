@@ -13,7 +13,12 @@ import {
   requiredRecord,
   stringArray,
 } from "../../core/cast.ts";
-import { isAbortLikeError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  isAbortLikeError,
+  providerUserAgent,
+  ProviderRequestError,
+  defaultProviderRequestTimeoutMs,
+} from "../provider-runtime.ts";
 
 export {
   compactObject,
@@ -28,7 +33,6 @@ export {
 export type GoogleQueryValue = string | readonly string[] | undefined;
 
 const service = "googlesheets";
-const googleDefaultRequestTimeoutMs = 30_000;
 
 export async function googleJsonRequest<T>(
   url: string,
@@ -101,7 +105,7 @@ export async function googleRequest(
   };
   const response = await googleFetchWithTimeout(target.toString(), {
     fetcher: input.fetcher,
-    timeoutMs: input.timeoutMs ?? googleDefaultRequestTimeoutMs,
+    timeoutMs: input.timeoutMs ?? defaultProviderRequestTimeoutMs,
     init: requestInit,
   });
 
@@ -222,7 +226,7 @@ async function googleFetchWithTimeout(
     init?: RequestInit;
   },
 ): Promise<Response> {
-  const timeoutMs = input.timeoutMs ?? googleDefaultRequestTimeoutMs;
+  const timeoutMs = input.timeoutMs ?? defaultProviderRequestTimeoutMs;
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
     return input.fetcher(url, input.init);
   }

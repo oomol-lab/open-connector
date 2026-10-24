@@ -21,11 +21,11 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "addressfinder";
 const addressfinderApiBaseUrl = "https://api.addressfinder.io/api/";
-const addressfinderDefaultRequestTimeoutMs = 30_000;
 const addressfinderValidationEndpoint = "/nz/address/autocomplete";
 
 type AddressfinderCountry = "au" | "nz";
@@ -256,7 +256,7 @@ async function requestAddressfinderJson(input: {
   fetcher: typeof fetch;
   signal?: AbortSignal;
 }): Promise<Record<string, unknown>> {
-  const timeoutSignal = AbortSignal.timeout(addressfinderDefaultRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = input.signal ? AbortSignal.any([input.signal, timeoutSignal]) : timeoutSignal;
 
   try {

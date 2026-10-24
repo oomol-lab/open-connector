@@ -22,6 +22,7 @@ import {
   ProviderRequestError,
   readProviderTextBody,
   requireApiKeyCredential,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 type QueryValue = string | number | boolean | undefined;
@@ -350,11 +351,11 @@ function createDigistore24Error(status: number, statusText: string, payload: unk
   if (status === 429) {
     return new ProviderRequestError(429, message);
   } else if (phase === "validate" && (status === 400 || status === 401 || status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   } else if (phase === "execute" && (status === 401 || status === 403)) {
     return new ProviderRequestError(401, message);
   } else if (phase === "execute" && (status === 400 || status === 404 || status === 422)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   } else {
     return new ProviderRequestError(status >= 500 ? 502 : status || 502, message);
   }

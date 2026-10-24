@@ -18,6 +18,7 @@ import {
   ProviderRequestError,
   readProviderTextBody,
   requireApiKeyCredential,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 const gainsightNxtMaxResponseBytes = 10 * 1024 * 1024;
@@ -233,7 +234,7 @@ function createGainsightError(status: number, payload: unknown, phase: Gainsight
     return new ProviderRequestError(status || 400, message);
   }
 
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function readGainsightErrorMessage(payload: unknown) {

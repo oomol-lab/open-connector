@@ -2,7 +2,13 @@ import type { CredentialValidationResult, ProviderExecutors } from "../../core/t
 import type { ApiKeyProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  defineApiKeyProviderExecutors,
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+  defaultProviderRequestTimeoutMs,
+} from "../provider-runtime.ts";
 
 export const mobileTextAlertsApiBaseUrl = "https://api.mobile-text-alerts.com/v3";
 
@@ -150,7 +156,7 @@ async function requestMobileTextAlertsJson(options: RequestOptions): Promise<unk
         "user-agent": providerUserAgent,
       },
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
-      signal: options.signal ?? AbortSignal.timeout(30_000),
+      signal: options.signal ?? AbortSignal.timeout(defaultProviderRequestTimeoutMs),
     });
   } catch (error) {
     throw new ProviderRequestError(
@@ -183,7 +189,7 @@ function mobileTextAlertsError(response: Response, payload: unknown, phase: Requ
     return new ProviderRequestError(phase === "validate" ? 400 : response.status, message);
   }
   if (response.status === 400 || response.status === 404) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 429) return new ProviderRequestError(429, message);
   return new ProviderRequestError(response.status >= 500 ? 502 : response.status, message);

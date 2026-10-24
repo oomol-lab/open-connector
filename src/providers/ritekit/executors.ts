@@ -11,6 +11,7 @@ import {
   ProviderRequestError,
   readProviderTextBody,
   requiredInputString,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "ritekit";
@@ -176,8 +177,7 @@ function createError(status: number, payload: unknown, phase: RiteKitPhase): Pro
     optionalString(record?.error_description) ??
     `RiteKit request failed with status ${effectiveStatus || 500}`;
   if (effectiveStatus === 429) return new ProviderRequestError(429, message);
-  if (phase === "validate" && effectiveStatus >= 400 && effectiveStatus < 500)
-    return new ProviderRequestError(400, message);
+  if (phase === "validate" && effectiveStatus >= 400 && effectiveStatus < 500) return providerInputError(message);
   if (effectiveStatus === 401 || effectiveStatus === 403) return new ProviderRequestError(effectiveStatus, message);
   if (effectiveStatus >= 400 && effectiveStatus < 500) return new ProviderRequestError(effectiveStatus, message);
   return new ProviderRequestError(effectiveStatus >= 400 ? effectiveStatus : 502, message);

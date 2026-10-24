@@ -12,11 +12,11 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requiredResponseRecord,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const wecomMcpConfigUrl = "https://qyapi.weixin.qq.com/cgi-bin/aibot/cli/get_mcp_config";
 const wecomSmartBotHelpUrl = "https://open.work.weixin.qq.com/help2/pc/cat?doc_id=21677";
-const wecomSmartBotRequestTimeoutMs = 30_000;
 const wecomSmartBotMediaTimeoutMs = 120_000;
 const wecomMcpConfigCacheTtlMs = 10 * 60_000;
 const wecomMcpConfigCacheMaxEntries = 128;
@@ -284,7 +284,7 @@ async function fetchWecomMcpConfig(
       }),
     },
     fetcher,
-    wecomSmartBotRequestTimeoutMs,
+    defaultProviderRequestTimeoutMs,
   );
   const payload = requiredResponseRecord(response.payload, "WeCom MCP config response");
   const errcode = readInteger(payload.errcode) ?? 0;
@@ -390,7 +390,7 @@ async function callWecomToolAtEndpoint(
     "tools/call",
     { name: toolName, arguments: argumentsValue },
     fetcher,
-    toolName === "get_msg_media" ? wecomSmartBotMediaTimeoutMs : wecomSmartBotRequestTimeoutMs,
+    toolName === "get_msg_media" ? wecomSmartBotMediaTimeoutMs : defaultProviderRequestTimeoutMs,
   );
   const result = requiredResponseRecord(payload.result, `WeCom ${toolName} MCP result`);
   if (result.isError === true) {
@@ -420,7 +420,7 @@ async function sendWecomMcpRequest(
   method: string,
   params: unknown,
   fetcher: typeof fetch,
-  timeoutMs = wecomSmartBotRequestTimeoutMs,
+  timeoutMs = defaultProviderRequestTimeoutMs,
 ) {
   const response = await fetchWecomJson(
     endpoint,

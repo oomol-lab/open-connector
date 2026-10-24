@@ -2,7 +2,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
+import {
+  providerUserAgent,
+  ProviderRequestError,
+  requiredInputString,
+  providerInputError,
+} from "../provider-runtime.ts";
 
 export const loyjoyApiBaseUrl = "https://app-stable.loyjoy.com/api";
 type Phase = "validate" | "execute";
@@ -140,8 +145,7 @@ function errorFor(response: Response, payload: unknown, phase: Phase): ProviderR
     optionalString(record?.error) ??
     `LoyJoy request failed with status ${response.status}`;
   if (response.status === 429) return new ProviderRequestError(429, message);
-  if (phase === "validate" && response.status >= 400 && response.status < 500)
-    return new ProviderRequestError(400, message);
+  if (phase === "validate" && response.status >= 400 && response.status < 500) return providerInputError(message);
   if (phase === "execute" && (response.status === 401 || response.status === 403))
     return new ProviderRequestError(401, message);
   return new ProviderRequestError(response.status >= 400 && response.status < 500 ? 400 : 502, message);

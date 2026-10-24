@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { BearerProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, looseArray, optionalRecord, recordOrEmpty } from "../../core/cast.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { ProviderRequestError, providerInputError } from "../provider-runtime.ts";
 
 const tiktokBusinessApiBaseUrl = "https://business-api.tiktok.com";
 const tiktokBusinessUserInfoUrl = `${tiktokBusinessApiBaseUrl}/open_api/v1.3/user/info/`;
@@ -465,7 +465,7 @@ function createTikTokBusinessError<T>(status: number, envelope: TikTokBusinessEn
     );
   }
   if (status === 400 || status === 422 || code === 40001 || code === 40003) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 429) {
     return new ProviderRequestError(status || 429, message);

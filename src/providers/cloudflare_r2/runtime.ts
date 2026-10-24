@@ -27,6 +27,7 @@ import {
   ProviderRequestError,
   providerUserAgent,
   runProviderRequest,
+  providerResponseError,
 } from "../provider-runtime.ts";
 import { cloudflareR2AccountActionHandlers } from "./runtime-account.ts";
 import { cloudflareR2BucketSettingsActionHandlers } from "./runtime-bucket-settings.ts";
@@ -124,8 +125,8 @@ export async function validateCloudflareR2Credential(
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const apiToken = requiredString(values.apiKey, "apiKey", (message) => new ProviderRequestError(400, message));
-  const accountId = requiredString(values.accountId, "accountId", (message) => new ProviderRequestError(400, message));
+  const apiToken = requiredString(values.apiKey, "apiKey", providerInputError);
+  const accountId = requiredString(values.accountId, "accountId", providerInputError);
   const envelope = await cloudflareR2RequestEnvelope(
     apiToken,
     {
@@ -485,7 +486,7 @@ async function downloadSourceFile(
       // An upstream 401/403 is not our authorization failure, so it must not
       // pass through as this action's own status.
       const message = `failed to download sourceUrl: ${response.status} ${response.statusText}`.trim();
-      throw response.status >= 500 ? new ProviderRequestError(502, message) : providerInputError(message);
+      throw response.status >= 500 ? providerResponseError(message) : providerInputError(message);
     }
     const bytes = await readBoundedResponseBytes(response, {
       maxBytes: maxSourceBytes,
@@ -780,7 +781,7 @@ function normalizeCloudflareR2Error(
     return new ProviderRequestError(429, message);
   }
   if (phase === "validate" && [400, 401, 403, 404].includes(response.status)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (phase === "execute" && (response.status === 400 || response.status === 404)) {
     return new ProviderRequestError(response.status, message);

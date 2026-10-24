@@ -9,7 +9,7 @@ import type { CallToolResult } from "@modelcontextprotocol/server";
 
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
-import { ConnectionError } from "./connection-service.ts";
+import { ConnectionError } from "./connection-error.ts";
 import { createActionSearchIndexProvider, searchActions as searchActionIndex } from "./core/action-search.ts";
 import { describeSchemaType, readSchemaProperties, readSchemaRequired } from "./core/json-schema.ts";
 import { renderActionMarkdown } from "./server/api/action-markdown.ts";

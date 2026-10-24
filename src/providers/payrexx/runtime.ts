@@ -9,7 +9,13 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+  defaultProviderRequestTimeoutMs,
+} from "../provider-runtime.ts";
 
 export interface PayrexxCredentialCheck {
   providerAccountId?: string;
@@ -19,8 +25,6 @@ export interface PayrexxCredentialCheck {
 }
 
 export const payrexxApiBaseUrl = "https://api.payrexx.com/v1.16";
-
-const requestTimeoutMs = 30_000;
 
 type QueryValue = string | number | boolean | undefined;
 type PayrexxPhase = "validate" | "execute";
@@ -128,7 +132,7 @@ export async function validatePayrexxCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
 ): Promise<PayrexxCredentialCheck> {
-  const apiKey = requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message));
+  const apiKey = requiredString(input.apiKey, "apiKey", providerInputError);
   const instance = requireInputString(input.instance, "instance");
   const payload = await requestPayrexxJson({
     path: "/PaymentProvider/",
@@ -192,7 +196,7 @@ async function requestPayrexxJson(input: {
     headers.set("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
   }
 
-  const timeout = createProviderTimeout(undefined, requestTimeoutMs);
+  const timeout = createProviderTimeout(undefined);
   try {
     const response = await input.fetcher(url, {
       method: input.method,
@@ -210,7 +214,7 @@ async function requestPayrexxJson(input: {
     if (timeout.didTimeout() && isAbortError(error)) {
       throw new ProviderRequestError(
         502,
-        `payrexx request timed out after ${Math.ceil(requestTimeoutMs / 1000)} seconds`,
+        `payrexx request timed out after ${Math.ceil(defaultProviderRequestTimeoutMs / 1000)} seconds`,
       );
     }
     throw new ProviderRequestError(502, readErrorMessage(error));
@@ -240,7 +244,7 @@ function normalizePayrexxError(response: Response, payload: PayrexxResponse, pha
     return new ProviderRequestError(429, message);
   }
   if (phase === "validate" && response.status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (
     response.status === 401 ||

@@ -162,9 +162,9 @@ function mapMoxieError(status: number, payload: unknown, validation: boolean): P
     optionalString(record?.message) ||
     optionalString(record?.error) ||
     `Moxie request failed with status ${status}`;
-  if (validation && [400, 401, 403].includes(status)) return new ProviderRequestError(400, message);
+  if (validation && [400, 401, 403].includes(status)) return providerInputError(message);
   if (status === 401 || status === 403) return new ProviderRequestError(401, message);
-  if ([400, 404, 422].includes(status)) return new ProviderRequestError(400, message);
+  if ([400, 404, 422].includes(status)) return providerInputError(message);
   if (status === 429) return new ProviderRequestError(429, message);
   return new ProviderRequestError(status || 502, message);
 }

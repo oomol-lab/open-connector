@@ -21,6 +21,8 @@ import {
   readProviderTextBody,
   requireCustomCredential,
   toProviderProxyError,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 const service = "gagelist";
@@ -620,7 +622,7 @@ function listQuery(input: Record<string, unknown>) {
 function requireObject(value: unknown, message: string) {
   const object = optionalRecord(value);
   if (!object) {
-    throw new ProviderRequestError(502, message);
+    throw providerResponseError(message);
   }
   return object;
 }
@@ -653,7 +655,7 @@ function createGagelistError(status: number, payload: unknown, phase: GagelistPh
     optionalRawString(body?.message) ??
     `GageList ${operation} failed with HTTP ${status}`;
   if (phase == "validate" && (status == 400 || status == 401 || status == 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status == 401 || status == 403) {
     return new ProviderRequestError(status, message);

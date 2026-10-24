@@ -2,7 +2,7 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, providerInputError } from "../provider-runtime.ts";
 
 const tencentMapsApiBaseUrl = "https://apis.map.qq.com";
 const tencentMapsValidationPath = "/ws/district/v1/list";
@@ -565,11 +565,11 @@ function normalizeTencentMapsError(
       return new ProviderRequestError(429, message);
     }
     if (tencentMapsInputStatuses.has(status)) {
-      return new ProviderRequestError(400, message);
+      return providerInputError(message);
     }
     if (tencentMapsAuthStatuses.has(status)) {
       if (phase === "validate") {
-        return new ProviderRequestError(400, message);
+        return providerInputError(message);
       }
       return new ProviderRequestError(401, message);
     }

@@ -11,7 +11,7 @@ import {
   optionalString,
 } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, providerInputError } from "../provider-runtime.ts";
 
 interface CloudflareEnvelope {
   success?: unknown;
@@ -279,8 +279,7 @@ function normalizeError(
 ): ProviderRequestError {
   const message = readErrorMessage(envelope) ?? `cloudflare request failed with ${response.status}`;
   if (response.status === 429) return new ProviderRequestError(429, message);
-  if (phase === "validate" && [400, 401, 403, 404].includes(response.status))
-    return new ProviderRequestError(400, message);
+  if (phase === "validate" && [400, 401, 403, 404].includes(response.status)) return providerInputError(message);
   return new ProviderRequestError(response.status >= 500 ? 502 : response.status, message);
 }
 

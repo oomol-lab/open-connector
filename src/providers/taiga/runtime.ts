@@ -8,6 +8,7 @@ import {
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 interface TaigaCredential {
@@ -313,11 +314,11 @@ function requireObject(value: unknown, label: string): Record<string, unknown> {
 
 function createTaigaError(response: Response, phase: TaigaRequestInput["phase"]): ProviderRequestError {
   const message = `Taiga request failed with status ${response.status}`;
-  if (response.status == 400) return new ProviderRequestError(400, message);
+  if (response.status == 400) return providerInputError(message);
   if (response.status == 401 || response.status == 403) {
     return new ProviderRequestError(phase == "validate" ? 400 : response.status, message);
   }
-  if (response.status == 404) return new ProviderRequestError(400, message);
+  if (response.status == 404) return providerInputError(message);
   if (response.status == 409 || response.status == 429) return new ProviderRequestError(response.status, message);
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }

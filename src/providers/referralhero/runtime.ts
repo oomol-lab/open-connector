@@ -3,7 +3,13 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  providerUserAgent,
+  ProviderRequestError,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 export const referralheroApiBaseUrl = "https://app.referralhero.com/api/v2";
 interface Spec {
   method: string;
@@ -182,8 +188,8 @@ function mapError(status: number, payload: Record<string, unknown>, phase: "vali
   if (status === 429 || code === "too_many_calls") return new ProviderRequestError(429, message);
   if (["no_token", "invalid_token", "inactive_account"].includes(code ?? "") || status === 401 || status === 403)
     return new ProviderRequestError(phase === "validate" ? 400 : status, message);
-  if (status < 500 || payload.status === "error") return new ProviderRequestError(400, message);
-  return new ProviderRequestError(502, message);
+  if (status < 500 || payload.status === "error") return providerInputError(message);
+  return providerResponseError(message);
 }
 function requiredObject(value: unknown, name: string) {
   const result = optionalRecord(value);

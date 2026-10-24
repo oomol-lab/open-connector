@@ -1,7 +1,12 @@
 import type { ProviderActionHandlers } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+} from "../provider-runtime.ts";
 
 export const qingflowApiBaseUrl = "https://api.qingflow.com";
 
@@ -543,7 +548,7 @@ function mapQingflowApiError(errorCode: number, envelope: Record<string, unknown
   if (qingflowPermissionErrorCodes.has(errorCode)) {
     return new ProviderRequestError(403, message);
   }
-  return new ProviderRequestError(400, message);
+  return providerInputError(message);
 }
 
 const qingflowPermissionErrorCodes = new Set([40002, 40064, 40065, 40066, 40069, 40095]);

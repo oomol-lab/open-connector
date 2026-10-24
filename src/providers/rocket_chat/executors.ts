@@ -16,10 +16,10 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requireCustomCredential,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "rocket_chat";
-const requestTimeoutMs = 30_000;
 const validationPath = "/me";
 
 interface RocketChatCredential {
@@ -252,8 +252,8 @@ async function requestRocketChat(options: {
   body?: Record<string, unknown>;
 }): Promise<{ status: number; payload: unknown; rawText: string }> {
   const signal = options.signal
-    ? AbortSignal.any([options.signal, AbortSignal.timeout(requestTimeoutMs)])
-    : AbortSignal.timeout(requestTimeoutMs);
+    ? AbortSignal.any([options.signal, AbortSignal.timeout(defaultProviderRequestTimeoutMs)])
+    : AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const headers = new Headers({
     accept: "application/json",
     "user-agent": providerUserAgent,

@@ -9,6 +9,7 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "greenhouse";
@@ -255,13 +256,13 @@ async function mapGreenhouseError(response: Response, phase: GreenhouseRequestPh
     ? `Greenhouse API request failed: ${detail}`
     : `Greenhouse API request failed with HTTP ${response.status}`;
   if (phase === "validate" && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 401 || response.status === 403) {
     return new ProviderRequestError(401, message);
   }
   if (response.status === 404 || response.status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 429) {
     return new ProviderRequestError(429, message);

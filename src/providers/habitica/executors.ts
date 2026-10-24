@@ -29,12 +29,12 @@ import {
   requireApiKeyCredential,
   requiredInputString,
   toProviderProxyError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "habitica";
 const habiticaApiBaseUrl = "https://habitica.com/api/v3";
 const habiticaFetch = createProviderFetch({ skipDnsValidation: true });
-const habiticaDefaultRequestTimeoutMs = 30_000;
 
 type HabiticaRequestPhase = "validate" | "execute";
 type HabiticaMethod = "GET" | "POST" | "PUT" | "DELETE";
@@ -390,7 +390,7 @@ async function deleteTag(input: Record<string, unknown>, context: HabiticaAction
 }
 
 async function requestHabitica(input: HabiticaRequestOptions): Promise<HabiticaEnvelope> {
-  const timeoutSignal = AbortSignal.timeout(habiticaDefaultRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = input.signal ? AbortSignal.any([input.signal, timeoutSignal]) : timeoutSignal;
 
   try {

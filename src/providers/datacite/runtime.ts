@@ -159,7 +159,7 @@ function createDataciteError(status: number, payload: unknown, phase: DatacitePh
     return new ProviderRequestError(429, message);
   }
   if (phase === "validate" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 401 || status === 403) {
     return new ProviderRequestError(400, message, status);

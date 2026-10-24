@@ -4,7 +4,13 @@ import type { SplunkHttpEventCollectorActionName } from "./actions.ts";
 import { createHash, randomUUID } from "node:crypto";
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+  defaultProviderRequestTimeoutMs,
+} from "../provider-runtime.ts";
 
 export interface SplunkHttpEventCollectorCredentialCheck {
   providerAccountId?: string;
@@ -41,8 +47,6 @@ interface SplunkHecRequestInput {
 }
 
 type SplunkHecActionHandler = (input: SplunkHecActionInput, fetcher: typeof fetch) => Promise<unknown>;
-
-const splunkHecRequestTimeoutMs = 30_000;
 
 export const splunkHttpEventCollectorActionHandlers: ProviderActionHandlers<
   "splunk_http_event_collector",
@@ -95,10 +99,7 @@ export async function validateSplunkHttpEventCollectorCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
 ): Promise<SplunkHttpEventCollectorCredentialCheck> {
-  const credential = resolveCredential(
-    requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message)),
-    input.baseUrl,
-  );
+  const credential = resolveCredential(requiredString(input.apiKey, "apiKey", providerInputError), input.baseUrl);
   await requestSplunkHec({
     credential,
     path: "/services/collector/event",
@@ -138,7 +139,7 @@ export async function executeSplunkHttpEventCollectorAction(
 }
 
 async function requestSplunkHec(input: SplunkHecRequestInput) {
-  const timeout = createProviderTimeout(undefined, splunkHecRequestTimeoutMs);
+  const timeout = createProviderTimeout(undefined);
   const url = buildSplunkHecUrl(input.credential.baseUrl, input.path, input.query);
 
   try {
@@ -183,7 +184,7 @@ async function requestSplunkHec(input: SplunkHecRequestInput) {
     if (timeout.didTimeout()) {
       throw new ProviderRequestError(
         504,
-        `Splunk HEC request timed out after ${Math.ceil(splunkHecRequestTimeoutMs / 1000)} seconds`,
+        `Splunk HEC request timed out after ${Math.ceil(defaultProviderRequestTimeoutMs / 1000)} seconds`,
       );
     }
     const message = error instanceof Error && error.message.trim() ? error.message : "request failed";
@@ -219,7 +220,7 @@ export function normalizeSplunkHecBaseUrl(
 
   const url = assertPublicHttpUrl(rawValue, {
     fieldName: "baseUrl",
-    createError: (message) => new ProviderRequestError(400, message),
+    createError: providerInputError,
     allowPrivateNetwork,
   });
   if (url.protocol !== "https:") {
@@ -276,13 +277,13 @@ function readSplunkHecMessage(payload: unknown) {
 
 function mapSplunkHecError(status: number, code: number | undefined, message: string, phase: "validate" | "execute") {
   if (phase === "validate" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (phase === "execute" && (status === 401 || status === 403 || code === 4 || code === 21 || code === 22)) {
     return new ProviderRequestError(401, message);
   }
   if (status === 400 || status === 404) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 429) {
     return new ProviderRequestError(429, message);

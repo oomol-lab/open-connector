@@ -8,12 +8,12 @@ import {
   mapProviderActionHandlers,
   ProviderRequestError,
   providerUserAgent,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 import { mendeleyActions } from "./actions.ts";
 
 const service = "mendeley";
 const mendeleyApiBaseUrl = "https://api.mendeley.com";
-const mendeleyRequestTimeoutMs = 30_000;
 const documentMediaType = "application/vnd.mendeley-document.1+json";
 const profileMediaType = "application/vnd.mendeley-profiles.1+json";
 
@@ -164,7 +164,7 @@ async function requestMendeley(
     method: options.method ?? "GET",
     headers,
     body: options.body,
-    signal: AbortSignal.timeout(mendeleyRequestTimeoutMs),
+    signal: AbortSignal.timeout(defaultProviderRequestTimeoutMs),
   });
   if (!response.ok) {
     const payload = await readOptionalJson(response);

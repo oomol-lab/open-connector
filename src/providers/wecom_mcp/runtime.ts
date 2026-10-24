@@ -10,10 +10,14 @@ import { createHash } from "node:crypto";
 import { optionalRecord, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
 import { withMcpClient } from "../mcp-client.ts";
-import { providerUserAgent, ProviderRequestError, toProviderExecutionError } from "../provider-runtime.ts";
+import {
+  providerUserAgent,
+  ProviderRequestError,
+  toProviderExecutionError,
+  defaultProviderRequestTimeoutMs,
+} from "../provider-runtime.ts";
 
 const wecomMcpHost = "qyapi.weixin.qq.com";
-const wecomRequestTimeoutMs = 30_000;
 const wecomToolIntervalMs = 1_000;
 const maximumTrackedRateLimitKeys = 1_024;
 
@@ -208,7 +212,7 @@ export async function callWeComTool(
           arguments: argumentsValue,
         },
         {
-          timeout: wecomRequestTimeoutMs,
+          timeout: defaultProviderRequestTimeoutMs,
           signal: context.signal,
         },
       );
@@ -230,7 +234,7 @@ async function discoverWeComTools(context: WeComContext): Promise<
     const result = await client.listTools(
       {},
       {
-        timeout: wecomRequestTimeoutMs,
+        timeout: defaultProviderRequestTimeoutMs,
         signal: context.signal,
       },
     );

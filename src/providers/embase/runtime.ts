@@ -6,6 +6,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   runProviderRequest,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 export const embaseApiBaseUrl = "https://api.elsevier.com/content/embase";
@@ -173,7 +174,7 @@ function createEmbaseError(status: number, payload: unknown, phase: EmbasePhase)
     return new ProviderRequestError(429, message);
   }
   if (phase === "validate" && 400 <= status && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 401) {
     return new ProviderRequestError(401, message);
@@ -184,7 +185,7 @@ function createEmbaseError(status: number, payload: unknown, phase: EmbasePhase)
   if (400 <= status && status < 500) {
     return new ProviderRequestError(502, message, status);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function extractEmbaseErrorMessage(payload: unknown): string | undefined {

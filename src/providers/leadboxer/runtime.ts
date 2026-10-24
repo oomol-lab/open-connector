@@ -9,6 +9,7 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requiredResponseRecord,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 export interface LeadboxerCredentialCheck {
@@ -39,7 +40,7 @@ export async function validateLeadboxerCredential(
   fetcher: typeof fetch,
 ): Promise<LeadboxerCredentialCheck> {
   const payload = await requestLeadboxerJson({
-    apiKey: requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message)),
+    apiKey: requiredString(input.apiKey, "apiKey", providerInputError),
     path: leadboxerValidationEndpoint,
     fetcher,
     phase: "validate",
@@ -211,7 +212,7 @@ function createLeadboxerError(response: Response, payload: unknown, phase: Leadb
   }
 
   if (phase === "validate" && response.status >= 400 && response.status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (phase === "execute" && response.status === 401) {
@@ -223,7 +224,7 @@ function createLeadboxerError(response: Response, payload: unknown, phase: Leadb
   }
 
   if (phase === "execute" && (response.status === 400 || response.status === 404 || response.status === 409)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   return new ProviderRequestError(response.status || 500, message);

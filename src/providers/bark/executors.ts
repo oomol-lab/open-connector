@@ -21,6 +21,7 @@ import {
   readProviderProxyResponse,
   requireApiKeyCredential,
   toProviderProxyError,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "bark";
@@ -306,7 +307,7 @@ function parseBarkPushUrl(value: string, allowPrivateNetwork: boolean): BarkCred
     url = assertPublicHttpUrl(value, {
       fieldName: "Bark push URL",
       allowPrivateNetwork,
-      createError: (message) => new ProviderRequestError(400, message),
+      createError: providerInputError,
     });
   } catch (error) {
     if (error instanceof ProviderRequestError) {
@@ -340,7 +341,7 @@ function normalizeBarkBaseUrl(value?: string, allowPrivateNetwork: boolean = isP
   const url = assertPublicHttpUrl(candidate, {
     fieldName: "Bark baseUrl",
     allowPrivateNetwork,
-    createError: (message) => new ProviderRequestError(400, message),
+    createError: providerInputError,
   });
 
   if (url.protocol !== "https:" && !allowPrivateNetwork) {
@@ -452,10 +453,10 @@ function readBarkErrorMessage(payload: Record<string, unknown>): string {
 
 function mapBarkHttpError(status: number, message: string, phase: BarkRequestPhase): ProviderRequestError {
   if (status === 401 || status === 403 || (phase === "validate" && status === 404)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 400 || status === 404 || status === 422) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 429) {
     return new ProviderRequestError(429, message);

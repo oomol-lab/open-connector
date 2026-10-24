@@ -318,7 +318,7 @@ function normalizeDingtalkBotError(
     return new ProviderRequestError(phase === "validate" ? 400 : 401, message);
   }
   if (errcode === 310000 || errcode === 40035 || errcode === 400105) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(result.status >= 400 ? result.status : 500, message);
 }

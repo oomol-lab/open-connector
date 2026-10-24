@@ -14,11 +14,11 @@ import {
   ProviderRequestError,
   providerUserAgent,
   requiredInputString,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const auth0ApiSegment = "api/v2";
 const auth0CredentialHelpUrl = "https://auth0.com/docs/api/management/v2";
-const auth0ManagementRequestTimeoutMs = 30_000;
 
 type Auth0ManagementPhase = "validate" | "execute";
 type Auth0QueryValue = string | number | boolean | undefined;
@@ -379,7 +379,7 @@ async function listRoleUsers(input: Record<string, unknown>, context: Auth0Actio
 }
 
 async function requestAuth0ManagementJson(input: Auth0ManagementRequest): Promise<unknown> {
-  const timeoutSignal = AbortSignal.timeout(auth0ManagementRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = input.signal ? AbortSignal.any([input.signal, timeoutSignal]) : timeoutSignal;
 
   let response: Response;

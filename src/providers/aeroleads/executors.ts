@@ -13,6 +13,8 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 const service = "aeroleads";
@@ -221,7 +223,7 @@ function mapAeroleadsError(status: number, message: string): ProviderRequestErro
     return new ProviderRequestError(status, message);
   }
   if (status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }

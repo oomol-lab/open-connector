@@ -7,7 +7,7 @@ import {
   resolveGuardedEgressTarget,
   unwrapGuardedFetch,
 } from "./guarded-fetch.ts";
-import { setEgressTrustedHosts } from "./request.ts";
+import { setEgressTrustedHosts } from "./provider-network-policy.test-support.ts";
 
 interface RecordedCall {
   url: string;

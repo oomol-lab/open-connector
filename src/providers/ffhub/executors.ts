@@ -15,12 +15,12 @@ import {
   defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "ffhub";
 const ffhubApiBaseUrl = "https://api.ffhub.io/v1/";
 const ffhubValidationPath = "/status";
-const ffhubDefaultTimeoutMs = 30_000;
 
 type FfhubRequestPhase = "validate" | "execute";
 type FfhubActionContext = ApiKeyProviderContext;
@@ -297,7 +297,7 @@ function readNullableInteger(value: unknown): number | null {
 
 function createFfhubRequestSignal(parent?: AbortSignal): FfhubRequestSignal {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), ffhubDefaultTimeoutMs);
+  const timeout = setTimeout(() => controller.abort(), defaultProviderRequestTimeoutMs);
   const abortFromParent = (): void => controller.abort(parent?.reason);
   if (parent?.aborted) {
     controller.abort(parent.reason);

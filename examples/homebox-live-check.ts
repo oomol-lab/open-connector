@@ -11,7 +11,7 @@
  *   HOMEBOX_API_KEY='...' \
  *   node examples/homebox-live-check.ts
  */
-import { setPrivateNetworkAccessAllowed } from "../src/core/request.ts";
+import { withProviderNetworkPolicy } from "../src/core/provider-network-policy.ts";
 import { homeBoxActionHandlers } from "../src/providers/homebox/runtime.ts";
 import { createProviderFetch, ProviderRequestError } from "../src/providers/provider-runtime.ts";
 
@@ -19,11 +19,6 @@ const baseUrl = process.env.HOMEBOX_BASE_URL?.trim();
 const apiKey = process.env.HOMEBOX_API_KEY?.trim();
 
 const fetcher = createProviderFetch({ allowPrivateNetwork: () => true });
-// A HomeBox instance is commonly reachable only on the local network. In
-// production the server bootstrap enables this flag from
-// OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK; a standalone example has no bootstrap,
-// so it opts in explicitly.
-setPrivateNetworkAccessAllowed(true);
 
 const context = {
   apiKey: apiKey ?? "",
@@ -124,7 +119,7 @@ async function main(): Promise<void> {
 }
 
 // Surface clean provider errors without a stack trace.
-void main().catch((error: unknown) => {
+void withProviderNetworkPolicy({ allowPrivateNetwork: true }, main).catch((error: unknown) => {
   if (error instanceof ProviderRequestError) {
     console.error(`[homebox] live check failed: ${error.message}`);
     process.exitCode = 1;

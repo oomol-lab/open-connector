@@ -15,6 +15,8 @@ import {
   defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 
 const service = "dub";
@@ -391,7 +393,7 @@ function createDubError(response: Response, payload: unknown, phase: DubRequestP
   }
 
   if (phase === "validate" && (response.status === 401 || response.status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (phase === "execute" && (response.status === 401 || response.status === 403)) {
@@ -399,7 +401,7 @@ function createDubError(response: Response, payload: unknown, phase: DubRequestP
   }
 
   if (phase === "execute" && [400, 404, 409, 410, 422].includes(response.status)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   return new ProviderRequestError(response.status || 500, message);
@@ -420,7 +422,7 @@ function extractDubErrorMessage(payload: unknown) {
 }
 
 function normalizeLink(payload: unknown) {
-  const object = requiredRecord(payload, "link", (message) => new ProviderRequestError(502, message));
+  const object = requiredRecord(payload, "link", providerResponseError);
   return {
     id: readRequiredString(object.id, "link.id"),
     domain: readRequiredString(object.domain, "link.domain"),
@@ -441,7 +443,7 @@ function normalizeLink(payload: unknown) {
 }
 
 function normalizeTag(payload: unknown) {
-  const object = requiredRecord(payload, "tag", (message) => new ProviderRequestError(502, message));
+  const object = requiredRecord(payload, "tag", providerResponseError);
   return {
     id: readRequiredString(object.id, "tag.id"),
     name: readRequiredString(object.name, "tag.name"),
@@ -451,7 +453,7 @@ function normalizeTag(payload: unknown) {
 }
 
 function normalizeFolder(payload: unknown) {
-  const object = requiredRecord(payload, "folder", (message) => new ProviderRequestError(502, message));
+  const object = requiredRecord(payload, "folder", providerResponseError);
   return {
     id: readRequiredString(object.id, "folder.id"),
     name: readRequiredString(object.name, "folder.name"),

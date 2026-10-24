@@ -6,7 +6,7 @@ import type { SaasProjectService } from "../../saas/saas-project-service.ts";
 import type { Context } from "hono";
 
 import { Hono } from "hono";
-import { ConnectionError } from "../../connection-service.ts";
+import { ConnectionError } from "../../connection-error.ts";
 import {
   optionalBoolean,
   optionalRecord,

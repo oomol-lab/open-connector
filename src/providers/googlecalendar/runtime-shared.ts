@@ -1,7 +1,12 @@
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString as asOptionalString, pickOptionalString } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError, withRetryAfterSeconds } from "../provider-runtime.ts";
+import {
+  providerUserAgent,
+  ProviderRequestError,
+  withRetryAfterSeconds,
+  defaultProviderRequestTimeoutMs,
+} from "../provider-runtime.ts";
 
 export const googlecalendarApiBaseUrl = "https://www.googleapis.com/calendar/v3";
 
@@ -20,7 +25,6 @@ export interface GooglecalendarRequestInput {
 }
 
 const service = "googlecalendar";
-const googleDefaultRequestTimeoutMs = 30_000;
 
 export async function googlecalendarJsonRequest<T>(url: string, input: GooglecalendarRequestInput): Promise<T> {
   try {
@@ -72,7 +76,7 @@ export async function googlecalendarRequest(url: string, input: GooglecalendarRe
     };
     const response = await googleFetchWithTimeout(target.toString(), {
       fetcher: input.fetcher,
-      timeoutMs: googleDefaultRequestTimeoutMs,
+      timeoutMs: defaultProviderRequestTimeoutMs,
       init: requestInit,
     });
 
@@ -131,7 +135,7 @@ async function googleFetchWithTimeout(
     init?: RequestInit;
   },
 ): Promise<Response> {
-  const timeoutMs = input.timeoutMs ?? googleDefaultRequestTimeoutMs;
+  const timeoutMs = input.timeoutMs ?? defaultProviderRequestTimeoutMs;
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
     return input.fetcher(url, input.init);
   }

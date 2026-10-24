@@ -10,11 +10,11 @@ import {
   mapProviderActionHandlers,
   ProviderRequestError,
   providerUserAgent,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 import { fusionApiOperations } from "./operations.ts";
 
 export const fusionApiDefaultBaseUrl = "https://fusion-api.oomol.com";
-const fusionApiDefaultRequestTimeoutMs = 30_000;
 const fusionApiLongRunningRequestTimeoutMs = 300_000;
 const fusionApiLongRunningPaths = new Set(["/v1/deepseek-ocr/action/recognize", "/v1/jina-reader/action/read"]);
 const fusionApiValidationPath = "/openapi/qwen-image?hideTaskStateAPI=true";
@@ -108,7 +108,7 @@ async function fusionApiRequest(context: FusionApiRequestContext, request: Fusio
 
   const requestTimeoutMs = fusionApiLongRunningPaths.has(request.path)
     ? fusionApiLongRunningRequestTimeoutMs
-    : fusionApiDefaultRequestTimeoutMs;
+    : defaultProviderRequestTimeoutMs;
   const timeout = createProviderTimeout(context.signal, requestTimeoutMs);
   let response: Response;
   try {

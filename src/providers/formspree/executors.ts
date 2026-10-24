@@ -14,6 +14,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   requireApiKeyCredential,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "formspree";
@@ -125,7 +126,7 @@ async function formspreeFetch(
   input: { apiKey: string; fetcher: typeof fetch; signal?: AbortSignal },
 ): Promise<Response> {
   const url = new URL(path, formspreeApiBaseUrl);
-  const timeoutSignal = AbortSignal.timeout(30_000);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = input.signal ? AbortSignal.any([input.signal, timeoutSignal]) : timeoutSignal;
   const headers = new Headers({
     accept: "application/json",

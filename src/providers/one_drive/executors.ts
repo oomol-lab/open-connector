@@ -12,6 +12,8 @@ import {
   defineProviderProxy,
   ProviderRequestError,
   readTransitFileInput,
+  providerInputError,
+  providerResponseError,
 } from "../provider-runtime.ts";
 import { oneDriveItemChanged } from "./trigger-on-item-changed.ts";
 
@@ -325,7 +327,7 @@ export async function assertOneDriveResponse(response: Response): Promise<void> 
   const { code, message } = await extractOneDriveError(response);
 
   if (response.status === 400) {
-    throw new ProviderRequestError(400, message);
+    throw providerInputError(message);
   }
   if (response.status === 401) {
     throw new ProviderRequestError(401, message);
@@ -337,10 +339,10 @@ export async function assertOneDriveResponse(response: Response): Promise<void> 
     throw new ProviderRequestError(403, message);
   }
   if (response.status === 404) {
-    throw new ProviderRequestError(400, message);
+    throw providerInputError(message);
   }
   if (response.status === 409 || response.status === 412) {
-    throw new ProviderRequestError(400, message);
+    throw providerInputError(message);
   }
   if (response.status === 429) {
     throw new ProviderRequestError(429, message);
@@ -1075,7 +1077,7 @@ function resolveUploadChunkSize(remainingBytes: number) {
 async function buildUploadSessionError(response: Response) {
   const { message } = await extractOneDriveError(response);
   if (response.status === 400 || response.status === 409 || response.status === 412) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (response.status === 404) {
     return new ProviderRequestError(404, "one_drive upload session expired");
@@ -1355,7 +1357,7 @@ function requireString(value: unknown, fieldName: string) {
 }
 
 function asObject(value: unknown): Record<string, unknown> {
-  return requiredRecord(value, "object input", (message) => new ProviderRequestError(502, message));
+  return requiredRecord(value, "object input", providerResponseError);
 }
 
 function readOptionalPresentString(input: Record<string, unknown>, key: string) {

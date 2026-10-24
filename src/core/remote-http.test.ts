@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { setDefaultGuardedFetchDnsLookup } from "./guarded-fetch.ts";
+import { setEgressTrustedHosts } from "./provider-network-policy.test-support.ts";
 import { isFailureEnvelope, isSuccessEnvelope, readRemoteJson, requestRemote } from "./remote-http.ts";
-import { setEgressTrustedHosts } from "./request.ts";
 
 afterEach(() => {
   setDefaultGuardedFetchDnsLookup(null);

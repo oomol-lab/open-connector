@@ -7,7 +7,12 @@ import {
   optionalRecord as asOptionalObject,
   optionalString as asOptionalString,
 } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+  defaultProviderRequestTimeoutMs,
+} from "../provider-runtime.ts";
 
 function requiredApiKey(input: { apiKey?: string }): string {
   if (input.apiKey?.trim()) return input.apiKey.trim();
@@ -16,8 +21,6 @@ function requiredApiKey(input: { apiKey?: string }): string {
 
 export const spyfuApiBaseUrl: string = "https://api.spyfu.com";
 export const spyfuProxyBaseUrl: string = `${spyfuApiBaseUrl}/apis`;
-
-const spyfuDefaultRequestTimeoutMs = 30_000;
 
 type SpyfuRequestPhase = "validate" | "execute";
 type SpyfuRequestMethod = "GET" | "POST";
@@ -513,7 +516,7 @@ async function requestSpyfuJson(input: {
   fetcher: typeof fetch;
   phase: SpyfuRequestPhase;
 }) {
-  const timeoutSignal = AbortSignal.timeout(spyfuDefaultRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const method = input.method ?? "GET";
   const url = new URL(input.path, spyfuApiBaseUrl);
   url.searchParams.set("api_key", input.apiKey);
@@ -580,7 +583,7 @@ function createSpyfuError(response: Response, payload: unknown, phase: SpyfuRequ
   }
 
   if (phase === "validate" && response.status >= 400 && response.status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (phase === "execute" && (response.status === 401 || response.status === 403)) {
@@ -588,7 +591,7 @@ function createSpyfuError(response: Response, payload: unknown, phase: SpyfuRequ
   }
 
   if (phase === "execute" && response.status >= 400 && response.status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   return new ProviderRequestError(response.status || 500, message);

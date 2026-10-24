@@ -2,7 +2,12 @@ import type { ApiKeyActionRequest } from "../provider-runtime.ts";
 import type { InfolobbyActionName } from "./actions.ts";
 
 import { compactObject, requiredString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  providerInputError,
+  providerResponseError,
+} from "../provider-runtime.ts";
 
 export interface InfolobbyCredentialCheck {
   providerAccountId?: string;
@@ -26,7 +31,7 @@ export async function validateInfolobbyCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
 ): Promise<InfolobbyCredentialCheck> {
-  const apiKey = requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message));
+  const apiKey = requiredString(input.apiKey, "apiKey", providerInputError);
   const payload = await requestInfolobby({
     path: "/spaces/list",
     apiKey,
@@ -178,18 +183,18 @@ async function requestInfolobby(options: RequestOptions) {
 function mapInfolobbyError(status: number, text: string, mode: "validate" | "execute") {
   const message = text.trim() || `InfoLobby API request failed with status ${status}`;
   if (status === 401) {
-    return mode === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(401, message);
+    return mode === "validate" ? providerInputError(message) : new ProviderRequestError(401, message);
   }
   if (status === 403 || status === 405) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 500 && isDocumentedClientError(message)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 429) {
     return new ProviderRequestError(429, message);
   }
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function isDocumentedClientError(message: string) {

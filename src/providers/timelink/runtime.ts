@@ -9,7 +9,12 @@ import {
   optionalString as asOptionalString,
   requiredString,
 } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  runProviderRequest,
+  providerInputError,
+} from "../provider-runtime.ts";
 
 export const timelinkApiBaseUrl: string = "https://api.timelink.io/api/v1";
 
@@ -371,7 +376,7 @@ function createTimelinkError(status: number, payload: unknown, phase: TimelinkPh
   }
 
   if (phase === "validate" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   if (phase === "execute" && (status === 401 || status === 403)) {

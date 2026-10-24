@@ -3,7 +3,12 @@ import type { ProviderActionHandlers } from "../provider-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-runtime.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import {
+  createProviderTimeout,
+  providerUserAgent,
+  ProviderRequestError,
+  providerInputError,
+} from "../provider-runtime.ts";
 
 export const dropcontactApiBaseUrl = "https://api.dropcontact.com";
 
@@ -45,11 +50,7 @@ export const dropcontactActionHandlers: ProviderActionHandlers<"dropcontact", Dr
   },
 
   async get_enrichment_result(input, context): Promise<unknown> {
-    const requestId = requiredString(
-      input.request_id,
-      "request_id",
-      (message) => new ProviderRequestError(400, message),
-    );
+    const requestId = requiredString(input.request_id, "request_id", providerInputError);
     const payload = await requestDropcontactJson(
       {
         method: "GET",
@@ -162,7 +163,7 @@ function mapDropcontactError(status: number, payload: unknown, mode: RequestMode
     return new ProviderRequestError(mode === "validate" ? 400 : 401, message);
   }
   if (status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   return new ProviderRequestError(status >= 500 ? 502 : status, message);
 }

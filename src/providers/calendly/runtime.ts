@@ -9,7 +9,7 @@ import {
   optionalRecord,
   optionalString,
 } from "../../core/cast.ts";
-import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError, providerResponseError } from "../provider-runtime.ts";
 
 type CalendlyActionContext = BearerProviderContext;
 
@@ -1048,7 +1048,7 @@ function createCalendlyTransportError(error: unknown, phase: "request" | "respon
     return new ProviderRequestError(504, message);
   }
 
-  return new ProviderRequestError(502, message);
+  return providerResponseError(message);
 }
 
 function isAbortError(error: unknown) {

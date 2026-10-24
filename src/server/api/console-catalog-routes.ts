@@ -5,7 +5,7 @@ import type { ActionSearchDocument, ActionSearchIndexProvider } from "../../core
 import type { Context } from "hono";
 
 import { Hono } from "hono";
-import { ConnectionError } from "../../connection-service.ts";
+import { ConnectionError } from "../../connection-error.ts";
 import { searchActions } from "../../core/action-search.ts";
 import { renderActionMarkdown } from "./action-markdown.ts";
 import { jsonError, notFound, readConnectionName as defaultReadConnectionName } from "./http-utils.ts";

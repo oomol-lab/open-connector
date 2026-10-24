@@ -5,7 +5,7 @@ import type { IMarketplaceStore, ProviderPreference, StoredMarketplaceConfig } f
 import { describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "../catalog-store.ts";
 import { setDefaultGuardedFetchDnsLookup } from "../core/guarded-fetch.ts";
-import { setEgressTrustedHosts } from "../core/request.ts";
+import { setEgressTrustedHosts } from "../core/provider-network-policy.test-support.ts";
 import { defaultMarketplaceDiscoveryUrl } from "./default-marketplace.ts";
 import { MarketplaceService } from "./marketplace-service.ts";
 

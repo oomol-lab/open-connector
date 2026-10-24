@@ -6,7 +6,7 @@ import {
   optionalRecord as asOptionalObject,
   optionalString as asOptionalString,
 } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { ProviderRequestError, providerUserAgent, providerInputError } from "../provider-runtime.ts";
 
 function requiredApiKey(input: { apiKey?: string }): string {
   if (input.apiKey?.trim()) return input.apiKey.trim();
@@ -308,11 +308,11 @@ function createChengxinError(input: { phase: ChengxinRequestPhase; status: numbe
     input.code === "401" ||
     input.code === "403"
   ) {
-    return input.phase === "validate" ? new ProviderRequestError(400, message) : new ProviderRequestError(401, message);
+    return input.phase === "validate" ? providerInputError(message) : new ProviderRequestError(401, message);
   }
 
   if (input.status >= 400 && input.status < 500) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
 
   return new ProviderRequestError(input.status || 502, message);

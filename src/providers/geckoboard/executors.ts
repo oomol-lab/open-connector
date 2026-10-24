@@ -10,11 +10,11 @@ import {
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
+  defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 
 const service = "geckoboard";
 const geckoboardApiBaseUrl = "https://api.geckoboard.com";
-const geckoboardDefaultRequestTimeoutMs = 30_000;
 
 type GeckoboardPhase = "validate" | "execute";
 type GeckoboardActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
@@ -128,7 +128,7 @@ async function requestGeckoboardJson(input: {
   context: GeckoboardActionContext;
   phase: GeckoboardPhase;
 }): Promise<Record<string, unknown>> {
-  const timeoutSignal = AbortSignal.timeout(geckoboardDefaultRequestTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = input.context.signal ? AbortSignal.any([input.context.signal, timeoutSignal]) : timeoutSignal;
 
   let response: Response;

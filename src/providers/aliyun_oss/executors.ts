@@ -23,6 +23,7 @@ import {
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   toProviderProxyError,
+  providerInputError,
 } from "../provider-runtime.ts";
 
 const service = "aliyun_oss";
@@ -333,7 +334,7 @@ async function createAliyunOssClient(input: AliyunClientOptions): Promise<Aliyun
   const endpoint = normalizeEndpoint(input.endpoint);
   await assertGuardedEgressUrl(endpoint, {
     fieldName: "endpoint",
-    createError: (message) => new ProviderRequestError(400, message),
+    createError: providerInputError,
     allowPrivateNetwork: isPrivateNetworkAccessAllowed(),
   });
   return new AliOss({
@@ -401,11 +402,7 @@ function encodeOssObjectKey(value: string): string {
 }
 
 function readObjectKey(input: Record<string, unknown>): string {
-  const objectKey = requiredRawString(
-    input.objectKey,
-    "objectKey",
-    (message) => new ProviderRequestError(400, message),
-  );
+  const objectKey = requiredRawString(input.objectKey, "objectKey", providerInputError);
   if (objectKey.length === 0) {
     throw new ProviderRequestError(400, "objectKey must not be empty");
   }
@@ -699,7 +696,7 @@ function resolveBucket(input: Record<string, unknown>, context: AliyunOssContext
 }
 
 function missingAliyunField(message: string): never {
-  throw new ProviderRequestError(400, message);
+  throw providerInputError(message);
 }
 
 function normalizeBucket(bucket: AliyunBucket | undefined | null): Record<string, unknown> {
@@ -810,7 +807,7 @@ function normalizeAliyunError(error: unknown, phase: "validate" | "execute"): Pr
   const status = readAliyunErrorStatus(error);
   const message = error instanceof Error && error.message.trim() ? error.message : "aliyun_oss request failed";
   if (phase === "validate" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(400, message);
+    return providerInputError(message);
   }
   if (status === 429) {
     return new ProviderRequestError(429, message);
@@ -854,7 +851,7 @@ function parseAndValidateEndpoint(value: string, allowPrivateNetwork = isPrivate
   // which otherwise bypasses the guarded fetch.
   assertPublicHttpUrl(url.toString(), {
     fieldName: "endpoint",
-    createError: (message) => new ProviderRequestError(400, message),
+    createError: providerInputError,
     allowPrivateNetwork,
   });
   return url;
@@ -869,7 +866,7 @@ function validateSourceUrl(value: string): string {
   // deployment's private-network opt-in (which only covers the trusted endpoint).
   assertPublicHttpUrl(url.toString(), {
     fieldName: "sourceUrl",
-    createError: (message) => new ProviderRequestError(400, message),
+    createError: providerInputError,
     allowPrivateNetwork: false,
   });
   return url.toString();
