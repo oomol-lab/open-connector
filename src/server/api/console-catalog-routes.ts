@@ -51,11 +51,12 @@ export function createConsoleCatalogRoutes({
       const authenticated = new Set(
         await connections.listAuthenticatedServices([...new Set(results.map((result) => result.service))]),
       );
-      return results.flatMap((result) => {
-        const action = catalog.actionsById.get(result.id);
-        if (!action) return [];
-        return [serializeActionSearchResult(result, action, authenticated.has(action.service))];
-      });
+      const items: unknown[] = [];
+      for (const result of results) {
+        const action = await catalog.getAction(result.id);
+        if (action) items.push(serializeActionSearchResult(result, action, authenticated.has(action.service)));
+      }
+      return items;
     });
 
   app.get("/providers", (context) => {
@@ -67,13 +68,18 @@ export function createConsoleCatalogRoutes({
     return context.body(providerSummariesJson, 200, { "Content-Type": "application/json" });
   });
 
-  app.get("/providers/:service", (context) => {
+  app.get("/providers/:service", async (context) => {
     const provider = catalog.providers.find((p) => p.service === context.req.param("service"));
     if (!provider) return notFound(context);
-    return context.json(provider);
+    return context.json({
+      ...provider,
+      actions: await Promise.all(provider.actions.map((action) => catalog.getAction(action.id))),
+    });
   });
 
-  app.get("/actions", (context) => context.json(catalog.actions));
+  app.get("/actions", async (context) =>
+    context.json(await Promise.all(catalog.actions.map((action) => catalog.getAction(action.id)))),
+  );
 
   app.get("/actions/search", async (context) => {
     const query = readSearchQuery(context);
@@ -94,7 +100,7 @@ export function createConsoleCatalogRoutes({
 
   app.get("/actions/:actionId/agent.md", async (context) => {
     const actionId = context.req.param("actionId");
-    const action = catalog.actionsById.get(actionId);
+    const action = await catalog.getAction(actionId);
     if (!action) return notFound(context);
 
     try {
@@ -119,8 +125,8 @@ export function createConsoleCatalogRoutes({
     }
   });
 
-  app.get("/actions/:actionId", (context) => {
-    const action = catalog.actionsById.get(context.req.param("actionId"));
+  app.get("/actions/:actionId", async (context) => {
+    const action = await catalog.getAction(context.req.param("actionId"));
     if (!action) return notFound(context);
     return context.json(action);
   });

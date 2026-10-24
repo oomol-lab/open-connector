@@ -302,7 +302,7 @@ export class ConnectServer {
     app.route(
       "/",
       createDocsRoutes({
-        providers: this.options.catalog.providers,
+        catalog: this.options.catalog,
         publicOrigin: this.options.publicOrigin,
         serveDocumentation: this.options.serveDocumentation,
       }),

@@ -105,7 +105,7 @@ export class ActionPolicySnapshot {
     }
   }
 
-  evaluate(action: ActionDefinition): ActionPolicyDecision {
+  evaluate(action: Pick<ActionDefinition, "id">): ActionPolicyDecision {
     for (const layer of this.layers) {
       const blocked = layer.blockedActions.find((rule) => rule.matches(action.id));
       if (blocked) {

@@ -516,7 +516,7 @@ export class ConnectionService {
   }
 
   private async saveCredential(
-    provider: ProviderDefinition,
+    provider: Omit<ProviderDefinition, "actions">,
     credential: Exclude<ResolvedCredential, { authType: "no_auth" }>,
     input: ConnectWithCredentialInput,
   ): Promise<ConnectionSummary> {
@@ -619,7 +619,7 @@ export class ConnectionService {
   }
 
   private createConfiguredConnectionSummary(
-    provider: ProviderDefinition,
+    provider: Omit<ProviderDefinition, "actions">,
     id: string,
     connectionName: string,
     credential: ResolvedCredential,
@@ -636,7 +636,7 @@ export class ConnectionService {
   }
 
   private createStoredConnectionSummary(
-    provider: ProviderDefinition,
+    provider: Omit<ProviderDefinition, "actions">,
     id: string,
     connectionName: string,
     credential: Exclude<ResolvedCredential, { authType: "no_auth" }>,
@@ -664,7 +664,10 @@ export class ConnectionService {
     return summary;
   }
 
-  private createNoAuthConnectionSummary(provider: ProviderDefinition, connectionName: string): ConnectionSummary {
+  private createNoAuthConnectionSummary(
+    provider: Omit<ProviderDefinition, "actions">,
+    connectionName: string,
+  ): ConnectionSummary {
     return {
       id: `${provider.service}:${connectionName}`,
       service: provider.service,
@@ -691,7 +694,7 @@ export class ConnectionService {
   }
 
   private createMarketplaceConnectionSummary(
-    provider: ProviderDefinition,
+    provider: Omit<ProviderDefinition, "actions">,
     preferences: ReadonlyMap<string, boolean>,
     isDefault = false,
   ): ConnectionSummary | undefined {
@@ -738,11 +741,11 @@ export class ConnectionService {
     return provider;
   }
 
-  private supportsAuth(provider: ProviderDefinition, authType: AuthType): boolean {
+  private supportsAuth(provider: Omit<ProviderDefinition, "actions">, authType: AuthType): boolean {
     return provider.authTypes.includes(authType);
   }
 
-  private getApiKeyDefinition(provider: ProviderDefinition): ApiKeyAuthDefinition {
+  private getApiKeyDefinition(provider: Omit<ProviderDefinition, "actions">): ApiKeyAuthDefinition {
     const auth = provider.auth.find((auth) => auth.type === "api_key");
     if (!auth || auth.type !== "api_key") {
       throw new ConnectionError("unsupported_auth_type", `${provider.service} does not support api_key.`);
@@ -751,7 +754,7 @@ export class ConnectionService {
     return auth;
   }
 
-  private getCustomCredentialDefinition(provider: ProviderDefinition): CustomCredentialAuthDefinition {
+  private getCustomCredentialDefinition(provider: Omit<ProviderDefinition, "actions">): CustomCredentialAuthDefinition {
     const auth = provider.auth.find((auth) => auth.type === "custom_credential");
     if (!auth || auth.type !== "custom_credential") {
       throw new ConnectionError("unsupported_auth_type", `${provider.service} does not support custom_credential.`);
@@ -844,7 +847,7 @@ export class ConnectionService {
   }
 
   private buildCredentialRuntimeData(
-    provider: ProviderDefinition,
+    provider: Omit<ProviderDefinition, "actions">,
     authType: Exclude<AuthType, "no_auth">,
     credentialFields: CredentialDefinition[],
     credentialValues: Record<string, string>,
@@ -864,7 +867,7 @@ export class ConnectionService {
   }
 
   private mergeCredentialRuntimeData(
-    provider: ProviderDefinition,
+    provider: Omit<ProviderDefinition, "actions">,
     authType: Exclude<AuthType, "no_auth">,
     credential: Extract<ResolvedCredential, { authType: "oauth2" }>,
     validation: CredentialValidationResult,
@@ -890,7 +893,7 @@ export class ConnectionService {
   }
 
   private createCredentialProfile(
-    provider: ProviderDefinition,
+    provider: Omit<ProviderDefinition, "actions">,
     authType: Exclude<AuthType, "no_auth">,
     credentialFields: CredentialDefinition[],
     credentialValues: Record<string, string>,
@@ -924,7 +927,7 @@ export class ConnectionService {
     };
   }
 
-  private createNoAuthProfile(provider: ProviderDefinition): CredentialProfile {
+  private createNoAuthProfile(provider: Omit<ProviderDefinition, "actions">): CredentialProfile {
     return {
       accountId: `${provider.service}:public`,
       displayName: `${provider.displayName} Public`,
@@ -933,7 +936,7 @@ export class ConnectionService {
   }
 
   private createDefaultAccountId(
-    provider: ProviderDefinition,
+    provider: Omit<ProviderDefinition, "actions">,
     authType: Exclude<AuthType, "no_auth">,
     credentialFields: CredentialDefinition[],
     credentialValues: Record<string, string>,
@@ -947,7 +950,10 @@ export class ConnectionService {
       : `${provider.service}:${authType}`;
   }
 
-  private createDefaultDisplayName(provider: ProviderDefinition, authType: Exclude<AuthType, "no_auth">): string {
+  private createDefaultDisplayName(
+    provider: Omit<ProviderDefinition, "actions">,
+    authType: Exclude<AuthType, "no_auth">,
+  ): string {
     return `${provider.displayName} ${authType === "api_key" ? "API Key" : "Credential"}`;
   }
 }

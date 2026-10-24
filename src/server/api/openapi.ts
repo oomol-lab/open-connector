@@ -1,4 +1,4 @@
-import type { ActionDefinition, JsonSchema, ProviderDefinition } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { z } from "zod";
 import { jsonSchema } from "../../core/json-schema.ts";
@@ -34,9 +34,9 @@ export type OpenApiDocument = {
 /**
  * Controls how much provider action detail is embedded in the OpenAPI document.
  */
-export type OpenApiDocumentOptions = {
-  actionId?: string;
-};
+export interface OpenApiDocumentOptions {
+  action?: ActionDefinition;
+}
 
 const errorPayloadSchema = jsonSchema.object(
   {
@@ -222,15 +222,11 @@ const runtimeConnectionProperties: Record<string, JsonSchema> = {
  *
  * The action catalog remains the source of truth for provider-specific input
  * and output schemas. The default document stays compact and exposes one
- * generic run creation route. Pass `actionId` to embed one concrete action schema for
+ * generic run creation route. Pass `action` to embed one concrete action schema for
  * tool importers that need a small strongly typed OpenAPI document.
  */
-export function createOpenApiDocument(
-  providers: ProviderDefinition[],
-  options: OpenApiDocumentOptions = {},
-): OpenApiDocument {
-  const actions = providers.flatMap((provider) => provider.actions);
-  const concreteAction = options.actionId ? actions.find((action) => action.id === options.actionId) : undefined;
+export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): OpenApiDocument {
+  const concreteAction = options.action;
   const runPath = createRunPath();
   if (concreteAction) {
     runPath.post = createConcreteRunOperation(concreteAction);

@@ -20,10 +20,8 @@ export interface CatalogIndex {
 export const catalogIndexFileName = "apps-index.json";
 
 /**
- * An action as the index stores it: every key at the position it has in the provider file, with the
- * two schema keys holding `null`. The lazy loader defines its accessors at the key position it finds,
- * and real actions carry `followUpActions` and `asyncLifecycle` after the schemas, so dropping the
- * keys instead would reorder every serialized action.
+ * Startup metadata retains null schema placeholders in the generated index format.
+ * The runtime strips them when loading metadata; getAction reads the complete provider file.
  */
 export type CatalogIndexAction = Omit<ActionDefinition, "inputSchema" | "outputSchema"> & {
   inputSchema: null;

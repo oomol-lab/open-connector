@@ -1,4 +1,4 @@
-import type { CatalogStore, RuntimeActionDefinition } from "./catalog-store.ts";
+import type { CatalogStore, RuntimeActionDefinition, RuntimeActionSummary } from "./catalog-store.ts";
 import type { ConnectionService, ConnectionSummary } from "./connection-service.ts";
 import type { ActionPolicyDecision, ActionPolicySnapshot } from "./core/action-policy.ts";
 import type { ActionSearchIndexProvider } from "./core/action-search.ts";
@@ -262,7 +262,7 @@ async function searchActions(
   const rankedActions = query
     ? searchActionIndex(await actionSearch.get(), query, { service: input.service, limit: input.limit })
         .map((result) => options.catalog.actionsById.get(result.id))
-        .filter((action): action is RuntimeActionDefinition => Boolean(action))
+        .filter((action): action is RuntimeActionSummary => Boolean(action))
     : options.catalog.actions
         .filter((action) => !input.service || action.service === input.service)
         .slice(0, input.limit);
@@ -275,7 +275,7 @@ async function searchActions(
     capability: summarizeActionCapability(
       describeActionCapability(action, policy, await getSelectedConnectionSummary(options, action.service, undefined)),
     ),
-    inputSummary: summarizeInputSchema(action.inputSchema),
+    inputSummary: summarizeInputSchema((await options.catalog.getAction(action.id))!.inputSchema),
   }));
 
   return successPayload(await Promise.all(actions));
@@ -286,7 +286,7 @@ async function getActionGuide(
   actionId: string,
   connectionName: string | undefined,
 ): Promise<ToolPayload> {
-  const action = options.catalog.actionsById.get(actionId);
+  const action = await options.catalog.getAction(actionId);
   if (!action) {
     return errorPayload("unknown_action", `Unknown action: ${actionId}`);
   }
@@ -398,7 +398,7 @@ type ActionCapability = {
 };
 
 function describeActionCapability(
-  action: RuntimeActionDefinition,
+  action: RuntimeActionSummary,
   policy: ActionPolicySnapshot,
   connection: ConnectionSummary | undefined,
 ): ActionCapability {

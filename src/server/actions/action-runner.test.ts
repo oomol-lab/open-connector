@@ -49,6 +49,36 @@ afterEach(() => {
 });
 
 describe("ActionRunner", () => {
+  it("does not invoke the executor when cancelled during schema loading", async () => {
+    const catalog = createCatalogStore([exampleProvider], { executableActionIds: [echoAction.id] });
+    const controller = new AbortController();
+    const read = catalog.getAction.bind(catalog);
+    vi.spyOn(catalog, "getAction").mockImplementation(async (id) => {
+      const action = await read(id);
+      controller.abort();
+      return action;
+    });
+    const execute = vi.fn(async () => ({ ok: true, output: {} }));
+    const providerLoader = new TestProviderLoader(execute);
+    const runs = new MemoryRunLogStore();
+    const runner = new ActionRunner({
+      catalog,
+      providerLoader,
+      runs,
+      connections: new ConnectionService({ catalog, providerLoader, store: new MemoryConnectionStore() }),
+    });
+    const result = await runner.run({
+      actionId: echoAction.id,
+      input: {},
+      caller: "http",
+      policy: openPolicy,
+      signal: controller.signal,
+    });
+    expect(result?.result.error?.code).toBe("execution_cancelled");
+    expect(execute).not.toHaveBeenCalled();
+    expect(runs.items[0]?.errorCode).toBe("execution_cancelled");
+  });
+
   it("uses one execution id across logs, storage, and the result", async () => {
     const runs = new MemoryRunLogStore();
     const { entries, logger } = createTestLogger();

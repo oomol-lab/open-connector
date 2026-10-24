@@ -110,13 +110,12 @@ export function createRuntimeCatalogRoutes({
     const authenticated = new Set(
       await connections.listAuthenticatedServices([...new Set(results.map((result) => result.service))]),
     );
-    return results.flatMap((result) => {
-      const action = catalog.actionsById.get(result.id);
-      if (!action) {
-        return [];
-      }
-      return [serializeActionSearchResult(result, action, authenticated.has(action.service))];
-    });
+    const items: RuntimeActionSearchResult[] = [];
+    for (const result of results) {
+      const action = await catalog.getAction(result.id);
+      if (action) items.push(serializeActionSearchResult(result, action, authenticated.has(action.service)));
+    }
+    return items;
   };
 
   app.get("/providers/:service/setup", async (context) => {
@@ -171,7 +170,7 @@ export function createRuntimeCatalogRoutes({
     return writeRuntimeSuccess(context, providers.map(serializeRuntimeProvider));
   });
 
-  app.get("/actions", (context) => {
+  app.get("/actions", async (context) => {
     const service = optionalString(context.req.query("service"));
     if (!service) {
       const services = [...new Set(catalog.actions.map((action) => action.service))];
@@ -179,7 +178,10 @@ export function createRuntimeCatalogRoutes({
     }
 
     const actions = catalog.actions.filter((action) => action.service === service);
-    return writeRuntimeSuccess(context, actions.map(serializeRuntimeAction));
+    return writeRuntimeSuccess(
+      context,
+      await Promise.all(actions.map(async (action) => serializeRuntimeAction((await catalog.getAction(action.id))!))),
+    );
   });
 
   app.get("/actions/search", async (context) => {
@@ -200,9 +202,9 @@ export function createRuntimeCatalogRoutes({
     return writeRuntimeSuccess(context, await serializeSearchResults(results));
   });
 
-  app.get("/actions/:actionId", (context) => {
+  app.get("/actions/:actionId", async (context) => {
     const actionId = context.req.param("actionId");
-    const action = catalog.actionsById.get(actionId);
+    const action = await catalog.getAction(actionId);
     if (!action) {
       return writeRuntimeFailure(context, unknownActionFailure(actionId));
     }

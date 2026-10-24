@@ -1,4 +1,3 @@
-import type { CatalogStore } from "../../catalog-store.ts";
 import type { ConnectionService, ConnectionSummary } from "../../connection-service.ts";
 import type {
   ActionExecutor,
@@ -13,6 +12,7 @@ import type { Logger } from "../logger.ts";
 import type { ProxyFailureStatus } from "./proxy-runner.ts";
 
 import { describe, expect, it, vi } from "vitest";
+import { createCatalogStore } from "../../catalog-store.ts";
 import { ConnectionError } from "../../connection-error.ts";
 import { ActionPolicyService } from "../../core/action-policy.ts";
 import { providerErrorCodes } from "../../core/provider-error-codes.ts";
@@ -847,7 +847,7 @@ function createRunner(input: {
   providerLoader: IProviderLoader;
 }): ProxyRunner {
   return new ProxyRunner({
-    catalog: { providers: [input.provider ?? provider] } as CatalogStore,
+    catalog: createCatalogStore([input.provider ?? provider]),
     connections: input.connections ?? createConnections(),
     logger: input.logger,
     providerLoader: input.providerLoader,

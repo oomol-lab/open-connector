@@ -1,4 +1,3 @@
-import type { ActionDefinition } from "./types.ts";
 import type { Options, SearchResult } from "minisearch";
 
 import MiniSearch from "minisearch";
@@ -195,7 +194,7 @@ const miniSearchOptions: Options<ActionSearchDocument> = {
   processTerm: indexProcessTerm,
 };
 
-export function toActionSearchDocument(action: ActionDefinition): ActionSearchDocument {
+export function toActionSearchDocument(action: ActionSearchDocument): ActionSearchDocument {
   return {
     id: action.id,
     service: action.service,
@@ -204,13 +203,13 @@ export function toActionSearchDocument(action: ActionDefinition): ActionSearchDo
   };
 }
 
-export function buildActionSearchIndex(actions: Iterable<ActionDefinition>): MiniSearch<ActionSearchDocument> {
+export function buildActionSearchIndex(actions: Iterable<ActionSearchDocument>): MiniSearch<ActionSearchDocument> {
   const index = new MiniSearch<ActionSearchDocument>(miniSearchOptions);
   index.addAll(Array.from(actions, toActionSearchDocument));
   return index;
 }
 
-export function createActionSearchIndexProvider(actions: Iterable<ActionDefinition>): ActionSearchIndexProvider {
+export function createActionSearchIndexProvider(actions: Iterable<ActionSearchDocument>): ActionSearchIndexProvider {
   let indexPromise: Promise<MiniSearch<ActionSearchDocument>> | undefined;
   return {
     get() {

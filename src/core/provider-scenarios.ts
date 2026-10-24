@@ -187,7 +187,7 @@ const scenarioKeywords: ReadonlyArray<readonly [ProviderScenario, readonly strin
 ];
 
 /** Resolve one stable discovery scenario for a provider catalog entry. */
-export function resolveProviderScenario(provider: ProviderDefinition): ProviderScenario {
+export function resolveProviderScenario(provider: Omit<ProviderDefinition, "actions">): ProviderScenario {
   const serviceScenario = scenarioByService.get(compactValue(provider.service));
   if (serviceScenario) {
     return serviceScenario;

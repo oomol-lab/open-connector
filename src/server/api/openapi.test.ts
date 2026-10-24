@@ -40,11 +40,11 @@ const provider: ProviderDefinition = {
 describe("action execution OpenAPI", () => {
   it.each([
     ["generic", {}],
-    ["concrete", { actionId: "example.echo" }],
+    ["concrete", { action: provider.actions[0] }],
   ] satisfies Array<[string, OpenApiDocumentOptions]>)(
     "documents idempotent retries for the %s operation",
     (_name, options) => {
-      const document = createOpenApiDocument([provider], options);
+      const document = createOpenApiDocument(options);
       const path = document.paths["/v1/actions/{actionId}"] as { post: RunOperation };
 
       expect(path.post.parameters).toContainEqual({
@@ -83,7 +83,7 @@ describe("action execution OpenAPI", () => {
   );
 
   it("documents the same runtime statuses on both /v1 execution routes", () => {
-    const document = createOpenApiDocument([provider]);
+    const document = createOpenApiDocument();
     const documentedStatuses = (path: string): string[] =>
       Object.keys((document.paths[path] as { post: { responses: Record<string, unknown> } }).post.responses);
 
@@ -98,7 +98,7 @@ describe("action execution OpenAPI", () => {
   });
 
   it("documents the provider setup route as an administrator route", () => {
-    const document = createOpenApiDocument([provider]);
+    const document = createOpenApiDocument();
     const setup = document.paths["/v1/providers/{service}/setup"] as {
       get: { tags: string[]; description: string; responses: Record<string, unknown> };
     };
@@ -109,7 +109,7 @@ describe("action execution OpenAPI", () => {
   });
 
   it("documents public /v1 catalog routes with the runtime envelope", () => {
-    const document = createOpenApiDocument([provider]);
+    const document = createOpenApiDocument();
     const search = document.paths["/v1/actions/search"] as {
       get: {
         responses: Record<string, { content?: { "application/json"?: { schema?: { required?: string[] } } } }>;
@@ -175,7 +175,7 @@ describe("action execution OpenAPI", () => {
   });
 
   it("documents Runtime and token policy management and run audit metadata", () => {
-    const document = createOpenApiDocument([provider]);
+    const document = createOpenApiDocument();
     const runtimePolicyPath = document.paths["/api/runtime-policy"] as {
       get: { responses: Record<string, unknown> };
       put: { responses: Record<string, unknown> };
@@ -224,7 +224,7 @@ describe("action execution OpenAPI", () => {
   });
 
   it("documents stored-token connection IDs without changing deployment PolicyRules", () => {
-    const document = createOpenApiDocument([provider]);
+    const document = createOpenApiDocument();
     const tokenSummary = document.components.schemas.RuntimeTokenSummary as {
       required: string[];
       properties: Record<string, ConnectionGrantSchema>;
@@ -276,7 +276,7 @@ interface ConnectionGrantSchema {
 
 describe("Slack verification contract", () => {
   it("documents dedicated bearer authentication and runtime response envelopes", () => {
-    const document = createOpenApiDocument([provider]);
+    const document = createOpenApiDocument();
     const route = document.paths["/v1/providers/slackbot/events/verify"] as {
       post: {
         security: unknown;

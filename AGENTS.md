@@ -6,6 +6,7 @@
 - Provider definitions are catalog source code. Build schemas with `src/core/json-schema.ts` helpers, usually imported as `s`, instead of copying generated catalog JSON.
 - Keep provider execution lazy at the executor-module boundary. Generated registries should map each service to `import("./<service>/executors.ts")`, and `ProviderLoader` should call that importer only when an action, proxy request, or credential validator runs. Inside `executors.ts`, import provider runtime modules normally unless those modules have meaningful startup cost or side effects.
 - Shared provider modules have distinct owners: `provider-runtime.ts` owns guarded requests and errors, `provider-executors.ts` owns action adaptation and credentials, `provider-proxy.ts` owns proxy construction, and `provider-files.ts` owns file transfer. Import directly from the owner.
+- Catalog lists contain schema-free action metadata. Call `catalog.getAction(id)` explicitly when execution, documentation, or a public detail response needs schemas; copying metadata must never perform I/O.
 - Do not create barrel files such as `index.ts`. Import from the concrete module that owns the API.
 
 ## Code Style

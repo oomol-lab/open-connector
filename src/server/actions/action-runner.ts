@@ -161,9 +161,11 @@ export class ActionRunner {
               connectionId: connection.summary?.id,
               connectionName: connection.summary?.connectionName,
             },
-            () =>
-              executeProviderAction(
-                action,
+            async () => {
+              const definition = (await this.options.catalog.getAction(action.id))!;
+              input.signal?.throwIfAborted();
+              return executeProviderAction(
+                definition,
                 saasReference
                   ? async (actionInput) => {
                       if (!this.options.saas)
@@ -186,7 +188,8 @@ export class ActionRunner {
                   resolvedConnection.kind === "local" ? resolvedConnection.getCredential : async () => undefined,
                   input.signal,
                 ),
-              ),
+              );
+            },
             this.options.providerHttpDispatch,
           );
           if (input.signal?.aborted) {

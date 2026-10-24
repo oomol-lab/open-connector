@@ -1,9 +1,7 @@
-import type { ProviderDefinition } from "./types.ts";
-
 /**
  * Return providers in stable catalog order and sort each provider's actions.
  */
-export function sortProviders(providers: ProviderDefinition[]): ProviderDefinition[] {
+export function sortProviders<T extends { service: string; actions: readonly { id: string }[] }>(providers: T[]): T[] {
   return [...providers]
     .sort((a, b) => a.service.localeCompare(b.service))
     .map((provider) => ({
