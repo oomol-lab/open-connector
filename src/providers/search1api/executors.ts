@@ -1,15 +1,11 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { BearerProviderContext } from "../provider-runtime.ts";
+import type { BearerProviderContext } from "../provider-executors.ts";
 
 import { optionalString } from "../../core/cast.ts";
 import { storeResponseInTransit } from "../../core/request.ts";
-import {
-  runProviderRequest,
-  ProviderRequestError,
-  providerResponseError,
-  defineBearerProviderExecutors,
-  defineProviderProxy,
-} from "../provider-runtime.ts";
+import { defineBearerProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { runProviderRequest, ProviderRequestError, providerResponseError } from "../provider-runtime.ts";
 import { search1apiActions } from "./actions.ts";
 import { readSearch1apiJson, requestSearch1api, search1apiBaseUrl } from "./runtime.ts";
 async function execute(

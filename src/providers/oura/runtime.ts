@@ -1,6 +1,7 @@
 import type { QueryValue } from "../../core/request.ts";
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { OAuthProviderContext, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 import type { OuraDocumentCollection } from "./collections.ts";
 
 import {

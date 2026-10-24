@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 import type { Jin10ActionName } from "./actions.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
@@ -9,13 +9,9 @@ import { SdkHttpError } from "@modelcontextprotocol/client";
 import { ProtocolError } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
 import { withMcpClient } from "../mcp-client.ts";
-import {
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-  providerUserAgent,
-  ProviderRequestError,
-  defaultProviderRequestTimeoutMs,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerUserAgent, ProviderRequestError, defaultProviderRequestTimeoutMs } from "../provider-runtime.ts";
 
 const service = "jin10";
 const jin10McpOrigin = "https://mcp.jin10.com";

@@ -5,7 +5,8 @@ import type {
   ProviderExecutors,
 } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { builderIoActionHandlers, builderIoWriteApiBaseUrl } from "./runtime.ts";
 
 const service = "builder_io";

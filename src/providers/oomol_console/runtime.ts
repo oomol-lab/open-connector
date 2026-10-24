@@ -1,5 +1,5 @@
 import type { RuntimeLogger } from "../../core/types.ts";
-import type { ProviderActionName } from "../provider-runtime.ts";
+import type { ProviderActionName } from "../provider-executors.ts";
 import type { OomolConsoleMemberDirectory } from "./member-directory.ts";
 import type {
   ConnectionActionPermission,

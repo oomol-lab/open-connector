@@ -6,7 +6,7 @@ import type {
   ProviderProxyExecutor,
   TransitFileWriter,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { createHash } from "node:crypto";
 import { basename } from "node:path";
@@ -20,19 +20,20 @@ import {
   optionalString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, storeResponseInTransit } from "../../core/request.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
 import {
-  defineProviderExecutors,
-  isAbortLikeError,
   normalizeProviderProxyEndpoint,
   normalizeProviderProxyHeaders,
   normalizeProviderProxyQuery,
+  readProviderProxyResponse,
+  toProviderProxyError,
+} from "../provider-proxy.ts";
+import {
+  isAbortLikeError,
   providerFetch,
   ProviderRequestError,
   providerUserAgent,
-  readProviderProxyResponse,
-  requireCustomCredential,
   requiredInputString,
-  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "fuxin";

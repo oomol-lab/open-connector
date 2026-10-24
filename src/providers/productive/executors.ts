@@ -1,7 +1,8 @@
 import type { CredentialValidators, ProviderProxyExecutor, ResolvedCredential } from "../../core/types.ts";
 
 import { requiredString } from "../../core/cast.ts";
-import { defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import { executors, productiveApiBaseUrl, validateProductiveCredential } from "./runtime.ts";
 
 export { executors };

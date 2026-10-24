@@ -1,4 +1,4 @@
-import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+import type { ProviderActionHandlerSubset } from "../provider-executors.ts";
 import type { MondayProviderActionInput } from "./runtime-common.ts";
 import type { MondayActionHandler } from "./runtime-common.ts";
 

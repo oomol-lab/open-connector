@@ -4,8 +4,8 @@ import type {
   ProviderActionHandlers,
   ProviderActionName,
   ProviderActionSources,
-  ProviderFetch,
-} from "../provider-runtime.ts";
+} from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import {
   base64Bytes,
@@ -16,12 +16,8 @@ import {
   optionalRecord,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import {
-  mapProviderActionSources,
-  ProviderRequestError,
-  providerUserAgent,
-  providerInputError,
-} from "../provider-runtime.ts";
+import { mapProviderActionSources } from "../provider-executors.ts";
+import { ProviderRequestError, providerUserAgent, providerInputError } from "../provider-runtime.ts";
 
 export const vapiApiBaseUrl = "https://api.vapi.ai";
 

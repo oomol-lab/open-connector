@@ -3,10 +3,10 @@ import type { TransitFileWriter } from "../../core/types.ts";
 import { createHash } from "node:crypto";
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, storeResponseInTransit } from "../../core/request.ts";
+import { readTransitFileInput } from "../provider-files.ts";
 import {
   providerInputError,
   ProviderRequestError,
-  readTransitFileInput,
   requiredInputString,
   requiredResponseRecord,
   runProviderRequest,

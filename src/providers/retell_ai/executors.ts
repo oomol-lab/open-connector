@@ -5,7 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -21,9 +21,9 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
   ProviderRequestError,
   providerResponseError,
   providerUserAgent,

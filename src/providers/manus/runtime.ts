@@ -1,15 +1,11 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext, ProviderActionSources, ProviderFetch } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ApiKeyProviderContext, ProviderActionSources } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
-import {
-  isAbortLikeError,
-  mapProviderActionSources,
-  providerUserAgent,
-  ProviderRequestError,
-  providerInputError,
-} from "../provider-runtime.ts";
+import { mapProviderActionSources } from "../provider-executors.ts";
+import { isAbortLikeError, providerUserAgent, ProviderRequestError, providerInputError } from "../provider-runtime.ts";
 
 const manusApiBaseUrl = "https://api.manus.ai";
 const validationEndpoint = "/v2/project.list";

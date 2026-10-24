@@ -1,12 +1,9 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
-import {
-  combineProviderActionHandlers,
-  createProviderFetch,
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-} from "../provider-runtime.ts";
+import { combineProviderActionHandlers, defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { createProviderFetch } from "../provider-runtime.ts";
 import { pixellabCharacterActionHandlers } from "./runtime-character.ts";
 import { pixellabImageExtraActionHandlers } from "./runtime-image-extra.ts";
 import { pixellabImageActionHandlers } from "./runtime-image.ts";

@@ -6,23 +6,25 @@ import type {
   ProviderProxyExecutor,
   TransitFileWriter,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import AliOss from "ali-oss";
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRawString } from "../../core/cast.ts";
 import { assertGuardedEgressUrl } from "../../core/guarded-fetch.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed, storeResponseInTransit } from "../../core/request.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import {
-  createProviderFetch,
   createProviderProxyUrl,
-  defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerFetch,
-  ProviderRequestError,
-  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   toProviderProxyError,
+} from "../provider-proxy.ts";
+import {
+  createProviderFetch,
+  providerFetch,
+  ProviderRequestError,
+  providerUserAgent,
   providerInputError,
 } from "../provider-runtime.ts";
 

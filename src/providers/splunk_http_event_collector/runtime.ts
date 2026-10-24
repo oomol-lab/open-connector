@@ -1,4 +1,4 @@
-import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-executors.ts";
 import type { SplunkHttpEventCollectorActionName } from "./actions.ts";
 
 import { createHash, randomUUID } from "node:crypto";

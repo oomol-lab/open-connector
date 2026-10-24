@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -14,12 +14,11 @@ import {
   optionalString,
   requiredRecord,
 } from "../../core/cast.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
-  defineProviderExecutors,
-  defineProviderProxy,
   providerUserAgent,
   ProviderRequestError,
-  requireApiKeyCredential,
   requiredInputString,
   runProviderRequest,
 } from "../provider-runtime.ts";

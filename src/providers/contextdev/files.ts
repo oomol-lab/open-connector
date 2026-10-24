@@ -1,8 +1,8 @@
 import type { TransitFileWriter } from "../../core/types.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
+import { downloadUploadSource } from "../provider-files.ts";
 import {
-  downloadUploadSource,
   requiredResponseRecord,
   ProviderRequestError,
   providerResponseError,

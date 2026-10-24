@@ -6,7 +6,8 @@ import type {
 } from "../../core/types.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { normalizeOutlineBaseUrl, outlineActionHandlers, validateOutlineCredential } from "./runtime.ts";
 
 const service = "outline";

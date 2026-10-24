@@ -1,7 +1,8 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
 
-import { defineApiKeyProviderExecutors, defineProviderProxy, mapProviderActionNames } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionNames } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { stealthgptActions } from "./actions.ts";
 import { executeStealthgptAction, stealthgptApiBaseUrl, validateStealthgptCredential } from "./runtime.ts";
 

@@ -6,13 +6,9 @@ import type {
 } from "../../core/types.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
-  providerUserAgent,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const service = "waiverfile";
 const apiBaseUrl = "https://api.waiverfile.com/api/v1";

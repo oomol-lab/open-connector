@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -14,14 +14,9 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  defineProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
-  providerUserAgent,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const service = "voiceflow";
 const generalRuntimeBaseUrl = "https://general-runtime.voiceflow.com";

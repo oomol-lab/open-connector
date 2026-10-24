@@ -1,4 +1,5 @@
-import type { ProviderActionHandlers, ProviderFetch } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalNumber, optionalRawString, optionalRecord, optionalString } from "../../core/cast.ts";
 import {

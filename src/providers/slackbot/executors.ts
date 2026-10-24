@@ -1,9 +1,9 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { SlackActionHandler } from "../slack/runtime.ts";
 
-import { getProviderActionHandler, mapProviderActionHandlers } from "../provider-runtime.ts";
+import { getProviderActionHandler, mapProviderActionHandlers } from "../provider-executors.ts";
 import {
   defineSlackProviderExecutors,
   slackActionHandlers,

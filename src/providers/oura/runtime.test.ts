@@ -1,4 +1,5 @@
-import type { OAuthProviderContext, ProviderFetch } from "../provider-runtime.ts";
+import type { OAuthProviderContext } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { describe, expect, it } from "vitest";
 import { ProviderRequestError } from "../provider-runtime.ts";

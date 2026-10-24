@@ -16,14 +16,13 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, encodePathSegment } from "../../core/request.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
-  defineProviderExecutors,
-  defineProviderProxy,
   providerInputError,
   providerResponseError,
   providerUserAgent,
   ProviderRequestError,
-  requireApiKeyCredential,
 } from "../provider-runtime.ts";
 
 const service = "docsumo";

@@ -1,7 +1,9 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { createProviderFetch, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import { requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { createProviderFetch } from "../provider-runtime.ts";
 import { defineSeqeraExecutors, normalizeSeqeraApiBaseUrl, validateSeqeraCredential } from "./runtime.ts";
 
 export const executors: ProviderExecutors = defineSeqeraExecutors();

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { OAuthProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { OAuthProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -11,13 +11,10 @@ import {
   optionalString,
   requiredRecord,
 } from "../../core/cast.ts";
-import {
-  defineOAuthProviderExecutors,
-  defineProviderProxy,
-  providerInputError,
-  ProviderRequestError,
-  readTransitFileInput,
-} from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
+import { readTransitFileInput } from "../provider-files.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerInputError, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "strava";
 const stravaApiBaseUrl = "https://www.strava.com/api/v3/";

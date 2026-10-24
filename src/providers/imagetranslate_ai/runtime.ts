@@ -1,10 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type {
-  ApiKeyProviderContext,
-  ProviderActionHandlers,
-  ProviderRuntimeHandler,
-  ProviderTransitFile,
-} from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderTransitFile } from "../provider-files.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";

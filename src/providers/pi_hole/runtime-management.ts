@@ -1,4 +1,4 @@
-import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+import type { ProviderActionHandlerSubset } from "../provider-executors.ts";
 import type { PiHoleActionContext, PiHoleActionHandler, PiHoleRequestOptions } from "./runtime.ts";
 
 import {

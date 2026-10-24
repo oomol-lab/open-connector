@@ -4,18 +4,12 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { compactObject, optionalIntegerLike, optionalRawString } from "../../core/cast.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  mapProviderActionSources,
-  providerUserAgent,
-  ProviderRequestError,
-  requireApiKeyCredential,
-  runProviderRequest,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, mapProviderActionSources, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
 export const semrushApiBaseUrl = "https://api.semrush.com";
 

@@ -4,15 +4,11 @@ import type {
   ProviderProxyExecutor,
   TransitFileWriter,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { optionalString, requiredString } from "../../core/cast.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  mapProviderActionHandlers,
-  requireOAuthCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, mapProviderActionHandlers, requireOAuthCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { baiduNetdiskActions } from "./actions.ts";
 import { executeBaiduNetdiskMcpAction, verifyBaiduNetdiskMcpConnection } from "./runtime-mcp.ts";
 import {

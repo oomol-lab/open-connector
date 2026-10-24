@@ -1,5 +1,5 @@
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { OAuthProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { OAuthProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalString } from "../../core/cast.ts";
 import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";

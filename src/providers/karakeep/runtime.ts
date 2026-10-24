@@ -1,7 +1,7 @@
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { KarakeepHandler } from "./runtime-helpers.ts";
 
-import { combineProviderActionHandlers } from "../provider-runtime.ts";
+import { combineProviderActionHandlers } from "../provider-executors.ts";
 import { karakeepAdminActionHandlers } from "./runtime-admin.ts";
 import { karakeepAssetActionHandlers } from "./runtime-assets.ts";
 import { karakeepBackupActionHandlers } from "./runtime-backups.ts";

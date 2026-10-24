@@ -1,5 +1,5 @@
 import type { GoogleQueryValue } from "../googledrive/runtime-request.ts";
-import type { OAuthProviderContext } from "../provider-runtime.ts";
+import type { OAuthProviderContext } from "../provider-executors.ts";
 
 import { googleJsonRequest } from "../googledrive/runtime-request.ts";
 

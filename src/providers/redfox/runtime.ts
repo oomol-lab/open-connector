@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 import type { RedfoxRoute } from "./routes.ts";
 
 import { optionalRecord, optionalRawString } from "../../core/cast.ts";

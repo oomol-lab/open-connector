@@ -9,12 +9,9 @@ import type { KarakeepExecutionContext } from "./runtime-helpers.ts";
 
 import { optionalString } from "../../core/cast.ts";
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import {
-  createProviderFetch,
-  defineProviderExecutors,
-  defineProviderProxy,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { createProviderFetch } from "../provider-runtime.ts";
 import { createKarakeepContext, normalizeKarakeepApiBaseUrl, validateKarakeepCredential } from "./runtime-helpers.ts";
 import { karakeepActionHandlers } from "./runtime.ts";
 

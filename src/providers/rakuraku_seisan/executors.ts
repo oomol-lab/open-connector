@@ -1,13 +1,9 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { RakurakuContext } from "./runtime.ts";
 
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  requireApiKeyCredential,
-  mapProviderActionHandlers,
-  requiredInputString,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential, mapProviderActionHandlers } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { requiredInputString } from "../provider-runtime.ts";
 import { rakurakuSeisanActions } from "./actions.ts";
 import { normalizeBaseUrl, executeRakurakuSeisanAction, readRakurakuError } from "./runtime.ts";
 export const executors: ProviderExecutors = defineProviderExecutors<RakurakuContext>({

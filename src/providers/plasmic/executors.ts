@@ -1,16 +1,11 @@
 import type { ExecutionContext, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import {
-  createProviderTimeout,
-  defineProviderExecutors,
-  defineProviderProxy,
-  providerUserAgent,
-  ProviderRequestError,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { createProviderTimeout, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "plasmic";
 const plasmicDataBaseUrl = "https://data.plasmic.app";

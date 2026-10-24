@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   optionalIntegerLike,
@@ -10,8 +10,8 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import {
-  defineApiKeyProviderExecutors,
   providerInputError,
   ProviderRequestError,
   providerResponseError,

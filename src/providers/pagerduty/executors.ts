@@ -1,6 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { pagerDutyActionHandlers, pagerDutyApiBaseUrl, validatePagerDutyCredential } from "./runtime.ts";
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors("pagerduty", pagerDutyActionHandlers);

@@ -9,18 +9,15 @@ import type { FivetranContext } from "./runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { requiredString } from "../../core/cast.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
 import {
-  createProviderFetch,
   createProviderProxyUrl,
-  defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  ProviderRequestError,
-  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
-  requireCustomCredential,
   toProviderProxyError,
-} from "../provider-runtime.ts";
+} from "../provider-proxy.ts";
+import { createProviderFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 import { fivetranActionHandlers, fivetranApiBaseUrl, validateFivetranCredential } from "./runtime.ts";
 
 const service = "fivetran";

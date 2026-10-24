@@ -5,7 +5,7 @@ import type {
   ProviderExecutors,
 } from "../../core/types.ts";
 
-import { defineProviderExecutors, requireCustomCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
 import { createMqttContext, mqttActionHandlers, validateMqttCredential } from "./runtime.ts";
 
 const service = "mqtt";

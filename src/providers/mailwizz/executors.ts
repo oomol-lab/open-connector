@@ -9,13 +9,9 @@ import type { MailWizzContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import {
-  createProviderFetch,
-  defineProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { createProviderFetch, ProviderRequestError } from "../provider-runtime.ts";
 import {
   createMailWizzContext,
   mailWizzActionHandlers,

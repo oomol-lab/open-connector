@@ -1,6 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineOAuthProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { helium10ActionHandlers, helium10McpEndpoint, validateHelium10Credential } from "./runtime.ts";
 
 const service = "helium10";

@@ -1,6 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { papertrailActionHandlers, validatePapertrailCredential } from "./runtime.ts";
 const service = "papertrail";
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, papertrailActionHandlers);

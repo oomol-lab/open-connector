@@ -1,12 +1,12 @@
-import type { ProviderTransitFile } from "../provider-runtime.ts";
+import type { ProviderTransitFile } from "../provider-files.ts";
 import type { KarakeepExecutionContext, KarakeepHandlerMap } from "./runtime-helpers.ts";
 
 import { optionalString } from "../../core/cast.ts";
 import { storeResponseInTransit } from "../../core/request.ts";
+import { readTransitFileInput } from "../provider-files.ts";
 import {
   providerInputError,
   ProviderRequestError,
-  readTransitFileInput,
   requiredInputString,
   requiredResponseRecord,
 } from "../provider-runtime.ts";

@@ -8,13 +8,9 @@ import type {
 import type { AerisWeatherContext } from "./runtime.ts";
 
 import { requiredString } from "../../core/cast.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  providerInputError,
-  ProviderRequestError,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerInputError, ProviderRequestError } from "../provider-runtime.ts";
 import { aerisweatherActionHandlers, aerisweatherApiBaseUrl, validateAerisWeatherCredential } from "./runtime.ts";
 
 const service = "aerisweather";

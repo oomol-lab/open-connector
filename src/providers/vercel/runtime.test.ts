@@ -1,5 +1,5 @@
 import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
-import type { ProviderActionName } from "../provider-runtime.ts";
+import type { ProviderActionName } from "../provider-executors.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { validateActionInput } from "../../core/validation.ts";

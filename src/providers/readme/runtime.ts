@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { ReadMeActionName } from "./actions.ts";
 
 import { compactObject, optionalRecord, requiredRecord } from "../../core/cast.ts";

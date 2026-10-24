@@ -1,9 +1,10 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 import type { V0ActionInput } from "./runtime-client.ts";
 
-import { defineApiKeyProviderExecutors, defineProviderProxy, mapProviderActionSources } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionSources } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   v0FindRateLimit,
   v0GetBilling,

@@ -7,7 +7,8 @@ import type {
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { IntercomActionContext } from "./runtime.ts";
 
-import { defineProviderExecutors, defineProviderProxy, requireOAuthCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireOAuthCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   intercomActionHandlers,
   intercomAllowedApiBaseUrls,

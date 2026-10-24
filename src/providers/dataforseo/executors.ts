@@ -7,12 +7,9 @@ import type {
 
 import { Buffer } from "node:buffer";
 import { optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
-  requireCustomCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import { dataForSeoActionHandlers, dataForSeoApiBaseUrl, requestDataForSeoUserData } from "./runtime.ts";
 
 const service = "dataforseo";

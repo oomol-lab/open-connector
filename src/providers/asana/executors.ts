@@ -3,12 +3,9 @@ import type { IntegrationDefinition } from "../../triggers/common/integration.ts
 import type { AsanaActionHandler } from "./runtime.ts";
 
 import { compactObject, optionalString, requiredRecord } from "../../core/cast.ts";
-import {
-  combineProviderActionHandlers,
-  defineBearerProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { combineProviderActionHandlers, defineBearerProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import { attachmentActionHandlers } from "./runtime-attachments.ts";
 import { customFieldActionHandlers } from "./runtime-custom-fields.ts";
 import { projectSectionActionHandlers } from "./runtime-projects-sections.ts";

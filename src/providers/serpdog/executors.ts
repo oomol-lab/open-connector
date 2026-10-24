@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineProviderProxy } from "../provider-runtime.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { serpdogBaseUrl, serpdogExecutors, validateSerpdogCredential } from "./runtime.ts";
 
 export const executors: ProviderExecutors = serpdogExecutors;

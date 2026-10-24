@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
 import { UnauthorizedError } from "@modelcontextprotocol/client";
@@ -8,13 +8,9 @@ import { SdkHttpError } from "@modelcontextprotocol/client";
 import { ProtocolError } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
 import { withMcpClient } from "../mcp-client.ts";
-import {
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-  mapProviderActionHandlers,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 import { sellerspriteMcpActions } from "./actions.ts";
 
 const service = "sellersprite_mcp";

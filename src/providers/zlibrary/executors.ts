@@ -2,7 +2,8 @@ import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "
 import type { ZLibraryRuntimeContext } from "./runtime.ts";
 
 import { requiredString } from "../../core/cast.ts";
-import { defineProviderExecutors, ProviderRequestError, requireCustomCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import { zlibraryActionHandlers, zlibraryEapiLoginWithFallback } from "./runtime.ts";
 
 const service = "zlibrary";

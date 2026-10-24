@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -9,8 +9,8 @@ import {
   optionalRecord,
   optionalString,
 } from "../../core/cast.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import {
-  defineApiKeyProviderExecutors,
   providerInputError,
   ProviderRequestError,
   providerResponseError,

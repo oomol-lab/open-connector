@@ -1,10 +1,12 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
 
 import { looseArray, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { compactJson, encodePathSegment } from "../../core/request.ts";
 import { microsoftGraphJson } from "../outlook/microsoft-graph.ts";
-import { defineOAuthProviderExecutors, defineProviderProxy, requiredInputString } from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { requiredInputString } from "../provider-runtime.ts";
 
 const service = "microsoft_teams";
 const graphBaseUrl = "https://graph.microsoft.com/v1.0";

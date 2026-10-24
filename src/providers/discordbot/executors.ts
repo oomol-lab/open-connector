@@ -1,16 +1,12 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+import type { ProviderActionHandlerSubset } from "../provider-executors.ts";
 import type { DiscordbotActionHandler, DiscordbotContext } from "./runtime.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
-import {
-  combineProviderActionHandlers,
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
-  providerResponseError,
-} from "../provider-runtime.ts";
+import { combineProviderActionHandlers, defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError, providerResponseError } from "../provider-runtime.ts";
 import { guildActionHandlers } from "./runtime-guilds.ts";
 import {
   discordProxyBaseUrl,

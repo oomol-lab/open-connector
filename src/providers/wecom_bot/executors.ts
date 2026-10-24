@@ -5,13 +5,9 @@ import type {
   ProviderProxyExecutor,
 } from "../../core/types.ts";
 
-import {
-  createProviderFetch,
-  defineProviderExecutors,
-  defineProviderProxy,
-  requireApiKeyCredential,
-  requireCustomCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential, requireCustomCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { createProviderFetch } from "../provider-runtime.ts";
 import { validateWecomBotCredential, wecomBotActionHandlers } from "./runtime.ts";
 import {
   createWecomSmartBotRuntime,

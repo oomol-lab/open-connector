@@ -1,16 +1,14 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalRecord, optionalRawString } from "../../core/cast.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
+import { defineProviderProxy, readProviderProxyErrorMessage } from "../provider-proxy.ts";
 import {
   requiredInputString,
   requiredResponseRecord,
   ProviderRequestError,
   runProviderRequest,
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-  mapProviderActionHandlers,
-  readProviderProxyErrorMessage,
   withRetryAfterSeconds,
 } from "../provider-runtime.ts";
 import { wereadActions } from "./actions.ts";

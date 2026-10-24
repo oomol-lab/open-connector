@@ -1,16 +1,13 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 import type { McpToolSummary, McpToolOptions } from "../mcp-tools.ts";
-import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { sha256Hex } from "../../core/aws-sigv4.ts";
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { listMcpTools, callMcpTool } from "../mcp-tools.ts";
-import {
-  defineApiKeyProviderExecutors,
-  mapProviderActionHandlers,
-  ProviderRequestError,
-  requiredInputString,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
+import { ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 import { gildataActions, gildataMcpServerTypes } from "./actions.ts";
 type GildataMcpServerType = "tool" | "api";
 const gildataMcpOrigin = "https://api.gildata.com";

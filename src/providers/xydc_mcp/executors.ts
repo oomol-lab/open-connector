@@ -1,18 +1,14 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
 import { ProtocolError, SdkHttpError, UnauthorizedError } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { withMcpClient } from "../mcp-client.ts";
-import {
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-  mapProviderActionHandlers,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 import { xydcMcpActions } from "./actions.ts";
 import { normalizeXydcMcpToolResult } from "./runtime.ts";
 

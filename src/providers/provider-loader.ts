@@ -3,7 +3,7 @@ import type { ProviderOAuthRuntime } from "../oauth/oauth-token.ts";
 import type { IntegrationDefinition } from "../triggers/common/integration.ts";
 import type { PollDefinition } from "../triggers/common/poll.ts";
 
-import { withProviderFallbackMessage } from "./provider-runtime.ts";
+import { withProviderFallbackMessage } from "./provider-executors.ts";
 
 export interface ExecutorModule {
   triggers?: readonly (IntegrationDefinition | PollDefinition)[];

@@ -1,7 +1,7 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { CloudflareCurrentUser } from "../cloudflare_dns/runtime-user.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import {
   compactObject,

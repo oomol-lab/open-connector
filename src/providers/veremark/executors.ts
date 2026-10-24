@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -9,13 +9,10 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { readProviderTextBody } from "../provider-runtime.ts";
-import {
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 const service = "veremark",
   baseUrl = "https://api.veremark.com/external/v1";
 type Handler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;

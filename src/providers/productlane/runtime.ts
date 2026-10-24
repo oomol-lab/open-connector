@@ -1,4 +1,4 @@
-import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-executors.ts";
 import type { ProductlaneActionName } from "./actions.ts";
 
 import { requiredString } from "../../core/cast.ts";

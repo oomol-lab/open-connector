@@ -1,5 +1,5 @@
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { randomUUID } from "node:crypto";
 import { compactObject, optionalBoolean, optionalInteger, optionalString, rawStringOrNull } from "../../core/cast.ts";

@@ -18,13 +18,12 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
-  defineProviderExecutors,
-  defineProviderProxy,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
-  requireApiKeyCredential,
   runProviderRequest,
 } from "../provider-runtime.ts";
 

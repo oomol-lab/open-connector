@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { basename, extname } from "node:path";
 import {
@@ -12,11 +12,11 @@ import {
   optionalString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, readBoundedResponseBytes } from "../../core/request.ts";
+import { readTransitFileInput } from "../provider-files.ts";
 import {
   providerFetch,
   ProviderRequestError,
   providerUserAgent,
-  readTransitFileInput,
   requiredInputString,
   requiredResponseRecord,
 } from "../provider-runtime.ts";

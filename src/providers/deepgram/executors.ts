@@ -1,7 +1,8 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
-import { defineApiKeyProviderExecutors, defineProviderProxy, mapProviderActionSources } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionSources } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { deepgramActionHandlers, deepgramApiBaseUrl, validateDeepgramCredential } from "./runtime.ts";
 
 const service = "deepgram";

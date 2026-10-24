@@ -1,4 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import {
   optionalBoolean,

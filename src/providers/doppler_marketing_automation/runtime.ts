@@ -1,4 +1,4 @@
-import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-executors.ts";
 import type { DopplerMarketingAutomationActionName } from "./actions.ts";
 
 import {

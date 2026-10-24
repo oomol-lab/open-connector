@@ -8,12 +8,9 @@ import type { JumpsellerActionContext } from "./runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, requiredString } from "../../core/cast.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  providerInputError,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerInputError } from "../provider-runtime.ts";
 import { jumpsellerActionHandlers, jumpsellerApiBaseUrl, validateJumpsellerCredential } from "./runtime.ts";
 
 const service = "jumpseller";

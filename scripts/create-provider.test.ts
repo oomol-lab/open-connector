@@ -25,6 +25,7 @@ it("generates a runnable provider and refuses to overwrite it", async () => {
   });
   await symlink(resolve("src/core"), join(directory, "src/core"));
   await symlink(resolve("src/providers/provider-runtime.ts"), join(providers, "provider-runtime.ts"));
+  await symlink(resolve("src/providers/provider-executors.ts"), join(providers, "provider-executors.ts"));
   const { provider } = (await import(join(providers, "scaffold_fixture/definition.ts"))) as {
     provider: ProviderDefinition;
   };

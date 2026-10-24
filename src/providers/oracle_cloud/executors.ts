@@ -6,7 +6,7 @@ import type {
 } from "../../core/types.ts";
 import type { OracleCloudContext } from "./runtime.ts";
 
-import { defineProviderExecutors, requireCustomCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
 import { createOracleCloudContext, oracleCloudActionHandlers, validateOracleCloudCredential } from "./runtime.ts";
 
 const service = "oracle_cloud";

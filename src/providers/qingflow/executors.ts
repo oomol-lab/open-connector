@@ -5,12 +5,9 @@ import type {
   ProviderProxyExecutor,
 } from "../../core/types.ts";
 
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  providerUserAgent,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerUserAgent } from "../provider-runtime.ts";
 import { qingflowActionHandlers, qingflowApiBaseUrl, validateQingflowCredential } from "./runtime.ts";
 
 const service = "qingflow";

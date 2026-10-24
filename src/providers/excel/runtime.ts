@@ -1,12 +1,8 @@
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { compactObject, optionalBoolean, optionalNumber } from "../../core/cast.ts";
-import {
-  getProviderActionHandler,
-  ProviderRequestError,
-  providerInputError,
-  providerResponseError,
-} from "../provider-runtime.ts";
+import { getProviderActionHandler } from "../provider-executors.ts";
+import { ProviderRequestError, providerInputError, providerResponseError } from "../provider-runtime.ts";
 import { emptyWorkbookBytes, excelWorkbookMimeType } from "./workbook-template.ts";
 
 export const graphBaseUrl = "https://graph.microsoft.com/v1.0";

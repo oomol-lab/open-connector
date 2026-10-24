@@ -4,8 +4,9 @@ import type {
   ProviderExecutors,
   ResolvedCredential,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ProviderExecutorDefinition, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ProviderExecutorDefinition, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -16,13 +17,12 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
 import {
   createProviderTimeout,
-  defineProviderExecutors,
   isAbortLikeError,
   providerUserAgent,
   ProviderRequestError,
-  requireApiKeyCredential,
   requiredResponseRecord,
   defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";

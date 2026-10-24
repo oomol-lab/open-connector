@@ -1,16 +1,12 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 import type { McpToolOptions } from "../mcp-tools.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { sha256Hex } from "../../core/aws-sigv4.ts";
 import { optionalRecord } from "../../core/cast.ts";
 import { callMcpTool, listMcpTools } from "../mcp-tools.ts";
-import {
-  defineApiKeyProviderExecutors,
-  mapProviderActionHandlers,
-  providerInputError,
-  requiredInputString,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
+import { providerInputError, requiredInputString } from "../provider-runtime.ts";
 import { timemSpaceActions } from "./actions.ts";
 const endpoint = "https://api.space.timem.cloud/mcp/";
 function connection(context: ApiKeyProviderContext): McpToolOptions {

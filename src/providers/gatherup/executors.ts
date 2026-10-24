@@ -1,7 +1,8 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { GatherupContext } from "./runtime.ts";
 
-import { defineProviderExecutors, defineProviderProxy, requireCustomCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { gatherupActionHandlers, gatherupApiBaseUrl, validateGatherupCredential } from "./runtime.ts";
 
 const service = "gatherup";

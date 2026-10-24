@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { OAuthProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { OAuthProviderContext } from "../provider-executors.ts";
 import type { SlackNormalizedConversationType } from "./constants.ts";
 
 import {
@@ -14,9 +14,9 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, readBoundedResponseBytes, storeResponseInTransit } from "../../core/request.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import {
   createProviderTimeout,
-  defineProviderExecutors,
   isAbortLikeError,
   ProviderRequestError,
   providerInputError,

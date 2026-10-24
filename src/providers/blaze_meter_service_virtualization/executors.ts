@@ -8,7 +8,7 @@ import type { BlazeMeterServiceVirtualizationContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
 import { createBlazeMeterProxyExecutor } from "../blaze_meter_performance/shared-runtime.ts";
-import { defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
 import {
   blazeMeterServiceVirtualizationActionHandlers,
   requireBlazeMeterServiceVirtualizationApiKeyId,

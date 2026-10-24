@@ -1,16 +1,13 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { McpToolOptions } from "../mcp-tools.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { sha256Hex } from "../../core/aws-sigv4.ts";
 import { optionalRecord } from "../../core/cast.ts";
 import { callMcpTool, listMcpTools } from "../mcp-tools.ts";
-import {
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-  providerInputError,
-  requiredInputString,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerInputError, requiredInputString } from "../provider-runtime.ts";
 const origin = "https://mcp.huodingdong.com";
 const endpoint = `${origin}/mcp`;
 function connection(context: ApiKeyProviderContext): McpToolOptions {

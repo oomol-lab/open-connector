@@ -7,7 +7,8 @@ import type {
 import type { DocugenerateActionContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   docugenerateActionHandlers,
   resolveDocugenerateApiBaseUrl,

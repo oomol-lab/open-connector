@@ -7,13 +7,9 @@ import type {
 import type { AppStoreConnectContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  providerProxyEndpointPrefixes,
-  requireCustomCredential,
-  requiredInputString,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { defineProviderProxy, providerProxyEndpointPrefixes } from "../provider-proxy.ts";
+import { requiredInputString } from "../provider-runtime.ts";
 import { createAppStoreConnectAuthorization } from "./jwt.ts";
 import {
   appStoreConnectActionHandlers,

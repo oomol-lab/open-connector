@@ -1,14 +1,9 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
-import {
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-  mapProviderActionHandlers,
-  ProviderRequestError,
-  readProviderProxyErrorMessage,
-  withRetryAfterSeconds,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
+import { defineProviderProxy, readProviderProxyErrorMessage } from "../provider-proxy.ts";
+import { ProviderRequestError, withRetryAfterSeconds } from "../provider-runtime.ts";
 import { redfoxActions } from "./actions.ts";
 import { redfoxRoutes } from "./routes.ts";
 import { executeRedfoxAction, validateRedfoxCredential, redfoxApiBaseUrl } from "./runtime.ts";

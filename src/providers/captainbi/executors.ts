@@ -4,20 +4,17 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
+import { defineProviderExecutors, mapProviderActionHandlers, requireCustomCredential } from "../provider-executors.ts";
 import {
-  createProviderFetch,
   createProviderProxyUrl,
-  defineProviderExecutors,
-  mapProviderActionHandlers,
   normalizeProviderProxyHeaders,
-  ProviderRequestError,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
-  requireCustomCredential,
   toProviderProxyError,
-} from "../provider-runtime.ts";
+} from "../provider-proxy.ts";
+import { createProviderFetch, ProviderRequestError } from "../provider-runtime.ts";
 import { captainBiActions } from "./actions.ts";
 import { exchangeCaptainBiAccessToken, executeCaptainBiAction, validateCaptainBiCredential } from "./runtime.ts";
 

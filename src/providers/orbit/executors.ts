@@ -1,17 +1,17 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString, looseArray } from "../../core/cast.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { downloadUploadSource } from "../provider-files.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
-  downloadUploadSource,
   requiredResponseRecord,
   isAbortLikeError,
   runProviderRequest,
   ProviderRequestError,
   providerInputError,
   providerResponseError,
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
 } from "../provider-runtime.ts";
 import { orbitActions } from "./actions.ts";
 import { orbitRoutes } from "./routes.ts";

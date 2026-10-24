@@ -5,18 +5,17 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   createProviderTimeout,
-  defineProviderExecutors,
-  defineProviderProxy,
   isAbortLikeError,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
-  requireApiKeyCredential,
   defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 

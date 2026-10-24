@@ -1,4 +1,4 @@
-import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+import type { ProviderActionHandlerSubset } from "../provider-executors.ts";
 import type { DiscordbotActionHandler, DiscordbotContext } from "./runtime.ts";
 
 import { Buffer } from "node:buffer";

@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -13,8 +13,10 @@ import {
 } from "../../core/cast.ts";
 import { compactJson, encodePathSegment } from "../../core/request.ts";
 import { microsoftGraphJson, microsoftGraphRequest } from "../outlook/microsoft-graph.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { providerInputError } from "../provider-runtime.ts";
-import { defineOAuthProviderExecutors, defineProviderProxy, requiredInputString } from "../provider-runtime.ts";
+import { requiredInputString } from "../provider-runtime.ts";
 
 const service = "outlook_calendar";
 const graphBaseUrl = "https://graph.microsoft.com/v1.0";

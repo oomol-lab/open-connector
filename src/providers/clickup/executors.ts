@@ -7,7 +7,9 @@ import type {
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { ClickupActionContext } from "./runtime.ts";
 
-import { defineProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import { clickupActionHandlers, clickupApiOrigin, validateClickupCredential } from "./runtime.ts";
 import { clickupTaskEvent } from "./trigger-on-task-event.ts";
 

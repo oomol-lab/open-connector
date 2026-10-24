@@ -7,18 +7,15 @@ import type {
 } from "../../core/types.ts";
 import type { WacheteContext } from "./runtime.ts";
 
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
 import {
-  createProviderFetch,
   createProviderProxyUrl,
-  defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  ProviderRequestError,
-  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
-  requireApiKeyCredential,
   toProviderProxyError,
-} from "../provider-runtime.ts";
+} from "../provider-proxy.ts";
+import { createProviderFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 import {
   requestWacheteToken,
   resolveWacheteUserId,

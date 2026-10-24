@@ -1,17 +1,13 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { PollDefinition } from "../../triggers/common/poll.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { OAuthProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { OAuthProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalString, requiredBoolean, requiredRecord } from "../../core/cast.ts";
-import {
-  defineOAuthProviderExecutors,
-  defineProviderProxy,
-  providerInputError,
-  requiredInputString,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerInputError, requiredInputString, ProviderRequestError } from "../provider-runtime.ts";
 import { microsoftGraphJson, microsoftGraphRequest } from "./microsoft-graph.ts";
 import { outlookMessageReceived } from "./trigger-on-message-received.ts";
 

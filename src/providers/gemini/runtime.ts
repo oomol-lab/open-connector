@@ -1,4 +1,4 @@
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalInteger, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { jsonObject, readBoundedResponseBytes } from "../../core/request.ts";

@@ -7,7 +7,8 @@ import type {
 } from "../../core/types.ts";
 import type { TalentlmsActionContext } from "./runtime.ts";
 
-import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   buildTalentlmsApiBaseUrl,
   normalizeTalentlmsApiBaseUrl,

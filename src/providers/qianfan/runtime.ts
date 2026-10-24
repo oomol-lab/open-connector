@@ -1,15 +1,14 @@
 import type { CredentialValidationResult, ProviderExecutors, TransitFileWriter } from "../../core/types.ts";
-import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, requiredString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionSources } from "../provider-executors.ts";
+import { readTransitFileInput } from "../provider-files.ts";
 import {
-  defineApiKeyProviderExecutors,
-  mapProviderActionSources,
   providerUserAgent,
   ProviderRequestError,
-  readTransitFileInput,
   providerInputError,
   providerResponseError,
 } from "../provider-runtime.ts";

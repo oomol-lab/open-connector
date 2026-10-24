@@ -1,6 +1,7 @@
 import type { ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { executeWhoGhoAction, whoGhoApiBaseUrl } from "./runtime.ts";
 const service = "who_gho";
 const handlers: Record<

@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
 import { ProtocolError, SdkHttpError, UnauthorizedError } from "@modelcontextprotocol/client";
@@ -7,12 +7,8 @@ import { createHash } from "node:crypto";
 import { optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
 import { withMcpClient } from "../mcp-client.ts";
-import {
-  defineApiKeyProviderExecutors,
-  providerUserAgent,
-  ProviderRequestError,
-  requiredInputString,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 import { tongdaxinActions, tongdaxinReadOnlyToolNames } from "./actions.ts";
 import { normalizeTongdaxinNamedActionOutput } from "./named-action-output.ts";
 import { isTongdaxinNamedActionName, resolveTongdaxinNamedToolCall } from "./named-action-routing.ts";

@@ -1,6 +1,6 @@
 import type { ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineProviderProxy } from "../provider-runtime.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { quickchartBaseUrl } from "./runtime.ts";
 
 export { executors } from "./runtime.ts";

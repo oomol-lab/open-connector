@@ -1,11 +1,11 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
 
 import { looseArray, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import {
   defaultProviderJsonMaxResponseBytes,
-  defineApiKeyProviderExecutors,
   ProviderRequestError,
   providerUserAgent,
   readProviderTextBody,

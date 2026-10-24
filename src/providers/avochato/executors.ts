@@ -14,18 +14,15 @@ import {
   requiredString,
   requiredStringArray,
 } from "../../core/cast.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
 import {
-  createProviderFetch,
   createProviderProxyUrl,
-  defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
-  ProviderRequestError,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
-  requireCustomCredential,
   toProviderProxyError,
-} from "../provider-runtime.ts";
+} from "../provider-proxy.ts";
+import { createProviderFetch, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "avochato";
 const baseUrl = "https://www.avochato.com";

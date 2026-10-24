@@ -1,4 +1,4 @@
-import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+import type { ProviderActionHandlerSubset } from "../provider-executors.ts";
 import type { GitHubActionContext, GitHubActionHandler } from "./runtime-shared.ts";
 
 import {

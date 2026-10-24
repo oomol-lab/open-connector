@@ -6,7 +6,7 @@ import type {
   ProviderProxyExecutor,
   TransitFileWriter,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import {
   canonicalizeSearchParams,
@@ -17,17 +17,14 @@ import {
 } from "../../core/aws-sigv4.ts";
 import { compactObject, optionalRecord, optionalString, requiredRawString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, storeResponseInTransit } from "../../core/request.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
-  createProviderTimeout,
-  defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerFetch,
-  ProviderRequestError,
-  providerUserAgent,
   readProviderProxyResponse,
   toProviderProxyError,
-} from "../provider-runtime.ts";
+} from "../provider-proxy.ts";
+import { createProviderTimeout, providerFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 type AwsActionContext = {
   values: Record<string, string>;

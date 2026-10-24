@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 
-import { defineOAuthProviderExecutors } from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
 import { instagramActionHandlers, validateInstagramCredential } from "./runtime.ts";
 
 export { oauth } from "./oauth.ts";

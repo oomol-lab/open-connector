@@ -1,8 +1,9 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
-import { defineApiKeyProviderExecutors, defineProviderProxy, mapProviderActionHandlers } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { linkfoxActions } from "./actions.ts";
 import { executeLinkfoxAction, linkfoxApiBaseUrl, validateLinkfoxCredential } from "./runtime.ts";
 

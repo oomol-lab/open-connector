@@ -1,4 +1,5 @@
-import type { BearerProviderContext, ProviderFetch } from "../provider-runtime.ts";
+import type { BearerProviderContext } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import {
   compactObject,

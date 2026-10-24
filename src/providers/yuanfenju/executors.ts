@@ -1,12 +1,9 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import {
-  requiredResponseRecord,
-  requiredInputString,
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { requiredResponseRecord, requiredInputString } from "../provider-runtime.ts";
 import { yuanfenjuActionHandlers, yuanfenjuApiBaseUrl, requestYuanfenju, yuanfenjuAccountPath } from "./runtime.ts";
 
 const service = "yuanfenju";

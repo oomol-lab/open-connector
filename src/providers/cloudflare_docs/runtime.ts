@@ -1,5 +1,5 @@
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { optionalString } from "../../core/cast.ts";
 import { withMcpClient } from "../mcp-client.ts";

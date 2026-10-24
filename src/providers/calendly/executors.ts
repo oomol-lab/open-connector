@@ -1,7 +1,8 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 
-import { defineBearerProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineBearerProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { calendlyActionHandlers, calendlyApiOrigin, validateCalendlyCredential } from "./runtime.ts";
 import { calendlyBookingEvent } from "./trigger-on-booking-event.ts";
 

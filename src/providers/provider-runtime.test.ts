@@ -1,32 +1,35 @@
 import type { ExecutionContext, ResolvedCredential } from "../core/types.ts";
-import type { ProviderActionHandlers, ProviderActionSources } from "./provider-runtime.ts";
+import type { ProviderActionHandlers, ProviderActionSources } from "./provider-executors.ts";
 
 import { afterEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 import { withProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import { isPrivateNetworkAccessAllowed } from "../core/request.ts";
 import {
-  downloadUploadSource,
-  createProviderTimeout,
-  createProviderProxyUrl,
   defineOAuthProviderExecutors,
   defineProviderExecutors,
+  mapProviderActionSources,
+} from "./provider-executors.ts";
+import { downloadUploadSource, uploadProviderUrlToTransitFile } from "./provider-files.ts";
+import {
+  createProviderProxyUrl,
   defineProviderProxy,
+  readProviderProxyErrorMessage,
+  readProviderProxyResponse,
+} from "./provider-proxy.ts";
+import {
+  createProviderTimeout,
   isAbortLikeError,
   isAbortSignalError,
-  mapProviderActionSources,
   providerFetch,
   providerInputError,
   ProviderRequestError,
   providerResponseError,
   readProviderErrorTextBody,
   readProviderJson,
-  readProviderProxyErrorMessage,
-  readProviderProxyResponse,
   requiredInputString,
   requiredResponseRecord,
   runProviderRequest,
   toProviderExecutionError,
-  uploadProviderUrlToTransitFile,
 } from "./provider-runtime.ts";
 
 afterEach(() => {

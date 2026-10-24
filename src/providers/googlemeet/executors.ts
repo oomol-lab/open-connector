@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { OAuthProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { OAuthProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -16,7 +16,8 @@ import {
   googleServiceAccountValidator,
 } from "../googledrive/runtime-auth.ts";
 import { googleJsonRequest } from "../googledrive/runtime-request.ts";
-import { defineProviderProxy, providerProxyEndpointPrefixes, ProviderRequestError } from "../provider-runtime.ts";
+import { defineProviderProxy, providerProxyEndpointPrefixes } from "../provider-proxy.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import { googleMeetApiBaseUrl, googleMeetApiOrigin, googleMeetUserInfoUrl } from "./constants.ts";
 import { googleMeetOAuthScopes } from "./scopes.ts";
 

@@ -1,5 +1,6 @@
 import type { CredentialValidationResult, ResolvedCredential } from "../../core/types.ts";
-import type { OAuthProviderContext, ProviderActionHandlers, ProviderFetch } from "../provider-runtime.ts";
+import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import {
   compactObject,

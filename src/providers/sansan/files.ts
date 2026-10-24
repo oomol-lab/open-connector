@@ -1,5 +1,5 @@
 import type { TransitFileUpload } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { readBoundedResponseBytes, storeResponseInTransit } from "../../core/request.ts";
 import {

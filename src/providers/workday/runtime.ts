@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ResolvedCredential } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, recordOrEmpty } from "../../core/cast.ts";
 import {

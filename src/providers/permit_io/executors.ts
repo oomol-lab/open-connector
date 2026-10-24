@@ -6,7 +6,8 @@ import type {
 } from "../../core/types.ts";
 import type { PermitIoContext } from "./runtime.ts";
 
-import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { permitIoActionHandlers, permitIoApiBaseUrl, validatePermitIoCredential } from "./runtime.ts";
 
 const service = "permit_io";

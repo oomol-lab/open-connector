@@ -1,5 +1,6 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors, TransitFileWriter } from "../../core/types.ts";
-import type { ProviderActionHandlers, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 import type { WechatApiResult, WeixinStoreCredential } from "./access-token.ts";
 
 import {
@@ -12,13 +13,12 @@ import {
   optionalString,
   positiveInteger,
 } from "../../core/cast.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { readTransitFileInput } from "../provider-files.ts";
 import {
   createProviderFetch,
-  defineProviderExecutors,
   providerInputError,
   providerUserAgent,
-  readTransitFileInput,
-  requireCustomCredential,
   requiredInputString,
   runProviderRequest,
 } from "../provider-runtime.ts";

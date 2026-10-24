@@ -8,17 +8,19 @@ import type {
 } from "../../core/types.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
+import { requireOAuthCredential } from "../provider-executors.ts";
 import {
-  createProviderFetch,
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,
-  ProviderRequestError,
-  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
-  requireOAuthCredential,
-  toProviderExecutionError,
   toProviderProxyError,
+} from "../provider-proxy.ts";
+import {
+  createProviderFetch,
+  ProviderRequestError,
+  providerUserAgent,
+  toProviderExecutionError,
 } from "../provider-runtime.ts";
 import { tencentDocsActionHandlers, tencentDocsApiBaseUrl } from "./runtime.ts";
 

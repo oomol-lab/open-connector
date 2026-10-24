@@ -2,13 +2,9 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { SansanContext } from "./request.ts";
 
 import { optionalString, recordOrEmpty } from "../../core/cast.ts";
-import {
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-  mapProviderActionHandlers,
-  providerResponseError,
-  requiredInputString,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerResponseError, requiredInputString } from "../provider-runtime.ts";
 import { sansanActions } from "./actions.ts";
 import { sansanAdminHandlers } from "./admin.ts";
 import { sansanBusinessHandlers } from "./business.ts";

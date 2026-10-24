@@ -5,24 +5,21 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { createHash, createHmac } from "node:crypto";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
 import {
-  createProviderFetch,
   createProviderProxyUrl,
-  defineProviderExecutors,
   normalizeProviderProxyEndpoint,
   normalizeProviderProxyHeaders,
   normalizeProviderProxyQuery,
-  ProviderRequestError,
-  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
-  requireCustomCredential,
   toProviderProxyError,
-} from "../provider-runtime.ts";
+} from "../provider-proxy.ts";
+import { createProviderFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const service = "jimeng_ai";
 const jimengAiFetch = createProviderFetch({ skipDnsValidation: true });

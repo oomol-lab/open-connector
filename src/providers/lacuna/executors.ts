@@ -2,7 +2,9 @@ import type { ExecutionContext, ProviderExecutors, ProviderProxyExecutor } from 
 import type { ProviderFetch } from "../provider-runtime.ts";
 import type { LacunaActionContext } from "./runtime.ts";
 
-import { defineProviderExecutors, defineProviderProxy, providerFetch } from "../provider-runtime.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerFetch } from "../provider-runtime.ts";
 import { lacunaActionHandlers, lacunaBaseUrl, skipRetryDelay, sleepBeforeRetry } from "./runtime.ts";
 
 export const executors: ProviderExecutors = defineProviderExecutors<LacunaActionContext>({

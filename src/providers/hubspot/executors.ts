@@ -4,10 +4,11 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { OAuthProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { OAuthProviderContext } from "../provider-executors.ts";
 
-import { defineOAuthProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { executeHubspotAction, fetchHubspotCurrentAccount, hubspotMcpEndpoint } from "./runtime.ts";
 
 const service = "hubspot";

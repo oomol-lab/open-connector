@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { isIP } from "node:net";
 import {
@@ -11,13 +11,9 @@ import {
   optionalString,
 } from "../../core/cast.ts";
 import { queryParams } from "../../core/request.ts";
-import {
-  defineBearerProviderExecutors,
-  defineProviderProxy,
-  providerInputError,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { defineBearerProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "convex";
 const apiBaseUrl = "https://api.convex.dev/v1";

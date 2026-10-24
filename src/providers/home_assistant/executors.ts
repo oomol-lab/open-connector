@@ -10,9 +10,9 @@ import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
   combineProviderActionHandlers,
   defineProviderExecutors,
-  defineProviderProxy,
   requireApiKeyCredential,
-} from "../provider-runtime.ts";
+} from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { homeAssistantConfigActionHandlers } from "./runtime-config.ts";
 import { homeAssistantWebSocketActionHandlers } from "./runtime-ws.ts";
 import {

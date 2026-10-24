@@ -2,12 +2,9 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { ExecutionContext } from "../../core/types.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const service = "ozon";
 const baseUrl = "https://api-seller.ozon.ru";

@@ -7,7 +7,7 @@ import type {
 } from "../../core/types.ts";
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { PollDefinition } from "../../triggers/common/poll.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { GmailDraftResource, GmailMessageResource, GmailReplyHeaders, GmailThreadResource } from "./message.ts";
 
 import { format as schemaFormat } from "@cfworker/json-schema";
@@ -25,9 +25,9 @@ import {
   googleServiceAccountValidator,
   resolveGoogleAccessToken,
 } from "../googledrive/runtime-auth.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
-  defineProviderExecutors,
-  defineProviderProxy,
   providerInputError,
   ProviderRequestError,
   providerResponseError,

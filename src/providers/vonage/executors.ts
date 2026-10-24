@@ -6,7 +6,8 @@ import type {
 } from "../../core/types.ts";
 
 import { Buffer } from "node:buffer";
-import { defineProviderExecutors, defineProviderProxy, requireCustomCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { createVonageContext, validateVonageCredential, vonageActionHandlers, vonageApiBaseUrl } from "./runtime.ts";
 
 const service = "vonage";

@@ -1,13 +1,13 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { FusionApiOperation } from "./operations.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { compactJson, encodePathSegment } from "../../core/request.ts";
+import { mapProviderActionHandlers } from "../provider-executors.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
-  mapProviderActionHandlers,
   ProviderRequestError,
   providerUserAgent,
   defaultProviderRequestTimeoutMs,

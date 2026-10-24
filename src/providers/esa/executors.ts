@@ -1,7 +1,8 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { optionalInteger, optionalString } from "../../core/cast.ts";
-import { defineBearerProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineBearerProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { esaActionHandlers, esaApiBaseUrl, requestEsaJson } from "./runtime.ts";
 
 const service = "esa";

@@ -8,13 +8,9 @@ import type {
 import type { JumpServerMcpContext } from "./runtime.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import {
-  createProviderFetch,
-  defineProviderExecutors,
-  defineProviderProxy,
-  mapProviderActionNames,
-  requireCustomCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, mapProviderActionNames, requireCustomCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { createProviderFetch } from "../provider-runtime.ts";
 import { jumpServerMcpToolNames } from "./actions.ts";
 
 const service = "jumpserver";

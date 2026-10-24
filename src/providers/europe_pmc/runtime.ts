@@ -1,7 +1,8 @@
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
-import { combineProviderActionHandlers, ProviderRequestError } from "../provider-runtime.ts";
+import { combineProviderActionHandlers } from "../provider-executors.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import { requestEuropePmcObject, requestEuropePmcText } from "./request.ts";
 import { europePmcAnnotationActionHandlers } from "./runtime-annotations.ts";
 import { europePmcGrantActionHandlers } from "./runtime-grants.ts";

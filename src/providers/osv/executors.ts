@@ -1,7 +1,7 @@
 import type { ProviderExecutors } from "../../core/types.ts";
 import type { OsvRuntimeContext } from "./runtime.ts";
 
-import { defineProviderExecutors } from "../provider-runtime.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import { osvActionHandlers } from "./runtime.ts";
 
 const service = "osv";

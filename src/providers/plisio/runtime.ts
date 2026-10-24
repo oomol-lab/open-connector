@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -11,12 +11,8 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import {
-  defineApiKeyProviderExecutors,
-  ProviderRequestError,
-  providerUserAgent,
-  requiredInputString,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
 
 type PlisioActionContext = ApiKeyProviderContext;
 type PlisioActionHandler = (input: Record<string, unknown>, context: PlisioActionContext) => Promise<unknown>;

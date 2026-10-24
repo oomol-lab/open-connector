@@ -9,17 +9,15 @@ import type {
 import type { TwitterActionContext } from "./runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import {
-  createProviderFetch,
   createProviderProxyUrl,
-  defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  ProviderRequestError,
-  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   toProviderProxyError,
-} from "../provider-runtime.ts";
+} from "../provider-proxy.ts";
+import { createProviderFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 import { fetchTwitterCurrentAccount, twitterActionHandlers, twitterApiBaseUrl } from "./runtime.ts";
 
 const service = "twitter";

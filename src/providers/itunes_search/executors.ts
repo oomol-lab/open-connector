@@ -1,9 +1,9 @@
 import type { ExecutionContext, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { looseArray, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
-  defineProviderExecutors,
-  defineProviderProxy,
   ProviderRequestError,
   providerResponseError,
   requiredInputString,

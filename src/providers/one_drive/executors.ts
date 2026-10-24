@@ -1,20 +1,16 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { PollDefinition } from "../../triggers/common/poll.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { OAuthProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { OAuthProviderContext } from "../provider-executors.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, requiredRecord } from "../../core/cast.ts";
 import { storeResponseInTransit } from "../../core/request.ts";
-import {
-  defineOAuthProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
-  readTransitFileInput,
-  providerInputError,
-  providerResponseError,
-} from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
+import { readTransitFileInput } from "../provider-files.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError, providerInputError, providerResponseError } from "../provider-runtime.ts";
 import { oneDriveItemChanged } from "./trigger-on-item-changed.ts";
 
 const graphBaseUrl = "https://graph.microsoft.com/v1.0";

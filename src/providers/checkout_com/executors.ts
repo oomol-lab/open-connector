@@ -1,6 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { checkoutComActionHandlers, createCheckoutContext, resolveCheckoutBase, validateCheckout } from "./runtime.ts";
 export const executors: ProviderExecutors = defineProviderExecutors({
   service: "checkout_com",

@@ -1,7 +1,9 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   requiredResponseRecord,
   isAbortLikeError,
@@ -9,8 +11,6 @@ import {
   ProviderRequestError,
   providerInputError,
   providerResponseError,
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
 } from "../provider-runtime.ts";
 import { aktaActions } from "./actions.ts";
 import { aktaRoutes } from "./actions.ts";

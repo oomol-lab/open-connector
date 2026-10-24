@@ -1,4 +1,4 @@
-import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+import type { ProviderActionHandlerSubset } from "../provider-executors.ts";
 import type { GitHubActionHandler } from "./runtime-shared.ts";
 
 import { optionalBoolean, optionalInteger, optionalRawString, optionalString } from "../../core/cast.ts";

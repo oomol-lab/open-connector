@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -12,13 +12,9 @@ import {
   optionalRecord,
   optionalString,
 } from "../../core/cast.ts";
-import {
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-  providerProxyEndpointPrefixes,
-  ProviderRequestError,
-  providerInputError,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy, providerProxyEndpointPrefixes } from "../provider-proxy.ts";
+import { ProviderRequestError, providerInputError } from "../provider-runtime.ts";
 
 const service = "enigma";
 const enigmaGraphqlApiUrl = "https://api.enigma.com/graphql";

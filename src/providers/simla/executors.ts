@@ -4,14 +4,11 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
-import {
-  credentialProviderProxyBaseUrl,
-  defineProviderExecutors,
-  defineProviderProxy,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { credentialProviderProxyBaseUrl, defineProviderProxy } from "../provider-proxy.ts";
 import { normalizeSimlaApiBaseUrl, simlaActionHandlers, validateSimlaCredential } from "./runtime.ts";
 
 const service = "simla";

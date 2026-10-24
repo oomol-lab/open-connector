@@ -1,13 +1,10 @@
 import type { ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { optionalBoolean, optionalInteger, positiveInteger, requiredString } from "../../core/cast.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  readProviderJson,
-  setSearchParams,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { readProviderJson, setSearchParams } from "../provider-runtime.ts";
 
 const service = "hackernews";
 

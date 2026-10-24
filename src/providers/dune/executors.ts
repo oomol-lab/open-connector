@@ -1,6 +1,7 @@
 import type { ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { duneActionHandlers, duneApiBaseUrl } from "./runtime.ts";
 
 const service = "dune";

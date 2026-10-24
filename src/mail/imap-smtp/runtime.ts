@@ -17,11 +17,8 @@ import { join } from "node:path";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import {
-  defineProviderExecutors,
-  ProviderRequestError,
-  requireCustomCredential,
-} from "../../providers/provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../../providers/provider-executors.ts";
+import { ProviderRequestError } from "../../providers/provider-runtime.ts";
 import { mailConnectionTimeoutMs, mailImapPort, mailMessageFetchByteLimit, mailSmtpPort } from "./config.ts";
 import { MailProtocolError } from "./errors.ts";
 import { sanitizeTempFileName } from "./temp-files.ts";

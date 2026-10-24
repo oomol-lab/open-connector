@@ -1,10 +1,10 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
 
 import { sha256Hex } from "../../core/aws-sigv4.ts";
 import { compactObject, looseArray, optionalInteger, optionalString } from "../../core/cast.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import {
-  defineApiKeyProviderExecutors,
   providerInputError,
   ProviderRequestError,
   providerResponseError,

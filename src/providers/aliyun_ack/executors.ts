@@ -1,8 +1,9 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { optionalBoolean, optionalNumber, optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, ProviderRequestError } from "../provider-runtime.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import { getTemporaryKubeconfig } from "./runtime.ts";
 
 const service = "aliyun_ack";

@@ -1,17 +1,13 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { OAuthProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { OAuthProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
 import { ProtocolError, SdkHttpError, UnauthorizedError } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
 import { optionalRecord, requiredString } from "../../core/cast.ts";
 import { withMcpClient } from "../mcp-client.ts";
-import {
-  defineOAuthProviderExecutors,
-  providerInputError,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "tiktok_business_mcp";
 const endpoint = "https://business-api.tiktok.com/open_mcp/tt-ads-mcp-flat";

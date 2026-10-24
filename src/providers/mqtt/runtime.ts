@@ -1,6 +1,6 @@
 import type { GuardedWebSocketOptions, WebSocketLike } from "../../core/guarded-websocket.ts";
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { IClientOptions, IClientPublishOptions, IClientSubscribeOptions, IPublishPacket, MqttClient } from "mqtt";
 
 import mqtt from "mqtt";

@@ -1,6 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext, ProviderTransitFile } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderTransitFile } from "../provider-files.ts";
 
 import {
   compactObject,
@@ -12,10 +13,10 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { storeResponseInTransit } from "../../core/request.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   createProviderFetch,
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
   providerInputError,
   providerResponseError,
   providerUserAgent,

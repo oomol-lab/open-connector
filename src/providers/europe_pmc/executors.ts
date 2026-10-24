@@ -1,6 +1,7 @@
 import type { ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineProviderExecutors, defineProviderProxy, mapProviderActionSources } from "../provider-runtime.ts";
+import { defineProviderExecutors, mapProviderActionSources } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { europePmcApiBaseUrl } from "./request.ts";
 import { europePmcActionHandlers } from "./runtime.ts";
 const service = "europe_pmc";

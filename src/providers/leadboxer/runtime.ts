@@ -1,11 +1,11 @@
-import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-executors.ts";
 
 import { isIP } from "node:net";
 import { domainToASCII } from "node:url";
 import { optionalRecord, requiredString } from "../../core/cast.ts";
+import { getProviderActionHandler } from "../provider-executors.ts";
 import {
   createProviderTimeout,
-  getProviderActionHandler,
   ProviderRequestError,
   providerUserAgent,
   requiredResponseRecord,

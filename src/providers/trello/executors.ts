@@ -7,18 +7,15 @@ import type {
 import type { TrelloActionContext } from "./runtime.ts";
 
 import { encodeRfc3986 } from "../../core/aws-sigv4.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
 import {
-  createProviderFetch,
   createProviderProxyUrl,
-  defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  ProviderRequestError,
-  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
-  requireCustomCredential,
   toProviderProxyError,
-} from "../provider-runtime.ts";
+} from "../provider-proxy.ts";
+import { createProviderFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 import { trelloActionHandlers, trelloApiBaseUrl, validateTrelloCredential } from "./runtime.ts";
 
 const service = "trello";

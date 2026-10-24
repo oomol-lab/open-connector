@@ -1,16 +1,12 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
-import {
-  defineApiKeyProviderExecutors,
-  providerInputError,
-  ProviderRequestError,
-  providerUserAgent,
-  uploadProviderUrlToTransitFile,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { uploadProviderUrlToTransitFile } from "../provider-files.ts";
+import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const pdfApiIoApiBaseUrl = "https://pdf-api.io";
 const pdfApiIoTemplatesPath = "/api/templates";

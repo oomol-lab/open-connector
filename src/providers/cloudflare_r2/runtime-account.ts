@@ -1,4 +1,4 @@
-import type { ProviderActionHandlerSubset, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderActionHandlerSubset, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { CloudflareR2Context } from "./runtime.ts";
 
 import { optionalInteger, optionalNumber, optionalRecord, optionalString, compactObject } from "../../core/cast.ts";

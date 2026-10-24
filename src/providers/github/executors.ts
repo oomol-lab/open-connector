@@ -11,10 +11,10 @@ import type { GitHubActionContext, GitHubActionHandler } from "./runtime-shared.
 import {
   combineProviderActionHandlers,
   defineProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
   requireBearerCredential,
-} from "../provider-runtime.ts";
+} from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import {
   createGitHubInstallationTokenResolver,
   fetchGitHubAppInstallation,

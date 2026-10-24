@@ -1,4 +1,4 @@
-import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { optionalNumber, optionalRecord, optionalRawString, rawStringOrNull } from "../../core/cast.ts";
 import {

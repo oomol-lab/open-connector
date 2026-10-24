@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -10,13 +10,9 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import {
-  defineApiKeyProviderExecutors,
-  ProviderRequestError,
-  providerResponseError,
-  providerUserAgent,
-  readTransitFileInput,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { readTransitFileInput } from "../provider-files.ts";
+import { ProviderRequestError, providerResponseError, providerUserAgent } from "../provider-runtime.ts";
 
 const service = "platerecognizer";
 export const platerecognizerApiBaseUrl = "https://api.platerecognizer.com";

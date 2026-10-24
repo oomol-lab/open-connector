@@ -1,15 +1,10 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalRawString } from "../../core/cast.ts";
-import {
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-  mapProviderActionHandlers,
-  requiredInputString,
-  requiredResponseRecord,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { requiredInputString, requiredResponseRecord, providerUserAgent } from "../provider-runtime.ts";
 import { clayActions } from "./actions.ts";
 import { runClayBatch } from "./batch-runtime.ts";
 import { baseUrl, encodeSegment, requestClay } from "./request.ts";

@@ -7,11 +7,11 @@ import { basename, extname, join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { compactObject, optionalRecord } from "../../core/cast.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   createProviderFetch,
   createProviderTimeout,
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
   providerInputError,

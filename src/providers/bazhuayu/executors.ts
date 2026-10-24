@@ -5,22 +5,18 @@ import type {
   ProxyRequestInput,
   ResolvedCredential,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { BazhuayuRuntimeContext } from "./runtime.ts";
 
+import { defineProviderExecutors, mapProviderActionHandlers, requireCustomCredential } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
-  createProviderTimeout,
-  defineProviderExecutors,
-  mapProviderActionHandlers,
   normalizeProviderProxyHeaders,
-  providerFetch,
-  providerUserAgent,
   readProviderProxyResponse,
-  requireCustomCredential,
   toProviderProxyError,
-} from "../provider-runtime.ts";
+} from "../provider-proxy.ts";
+import { createProviderTimeout, providerFetch, providerUserAgent } from "../provider-runtime.ts";
 import { bazhuayuActions } from "./actions.ts";
 import {
   bazhuayuApiBaseUrl,

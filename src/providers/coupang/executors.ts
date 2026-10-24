@@ -6,18 +6,15 @@ import type {
   ProxyExecutionResult,
 } from "../../core/types.ts";
 
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
 import {
-  defineProviderExecutors,
-  createProviderFetch,
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,
-  ProviderRequestError,
-  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
-  requireCustomCredential,
   toProviderProxyError,
-} from "../provider-runtime.ts";
+} from "../provider-proxy.ts";
+import { createProviderFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 import {
   applyCoupangSignature,
   coupangApiBaseUrl,

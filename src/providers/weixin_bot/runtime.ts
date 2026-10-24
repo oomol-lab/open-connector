@@ -1,5 +1,5 @@
 import type { TransitFileWriter } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { Buffer } from "node:buffer";
 import { randomUUID } from "node:crypto";

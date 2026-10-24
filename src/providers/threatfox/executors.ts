@@ -6,7 +6,8 @@ import type {
 } from "../../core/types.ts";
 import type { ThreatfoxRuntimeContext } from "./runtime.ts";
 
-import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { readThreatfoxError } from "./runtime.ts";
 import { threatfoxActionHandlers, threatfoxApiBaseUrl, threatfoxApiPath, validateThreatfoxAuthKey } from "./runtime.ts";
 

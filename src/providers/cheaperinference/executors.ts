@@ -1,15 +1,10 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
 
 import { compactObject, looseArray, optionalRecord, optionalString } from "../../core/cast.ts";
-import {
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-  isAbortLikeError,
-  ProviderRequestError,
-  providerUserAgent,
-  runProviderRequest,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { isAbortLikeError, ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 
 const service = "cheaperinference";
 const cheaperinferenceApiBaseUrl = "https://api.cheaperinference.com/v1";

@@ -1,11 +1,12 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { OAuthProviderContext } from "../provider-runtime.ts";
+import type { OAuthProviderContext } from "../provider-executors.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
 import { ProtocolError, SdkHttpError, UnauthorizedError } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
 import { withMcpClient } from "../mcp-client.ts";
-import { defineOAuthProviderExecutors, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
+import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 import { sunsamaMcpOfficialActions } from "./official-actions.ts";
 
 const service = "sunsama_mcp";

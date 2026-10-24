@@ -1,4 +1,4 @@
-import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+import type { ProviderActionHandlerSubset } from "../provider-executors.ts";
 import type { BilibiliActionHandler } from "./runtime.ts";
 
 import {
@@ -11,10 +11,10 @@ import {
   optionalStringArray,
   positiveInteger,
 } from "../../core/cast.ts";
+import { readTransitFileInput } from "../provider-files.ts";
 import {
   providerInputError,
   providerResponseError,
-  readTransitFileInput,
   requiredInputNumber,
   requiredInputString,
   requiredResponseRecord,

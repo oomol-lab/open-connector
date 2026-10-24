@@ -1,23 +1,23 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 import type { ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 import type { MondayActionHandler } from "./runtime-common.ts";
 
 import {
-  createProviderFetch,
-  createProviderProxyUrl,
   combineProviderActionHandlers,
   defineProviderExecutors,
   mapProviderActionSources,
+  requireBearerCredential,
+} from "../provider-executors.ts";
+import {
+  createProviderProxyUrl,
   normalizeProviderProxyHeaders,
-  ProviderRequestError,
-  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
-  requireBearerCredential,
   toProviderProxyError,
-} from "../provider-runtime.ts";
+} from "../provider-proxy.ts";
+import { createProviderFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 import { mondayAutomationActionHandlers } from "./runtime-automation.ts";
 import { mondayCollaborationActionHandlers } from "./runtime-collaboration.ts";
 import { mondayApiUrl, mondayApiVersion, validateMondayCredential } from "./runtime-common.ts";

@@ -1,6 +1,7 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 
-import { createProviderFetch, defineApiKeyProviderExecutors } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { createProviderFetch } from "../provider-runtime.ts";
 import { toriiImageTranslatorActionHandlers, validateCredential } from "./runtime.ts";
 
 const service = "torii_image_translator";

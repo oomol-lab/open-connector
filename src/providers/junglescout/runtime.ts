@@ -1,7 +1,8 @@
-import type { ProviderActionHandlers, ProviderActionName, ProviderActionSources } from "../provider-runtime.ts";
+import type { ProviderActionHandlers, ProviderActionName, ProviderActionSources } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
-import { mapProviderActionSources, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { mapProviderActionSources } from "../provider-executors.ts";
+import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const jungleScoutApiBaseUrl = "https://developer.junglescout.com/api/";
 

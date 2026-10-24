@@ -3,9 +3,9 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { randomUUID } from "node:crypto";
 import { optionalRecord, optionalString } from "../../core/cast.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
   requiredInputString,
   requiredResponseRecord,
   runProviderRequest,

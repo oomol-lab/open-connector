@@ -1,6 +1,7 @@
 import type { CredentialValidationResult, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -15,13 +16,8 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { compactJson, encodePathSegment } from "../../core/request.ts";
-import {
-  defineProviderExecutors,
-  providerInputError,
-  ProviderRequestError,
-  providerUserAgent,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 type SupportbeeRequestPhase = "validate" | "execute";
 

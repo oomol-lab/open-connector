@@ -1,13 +1,13 @@
 import type { ExecutionContext } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { requireApiKeyCredential } from "../provider-executors.ts";
 import {
   providerInputError,
   providerResponseError,
   providerUserAgent,
   ProviderRequestError,
-  requireApiKeyCredential,
 } from "../provider-runtime.ts";
 type Environment = "sandbox" | "production";
 interface CheckoutContext {

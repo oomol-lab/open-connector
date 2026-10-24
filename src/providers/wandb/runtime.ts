@@ -1,10 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type {
-  ProviderActionHandlers,
-  ProviderActionSources,
-  ProviderFetch,
-  ProviderRuntimeHandler,
-} from "../provider-runtime.ts";
+import type { ProviderActionHandlers, ProviderActionSources, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
 import { UnauthorizedError } from "@modelcontextprotocol/client";
@@ -14,7 +10,8 @@ import { createHash } from "node:crypto";
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { withMcpClient } from "../mcp-client.ts";
-import { mapProviderActionSources, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { mapProviderActionSources } from "../provider-executors.ts";
+import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export interface WandbMcpContext {
   endpoint: URL;

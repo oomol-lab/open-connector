@@ -1,9 +1,11 @@
 import type { TransitFileWriter } from "../../core/types.ts";
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 import type { ContextdevEndpoint } from "./actions.ts";
 
 import { optionalRecord, optionalString, optionalNumber } from "../../core/cast.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   requiredResponseRecord,
   requiredInputString,
@@ -11,8 +13,6 @@ import {
   runProviderRequest,
   ProviderRequestError,
   providerInputError,
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
 } from "../provider-runtime.ts";
 import { contextdevActions } from "./actions.ts";
 import { contextdevEndpointByName } from "./actions.ts";

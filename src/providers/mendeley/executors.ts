@@ -1,15 +1,10 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
-import {
-  defineOAuthProviderExecutors,
-  defineProviderProxy,
-  mapProviderActionHandlers,
-  ProviderRequestError,
-  providerUserAgent,
-  defaultProviderRequestTimeoutMs,
-} from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError, providerUserAgent, defaultProviderRequestTimeoutMs } from "../provider-runtime.ts";
 import { mendeleyActions } from "./actions.ts";
 
 const service = "mendeley";

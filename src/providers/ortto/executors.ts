@@ -2,7 +2,8 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { OrttoContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { orttoActionHandlers, resolveOrttoApiBaseUrl, validateOrttoCredential } from "./runtime.ts";
 
 const service = "ortto";

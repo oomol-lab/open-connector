@@ -1,9 +1,11 @@
 import type { TransitFileWriter } from "../../core/types.ts";
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { randomUUIDv7 } from "../../core/uuid-v7.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   requiredResponseRecord,
   isAbortLikeError,
@@ -11,8 +13,6 @@ import {
   ProviderRequestError,
   providerInputError,
   providerResponseError,
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
 } from "../provider-runtime.ts";
 import { litescrapeActions } from "./actions.ts";
 import { litescrapeEndpointByName, litescrapeToolByName } from "./actions.ts";

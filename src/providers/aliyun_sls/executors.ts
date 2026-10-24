@@ -6,7 +6,7 @@ import type {
 } from "../../core/types.ts";
 import type { AliyunSlsActionContext } from "./runtime.ts";
 
-import { defineProviderExecutors, requireCustomCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
 import { aliyunSlsActionHandlers, createAliyunSlsContext, validateAliyunSlsCredential } from "./runtime.ts";
 
 const service = "aliyun_sls";

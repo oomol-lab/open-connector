@@ -1,18 +1,17 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
 import { createHash } from "node:crypto";
 import { withMcpClient } from "../mcp-client.ts";
 import {
   defineApiKeyProviderExecutors,
-  defineProviderProxy,
   getProviderActionHandler,
   mapProviderActionHandlers,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+} from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 import { sellerspaceActions, sellerspaceToolNameByAction } from "./actions.ts";
 
 const service = "sellerspace";

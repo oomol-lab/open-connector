@@ -1,5 +1,5 @@
 import type { TransitFileRead } from "../../core/types.ts";
-import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+import type { ProviderActionHandlerSubset } from "../provider-executors.ts";
 import type { AsanaActionHandler, AsanaContext } from "./runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";

@@ -5,7 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { createHash } from "node:crypto";
 import {
@@ -17,14 +17,13 @@ import {
   rawStringOrNull,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   createProviderFetch,
   createProviderTimeout,
-  defineProviderExecutors,
-  defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
-  requireApiKeyCredential,
   providerInputError,
   defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";

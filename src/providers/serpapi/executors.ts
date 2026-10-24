@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineProviderProxy } from "../provider-runtime.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { serpapiBaseUrl, serpapiExecutors, validateSerpapiCredential } from "./runtime.ts";
 
 export const executors: ProviderExecutors = serpapiExecutors;

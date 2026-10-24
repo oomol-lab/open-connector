@@ -1,15 +1,15 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   requiredResponseRecord,
   runProviderRequest,
   ProviderRequestError,
   providerInputError,
   providerResponseError,
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
 } from "../provider-runtime.ts";
 import { ploidActions } from "./actions.ts";
 import { ploidEndpointByName } from "./actions.ts";

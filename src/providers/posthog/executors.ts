@@ -2,13 +2,9 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { PosthogRuntimeContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import {
-  credentialProviderProxyBaseUrl,
-  defineProviderExecutors,
-  defineProviderProxy,
-  mapProviderActionSources,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, mapProviderActionSources } from "../provider-executors.ts";
+import { credentialProviderProxyBaseUrl, defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import { posthogActionHandlers, validatePosthogCredential } from "./runtime.ts";
 
 const service = "posthog";

@@ -1,18 +1,12 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { sha256Hex } from "../../core/aws-sigv4.ts";
 import { recordOrEmpty, optionalRecord, optionalRawString, optionalNumber } from "../../core/cast.ts";
 import { listMcpTools, withMcpToolClient } from "../mcp-tools.ts";
-import {
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-  mapProviderActionHandlers,
-  requiredInputString,
-  ProviderRequestError,
-  readProviderProxyErrorMessage,
-  withRetryAfterSeconds,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
+import { defineProviderProxy, readProviderProxyErrorMessage } from "../provider-proxy.ts";
+import { requiredInputString, ProviderRequestError, withRetryAfterSeconds } from "../provider-runtime.ts";
 import { tencentMeetingMcpActions } from "./actions.ts";
 const origin = "https://mcp.meeting.tencent.com";
 const endpoint = `${origin}/mcp/wemeet-open/v1`;

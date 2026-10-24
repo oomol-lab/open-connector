@@ -8,7 +8,8 @@ import {
   rawStringOrNull,
   recordOrEmpty,
 } from "../../core/cast.ts";
-import { ProviderRequestError, readTransitFileInput, requiredInputString } from "../provider-runtime.ts";
+import { readTransitFileInput } from "../provider-files.ts";
+import { ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 import {
   appStoreServerPath,
   getAppStoreServerObject,

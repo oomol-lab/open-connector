@@ -5,7 +5,7 @@ import type {
   ApiKeyProviderContext,
   ProviderRuntimeHandler,
   ProviderActionName,
-} from "../provider-runtime.ts";
+} from "../provider-executors.ts";
 
 import {
   optionalNumber,
@@ -15,9 +15,9 @@ import {
   requiredNumber,
   requiredString,
 } from "../../core/cast.ts";
+import { mapProviderActionSources } from "../provider-executors.ts";
 import {
   readProviderTextBody,
-  mapProviderActionSources,
   providerResponseError,
   providerInputError,
   ProviderRequestError,

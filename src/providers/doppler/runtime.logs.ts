@@ -1,4 +1,4 @@
-import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+import type { ProviderActionHandlerSubset } from "../provider-executors.ts";
 
 import { optionalBoolean, optionalRecord, optionalString, compactObject } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";

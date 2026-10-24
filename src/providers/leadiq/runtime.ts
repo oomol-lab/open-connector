@@ -1,4 +1,4 @@
-import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import {

@@ -5,7 +5,8 @@ import type {
   ProviderProxyExecutor,
 } from "../../core/types.ts";
 
-import { defineProviderProxy, defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { amapActionHandlers, amapApiBaseUrl, validateAmapCredential } from "./runtime.ts";
 
 const service = "amap";

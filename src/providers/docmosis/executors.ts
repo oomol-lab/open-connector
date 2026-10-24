@@ -8,18 +8,15 @@ import type {
 import type { DocmosisActionContext } from "./runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
-  defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerFetch,
-  ProviderRequestError,
-  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
-  requireApiKeyCredential,
   toProviderProxyError,
-} from "../provider-runtime.ts";
+} from "../provider-proxy.ts";
+import { providerFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 import { docmosisActionHandlers, resolveDocmosisApiBaseUrl, validateDocmosisCredential } from "./runtime.ts";
 
 const service = "docmosis";

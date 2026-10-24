@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, TransitFileWriter } from "../../core/types.ts";
 import type { CloudflareCurrentUser } from "../cloudflare_dns/runtime-user.ts";
-import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { CloudflareR2PresignedMethod } from "./s3-presign.ts";
 
 import {
@@ -20,8 +20,8 @@ import {
   storeResponseInTransit,
 } from "../../core/request.ts";
 import { readCloudflareCurrentUser } from "../cloudflare_dns/runtime-user.ts";
+import { combineProviderActionHandlers } from "../provider-executors.ts";
 import {
-  combineProviderActionHandlers,
   providerFetch,
   providerInputError,
   ProviderRequestError,

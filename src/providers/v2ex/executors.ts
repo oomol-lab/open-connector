@@ -1,10 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import {
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-  providerProxyEndpointPrefixes,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy, providerProxyEndpointPrefixes } from "../provider-proxy.ts";
 import { v2exActionHandlers, validateV2exCredential } from "./runtime.ts";
 
 const service = "v2ex";

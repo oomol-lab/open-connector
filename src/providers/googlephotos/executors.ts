@@ -5,7 +5,7 @@ import type {
   ProviderProxyExecutor,
   TransitFileWriter,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import {
@@ -18,14 +18,9 @@ import {
   stringArray,
 } from "../../core/cast.ts";
 import { storeResponseInTransit } from "../../core/request.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  providerInputError,
-  ProviderRequestError,
-  providerUserAgent,
-  requireOAuthCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireOAuthCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const googlePhotosApiBaseUrl = "https://photoslibrary.googleapis.com/v1";
 export const googlePhotosPickerApiBaseUrl = "https://photospicker.googleapis.com/v1";

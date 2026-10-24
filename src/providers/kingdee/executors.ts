@@ -1,12 +1,9 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import {
-  createProviderFetch,
-  defineProviderExecutors,
-  defineProviderProxy,
-  requireCustomCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { createProviderFetch } from "../provider-runtime.ts";
 import { handlers, isBusinessEndpoint, login, readCredential, validateCredential } from "./runtime.ts";
 
 const service = "kingdee";

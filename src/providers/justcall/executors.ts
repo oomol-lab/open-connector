@@ -1,12 +1,9 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { JustCallActionContext } from "./runtime.ts";
 
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  requiredInputString,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { requiredInputString } from "../provider-runtime.ts";
 import { justCallActionHandlers, justCallApiBaseUrl, validateJustCallCredential } from "./runtime.ts";
 
 const service = "justcall";

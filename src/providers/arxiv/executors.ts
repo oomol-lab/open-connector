@@ -1,13 +1,10 @@
 import type { ExecutionContext, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { optionalNumber } from "../../core/cast.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  providerFetch,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerFetch, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "arxiv";
 const arxivApiBaseUrl = "https://export.arxiv.org/api";

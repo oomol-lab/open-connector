@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { OAuthProviderContext, ProviderActionSources, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { OAuthProviderContext, ProviderActionSources, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
 import { ProtocolError, SdkHttpError, UnauthorizedError } from "@modelcontextprotocol/client";
@@ -16,9 +16,8 @@ import {
   requiredRawString,
 } from "../../core/cast.ts";
 import { withMcpClient } from "../mcp-client.ts";
+import { defineOAuthProviderExecutors, mapProviderActionSources } from "../provider-executors.ts";
 import {
-  defineOAuthProviderExecutors,
-  mapProviderActionSources,
   providerInputError,
   providerResponseError,
   providerUserAgent,

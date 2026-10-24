@@ -1,5 +1,5 @@
 import type { TransitFileStore } from "../../core/types.ts";
-import type { BearerProviderContext } from "../provider-runtime.ts";
+import type { BearerProviderContext } from "../provider-executors.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { setDefaultGuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";

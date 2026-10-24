@@ -6,12 +6,9 @@ import type {
 } from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import { buildUnipileBaseUrl, unipileActionHandlers, validateUnipileCredential } from "./runtime.ts";
 
 const service = "unipile";

@@ -7,12 +7,9 @@ import type {
 import type { BotpressContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import { botpressActionHandlers, botpressApiBaseUrl, validateBotpressCredential } from "./runtime.ts";
 
 const service = "botpress";

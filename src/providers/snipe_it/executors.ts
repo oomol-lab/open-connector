@@ -6,13 +6,9 @@ import type {
 } from "../../core/types.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import {
-  createProviderFetch,
-  defineProviderExecutors,
-  defineProviderProxy,
-  providerFetch,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { createProviderFetch, providerFetch } from "../provider-runtime.ts";
 import { resolveSnipeItContext, snipeItActionHandlers, validateSnipeItCredential } from "./runtime.ts";
 
 const service = "snipe_it";

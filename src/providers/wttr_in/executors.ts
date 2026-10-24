@@ -1,6 +1,7 @@
 import type { ExecutionContext, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { wttrInActionHandlers, wttrInApiBaseUrl } from "./runtime.ts";
 
 const service = "wttr_in";

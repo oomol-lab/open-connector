@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers, OAuthProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers, OAuthProviderContext } from "../provider-executors.ts";
 
 import {
   optionalBoolean,
@@ -10,14 +10,14 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { storeResponseInTransit } from "../../core/request.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
+import { readTransitFileInput } from "../provider-files.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
-  defineOAuthProviderExecutors,
-  defineProviderProxy,
   providerInputError,
   ProviderRequestError,
   providerResponseError,
   readProviderJsonBody,
-  readTransitFileInput,
   requiredInputString,
 } from "../provider-runtime.ts";
 

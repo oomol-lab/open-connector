@@ -1,7 +1,7 @@
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { describe, expect, it } from "vitest";
-import { getProviderActionHandler } from "../provider-runtime.ts";
+import { getProviderActionHandler } from "../provider-executors.ts";
 import { googleChatActions } from "./actions.ts";
 import { googleChatActionHandlers } from "./executors.ts";
 

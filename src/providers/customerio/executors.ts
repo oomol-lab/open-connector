@@ -7,12 +7,9 @@ import type {
 import type { CustomerioCredentialContext } from "./runtime.ts";
 
 import { Buffer } from "node:buffer";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  providerFetch,
-  requireCustomCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerFetch } from "../provider-runtime.ts";
 import {
   customerioActionHandlers,
   resolveCustomerioCredentialContext,

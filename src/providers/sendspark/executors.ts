@@ -6,17 +6,15 @@ import type {
 } from "../../core/types.ts";
 
 import { requiredString } from "../../core/cast.ts";
+import { requireApiKeyCredential } from "../provider-executors.ts";
 import {
-  createProviderFetch,
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,
-  ProviderRequestError,
-  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
-  requireApiKeyCredential,
   toProviderProxyError,
-} from "../provider-runtime.ts";
+} from "../provider-proxy.ts";
+import { createProviderFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 import { defineSendsparkExecutors, sendsparkApiBaseUrl, validateSendsparkCredential } from "./runtime.ts";
 
 const service = "sendspark";

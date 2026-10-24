@@ -1,4 +1,4 @@
-import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+import type { ProviderActionHandlerSubset } from "../provider-executors.ts";
 import type { HomeAssistantActionContext, HomeAssistantActionHandler } from "./runtime.ts";
 
 import { optionalRecord, optionalString, optionalStringOrNull, requiredRecord } from "../../core/cast.ts";

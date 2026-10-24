@@ -1,7 +1,9 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString, optionalNumber } from "../../core/cast.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   requiredResponseRecord,
   runProviderRequest,
@@ -9,8 +11,6 @@ import {
   ProviderRequestError,
   providerInputError,
   providerResponseError,
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
 } from "../provider-runtime.ts";
 import { surfActions } from "./actions.ts";
 import { surfRoutes } from "./actions.ts";

@@ -1,5 +1,5 @@
 import type { QueryValue } from "../../core/request.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { createHash } from "node:crypto";
 import { createReadStream, createWriteStream } from "node:fs";

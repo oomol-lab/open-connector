@@ -6,7 +6,7 @@ import type {
   ProviderProxyExecutor,
   ResolvedCredential,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import {
   base64Bytes,
@@ -17,12 +17,9 @@ import {
   optionalString,
   requiredString,
 } from "../../core/cast.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  providerInputError,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerInputError, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "crowdin";
 const crowdinUserUrl = "https://api.crowdin.com/api/v2/user";

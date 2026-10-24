@@ -5,7 +5,7 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { FlomoMcpToolName } from "./actions.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
@@ -15,16 +15,18 @@ import { ProtocolError } from "@modelcontextprotocol/client";
 import { createHash } from "node:crypto";
 import { optionalString, requiredString } from "../../core/cast.ts";
 import { withMcpClient } from "../mcp-client.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
-  defineProviderExecutors,
   normalizeProviderProxyHeaders,
+  readProviderProxyResponse,
+  toProviderProxyError,
+} from "../provider-proxy.ts";
+import {
   providerFetch,
   providerInputError,
   ProviderRequestError,
   providerUserAgent,
-  readProviderProxyResponse,
-  toProviderProxyError,
   defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 

@@ -6,18 +6,15 @@ import type {
 } from "../../core/types.ts";
 import type { VtexContext } from "./runtime.ts";
 
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
-  defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerFetch,
-  ProviderRequestError,
-  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
-  requireApiKeyCredential,
   toProviderProxyError,
-} from "../provider-runtime.ts";
+} from "../provider-proxy.ts";
+import { providerFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 import {
   buildVtexApiBaseUrl,
   normalizeVtexEnvironment,

@@ -1,5 +1,5 @@
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { BearerProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { BearerProviderContext } from "../provider-executors.ts";
 
 import { createHash } from "node:crypto";
 import {
@@ -16,12 +16,8 @@ import {
   stringArray,
 } from "../../core/cast.ts";
 import { jsonObject, readBoundedResponseBytes, storeResponseInTransit } from "../../core/request.ts";
-import {
-  providerInputError,
-  ProviderRequestError,
-  providerUserAgent,
-  readTransitFileInput,
-} from "../provider-runtime.ts";
+import { readTransitFileInput } from "../provider-files.ts";
+import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 import { supabaseProviderScopes } from "./scopes.ts";
 
 export const supabaseApiBaseUrl: string = "https://api.supabase.com/v1";

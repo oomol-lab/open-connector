@@ -1,18 +1,14 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { PollDefinition } from "../../triggers/common/poll.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { OAuthProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { OAuthProviderContext } from "../provider-executors.ts";
 
 import { randomUUID } from "node:crypto";
 import { requiredRawString, requiredString } from "../../core/cast.ts";
 import { storeResponseInTransit } from "../../core/request.ts";
-import {
-  defineProviderProxy,
-  providerProxyEndpointPrefixes,
-  ProviderRequestError,
-  providerResponseError,
-} from "../provider-runtime.ts";
+import { defineProviderProxy, providerProxyEndpointPrefixes } from "../provider-proxy.ts";
+import { ProviderRequestError, providerResponseError } from "../provider-runtime.ts";
 import { defineGoogleProviderExecutors, googleBearerProxyAuth, googleServiceAccountValidator } from "./runtime-auth.ts";
 import {
   createComment,

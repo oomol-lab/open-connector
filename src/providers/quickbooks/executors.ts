@@ -5,7 +5,7 @@ import type {
   ProviderExecutors,
   ResolvedCredential,
 } from "../../core/types.ts";
-import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { QuickbooksResource, QuickbooksResourceOperation } from "./resources.ts";
 import type { QuickbooksContext } from "./runtime.ts";
 
@@ -18,9 +18,9 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import {
   ProviderRequestError,
-  defineProviderExecutors,
   providerInputError,
   providerResponseError,
   requiredInputString,

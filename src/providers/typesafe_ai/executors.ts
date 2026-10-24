@@ -1,6 +1,8 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { createProviderFetch, defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { createProviderFetch } from "../provider-runtime.ts";
 import { typesafeAiApiBaseUrl } from "./constants.ts";
 import { typesafeAiActionHandlers, validateTypesafeAiCredential } from "./runtime.ts";
 

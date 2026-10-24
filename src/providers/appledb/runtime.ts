@@ -1,4 +1,5 @@
-import type { ProviderActionHandlers, ProviderFetch, ReadProviderJsonBodyOptions } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ProviderFetch, ReadProviderJsonBodyOptions } from "../provider-runtime.ts";
 
 import { looseArray, objectArray, optionalBoolean, optionalInteger, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";

@@ -1,4 +1,4 @@
-import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-executors.ts";
 import type { SupermemoryActionName } from "./actions.ts";
 
 import { compactObject, requiredString } from "../../core/cast.ts";

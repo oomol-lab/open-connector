@@ -1,6 +1,7 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 
-import { createProviderFetch, defineProviderExecutors, requireCustomCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { createProviderFetch } from "../provider-runtime.ts";
 import { createWeComContext, toWeComExecutionError, validateWeComCredential, wecomActionHandlers } from "./runtime.ts";
 
 const service = "wecom_mcp";

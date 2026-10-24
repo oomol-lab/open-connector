@@ -1,6 +1,7 @@
 import type { ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { hasdataActionHandlers, hasdataApiBaseUrl } from "./runtime.ts";
 
 const service = "hasdata";

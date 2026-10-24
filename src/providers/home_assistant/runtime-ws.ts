@@ -1,5 +1,5 @@
 import type { GuardedWebSocketFailure, WebSocketLike } from "../../core/guarded-websocket.ts";
-import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
+import type { ProviderActionHandlerSubset } from "../provider-executors.ts";
 import type { HomeAssistantRegistryName } from "./actions.ts";
 import type { HomeAssistantActionContext, HomeAssistantActionHandler } from "./runtime.ts";
 

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineProviderProxy } from "../provider-runtime.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { executors as heyyExecutors, heyyApiBaseUrl, validateHeyyCredential } from "./runtime.ts";
 
 export const executors: ProviderExecutors = heyyExecutors;

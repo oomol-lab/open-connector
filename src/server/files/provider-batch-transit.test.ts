@@ -1,4 +1,4 @@
-import type { ApiKeyProviderContext } from "../../providers/provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../../providers/provider-executors.ts";
 
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";

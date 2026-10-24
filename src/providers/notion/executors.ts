@@ -7,23 +7,24 @@ import type {
 } from "../../core/types.ts";
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { PollDefinition } from "../../triggers/common/poll.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { compactObject, optionalNumber, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
+import { defineProviderExecutors, requireBearerCredential } from "../provider-executors.ts";
+import {
+  createProviderProxyUrl,
+  normalizeProviderProxyHeaders,
+  readProviderProxyErrorMessage,
+  readProviderProxyResponse,
+  toProviderProxyError,
+} from "../provider-proxy.ts";
 import {
   createProviderFetch,
-  createProviderProxyUrl,
-  defineProviderExecutors,
-  normalizeProviderProxyHeaders,
   providerInputError,
   ProviderRequestError,
   providerUserAgent,
-  readProviderProxyErrorMessage,
-  readProviderProxyResponse,
-  requireBearerCredential,
   requiredInputString,
-  toProviderProxyError,
   withRetryAfterSeconds,
 } from "../provider-runtime.ts";
 import { notionDatabasePageEvent } from "./trigger-on-database-page-event.ts";

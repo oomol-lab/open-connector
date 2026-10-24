@@ -1,6 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { mojoHelpdeskActionHandlers, mojoHelpdeskApiBaseUrl, validateMojoHelpdeskCredential } from "./runtime.ts";
 
 const service = "mojo_helpdesk";

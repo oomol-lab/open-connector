@@ -1,8 +1,9 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
 
 import { optionalString, requiredString } from "../../core/cast.ts";
-import { defineOAuthProviderExecutors, defineProviderProxy, mapProviderActionHandlers } from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { excelActions } from "./actions.ts";
 import { excelJsonRequest, executeExcelAction, graphBaseUrl } from "./runtime.ts";
 

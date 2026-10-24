@@ -6,18 +6,15 @@ import type {
   ProxyExecutionResult,
 } from "../../core/types.ts";
 
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
-  defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerFetch,
-  ProviderRequestError,
-  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
-  requireApiKeyCredential,
   toProviderProxyError,
-} from "../provider-runtime.ts";
+} from "../provider-proxy.ts";
+import { providerFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 import { algoliaActionHandlers, readAlgoliaApplicationId, validateAlgoliaCredential } from "./runtime.ts";
 
 const service = "algolia";

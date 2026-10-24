@@ -1,7 +1,8 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 
-import { defineOAuthProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { sentryActionHandlers, sentryApiBaseUrl, validateSentryCredential } from "./runtime.ts";
 import { sentryIssueAlert } from "./trigger-on-issue-alert.ts";
 

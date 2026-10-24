@@ -1,6 +1,8 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { requiredInputString, defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { requiredInputString } from "../provider-runtime.ts";
 import { fengshuiActionHandlers, fengshuiApiBaseUrl, requestFengshuiJson } from "./runtime.ts";
 
 const service = "fengshui";

@@ -1,10 +1,12 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 import type { SaperlyEndpoint } from "./actions.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { downloadUploadSource } from "../provider-files.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
-  downloadUploadSource,
   requiredResponseRecord,
   requiredInputString,
   isAbortLikeError,
@@ -12,8 +14,6 @@ import {
   ProviderRequestError,
   providerInputError,
   providerResponseError,
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
 } from "../provider-runtime.ts";
 import { saperlyActions } from "./actions.ts";
 import { saperlyEndpointByName } from "./actions.ts";

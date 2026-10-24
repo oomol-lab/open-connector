@@ -1,13 +1,13 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 import type { McpToolOptions, McpToolSummary } from "../mcp-tools.ts";
-import type { ApiKeyProviderContext, ProviderFetch } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { sha256Hex } from "../../core/aws-sigv4.ts";
 import { optionalRecord } from "../../core/cast.ts";
 import { callMcpTool, listMcpTools } from "../mcp-tools.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
 import {
-  defineApiKeyProviderExecutors,
-  mapProviderActionHandlers,
   providerInputError,
   ProviderRequestError,
   providerResponseError,

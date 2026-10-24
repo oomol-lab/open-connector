@@ -4,15 +4,12 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeContextFactory } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderRuntimeContextFactory } from "../provider-executors.ts";
 
 import { requiredString } from "../../core/cast.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  providerInputError,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerInputError } from "../provider-runtime.ts";
 import { superSaasActionHandlers, superSaasApiBaseUrl, validateSuperSaasCredential } from "./runtime.ts";
 
 const service = "super_saas";

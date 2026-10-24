@@ -1,9 +1,9 @@
-import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { looseArray, optionalRecord, optionalRawString } from "../../core/cast.ts";
+import { mapProviderActionSources } from "../provider-executors.ts";
 import {
   readProviderJsonBody,
-  mapProviderActionSources,
   providerInputError,
   ProviderRequestError,
   providerUserAgent,

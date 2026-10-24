@@ -2,14 +2,14 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { DefillamaRoute } from "./actions.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineProviderExecutors } from "../provider-runtime.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   isAbortLikeError,
   runProviderRequest,
   ProviderRequestError,
   providerInputError,
   providerResponseError,
-  defineProviderProxy,
 } from "../provider-runtime.ts";
 import { defillamaActions } from "./actions.ts";
 import { defillamaRoutes } from "./actions.ts";

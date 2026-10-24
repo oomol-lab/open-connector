@@ -1,9 +1,11 @@
 import type { ExecutionContext, TransitFileWriter } from "../../core/types.ts";
 import type { OAuthTokenResult } from "../../oauth/oauth-token.ts";
-import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { createHash, createHmac, randomUUID } from "node:crypto";
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { requireOAuthCredential } from "../provider-executors.ts";
 import {
   ProviderRequestError,
   createProviderTimeout,
@@ -13,7 +15,6 @@ import {
   providerUserAgent,
   readProviderErrorTextBody,
   readProviderJsonBody,
-  requireOAuthCredential,
   requiredResponseRecord,
   runProviderRequest,
   setSearchParams,

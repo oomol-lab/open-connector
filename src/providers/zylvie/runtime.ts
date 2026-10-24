@@ -1,9 +1,9 @@
-import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyActionRequest, ProviderActionHandlers } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { getProviderActionHandler } from "../provider-executors.ts";
 import {
   createProviderTimeout,
-  getProviderActionHandler,
   ProviderRequestError,
   providerUserAgent,
   requiredResponseRecord,

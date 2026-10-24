@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlerSubset, ProviderActionHandlers } from "../provider-runtime.ts";
-import type { OAuthProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlerSubset, ProviderActionHandlers } from "../provider-executors.ts";
+import type { OAuthProviderContext } from "../provider-executors.ts";
 import type { LongbridgeReadonlyActionSpec, LongbridgeReadonlyParamSpec } from "./readonly-action-specs.ts";
 
 import {
@@ -13,8 +13,8 @@ import {
   stringArray,
 } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
+import { mapProviderActionHandlers } from "../provider-executors.ts";
 import {
-  mapProviderActionHandlers,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,

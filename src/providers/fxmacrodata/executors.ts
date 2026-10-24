@@ -1,7 +1,8 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { AsyncLocalStorage } from "node:async_hooks";
-import { defineProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   createFxmacrodataContext,
   fxmacrodataActionHandlers,

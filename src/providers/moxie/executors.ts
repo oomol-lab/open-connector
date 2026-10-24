@@ -6,12 +6,9 @@ import type {
 } from "../../core/types.ts";
 import type { MoxieActionContext } from "./runtime.ts";
 
-import {
-  createProviderFetch,
-  defineProviderExecutors,
-  defineProviderProxy,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { createProviderFetch } from "../provider-runtime.ts";
 import { moxieActionHandlers, normalizeMoxieBaseUrl, validateMoxieCredential } from "./runtime.ts";
 
 const service = "moxie";

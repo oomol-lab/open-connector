@@ -1,7 +1,8 @@
-import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderActionSources } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderActionSources } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import { mapProviderActionSources, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
+import { mapProviderActionSources } from "../provider-executors.ts";
+import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 export const samcartApiBaseUrl = "https://api.samcart.com/v1";
 interface RequestShape {

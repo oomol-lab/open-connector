@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import { kuaidi100ActionHandlers, validateKuaidi100Credential } from "./runtime.ts";
 
 const service = "kuaidi100";

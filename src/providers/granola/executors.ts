@@ -6,12 +6,9 @@ import type {
 } from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  mapProviderActionSources,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, mapProviderActionSources } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import { granolaMcpActionHandlers, validateGranolaOAuthCredential } from "./runtime-mcp.ts";
 import { granolaActionHandlers, granolaApiBaseUrl, validateGranolaCredential } from "./runtime.ts";
 

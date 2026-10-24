@@ -6,13 +6,9 @@ import type {
 } from "../../core/types.ts";
 
 import { requiredString } from "../../core/cast.ts";
-import {
-  basicAuthorizationHeader,
-  defineProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
-  requireCustomCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { basicAuthorizationHeader, ProviderRequestError } from "../provider-runtime.ts";
 import {
   createEchoTikProviderAccountId,
   echotikActionHandlers,

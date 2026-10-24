@@ -1,5 +1,5 @@
 import type { TransitFileWriter } from "../../core/types.ts";
-import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderRuntimeHandler } from "../provider-executors.ts";
 
 export interface ShopifyContext {
   accessToken: string;

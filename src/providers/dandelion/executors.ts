@@ -1,11 +1,8 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import {
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-  providerInputError,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerInputError } from "../provider-runtime.ts";
 import { dandelionActionHandlers, dandelionApiBaseUrl, validateDandelionApiKey } from "./runtime.ts";
 
 const service = "dandelion";

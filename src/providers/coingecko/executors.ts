@@ -4,14 +4,10 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  mapProviderActionSources,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, mapProviderActionSources, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   coingeckoAuthHeader,
   coingeckoBaseUrl,

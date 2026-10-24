@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
 
 import {
   optionalBoolean,
@@ -11,12 +11,8 @@ import {
   requiredString,
   requiredStringArray,
 } from "../../core/cast.ts";
-import {
-  defineOAuthProviderExecutors,
-  providerInputError,
-  ProviderRequestError,
-  readProviderJson,
-} from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
+import { providerInputError, ProviderRequestError, readProviderJson } from "../provider-runtime.ts";
 
 const service = "indeed";
 const graphQlUrl = "https://apis.indeed.com/graphql";

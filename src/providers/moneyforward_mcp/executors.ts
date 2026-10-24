@@ -1,6 +1,7 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 
-import { createProviderFetch, defineApiKeyProviderExecutors } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { createProviderFetch } from "../provider-runtime.ts";
 import { moneyforwardService } from "./manifest.ts";
 import { moneyforwardMcpActionHandlers, validateMoneyforwardMcpCredential } from "./runtime.ts";
 

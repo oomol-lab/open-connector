@@ -1,7 +1,8 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { optionalString, requiredString } from "../../core/cast.ts";
-import { defineOAuthProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { microsoftTodoActionHandlers, microsoftTodoGraphBaseUrl, microsoftTodoJsonRequest } from "./runtime.ts";
 
 const service = "microsoft_todo";

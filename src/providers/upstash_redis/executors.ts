@@ -6,7 +6,8 @@ import type {
 } from "../../core/types.ts";
 import type { UpstashRedisContext } from "./runtime.ts";
 
-import { defineProviderExecutors, defineProviderProxy, requireCustomCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   createUpstashRedisContext,
   normalizeUpstashRestUrl,

@@ -1,15 +1,10 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
-import {
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-  mapProviderActionHandlers,
-  ProviderRequestError,
-  requiredResponseRecord,
-  runProviderRequest,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError, requiredResponseRecord, runProviderRequest } from "../provider-runtime.ts";
 import { dynalistActions } from "./actions.ts";
 const baseUrl = "https://dynalist.io/api/v1";
 const endpoints: Record<string, string> = {

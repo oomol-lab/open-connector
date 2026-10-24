@@ -1,13 +1,9 @@
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, recordOrEmpty } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
-import {
-  createProviderTimeout,
-  getProviderActionHandler,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { getProviderActionHandler } from "../provider-executors.ts";
+import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 interface ApiKeyProviderActionInput {
   apiKey: string;

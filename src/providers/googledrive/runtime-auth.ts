@@ -1,16 +1,13 @@
 import type { CredentialValidators, ProviderExecutors, ResolvedCredential } from "../../core/types.ts";
-import type {
-  OAuthProviderContext,
-  ProviderFetch,
-  ProviderProxyAuth,
-  ProviderRuntimeHandler,
-} from "../provider-runtime.ts";
+import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderProxyAuth } from "../provider-proxy.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { importPKCS8, SignJWT } from "jose";
 import { sha256Hex } from "../../core/aws-sigv4.ts";
 import { optionalNumberLike, optionalRecord, optionalString } from "../../core/cast.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import {
-  defineProviderExecutors,
   providerInputError,
   ProviderRequestError,
   providerUserAgent,

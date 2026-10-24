@@ -4,7 +4,7 @@ import type {
   ApiKeyProviderContext,
   ProviderRuntimeHandler,
   ProviderActionName,
-} from "../provider-runtime.ts";
+} from "../provider-executors.ts";
 
 import { setTimeout as delay } from "node:timers/promises";
 import {
@@ -15,10 +15,10 @@ import {
   recordOrEmpty,
   objectArray,
 } from "../../core/cast.ts";
+import { mapProviderActionSources } from "../provider-executors.ts";
 import {
   providerInputError,
   readProviderJsonBody,
-  mapProviderActionSources,
   providerResponseError,
   ProviderRequestError,
   readRetryAfterSeconds,

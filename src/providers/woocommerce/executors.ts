@@ -8,18 +8,19 @@ import type { IntegrationDefinition } from "../../triggers/common/integration.ts
 import type { PollDefinition } from "../../triggers/common/poll.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import {
+  createProviderProxyUrl,
+  normalizeProviderProxyHeaders,
+  readProviderProxyErrorMessage,
+  readProviderProxyResponse,
+  toProviderProxyError,
+} from "../provider-proxy.ts";
 import {
   basicAuthorizationHeader,
   createProviderFetch,
-  createProviderProxyUrl,
-  defineProviderExecutors,
-  normalizeProviderProxyHeaders,
   ProviderRequestError,
   providerUserAgent,
-  readProviderProxyErrorMessage,
-  readProviderProxyResponse,
-  requireCustomCredential,
-  toProviderProxyError,
 } from "../provider-runtime.ts";
 import {
   resolveWooCommerceCredentialContext,

@@ -1,5 +1,6 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { ProviderActionName, ProviderActionSources, ProviderFetch } from "../provider-runtime.ts";
+import type { ProviderActionName, ProviderActionSources } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import {
@@ -14,15 +15,13 @@ import {
   pickOptionalString,
   requiredBoolean,
 } from "../../core/cast.ts";
+import { defineProviderExecutors, mapProviderActionSources, requireCustomCredential } from "../provider-executors.ts";
 import {
-  defineProviderExecutors,
-  mapProviderActionSources,
   providerInputError,
   providerResponseError,
   ProviderRequestError,
   providerUserAgent,
   readProviderJsonBody,
-  requireCustomCredential,
   requiredInputString,
   runProviderRequest,
 } from "../provider-runtime.ts";

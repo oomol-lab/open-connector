@@ -6,7 +6,9 @@ import type {
 } from "../../core/types.ts";
 import type { HeygenActionContext } from "./runtime.ts";
 
-import { defineProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import {
   createHeygenApiKeyAuth,
   createHeygenOAuthAuth,

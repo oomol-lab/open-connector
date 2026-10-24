@@ -1,6 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { buzzsproutActionHandlers, buzzsproutApiBaseUrl, validateBuzzsproutCredential } from "./runtime.ts";
 const service = "buzzsprout";
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, buzzsproutActionHandlers, {

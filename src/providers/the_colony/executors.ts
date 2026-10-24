@@ -1,7 +1,9 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import { theColonyActionHandlers, theColonyApiBaseUrl, validateTheColonyCredential } from "./runtime.ts";
 
 const service = "the_colony";

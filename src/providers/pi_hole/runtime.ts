@@ -1,5 +1,6 @@
 import type { CredentialValidationResult, TransitFileStore } from "../../core/types.ts";
-import type { ProviderActionHandlerSubset, ProviderFetch } from "../provider-runtime.ts";
+import type { ProviderActionHandlerSubset } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import {
   optionalBoolean,
@@ -15,6 +16,7 @@ import {
   stringArray,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed, readBoundedResponseBytes } from "../../core/request.ts";
+import { readTransitFileInput } from "../provider-files.ts";
 import {
   createProviderTimeout,
   providerInputError,
@@ -22,7 +24,6 @@ import {
   providerUserAgent,
   readProviderJsonBody,
   readProviderTextBody,
-  readTransitFileInput,
   requiredInputString,
 } from "../provider-runtime.ts";
 

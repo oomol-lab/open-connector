@@ -5,24 +5,25 @@ import type {
   ProviderProxyExecutor,
   ProxyExecutionResult,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { createHash, createHmac } from "node:crypto";
 import { compactObject, objectArray, optionalNumber, optionalString, requiredString } from "../../core/cast.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import {
+  createProviderProxyUrl,
+  normalizeProviderProxyHeaders,
+  readProviderProxyErrorMessage,
+  readProviderProxyResponse,
+  toProviderProxyError,
+} from "../provider-proxy.ts";
 import {
   createProviderFetch,
-  createProviderProxyUrl,
   createProviderTimeout,
-  defineProviderExecutors,
   isAbortLikeError,
-  normalizeProviderProxyHeaders,
   providerInputError,
   ProviderRequestError,
   providerUserAgent,
-  readProviderProxyErrorMessage,
-  readProviderProxyResponse,
-  requireApiKeyCredential,
-  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "dingtalk_bot";

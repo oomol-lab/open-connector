@@ -2,13 +2,8 @@ import type { CredentialValidationResult, CredentialValidators, ProviderExecutor
 import type { OdooActionContext } from "./runtime.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import {
-  createProviderFetch,
-  defineProviderExecutors,
-  ProviderRequestError,
-  providerInputError,
-  requireCustomCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { createProviderFetch, ProviderRequestError, providerInputError } from "../provider-runtime.ts";
 import { createOdooContext, odooActionHandlers } from "./runtime.ts";
 
 export const executors: ProviderExecutors = defineProviderExecutors<OdooActionContext>({

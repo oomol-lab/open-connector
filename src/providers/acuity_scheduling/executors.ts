@@ -9,18 +9,15 @@ import type { AcuitySchedulingActionContext } from "./runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { optionalString } from "../../core/cast.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
-  defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerFetch,
-  ProviderRequestError,
-  providerUserAgent,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
-  requireApiKeyCredential,
   toProviderProxyError,
-} from "../provider-runtime.ts";
+} from "../provider-proxy.ts";
+import { providerFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 import {
   acuitySchedulingActionHandlers,
   resolveAcuitySchedulingCredential,

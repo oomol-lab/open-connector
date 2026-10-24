@@ -4,20 +4,19 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionName, ProviderActionSources, ProviderFetch } from "../provider-runtime.ts";
+import type { ProviderActionName, ProviderActionSources } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { createHash, createHmac } from "node:crypto";
 import { compactObject, optionalInteger, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
+import { defineProviderExecutors, mapProviderActionSources, requireCustomCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  mapProviderActionSources,
   providerInputError,
   providerResponseError,
   ProviderRequestError,
   providerUserAgent,
   requiredInputString,
-  requireCustomCredential,
   runProviderRequest,
 } from "../provider-runtime.ts";
 

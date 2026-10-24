@@ -1,19 +1,22 @@
 import type { CredentialValidationResult, ProviderProxyExecutor, ProxyExecutionResult } from "../../core/types.ts";
-import type { ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalScalarString, optionalString } from "../../core/cast.ts";
+import { requireApiKeyCredential } from "../provider-executors.ts";
+import {
+  createProviderProxyUrl,
+  normalizeProviderProxyHeaders,
+  readProviderProxyResponse,
+  toProviderProxyError,
+} from "../provider-proxy.ts";
 import {
   createProviderFetch,
-  createProviderProxyUrl,
   createProviderTimeout,
   isAbortLikeError,
-  normalizeProviderProxyHeaders,
   ProviderRequestError,
   providerUserAgent,
-  readProviderProxyResponse,
-  requireApiKeyCredential,
-  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 export const blazeMeterApiBaseUrl = "https://a.blazemeter.com/api/v4";

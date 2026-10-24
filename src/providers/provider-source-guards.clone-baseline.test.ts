@@ -115,14 +115,14 @@ const cloneClasses: CloneClass[] = [
   },
   {
     id: "local-api-key-action-input",
-    owner: "ApiKeyActionRequest in src/providers/provider-runtime.ts",
-    ownerFile: providerRuntimeFile,
+    owner: "ApiKeyActionRequest in src/providers/provider-executors.ts",
+    ownerFile: "src/providers/provider-executors.ts",
     pattern: /interface \w*ApiKey\w*ActionInput\b/,
   },
   {
     id: "hand-written-proxy",
-    owner: "defineProviderProxy in src/providers/provider-runtime.ts",
-    ownerFile: providerRuntimeFile,
+    owner: "defineProviderProxy in src/providers/provider-proxy.ts",
+    ownerFile: "src/providers/provider-proxy.ts",
     pattern:
       /export (?:const proxy(?:: ProviderProxyExecutor)? =(?!\s*defineProviderProxy\b)|(?:async )?function proxy\b)/,
   },
@@ -151,7 +151,7 @@ const cloneClasses: CloneClass[] = [
     id: "local-action-name-union",
     owner:
       "the plain string action name every provider runtime already receives, or the generated ProviderActionName map for typed callers",
-    ownerFile: providerRuntimeFile,
+    ownerFile: "src/providers/provider-executors.ts",
     pattern: /^[^\S\n]*(?:export )?type \w+ActionName\b/,
   },
   {
@@ -227,7 +227,7 @@ const cloneSpellings: CloneSpellings[] = [
     id: "local-api-key-action-input",
     clones: ["interface ApiKeyProviderActionInput {", "interface EchotikApiKeyActionInput {"],
     callers: [
-      'import type { ApiKeyActionRequest } from "../provider-runtime.ts";',
+      'import type { ApiKeyActionRequest } from "../provider-executors.ts";',
       "async function runAction(request: ApiKeyActionRequest): Promise<unknown> {",
     ],
   },

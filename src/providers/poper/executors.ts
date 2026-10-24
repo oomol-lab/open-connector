@@ -6,19 +6,20 @@ import type {
 } from "../../core/types.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { defineApiKeyProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
 import {
-  createProviderTimeout,
-  defineApiKeyProviderExecutors,
   createProviderProxyUrl,
   normalizeProviderProxyHeaders,
+  readProviderProxyErrorMessage,
+  readProviderProxyResponse,
+  toProviderProxyError,
+} from "../provider-proxy.ts";
+import {
+  createProviderTimeout,
   providerFetch,
   providerInputError,
   ProviderRequestError,
   providerUserAgent,
-  readProviderProxyErrorMessage,
-  readProviderProxyResponse,
-  requireApiKeyCredential,
-  toProviderProxyError,
 } from "../provider-runtime.ts";
 
 const service = "poper";

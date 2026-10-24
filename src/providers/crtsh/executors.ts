@@ -1,7 +1,8 @@
 import type { ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { CrtshRuntimeContext } from "./runtime.ts";
 
-import { defineProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { readCrtshError } from "./runtime.ts";
 import { crtshActionHandlers, crtshApiBaseUrl } from "./runtime.ts";
 

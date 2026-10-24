@@ -6,7 +6,9 @@ import type {
 } from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
-import { defineProviderExecutors, defineProviderProxy, ProviderRequestError } from "../provider-runtime.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import { u301ActionHandlers, u301ApiBaseUrl, validateU301Credential } from "./runtime.ts";
 
 const service = "u301";

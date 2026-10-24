@@ -4,18 +4,17 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, pickOptionalBoolean } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   createProviderFetch,
-  defineProviderExecutors,
-  defineProviderProxy,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
-  requireApiKeyCredential,
 } from "../provider-runtime.ts";
 
 const service = "firecrawl";

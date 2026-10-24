@@ -9,16 +9,15 @@ import type {
 import type { ActionContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
 import {
-  createProviderFetch,
   createProviderProxyUrl,
-  defineProviderExecutors,
   normalizeProviderProxyHeaders,
-  ProviderRequestError,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   toProviderProxyError,
-} from "../provider-runtime.ts";
+} from "../provider-proxy.ts";
+import { createProviderFetch, ProviderRequestError } from "../provider-runtime.ts";
 import {
   alpacaActionHandlers,
   alpacaCredentialHeaders,

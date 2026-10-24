@@ -1,5 +1,5 @@
 import type { CredentialValidationResult, TransitFileWriter } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { Buffer } from "node:buffer";
 import { createHash, createHmac } from "node:crypto";

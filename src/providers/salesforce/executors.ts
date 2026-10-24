@@ -1,10 +1,10 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { OAuthProviderContext } from "../provider-runtime.ts";
+import type { OAuthProviderContext } from "../provider-executors.ts";
 
 import { optionalString } from "../../core/cast.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
-  defineOAuthProviderExecutors,
-  defineProviderProxy,
   providerInputError,
   providerResponseError,
   requiredInputString,

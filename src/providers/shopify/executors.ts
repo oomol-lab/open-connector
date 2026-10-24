@@ -10,12 +10,9 @@ import type { IntegrationDefinition } from "../../triggers/common/integration.ts
 import type { PollDefinition } from "../../triggers/common/poll.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
-  requiredResponseRecord,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError, requiredResponseRecord } from "../provider-runtime.ts";
 import { bulkHandlers } from "./bulk.ts";
 import { catalogHandlers } from "./catalog.ts";
 import { buildShopifyApiBaseUrl, requestShopifyGraphQL } from "./client.ts";

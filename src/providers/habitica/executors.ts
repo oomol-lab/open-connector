@@ -1,6 +1,6 @@
 import type { CredentialValidators, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
 import type { ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -16,19 +16,16 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { createProviderProxyUrl, normalizeProviderProxyHeaders, toProviderProxyError } from "../provider-proxy.ts";
 import {
   createProviderFetch,
-  createProviderProxyUrl,
-  defineProviderExecutors,
   isAbortLikeError,
-  normalizeProviderProxyHeaders,
   providerInputError,
   ProviderRequestError,
   providerResponseError,
   providerUserAgent,
-  requireApiKeyCredential,
   requiredInputString,
-  toProviderProxyError,
   defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
 

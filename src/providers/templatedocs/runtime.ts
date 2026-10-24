@@ -1,5 +1,6 @@
 import type { CredentialValidationResult, TransitFileWriter } from "../../core/types.ts";
-import type { ProviderActionHandlers, ProviderFetch } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { basename } from "node:path";
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";

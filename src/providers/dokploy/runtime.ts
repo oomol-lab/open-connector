@@ -1,17 +1,17 @@
 import type { CredentialValidationResult, TransitFileWriter } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { DokployOperation } from "./operations.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed, readBoundedResponseBytes } from "../../core/request.ts";
+import { mapProviderActionHandlers } from "../provider-executors.ts";
+import { readTransitFileInput } from "../provider-files.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
-  mapProviderActionHandlers,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
-  readTransitFileInput,
 } from "../provider-runtime.ts";
 import { dokployOperations } from "./operations.ts";
 

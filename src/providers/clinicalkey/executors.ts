@@ -6,13 +6,9 @@ import type {
 } from "../../core/types.ts";
 
 import { requiredString } from "../../core/cast.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  providerInputError,
-  ProviderRequestError,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerInputError, ProviderRequestError } from "../provider-runtime.ts";
 import {
   clinicalKeyActionHandlers,
   clinicalKeyApiBaseUrl,

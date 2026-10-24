@@ -5,16 +5,18 @@ import type {
   ProviderProxyExecutor,
 } from "../../core/types.ts";
 import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
-import type { OAuthProviderContext } from "../provider-runtime.ts";
+import type { OAuthProviderContext } from "../provider-executors.ts";
 import type { FeishuActionRuntimeContext } from "./shared/client.ts";
 
 import { optionalNumber, optionalString } from "../../core/cast.ts";
 import { expiresAtFromLifetime } from "../../oauth/oauth-token.ts";
 import {
   defineOAuthProviderExecutors,
-  defineProviderProxy,
   getProviderActionHandler,
   mapProviderActionHandlers,
+} from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import {
   ProviderRequestError,
   readProviderJsonBody,
   requiredResponseRecord,

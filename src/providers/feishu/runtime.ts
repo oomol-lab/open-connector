@@ -1,5 +1,5 @@
-import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
-import type { OAuthProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlerSubset } from "../provider-executors.ts";
+import type { OAuthProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalObjectArray, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, readProviderJsonBody, requiredInputString } from "../provider-runtime.ts";

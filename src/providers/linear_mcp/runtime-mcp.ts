@@ -4,7 +4,7 @@ import type {
   ProviderActionHandlers,
   ProviderActionSources,
   ProviderRuntimeHandler,
-} from "../provider-runtime.ts";
+} from "../provider-executors.ts";
 import type { LinearMcpComment, LinearMcpIssue, LinearMcpNamedRecord, LinearMcpUser } from "./actions.ts";
 import type { Client } from "@modelcontextprotocol/client";
 

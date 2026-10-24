@@ -1,13 +1,13 @@
 import type { ExecutionContext } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { requireApiKeyCredential } from "../provider-executors.ts";
 import {
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
-  requireApiKeyCredential,
   requiredInputString,
 } from "../provider-runtime.ts";
 export const lunoApiBaseUrl = "https://api.luno.com";

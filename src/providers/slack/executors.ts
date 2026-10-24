@@ -2,7 +2,7 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { PollDefinition } from "../../triggers/common/poll.ts";
 
-import { defineProviderProxy } from "../provider-runtime.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   defineSlackProviderExecutors,
   slackActionHandlers,

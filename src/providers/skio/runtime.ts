@@ -4,15 +4,11 @@ import type {
   ProviderActionHandlers,
   ProviderActionSources,
   ProviderRuntimeHandler,
-} from "../provider-runtime.ts";
+} from "../provider-executors.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
-import {
-  mapProviderActionSources,
-  providerUserAgent,
-  ProviderRequestError,
-  runProviderRequest,
-} from "../provider-runtime.ts";
+import { mapProviderActionSources } from "../provider-executors.ts";
+import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 
 export const skioApiBaseUrl = "https://api.skio.com/public-rest-api-http";
 const validationPath = "/subscriptions";

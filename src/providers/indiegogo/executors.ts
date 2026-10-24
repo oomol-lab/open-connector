@@ -1,13 +1,9 @@
 import type { ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers, ProviderActionSources, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderActionHandlers, ProviderActionSources, ProviderRuntimeHandler } from "../provider-executors.ts";
 
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  mapProviderActionSources,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, mapProviderActionSources } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 interface Context {
   fetcher: typeof fetch;

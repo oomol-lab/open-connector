@@ -5,7 +5,8 @@ import type {
   ProviderProxyExecutor,
 } from "../../core/types.ts";
 
-import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { agilityActionHandlers, agilityApiBaseUrl, validateAgilityCredential } from "./runtime.ts";
 
 const service = "agility";

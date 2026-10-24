@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
-import type { ProviderActionHandlerSubset, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlerSubset, ProviderActionHandlers } from "../provider-executors.ts";
 import type { BilibiliActionContext, BilibiliActionHandler } from "./runtime.ts";
 
 import {
@@ -13,12 +13,11 @@ import {
   optionalStringArray,
   requiredString,
 } from "../../core/cast.ts";
+import { combineProviderActionHandlers, defineProviderExecutors } from "../provider-executors.ts";
+import { readTransitFileInput } from "../provider-files.ts";
 import {
-  combineProviderActionHandlers,
-  defineProviderExecutors,
   providerInputError,
   providerResponseError,
-  readTransitFileInput,
   requiredInputNumber,
   requiredInputString,
   requiredResponseRecord,

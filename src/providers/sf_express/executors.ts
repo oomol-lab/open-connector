@@ -10,7 +10,7 @@ import {
   combineProviderActionHandlers,
   defineProviderExecutors,
   requireCustomCredential,
-} from "../provider-runtime.ts";
+} from "../provider-executors.ts";
 import { sfExpressColdchainHandlers } from "./runtime-coldchain.ts";
 import { sfExpressFreightCoreHandlers } from "./runtime-freight-core.ts";
 import { sfExpressFreightForwardCrossborderHandlers } from "./runtime-freight-forward-crossborder.ts";

@@ -5,7 +5,7 @@ import { Validator } from "@cfworker/json-schema";
 import { SdkError, SdkErrorCode } from "@modelcontextprotocol/client";
 import { describe, expect, it } from "vitest";
 import { validateActionInput } from "../../core/validation.ts";
-import { getProviderActionHandler } from "../provider-runtime.ts";
+import { getProviderActionHandler } from "../provider-executors.ts";
 import { provider } from "./definition.ts";
 import { executors } from "./executors.ts";
 import { metabaseMcpHandlers, runMetabaseMcp } from "./mcp-runtime.ts";

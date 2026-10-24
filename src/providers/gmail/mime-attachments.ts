@@ -3,7 +3,8 @@ import type { GmailMimeAttachment } from "./mime.ts";
 
 import { Buffer } from "node:buffer";
 import { base64Bytes, objectArray, optionalString, requiredRawString } from "../../core/cast.ts";
-import { providerInputError, ProviderRequestError, readTransitFileInput } from "../provider-runtime.ts";
+import { readTransitFileInput } from "../provider-files.ts";
+import { providerInputError, ProviderRequestError } from "../provider-runtime.ts";
 import { gmailMaxAttachmentBytes, gmailMaxAttachmentCount } from "./limits.ts";
 import { assertMimeAttachmentMetadata } from "./mime.ts";
 

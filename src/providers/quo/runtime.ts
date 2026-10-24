@@ -1,15 +1,11 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, requiredString } from "../../core/cast.ts";
-import {
-  defineApiKeyProviderExecutors,
-  providerUserAgent,
-  ProviderRequestError,
-  providerInputError,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { providerUserAgent, ProviderRequestError, providerInputError } from "../provider-runtime.ts";
 
 type QueryValue = string | number | readonly string[] | undefined;
 type QuoActionContext = ApiKeyProviderContext;

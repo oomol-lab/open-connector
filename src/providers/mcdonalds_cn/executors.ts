@@ -6,7 +6,7 @@ import type {
 } from "../../core/types.ts";
 import type { McdonaldsCnContext } from "./runtime.ts";
 
-import { defineProviderExecutors, requireCustomCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
 import { createMcdonaldsCnContext, mcdonaldsCnActionHandlers, validateMcdonaldsCnCredential } from "./runtime.ts";
 
 const service = "mcdonalds_cn";

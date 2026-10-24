@@ -1,6 +1,7 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { McpClientToolResult, McpToolOptions } from "../mcp-tools.ts";
-import type { ProviderActionHandlers, ProviderFetch, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { sha256Hex } from "../../core/aws-sigv4.ts";
 import {

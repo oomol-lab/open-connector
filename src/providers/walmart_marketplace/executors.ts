@@ -5,12 +5,9 @@ import type {
   ProviderProxyExecutor,
 } from "../../core/types.ts";
 
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  providerUserAgent,
-  requireCustomCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerUserAgent } from "../provider-runtime.ts";
 import {
   applyMarketplaceHeaders,
   exchangeAccessToken,

@@ -1,17 +1,15 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
 import {
-  createProviderFetch,
-  defineProviderExecutors,
   normalizeProviderProxyEndpoint,
   normalizeProviderProxyHeaders,
   normalizeProviderProxyQuery,
-  ProviderRequestError,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
-  requireCustomCredential,
   toProviderProxyError,
-} from "../provider-runtime.ts";
+} from "../provider-proxy.ts";
+import { createProviderFetch, ProviderRequestError } from "../provider-runtime.ts";
 import { requestTiDBProxy, resolveTiDBProxyTarget, tidbActionHandlers, validateTiDBCredential } from "./runtime.ts";
 
 const service = "tidb";

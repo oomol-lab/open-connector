@@ -1,15 +1,15 @@
 import type { ExecutionContext } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { requireApiKeyCredential } from "../provider-executors.ts";
 import {
   createProviderTimeout,
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
-  requireApiKeyCredential,
 } from "../provider-runtime.ts";
 
 export const evervaultApiBaseUrl = "https://api.evervault.com";

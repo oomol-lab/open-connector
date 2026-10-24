@@ -5,7 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ZerotierActionContext } from "./runtime.ts";
 
 import {
@@ -20,14 +20,9 @@ import {
   optionalStringArray,
   requiredStringArray,
 } from "../../core/cast.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  providerInputError,
-  ProviderRequestError,
-  requiredInputString,
-  requireCustomCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerInputError, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 import {
   createZerotierContext,
   parseZerotierApiVersion,

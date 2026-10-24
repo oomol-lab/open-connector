@@ -8,7 +8,7 @@ import { executors as dealroomExecutors } from "./dealroom/executors.ts";
 import { proxy as echotikProxy } from "./echotik/executors.ts";
 import { proxy as helpdeskProxy } from "./helpdesk/executors.ts";
 import { proxy as mxProxy } from "./mx/executors.ts";
-import { defineProviderProxy } from "./provider-runtime.ts";
+import { defineProviderProxy } from "./provider-proxy.ts";
 import { proxy as razorpayProxy } from "./razorpay/executors.ts";
 import { executors as stannpExecutors } from "./stannp/executors.ts";
 import { proxy as woocommerceProxy } from "./woocommerce/executors.ts";

@@ -1,4 +1,4 @@
-import type { ProviderActionHandlerSubset, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderActionHandlerSubset, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { MetabaseContext } from "./runtime.ts";
 import type { Client } from "@modelcontextprotocol/client";
 

@@ -1,18 +1,14 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { optionalRecord } from "../../core/cast.ts";
+import { defineApiKeyProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
 import {
-  createProviderFetch,
   createProviderProxyUrl,
-  defineApiKeyProviderExecutors,
   normalizeProviderProxyHeaders,
-  providerInputError,
-  providerUserAgent,
   readProviderProxyResponse,
-  requireApiKeyCredential,
-  runProviderRequest,
   toProviderProxyError,
-} from "../provider-runtime.ts";
+} from "../provider-proxy.ts";
+import { createProviderFetch, providerInputError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
 import {
   heyzineActionHandlers,
   heyzineApiBaseUrl,

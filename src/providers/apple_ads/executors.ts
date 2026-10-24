@@ -7,13 +7,9 @@ import type {
 } from "../../core/types.ts";
 import type { AppleAdsContext } from "./runtime-helpers.ts";
 
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
-  providerProxyEndpointPrefixes,
-  requireCustomCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { defineProviderProxy, providerProxyEndpointPrefixes } from "../provider-proxy.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import { createAppleAdsAuthorization, readAppleAdsCredential } from "./auth.ts";
 import { appleAdsApiOrigin } from "./runtime-helpers.ts";
 import { appleAdsActionHandlers, validateAppleAdsCredential } from "./runtime.ts";

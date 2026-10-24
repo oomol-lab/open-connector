@@ -1,6 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineBearerProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineBearerProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { giteeActionHandlers, giteeApiBaseUrl, parseGiteeScopes, validateGiteeCredential } from "./runtime.ts";
 
 const service = "gitee";

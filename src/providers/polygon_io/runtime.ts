@@ -1,6 +1,6 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -15,10 +15,8 @@ import {
   defineApiKeyProviderExecutors,
   getProviderActionHandler,
   mapProviderActionHandlers,
-  ProviderRequestError,
-  providerUserAgent,
-  requiredInputString,
-} from "../provider-runtime.ts";
+} from "../provider-executors.ts";
+import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
 import { polygonIoActions } from "./actions.ts";
 import { executeExpandedPolygonIoAction, expandedPolygonIoActionNames } from "./expanded-runtime.ts";
 

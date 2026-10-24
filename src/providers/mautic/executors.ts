@@ -7,14 +7,9 @@ import type {
 
 import { optionalString } from "../../core/cast.ts";
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import {
-  basicAuthorizationHeader,
-  createProviderFetch,
-  defineProviderExecutors,
-  defineProviderProxy,
-  requireCustomCredential,
-  requiredInputString,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { basicAuthorizationHeader, createProviderFetch, requiredInputString } from "../provider-runtime.ts";
 import { mauticActionHandlers, normalizeMauticBaseUrl, validateMauticCredential } from "./runtime.ts";
 
 interface MauticContext {

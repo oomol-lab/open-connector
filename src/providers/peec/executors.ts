@@ -1,6 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { peecActionHandlers, validatePeecCredential } from "./runtime.ts";
 const service = "peec";
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, peecActionHandlers);

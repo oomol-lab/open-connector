@@ -1,6 +1,6 @@
 import type { QueryValue } from "../../core/request.ts";
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString, recordOrEmpty, requiredString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, jsonObject, queryParams } from "../../core/request.ts";

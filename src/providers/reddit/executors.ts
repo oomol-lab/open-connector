@@ -4,12 +4,12 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
-  defineOAuthProviderExecutors,
-  defineProviderProxy,
   ProviderRequestError,
   providerUserAgent,
   readProviderJsonBody,

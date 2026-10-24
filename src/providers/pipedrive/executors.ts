@@ -1,7 +1,7 @@
 import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 
-import { defineProviderProxy } from "../provider-runtime.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { executors, validatePipedriveCredential } from "./runtime.ts";
 import { pipedriveCrmEvent } from "./trigger-on-crm-event.ts";
 

@@ -4,11 +4,11 @@ import { Buffer } from "node:buffer";
 import { createCipheriv, createDecipheriv, createHash, randomBytes, randomUUID } from "node:crypto";
 import { optionalString } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
+import { readTransitFileInput } from "../provider-files.ts";
 import {
   ProviderRequestError,
   providerFetch,
   providerResponseError,
-  readTransitFileInput,
   requiredInputString,
   requiredResponseRecord,
   runProviderRequest,

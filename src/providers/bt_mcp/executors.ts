@@ -4,11 +4,12 @@ import type {
   ExecutionContext,
   ProviderExecutors,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { BtMcpContext } from "./runtime.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import { createProviderFetch, defineProviderExecutors, requireCustomCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { createProviderFetch } from "../provider-runtime.ts";
 import { callBtMcpTool, createBtMcpContext, listBtMcpTools, validateBtMcpCredential } from "./runtime.ts";
 
 const service = "bt_mcp";

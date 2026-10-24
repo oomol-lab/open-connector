@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -11,14 +11,10 @@ import {
   requiredString,
   requiredStringArray,
 } from "../../core/cast.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { readProviderTextBody } from "../provider-runtime.ts";
-import {
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
-  providerResponseError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { ProviderRequestError, providerResponseError, providerUserAgent } from "../provider-runtime.ts";
 
 const service = "mumble";
 const baseUrl = "https://app.mumble.co.il/mumbleapi";

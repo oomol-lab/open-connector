@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -16,15 +16,14 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   createProviderTimeout,
-  defineProviderExecutors,
-  defineProviderProxy,
   providerFetch,
   providerUserAgent,
   ProviderRequestError,
   readProviderTextBody,
-  requireCustomCredential,
   providerInputError,
 } from "../provider-runtime.ts";
 

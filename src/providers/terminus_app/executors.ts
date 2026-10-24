@@ -1,6 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { terminusAppActionHandlers, validateTerminusAppCredential } from "./runtime.ts";
 const service = "terminus_app";
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, terminusAppActionHandlers);

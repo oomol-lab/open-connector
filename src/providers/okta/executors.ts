@@ -8,13 +8,9 @@ import type {
 import type { OktaContext } from "./runtime.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  providerInputError,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerInputError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 import { normalizeOktaOrgUrl, oktaActionHandlers, oktaApiTokenHelpUrl, validateOktaCredential } from "./runtime.ts";
 
 const service = "okta";

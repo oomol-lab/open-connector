@@ -1,6 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineOAuthProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { dida365ActionHandlers, dida365ApiBaseUrl, fetchDida365CurrentAccount } from "./runtime.ts";
 
 const service = "dida365";

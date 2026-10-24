@@ -1,7 +1,7 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
 
-import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
 import { chengxinActions } from "./actions.ts";
 import { executeChengxinAction, validateChengxinCredential } from "./runtime.ts";
 

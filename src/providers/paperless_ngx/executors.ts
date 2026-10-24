@@ -9,13 +9,9 @@ import type { PaperlessExecutionContext, PaperlessHandler } from "./runtime-help
 
 import { optionalString } from "../../core/cast.ts";
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
-import {
-  createProviderFetch,
-  defineProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { createProviderFetch, ProviderRequestError } from "../provider-runtime.ts";
 import { paperlessNgxDocumentOperationActionHandlers } from "./runtime-document-operations.ts";
 import { paperlessNgxDocumentActionHandlers } from "./runtime-documents.ts";
 import {

@@ -1,4 +1,4 @@
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalRawString } from "../../core/cast.ts";
 import {

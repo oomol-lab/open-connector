@@ -7,19 +7,19 @@ import type {
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { PollDefinition } from "../../triggers/common/poll.ts";
 
+import { defineProviderExecutors, requireApiKeyCredential, requireOAuthCredential } from "../provider-executors.ts";
+import {
+  createProviderProxyUrl,
+  normalizeProviderProxyHeaders,
+  readProviderProxyErrorMessage,
+  readProviderProxyResponse,
+  toProviderProxyError,
+} from "../provider-proxy.ts";
 import {
   basicAuthorizationHeader,
-  createProviderProxyUrl,
-  defineProviderExecutors,
-  normalizeProviderProxyHeaders,
   providerFetch,
   ProviderRequestError,
   providerUserAgent,
-  readProviderProxyErrorMessage,
-  readProviderProxyResponse,
-  requireApiKeyCredential,
-  requireOAuthCredential,
-  toProviderProxyError,
 } from "../provider-runtime.ts";
 import { validateZendeskCredential, zendeskActionHandlers } from "./runtime.ts";
 import { zendeskEvent } from "./trigger-on-event.ts";

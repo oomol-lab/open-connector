@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import {
@@ -13,12 +13,9 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { cloudflareCurrentUserDisplayName, readCloudflareCurrentUser } from "../cloudflare_dns/runtime-user.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
-  providerUserAgent,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const service = "cloudflare_browser_rendering";
 const cloudflareBrowserRenderingApiBaseUrl = "https://api.cloudflare.com/client/v4";

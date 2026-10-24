@@ -4,10 +4,11 @@ import type {
   ExecutionContext,
   ProviderExecutors,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers, ProviderActionName, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderActionHandlers, ProviderActionName, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { OomolConsoleContext } from "./runtime.ts";
 
-import { createProviderFetch, defineProviderExecutors, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { createProviderFetch } from "../provider-runtime.ts";
 import { createOomolConsoleMemberDirectory } from "./member-directory.ts";
 import { defaultEndpoints } from "./request.ts";
 import { executeOomolConsoleAction } from "./runtime.ts";

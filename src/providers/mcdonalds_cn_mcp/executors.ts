@@ -1,6 +1,8 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors, defineProviderProxy, providerUserAgent } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerUserAgent } from "../provider-runtime.ts";
 import { mcdonaldsCnMcpActionHandlers, mcdonaldsCnMcpEndpoint, validateMcdonaldsCnMcpCredential } from "./runtime.ts";
 
 const service = "mcdonalds_cn_mcp";

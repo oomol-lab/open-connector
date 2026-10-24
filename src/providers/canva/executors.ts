@@ -1,14 +1,10 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-runtime.ts";
+import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
-import {
-  defineOAuthProviderExecutors,
-  defineProviderProxy,
-  providerInputError,
-  ProviderRequestError,
-  requiredInputString,
-} from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerInputError, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 
 const service = "canva";
 const canvaApiBaseUrl = "https://api.canva.com/rest";

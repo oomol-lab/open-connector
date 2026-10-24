@@ -10,10 +10,10 @@ import type { ConfluenceContext } from "./runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalString, optionalStringArray, requiredString } from "../../core/cast.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   createProviderTimeout,
-  defineProviderExecutors,
-  defineProviderProxy,
   isAbortLikeError,
   ProviderRequestError,
   readProviderJsonBody,

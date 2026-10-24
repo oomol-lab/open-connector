@@ -1,7 +1,8 @@
 import type { ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
-import { defineOAuthProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { futunnActions } from "./actions.ts";
 import { executeFutunnAction } from "./runtime.ts";
 import { futunnApiBaseUrl } from "./transport.ts";

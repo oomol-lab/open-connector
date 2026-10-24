@@ -3,16 +3,16 @@ import type {
   ProviderActionHandlers,
   ProviderActionName,
   ProviderActionSources,
-  ProviderFetch,
   ProviderRuntimeHandler,
-} from "../provider-runtime.ts";
+} from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import { mapProviderActionSources } from "../provider-executors.ts";
 import {
   createProviderTimeout,
-  mapProviderActionSources,
   ProviderRequestError,
   providerUserAgent,
   toProviderExecutionError,

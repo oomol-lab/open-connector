@@ -1,6 +1,8 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlerSubset } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext, ProviderFetch, ProviderTransitFile } from "../provider-runtime.ts";
+import type { ProviderActionHandlerSubset } from "../provider-executors.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderTransitFile } from "../provider-files.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -16,13 +18,13 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { storeResponseInTransit } from "../../core/request.ts";
+import { readTransitFileInput } from "../provider-files.ts";
 import {
   providerInputError,
   ProviderRequestError,
   providerResponseError,
   providerUserAgent,
   readProviderJsonBody,
-  readTransitFileInput,
   requiredInputString,
 } from "../provider-runtime.ts";
 

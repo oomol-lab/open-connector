@@ -1,4 +1,4 @@
-import type { ApiKeyActionRequest } from "../provider-runtime.ts";
+import type { ApiKeyActionRequest } from "../provider-executors.ts";
 import type { InfolobbyActionName } from "./actions.ts";
 
 import { compactObject, requiredString } from "../../core/cast.ts";

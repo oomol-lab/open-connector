@@ -10,11 +10,11 @@ import type { PiHoleActionContext, PiHoleActionHandler } from "./runtime.ts";
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import {
   combineProviderActionHandlers,
-  createProviderFetch,
   defineProviderExecutors,
-  defineProviderProxy,
   requireApiKeyCredential,
-} from "../provider-runtime.ts";
+} from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { createProviderFetch } from "../provider-runtime.ts";
 import { piHoleManagementActionHandlers } from "./runtime-management.ts";
 import {
   ensurePiHoleSession,

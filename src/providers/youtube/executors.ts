@@ -1,11 +1,8 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
 import { googleJsonRequest } from "../googledrive/runtime-request.ts";
-import {
-  defineOAuthProviderExecutors,
-  defineProviderProxy,
-  providerProxyEndpointPrefixes,
-} from "../provider-runtime.ts";
+import { defineOAuthProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy, providerProxyEndpointPrefixes } from "../provider-proxy.ts";
 import { youtubeActionHandlers } from "./runtime.ts";
 
 const service = "youtube";

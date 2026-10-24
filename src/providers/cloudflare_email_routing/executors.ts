@@ -8,13 +8,9 @@ import type {
 import type { CloudflareEmailRoutingContext } from "./runtime.ts";
 
 import { optionalString } from "../../core/cast.ts";
-import {
-  createProviderFetch,
-  defineProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
-  requireCustomCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { createProviderFetch, ProviderRequestError } from "../provider-runtime.ts";
 import {
   cloudflareEmailRoutingActionHandlers,
   cloudflareEmailRoutingApiBaseUrl,

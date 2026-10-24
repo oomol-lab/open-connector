@@ -4,7 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { Buffer } from "node:buffer";
 import { integer, objectArray } from "../../core/cast.ts";
@@ -19,12 +19,9 @@ import {
   compactObject,
   optionalBoolean,
 } from "../googledrive/runtime-shared.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
-  requireOAuthCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireOAuthCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 
 const docsApiBaseUrl = "https://docs.googleapis.com/v1";
 const driveApiBaseUrl = "https://www.googleapis.com/drive/v3";

@@ -7,13 +7,9 @@ import type {
 import type { MuxContext } from "./runtime.ts";
 
 import { requiredString } from "../../core/cast.ts";
-import {
-  basicAuthorizationHeader,
-  defineProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
-  requireApiKeyCredential,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { basicAuthorizationHeader, ProviderRequestError } from "../provider-runtime.ts";
 import { muxActionHandlers, muxApiOrigin, validateMuxCredential } from "./runtime.ts";
 
 const service = "mux";

@@ -1,14 +1,13 @@
 import type { CredentialValidationResult, ExecutionContext, ProviderExecutors } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
 import {
   createProviderTimeout,
-  defineProviderExecutors,
   ProviderRequestError,
   providerUserAgent,
-  requireApiKeyCredential,
   providerInputError,
 } from "../provider-runtime.ts";
 

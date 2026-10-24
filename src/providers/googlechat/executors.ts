@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { GoogleChatRuntimeContext } from "./runtime.ts";
 
 import {
@@ -17,12 +17,8 @@ import {
 } from "../googledrive/runtime-auth.ts";
 import { googleJsonRequest } from "../googledrive/runtime-request.ts";
 import { asObject } from "../googledrive/runtime-shared.ts";
-import {
-  defineProviderProxy,
-  ProviderRequestError,
-  providerResponseError,
-  requiredResponseRecord,
-} from "../provider-runtime.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError, providerResponseError, requiredResponseRecord } from "../provider-runtime.ts";
 import {
   attachSenderProfiles,
   listSpaceMembersPage,

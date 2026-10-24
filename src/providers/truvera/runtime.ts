@@ -1,5 +1,5 @@
 import type { CredentialValidationResult, ExecutionContext } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, providerInputError } from "../provider-runtime.ts";

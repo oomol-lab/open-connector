@@ -4,12 +4,12 @@ import type {
   ApiKeyProviderContext,
   ProviderRuntimeHandler,
   ProviderActionName,
-} from "../provider-runtime.ts";
+} from "../provider-executors.ts";
 
 import { optionalRecord, optionalRawString } from "../../core/cast.ts";
+import { mapProviderActionSources } from "../provider-executors.ts";
 import {
   readProviderTextBody,
-  mapProviderActionSources,
   providerInputError,
   ProviderRequestError,
   providerUserAgent,

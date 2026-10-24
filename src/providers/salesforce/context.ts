@@ -1,4 +1,4 @@
-import type { OAuthProviderContext } from "../provider-runtime.ts";
+import type { OAuthProviderContext } from "../provider-executors.ts";
 
 import { requiredRawString } from "../../core/cast.ts";
 import {

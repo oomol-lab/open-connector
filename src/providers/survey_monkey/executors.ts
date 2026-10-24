@@ -1,7 +1,8 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { BearerProviderContext } from "../provider-runtime.ts";
+import type { BearerProviderContext } from "../provider-executors.ts";
 
-import { defineBearerProviderExecutors, defineProviderProxy } from "../provider-runtime.ts";
+import { defineBearerProviderExecutors } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   normalizeSurveyMonkeyApiBaseUrl,
   surveyMonkeyActionHandlers,

@@ -1,17 +1,18 @@
 import type { ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 
+import { defineProviderExecutors, mapProviderActionSources } from "../provider-executors.ts";
 import {
-  createProviderFetch,
   createProviderProxyUrl,
-  createProviderTimeout,
-  defineProviderExecutors,
-  mapProviderActionSources,
   normalizeProviderProxyHeaders,
-  providerUserAgent,
-  ProviderRequestError,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
   toProviderProxyError,
+} from "../provider-proxy.ts";
+import {
+  createProviderFetch,
+  createProviderTimeout,
+  providerUserAgent,
+  ProviderRequestError,
 } from "../provider-runtime.ts";
 import {
   clinicalTrialsGovActionHandlers,

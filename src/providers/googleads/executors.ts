@@ -1,5 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
@@ -12,13 +12,9 @@ import {
   optionalString,
 } from "../../core/cast.ts";
 import { googleJsonRequest, googleRequest } from "../googledrive/runtime-request.ts";
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  ProviderRequestError,
-  requireOAuthCredential,
-  requiredInputString,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireOAuthCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 import { googleAdsScope } from "./scopes.ts";
 
 export const googleAdsApiBaseUrl = "https://googleads.googleapis.com/v25";

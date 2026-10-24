@@ -5,12 +5,9 @@ import type {
   ProviderProxyExecutor,
 } from "../../core/types.ts";
 
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  mapProviderActionSources,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, mapProviderActionSources } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import { crossrefActionHandlers, crossrefApiBaseUrl, validateCrossrefCredential } from "./runtime.ts";
 
 const service = "crossref";

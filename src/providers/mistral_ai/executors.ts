@@ -9,7 +9,7 @@ import type {
   ProviderActionHandlers,
   ProviderActionName,
   ProviderActionSources,
-} from "../provider-runtime.ts";
+} from "../provider-executors.ts";
 
 import { base64Bytes, compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -18,15 +18,10 @@ import {
   readBoundedResponseBytes,
   storeResponseInTransit,
 } from "../../core/request.ts";
-import {
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-  mapProviderActionSources,
-  providerInputError,
-  ProviderRequestError,
-  providerUserAgent,
-  readTransitFileInput,
-} from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionSources } from "../provider-executors.ts";
+import { readTransitFileInput } from "../provider-files.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const service = "mistral_ai";
 const mistralApiBaseUrl = "https://api.mistral.ai";

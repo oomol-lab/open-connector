@@ -2,7 +2,7 @@ import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getProviderActionHandler } from "../provider-runtime.ts";
+import { getProviderActionHandler } from "../provider-executors.ts";
 import { credentialValidators, googleMeetActionHandlers, proxy } from "./executors.ts";
 
 const accessToken = "google-meet-access-token";

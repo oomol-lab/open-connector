@@ -6,7 +6,8 @@ import type {
 } from "../../core/types.ts";
 import type { JiminnyActionContext } from "./runtime.ts";
 
-import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { jiminnyActionHandlers, resolveJiminnyApiBaseUrl, validateJiminnyCredential } from "./runtime.ts";
 
 const service = "jiminny";

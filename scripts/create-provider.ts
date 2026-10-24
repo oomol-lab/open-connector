@@ -53,8 +53,9 @@ export const actions: ActionDefinition[] = [
   await writeFile(
     join(directory, "executors.ts"),
     `import type { ProviderExecutors } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import { defineProviderExecutors, runProviderRequest, readProviderJsonBody, readProviderErrorTextBody, ProviderRequestError } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import { defineProviderExecutors } from "../provider-executors.ts";
+import { runProviderRequest, readProviderJsonBody, readProviderErrorTextBody, ProviderRequestError } from "../provider-runtime.ts";
 
 interface Context {
   fetcher: typeof fetch;

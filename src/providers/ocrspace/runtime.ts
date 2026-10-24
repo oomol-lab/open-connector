@@ -1,10 +1,11 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-runtime.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalBoolean, optionalIntegerLike, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
-import { ProviderRequestError, providerUserAgent, readTransitFileInput } from "../provider-runtime.ts";
+import { readTransitFileInput } from "../provider-files.ts";
+import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 type OcrspaceActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 type OcrspaceRequestPhase = "validate" | "execute";

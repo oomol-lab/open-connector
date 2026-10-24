@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
 
-import { defineProviderProxy } from "../provider-runtime.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { executors, peopledatalabsApiBaseUrl, validatePeopledatalabsCredential } from "./runtime.ts";
 
 export { executors };

@@ -1,4 +1,4 @@
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { sha256Hex } from "../../core/aws-sigv4.ts";
 import { optionalRecord, optionalString } from "../../core/cast.ts";

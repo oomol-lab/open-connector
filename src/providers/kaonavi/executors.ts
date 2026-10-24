@@ -1,13 +1,9 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
-import {
-  defineProviderExecutors,
-  defineProviderProxy,
-  requireCustomCredential,
-  runProviderRequest,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { defineProviderExecutors, requireCustomCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
+import { runProviderRequest, ProviderRequestError } from "../provider-runtime.ts";
 import { kaonaviActionDefinitions } from "./actions.ts";
 import { getKaonaviToken, kaonaviBaseUrl, readKaonaviResponse } from "./runtime.ts";
 

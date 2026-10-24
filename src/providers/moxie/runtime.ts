@@ -1,4 +1,4 @@
-import type { ProviderRuntimeHandler } from "../provider-runtime.ts";
+import type { ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { createHash } from "node:crypto";
 import { objectArray, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";

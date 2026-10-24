@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 
-import { defineApiKeyProviderExecutors } from "../provider-runtime.ts";
+import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import { arcmiraActionHandlers, validateArcmiraCredential } from "./runtime.ts";
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors("arcmira", arcmiraActionHandlers);

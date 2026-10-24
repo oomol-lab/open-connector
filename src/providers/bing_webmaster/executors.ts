@@ -1,16 +1,11 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext } from "../provider-runtime.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
+import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { readProviderTextBody } from "../provider-runtime.ts";
-import {
-  defineApiKeyProviderExecutors,
-  defineProviderProxy,
-  mapProviderActionHandlers,
-  providerResponseError,
-  providerUserAgent,
-  ProviderRequestError,
-} from "../provider-runtime.ts";
+import { providerResponseError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 import { bingWebmasterActions } from "./actions.ts";
 const service = "bing_webmaster",
   baseUrl = "https://ssl.bing.com/webmaster/api.svc/json";

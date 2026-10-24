@@ -6,7 +6,8 @@ import type {
 } from "../../core/types.ts";
 import type { ZyteApiContext } from "./runtime.ts";
 
-import { defineProviderExecutors, defineProviderProxy, requireApiKeyCredential } from "../provider-runtime.ts";
+import { defineProviderExecutors, requireApiKeyCredential } from "../provider-executors.ts";
+import { defineProviderProxy } from "../provider-proxy.ts";
 import { validateZyteApiCredential, zyteApiActionHandlers, zyteApiBaseUrl } from "./runtime.ts";
 
 const service = "zyte_api";

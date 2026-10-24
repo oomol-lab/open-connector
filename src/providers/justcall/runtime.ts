@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ApiKeyActionRequest } from "../provider-runtime.ts";
-import type { ProviderActionHandlers, ProviderActionName } from "../provider-runtime.ts";
+import type { ApiKeyActionRequest } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ProviderActionName } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
