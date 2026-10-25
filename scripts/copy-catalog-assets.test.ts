@@ -1,9 +1,11 @@
+import type { ProviderDefinition } from "../src/core/types.ts";
 import type { AssetsBinding } from "../src/server/cloudflare/cloudflare-bindings.ts";
 
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { createCatalogStore, resolveExecutableActionIds } from "../src/catalog-store.ts";
 import { loadCatalogFromAssets } from "../src/server/cloudflare/catalog-assets.ts";
 import { copyCatalogAssets } from "./copy-catalog-assets.ts";
 
@@ -88,6 +90,132 @@ describe("copyCatalogAssets", () => {
     });
   });
 
+  it("prepares the same runtime catalog, schema data, summary bytes, and ETag at build time", async () => {
+    const { sourceDir, targetDir } = await fixture();
+    const definitions: ProviderDefinition[] = ["zulu", "alpha"].map((service) => ({
+      ...providerDefinition(service),
+      actions: [
+        {
+          id: `${service}.ping`,
+          service,
+          name: "ping",
+          description: "Ping 中.",
+          operationType: "read",
+          requiredScopes: [],
+          providerPermissions: [],
+          inputSchema: { type: "object", properties: { query: { type: "string" } } },
+          outputSchema: { type: "string" },
+        },
+      ],
+    }));
+    for (const provider of definitions) {
+      await writeFile(join(sourceDir, `${provider.service}.json`), JSON.stringify(provider));
+    }
+    const options = { executableServices: ["alpha"] };
+    const expected = createCatalogStore(definitions, {
+      executableActionIds: resolveExecutableActionIds(definitions, options),
+    });
+    const index = await copyCatalogAssets({ sourceDir, targetDir, prepareRuntime: options });
+    const backing = directoryAssets(targetDir);
+    let schemaRequests = 0;
+    let failSchema = true;
+    const actual = await loadCatalogFromAssets(
+      {
+        async fetch(request) {
+          if (new URL(request.url).pathname.includes("/schemas-")) {
+            schemaRequests++;
+            if (failSchema) return new Response("unavailable", { status: 503 });
+          }
+          return backing.fetch(request);
+        },
+      },
+      options,
+    );
+    expect(index.prepared).toBeDefined();
+    expect(schemaRequests).toBe(0);
+    expect(actual.actionsById.get("alpha.ping")).not.toHaveProperty("inputSchema");
+    expect(await actual.getAction("missing.ping")).toBeUndefined();
+    expect(schemaRequests).toBe(0);
+    const failed = await Promise.allSettled([actual.getAction("alpha.ping"), actual.getAction("zulu.ping")]);
+    expect(failed.map((result) => result.status)).toEqual(["rejected", "rejected"]);
+    expect(schemaRequests).toBe(1);
+    expect(actual.actionsById.get("alpha.ping")).not.toHaveProperty("inputSchema");
+    failSchema = false;
+    const definitionsRead = await Promise.all([actual.getAction("alpha.ping"), actual.getAction("zulu.ping")]);
+    expect(schemaRequests).toBe(2);
+    expect(definitionsRead).toEqual(
+      await Promise.all([expected.getAction("alpha.ping"), expected.getAction("zulu.ping")]),
+    );
+    expect(await actual.getAction("alpha.ping")).toBe(definitionsRead[0]);
+    expect(schemaRequests).toBe(2);
+    expect(actual.actionsById.get("alpha.ping")).not.toHaveProperty("inputSchema");
+    const { getAction: _actualReader, ...loaded } = actual;
+    const { getAction: _expectedReader, ...expectedMetadata } = expected;
+    expect(loaded).toEqual(expectedMetadata);
+    expect(actual.actionsById.get("alpha.ping")).toBe(actual.providers[0]?.actions[0]);
+    expect(actual.actionsById.get("zulu.ping")?.execution.locallyExecutable).toBe(false);
+    await expect(loadCatalogFromAssets(directoryAssets(targetDir), { executableServices: ["zulu"] })).rejects.toThrow(
+      "does not match the Worker executor registry",
+    );
+    await rm(join(targetDir, "provider-summaries.json"));
+    await expect(loadCatalogFromAssets(directoryAssets(targetDir), options)).rejects.toThrow(
+      "returned content type text/html",
+    );
+  });
+
+  it("loads only the requested schema chunk and retries invalid chunks without changing metadata", async () => {
+    const { sourceDir, targetDir } = await fixture();
+    for (const service of ["alpha", "zulu"]) {
+      await writeFile(
+        join(sourceDir, `${service}.json`),
+        JSON.stringify({
+          ...providerDefinition(service),
+          actions: [
+            {
+              id: `${service}.ping`,
+              service,
+              name: "ping",
+              description: "Ping",
+              operationType: "read",
+              requiredScopes: [],
+              providerPermissions: [],
+              inputSchema: { type: "object", description: "x".repeat(1200) },
+              outputSchema: {},
+            },
+          ],
+        }),
+      );
+    }
+    const index = await copyCatalogAssets({ sourceDir, targetDir, maxChunkBytes: 2000, prepareRuntime: {} });
+    expect(index.prepared?.schemaChunks).toHaveLength(2);
+    const backing = directoryAssets(targetDir);
+    const requests: string[] = [];
+    const catalog = await loadCatalogFromAssets({
+      async fetch(request) {
+        requests.push(new URL(request.url).pathname);
+        return backing.fetch(request);
+      },
+    });
+    const schemaFile = join(targetDir, index.prepared!.schemaChunks[0]!.file);
+    const valid = await readFile(schemaFile, "utf8");
+    const invalid = JSON.parse(valid);
+    invalid[0].actions[0].id = "wrong.action";
+    await writeFile(schemaFile, JSON.stringify(invalid));
+    await expect(catalog.getAction("alpha.ping")).rejects.toThrow("Invalid action schema chunk");
+    expect(catalog.actionsById.get("alpha.ping")).not.toHaveProperty("inputSchema");
+    await writeFile(schemaFile, valid);
+    expect(await catalog.getAction("alpha.ping")).toMatchObject({ inputSchema: { type: "object" } });
+    expect(requests.filter((path) => path.includes("/schemas-"))).toEqual([
+      "/catalog/schemas-0000.json",
+      "/catalog/schemas-0000.json",
+    ]);
+    expect(await catalog.getAction("zulu.ping")).toMatchObject({ inputSchema: { type: "object" } });
+    expect(requests.at(-1)).toBe("/catalog/schemas-0001.json");
+    expect(
+      catalog.providers.flatMap((provider) => provider.actions).every((action) => !("inputSchema" in action)),
+    ).toBe(true);
+  });
+
   it("writes an empty index for an empty catalog", async () => {
     const { sourceDir, targetDir } = await fixture();
 
@@ -131,7 +259,7 @@ function directoryAssets(directory: string): AssetsBinding {
   };
 }
 
-function providerDefinition(service: string): Record<string, unknown> {
+function providerDefinition(service: string): ProviderDefinition {
   return {
     service,
     displayName: service,

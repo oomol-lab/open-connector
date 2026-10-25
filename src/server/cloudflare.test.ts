@@ -1,3 +1,4 @@
+import type { ActionDefinition } from "../core/types.ts";
 import type {
   AssetsBinding,
   D1DatabaseBinding,
@@ -9,6 +10,7 @@ import type {
 import type { CloudflareEnv } from "./cloudflare/cloudflare-env.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { createCatalogStore } from "../catalog-store.ts";
 import { getProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import { MarketplaceService } from "../marketplace/marketplace-service.ts";
 import worker from "./cloudflare.ts";
@@ -26,6 +28,104 @@ const provider = {
 };
 
 describe("cloudflare worker", () => {
+  it("keeps dashboard requests schema-free and authenticates before loading action details", async () => {
+    vi.resetModules();
+    const { default: isolatedWorker } = await import("./cloudflare.ts");
+    const action: ActionDefinition = {
+      id: "example.ping",
+      service: "example",
+      name: "ping",
+      description: "Ping",
+      operationType: "read",
+      requiredScopes: [],
+      providerPermissions: [],
+      inputSchema: { type: "object" },
+      outputSchema: { type: "string" },
+    };
+    const catalog = createCatalogStore([
+      {
+        ...provider,
+        authTypes: ["no_auth"],
+        auth: [{ type: "no_auth" }],
+        actions: [action],
+      },
+    ]);
+    const backing = memoryAssets({
+      "/catalog/index.json": {
+        version: 1,
+        providerCount: 1,
+        chunks: ["apps-0000.json"],
+        prepared: {
+          executableActionIds: [],
+          providerSummariesEtag: catalog.providerSummariesEtag,
+          schemaChunks: [{ file: "schemas-0000.json", services: ["example"] }],
+        },
+      },
+      "/catalog/apps-0000.json": catalog.providers,
+      "/catalog/provider-summaries.json": JSON.parse(new TextDecoder().decode(catalog.providerSummariesJson)),
+      "/catalog/schemas-0000.json": [
+        {
+          service: "example",
+          actions: [
+            {
+              id: action.id,
+              inputSchema: action.inputSchema,
+              outputSchema: action.outputSchema,
+            },
+          ],
+        },
+      ],
+    });
+    let schemaRequests = 0;
+    const database = new SqliteD1Database();
+    const env: CloudflareEnv = {
+      DB: database,
+      TRANSIT_FILES: new UnusedR2Bucket(),
+      OOMOL_CONNECT_ADMIN_TOKEN: "test-admin",
+      OOMOL_CONNECT_RUNTIME_TOKEN: "test-runtime",
+      ASSETS: {
+        async fetch(request) {
+          if (new URL(request.url).pathname.includes("/schemas-")) schemaRequests++;
+          return backing.fetch(request);
+        },
+      },
+    };
+    const request = (path: string, token = "test-admin") =>
+      isolatedWorker.fetch(
+        new Request(`https://prepared-catalog.example.com${path}`, { headers: { authorization: `Bearer ${token}` } }),
+        env,
+        createExecutionContext(),
+      );
+    try {
+      const dashboardPaths = [
+        "/api/providers",
+        "/api/connections",
+        "/api/oauth/configs",
+        "/api/runtime-tokens",
+        "/api/runtime-policy",
+        "/api/runs",
+        "/api/marketplace",
+        "/api/provider-preferences",
+      ];
+      const responses = await Promise.all(dashboardPaths.map((path) => request(path)));
+      expect(responses.map((response) => response.status)).toEqual(dashboardPaths.map(() => 200));
+      expect((await request("/api/actions/example.ping", "wrong-token")).status).toBe(401);
+      expect((await request("/v1/actions/example.ping", "wrong-token")).status).toBe(401);
+      expect(schemaRequests).toBe(0);
+      const detail = await request("/api/actions/example.ping");
+      expect(detail.status).toBe(200);
+      expect(await detail.json()).toMatchObject({ inputSchema: action.inputSchema, outputSchema: action.outputSchema });
+      expect(schemaRequests).toBe(1);
+      expect((await request("/v1/actions?service=example", "test-runtime")).status).toBe(200);
+      const summaries = await request("/api/providers");
+      expect(await summaries.text()).toBe(new TextDecoder().decode(catalog.providerSummariesJson));
+      expect(summaries.headers.get("etag")).toBe(catalog.providerSummariesEtag);
+      expect(schemaRequests).toBe(1);
+    } finally {
+      database.close();
+    }
+  });
+
   it("does not reuse an application with a different network policy", async () => {
     const policies: unknown[] = [];
     vi.spyOn(MarketplaceService.prototype, "initialize").mockImplementation(async () => {

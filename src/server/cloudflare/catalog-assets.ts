@@ -1,4 +1,9 @@
-import type { CatalogStore, ExecutableActionOptions } from "../../catalog-store.ts";
+import type {
+  CatalogStore,
+  ExecutableActionOptions,
+  RuntimeActionDefinition,
+  RuntimeProviderDefinition,
+} from "../../catalog-store.ts";
 import type { ProviderDefinition } from "../../core/types.ts";
 import type { AssetsBinding } from "./cloudflare-bindings.ts";
 
@@ -8,10 +13,16 @@ const catalogIndexPath = "/catalog/index.json";
 const chunkNamePattern = /^apps-\d{4}\.json$/;
 const jsonContentTypePattern = /^application\/(?:[\w.+-]+\+)?json$/i;
 
-interface CatalogAssetIndex {
+export interface CatalogAssetIndex {
   version: 1;
   providerCount: number;
   chunks: string[];
+  /** Runtime metadata and the console response are computed by the asset build. */
+  prepared?: {
+    providerSummariesEtag: string;
+    executableActionIds: string[];
+    schemaChunks: { file: string; services: string[] }[];
+  };
 }
 
 export async function loadCatalogFromAssets(
@@ -27,7 +38,94 @@ export async function loadCatalogFromAssets(
     );
   }
 
-  return createCatalog(providers, options);
+  if (index.prepared) {
+    const executableActionIds = resolveExecutableActionIds(providers, options);
+    const preparedIds = new Set(index.prepared.executableActionIds);
+    if (executableActionIds.size !== preparedIds.size || [...executableActionIds].some((id) => !preparedIds.has(id))) {
+      throw new Error("Prepared catalog does not match the Worker executor registry; rebuild catalog assets");
+    }
+    const runtimeProviders = providers as RuntimeProviderDefinition[];
+    const actions = runtimeProviders.flatMap((provider) => provider.actions);
+    const actionsById = new Map(actions.map((action) => [action.id, action]));
+    const summaries = await readJsonAssetResponse(assets, "/catalog/provider-summaries.json");
+    return {
+      providers: runtimeProviders,
+      actions,
+      actionsById,
+      executableActionIds,
+      providerSummariesJson: new Uint8Array(await summaries.arrayBuffer()),
+      providerSummariesEtag: index.prepared.providerSummariesEtag,
+      getAction: createSchemaLoader(assets, runtimeProviders, actionsById, index.prepared.schemaChunks),
+    };
+  }
+  return createCatalog(providers as ProviderDefinition[], options);
+}
+
+function createSchemaLoader(
+  assets: AssetsBinding,
+  providers: RuntimeProviderDefinition[],
+  actionsById: CatalogStore["actionsById"],
+  chunks: { file: string; services: string[] }[],
+): CatalogStore["getAction"] {
+  const byService = new Map(providers.map((provider) => [provider.service, provider]));
+  const chunkByService = new Map(
+    chunks.flatMap(({ file, services }) => services.map((service) => [service, file] as const)),
+  );
+  if (providers.some((provider) => !chunkByService.has(provider.service))) {
+    throw new Error("Catalog schema chunks do not cover every provider");
+  }
+  const definitions = new Map<string, RuntimeActionDefinition>();
+  const pending = new Map<string, Promise<void>>();
+  const load = async (file: string): Promise<void> => {
+    const value = await readJsonAsset(assets, `/catalog/${file}`);
+    if (!Array.isArray(value)) throw new Error(`Invalid action schema chunk: ${file}`);
+    // Validate the whole chunk before publishing definitions, allowing failed loads to retry.
+    const expected = chunks.find((chunk) => chunk.file === file)!;
+    if (value.length !== expected.services.length) throw new Error(`Invalid action schema chunk: ${file}`);
+    for (const [index, entry] of value.entries()) {
+      const provider = byService.get(expected.services[index]!);
+      if (
+        !provider ||
+        !isRecord(entry) ||
+        entry.service !== provider.service ||
+        !Array.isArray(entry.actions) ||
+        entry.actions.length !== provider.actions.length
+      ) {
+        throw new Error(`Invalid action schema chunk: ${file}`);
+      }
+      for (const [actionIndex, schema] of entry.actions.entries()) {
+        if (
+          !isRecord(schema) ||
+          schema.id !== provider.actions[actionIndex]?.id ||
+          !isRecord(schema.inputSchema) ||
+          !isRecord(schema.outputSchema)
+        ) {
+          throw new Error(`Invalid action schema chunk: ${file}`);
+        }
+      }
+    }
+    for (const entry of value) {
+      for (const [index, schema] of entry.actions.entries()) {
+        const action = byService.get(entry.service)!.actions[index]!;
+        definitions.set(action.id, { ...action, inputSchema: schema.inputSchema, outputSchema: schema.outputSchema });
+      }
+    }
+  };
+  return async (id) => {
+    const action = actionsById.get(id);
+    if (!action) return undefined;
+    const file = chunkByService.get(action.service)!;
+    let promise = pending.get(file);
+    if (!promise) {
+      promise = load(file).catch((error) => {
+        pending.delete(file);
+        throw error;
+      });
+      pending.set(file, promise);
+    }
+    await promise;
+    return definitions.get(id)!;
+  };
 }
 
 function createCatalog(providers: ProviderDefinition[], options: ExecutableActionOptions): CatalogStore {
@@ -40,9 +138,44 @@ function parseCatalogIndex(value: unknown, path: string): CatalogAssetIndex {
   if (!isRecord(value)) {
     throw new Error(`Cloudflare asset catalog index must be an object: ${path}`);
   }
-  const keys = Object.keys(value).sort();
+  const keys = Object.keys(value)
+    .filter((key) => key !== "prepared")
+    .sort();
   if (keys.join(",") !== "chunks,providerCount,version") {
-    throw new Error("Cloudflare asset catalog index must contain only version, providerCount, and chunks");
+    throw new Error(
+      "Cloudflare asset catalog index must contain only version, providerCount, chunks, and optional prepared metadata",
+    );
+  }
+  let prepared: CatalogAssetIndex["prepared"];
+  if (value.prepared !== undefined) {
+    const metadata = value.prepared;
+    if (
+      !isRecord(metadata) ||
+      typeof metadata.providerSummariesEtag !== "string" ||
+      !/^W\/"[a-f0-9]+-[a-f0-9]+"$/.test(metadata.providerSummariesEtag) ||
+      !Array.isArray(metadata.executableActionIds) ||
+      !metadata.executableActionIds.every((id): id is string => typeof id === "string")
+    ) {
+      throw new Error("Cloudflare asset catalog index has invalid prepared metadata");
+    }
+    if (!Array.isArray(metadata.schemaChunks)) throw new Error("Invalid catalog schema chunks");
+    const schemaChunks = metadata.schemaChunks.map((chunk) => {
+      if (
+        !isRecord(chunk) ||
+        typeof chunk.file !== "string" ||
+        !/^schemas-\d{4}\.json$/.test(chunk.file) ||
+        !Array.isArray(chunk.services) ||
+        !chunk.services.every((service): service is string => typeof service === "string")
+      ) {
+        throw new Error("Invalid catalog schema chunks");
+      }
+      return { file: chunk.file, services: chunk.services };
+    });
+    prepared = {
+      providerSummariesEtag: metadata.providerSummariesEtag,
+      executableActionIds: metadata.executableActionIds,
+      schemaChunks,
+    };
   }
   if (value.version !== 1) {
     throw new Error(`Unsupported Cloudflare asset catalog index version: ${String(value.version)}`);
@@ -68,19 +201,23 @@ function parseCatalogIndex(value: unknown, path: string): CatalogAssetIndex {
     version: 1,
     providerCount: value.providerCount,
     chunks: value.chunks,
+    prepared,
   };
 }
 
-async function requireProviderArrayAsset(assets: AssetsBinding, path: string): Promise<ProviderDefinition[]> {
+async function requireProviderArrayAsset(
+  assets: AssetsBinding,
+  path: string,
+): Promise<(ProviderDefinition | RuntimeProviderDefinition)[]> {
   return requireProviderArray(await readJsonAsset(assets, path), path);
 }
 
-function requireProviderArray(value: unknown, path: string): ProviderDefinition[] {
+function requireProviderArray(value: unknown, path: string): (ProviderDefinition | RuntimeProviderDefinition)[] {
   if (!Array.isArray(value)) {
     throw new Error(`Cloudflare asset catalog must be an array: ${path}`);
   }
 
-  return value as ProviderDefinition[];
+  return value as (ProviderDefinition | RuntimeProviderDefinition)[];
 }
 
 /**
@@ -93,6 +230,10 @@ function requireProviderArray(value: unknown, path: string): ProviderDefinition[
  * would be parsed as catalog JSON.
  */
 async function readJsonAsset(assets: AssetsBinding, path: string): Promise<unknown> {
+  return readResponseJson(await readJsonAssetResponse(assets, path), path);
+}
+
+async function readJsonAssetResponse(assets: AssetsBinding, path: string): Promise<Response> {
   const response = await fetchAsset(assets, path);
   if (response.status === 404) {
     throw assetRequestError(path, "returned 404");
@@ -106,7 +247,7 @@ async function readJsonAsset(assets: AssetsBinding, path: string): Promise<unkno
     throw assetRequestError(path, `returned content type ${contentType ?? "(none)"} instead of JSON`);
   }
 
-  return await readResponseJson(response, path);
+  return response;
 }
 
 function fetchAsset(assets: AssetsBinding, path: string): Promise<Response> {

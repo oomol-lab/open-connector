@@ -17,7 +17,6 @@ import { DEFAULT_OAUTH_CLOSE_DELAY_SECONDS, parseOAuthResultOrigins } from "./ap
 import { loadCatalogFromAssets } from "./cloudflare/catalog-assets.ts";
 import { readNonNegativeInteger, readPositiveInteger, resolvePublicOrigin } from "./cloudflare/cloudflare-env.ts";
 import { createConnectApp } from "./connect-app.ts";
-import { preloadOptionalServerModules } from "./connect-server.ts";
 import { KVTransitFileService } from "./files/kv-transit-files.ts";
 import { R2TransitFileService } from "./files/r2-transit-files.ts";
 import { createWorkerSecretCodec } from "./secrets/worker-secret-codec.ts";
@@ -96,10 +95,7 @@ async function createCloudflareApp(env: CloudflareEnv, publicOrigin: string): Pr
   if (!assets) {
     throw new Error("Cloudflare ASSETS binding is required to load the catalog");
   }
-  // The Node server defers the MCP and docs modules to their first request so its startup graph stays small.
-  // Workers keep paying their evaluation here, at app creation, so the first /mcp or /docs request of an isolate
-  // is served the same way as every later one.
-  await preloadOptionalServerModules();
+  // Load optional MCP/docs modules on first use to reduce Worker initialization.
   const secretCodec = await createSecretCodec(env.OOMOL_CONNECT_ENCRYPTION_KEY);
   return await createConnectApp({
     network: {

@@ -285,6 +285,14 @@ policy, transit file limits, and data encryption. The JWT settings above, `PORT`
 `OOMOL_CONNECT_DATA_DIR`, `OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS`, and
 `OOMOL_CONNECT_CATALOG_SCHEMA_CACHE_FILES` are Node-only settings.
 
+Run `node scripts/copy-catalog-assets.ts` after generating the catalog and building the web console.
+The Cloudflare asset build prepares runtime metadata and the console catalog response in advance,
+and writes action schemas into separate size-bounded chunks. Dashboard requests load metadata only;
+authenticated detail and execution requests load schemas through `catalog.getAction()`. Metadata stays
+schema-free after a schema read. MCP, OpenAPI, and full-catalog routes retain access to all schemas
+and can still require more CPU than dashboard requests.
+Deploy the generated assets with their matching Worker: the loader rejects mismatched executor registries.
+
 The Worker runtime also requires these bindings in `wrangler.local.jsonc`. Copy
 `wrangler.example.jsonc` to `wrangler.local.jsonc` and fill in your own Cloudflare resource IDs
 before running Wrangler commands.
