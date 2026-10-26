@@ -23,6 +23,31 @@ describe("buildExampleInput", () => {
     expect(result.valid, `${label}: ${JSON.stringify(example)}`).toBe(true);
   }
 
+  it("seeds transitive and cyclic dependent properties without adding inactive dependencies", () => {
+    const inputSchema: JsonSchema = {
+      type: "object",
+      properties: {
+        key: { type: "string" },
+        signature: { type: "string" },
+        timestamp: { type: "integer" },
+        unused: { type: "string" },
+        other: { type: "string" },
+      },
+      required: ["key"],
+      dependentRequired: { signature: ["timestamp"], key: ["signature"], timestamp: ["key"], unused: ["other"] },
+    };
+    expectValidExample("dependent fields", inputSchema);
+    expect(Object.keys(buildExampleInput(inputSchema)).sort()).toEqual(["key", "signature", "timestamp"]);
+  });
+
+  it("keeps numbers inside a narrow interval with an exclusive upper bound", () => {
+    expectValidExample("narrow interval", {
+      type: "object",
+      properties: { value: { type: "number", minimum: 0, exclusiveMaximum: 0.5 } },
+      required: ["value"],
+    });
+  });
+
   it("preserves defaults that satisfy the schema", () => {
     expect(
       buildExampleInput({

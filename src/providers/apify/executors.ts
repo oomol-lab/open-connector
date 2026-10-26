@@ -12,7 +12,7 @@ import {
 } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
-import { runProviderRequest } from "../provider-runtime.ts";
+import { isAbortLikeError, isAbortSignalError, runProviderRequest } from "../provider-runtime.ts";
 import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const service = "apify";
@@ -214,7 +214,7 @@ async function requestApifyJson(input: {
       body: input.body ? JSON.stringify(input.body) : undefined,
       signal,
     });
-    const payload = await readApifyPayload(response);
+    const payload = await readApifyPayload(response, signal);
     if (!response.ok) throw createApifyError(response, payload, input.phase, input.notFoundAsInvalidInput);
     return payload;
   });
@@ -230,8 +230,11 @@ function buildApifyUrl(path: string, query: Record<string, ApifyQueryValue> = {}
   return url;
 }
 
-async function readApifyPayload(response: Response): Promise<unknown> {
-  const text = await response.text().catch(() => "");
+async function readApifyPayload(response: Response, signal: AbortSignal): Promise<unknown> {
+  const text = await response.text().catch((error: unknown) => {
+    if (isAbortLikeError(error) || isAbortSignalError(signal, error)) throw error;
+    return "";
+  });
   if (!text) {
     return null;
   }

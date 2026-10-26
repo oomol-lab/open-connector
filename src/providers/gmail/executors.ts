@@ -1261,7 +1261,7 @@ function gmailRetryAfterMs(error: GmailRequestError) {
 function hydrationRetryDelayMs(attempt: number, retryAfterMs: number) {
   if (retryAfterMs > 0) return retryAfterMs;
   const backoffMs = hydrationBaseBackoffMs * 2 ** (attempt - 1);
-  return backoffMs / 2 + Math.random() * (backoffMs / 2);
+  return backoffMs + Math.random() * (backoffMs / 2);
 }
 
 function sleepFor(delayMs: number, signal?: AbortSignal): Promise<void> {

@@ -65,6 +65,7 @@ export async function requestAnyapi(
         optionalString(record.error) ?? `AnyAPI request failed with status ${response.status}`,
         {
           upstreamStatus: response.status,
+          upstreamBody: optionalString(record.error) ? undefined : text.slice(0, 1000),
           upstreamCode: optionalString(record.code),
           requestId: optionalString(record.requestId) ?? response.headers.get("X-Anyapi-Request-Id") ?? undefined,
           payment: optionalRecord(record.payment),

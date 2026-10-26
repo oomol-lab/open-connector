@@ -77,7 +77,10 @@ export async function executeTendataAction(
   if (endpoint.trade) validateTradeInput(input);
   let path: string = endpoint.path;
   if (actionName === "get_contact_social_links") {
-    path = path.replace("{mailsouId}", encodeURIComponent(requiredInputString(input.mailsouId, "mailsouId")));
+    const mailsouId = requiredInputString(input.mailsouId, "mailsouId");
+    if (mailsouId === "." || mailsouId === "..")
+      throw providerInputError("mailsouId is not a valid contact identifier");
+    path = path.replace("{mailsouId}", encodeURIComponent(mailsouId));
   }
   const url = new URL(`${tendataApiBaseUrl}${path}`);
   const body: Record<string, unknown> = {};

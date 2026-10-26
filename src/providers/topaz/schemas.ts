@@ -12,7 +12,7 @@ function caseInsensitiveVideoEnum(description: string, values: readonly string[]
   return s.string(description, { pattern: `^(?:${alternatives})$` });
 }
 
-export const processId: JsonSchema = s.string("Image processing job UUID.", { format: "uuid" });
+const processId: JsonSchema = s.string("Image processing job UUID.", { format: "uuid" });
 export const requestId: JsonSchema = s.string("Video enhancement request UUID.", { format: "uuid" });
 export const imageHandle: JsonSchema = s.requiredObject("Image job request.", { processId });
 export const videoHandle: JsonSchema = s.requiredObject("Video job request.", { requestId });
@@ -72,7 +72,7 @@ export const estimates: JsonSchema = s.looseObject("Estimated credit cost and pr
   cost: s.array("Lower and upper credit cost estimates.", s.number("Credit estimate.")),
   time: s.array("Lower and upper duration estimates in seconds.", s.number("Duration estimate.")),
 });
-export const external: JsonSchema = s.object(
+const external: JsonSchema = s.object(
   "S3 external storage access. Use a presigned URL or an AWS role with bucket and key.",
   {
     provider: s.stringEnum("External storage provider.", ["s3"]),

@@ -115,9 +115,11 @@ async function requestLatest(base: string, context: AllRatesTodayRuntimeContext)
     const rate = optionalNumber(value);
     if (rate !== undefined && Number.isFinite(rate) && rate > 0) rates[code] = rate;
   }
+  const date = optionalString(body.date);
+  if (!date) throw providerResponseError("AllRatesToday response has no date");
   return {
     base: optionalString(body.base_code) ?? base,
-    date: optionalString(body.date) ?? "",
+    date,
     last_updated: optionalString(body.time_last_update_utc),
     next_update: optionalString(body.time_next_update_utc),
     rates,
