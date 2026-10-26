@@ -1,10 +1,12 @@
 import type { ConnectionService } from "../../connection-service.ts";
+import type { OAuthClientConfigService } from "../../oauth/oauth-client-config-service.ts";
 import type { Context } from "hono";
 
 import { Hono } from "hono";
 import { ConnectionError } from "../../connection-error.ts";
 import { optionalString } from "../../core/cast.ts";
 import { readEventRequestBody } from "../event-request-body.ts";
+import { verifySlackEventRequest } from "../slack-event-verification.ts";
 import { BotFrameworkKeysUnavailableError, verifyTeamsBotEventRequest } from "../teams-bot-event-verification.ts";
 import { readConnectionName } from "./http-utils.ts";
 import { mapConnectionErrorStatus, writeRuntimeFailure, writeRuntimeSuccess } from "./runtime-api.ts";
@@ -13,8 +15,9 @@ const teamsBotService = "microsoft_teams_bot";
 // Authorization carries the dedicated verify token, so the activity's own bearer token is forwarded here.
 const botFrameworkAuthorizationHeader = "x-botframework-authorization";
 
-export interface TeamsBotEventVerificationRoutesOptions {
+export interface EventVerificationRoutesOptions {
   connections: ConnectionService;
+  oauthClientConfigs: OAuthClientConfigService;
   /** Dedicated OOMOL_CONNECT_EVENT_VERIFY_TOKEN, when configured. */
   eventVerifyToken: string | undefined;
 }
@@ -23,7 +26,7 @@ export interface TeamsBotEventVerificationRoutesOptions {
  * Checks the dedicated event verification bearer token. Returns the failure
  * response when the route must not proceed, or undefined when it is authorized.
  */
-export async function rejectUnauthorizedEventVerification(
+async function rejectUnauthorizedEventVerification(
   context: Context,
   eventVerifyToken: string | undefined,
 ): Promise<Response | undefined> {
@@ -45,15 +48,77 @@ export async function rejectUnauthorizedEventVerification(
   return undefined;
 }
 
-/**
- * Inbound Microsoft Teams bot activity verification. The bot is the connection
- * selected the same way Actions select one, so a deployment can hold several bots.
- */
-export function createTeamsBotEventVerificationRoutes({
+/** Inbound provider event verification using a dedicated bearer token. */
+export function createEventVerificationRoutes({
   connections,
+  oauthClientConfigs,
   eventVerifyToken,
-}: TeamsBotEventVerificationRoutesOptions): Hono {
+}: EventVerificationRoutesOptions): Hono {
   const app = new Hono();
+
+  app.post("/providers/slackbot/events/verify", async (context) => {
+    const rejected = await rejectUnauthorizedEventVerification(context, eventVerifyToken);
+    if (rejected) return rejected;
+    const config = await oauthClientConfigs.getConfig("slackbot");
+    const appId = String(config?.extra?.appId ?? "").trim();
+    const signingSecret = String(config?.secretExtra?.signingSecret ?? "").trim();
+    if (!appId || !signingSecret)
+      return writeRuntimeFailure(context, {
+        status: 409,
+        errorCode: "event_verification_not_configured",
+        message: "Configure the default Slack App ID and Signing Secret.",
+      });
+    const rawBody = await readEventRequestBody(context.req.raw);
+    if (!rawBody)
+      return writeRuntimeFailure(context, {
+        status: 413,
+        errorCode: "webhook_request_too_large",
+        message: "Slack request body exceeds 64 KiB.",
+      });
+    const result = await verifySlackEventRequest({
+      timestamp: context.req.header("x-slack-request-timestamp") ?? "",
+      signature: context.req.header("x-slack-signature") ?? "",
+      rawBody,
+      configuredAppId: appId,
+      signingSecret,
+      contentType: context.req.header("content-type") ?? "",
+    });
+    if (!result.valid) {
+      switch (result.reason) {
+        case "body_too_large":
+          return writeRuntimeFailure(context, {
+            status: 413,
+            errorCode: "webhook_request_too_large",
+            message: "Slack request body exceeds 64 KiB.",
+          });
+        case "payload":
+          return writeRuntimeFailure(context, {
+            status: 400,
+            errorCode: "invalid_event_payload",
+            message: "Invalid Slack event envelope.",
+          });
+        case "app":
+          return writeRuntimeFailure(context, {
+            status: 403,
+            errorCode: "webhook_app_mismatch",
+            message: "Slack App ID does not match the configured application.",
+          });
+        case "timestamp":
+          return writeRuntimeFailure(context, {
+            status: 401,
+            errorCode: "invalid_webhook_timestamp",
+            message: "Invalid or expired Slack request timestamp.",
+          });
+        case "signature":
+          return writeRuntimeFailure(context, {
+            status: 401,
+            errorCode: "invalid_webhook_signature",
+            message: "Invalid Slack request signature.",
+          });
+      }
+    }
+    return writeRuntimeSuccess(context, result);
+  });
 
   app.post(`/providers/${teamsBotService}/events/verify`, async (context) => {
     const rejected = await rejectUnauthorizedEventVerification(context, eventVerifyToken);

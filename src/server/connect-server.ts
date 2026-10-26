@@ -36,10 +36,7 @@ import { createConnectionRoutes } from "./api/connection-routes.ts";
 import { createConsoleCatalogRoutes } from "./api/console-catalog-routes.ts";
 import { createConsoleOAuthRoutes } from "./api/console-oauth-routes.ts";
 import { createDocsRoutes, loadDocsHandler } from "./api/docs-routes.ts";
-import {
-  createTeamsBotEventVerificationRoutes,
-  rejectUnauthorizedEventVerification,
-} from "./api/event-verification-routes.ts";
+import { createEventVerificationRoutes } from "./api/event-verification-routes.ts";
 import { HttpRequestError, internalError, jsonError, notFound } from "./api/http-utils.ts";
 import { createMarketplaceRoutes } from "./api/marketplace-routes.ts";
 import { createMcpRoutes, loadMcpModule } from "./api/mcp-routes.ts";
@@ -55,9 +52,7 @@ import { createSaasOAuthRoutes } from "./api/saas-oauth-routes.ts";
 import { createSaasProjectRoutes } from "./api/saas-project-routes.ts";
 import { createTransitFileRoutes } from "./api/transit-file-routes.ts";
 import { createTriggerRoutes } from "./api/trigger-routes.ts";
-import { readEventRequestBody } from "./event-request-body.ts";
 import { ProxyRunner } from "./proxy/proxy-runner.ts";
-import { verifySlackEventRequest } from "./slack-event-verification.ts";
 
 /**
  * Import and evaluate the modules the /mcp and /docs routes defer to their first request. The Node server never
@@ -171,76 +166,11 @@ export class ConnectServer {
     }
     app.use("*", createLocalAuthMiddleware(auth));
 
-    // Inbound provider event verification. This route authenticates with a dedicated token
-    // so a host ingress can delegate signature verification without receiving the admin token.
-    app.post("/v1/providers/slackbot/events/verify", async (context) => {
-      const rejected = await rejectUnauthorizedEventVerification(context, this.options.eventVerifyToken);
-      if (rejected) return rejected;
-      const config = await this.options.oauthClientConfigs.getConfig("slackbot");
-      const appId = String(config?.extra?.appId ?? "").trim();
-      const signingSecret = String(config?.secretExtra?.signingSecret ?? "").trim();
-      if (!appId || !signingSecret)
-        return writeRuntimeFailure(context, {
-          status: 409,
-          errorCode: "event_verification_not_configured",
-          message: "Configure the default Slack App ID and Signing Secret.",
-        });
-      const rawBody = await readEventRequestBody(context.req.raw);
-      if (!rawBody)
-        return writeRuntimeFailure(context, {
-          status: 413,
-          errorCode: "webhook_request_too_large",
-          message: "Slack request body exceeds 64 KiB.",
-        });
-      const result = await verifySlackEventRequest({
-        timestamp: context.req.header("x-slack-request-timestamp") ?? "",
-        signature: context.req.header("x-slack-signature") ?? "",
-        rawBody,
-        configuredAppId: appId,
-        signingSecret,
-        contentType: context.req.header("content-type") ?? "",
-      });
-      if (!result.valid) {
-        switch (result.reason) {
-          case "body_too_large":
-            return writeRuntimeFailure(context, {
-              status: 413,
-              errorCode: "webhook_request_too_large",
-              message: "Slack request body exceeds 64 KiB.",
-            });
-          case "payload":
-            return writeRuntimeFailure(context, {
-              status: 400,
-              errorCode: "invalid_event_payload",
-              message: "Invalid Slack event envelope.",
-            });
-          case "app":
-            return writeRuntimeFailure(context, {
-              status: 403,
-              errorCode: "webhook_app_mismatch",
-              message: "Slack App ID does not match the configured application.",
-            });
-          case "timestamp":
-            return writeRuntimeFailure(context, {
-              status: 401,
-              errorCode: "invalid_webhook_timestamp",
-              message: "Invalid or expired Slack request timestamp.",
-            });
-          case "signature":
-            return writeRuntimeFailure(context, {
-              status: 401,
-              errorCode: "invalid_webhook_signature",
-              message: "Invalid Slack request signature.",
-            });
-        }
-      }
-      return writeRuntimeSuccess(context, result);
-    });
-
     app.route(
       "/v1",
-      createTeamsBotEventVerificationRoutes({
+      createEventVerificationRoutes({
         connections: this.options.connections,
+        oauthClientConfigs: this.options.oauthClientConfigs,
         eventVerifyToken: this.options.eventVerifyToken,
       }),
     );
